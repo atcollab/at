@@ -89,7 +89,7 @@ static void ExactSectorBend(
 
       /*  integrator  */
       Yrot(r6, entrance_angle);
-      // bend_fringe(r6, irho, gK);
+      bend_fringe(r6, irho, gK);
       if (do_fringe)
         multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
       bend_edge(r6, irho, -entrance_angle);
@@ -112,7 +112,7 @@ static void ExactSectorBend(
       bend_edge(r6, irho, -exit_angle);
       if (do_fringe)
         multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
-      // bend_fringe(r6, -irho, gK);
+      bend_fringe(r6, -irho, gK);
       Yrot(r6, exit_angle);
 
       /* Check physical apertures at the exit of the magnet */
