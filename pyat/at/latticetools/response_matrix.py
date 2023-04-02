@@ -127,7 +127,7 @@ class SvdResponse(ABC):
             nvals = len(self.singular_values)
         return self.v[:, :nvals] @ self.uh[:nvals, :]
 
-    def save(self, file):
+    def save(self, file) -> None:
         """Save a response matrix
 
         Args:
@@ -140,7 +140,7 @@ class SvdResponse(ABC):
             raise AtError("No response matrix: run build() first")
         np.save(file, self.weighted_response)
 
-    def load(self, file):
+    def load(self, file) -> None:
         """Load a response matrix
 
         Args:
