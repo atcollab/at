@@ -52,7 +52,6 @@ static void ExactSectorBend(
   double *EApertures, double *KickAngle, int num_particles)
 {
   double irho = bending_angle / le;
-  double phi2 = 0.5 * bending_angle;
   double SL = num_int_steps == 0 ? le : le / num_int_steps;
   double L1 = SL * DRIFT1;
   double L2 = SL * DRIFT2;
@@ -89,7 +88,7 @@ static void ExactSectorBend(
 
       /*  integrator  */
       Yrot(r6, entrance_angle);
-      bend_fringe(r6, irho, gK);
+      //bend_fringe(r6, irho, gK);
       if (do_fringe)
         multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
       bend_edge(r6, irho, -entrance_angle);
@@ -112,7 +111,7 @@ static void ExactSectorBend(
       bend_edge(r6, irho, -exit_angle);
       if (do_fringe)
         multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
-      bend_fringe(r6, -irho, gK);
+      //bend_fringe(r6, -irho, gK);
       Yrot(r6, exit_angle);
 
       /* Check physical apertures at the exit of the magnet */
@@ -160,6 +159,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
     Elem->BendingAngle = BendingAngle;
+    Elem->EntranceAngle = EntranceAngle;
+    Elem->ExitAngle = ExitAngle;
     /*optional fields*/
     Elem->multipole_fringe = multipole_fringe;
     Elem->gK = gK;

@@ -169,6 +169,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
     Elem->BendingAngle = BendingAngle;
+    Elem->EntranceAngle = EntranceAngle;
+    Elem->ExitAngle = ExitAngle;
     /*optional fields*/
     Elem->multipole_fringe = multipole_fringe;
     Elem->gK = gK;
