@@ -128,11 +128,25 @@ class SvdResponse(ABC):
         return self.v[:, :nvals] @ self.uh[:nvals, :]
 
     def save(self, file):
+        """Save a response matrix
+
+        Args:
+            file:   file-like object, string, or pathlib.Path: File to which
+              the data is saved. If file is a file-object, it must be opened in
+              binary mode. If file is a string or Path, a .npy extension will
+              be appended to the filename if it does not already have one.
+        """
         if self.weighted_response is None:
             raise AtError("No response matrix: run build() first")
         np.save(file, self.weighted_response)
 
     def load(self, file):
+        """Load a response matrix
+
+        Args:
+            file:   file-like object, string, or pathlib.Path: the file to read.
+              A file object must always be opened in binaty mode.
+        """
         self.weighted_response = np.load(file)
         nobs, nvar = self.weighted_response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
