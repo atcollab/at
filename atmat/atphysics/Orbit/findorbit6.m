@@ -38,6 +38,17 @@ function [orb6,orbitin] = findorbit6(ring,varargin)
 %   from the range 1 to length(RING)+1.
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
+% FINDORBIT6(...,'dp',DP)
+%   Specify the off-momentum. The RF frequency will be adjusted to get the
+%   desired value
+%
+% FINDORBIT6(...,'dct',DCT)
+%   Specify the path lengthening. The RF frequency will be adjusted to get
+%   the desired value
+%
+% FINDORBIT6(...,'df',DF)
+%   Specify the RF frequency deviation
+%
 % FINDORBIT6(RING,REFPTS,GUESS)
 % FINDORBIT6(...,'guess',GUESS)     The search for the fixed point
 %	starts from initial condition GUESS. Otherwise the search starts from
