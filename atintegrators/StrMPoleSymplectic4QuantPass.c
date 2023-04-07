@@ -63,7 +63,7 @@ void StrMPoleSymplectic4QuantPass(double* r, double le, double* A, double* B,
     }
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none)                      \
     shared(r, num_particles, R1, T1, R2, T2, RApertures, EApertures,                                        \
-        A, B, L1, L2, K1, K2, max_order, num_int_steps,                                                     \
+        A, B, L1, L2, K1, K2, max_order, num_int_steps, rng,                                                \
         FringeQuadEntrance, useLinFrEleEntrance, FringeQuadExit, useLinFrEleExit, fringeIntM0, fringeIntP0, \
         emass, E0, hbar, clight, alpha0, qe, SL)
     for (int c = 0; c < num_particles; c++) { /* Loop over particles  */

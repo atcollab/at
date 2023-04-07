@@ -14,7 +14,7 @@ void QuantDiffPass(double* r_in, double* Lmatp, int nturn,
      */
 {
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r_in, num_particles, Lmatp)
+    shared(r_in, num_particles, Lmatp, rng)
     for (int c = 0; c < num_particles; c++) {
         /*Loop over particles  */
         int i, j;
