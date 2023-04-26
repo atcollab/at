@@ -123,12 +123,12 @@ def get_timelag_fromU0(ring: Lattice,
 
     def eq(x, freq, rfv, tl0, u0):
         omf = 2*numpy.pi*freq/clight
-        eq1 = numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0
+        eq1 = (numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0)/u0
         eq2 = numpy.sum(-omf*rfv*numpy.cos(omf*(x-tl0)))
         if eq2 > 0:
             return numpy.sqrt(eq1**2+eq2**2)
         else:
-            return eq1
+            return abs(eq1)
 
     if cavpts is None:
         cavpts = get_bool_index(ring, RFCavity)
@@ -151,8 +151,8 @@ def get_timelag_fromU0(ring: Lattice,
                                    args=args, bounds=bounds+tt0))
             r.append(least_squares(eq, bounds[1]*fact+tt0,
                                    args=args, bounds=bounds+tt0))
-        res = numpy.array([abs(ri.fun[0]) for ri in r])
-        ok = res < 1.0e-6
+        res = numpy.array([ri.fun[0] for ri in r])
+        ok = res < 1.0e-9
         vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '
