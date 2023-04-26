@@ -97,7 +97,8 @@ def get_energy_loss(ring: Lattice,
 def get_timelag_fromU0(ring: Lattice,
                        method: Optional[ELossMethod] = ELossMethod.TRACKING,
                        cavpts: Optional[Refpts] = None,
-                       divider: Optional[int] = 4) -> Tuple[float, float]:
+                       divider: Optional[int] = 4,
+                       ts_tol: Optional[float] = 1.0e-9) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -111,6 +112,8 @@ def get_timelag_fromU0(ring: Lattice,
           See :py:class:`ELossMethod`.
         cavpts:             Cavity location. If None, use all cavities.
           This allows to ignore harmonic cavities.
+        divider: number of segments to search for ts
+        phis_tol: relative tolerance for ts calculation
     Returns:
         timelag (float):    Timelag
         ts (float):         Time difference with the present value
@@ -152,7 +155,7 @@ def get_timelag_fromU0(ring: Lattice,
             r.append(least_squares(eq, bounds[1]*fact+tt0,
                                    args=args, bounds=bounds+tt0))
         res = numpy.array([ri.fun[0] for ri in r])
-        ok = res < 1.0e-9
+        ok = res < ts_tol
         vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '
