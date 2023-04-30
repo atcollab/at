@@ -11,6 +11,7 @@ import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
+from at.lattice import idtable_element
 from at.lattice import Particle, Element
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
@@ -71,6 +72,7 @@ _PASS_MAP = {'BendLinearPass': elt.Dipole,
              'ThinMPolePass': elt.ThinMultipole,
              'Matrix66Pass': elt.M66,
              'AperturePass': elt.Aperture,
+             'IdTablePass': idtable_element.IdTable,
              'GWigSymplecticPass': elt.Wiggler}
 
 # Matlab to Python attribute translation
@@ -78,7 +80,10 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name'}
 
 # Python to Matlab class translation
-_matclass_map = {'Dipole': 'Bend'}
+_matclass_map = {
+        'Dipole': 'Bend',
+        'IdTable': 'Multipole'
+        }
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
@@ -88,7 +93,9 @@ _mattype_map = {int: float,
 _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
-    elt.M66: 'atM66'}
+    elt.M66: 'atM66',
+    idtable_element.IdTable: 'atdrift'
+    }
 
 
 def hasattrs(kwargs: dict, *attributes) -> bool:
@@ -243,7 +250,8 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
                 raise err("does not have a {0} file.".format(file_name))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
                 raise err("is not compatible with length {0}.", length)
-            elif pass_to_class is not None:
+            elif pass_to_class is not None and \
+                    pass_method != 'IdTablePass':
                 if not issubclass(cls, pass_to_class):
                     raise err("is not compatible with Class {0}.", class_name)
             elif issubclass(cls, (elt.Marker, elt.Monitor, RingParam)):
