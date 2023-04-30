@@ -4,7 +4,7 @@ import io
 from scipy.constants import c as clight
 
 
-class InsertionDeviceKickMap(Element):
+class IdTable(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 
@@ -13,11 +13,54 @@ class InsertionDeviceKickMap(Element):
         European Synchrotron Radiation Facility.
         BP 220, F-38043 Grenoble, France
     """
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Nslice',
-                                                     'Filename_in',
-                                                     'Energy']
 
-    def readRadiaFieldMap(self, file_in_name):
+    def set_DriftPass(self):
+        setattr(self, 'PassMethod', 'DriftPass')
+
+    def set_IdTablePass(self):
+        setattr(self, 'PassMethod', 'IdTablePass')
+
+    def get_PassMethod(self):
+        return getattr(self, 'PassMethod')
+
+    def __init__(self,
+                 family_name: str,
+                 **kwargs):
+        """
+        Args:
+            family_name:    family name
+
+        Default PassMethod: ``IdTablePass``
+        """
+
+        super(IdTable, self).__init__(family_name, **kwargs)
+
+
+__all__ = ['InsertionDeviceKickMap']
+
+
+def InsertionDeviceKickMap(
+        family_name: str,
+        Nslice: int,
+        Filename_in: str,
+        Energy: float,
+        **kwargs
+        ):
+    """
+    Args:
+        family_name:    family name
+        Nslice:         number of slices in integrator
+        Filename_in:    input filename
+        Energy:         particle energy in GeV
+
+    Default PassMethod: ``IdTablePass``
+    """
+    # 2023apr30 redifinition to function
+    # 2023jan18 fix bug with element print
+    # 2023jan15 first release
+    # orblancog
+
+    def readRadiaFieldMap(file_in_name):
         """
         Read a RadiaField map and return
         """
@@ -100,7 +143,7 @@ class InsertionDeviceKickMap(Element):
         return el_length, hkickmap, vkickmap, table_cols1, table_rows1, \
             table_cols2, table_rows2
 
-    def sorted_table(self, table_in, sorted_index, order_axis):
+    def sorted_table(table_in, sorted_index, order_axis):
         # numpy.asfortranarray makes a copy of contiguous memory positions
         table_out = numpy.copy(table_in)
         for i, iis in zip(range(len(sorted_index)), sorted_index):
@@ -111,82 +154,62 @@ class InsertionDeviceKickMap(Element):
         table_out2 = numpy.asfortranarray(table_out)
         return table_out2
 
-    def set_DriftPass(self):
-        setattr(self, 'PassMethod', 'DriftPass')
+    # read the input data
+    el_length, hkickmap, vkickmap, \
+        table_cols1, table_rows1, \
+        table_cols2, table_rows2 \
+        = readRadiaFieldMap(Filename_in)
 
-    def set_IdTablePass(self):
-        setattr(self, 'PassMethod', 'IdTablePass')
+    # set to float
+    table_cols1array = numpy.array(table_cols1, dtype='float64')
+    table_rows1array = numpy.array(table_rows1, dtype='float64')
+    table_cols2array = numpy.array(table_cols2, dtype='float64')
+    table_rows2array = numpy.array(table_rows2, dtype='float64')
 
-    def get_PassMethod(self):
-        return getattr(self, 'PassMethod')
+    # Reorder table_axes and kick maps
+    cols1sorted_index = numpy.argsort(table_cols1array)
+    table_cols1array.sort()
+    rows1sorted_index = numpy.argsort(table_rows1array)
+    table_rows1array.sort()
+    cols2sorted_index = numpy.argsort(table_cols2array)
+    table_cols2array.sort()
+    rows2sorted_index = numpy.argsort(table_rows2array)
+    table_rows2array.sort()
+    hkickmap_a = sorted_table(hkickmap, cols1sorted_index, 'col')
+    hkickmap = sorted_table(hkickmap_a, rows1sorted_index, 'row')
+    vkickmap_a = sorted_table(vkickmap, cols2sorted_index, 'col')
+    vkickmap = sorted_table(vkickmap_a, rows2sorted_index, 'row')
 
-    def __init__(self,
-                 family_name: str,
-                 Nslice: float,
-                 Filename_in: str,
-                 Energy: float,
-                 **kwargs):
-        """
-        Args:
-            family_name:    family name
-            Nslice:         number of slices in ... tracking??? integrator ???
-            Filename_in:    input filename
-            Energy:         particle energy in GeV
+    # Field to kick factors
+    Brho = 1e9 * Energy/clight
+    factor = 1.0/(Brho**2)
+    xkick = factor * hkickmap
+    ykick = factor * vkickmap
+    factor1 = -1.0/(Brho)
+    xtable = table_cols1array
+    ytable = table_rows1array
 
-        Default PassMethod: ``IdTablePass``
-        """
-        # 2023jan18 fix bug with element print
-        # 2023jan15 first release
-        # orblancog
-        # read the input data
-        el_length, hkickmap, vkickmap, \
-            table_cols1, table_rows1, \
-            table_cols2, table_rows2 \
-            = self.readRadiaFieldMap(Filename_in)
+    # Create element properties
+    kwargs.setdefault('PassMethod', 'IdTablePass')
+    kwargs.setdefault('Filename_in', Filename_in)
+    kwargs.setdefault('Energy',      Energy)
+    kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
+    kwargs.setdefault('Length',      el_length)
+    kwargs.setdefault('xkick',       xkick)
+    kwargs.setdefault('ykick',       ykick)
+    kwargs.setdefault('xtable',      xtable)
+    kwargs.setdefault('ytable',      ytable)
+    # the following is added to be compatible with multipole class
+    # when saving .mat files, but it is not used
+    kwargs.setdefault('poly_a',      numpy.zeros(4))
+    kwargs.setdefault('poly_b',      numpy.zeros(4))
+    kwargs.setdefault('MaxOrder',    int(3))
 
-        # set to float
-        table_cols1array = numpy.array(table_cols1, dtype='float64')
-        table_rows1array = numpy.array(table_rows1, dtype='float64')
-        table_cols2array = numpy.array(table_cols2, dtype='float64')
-        table_rows2array = numpy.array(table_rows2, dtype='float64')
+    # pyat issue #522
+    # elem = Element('name', PassMethod='IdTablePass', \
+    #                       xkick=x0, ykick=x1, \
+    #                       xtable=x2, ytable=x3, Nslice=x4)
 
-        # Reorder table_axes and kick maps
-        cols1sorted_index = numpy.argsort(table_cols1array)
-        table_cols1array.sort()
-        rows1sorted_index = numpy.argsort(table_rows1array)
-        table_rows1array.sort()
-        cols2sorted_index = numpy.argsort(table_cols2array)
-        table_cols2array.sort()
-        rows2sorted_index = numpy.argsort(table_rows2array)
-        table_rows2array.sort()
-        hkickmap_a = self.sorted_table(hkickmap,   cols1sorted_index, 'col')
-        hkickmap = self.sorted_table(hkickmap_a, rows1sorted_index, 'row')
-        vkickmap_a = self.sorted_table(vkickmap,   cols2sorted_index, 'col')
-        vkickmap = self.sorted_table(vkickmap_a, rows2sorted_index, 'row')
+    return IdTable(family_name, **kwargs)
 
-        # Field to kick factors
-        Brho = 1e9 * Energy/clight
-        factor = 1.0/(Brho**2)
-        xkick = factor * hkickmap
-        ykick = factor * vkickmap
-        factor1 = -1.0/(Brho)
-        xtable = table_cols1array
-        ytable = table_rows1array
-
-        # Create element properties
-        kwargs.setdefault('PassMethod', 'IdTablePass')
-        kwargs.setdefault('Filename_in', Filename_in)
-        kwargs.setdefault('Energy',      Energy)
-        kwargs.setdefault('Nslice',      Nslice)
-        kwargs.setdefault('Length',      el_length)
-        kwargs.setdefault('xkick',       xkick)
-        kwargs.setdefault('ykick',       ykick)
-        kwargs.setdefault('xtable',      xtable)
-        kwargs.setdefault('ytable',      ytable)
-
-        # Set Element inherited properties
-        # pyat issue #522
-        # elem = Element('name', PassMethod='IdTablePass', \
-        #                       xkick=x0, ykick=x1, \
-        #                       xtable=x2, ytable=x3, Nslice=x4)
-        super(InsertionDeviceKickMap, self).__init__(family_name, **kwargs)
+# EOF
