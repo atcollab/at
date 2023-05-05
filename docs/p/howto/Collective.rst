@@ -14,9 +14,10 @@ then call the **WakeFieldPass** PassMethod.
 The wake field is applied by first uniformly slicing the full region occupied by the 
 particles in the ct co-ordinate. Each particle is then attributed to a
 given slice, which is represented by a weight. The mean position in x,y,ct 
-is computed for each slice. The kick from one slice to the next (or self kick) can then be computed by taking into account
-the differences in offsets of each slice. This kick is then applied to each particle 
-within the slice. 
+is computed for each slice. The kick from one slice to the next (and the self kick for some cases)
+can then be computed by taking into account the differences in offsets of each slice.
+This total kick is computed and then the appropriate modification to x', y' or dp is then applied
+to each particle. 
 
 To take into account multi-turn wakes, the wake element has a **TurnHistory** buffer.
 Each turn, the mean x,y,ct and weight of each slice is recorded. After each turn, the 
@@ -191,7 +192,7 @@ Multiple combinations can all be added to one wake element to bring all wake con
 Using the Haissinski Class
 --------------------------
 
-NOTE: This module is due a re-write and a clean up. But the fundamental process will remain the same.
+NOTE: This module is due for a re-write and a clean up. But the fundamental process will remain the same.
 
 The Haissinski solver is used to compute the equilibrium beam distribution in the presence of a longitudinal impedance. This class is based entirely on the very nice paper by K. Bane and R. Warnock [4]. In this small overview, we will only talk about how to use it. The details can be seen in the paper of exactly how it is implemented. All the functions within the class are cross referenced with the equations found in the paper. An example file which compares the results of tracking and the results of the Haissinski solver can be found in at/pyat/examples/CollectiveEffects/LongDistribution.py. 
 
@@ -250,6 +251,71 @@ The code will now iteratively solve the haissinski equation to determine the bea
 Multi Bunch Collective Effects
 ------------------------------
 
+All pass methods are set to work for multi bunch collective effects with very few modifications. 
+First, the filling pattern must be set
+
+.. code:: ipython3
+
+    Nbunches = 992
+    ring.beam_current = 200e-3 #Set total beam current to 200mA
+    ring.set_fillpattern(Nbunches) #Set uniform filling. Here the harmonic number is equal to 992. 
+
+The number of particles in the beam, must be an integer harmonic of the number of bunches. This is because
+in the pass method, the coordinates are accessed according to :math:`parts[bunch_id::Nbunches]`. This means all particles for all bunches are in series, and to access the particles for the nth bunch, you simply start at particle n, and take the particle at every Nbunches step. In PyAT we are able to do single slice per bunch, and 1 particle per bunch. Particles can be generated using the standard at.beam functionality.
+
+Two examples of multi bunch collective effects can be found, one for the Longitudinal Coupled Bunch Instability: at/pyat/examples/CollectiveEffects/LCBI_run.py and at/pyat/examples/CollectiveEffects/LCBI_analyse.py, and another for the Transverse Resistive Wall Instability: at/pyat/examples/CollectiveEffects/TRW_run.py and at/pyat/examples/CollectiveEffects/TRW_analyse.py.
+
+
+Parallelisation with Collective Effects
+---------------------------------------
+
+PyAT can very easily be run with across multiple cores. When using openmpi, the user must remember that each thread will be running exactly the same file. This must be taken into account when writing the script. At the beginning of the script, it must have
+
+.. code:: ipython3
+
+    from mpi4py import MPI
+    
+    comm = MPI.COMM_WORLD
+    size = comm.Get_size()
+    rank = comm.Get_rank()
+    
+size is an integer that says how many threads have been created, and rank says which thread you are on. Typically, there are many operations (saving of files, collating of particle data, etc) that you only want to happen on one thread, not on all. So therefore a common trick is to use
+
+.. code:: ipython3
+    
+    rank0 = True if rank == 0
+    
+then all of these types of operation can be hidden within a, if statement. As mentioned above, the number of particles must be an integer multiple of the number of bunches. When parallelising, this is true of each thread. So if you have 40 threads, and 992 bunches. Each thread, must have an integer multiple of 992 as the number of particles. Otherwise, some particles will be missing and the results will be incorrect. This means that it is not possible to parallelise a computation with 1 particle per bunch. In order to access turn by turn and bunch by bunch data, the beam monitor can be used
+
+.. code:: ipython3
+
+    bm_elem = at.BeamMoments('monitor')
+    ring.append(bm_elem)
+    
+This monitor works in parallel computations, and the data can be accessed by :math:`bm_elem.means` and :math:`bm_elem.stds`. If the user wishes to write their own data collation, in order to perform some more advanced analysis, functionalities within the MPI4PY package can be used. For example, to compute yourself the centroid position of each bunch in one turn
+
+.. code:: ipython3
+
+    def compute_centroid_per_bunch(parts, comm, size, Nparts, Nbunches):
+        all_centroid = numpy.zeros((6, Nbunches))
+        for i in numpy.arange(Nbunches):
+            all_centroid[:, i] += numpy.sum(parts[:,i::Nbunches],axis=1)     
+        centroid = comm.allreduce(all_centroid, op=MPI.SUM)/Nparts/size
+        comm.Barrier()
+        return centroid 
+
+Each thread passes the particles it has to this function. Through the :math:`comm` object, the threads can communicate. The sum of each plane is computed, and this sum information is transmitted. Then by dividing with size and Nparts, the mean is computed. The comm.Barrier() functions blocks all threads until they have all reached this point. 
+
+A final note of importants, when parallelising, Nslice refers to the number of slices per bunch. The total number of slices used in the computation will there be Nslice*Nbunches
+
+
+Beam Loading
+------------
+
+An IPAC paper that covers the theory used for the beam loading module can be found in [5]. Only the main functionalities will be mentioned here.
+
+
+
 Bibliography
 ------------
 [1] A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 73, Eqn. 2.84
@@ -260,5 +326,5 @@ Bibliography
 
 [4] "Numerical solution of the Haïssinski equation for the equilibrium state of  a stored electron beam", R. Warnock, K.Bane, Phys. Rev. Acc. and Beams 21, 124401 (2018)
 
-
+[5] L.R. Carver et al, 'Beam Loading Simulations in PyAT for the ESRF', Proceedings of IPAC23, Venice Italy (2023)
 
