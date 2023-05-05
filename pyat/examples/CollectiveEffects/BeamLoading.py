@@ -42,7 +42,7 @@ def analytical_qs(ring, I):
     # Synch. freq. with beam loading
     tilde_omega_s = numpy.sqrt(omega_s0**2 +
                                K * omega_rf * numpy.sin(2 * psi) + 1j * 0)
-    return tilde_omega_s / omega0
+    return tilde_omega_s / omega0, omega_s0/omega0
 
 
 comm = MPI.COMM_WORLD
@@ -139,7 +139,7 @@ if rank == 0:
 
     qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
 
-    qs_theory = analytical_qs(ring, current)
+    qs_theory, qs_zerocurrent = analytical_qs(ring, current)
 
     print('Analytical:', numpy.real(qs_theory))
     print('Simulated:', qs_mn, 'pm', qs_std)
@@ -162,5 +162,7 @@ if rank == 0:
                 linestyle='dashed', color='k')
     plt.axvline(numpy.real(qs_theory), label='Analytical Beam Loaded Tune',
                 linestyle='dashed', color='r')
+    plt.axvline(qs_zerocurrent, label='Zero Current Tune',
+                linestyle='dashed', color='b')
     plt.legend()
     plt.show()
