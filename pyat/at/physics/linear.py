@@ -1,17 +1,18 @@
 """
 Coupled or non-coupled 4x4 linear motion
 """
+from __future__ import annotations
 import numpy
 from math import sqrt, pi, sin, cos, atan2
-from typing import Callable
+from collections.abc import Callable
 import warnings
 from scipy.linalg import solve
 from ..constants import clight
 from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
-from ..lattice import AtWarning, Lattice, check_6d, get_s_pos
+from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
+from ..lattice import frequency_control
 from ..tracking import lattice_pass
-from .orbit import Orbit, find_orbit4, find_orbit6
-from .orbit import frequency_control
+from .orbit import find_orbit4, find_orbit6
 from .matrix import find_m44, find_m66
 from .amat import a_matrix, jmat, jmatswap
 from .harmonic_analysis import get_tunes_harmonic

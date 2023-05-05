@@ -61,6 +61,7 @@ end
 [dct,varargs]=getoption(varargs,'dct',NaN);
 [df,varargs]=getoption(varargs,'df',NaN);
 [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+[~,varargs]=getoption(varargs,'is_6d',[]); % Consume the is_6d option
 if isempty(orbitin)
     if isfinite(df)
         [cell_l,cell_frev,cell_h]=atGetRingProperties(ring,'cell_length',...

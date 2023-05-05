@@ -5,8 +5,7 @@ from .boundary import GridMode
 from .boundary import boundary_search
 from typing import Optional, Sequence
 import multiprocessing
-from ..lattice import Lattice, Refpts
-from ..physics import frequency_control
+from ..lattice import Lattice, Refpts, frequency_control
 
 
 __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
@@ -24,7 +23,7 @@ def get_acceptance(
         use_mp: Optional[bool] = False,
         verbose: Optional[bool] = True,
         divider: Optional[int] = 2,
-        shift_zero: Optional[float] = 1.0e-9,
+        shift_zero: Optional[float] = 1.0e-6,
         start_method: Optional[str] = None,
 ):
     # noinspection PyUnresolvedReferences
@@ -62,7 +61,7 @@ def get_acceptance(
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
-        shift_zero:
+        shift_zero: Epsilon offset applied on all 6 coordinates
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -164,7 +163,7 @@ def get_1d_acceptance(
         use_mp: Optional[bool] = False,
         verbose: Optional[bool] = False,
         divider: Optional[int] = 2,
-        shift_zero: Optional[float] = 1.0e-9,
+        shift_zero: Optional[float] = 1.0e-6,
         start_method: Optional[str] = None,
 
 ):
@@ -198,7 +197,7 @@ def get_1d_acceptance(
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
-        shift_zero:
+        shift_zero: Epsilon offset applied on all 6 coordinates
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -271,7 +270,7 @@ def get_horizontal_acceptance(ring: Lattice,
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
-        shift_zero:
+        shift_zero: Epsilon offset applied on all 6 coordinates
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -329,7 +328,7 @@ def get_vertical_acceptance(ring: Lattice,
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
-        shift_zero:
+        shift_zero: Epsilon offset applied on all 6 coordinates
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -387,7 +386,7 @@ def get_momentum_acceptance(ring: Lattice,
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
-        shift_zero:
+        shift_zero: Epsilon offset applied on all 6 coordinates
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.

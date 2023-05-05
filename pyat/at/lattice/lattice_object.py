@@ -15,7 +15,6 @@ import sys
 import copy
 import numpy
 import math
-import itertools
 from typing import Optional, Union
 if sys.version_info.minor < 9:
     from typing import Callable, Iterable, Generator
@@ -174,7 +173,7 @@ class Lattice(list):
             ``params_filter(params, ringparam_filter, *args)``
                 runs through ``ringparam_filter(params, *args)``, looks for
                 energy and periodicity if not yet defined.
-"""
+        """
         if iterator is None:
             arg1, = args or [[]]  # accept 0 or 1 argument
             if isinstance(arg1, Lattice):
@@ -263,29 +262,16 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        newring = Lattice(self)
-        newring.extend(elems)
-        return newring
+        return self.concatenate(elems, copy=True)
 
     def __iadd__(self, elems):
-        return super(Lattice, self).__iadd__(self._addition_filter(elems))
+        self.concatenate(elems, copy=False)
+        return self
 
     def __mul__(self, n):
-        """Repeats n times the lattice"""
-        periodicity = self.periodicity
-        if n != 0 and periodicity > 1:
-            nbp = periodicity / n
-            periodicity = int(round(nbp))
-            if abs(periodicity - nbp) > _TWO_PI_ERROR:
-                warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
-                               'city set to 1'.format(self.periodicity, n)))
-                periodicity = 1
-        # noinspection PyTypeChecker
-        return Lattice(elem_generator,
-                       itertools.chain(*itertools.repeat(self, n)),
-                       iterator=self.attrs_filter, periodicity=periodicity)
+        return self.repeat(n)
 
-    def _addition_filter(self, elems: Iterable[Element]):
+    def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
         length = 0.0
         params = {}
@@ -301,7 +287,10 @@ class Lattice(list):
             elif hasattr(elem, '_turnhistory'):
                 elem.clear_history(self)
             length += getattr(elem, 'Length', 0.0)
-            yield elem
+            if copy_elements:
+                yield elem.deepcopy()
+            else:
+                yield elem
 
         if cavities and not hasattr(self, '_cell_harmnumber'):
             cavities.sort(key=lambda el: el.Frequency)
@@ -314,23 +303,162 @@ class Lattice(list):
                 self._cell_harmnumber = int(round(frequency / rev))
         self._radiation |= params.pop('_radiation')
 
-    def insert(self, idx: SupportsIndex, elem: Element):
+    def insert(self, idx: SupportsIndex, elem: Element, copy_elements=False):
+        r"""This method allow to insert an AT element in the lattice.
+
+        Parameters:
+            idx (SupportsIndex): index at which the lement is inserted
+            elem (Element): AT element to be inserted in the lattice
+            copy_elements(bool): Default :py:obj:`True`.
+                                 If :py:obj:`True` a deep copy of elem
+                                 is used.
+        """
         # noinspection PyUnusedLocal
         # scan the new element to update it
-        elist = list(self._addition_filter([elem]))
+        elist = list(self._addition_filter([elem],
+                     copy_elements=copy_elements))
         super().insert(idx, elem)
 
-    def extend(self, elems: Iterable[Element]):
+    def extend(self, elems: Iterable[Element], copy_elements=False):
+        r"""This method adds all the elements of `elems` to the end of the
+        lattice. The behavior is the same as for a :py:obj:`list`
+
+        Equivalents syntaxes:
+        >>> ring.extend(elems)
+        >>> ring += elems
+
+        Parameters:
+            elems (Iterable[Element]): Sequence of AT elements to be
+                                      appended to the lattice
+            copy_elements(bool): Default :py:obj:`True`.
+                                 If :py:obj:`True` deep copies of each
+                                 element of elems are used
+        """
         if hasattr(self, '_energy'):
             # When unpickling a Lattice, extend is called before the lattice
             # is initialized. So skip this.
-            elems = self._addition_filter(elems)
+            elems = self._addition_filter(elems, copy_elements=copy_elements)
         super().extend(elems)
 
-    def append(self, elem: Element):
-        self.extend([elem])
+    def append(self, elem: Element, copy_elements=False):
+        r"""This method overwrites the inherited method
+            :py:meth:`list.append()`,
+            it behavior is changed, it accepts only AT lattice elements
+            :py:obj:`Element` as input argument.
 
-    def develop(self) -> "Lattice":
+            Equivalents syntaxes:
+            >>> ring.append(elem)
+            >>> ring += [elem]
+
+            Parameters:
+                elem (Element): AT element to be appended to the lattice
+                copy_elements(bool): Default :py:obj:`True`.
+                                     If :py:obj:`True` a deep copy of elem
+                                     is used
+        """
+        self.extend([elem], copy_elements=copy_elements)
+
+    def repeat(self, n: int, copy_elements=True):
+        r"""This method allows to repeat the lattice `n` times.
+        If `n` does not divide `ring.periodicity`, the new ring
+        periodicity is set to 1, otherwise  it is et to
+        `ring.periodicity /= n`.
+
+        Equivalents syntaxes:
+        >>> newring = ring.repeat(n)
+        >>> newring = ring * n
+
+        Parameters:
+            n (int): number of repetition
+            copy_elements(bool): Default :py:obj:`True`.
+                        If :py:obj:`True` deepcopies of the
+                        lattice are used for the repetition
+
+        Returns:
+            newring (Lattice): the new repeated lattice
+        """
+        def copy_fun(elem, copy):
+            if copy:
+                return elem.deepcopy()
+            else:
+                return elem
+
+        periodicity = self.periodicity
+        if n != 0 and periodicity > 1:
+            nbp = periodicity / n
+            periodicity = int(round(nbp))
+            if abs(periodicity - nbp) > _TWO_PI_ERROR:
+                warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
+                               'city set to 1'.format(self.periodicity, n)))
+                periodicity = 1
+        try:
+            cell_h = self._cell_harmnumber
+        except AttributeError:
+            hdict = {}
+        else:
+            hdict = dict(_cell_harmnumber=n*cell_h)
+        elems = (copy_fun(el, copy_elements) for _ in range(n) for el in self)
+        return Lattice(elem_generator, elems, iterator=self.attrs_filter,
+                       periodicity=periodicity, **hdict)
+
+    def concatenate(self, *lattices: Iterable[Element],
+                    copy_elements=False, copy=False):
+        """Concatenate several `Iterable[Element]` with the lattice
+
+        Equivalents syntaxes:
+        >>> newring = ring.concatenate(r1, r2, r3, copy=True)
+        >>> newring = ring + r1 + r2 + r3
+
+        >>> ring.concatenate(r1, copy=False)
+        >>> ring += r1
+
+        Parameters:
+            lattices: :py:obj:`Iterables[Element]` to be concatenanted
+                      to the Lattice, several lattices are allowed
+                      (see example)
+            copy_elements(bool): Default :py:obj:`False`. If :py:obj:`True`
+                        deepcopies of the elements of lattices are used
+            copy(bool): Default :py:obj:`False`. If :py:obj:`True`
+                           the lattice is modified in place.
+                           Oterwise a new Lattice object is returned
+
+        Returns:
+            lattice(Lattice): concatenated Lattice, if `copy==True` the
+                              new lattice object is returned
+                              otherwise None
+        """
+        if copy:
+            lattice = Lattice(self)
+        else:
+            lattice = self
+        for lat in lattices:
+            lattice.extend(lat, copy_elements=copy_elements)
+        return lattice if copy else None
+
+    def reverse(self, copy=False):
+        r"""Reverse the order of the lattice and swapt the faces
+        of elements. Alignment errors are not swapped
+
+        Parameters:
+            copy(bool): Default :py:obj:`False`. If :py:obj:`True`
+                           the lattice is modified in place.
+                           Oterwise a new Lattice object is returned
+
+        Returns:
+            lattice(Lattice): reversed Lattice, if `copy==True` the
+                              new lattice object is returned
+                              otherwise None
+        Example:
+            >>> newring = ring.reverse(copy=True)
+        """
+        elems = (el.swap_faces(copy=True) for el in reversed(self))
+        if copy:
+            return Lattice(elem_generator, elems, iterator=self.attrs_filter)
+        else:
+            reversed_list = list(elems)
+            self[:] = reversed_list
+
+    def develop(self) -> Lattice:
         """Develop a periodical lattice by repeating its elements
         *self.periodicity* times
 
@@ -360,7 +488,7 @@ class Lattice(list):
         res.update((k, v) for k, v in vrs.items() if not k.startswith('_'))
         return res
 
-    def rotate(self, n: int) -> "Lattice":
+    def rotate(self, n: int) -> Lattice:
         """Return a new lattice rotated left by n elements"""
         if len(self) == 0:
             return self.copy()
@@ -379,16 +507,39 @@ class Lattice(list):
         for (key, value) in attrs.items():
             setattr(self, key, value)
 
-    def copy(self) -> "Lattice":
+    def copy(self) -> Lattice:
         """Returns a shallow copy of the lattice"""
         return copy.copy(self)
 
-    def deepcopy(self) -> "Lattice":
+    def deepcopy(self) -> Lattice:
         """Returns a deep copy of the lattice"""
         return copy.deepcopy(self)
+        
+    def slice_elements(self, refpts: Refpts, slices: int = 1) -> Lattice:
+        """Create a new lattice by slicing the elements at refpts
+
+        Parameters:
+            refpts:     Element selector
+            slices:     Number of slices in the specified range. Ignored if
+              size is specified. Default: no slicing
+
+        Returns:
+            newring:    New Lattice object
+        """
+        def slice_generator(_):
+            check = get_bool_index(self, refpts)
+            for el, ok in zip(self, check):
+                if ok and (slices > 1):
+                    frac = numpy.ones(slices) / slices
+                    for elem in el.divide(frac):
+                        yield elem
+                else:
+                    yield el
+
+        return Lattice(slice_generator, iterator=self.attrs_filter)        
 
     def slice(self, size: Optional[float] = None, slices: Optional[int] = 1) \
-            -> "Lattice":
+            -> Lattice:
         """Create a new lattice by slicing the range of interest into small
         elements
 
@@ -629,15 +780,15 @@ class Lattice(list):
         """Indices of filled bunches"""
         return numpy.flatnonzero(self._fillpattern)
 
-    @property
-    def beam_current(self):
+    def get_beam_current(self):
         return self._beam_current
 
-    @beam_current.setter
-    def beam_current(self, value, clear_history=True):
+    def set_beam_current(self, value, clear_history=True):
         self._beam_current = value
         if clear_history:
             self.set_wake_turnhistory()
+
+    beam_current = property(get_beam_current, set_beam_current)
 
     @property
     def bunch_currents(self) -> numpy.ndarray:
@@ -652,7 +803,7 @@ class Lattice(list):
             circ = self.beta * clight * \
                 self.harmonic_number/self.rf_frequency
         except AtError:
-            circ = self.circumference       
+            circ = self.circumference
         bs = circ/len(self._fillpattern)
         allpos = bs*numpy.arange(len(self._fillpattern))
         return allpos[self._fillpattern > 0]
@@ -875,7 +1026,7 @@ class Lattice(list):
             lattice_modify()
 
     # noinspection PyShadowingNames,PyIncorrectDocstring
-    def enable_6d(self, *args, **kwargs) -> Optional["Lattice"]:
+    def enable_6d(self, *args, **kwargs) -> Optional[Lattice]:
         # noinspection PyUnresolvedReferences
         r"""
         enable_6d(elem_class[, elem_class]..., copy=False)
@@ -974,7 +1125,7 @@ class Lattice(list):
         return self._set_6d(True, *args, **kwargs)
 
     # noinspection PyShadowingNames,PyIncorrectDocstring
-    def disable_6d(self, *args, **kwargs) -> Optional["Lattice"]:
+    def disable_6d(self, *args, **kwargs) -> Optional[Lattice]:
         # noinspection PyUnresolvedReferences
         r"""
         disable_6d(elem_class[, elem_class]... , copy=False)
@@ -1130,7 +1281,7 @@ class Lattice(list):
         return Lattice(sbreak_iterator, iter_mk,
                        iterator=self.attrs_filter, **kwargs)
 
-    def reduce(self, **kwargs) -> "Lattice":
+    def reduce(self, **kwargs) -> Lattice:
         """Removes all elements with an ``IdentityPass`` PassMethod and merges
         compatible consecutive elements.
 
@@ -1167,7 +1318,7 @@ class Lattice(list):
         return Lattice(reduce_filter, self.select(kp | keep),
                        iterator=self.attrs_filter, **kwargs)
 
-    def replace(self, refpts: Refpts, **kwargs) -> "Lattice":
+    def replace(self, refpts: Refpts, **kwargs) -> Lattice:
         """Return a shallow copy of the lattice replacing the selected
         elements by a deep copy
 
@@ -1180,7 +1331,7 @@ class Lattice(list):
                        iterator=self.attrs_filter, **kwargs)
 
     # Obsolete methods kept for compatibility
-    def radiation_on(self, *args, **kwargs) -> Optional["Lattice"]:
+    def radiation_on(self, *args, **kwargs) -> Optional[Lattice]:
         """Obsolete. Turn longitudinal motion on
 
         The function name is misleading, since the function deals with
@@ -1196,7 +1347,7 @@ class Lattice(list):
             zip(('cavity_pass', 'dipole_pass', 'quadrupole_pass'), args))
         return self._set_6d(True, **kwargs)
 
-    def radiation_off(self, *args, **kwargs) -> Optional["Lattice"]:
+    def radiation_off(self, *args, **kwargs) -> Optional[Lattice]:
         """Obsolete. Turn longitudinal motion off
 
         The function name is misleading, since the function deals with

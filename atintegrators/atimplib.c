@@ -31,7 +31,7 @@ int binarySearch(double *array,double value,int upper,int lower,int nStep){
 };
 
 
-double getTableWake(double *waketable,double *waketableT,double distance,int index){
+static double getTableWake(double *waketable,double *waketableT,double distance,int index){
     double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
           (waketableT[index+1]-waketableT[index]);
     if(atIsNaN(w)){
@@ -42,7 +42,7 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
 };
 
 
-void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
+static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
     double *xtmp,*xtmp0;
     double *ytmp,*ytmp0;
     double *ztmp,*ztmp0;
@@ -82,7 +82,7 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
 };
 
 
-void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
+static void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
                double *smax, double *z_cuts){
     double *rtmp;
     int i, ib;
@@ -123,17 +123,17 @@ void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
 }
 
 
-void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
+static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
                  int nbunch,double *bunch_spos,double *bunch_currents,
                  double *turnhistory,int *pslice,double *z_cuts){
     
     int i,ii,ib;
     double *rtmp;
     
-    double *smin = malloc(nbunch*sizeof(double));
-    double *smax = malloc(nbunch*sizeof(double));
-    double *hz = malloc(nbunch*sizeof(double));
-    double *np_bunch = malloc(nbunch*sizeof(double));
+    double *smin = atMalloc(nbunch*sizeof(double));
+    double *smax = atMalloc(nbunch*sizeof(double));
+    double *hz = atMalloc(nbunch*sizeof(double));
+    double *np_bunch = atMalloc(nbunch*sizeof(double));
     getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts);     
     
     for(i=0;i<nbunch;i++){
@@ -199,13 +199,13 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
         weight[i] *= bunch_currents[ib]/np_bunch[ib];
     } 
-    free(np_bunch);
-    free(smin);
-    free(smax);
-    free(hz);
+    atFree(np_bunch);
+    atFree(smin);
+    atFree(smax);
+    atFree(hz);
 };
 
-void compute_kicks(int nslice,int nturns,int nelem,
+static void compute_kicks(int nslice,int nturns,int nelem,
                    double *turnhistory,double *waketableT,double *waketableDX,
                    double *waketableDY,double *waketableQX,double *waketableQY,
                    double *waketableZ,double *normfact, double *kx,double *ky,
@@ -260,10 +260,9 @@ void compute_kicks(int nslice,int nturns,int nelem,
 };
 
 
-double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta) {
+static void wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
 
     double omega, alpha, omegabar;
-    double *wake = malloc(2*sizeof(double));
     wake[0] = 0.0;
     wake[1] = 0.0;
     double dt;
@@ -296,25 +295,25 @@ double *wakefunc_long_resonator(double ds, double freqres, double qfactor, doubl
         wake[0] = 0.0;
         wake[1] = 0.0;
     }            
-    return wake;
 }
 
 
-void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
+static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
                            double *kz,double freq, double qfactor, double rshunt,
                            double beta, double *vbeamk, double energy, double *vbunch) {
 
     int rank=0;
     int size=1;
-    int i,ii,ib;
-    double ds,wi;
+    int i,ii,ib,loopstart,loopend;
+    double ds,wi,wii;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
-    double *wake = malloc(2*sizeof(double));
+    double wake[2];
     double vba, vbp;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
-
+    double totalW = 0;
+    
     for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
         kz[i]=0.0;
@@ -334,21 +333,44 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
     #endif
     for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){  
         ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+        wi = turnhistoryW[i];
+        totalW += wi;
+        
         if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
             for (ii=0;ii<nslice*nbunch*nturns;ii++){
                 ds = turnhistoryZ[i]-turnhistoryZ[ii];
                 if(turnhistoryW[ii]>0.0 && ds>=0){
-                    wi = turnhistoryW[ii];
-                    wake = wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta);       
-                    kz[i-nslice*nbunch*(nturns-1)] += normfact*wi*wake[0];
-                    vbeamk[0] += normfact*wi*wake[0]*energy/nbunch;
-                    vbeamk[1] -= normfact*wi*wake[1]*energy/nbunch;
-                    vbr[ib] += normfact*wi*wake[0]*energy;
-                    vbi[ib] -= normfact*wi*wake[1]*energy;
+                    wii = turnhistoryW[ii];
+                    wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta,wake);       
+                    kz[i-nslice*nbunch*(nturns-1)] += normfact*wii*wake[0];
+                    
+                    vbeamk[0] += normfact*wii*wake[0]*energy*wi;
+                    vbeamk[1] -= normfact*wii*wake[1]*energy*wi;
+                    vbr[ib] += normfact*wii*wake[0]*energy*wi;
+                    vbi[ib] -= normfact*wii*wake[1]*energy*wi;
                 }            
             }
         }
     }
+    
+    vbeamk[0] /= totalW;
+    vbeamk[1] /= totalW;
+    
+    for(i=0;i<nbunch;i++){
+        totalW = 0.0;
+        loopstart = nslice*nbunch*(nturns-1) + i*nslice;
+        loopend = loopstart + nslice;
+        for(ii=loopstart;ii<loopend;ii++){
+            totalW += turnhistoryW[ii];
+        }
+        
+        double vr = vbr[i]/totalW;
+        double vi = vbi[i]/totalW;
+        vbr[i] = sqrt(vr*vr+vi*vi); 
+        vbi[i] = atan2(vi,vr);
+    }
+
+
     #ifdef MPI
     MPI_Allreduce(MPI_IN_PLACE,kz,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbeamk,2,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -356,71 +378,90 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
     MPI_Allreduce(MPI_IN_PLACE,vbi,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
+
     vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1]);   
     vbp = atan2(vbeamk[1],vbeamk[0]);
     vbeamk[0] = vba;
     vbeamk[1] = vbp;
-    for(i=0;i<nbunch;i++){
-        double vr = vbr[i];
-        double vi = vbi[i];
-        vbr[i] = sqrt(vr*vr+vi*vi); 
-        vbi[i] = atan2(vi,vr);
-    }
-    free(wake);
 };
 
 
-void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
+static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
                           double normfact, double *kz,double freq, double qfactor,
                           double rshunt, double *vbeam, double circumference,
                           double energy, double beta, double *vbeamk, double *vbunch){  
     #ifndef _MSC_VER  
-    int i,ib;
+    int i,ib,it,is;
     double wi;
+    double selfkick;
+    int sliceperturn = nslice*nbunch;
     double dt =0.0;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
     double omr = TWOPI*freq;
     double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
     double complex vbeamkc = 0.0;
-    double kick = rshunt*omr/(2*qfactor);
+    double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
+    double totalW=0.0;
     
-    for (i=0;i<nslice*nbunch;i++) {
+    for (i=0;i<sliceperturn;i++) {
         ib = (int)(i/nslice);
         kz[i]=0.0;
         vbr[ib] = 0.0;
         vbi[ib] = 0.0;
     }
     
-    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){
-        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+    for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
+        ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
-        if(i==nslice*nbunch*(nturns-1)){
+        selfkick = normfact*wi*kloss*energy;
+
+        if(i==sliceperturn*(nturns-1)){
+            /*At the end of the turn, the vbeamc is
+            reverted to -final value, which stores the
+            dt information from previous turn. This extra
+            circumference is needed to take this into account. */
             dt = (circumference+turnhistoryZ[i])/bc;
         }else{
+            /* This is dt between each slice*/
             dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
         }      
-        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
-        vbeamkc += vbeamc+normfact*wi*kick*energy;
-        vbr[ib] += creal(vbeamc+normfact*wi*kick*energy);
-        vbi[ib] += cimag(vbeamc+normfact*wi*kick*energy);
-        kz[i-nslice*nbunch*(nturns-1)] = creal(vbeamc/energy+normfact*wi*kick);
-        vbeamc += 2*normfact*wi*kick*energy;    
+        
+        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);   
+        
+        /*vbeamkc is average kick i.e. average vbeam*/   
+        vbeamkc += (vbeamc+selfkick)*wi;
+        totalW += wi;
+        kz[i-sliceperturn*(nturns-1)] = creal((vbeamc + selfkick)/energy);
+                
+        vbr[ib] += creal((vbeamc + selfkick)*wi);
+        vbi[ib] += cimag((vbeamc + selfkick)*wi);
+
+        vbeamc += 2*selfkick;    
     }
-    dt = -turnhistoryZ[nslice*nbunch*nturns-1]/bc;
-    vbeamc = vbeamc*cexp((I*omr-omr/(2*qfactor))*dt);
+    
+    /*This takes the vbeam backwards in time to effectively store the
+    final slice position */
+    dt = -turnhistoryZ[sliceperturn*nturns-1]/bc;    
+    vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+
     vbeam[0] = cabs(vbeamc);
     vbeam[1] = carg(vbeamc); 
-    vbeamkc = vbeamkc/nslice/nbunch;
+    
+    vbeamkc /= (totalW);
     vbeamk[0] = cabs(vbeamkc);
     vbeamk[1] = carg(vbeamkc);   
     
     for(i=0;i<nbunch;i++){
-        double vr = vbr[i]/nslice;
-        double vi = vbi[i]/nslice;
+        totalW = 0.0;
+        for(is=nslice*i;is<nslice*(i+1);is++){
+            totalW += turnhistoryW[is];
+        }
+        double vr = vbr[i]/totalW;
+        double vi = vbi[i]/totalW;
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
@@ -428,7 +469,7 @@ void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistor
 };
 
 
-void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
+static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
     double vbeamr = vbeam[0]*cos(vbeam[1]);
     double vbeami = vbeam[0]*sin(vbeam[1]);
     double vcavr = vcav[0]*cos(vcav[1]);

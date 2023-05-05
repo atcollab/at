@@ -78,6 +78,7 @@ NE = length(LATTICE);
 varargs=getdparg(varargs);
 [dp,varargs]=getoption(varargs,'dp',0.0);
 [dpargs,varargs]=getoption(varargs,{'dct','df'});
+[~,varargs]=getoption(varargs,'is_6d',[]); % Consume the is_6d option
 [refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU>
 
 if islogical(refpts)
