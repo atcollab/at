@@ -314,6 +314,23 @@ Beam Loading
 
 An IPAC paper that covers the theory used for the beam loading module can be found in [5]. Only the main functionalities will be mentioned here.
 
+To consider beam loading in an rf cavity, a loaded shunt impedance :math:`R_{s}` and a loaded quality factor :math:`Q_{L}` must be defined. There are two different wake methods available, either the phasor model or the wake model (**BLMode.PHASOR** or **BLMode.WAKE**). The phasor model considers only the present turn, and keeps track of a running voltage and phase. The wake model saves a turn history of length **Nturns** and recomputes the full kick in the same way as the **LongResonator** element. A total and bunch by bunch beam induced voltage and phase is also computed and made available. The phasor model is more appropriate for high-Q resonators, as the wake model would require many turns to be accurate and increases computation time. 
+
+To intialise the beam loading element, the function **add_beamloading** must be applied a lattice object. This will convert the specified Cavity Element to a **BeamLoadingElement**. This can be done as follows
+
+.. code:: ipython3
+
+    from at.collective import BeamLoadingElement, add_beamloading, BLMode
+    
+    mode = BLMode.PHASOR
+    add_beamloading(fring, qfactor, rshunt,
+                    mode=mode, Nslice=1,
+                    VoltGain=0.01, PhaseGain=0.01)
+    
+An additional keyword argument **cavpts** can be given to specifically transfer one cavity element to a beam loading element. The **VoltGain** and **PhaseGain** are parameters to be tuned for the feedback. In summary, there is a cavity phase and amplitude set point, and a computed beam voltage and phase. The generator voltage and phase is calculated in order to ensure that the cavity set points are reached. The gain values specified here dictate what percentage of the difference is applied. If this number is too large, stability issues may arise. 
+
+
+    
 
 
 Bibliography
