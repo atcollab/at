@@ -38,6 +38,17 @@ function [orb6,orbitin] = findorbit6(ring,varargin)
 %   from the range 1 to length(RING)+1.
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
+% FINDORBIT6(...,'dp',DP)
+%   Specify the off-momentum. The RF frequency will be adjusted to get the
+%   desired value
+%
+% FINDORBIT6(...,'dct',DCT)
+%   Specify the path lengthening. The RF frequency will be adjusted to get
+%   the desired value
+%
+% FINDORBIT6(...,'df',DF)
+%   Specify the RF frequency deviation
+%
 % FINDORBIT6(RING,REFPTS,GUESS)
 % FINDORBIT6(...,'guess',GUESS)     The search for the fixed point
 %	starts from initial condition GUESS. Otherwise the search starts from
@@ -56,22 +67,27 @@ function [orb6,orbitin] = findorbit6(ring,varargin)
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[orbitin,varargs]=getoption(varargin,'orbit',[]);
-[refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
-if isempty(orbitin)
-    orbitin=xorbit_6(ring,varargs{:});
-    args={'KeepLattice'};
-else
-    args={};
-end
+[orb6,orbitin] = frequency_control(@xfindorbit6,ring,varargin{:});
 
-if islogical(refpts)
-    refpts=find(refpts);
-end
-if isempty(refpts)
-    % return only the fixed point at the entrance of RING{1}
-    orb6=orbitin;
-else
-    orb6 = linepass(ring,orbitin,refpts,args{:});
-end
+    function[orb6,orbitin] = xfindorbit6(ring,varargin)
+        [orbitin,varargs]=getoption(varargin,'orbit',[]);
+        [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+        [~,varargs]=getoption(varargs,'is_6d',[]); %% Consume the is_6d option
+        if isempty(orbitin)
+            orbitin=xorbit_6(ring,varargs{:});
+            args={'KeepLattice'};
+        else
+            args={};
+        end
+
+        if islogical(refpts)
+            refpts=find(refpts);
+        end
+        if isempty(refpts)
+            % return only the fixed point at the entrance of RING{1}
+            orb6=orbitin;
+        else
+            orb6 = linepass(ring,orbitin,refpts,args{:});
+        end
+    end
 end

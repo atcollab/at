@@ -88,7 +88,7 @@ def set_ring_orbit(ring, dp, obspt, orbit):
 
 
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
-                       shift_zero=1.0e-9):
+                       shift_zero=1.0e-6):
     """
     Return a grid configuration based on user input parameters, the ordering
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
@@ -156,9 +156,7 @@ def get_parts(config, offset):
         g = get_part_grid_radial(bnd, np, amp)
     parts = numpy.zeros((6, numpy.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
-    if len(pind) == 2:
-        parts[pind[0]][parts[pind[1]] == 0.0] += config.shift_zero
-        parts[pind[1]][parts[pind[0]] == 0.0] += config.shift_zero
+    offset += config.shift_zero
     parts = (parts.T+offset).T
     return parts, grid(g, offset[pind])
 

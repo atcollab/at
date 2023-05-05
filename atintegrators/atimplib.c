@@ -260,7 +260,7 @@ static void compute_kicks(int nslice,int nturns,int nelem,
 };
 
 
-static double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
+static void wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
 
     double omega, alpha, omegabar;
     wake[0] = 0.0;
