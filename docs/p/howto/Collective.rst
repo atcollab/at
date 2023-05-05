@@ -120,13 +120,16 @@ Now we can define a longitudinal resonator by calling the LongResonatorElement f
 
     from at.collective.wake_elements import LongResonatorElement
 
+    current = 0.1   # A
+    ring.beam_current = current
+
     f_resonator = ring.get_rf_frequency() - 5e4
     qfactor = 4500
     rshunt = 6e6
-    current = 0.1   # A
+
     Nslice = 1
     welem = LongResonatorElement('LongitudinalResonator', ring, srange, f_resonator, qfactor, rshunt, Nturns=wturns, Nslice=Nslice)
-    welem.Current = current
+
     
 Finally we can append this to the fast ring
 
@@ -330,7 +333,7 @@ To intialise the beam loading element, the function **add_beamloading** must be 
 An additional keyword argument **cavpts** can be given to specifically transfer one cavity element to a beam loading element. The **VoltGain** and **PhaseGain** are parameters to be tuned for the feedback. In summary, there is a cavity phase and amplitude set point, and a computed beam voltage and phase. The generator voltage and phase is calculated in order to ensure that the cavity set points are reached. The gain values specified here dictate what percentage of the difference is applied. If this number is too large, stability issues may arise. 
 
 
-    
+
 
 
 Bibliography
