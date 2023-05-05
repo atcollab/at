@@ -132,7 +132,6 @@ def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
     rp.E0 = E0
     rp.U0 = U0
     emitx = Cq * gamma2 * rp.i5 / Jx / rp.i2
-    rp.emittances = numpy.array([emitx, nan, nan])
     alphac = rp.i1 / circumference
     etac = 1.0/gamma2 - alphac
     rp.phi_s = (pi - asin(U0 / voltage)) if U0 <= voltage else nan
@@ -144,6 +143,7 @@ def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
     rp.J = damping_partition_numbers
     rp.sigma_e = sqrt(Cq * gamma2 * rp.i3 / Je / rp.i2)
     rp.sigma_l = beta * abs(etac) * circumference / 2.0 / pi / nus * rp.sigma_e
+    rp.emittances = numpy.array([emitx, nan, rp.sigma_e*rp.sigma_l])
     ringtunes, _ = numpy.modf(ring.periodicity * ringdata.tune)
     if len(ringtunes) < 3:
         rp.tunes = numpy.concatenate((ringtunes, (nus,)))
