@@ -1,19 +1,11 @@
 """
 Tracking functions
 """
-
-# noinspection PyUnresolvedReferences
-from .atpass import isopenmp, ismpi
+from ..lattice import DConstant
+from .atpass import reset_rng, common_rng, thread_rng
 from .patpass import patpass
 from .track import *
 from .particles import *
-# noinspection PyProtectedMember
-from ..lattice.options import _Dst
-
-if ismpi():
-    # if AT is compiled with mpicc this is required
-    # noinspection PyUnresolvedReferences
-    from mpi4py import MPI
-
-_Dst.openmp = property(lambda self: isopenmp())
-_Dst.mpi = property(lambda self: ismpi())
+from .utils import *
+# initialise the C random generators
+reset_rng(DConstant.rank)

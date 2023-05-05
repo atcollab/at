@@ -10,23 +10,30 @@ from .orbit import Orbit, find_orbit
 from .linear import get_tune, get_chrom, linopt6
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
+__all__ = ['detuning', 'chromaticity', 'gen_detuning_elem', 'tunes_vs_amp']
 
 
 def tunes_vs_amp(ring: Lattice, amp: Optional[Sequence[float]] = None,
-                 dim: Optional[int] = 0, window=1,
-                 nturns: Optional[int] = 512) -> numpy.ndarray:
+                 dim: Optional[int] = 0, nturns: Optional[int] = 512,
+                 **kwargs) -> numpy.ndarray:
     r"""Generates a range of tunes for varying x, y, or z amplitudes
 
     Parameters:
         ring:               Lattice description
-        amp:                Oscillation amplitude. Default: tunes from
-          :py:func:`.linopt6`
+        amp:                Oscillation amplitude. If amp is None the
+                            tunes are calculated from :py:func:`.linopt6`
+                            else tracking is used
         dim:                Coordinate index of the oscillation
         nturns:             Number of turns
+        method:             ``'laskar'`` or ``'fft'``. Default: ``'laskar'``
+        num_harmonics:      Number of harmonic components to compute (before
+                            mask applied)
+        fmin:               Lower bound for tune
+        fmax:               Upper bound for tune
+        hann:               Turn on Hanning window. Default: :py:obj:`False`
 
     Returns:
-        tunes (ndarray):    Array of tunes
+        tunes (ndarray):    Array of tunes qx, qy with shape (len(amp), 2)
     """
 
     def _gen_part(ring, amp, dim, orbit, ld, nturns):
@@ -57,8 +64,8 @@ def tunes_vs_amp(ring: Lattice, amp: Optional[Sequence[float]] = None,
 
     if amp is not None:
         partx, party = _gen_part(ring, amp, dim, orbit, l0, nturns)
-        qx = get_tunes_harmonic(partx, method='laskar')
-        qy = get_tunes_harmonic(party, method='laskar')
+        qx = get_tunes_harmonic(partx, **kwargs)
+        qy = get_tunes_harmonic(party, **kwargs)
         tunes = numpy.vstack((qx, qy)).T
 
     return numpy.array(tunes)
@@ -66,29 +73,37 @@ def tunes_vs_amp(ring: Lattice, amp: Optional[Sequence[float]] = None,
 
 def detuning(ring: Lattice,
              xm: Optional[float] = 0.3e-4, ym: Optional[float] = 0.3e-4,
-             npoints: Optional[int] = 3, window: Optional[int] = 1,
-             nturns: Optional[int] = 512):
+             npoints: Optional[int] = 3,
+             nturns: Optional[int] = 512, **kwargs):
     """Computes the tunes for a sequence of amplitudes
 
     This function uses :py:func:`tunes_vs_amp` to compute the tunes for
     the specified amplitudes. Then it fits this data and returns
-    result for dQx/dx, dQy/dx, dQx/dy, dQy/dy
+    the detuning coefficiant dQx/dx, dQy/dx, dQx/dy, dQy/dy and the
+    qx, qy arrays versus x, y arrays
 
     Parameters:
         ring:       Lattice description
         xm:         Maximum x amplitude
         ym:         Maximum y amplitude
         npoints:    Number of points in each plane
-        window:
         nturns:     Number of turns for tracking
+        method:     ``'laskar'`` or ``'fft'``. Default: ``'laskar'``
+        num_harmonics:  Number of harmonic components to compute
+                       (before mask applied)
+        fmin:       Lower bound for tune
+        fmax:       Upper bound for tune
+        hann:       Turn on Hanning window. Default: :py:obj:`False`
 
     Returns:
-        q0 (ndarray):
-        q1 (ndarray):
-        x (ndarray):          x amplitudes
-        q_dx (ndarray):
-        y (ndarray):          y amplitudes
-        q_dy (ndarray):
+        q0 (ndarray): qx, qy from horizontal and vertical amplitude scans.
+                      Fit results with shape (2, 2)
+        q1 (ndarray): Amplitude detuning coefficients with shape (2, 2)
+                      ``[[dQx/dx, dQy/dx], [dQx/dy, dQy/dy]]``
+        x (ndarray): x amplitudes (npoints, )
+        q_dx (ndarray): qx, qy tunes as a function of x amplitude (npoints, 2)
+        y (ndarray): y amplitudes (npoints, )
+        q_dy (ndarray): qx, qy tunes as a function of y amplitude (npoints, 2)
     """
     lindata0, _, _ = linopt6(ring)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
@@ -98,11 +113,14 @@ def detuning(ring: Lattice,
     x2 = x * x
     y2 = y * y
 
-    q_dx = tunes_vs_amp(ring, amp=x, dim=0, window=window, nturns=nturns)
-    q_dy = tunes_vs_amp(ring, amp=y, dim=2, window=window, nturns=nturns)
+    q_dx = tunes_vs_amp(ring, amp=x, dim=0, nturns=nturns, **kwargs)
+    q_dy = tunes_vs_amp(ring, amp=y, dim=2, nturns=nturns, **kwargs)
 
-    fx = numpy.polyfit(x2, q_dx, 1)
-    fy = numpy.polyfit(y2, q_dy, 1)
+    idx = numpy.isfinite(q_dx[:, 0]) & numpy.isfinite(q_dx[:, 1])
+    idy = numpy.isfinite(q_dy[:, 0]) & numpy.isfinite(q_dy[:, 1])
+
+    fx = numpy.polyfit(x2[idx], q_dx[idx], 1)
+    fy = numpy.polyfit(y2[idy], q_dy[idy], 1)
 
     q0 = [[fx[1, 0], fx[1, 1]],
           [fy[1, 0], fy[1, 1]]]
@@ -138,7 +156,10 @@ def chromaticity(ring: Lattice, method: Optional[str] = 'linopt',
         dp:         Central momentum deviation
 
     Returns:
-        (fitx, fity), dpa, qz
+        fit (ndarray): Horizontal Vertical polynomial coefficients
+                       from ``numpy.polyfit`` of shape (2, order+1)
+        dpa: dp array of shape (npoints,)
+        qz: tune array of shape (npoints, 2)
     """
     if order == 0:
         return get_chrom(ring, dp=dp, **kwargs)

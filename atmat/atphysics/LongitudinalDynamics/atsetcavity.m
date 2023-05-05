@@ -15,17 +15,20 @@ function ring = atsetcavity(ring,varargin)
 %   Set the cavity frequency to the nominal value according to
 %   circumference and harmonic number
 %
-%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dp',dp)
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dp',DP)
 %   Set the cavity frequency to the nominal value for the specified dp
 %
-%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dct',dct)
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dct',DCT)
 %   Set the cavity frequency to the nominal value for the specified dct
+%
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','df',DF)
+%   Set the cavity frequency to the nominal value + df
 %
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
 %   Set the total voltage (all cells) [V]
 %   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
 %
-%NEWRING=ATSETCAVITY(RING,...,'HarmNumber',h,...)
+%NEWRING=ATSETCAVITY(RING,...,'HarmNumber',H,...)
 %   Set the harmonic number
 %
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
@@ -61,7 +64,7 @@ function ring = atsetcavity(ring,varargin)
 %     on radflag says whether or not we want radiation on, which affects
 %     synchronous phase.
 %
-%  See also atSetCavityPhase, atsetRFcavity, atradon, atradoff, atgetU0
+%  See also atSetCavityPhase, atsetRFcavity, atenable_6d, atdisable_6d, atgetU0
 
 % Speed of light
 CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
@@ -74,6 +77,7 @@ CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 [timelag,varargs]=getoption(varargs, 'TimeLag', []);
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [dct,varargs]=getoption(varargs,'dct',NaN);
+[df,varargs]=getoption(varargs,'df',NaN);
 
 if isempty(cavpts)
     [ncells,cell_h,beta0,cavpts]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta','cavpts');
@@ -96,7 +100,10 @@ if isempty(varargs)             % New syntax
         lcell=findspos(ring,length(ring)+1);
         frev=beta0*CLIGHT/lcell;
         if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            if isfinite(dct)
+            hh=props_harmnumber(harmcell,cell_h);
+            if isfinite(df)
+                frev = frev + df/hh;
+            elseif isfinite(dct)
                 frev=frev * lcell/(lcell+dct);
             elseif isfinite(dp)
                 % Find the path lengthening for dp
@@ -106,7 +113,7 @@ if isempty(varargs)             % New syntax
                 dct=orbitout(6);
                 frev=frev * lcell/(lcell+dct);
             end
-            frequency = frev * props_harmnumber(harmcell,cell_h);
+            frequency = hh * frev;
         else
             harmcell=round(frequency/frev);
         end
@@ -138,9 +145,9 @@ else                            % Old syntax, for compatibility
     if radflag
         U0=atgetU0(ring);
         timelag= (lcell/(2*pi*harmcell))*asin(U0/vring);
-        ring=atradon(ring);  % set radiation on. nothing if radiation is already on
+        ring=atenable_6d(ring);  % set radiation on. nothing if radiation is already on
     else
-        ring=atradoff(ring,'RFCavityPass');  % set radiation off. nothing if radiation is already off
+        ring=atdisable_6d(ring,'cavipass','RFCavityPass');  % set radiation off and turn on cavities
         timelag=0;
     end
     ring=atsetfieldvalues(ring, cavpts, 'TimeLag', timelag);

@@ -13,6 +13,7 @@
 #include <stdbool.h> 
 #include <math.h>
 #include <float.h>
+#include <atrandom.c>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
@@ -63,6 +64,10 @@ static PyObject **kwargs_list = NULL;
 static char integrator_path[300];
 static PyObject *particle_type;
 static PyObject *element_type;
+
+/* state buffers for RNGs */
+static pcg32_random_t common_state = COMMON_PCG32_INITIALIZER;
+static pcg32_random_t thread_state = THREAD_PCG32_INITIALIZER;
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
@@ -395,6 +400,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
 
+    param.common_rng=&common_state;
+    param.thread_rng=&thread_state;
     param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;       
@@ -683,46 +690,51 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     return (PyObject *) rin;
 }
 
-
-static PyObject *isopenmp(PyObject *self)
+static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-#ifdef _OPENMP
-    Py_RETURN_TRUE;
-#else
-    Py_RETURN_FALSE;
-#endif /*_OPENMP)*/
+    static char *kwlist[] = {"rank", "seed", NULL};
+    uint64_t rank = 0;
+    uint64_t seed = AT_RNG_STATE;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|K$K", kwlist,
+        &rank, &seed)) {
+        return NULL;
+    }
+    pcg32_srandom_r(&common_state, seed, AT_RNG_INC);
+    pcg32_srandom_r(&thread_state, seed, rank);
+    Py_RETURN_NONE;
 }
 
-
-static PyObject *ismpi(PyObject *self)
+static PyObject *common_rng(PyObject *self)
 {
-#ifdef MPI
-    Py_RETURN_TRUE;
-#else
-    Py_RETURN_FALSE;
-#endif /*MPI)*/
+    double drand = atrandd_r(&common_state);
+    return Py_BuildValue("d", drand);
 }
 
+static PyObject *thread_rng(PyObject *self)
+{
+    double drand = atrandd_r(&thread_state);
+    return Py_BuildValue("d", drand);
+}
 
-/* Boilerplate to register methods. */
+/* Method table */
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("atpass(line: Sequence[Element], rin, n_turns: int, refpts: Uint32_refs = [], "
+    PyDoc_STR("atpass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
               "reuse: Optional[bool] = False, omp_num_threads: Optional[int] = 0)\n\n"
-              "Track input particles rin along line for nturns turns.\n"
+              "Track input particles r_in along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
               "Parameters:\n"
               "    line:    list of elements\n"
               "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
               "      On return, rin contains the final coordinates of the particles\n"
               "    n_turns: number of turns to be tracked\n"
-              "    refpts:  numpy array of indices of elements where output is desired\n\n"
-              "      0 means entrance of the first element\n\n"
-              "      len(line) means end of the last element\n"
+              "    refpts:  numpy array of indices of elements where output is desired\n"
+              "       0 means entrance of the first element\n"
+              "       len(line) means end of the last element\n"
               "    energy:  nominal energy [eV]\n"
-              "    rest_energy:  rest_energy of the particle [eV]\n"
-              "    charge:  particle charge [elementary charge]\n"
+              "    particle (Optional[Particle]):  circulating particle\n"
               "    reuse:   if True, use previously cached description of the lattice.\n"
               "    omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
               "    losses:  if True, process losses\n\n"
@@ -732,24 +744,30 @@ static PyMethodDef AtMethods[] = {
               ":meta private:"
               )},
     {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("elempass(element, rin)\n\n"
-              "Track input particles rin through a single element.\n\n"
+    PyDoc_STR("elempass(element, r_in)\n\n"
+              "Track input particles r_in through a single element.\n\n"
               "Parameters:\n"
-              "    element: AT element\n"
+              "    element (Element):   AT element\n"
               "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
               "      On return, rin contains the final coordinates of the particles\n"
-              "    energy:  nominal energy [eV]\n"
-              "    rest_energy:  rest_energy of the particle [eV]\n"
-              "    charge:  particle charge [elementary charge]\n\n"
+              "    energy (float):      nominal energy [eV]\n"
+              "    particle (Optional[Particle]):  circulating particle\n\n"
               ":meta private:"
             )},
-    {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
-    PyDoc_STR("isopenmp()\n\n"
-              "Return whether OpenMP is active.\n"
+    {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("reset_rng(rank=0, seed=None)\n\n"
+              "Reset the *common* and *thread* random generators.\n\n"
+              "Parameters:\n"
+              "    rank (int):    thread identifier (for MPI and python multiprocessing)\n"
+              "    seed (int):    single seed for both generators\n"
+            )},
+    {"common_rng",  (PyCFunction)common_rng, METH_NOARGS,
+    PyDoc_STR("common_rng()\n\n"
+              "Return a double from the *common* generator .\n"
              )},
-    {"ismpi",  (PyCFunction)ismpi, METH_NOARGS,
-    PyDoc_STR("ismpi()\n\n"
-              "Return whether MPI is active.\n"
+    {"thread_rng",  (PyCFunction)thread_rng, METH_NOARGS,
+    PyDoc_STR("thread_rng()\n\n"
+              "Return a double from the *thread* generator .\n"
              )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };

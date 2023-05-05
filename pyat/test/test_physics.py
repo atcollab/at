@@ -241,9 +241,9 @@ def test_linopt_no_refpts(dba_lattice):
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
 
-@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
+@pytest.mark.parametrize('refpts', ([121], [1, 2, 3, 121]))
 def test_linopt_line(hmba_lattice, refpts):
-    refpts.append(len(hmba_lattice))
+#    refpts.append(len(hmba_lattice))
     l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts)
     lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
     assert_close(ld['beta'], ltd['beta'], rtol=1e-12)
@@ -269,7 +269,7 @@ def test_nl_detuning_chromaticity(hmba_lattice):
     nlqpharm, _, _ = at.nonlinear.chromaticity(hmba_lattice,
                                                method='laskar', npoints=11)
     q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
-                                               npoints=11, window=1)
+                                               npoints=11)
     assert_close(nlqplin, [[0.38156741, 0.17908231, 1.18656034, -16.47368694],
                            [0.85437409, 0.1224062, 2.01744075, -3.06407764]],
                  atol=1e-12, rtol=1e-5)

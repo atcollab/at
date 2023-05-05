@@ -1,7 +1,7 @@
 /* CorrectorPass.c 
    Accelerator Toolbox 
    Revision 10/11/01
-   A.Terebilo terebilo@ssrl.slac.stanford.edu
+   A.Terebilo
    CorrectorPass expects an element to have a fields:
    Length, KickAngle
 */

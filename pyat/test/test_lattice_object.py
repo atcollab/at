@@ -1,4 +1,5 @@
 import numpy
+from numpy.testing import assert_allclose, assert_equal
 import pytest
 from at import elements
 from at.lattice import Lattice, AtWarning, AtError
@@ -171,3 +172,36 @@ def test_radiation_state_errors(hmba_lattice):
         hmba_lattice.get_mcf()
     hmba_lattice.disable_6d()
     hmba_lattice.get_mcf()
+
+@pytest.mark.parametrize('ring',
+                         [pytest.lazy_fixture('hmba_lattice')])
+def test_develop(ring):
+    newring = ring.develop()
+    assert_allclose(ring.circumference, newring.circumference)
+    assert_allclose(ring.rf_voltage, newring.rf_voltage)
+    assert_allclose(ring.revolution_frequency*ring.harmonic_number,
+                    newring.revolution_frequency*newring.harmonic_number)
+    rp1 = ring.radiation_parameters()
+    rp2 = newring.radiation_parameters()
+    assert_allclose(rp1.fulltunes, rp2.fulltunes)
+    assert_allclose(rp1.U0, rp2.U0)
+
+@pytest.mark.parametrize('ring',
+                         [pytest.lazy_fixture('hmba_lattice')])
+def test_operators(ring):
+    newring1 = ring + ring
+    newring2 = ring.concatenate(ring, copy=True)
+    assert_equal(len(newring1), len(ring)*2)
+    assert_equal(len(newring2), len(ring) * 2)
+    newring1 += ring
+    newring2.concatenate(ring, copy=False)
+    assert_equal(len(newring1), len(ring)*3)
+    assert_equal(len(newring2), len(ring)*3)
+    newring1 = ring * 2
+    newring2 = ring.repeat(2)
+    assert_equal(len(newring1), len(ring)*2)
+    assert_equal(len(newring2), len(ring) * 2)
+    assert_equal(newring1.harmonic_number, ring.harmonic_number)
+    newring1 = ring.reverse(copy=True)
+    assert_equal(newring1[-1].FamName, ring[0].FamName)
+

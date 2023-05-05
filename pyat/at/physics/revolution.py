@@ -1,54 +1,23 @@
-from ..lattice import Lattice, get_rf_frequency, check_radiation, get_s_pos
+from ..lattice import Lattice, get_rf_frequency, check_6d, get_s_pos
 from ..lattice import DConstant
 from ..constants import clight
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy
-import functools
 from typing import Optional
 
-__all__ = ['frequency_control', 'get_mcf', 'get_slip_factor',
-           'get_revolution_frequency', 'set_rf_frequency']
+__all__ = ['get_mcf', 'get_slip_factor', 'get_revolution_frequency',
+           'set_rf_frequency']
 
 
-def frequency_control(func):
-    """Function to be used as decorator for ``func(ring, *args, **kwargs)``
-
-    If ``ring.radiation`` is :py:obj:`True` **and** ``dp``, ``dct`` or ``df``
-    is specified in ``kwargs``, make a copy of ``ring`` with a modified
-    RF frequency, remove ``dp``, ``dct`` or ``df`` from ``kwargs`` and call
-    ``func`` with the modified ``ring``.
-
-    If ``ring.radiation`` is :py:obj:`False` **or** no ``dp``, ``dct`` or
-    ``df`` is specified in ``kwargs``, ``func`` is called unchanged.
-
-    Examples::
-
-        @frequency_control
-        def func(ring, *args, dp=None, dct=None, **kwargs):
-            pass
-    """
-    @functools.wraps(func)
-    def wrapper(ring, *args, **kwargs):
-        if ring.radiation:
-            momargs = {}
-            for key in ['dp', 'dct', 'df']:
-                v = kwargs.pop(key, None)
-                if v is not None:
-                    momargs[key] = v
-            if len(momargs) > 0:
-                ring = set_rf_frequency(ring, **momargs, copy=True)
-        return func(ring, *args, **kwargs)
-    return wrapper
-
-
-@check_radiation(False)
+@check_6d(False)
 def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
             keep_lattice: bool = False, **kwargs) -> float:
     r"""Compute the momentum compaction factor :math:`\alpha`
 
     Parameters:
-        ring:           Lattice description (radiation must be OFF)
+        ring:           Lattice description (:pycode:`ring.is_6d` must be
+          :py:obj:`False`)
         dp:             Momentum deviation. Defaults to :py:obj:`None`
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: :py:obj:`False`
@@ -75,11 +44,12 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     r"""Compute the slip factor :math:`\eta`
 
     Parameters:
-        ring:           Lattice description (radiation must be OFF)
+        ring:           Lattice description (:pycode:`ring.is_6d` must be
+          :py:obj:`False`)
 
     Keyword Args:
-        dp (Optional[float]):       Momentum deviation
-        DPStep (Optional[float]):       Momentum step size.
+        dp (float):     Momentum deviation
+        DPStep (float): Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
@@ -90,33 +60,39 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     return etac
 
 
-def get_revolution_frequency(ring,
-                             dp: Optional[float] = None,
-                             dct: Optional[float] = None) -> float:
+def get_revolution_frequency(ring: Lattice,
+                             dp: float = None,
+                             dct: float = None,
+                             df: float = None) -> float:
     """Compute the revolution frequency of the full ring [Hz]
 
     Parameters:
         ring:       Lattice description
-        dp:             Momentum deviation. Defaults to :py:obj:`None`
-        dct:            Path lengthening. Defaults to :py:obj:`None`
+        dp:         Momentum deviation. Defaults to :py:obj:`None`
+        dct:        Path lengthening. Defaults to :py:obj:`None`
+        df:         Deviation of RF frequency. Defaults to :py:obj:`None`
 
     Returns:
         frev:       Revolution frequency [Hz]
     """
-    lcell = ring.get_s_pos(len(ring))[0]
-    frev = ring.beta * clight / lcell / ring.periodicity
+    lcell = ring.cell_length
+    cell_frev = ring.beta * clight / lcell
     if dct is not None:
-        frev *= lcell / (lcell + dct)
+        cell_frev *= lcell / (lcell + dct)
     elif dp is not None:
         # Find the path lengthening for dp
-        rnorad = ring.radiation_off(copy=True) if ring.radiation else ring
+        rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
         orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
         dct = numpy.squeeze(orbit)[5]
-        frev *= lcell / (lcell + dct)
-    return frev
+        cell_frev *= lcell / (lcell + dct)
+    elif df is not None:
+        cell_frev += df / ring.cell_harmnumber
+    return cell_frev / ring.periodicity
 
 
-def set_rf_frequency(ring, frequency=None, dp=None, dct=None, **kwargs):
+def set_rf_frequency(ring: Lattice, frequency: float = None,
+                     dp: float = None, dct: float = None, df: float = None,
+                     **kwargs):
     """Set the RF frequency
 
     Parameters:
@@ -124,32 +100,33 @@ def set_rf_frequency(ring, frequency=None, dp=None, dct=None, **kwargs):
         frequency:      RF frequency [Hz]. Default: nominal frequency.
         dp:             Momentum deviation. Defaults to :py:obj:`None`
         dct:            Path lengthening. Defaults to :py:obj:`None`
+        df:             Deviation of RF frequency. Defaults to :py:obj:`None`
 
     Keyword Args:
         cavpts (Optional[Refpts]):  If :py:obj:`None`, look for ring.cavpts, or
           otherwise take all cavities.
-        array (Optional[bool]):     If :py:obj:`False` (default), ``frequency``
+        array (Optional[bool]):     If :py:obj:`False` (default), *frequency*
           is applied to the selected cavities with the lowest frequency. The
           frequency of all the other selected cavities is scaled by the same
           ratio.
 
-          If :py:obj:`True`, directly apply ``frequency`` to the selected
+          If :py:obj:`True`, directly apply *frequency* to the selected
           cavities. The value must be broadcastable to the number of cavities.
         copy (Optional[bool]):     If :py:obj:`True`, returns a shallow copy of
-          ``ring`` with new cavity elements. Otherwise (default), modify
-          ``ring`` in-place
+          *ring* with new cavity elements. Otherwise (default), modify
+          *ring* in-place
     """
     if frequency is None:
-        frequency = ring.get_revolution_frequency(dp=dp, dct=dct) \
+        frequency = get_revolution_frequency(ring, dp=dp, dct=dct, df=df) \
                     * ring.harmonic_number
     return ring.set_cavity(Frequency=frequency, **kwargs)
 
 
 Lattice.mcf = property(get_mcf, doc="Momentum compaction factor")
 Lattice.slip_factor = property(get_slip_factor, doc="Slip factor")
-Lattice.get_revolution_frequency = get_revolution_frequency
 Lattice.get_mcf = get_mcf
 Lattice.get_slip_factor = get_slip_factor
+Lattice.get_revolution_frequency = get_revolution_frequency
 Lattice.set_rf_frequency = set_rf_frequency
 Lattice.rf_frequency = property(get_rf_frequency, set_rf_frequency,
     doc="Fundamental RF frequency [Hz]. The special value "

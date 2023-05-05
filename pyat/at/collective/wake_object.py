@@ -62,6 +62,8 @@ class Wake(object):
     Components may be retrieved using :code:`wake.DX` for example
     """
     def __init__(self, srange):
+        assert len(srange) == len(numpy.unique(srange)), \
+            "srange must contain unique values"            
         self._srange = srange
         self.components = {WakeComponent.DX: None,
                            WakeComponent.DY: None,
@@ -141,6 +143,20 @@ class Wake(object):
 
     def _resonator(self, wcomp, frequency, qfactor, rshunt, beta,
                    yokoya_factor=1):
+        
+        if numpy.amin(self._srange) < 0:
+            raise ValueError("""
+                            Provided srange has negative values.
+                            This is not allowed for the resonator
+                            wake function. Please correct.
+                            """)
+
+        # It is needed to have a point at 0 and 1e-24 to sample properly
+        # the discontinuity in the longitudinal plane
+
+        self._srange = numpy.unique(numpy.concatenate(([0.0, 1e-24],
+                                                        self._srange)))
+
         if wcomp is WakeComponent.Z:
             return long_resonator_wf(self._srange, frequency,
                                      qfactor, rshunt, beta)
@@ -152,6 +168,20 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
     def _reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
+    
+        if numpy.amin(self._srange) < 0:
+            raise ValueError("""
+                            Provided srange has negative values.
+                            This is not allowed for the resistive wall
+                            wake function. Please correct.
+                            """)
+
+        # It is needed to have a point at 0 and 1e-24 to sample properly
+        # the discontinuity in the longitudinal plane (if combining with
+        # longres)
+        self._srange = numpy.unique(numpy.concatenate(([0.0, 1e-24],
+                                                       self._srange)))
+
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))
@@ -223,7 +253,7 @@ class Wake(object):
             >>> Q = 1
             >>> Rs = 1e4
             >>> wake = Wake.long_resonator(srange, freq, Q, Rs, ring.beta)
-        """
+        """ 
         return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
                               rshunt, beta, nelems=nelems)
 

@@ -9,7 +9,7 @@ methods are used by higher-level functions to provide physics results.
 Requirements
 ------------
 
-pyAT supports Python 3.6 to 3.10.
+pyAT supports Python 3.7 to 3.11.
 
 Installation
 ------------

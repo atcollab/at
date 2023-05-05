@@ -261,6 +261,9 @@ def get_tunes_harmonic(cents, method: str = 'laskar',
                                           num_harmonics=num_harmonics,
                                           method=method,
                                           hann=hann)
-        tunes[i] = get_max_spectrum(freq, amp, fmin, fmax)
+        try:                                 
+            tunes[i] = get_max_spectrum(freq, amp, fmin, fmax)
+        except ValueError:
+            tunes[i] = np.nan
 
     return tunes

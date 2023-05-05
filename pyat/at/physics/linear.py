@@ -1,16 +1,18 @@
 """
 Coupled or non-coupled 4x4 linear motion
 """
+from __future__ import annotations
 import numpy
 from math import sqrt, pi, sin, cos, atan2
-from typing import Optional, Callable
+from collections.abc import Callable
 import warnings
 from scipy.linalg import solve
 from ..constants import clight
-from ..lattice import DConstant, get_s_pos, Refpts
-from ..lattice import AtWarning, Lattice, check_radiation
+from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
+from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
+from ..lattice import frequency_control
 from ..tracking import lattice_pass
-from .orbit import Orbit, find_orbit4, find_orbit6
+from .orbit import find_orbit4, find_orbit6
 from .matrix import find_m44, find_m66
 from .amat import a_matrix, jmat, jmatswap
 from .harmonic_analysis import get_tunes_harmonic
@@ -86,7 +88,7 @@ def _closure(m22):
 # noinspection PyShadowingNames,PyPep8Naming
 def _tunes(ring, **kwargs):
     """"""
-    if ring.radiation:
+    if ring.is_6d:
         mt, _ = find_m66(ring, **kwargs)
     else:
         mt, _ = find_m44(ring, **kwargs)
@@ -245,9 +247,10 @@ def _analyze6(mt, ms):
 
 
 # noinspection PyShadowingNames,PyPep8Naming
-def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, orbit=None,
-            twiss_in=None, get_chrom=False, get_w=False, keep_lattice=False,
-            mname='M', add0=(), adds=(), cavpts=None, **kwargs):
+def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
+            orbit=None, twiss_in=None, get_chrom=False, get_w=False,
+            keep_lattice=False, mname='M', add0=(), adds=(), cavpts=None,
+            **kwargs):
     """"""
     def build_sigma(twin, orbit):
         """Build the initial distribution at entrance of the transfer line"""
@@ -313,7 +316,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, orbit=None,
     dp_step = kwargs.get('DPStep', DConstant.DPStep)
     addtype = kwargs.pop('addtype', [])
 
-    if ring.radiation:
+    if ring.is_6d:
         get_matrix = find_m66
         get_orbit = find_orbit6
     else:
@@ -322,7 +325,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
     if twiss_in is None:        # Ring
         if orbit is None:
-            orbit, _ = get_orbit(ring, dp=dp, dct=dct,
+            orbit, _ = get_orbit(ring, dp=dp, dct=dct, df=df,
                                  keep_lattice=keep_lattice, **kwargs)
             keep_lattice = True
         # Get 1-turn transfer matrix
@@ -354,8 +357,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, orbit=None,
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
                            keep_lattice=keep_lattice)
-    # avoid problem if refpts is None
-    spos = ring.get_s_pos(ring.uint32_refpts(refpts))
+    spos = ring.get_s_pos(refpts)
 
     nrefs = orbs.shape[0]
     dms = vps.size
@@ -367,7 +369,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, orbit=None,
         datas = (orbs, ms, spos)
         if get_chrom or get_w:
             f0 = ring.get_rf_frequency(cavpts=cavpts)
-            df = dp_step * ring.radiation_off(copy=True).slip_factor * f0
+            df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
             rgup = ring.set_rf_frequency(f0 + 0.5*df, cavpts=cavpts, copy=True)
             rgdn = ring.set_rf_frequency(f0 - 0.5*df, cavpts=cavpts, copy=True)
             o0up, _ = get_orbit(rgup, guess=orb0, **kwargs)
@@ -435,7 +437,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, orbit=None,
     return elemdata0, beamdata, elemdata
 
 
-@check_radiation(False)
+@check_6d(False)
 def linopt2(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of an uncoupled lattice
 
@@ -453,10 +455,11 @@ def linopt2(ring: Lattice, *args, **kwargs):
           2. an ordered list of such integers without duplicates,
           3. a numpy array of booleans of maximum length len(ring)+1,
              where selected elements are :py:obj:`True`.
-        dp (Optional[float]):   Momentum deviation.
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Orbit): Avoids looking for the closed orbit if is
+        dp (float):             Momentum deviation. Defaults to :py:obj:`None`
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to
+          :py:obj:`None`
+        orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
         get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
@@ -486,7 +489,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     **elemdata** is a record array with fields:
@@ -501,19 +504,18 @@ def linopt2(ring: Lattice, *args, **kwargs):
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
                         (modulo :math:`2\pi`)
-    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+    **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
-    Field values can be obtained with either
-    ``lindata['idx']`` or ``lindata.idx``
+    Field values can be obtained with either *lindata['idx']* or *lindata.idx*
 
     **ringdata** is a record array with fields:
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
                         :py:obj:`True`
     =================   ======
 
@@ -531,7 +533,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
     return _linopt(ring, _analyze2, *args, **kwargs)
 
 
-@check_radiation(False)
+@check_6d(False)
 def linopt4(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a H/V coupled lattice
 
@@ -551,10 +553,11 @@ def linopt4(ring: Lattice, *args, **kwargs):
           2. an ordered list of such integers without duplicates,
           3. a numpy array of booleans of maximum length len(ring)+1,
              where selected elements are :py:obj:`True`.
-        dp (Optional[float]):   Momentum deviation.
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Orbit): Avoids looking for the closed orbit if is
+        dp (float):             Momentum deviation. Defaults to :py:obj:`None`
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to
+          :py:obj:`None`
+        orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
         get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
@@ -577,13 +580,6 @@ def linopt4(ring: Lattice, *args, **kwargs):
           dispersion
             Optional (6,) array, default 0
 
-          alpha, beta
-            mandatory (2,) arrays
-          closed_orbit
-            Optional (6,) array, default 0
-          dispersion
-            Optional (6,) array, default 0
-
           If present, the attribute **R** will be used, otherwise the
           attributes **alpha** and **beta** will be used. All other attributes
           are ignored.
@@ -591,7 +587,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     **elemdata** is a record array with fields:
@@ -608,19 +604,19 @@ def linopt4(ring: Lattice, *args, **kwargs):
                         (modulo :math:`2\pi`)
     **gamma**           gamma parameter of the transformation to
                         eigenmodes [7]_
-    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+    **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
     Field values can be obtained with either
-    ``lindata['idx']`` or ``lindata.idx``
+    *lindata['idx']* or *lindata.idx*
 
     **ringdata** is a record array with fields:
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
                         :py:obj:`True`
     =================   ======
 
@@ -638,13 +634,14 @@ def linopt4(ring: Lattice, *args, **kwargs):
     return _linopt(ring, _analyze4, *args, **kwargs)
 
 
+@frequency_control
 def linopt6(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a fully coupled lattice using normal modes
 
     For circular machines, :py:func:`linopt6` analyses
 
-    * the 4x4 1-turn transfer matrix if radiation is OFF, or
-    * the 6x6 1-turn transfer matrix if radiation is ON.
+    * the 4x4 1-turn transfer matrix if *ring* is 4D, or
+    * the 6x6 1-turn transfer matrix if  *ring* is 6D.
 
     For a transfer line, The "twiss_in" intput must contain either:
 
@@ -665,10 +662,11 @@ def linopt6(ring: Lattice, *args, **kwargs):
           2. an ordered list of such integers without duplicates,
           3. a numpy array of booleans of maximum length len(ring)+1,
              where selected elements are :py:obj:`True`.
-        dp (Optional[float]):   Momentum deviation.
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Orbit): Avoids looking for the closed orbit if is
+        dp (float):             Momentum deviation. Defaults to :py:obj:`None`
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to
+          :py:obj:`None`
+        orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
         get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
@@ -694,12 +692,12 @@ def linopt6(ring: Lattice, *args, **kwargs):
           If present, the attribute **R** will be used, otherwise the
           attributes **alpha** and **beta** will be used. All other attributes
           are ignored.
-        cavpts (Optional[Refpts]):  Cavity location for off-momentum tuning
+        cavpts (Refpts):        Cavity location for off-momentum tuning
 
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     **elemdata** is a record array with fields:
@@ -716,19 +714,19 @@ def linopt6(ring: Lattice, *args, **kwargs):
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
                         (modulo :math:`2\pi`)
-    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+    **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
     Field values can be obtained with either
-    ``lindata['idx']`` or ``lindata.idx``
+    *lindata['idx']* or *lindata.idx*
 
     **ringdata** is a record array with fields:
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
                         :py:obj:`True`
     **damping_time**    Damping times [s] (only if radiation is ON)
     =================   ======
@@ -747,42 +745,43 @@ def linopt6(ring: Lattice, *args, **kwargs):
 def linopt_auto(ring: Lattice, *args, **kwargs):
     """
     This is a convenience function to automatically switch to the faster
-    :py:func:`linopt2` in case coupled=:py:obj:`False` **and**
-    ring.radiation=:py:obj:`False`. Otherwise the default :py:func:`linopt6`
-    is used
+    :py:func:`linopt2` in case the *coupled* keyword argument is
+    :py:obj:`False` **and** ring.is_6d is :py:obj:`False`.
+    Otherwise the default :py:func:`linopt6` is used
 
     Parameters: Same as :py:func:`.linopt2` or :py:func:`.linopt6`
 
     Keyword Args;
         coupled (bool):     If set to :py:obj:`False`, H/V coupling
-          will be ignored to simplify the calculation, needs radiation OFF
+          will be ignored to simplify the calculation (needs ring.is_6d
+          :py:obj:`False`)
 
 
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     Warning:
         The output varies depending whether :py:func:`.linopt2` or
         :py:func:`.linopt6` is called. To be used with care!
     """
-    if not (kwargs.pop('coupled', True) or ring.radiation):
+    if not (kwargs.pop('coupled', True) or ring.is_6d):
         return linopt2(ring, *args, **kwargs)
     else:
         return linopt6(ring, *args, **kwargs)
 
 
-def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
-               dp: Optional[float] = None,
+def get_optics(ring: Lattice, refpts: Refpts = None,
+               dp: float = None,
                method: Callable = linopt6,
                **kwargs):
     """Linear analysis of a fully coupled lattice
 
     Parameters:
-        ring:   Lattice description.
-        refpts (Optional[Refpts]): Elements at which data is returned.
+        ring:                   Lattice description.
+        refpts:                 Elements at which data is returned.
           It can be:
 
           1. an integer in the range [-len(ring), len(ring)-1]
@@ -792,8 +791,8 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
           2. an ordered list of such integers without duplicates,
           3. a numpy array of booleans of maximum length len(ring)+1,
              where selected elements are :py:obj:`True`.
-        dp (Optional[float]):   Momentum deviation.
-        method (Callable):  Method for linear optics:
+        dp:                     Momentum deviation.
+        method (Callable):      Method for linear optics:
 
           :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
 
@@ -804,9 +803,10 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
           motion, normal mode analysis
 
     Keyword Args:
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Orbit): Avoids looking for the closed orbit if is
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to
+          :py:obj:`None`
+        orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
         get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
@@ -836,7 +836,7 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     Warning:
@@ -847,16 +847,15 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
 
 
 # noinspection PyPep8Naming
-@check_radiation(False)
-def linopt(ring: Lattice, dp: Optional[float] = 0.0,
-           refpts: Optional[Refpts] = None,
+@check_6d(False)
+def linopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None,
            get_chrom: bool = False, **kwargs):
     """Linear analysis of a H/V coupled lattice (deprecated)
 
-    PARAMETERS
-        lattice         lattice description.
-        dp=0.0          momentum deviation.
-        refpts=None     elements at which data is returned. It can be:
+    Parameters:
+        ring:           lattice description.
+        dp:             momentum deviation.
+        refpts:         elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
                            rules. As a special case, len(ring) is allowed and
@@ -865,7 +864,7 @@ def linopt(ring: Lattice, dp: Optional[float] = 0.0,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are
                            :py:obj:`True`.
-    KEYWORDS
+    Keyword Args:
         orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute chromaticities. Needs computing the tune at
@@ -926,16 +925,15 @@ def linopt(ring: Lattice, dp: Optional[float] = 0.0,
     """
     analyze = _analyze4 if kwargs.pop('coupled', True) else _analyze2
     eld0, bd, eld = _linopt(ring, analyze, refpts, dp=dp, get_chrom=get_chrom,
-                            add0=(0,), adds=(ring.uint32_refpts(refpts),),
+                            add0=(0,), adds=(get_uint32_index(ring, refpts),),
                             addtype=[('idx', numpy.uint32)],
                             mname='m44', **kwargs)
     return eld0, bd.tune, bd.chromaticity, eld
 
 
 # noinspection PyPep8Naming
-@check_radiation(False)
-def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
-             refpts: Optional[Refpts] = None, **kwargs):
+@check_6d(False)
+def avlinopt(ring: Lattice, dp: float = None, refpts: Refpts = None, **kwargs):
     r"""Linear analysis of a lattice with average values
 
     :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
@@ -956,9 +954,10 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
              where selected elements are :py:obj:`True`.
 
     Keyword Args:
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Orbit): Avoids looking for the closed orbit if is
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to
+          :py:obj:`None`
+        orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
         get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
@@ -986,15 +985,15 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
           are ignored.
 
     Returns:
-        elemdata:   Linear optics at the points refered to by ``refpts``,
+        elemdata:   Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
         avebeta:    Average beta functions [:math:`\hat{\beta_x},\hat{\beta_y}`]
-          at ``refpts``
+          at *refpts*
         avemu:      Average phase advances [:math:`\hat{\mu_x},\hat{\mu_y}`]
-          at ``refpts``
+          at *refpts*
         avedisp:    Average dispersion [:math:`\hat{\eta_x}, \hat{\eta'_x},
-          \hat{\eta_y}, \hat{\eta'_y}`] at ``refpts``
-        avespos:    Average s position at ``refpts``
+          \hat{\eta_y}, \hat{\eta'_y}`] at *refpts*
+        avespos:    Average s position at *refpts*
         tune:       [:math:`\nu_1,\nu_2`], linear tunes for the two normal
           modes of linear motion [1]
         chrom:      [:math:`\xi_1,\xi_2`], chromaticities
@@ -1020,10 +1019,10 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
     def dispfoc(dispp0, dispp1, k2, lg):
         return (dispp0 - dispp1) / k2 / lg
 
-    boolrefs = ring.bool_refpts(refpts)
+    boolrefs = get_bool_index(ring, refpts)
     length = numpy.array([el.Length for el in ring[boolrefs]])
     strength = numpy.array([get_strength(el) for el in ring[boolrefs]])
-    longelem = ring.bool_refpts([])
+    longelem = get_bool_index(ring, None)
     longelem[boolrefs] = (length != 0)
 
     shorti_refpts = (~longelem) & boolrefs
@@ -1068,24 +1067,25 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
 
-def get_tune(ring: Lattice, method: str = 'linopt',
-             dp: Optional[float] = None, dct: Optional[float] = None,
-             orbit: Optional[Orbit] = None, **kwargs):
+@frequency_control
+def get_tune(ring: Lattice, *, method: str = 'linopt',
+             dp: float = None, dct: float = None, df: float = None,
+             orbit: Orbit = None, **kwargs):
     r"""Computes the tunes using several available methods
 
     Parameters:
-        ring:       Lattice description
-        method:     ``'linopt'`` returns the tunes from the :py:func:`.linopt6`
-          function,
+        ring:                   Lattice description
+        method:                 ``'linopt'`` returns the tunes from the
+          :py:func:`.linopt6` function,
 
           ``'fft'`` tracks a single particle and computes the tunes with fft,
 
           ``'laskar'`` tracks a single particle and computes the tunes with
           NAFF.
-        dp:         Momentum deviation.
-        dct:        Path lengthening. If specified, ``dp`` is ignored and
-          the off-momentum is deduced from the path lengthening.
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+        dp (float):             Momentum deviation.
+        dct (float):            Path lengthening.
+        df (float):             Deviation of RF frequency.
+        orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
 
     for the ``'fft'`` and ``'laskar'`` methods only:
@@ -1094,7 +1094,7 @@ def get_tune(ring: Lattice, method: str = 'linopt',
         nturns (int):           Number of turns. Default: 512
         amplitude (float):      Amplitude of oscillation.
           Default: 1.E-6
-        remove_dc (bool:        Remove the mean of oscillation data.
+        remove_dc (bool):       Remove the mean of oscillation data.
           Default: :py:obj:`True`
         num_harmonics (int):    Number of harmonic components to
           compute (before mask applied, default: 20)
@@ -1126,58 +1126,60 @@ def get_tune(ring: Lattice, method: str = 'linopt',
            'Integer tune only accessible with method=linopt'
     if method == 'linopt':
         if get_integer:
-            _, _, c = ring.get_optics(refpts=range(len(ring)+1))
+            _, _, c = get_optics(ring, refpts=range(len(ring)+1),
+                                 dp=dp, dct=dct, df=df, orbit=orbit)
             tunes = c.mu[-1]/(2*numpy.pi)
         else:
-            tunes = _tunes(ring, dp=dp, dct=dct, orbit=orbit)
+            tunes = _tunes(ring, dp=dp, dct=dct, df=df, orbit=orbit)
     else:
         nturns = kwargs.pop('nturns', 512)
         ampl = kwargs.pop('ampl', 1.0e-6)
         remove_dc = kwargs.pop('remove_dc', True)
-        ld, _, _ = linopt6(ring, dp=dp, dct=dct, orbit=orbit)
+        ld, _, _ = linopt6(ring, dp=dp, dct=dct, df=df, orbit=orbit)
         cents = gen_centroid(ring, ampl, nturns, remove_dc, ld)
         tunes = get_tunes_harmonic(cents, method=method, **kwargs)
     return tunes
 
 
-def get_chrom(ring: Lattice, method: str = 'linopt',
-              dp: Optional[float] = 0, dct: Optional[float] = None,
-              cavpts: Optional[Refpts] = None, **kwargs):
+@frequency_control
+def get_chrom(ring: Lattice, *, method: str = 'linopt',
+              dp: float = None, dct: float = None, df: float = None,
+              cavpts: Refpts = None, **kwargs):
     r"""Computes the chromaticities using several available methods
 
     Parameters:
-        ring:       Lattice description.
-        method:     ``'linopt'`` returns the tunes from the :py:func:`linopt6`
-          function,
+        ring:               Lattice description.
+        method:             ``'linopt'`` returns the tunes from the
+          :py:func:`linopt6` function,
 
           ``'fft'`` tracks a single particle and computes the tunes with
           :py:func:`~scipy.fftpack.fft`,
 
           ``'laskar'`` tracks a single particle and computes the tunes with
           NAFF.
-        dp:         Momentum deviation.
-        dct:        Path lengthening. If specified, ``dp`` is ignored and
-          the off-momentum is deduced from the path lengthening.
+        dp (float):         Momentum deviation.
+        dct (float):        Path lengthening.
+        df (float):         Deviation of RF frequency.
         cavpts:     If :py:obj:`None`, look for ring.cavpts, or
           otherwise take all cavities.
 
     Keyword Args:
-        DPStep (float):       Momentum step for differentiation
+        DPStep (float):     Momentum step for differentiation
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     for the ``'fft'`` and ``'laskar'`` methods only:
 
     Keyword Args:
-        nturns (int):           Number of turns. Default: 512
-        amplitude (float):      Amplitude of oscillation.
+        nturns (int):       Number of turns. Default: 512
+        amplitude (float):  Amplitude of oscillation.
           Default: 1.E-6
-        remove_dc (bool):       Remove the mean of oscillation data.
+        remove_dc (bool):   Remove the mean of oscillation data.
           Default: :py:obj:`True`
-        num_harmonics (int):    Number of harmonic components to
+        num_harmonics (int):Number of harmonic components to
           compute (before mask applied, default: 20)
-        fmin (float):           Lower tune bound. Default: 0
-        fmax (float):           Upper tune bound. Default: 1
-        hann (bool):            Turn on Hanning window.
+        fmin (float):       Lower tune bound. Default: 0
+        fmax (float):       Upper tune bound. Default: 1
+        hann (bool):        Turn on Hanning window.
           Default: :py:obj:`False`
 
     Returns:
@@ -1189,9 +1191,9 @@ def get_chrom(ring: Lattice, method: str = 'linopt',
         print('Warning fft method not accurate to get the ' +
               'chromaticity')
 
-    if ring.radiation:
+    if ring.is_6d:
         f0 = ring.get_rf_frequency(cavpts=cavpts)
-        df = dp_step * ring.radiation_off(copy=True).slip_factor * f0
+        df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
         rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
         o0up, _ = find_orbit6(rgup, **kwargs)
         tune_up = get_tune(rgup,  method=method, orbit=o0up, **kwargs)
@@ -1200,9 +1202,10 @@ def get_chrom(ring: Lattice, method: str = 'linopt',
         tune_down = get_tune(rgdn,  method=method, orbit=o0dn, **kwargs)
         dp_step = o0up[4] - o0dn[4]
     else:
-        if dct is not None:
-            orbit = find_orbit4(ring, dct=dct)
-            dp = orbit[4]
+        if dct is not None or df is not None:
+            dp = find_orbit4(ring, dct=dct, df=df)[0][4]
+        elif dp is None:
+            dp = 0.0
         tune_up = get_tune(ring, method=method, dp=dp + 0.5*dp_step, **kwargs)
         tune_down = get_tune(ring, method=method,
                              dp=dp - 0.5*dp_step, **kwargs)
@@ -1215,7 +1218,6 @@ Lattice.linopt2 = linopt2
 Lattice.linopt4 = linopt4
 Lattice.linopt6 = linopt6
 Lattice.get_optics = get_optics
-Lattice.avlinopt = avlinopt
 Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
 Lattice.get_chrom = get_chrom

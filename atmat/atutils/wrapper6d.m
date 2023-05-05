@@ -6,7 +6,7 @@ function varargout = wrapper6d(ring,func,varargin)
 %FUNC   Wrapped function, called as FUNC(RING,IS6D,VARARGIN{:})
 
 [warningdp6d,varargs]=getoption(varargin,'WarningDp6D');
-is6d=check_radiation(ring);
+is6d=check_6d(ring);
 if is6d
     [dpargs,varargs]=getoption(varargs,{'dp','dct','df'});
     if ~isempty(dpargs)

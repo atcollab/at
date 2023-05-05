@@ -2,6 +2,7 @@ import pytest
 import numpy
 from at import element_pass, lattice_pass
 from at import elements
+from numpy.testing import assert_equal
 
 
 def test_data_checks():
@@ -341,3 +342,10 @@ def test_wiggler(rin):
     expected[5] = 0.000000181809691064259
     element_pass(c, rin)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
+
+
+def test_exit_entrance():
+    q = elements.Quadrupole('quad', 0.4, k=1)
+    for kin, kout in zip(q._entrance_fields, q._exit_fields):
+        assert_equal(kin.replace('Entrance', ''). replace('1', ''),
+                     kout.replace('Exit', '').replace('2', ''))

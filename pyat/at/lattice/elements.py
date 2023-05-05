@@ -50,10 +50,11 @@ class LongtMotion(ABC):
         """Enable/Disable longitudinal motion
 
         Parameters:
-            enable:     ``True`` for enabling, ``False`` for disabling
+            enable:     :py:obj:`True`: for enabling, :py:obj:`False` for
+              disabling
             new_pass:   New PassMethod:
 
-              * ``None``: makes no change,
+              * :py:obj:`None`: makes no change,
               * ``'auto'``: Uses the default conversion,
               * Anything else is used as the new PassMethod.
             copy:       If True, returns a modified copy of the element,
@@ -79,8 +80,8 @@ class _DictLongtMotion(LongtMotion):
 
     * a :py:meth:`set_longt_motion` method setting the PassMethod according
       to the ``default_pass`` dictionary.
-    * a :py:obj:`.longt_motion` property set to ``True`` when the PassMethod
-      is ``default_pass[True]``
+    * a :py:obj:`.longt_motion` property set to :py:obj:`True` when the
+      PassMethod is ``default_pass[True]``
 
     The class must have a ``default_pass`` class attribute, a dictionary
     such that:
@@ -137,14 +138,17 @@ class _Radiative(LongtMotion):
     """
 
     def _get_longt_motion(self):
-        return self.PassMethod.endswith('RadPass')
+        return self.PassMethod.endswith(('RadPass', 'QuantPass'))
 
     def _autopass(self, enable):
-        rad = self.longt_motion
-        if enable and not rad:
-            return ''.join((self.PassMethod[:-4], 'RadPass'))
-        elif not enable and rad:
-            return ''.join((self.PassMethod[:-7], 'Pass'))
+        if enable:
+            root = self.PassMethod.replace('QuantPass', 'Pass').\
+                replace('RadPass', 'Pass')
+            return ''.join((root[:-4], 'RadPass'))
+        elif self.longt_motion:
+            root = self.PassMethod.replace('QuantPass', 'Pass').\
+                replace('RadPass', 'Pass')
+            return root
         else:
             return None
 
@@ -199,7 +203,7 @@ class Radiative(_Radiative):
 class Collective(_DictLongtMotion):
     """Mixin class for elements representing collective effects
 
-    Derived classes will automatically set the :py:obj:`is_collective`
+    Derived classes will automatically set the :py:attr:`~Element.is_collective`
     property when the element is active.
 
     The class must have a ``default_pass`` class attribute, a dictionary such
@@ -217,12 +221,17 @@ class Collective(_DictLongtMotion):
         ...
         ...     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
 
-        Defines a class where the :py:obj:`is_collective` property is handled
+        Defines a class where the :py:attr:`~Element.is_collective` property is
+        handled
     """
 
     def _get_collective(self):
         # noinspection PyUnresolvedReferences
         return self.PassMethod != self.default_pass[False]
+        
+    @abc.abstractmethod
+    def clear_history(self):
+        pass
 
 
 class Element(object):
@@ -244,6 +253,7 @@ class Element(object):
 
     _entrance_fields = ['T1', 'R1']
     _exit_fields = ['T2', 'R2']
+    _no_swap = _entrance_fields + _exit_fields
 
     def __init__(self, family_name: str, **kwargs):
         """
@@ -312,6 +322,34 @@ class Element(object):
         # Bx default, the element is indivisible
         return [self]
 
+    def swap_faces(self, copy=False):
+        """Swap the faces of an element, alignment errors are ignored"""
+        def swapattr(element, attro, attri):
+            val = getattr(element, attri)
+            delattr(element, attri)
+            return attro, val
+        if copy: 
+            el = self.copy()
+        else:
+            el = self
+        # Remove and swap entrance and exit attributes
+        fin = dict(swapattr(el, kout, kin)
+                   for kin, kout in zip(el._entrance_fields,
+                                        el._exit_fields)
+                   if kin in vars(el)
+                   and kin not in el._no_swap)
+        fout = dict(swapattr(el, kin, kout)
+                    for kin, kout in zip(el._entrance_fields,
+                                         el._exit_fields)
+                    if kout in vars(el)
+                    and kout not in el._no_swap)
+        # Apply swapped entrance and exit attributes
+        for key, value in fin.items():
+            setattr(el, key, value)
+        for key, value in fout.items():
+            setattr(el, key, value)
+        return el if copy else None
+
     def update(self, *args, **kwargs):
         """
         update(**kwargs)
@@ -336,8 +374,8 @@ class Element(object):
         for k, v in vars(self).items():
             yield k, v
 
-    def is_compatible(self, other) -> bool:
-        """Checks if another Element can be merged"""
+    def is_compatible(self, other: "Element") -> bool:
+        """Checks if another :py:class:`Element` can be merged"""
         return False
 
     def merge(self, other) -> None:
@@ -356,13 +394,13 @@ class Element(object):
         return False
 
     @property
-    def longt_motion(self):
-        """``True`` if longitudinal motion is affected by the element"""
+    def longt_motion(self) -> bool:
+        """:py:obj:`True` if longitudinal motion is affected by the element"""
         return self._get_longt_motion()
 
     @property
-    def is_collective(self):
-        """``True`` if the element involves collective effects"""
+    def is_collective(self) -> bool:
+        """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
 
 
@@ -430,6 +468,28 @@ class Monitor(Element):
     """Monitor element"""
 
 
+class BeamMoments(Element):
+    """Element to compute bunches mean and std"""
+
+    def __init__(self, family_name: str, **kwargs):
+        kwargs.setdefault('PassMethod', 'BeamMomentsPass')
+        self._stds = numpy.zeros((6, 1, 0), order='F')
+        self._means = numpy.zeros((6, 1, 0), order='F')
+        super(BeamMoments, self).__init__(family_name, **kwargs)
+
+    def set_buffers(self, nturns, nbunch):
+        self._stds = numpy.zeros((6, nbunch, nturns), order='F')
+        self._means = numpy.zeros((6, nbunch, nturns), order='F')
+        
+    @property
+    def stds(self):
+        return self._stds
+        
+    @property
+    def means(self):
+        return self._means    
+
+
 class Aperture(Element):
     """Aperture element"""
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
@@ -473,7 +533,7 @@ class Drift(LongElement):
 
               1. the location where the center of the element
                  will be inserted, given as a fraction of the Drift length.
-              2. an element to be inserted at that location. If ``None``,
+              2. an element to be inserted at that location. If :py:obj:`None`,
                  the drift will be divided but no element will be inserted.
 
         Returns:
@@ -663,7 +723,7 @@ class Dipole(Radiative, Multipole):
 
     _entrance_fields = Multipole._entrance_fields + ['EntranceAngle',
                                                      'FringeInt1',
-                                                     'FringeBendEntrance'
+                                                     'FringeBendEntrance',
                                                      'FringeQuadEntrance']
     _exit_fields = Multipole._exit_fields + ['ExitAngle',
                                              'FringeInt2',
@@ -1005,7 +1065,7 @@ class QuantumDiffusion(_DictLongtMotion, Element):
         Args:
             family_name:    Name of the element
             lmatp      :    Diffusion matrix for generation (see
-                               ``at.physics.radiation.gen_quandiff_elem``)
+                               :py:func:`.gen_quantdiff_elem`)
 
         Default PassMethod: ``QuantDiffPass``
         """

@@ -6,7 +6,7 @@ function githubsetup()
 % user workflow.
 
 savepath('pathdef.m');
-atmexall;
+atmexall -fail
 if ispc
     execfile=fullfile(getenv('pythonLocation'),'pythonw.exe');
     execmode='InProcess';
