@@ -215,8 +215,8 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
     def sanitise_class(index, cls, elem_dict):
         """Checks that the Class and PassMethod of the element are a valid
             combination. Some Classes and PassMethods are incompatible and
-            would raise errors during calculation if left, so we raise an error
-            here with a more helpful message.
+            would raise errors during calculation, so we send a
+            warning here.
 
         Args:
             index:          element index
