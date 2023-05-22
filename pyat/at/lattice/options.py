@@ -30,6 +30,7 @@ class _Dst(object):
     OrbMaxIter = 20          # Max. number of iterations for orbit
     omp_num_threads = int(os.environ.get('OMP_NUM_THREADS', '0'))
     patpass_poolsize = multiprocessing.cpu_count()
+    use_regex = False
     _rank = _MPI_rk         # MPI rank
 
     def __setattr__(self, name, value):

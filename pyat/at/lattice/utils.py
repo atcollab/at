@@ -32,12 +32,14 @@ location is defined as the entrance of the selected element. *refpts* may be:
 """
 import numpy
 import functools
+import re
 from typing import Callable, Optional, Sequence, Iterator
 from typing import Union, Tuple, List, Type
 from enum import Enum
 from itertools import compress
 from fnmatch import fnmatch
 from .elements import Element, Dipole
+from .options import DConstant
 
 ElementFilter = Callable[[Element], bool]
 BoolRefpts = numpy.ndarray
@@ -591,7 +593,10 @@ def checkname(pattern: str) -> ElementFilter:
 
         Returns an iterator over all with name starting with ``QF``.
     """
-    return lambda el: fnmatch(el.FamName, pattern)
+    if DConstant.use_regex:
+        return lambda el: re.match(pattern, el.FamName)
+    else:
+        return lambda el: fnmatch(el.FamName, pattern)
 
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
