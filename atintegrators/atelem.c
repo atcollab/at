@@ -46,6 +46,19 @@ static void *atCalloc(size_t count, size_t size)
 
 #endif /* MATLAB_MEX_FILE */
 
+#define SQR(X) ((X)*(X))
+
+/* AT coordinates */
+
+#ifndef __cplusplus
+#define x_ 0
+#define px_ 1
+#define y_ 2
+#define py_ 3
+#define delta_ 4
+#define ct_ 5
+#endif /*__cplusplus */
+
 /*----------------------------------------------------*/
 /*            For the Matlab interface                */
 /*----------------------------------------------------*/
