@@ -96,7 +96,7 @@ _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
     elt.M66: 'atM66',
-    idtable_element.IdTable: 'atIdTable'
+    idtable_element.IdTable: 'atidtable'
     }
 
 
