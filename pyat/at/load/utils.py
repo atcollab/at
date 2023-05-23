@@ -82,7 +82,7 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
 # Python to Matlab class translation
 _matclass_map = {
         'Dipole': 'Bend',
-        'IdTable': 'Multipole'
+        'IdTable': 'IdTable'
         }
 
 # Python to Matlab type translation
@@ -94,7 +94,7 @@ _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
     elt.M66: 'atM66',
-    idtable_element.IdTable: 'atdrift'
+    idtable_element.IdTable: 'atIdTable'
     }
 
 
@@ -143,8 +143,9 @@ def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
         if not quiet and class_name:
-            warn(AtWarning("Class '{0}' does not exist.\n"
-                           "{1}".format(class_name, elem_dict)))
+            class_doesnotexist_warning = ("Class '{0}' does not exist.\n"
+                                          "{1}".format(class_name, elem_dict))
+            warn(AtWarning(class_doesnotexist_warning))
         fam_name = elem_dict.get('FamName', '')
         try:
             return _CLASS_MAP[fam_name.lower()]
