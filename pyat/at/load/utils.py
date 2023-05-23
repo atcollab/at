@@ -56,7 +56,9 @@ _alias_map = {'rbend': elt.Dipole,
               'bpm': elt.Monitor,
               'ap': elt.Aperture,
               'ringparam': RingParam,
-              'wig': elt.Wiggler}
+              'wig': elt.Wiggler,
+              'idtable': idtable_element.IdTable
+              }
 
 
 # Matlab to Python class translation
