@@ -13,6 +13,17 @@ class IdTable(Element):
         European Synchrotron Radiation Facility.
         BP 220, F-38043 Grenoble, France
     """
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PassMethod',
+                                                     'Filename_in',
+                                                     'Energy',
+                                                     'Nslice',
+                                                     'Length',
+                                                     'xkick',
+                                                     'ykick',
+                                                     'xtable',
+                                                     'ytable'
+                                                     ]
+
 
     def set_DriftPass(self):
         setattr(self, 'PassMethod', 'DriftPass')
@@ -25,22 +36,46 @@ class IdTable(Element):
 
     def __init__(self,
                  family_name: str,
-                 **kwargs):
+                 PassMethod: str,
+                 Filename_in: str,
+                 Energy: float,
+                 Nslice: numpy.uint8,
+                 Length: float,
+                 xkick,
+                 ykick,
+                 xtable,
+                 ytable,
+                 **kwargs
+                 ):
         """
         Args:
             family_name:    family name
 
         Default PassMethod: ``IdTablePass``
         """
+        # Create element properties to pass to the generic Element
+        kwargs.setdefault('PassMethod', 'IdTablePass')
+        kwargs.setdefault('Filename_in', Filename_in)
+        kwargs.setdefault('Energy',      Energy)
+        kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
+        kwargs.setdefault('Length',      Length)
+        kwargs.setdefault('xkick',       xkick)
+        kwargs.setdefault('ykick',       ykick)
+        kwargs.setdefault('xtable',      xtable)
+        kwargs.setdefault('ytable',      ytable)
 
         super(IdTable, self).__init__(family_name, **kwargs)
         # the IdTable class uses IdTablePass method that
         # requires Fortran-aligned memory arguments.
-        fortran_aligned_kwargs = ['xkick', 'ykick']
-        d = dict(zip(fortran_aligned_kwargs,
-            range(len(fortran_aligned_kwargs))))
-        for key, value in d.items():
-            setattr(self, key, numpy.asfortranarray(kwargs.get(key)))
+        fortran_aligned_args = ['xkick', 'ykick']
+        for key in fortran_aligned_args:
+            kwtmp = getattr(self, key)
+            if not numpy.isfortran(kwtmp):
+                setattr(self, key, numpy.asfortranarray(kwtmp))
+        # Nslice needs to be an integer
+        integer_kwargs = ['Nslice']
+        for kw in integer_kwargs:
+            setattr(self, kw, numpy.uint8(getattr(self, kw)))
 
 __all__ = ['InsertionDeviceKickMap']
 
@@ -53,6 +88,9 @@ def InsertionDeviceKickMap(
         **kwargs
         ):
     """
+    This function creates an Insertion Device Kick Map
+    from a Radia field map file.
+
     Args:
         family_name:    family name
         Nslice:         number of slices in integrator
@@ -61,7 +99,7 @@ def InsertionDeviceKickMap(
 
     Default PassMethod: ``IdTablePass``
     """
-    # 2023apr30 redifinition to function
+    # 2023apr30 redefinition to function
     # 2023jan18 fix bug with element print
     # 2023jan15 first release
     # orblancog
@@ -196,26 +234,32 @@ def InsertionDeviceKickMap(
     ytable = table_rows1array
 
     # Create element properties
-    kwargs.setdefault('PassMethod', 'IdTablePass')
-    kwargs.setdefault('Filename_in', Filename_in)
-    kwargs.setdefault('Energy',      Energy)
-    kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
-    kwargs.setdefault('Length',      el_length)
-    kwargs.setdefault('xkick',       xkick)
-    kwargs.setdefault('ykick',       ykick)
-    kwargs.setdefault('xtable',      xtable)
-    kwargs.setdefault('ytable',      ytable)
-    # the following is added to be compatible with multipole class
-    # when saving .mat files, but it is not used
-    kwargs.setdefault('poly_a',      numpy.zeros(4))
-    kwargs.setdefault('poly_b',      numpy.zeros(4))
-    kwargs.setdefault('MaxOrder',    int(3))
+    #kwargs.setdefault('PassMethod', 'IdTablePass')
+    #kwargs.setdefault('Filename_in', Filename_in)
+    #kwargs.setdefault('Energy',      Energy)
+    #kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
+    #kwargs.setdefault('Length',      el_length)
+    #kwargs.setdefault('xkick',       xkick)
+    #kwargs.setdefault('ykick',       ykick)
+    #kwargs.setdefault('xtable',      xtable)
+    #kwargs.setdefault('ytable',      ytable)
 
+    # Suggestion on how to create the IdTable
     # pyat issue #522
     # elem = Element('name', PassMethod='IdTablePass', \
     #                       xkick=x0, ykick=x1, \
     #                       xtable=x2, ytable=x3, Nslice=x4)
+    return IdTable(
+                    family_name,
+                    PassMethod='IdTablePass',
+                    Filename_in=Filename_in,
+                    Energy=Energy,
+                    Nslice=numpy.uint8(Nslice),
+                    Length=el_length,
+                    xkick=xkick,
+                    ykick=ykick,
+                    xtable=xtable,
+                    ytable=ytable
+                )
 
-    return IdTable(family_name, **kwargs)
-
-# EOF
+#EOF
