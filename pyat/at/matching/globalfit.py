@@ -25,7 +25,7 @@ def _fit_tune_chrom(ring: Lattice, index: int, func,
                     refpts1: Refpts, refpts2: Refpts, newval,
                     tol: Optional[float] = 1.0e-12,
                     dp: Optional[float] = 0, niter: Optional[int] = 3,
-                    re= False, **kwargs):
+                    re=False, **kwargs):
 
     def _get_resp(ring: Lattice, index: int, func, refpts, attname,
                   delta, dp, re=False, **kwargs):
@@ -83,7 +83,7 @@ def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         refpts2:    Selection of the 2nd family
         newval:     New tunes, in case an non-zero integer part
                     is provided, fit_integer is set to True
-                    
+
     Keyword arguments:
         tol:        Tolerance for the matching; Default: 1.0e-12
         dp:         Momentum deviation. Default: 0
@@ -113,7 +113,7 @@ def fit_chrom(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         refpts1:    Selection of the 1st family
         refpts2:    Selection of the 2nd family
         newval:     New tunes
-        
+
     Keyword arguments:
         tol:        Tolerance for the matching; Default: 1.0e-12
         dp:         Momentum deviation. Default: 0

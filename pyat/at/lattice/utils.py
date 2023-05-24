@@ -599,8 +599,8 @@ def checkname(pattern: str, re=False) -> ElementFilter:
         Returns an iterator over all with name starting with ``QF``.
     """
     if re:
-        return lambda el: re.match(pattern, el.FamName)  
-    else:  
+        return lambda el: re.match(pattern, el.FamName)
+    else:
         return lambda el: fnmatch(el.FamName, pattern)
 
 
@@ -753,7 +753,8 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, re=False) \
 
 def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
                      attrname: str, index: Optional[int] = None, re=False):
-    r"""Extracts attribute values from selected lattice :py:class:`.Element`\ s.
+    r"""Extracts attribute values from selected
+        lattice :py:class:`.Element`\ s.
 
     Parameters:
         ring:           Lattice description
@@ -777,7 +778,8 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
         def getf(elem):
             return getattr(elem, attrname)[index]
 
-    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts, re=re)])
+    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts,
+                                                               re=re)])
 
 
 def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
@@ -871,13 +873,13 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     the *y*-axis.
     A positive angle represent a clockwise rotation when looking in
     the direction of the rotation axis.
-    
+
     The transformations are not all commmutative, the tilt is always the
     last transformation applied.
-    
+
     If *relative* is :py:obj:`True`, the previous angle and shifts are
     rebuilt form the *R* and *T* matrix and incremented by the input arguments.
-    
+
     The shift is always conserved regardless of the value of *relative*.
 
     Parameters:
