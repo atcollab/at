@@ -51,7 +51,7 @@ def fortran_align(func):
 
 @fortran_align
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = End, regex=False, **kwargs):
+                 refpts: Refpts = End, **kwargs):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -79,8 +79,6 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
 
     The following keyword arguments overload the Lattice values
 
@@ -138,7 +136,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     """
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    refs = get_uint32_index(lattice, refpts, regex=regex)
+    refs = get_uint32_index(lattice, refpts)
     # define properties if lattice is not a Lattice object
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
