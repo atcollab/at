@@ -31,7 +31,7 @@ The package is organised as follows:
 **at.collective.wake_functions** contains the analytic wake functions that can be called
 by the other classes
 
-The longitudinal resonator wake function is given by :ref:`Bibliography`
+The longitudinal resonator wake function is given by [1]
 
 .. math:: W_{z}(\tau) = \left\{ \begin{array}{lr} \alpha R_{s} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;   \text{for } \tau=0 \\ 2\alpha R_{s}e^{-\alpha \tau} [\text{cos}(\bar{\omega}\tau) - \frac{\alpha}{\bar{\omega}}\text{sin}(\bar{\omega}\tau)]\;\;\;\; \text{for}\ \tau > 0 \\ \end{array} \right. 
 
@@ -41,20 +41,20 @@ The transverse resonator wake function is given by [2]
 
 .. math:: W_{x,y}(z) = -\frac{c R_{s}\omega_{R}}{Q\bar{\omega}}e^{-\alpha z / c} \text{sin}(\bar{\omega} z / c).
 
-but here we use the slightly modified transverse resonator function that is given by
+Here we use the slightly modified transverse resonator function in the correct AT units that is given by. 
 
 .. math:: W_{x,y}(\tau) = -\frac{ R_{s} \omega_{R}^{2}}{Q\bar{\omega}}e^{-\alpha \tau} \text{sin}(\bar{\omega}\tau).
 
 
 The definitions are the same as for the longitudinal resonator.
 
-The units of the transverse resonator wake function are V/C/m (but not really)
+The units of the transverse resonator wake function are V/C/m
 
 The transverse resistive wall wake function is defined as [3]
 
 .. math:: W_{x,y}(z) = -\frac{2}{\pi b^{3}}\sqrt{\frac{c}{\sigma_{c}}}\frac{1}{|z|^{1/2}}L.
 
-but we use the modified version given by
+Here we use the modified version in the correct AT units given by
 
 .. math:: W_{x,y}(\tau) = -\frac{\beta_{x,y}L}{\pi b^{3}}\sqrt{\frac{Z_{0} c}{\pi \sigma_{c} \tau}}.
 
@@ -96,7 +96,7 @@ First we can call the fast_ring function to reduce significantly the number of e
 
     fring, _ = at.fast_ring(ring)
 
-First we must define an srange for the wake function. The wake_function will be computed at the values of the srange array, and an interpolation will be made during the tracking if the required dz of the 2 slices falls in between 2 data points. As a way of saving memory, the wake_object contains a useful function for computing the srange such that is is finely sampled only around where the bunches are expected to be. In this example, we will specify how many turns we would like the wake memory to be
+We must define an srange for the wake function. The wake_function will be computed at the values of the srange array, and an interpolation will be made during the tracking if the required dz of the 2 slices falls in between 2 data points. As a way of saving memory, the wake_object contains a function for computing the srange such that is is finely sampled only around where the bunches are expected to be. We must also specify how many turns we would like the wake memory to be
 
 .. code:: python
 
