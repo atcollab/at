@@ -362,7 +362,7 @@ def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
     Returns:
@@ -463,7 +463,7 @@ def get_bool_index(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
     Returns:
@@ -586,7 +586,7 @@ def checkname(pattern: str, regex=False) -> ElementFilter:
     Parameters:
         pattern: Desired :py:class:`.Element` name. Unix shell-style
           wildcards are supported (see :py:func:`fnmatch.fnmatch`)
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
     Returns:
@@ -612,7 +612,7 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts, regex=False) \
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
     Returns:
@@ -694,7 +694,7 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
     Returns:
@@ -742,7 +742,7 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, regex=False) \
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
     Returns:
@@ -763,7 +763,7 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
         attrname:   Attribute name
         index:      index of the value to retrieve if *attrname* is
           an array.
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
           If :py:obj:`None` the full array is retrieved
@@ -800,7 +800,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
           an array. if :py:obj:`None`, the full array is replaced by
           *attrvalue*
         increment:  Add values to the initial values.
-        re: Use regular expression for refpts string matching;
+        regex: Use regular expression for refpts string matching;
             Default: False (Unix shell-style wildcards)
 
           If :py:obj:`False` the initial value is replaced (Default)
