@@ -353,7 +353,7 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
-                     endpoint: bool = True, re=False) -> Uint32Refpts:
+                     endpoint: bool = True, regex=False) -> Uint32Refpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns an integer array of element indices, selecting ring elements.
 
@@ -394,7 +394,7 @@ def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts, re=re)
+        checkfun = checkname(refpts, regex=regex)
     else:
         return uint32_refpts(refpts, len(ring), endpoint=endpoint, types=_typ2)
 
@@ -454,7 +454,7 @@ def bool_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_bool_index(ring: Sequence[Element], refpts: Refpts,
-                   endpoint: bool = True, re=False) -> BoolRefpts:
+                   endpoint: bool = True, regex=False) -> BoolRefpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns a bool array of element indices, selecting ring elements.
 
@@ -498,7 +498,7 @@ def get_bool_index(ring: Sequence[Element], refpts: Refpts,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts, re=re)
+        checkfun = checkname(refpts, regex=regex)
     else:
         return bool_refpts(refpts, len(ring), endpoint=endpoint, types=_typ2)
 
@@ -574,7 +574,7 @@ def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
     return lambda el: isinstance(el, eltype)
 
 
-def checkname(pattern: str, re=False) -> ElementFilter:
+def checkname(pattern: str, regex=False) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the name of an element
 
@@ -598,13 +598,13 @@ def checkname(pattern: str, re=False) -> ElementFilter:
 
         Returns an iterator over all with name starting with ``QF``.
     """
-    if re:
+    if regex:
         return lambda el: re.match(pattern, el.FamName)
     else:
         return lambda el: fnmatch(el.FamName, pattern)
 
 
-def refpts_iterator(ring: Sequence[Element], refpts: Refpts, re=False) \
+def refpts_iterator(ring: Sequence[Element], refpts: Refpts, regex=False) \
         -> Iterator[Element]:
     r"""Return an iterator over selected elements in a lattice
 
@@ -626,7 +626,7 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts, re=False) \
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts, re=re)
+        checkfun = checkname(refpts, regex=regex)
     else:
         refs = numpy.ravel(refpts)
         if refpts is RefptsCode.All:
@@ -685,7 +685,7 @@ def refpts_count(refpts: RefIndex, n_elements: int,
 
 
 def _refcount(ring: Sequence[Element], refpts: Refpts,
-              endpoint: bool = True, re=False) -> int:
+              endpoint: bool = True, regex=False) -> int:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns the number of reference points
 
@@ -724,7 +724,7 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts, re=re)
+        checkfun = checkname(refpts, regex=regex)
     else:
         return refpts_count(refpts, len(ring), endpoint=endpoint, types=_typ2)
 
@@ -732,7 +732,7 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
-def get_elements(ring: Sequence[Element], refpts: Refpts, re=False) \
+def get_elements(ring: Sequence[Element], refpts: Refpts, regex=False) \
         -> list:
     r"""Returns a list of elements selected by *key*.
 
@@ -748,11 +748,11 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, re=False) \
     Returns:
         elem_list (list):  list of :py:class:`.Element`\ s matching key
     """
-    return list(refpts_iterator(ring, refpts, re=re))
+    return list(refpts_iterator(ring, refpts, regex=regex))
 
 
 def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
-                     attrname: str, index: Optional[int] = None, re=False):
+                     attrname: str, index: Optional[int] = None, regex=False):
     r"""Extracts attribute values from selected
         lattice :py:class:`.Element`\ s.
 
@@ -779,13 +779,13 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
             return getattr(elem, attrname)[index]
 
     return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts,
-                                                               re=re)])
+                                                               regex=regex)])
 
 
 def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
                      attrname: str, attrvalues, index: Optional[int] = None,
                      increment: Optional[bool] = False,
-                     copy: Optional[bool] = False, re=False):
+                     copy: Optional[bool] = False, regex=False):
     r"""Set the values of an attribute of an array of elements based on
     their refpts
 
@@ -824,15 +824,15 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
     if increment:
         attrvalues += get_value_refpts(ring, refpts,
-                                       attrname, index=index, re=re)
+                                       attrname, index=index, regex=regex)
     else:
         attrvalues = numpy.broadcast_to(attrvalues,
-                                        (_refcount(ring, refpts, re=re),))
+                                        (_refcount(ring, refpts, regex=regex),))
 
     # noinspection PyShadowingNames
     @make_copy(copy)
     def apply(ring, refpts, values, re):
-        for elm, val in zip(refpts_iterator(ring, refpts, re=re), values):
+        for elm, val in zip(refpts_iterator(ring, refpts, regex=regex), values):
             setf(elm, val)
 
     return apply(ring, refpts, attrvalues, re)
