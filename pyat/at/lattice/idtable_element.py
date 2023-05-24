@@ -34,7 +34,13 @@ class IdTable(Element):
         """
 
         super(IdTable, self).__init__(family_name, **kwargs)
-
+        # the IdTable class uses IdTablePass method that
+        # requires Fortran-aligned memory arguments.
+        fortran_aligned_kwargs = ['xkick', 'ykick']
+        d = dict(zip(fortran_aligned_kwargs,
+            range(len(fortran_aligned_kwargs))))
+        for key, value in d.items():
+            setattr(self, key, numpy.asfortranarray(kwargs.get(key)))
 
 __all__ = ['InsertionDeviceKickMap']
 
