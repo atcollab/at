@@ -838,7 +838,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
     return apply(ring, refpts, attrvalues, regex)
 
 
-def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
+def get_s_pos(ring: Sequence[Element], refpts: Refpts = All, regex=False) \
         -> Sequence[float]:
     # noinspection PyUnresolvedReferences
     r"""Returns the locations of selected elements
@@ -847,6 +847,8 @@ def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
         ring:       Lattice description
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        regex: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         s_pos:  Array of locations of the elements selected by *refpts*
@@ -862,7 +864,7 @@ def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
     s_pos = numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
-    return s_pos[get_bool_index(ring, refpts)]
+    return s_pos[get_bool_index(ring, refpts, regex=regex)]
 
 
 def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
