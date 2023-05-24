@@ -32,6 +32,7 @@ location is defined as the entrance of the selected element. *refpts* may be:
 """
 import numpy
 import functools
+import re
 from typing import Callable, Optional, Sequence, Iterator
 from typing import Union, Tuple, List, Type
 from enum import Enum
@@ -352,7 +353,7 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
-                     endpoint: bool = True) -> Uint32Refpts:
+                     endpoint: bool = True, re=False) -> Uint32Refpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns an integer array of element indices, selecting ring elements.
 
@@ -361,6 +362,8 @@ def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         uint32_ref (Uint32Refpts): uint32 numpy array used for indexing
@@ -391,7 +394,7 @@ def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts)
+        checkfun = checkname(refpts, re=re)
     else:
         return uint32_refpts(refpts, len(ring), endpoint=endpoint, types=_typ2)
 
@@ -451,7 +454,7 @@ def bool_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_bool_index(ring: Sequence[Element], refpts: Refpts,
-                   endpoint: bool = True) -> BoolRefpts:
+                   endpoint: bool = True, re=False) -> BoolRefpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns a bool array of element indices, selecting ring elements.
 
@@ -460,6 +463,8 @@ def get_bool_index(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         bool_refs (BoolRefpts):  A bool numpy array used for indexing
@@ -493,7 +498,7 @@ def get_bool_index(ring: Sequence[Element], refpts: Refpts,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts)
+        checkfun = checkname(refpts, re=re)
     else:
         return bool_refpts(refpts, len(ring), endpoint=endpoint, types=_typ2)
 
@@ -569,7 +574,7 @@ def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
     return lambda el: isinstance(el, eltype)
 
 
-def checkname(pattern: str) -> ElementFilter:
+def checkname(pattern: str, re=False) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the name of an element
 
@@ -581,6 +586,8 @@ def checkname(pattern: str) -> ElementFilter:
     Parameters:
         pattern: Desired :py:class:`.Element` name. Unix shell-style
           wildcards are supported (see :py:func:`fnmatch.fnmatch`)
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         checkfun (ElementFilter):   Element filter function
@@ -591,10 +598,13 @@ def checkname(pattern: str) -> ElementFilter:
 
         Returns an iterator over all with name starting with ``QF``.
     """
-    return lambda el: fnmatch(el.FamName, pattern)
+    if re:
+        return lambda el: re.match(pattern, el.FamName)  
+    else:  
+        return lambda el: fnmatch(el.FamName, pattern)
 
 
-def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
+def refpts_iterator(ring: Sequence[Element], refpts: Refpts, re=False) \
         -> Iterator[Element]:
     r"""Return an iterator over selected elements in a lattice
 
@@ -602,6 +612,8 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         elem_iter (Iterator[Element]):  Iterator over the elements in *ring*
@@ -614,7 +626,7 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts)
+        checkfun = checkname(refpts, re=re)
     else:
         refs = numpy.ravel(refpts)
         if refpts is RefptsCode.All:
@@ -673,7 +685,7 @@ def refpts_count(refpts: RefIndex, n_elements: int,
 
 
 def _refcount(ring: Sequence[Element], refpts: Refpts,
-              endpoint: bool = True) -> int:
+              endpoint: bool = True, re=False) -> int:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns the number of reference points
 
@@ -682,6 +694,8 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         nrefs (int):  The number of reference points
@@ -710,7 +724,7 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif isinstance(refpts, str):
-        checkfun = checkname(refpts)
+        checkfun = checkname(refpts, re=re)
     else:
         return refpts_count(refpts, len(ring), endpoint=endpoint, types=_typ2)
 
@@ -718,7 +732,7 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
-def get_elements(ring: Sequence[Element], refpts: Refpts, quiet=True) \
+def get_elements(ring: Sequence[Element], refpts: Refpts, re=False) \
         -> list:
     r"""Returns a list of elements selected by *key*.
 
@@ -728,15 +742,17 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, quiet=True) \
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         elem_list (list):  list of :py:class:`.Element`\ s matching key
     """
-    return list(refpts_iterator(ring, refpts))
+    return list(refpts_iterator(ring, refpts, re=re))
 
 
 def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
-                     attrname: str, index: Optional[int] = None):
+                     attrname: str, index: Optional[int] = None, re=False):
     r"""Extracts attribute values from selected lattice :py:class:`.Element`\ s.
 
     Parameters:
@@ -746,6 +762,8 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
         attrname:   Attribute name
         index:      index of the value to retrieve if *attrname* is
           an array.
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
           If :py:obj:`None` the full array is retrieved
 
@@ -759,13 +777,13 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
         def getf(elem):
             return getattr(elem, attrname)[index]
 
-    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts)])
+    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts, re=re)])
 
 
 def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
                      attrname: str, attrvalues, index: Optional[int] = None,
                      increment: Optional[bool] = False,
-                     copy: Optional[bool] = False):
+                     copy: Optional[bool] = False, re=False):
     r"""Set the values of an attribute of an array of elements based on
     their refpts
 
@@ -780,6 +798,8 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
           an array. if :py:obj:`None`, the full array is replaced by
           *attrvalue*
         increment:  Add values to the initial values.
+        re: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
           If :py:obj:`False` the initial value is replaced (Default)
         copy:       If :py:obj:`False`, the modification is done in-place,
@@ -802,18 +822,18 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
     if increment:
         attrvalues += get_value_refpts(ring, refpts,
-                                       attrname, index=index)
+                                       attrname, index=index, re=re)
     else:
         attrvalues = numpy.broadcast_to(attrvalues,
-                                        (_refcount(ring, refpts),))
+                                        (_refcount(ring, refpts, re=re),))
 
     # noinspection PyShadowingNames
     @make_copy(copy)
-    def apply(ring, refpts, values):
-        for elm, val in zip(refpts_iterator(ring, refpts), values):
+    def apply(ring, refpts, values, re):
+        for elm, val in zip(refpts_iterator(ring, refpts, re=re), values):
             setf(elm, val)
 
-    return apply(ring, refpts, attrvalues)
+    return apply(ring, refpts, attrvalues, re)
 
 
 def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
