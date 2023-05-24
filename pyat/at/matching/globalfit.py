@@ -73,7 +73,7 @@ def _fit_tune_chrom(ring: Lattice, index: int, func,
 
 def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
              tol: float = 1.0e-12,
-             dp: Optional[float] = 0, niter: int = 3, re=False
+             dp: Optional[float] = 0, niter: int = 3, re=False,
              **kwargs) -> None:
     """Fits the tunes using 2 families
 
@@ -126,4 +126,4 @@ def fit_chrom(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
     """
     print('\nFitting Chromaticity...')
     _fit_tune_chrom(ring, 2, _get_chrom, refpts1, refpts2, newval, tol=tol,
-                    dp=dp, niter=niter re=re)
+                    dp=dp, niter=niter, re=re)
