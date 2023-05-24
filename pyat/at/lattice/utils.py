@@ -599,7 +599,8 @@ def checkname(pattern: str, regex=False) -> ElementFilter:
         Returns an iterator over all with name starting with ``QF``.
     """
     if regex:
-        return lambda el: re.match(pattern, el.FamName)
+        rgx = re.compile(pattern)
+        return lambda el: rgx.fullmatch(el.FamName)
     else:
         return lambda el: fnmatch(el.FamName, pattern)
 
