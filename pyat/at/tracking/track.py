@@ -51,7 +51,7 @@ def fortran_align(func):
 
 @fortran_align
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = End, regex=False **kwargs):
+                 refpts: Refpts = End, regex=False, **kwargs):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
