@@ -20,24 +20,24 @@ def analytical_qs(ring, I):
     U0 = envel.U0 * qe
 
     Q0 = bl_elem.Qfactor * (1 + beta)
-    Rsh = 2 * bl_elem.Rshunt * (1 + beta)  # Difference in definition
+    Rsh = bl_elem.Rshunt * (1 + beta)  # Difference in definition
 
-    phi_s = numpy.arccos(U0 / (qe * Vc))  # sync. phase in radian
-    psi = - numpy.arctan(Rsh * I * numpy.sin(phi_s) /
+    phi_s = numpy.pi - numpy.arcsin(U0 / (qe * Vc))  # sync. phase in radian
+    psi = numpy.arctan(-2 * Rsh * I * numpy.cos(numpy.pi - phi_s) /
                          (Vc * (1 + beta)))  # tuning angle
-
+                         
     omega_res = (omega_rf /
-                 (1 + Rsh * I * numpy.sin(phi_s) /
+                 (1 - 2 * Rsh * I * (numpy.cos(numpy.pi - phi_s)) /
                   (2 * Q0 * Vc)))  # resonant freq.
 
     h = ring.harmonic_number  # harmonic number
     omega0 = omega_rf / h  # rev. freq.
     T0 = 2 * numpy.pi / omega0  # rev. time
 
-    omega_s0 = numpy.sqrt(qe * Vc * omega_rf * alpha_c * numpy.sin(phi_s) /
+    omega_s0 = numpy.sqrt(qe * Vc * omega_rf * alpha_c * numpy.cos(numpy.pi - phi_s) /
                           (E0 * T0))  # Synch. freq. for a single particle
 
-    K = alpha_c * qe * I / (E0 * T0) * (Rsh / 2) / (1 + beta)
+    K = alpha_c * qe * I / (E0 * T0) * Rsh / (1 + beta)
 
     # Synch. freq. with beam loading
     tilde_omega_s = numpy.sqrt(omega_s0**2 +

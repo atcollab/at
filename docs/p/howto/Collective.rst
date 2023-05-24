@@ -12,17 +12,18 @@ a longitudinal resonator or a transverse resistive wall). The element will
 then call the **WakeFieldPass** PassMethod. 
 
 The wake field is applied by first uniformly slicing the full region occupied by the 
-particles in the ct co-ordinate. Each particle is then attributed to a
+particles in the ct co-ordinate. Each particle is attributed to a
 given slice, which is represented by a weight. The mean position in x,y,ct 
 is computed for each slice. The kick from one slice to the next (and the self kick for some cases)
 can then be computed by taking into account the differences in offsets of each slice.
-This total kick is computed and then the appropriate modification to x', y' or dp is then applied
+This total kick is computed and the appropriate modification to x', y' or dp is applied
 to each particle. 
 
 To take into account multi-turn wakes, the wake element has a **TurnHistory** buffer.
-Each turn, the mean x,y,ct and weight of each slice is recorded. After each turn, the 
+Each turn, the mean x,y,ct and weight of each slice is recorded. At each turn, the 
 array of ct values is increased by one circumference (to take into account the decay 
-between turns). When the kick is computed, the full history of turns is used. 
+between turns). When the kick is computed, the full history of turns to ensure the
+total kick from all previous turns is considered.
 
 
 The package is organised as follows:
@@ -30,7 +31,7 @@ The package is organised as follows:
 **at.collective.wake_functions** contains the analytic wake functions that can be called
 by the other classes
 
-The longitudinal resonator wake function is given by [1]
+The longitudinal resonator wake function is given by :ref:`Bibliography`
 
 .. math:: W_{z}(\tau) = \left\{ \begin{array}{lr} \alpha R_{s} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;   \text{for } \tau=0 \\ 2\alpha R_{s}e^{-\alpha \tau} [\text{cos}(\bar{\omega}\tau) - \frac{\alpha}{\bar{\omega}}\text{sin}(\bar{\omega}\tau)]\;\;\;\; \text{for}\ \tau > 0 \\ \end{array} \right. 
 
@@ -49,8 +50,6 @@ The definitions are the same as for the longitudinal resonator.
 
 The units of the transverse resonator wake function are V/C/m (but not really)
 
-For both definitions (definitions)
-
 The transverse resistive wall wake function is defined as [3]
 
 .. math:: W_{x,y}(z) = -\frac{2}{\pi b^{3}}\sqrt{\frac{c}{\sigma_{c}}}\frac{1}{|z|^{1/2}}L.
@@ -63,21 +62,21 @@ where :math:`b` is the vacuum chamber half gap in m, :math:`Z_{0}=\pi * 119.9169
 
 The transverse resistive wall function is an approximation, as it clearly diverges for :math:`\tau` close to 0, but when considering multi bunch models the approximation works well. 
 
-Also included is a function to convolve a wake field with a gaussian bunch to compute the wake potential.
+Also included is a function to convolve a wake field with a gaussian bunch to compute the wake potential (convolve_wake_fun)
 This function can be useful to combine multiple wake potentials (for example to include an analytical
 wake function with the wake potential output from GDfidL). 
 
 These above functions can be directly called 
 
-.. code:: ipython3
+.. code:: python
 
     from at.collective.wake_functions import long_resonator_wf
     from at.collective.wake_functions import transverse_resonator_wf
     from at.collective.wake_functions import transverse_reswall_wf
  
-**at.collective.wake_objects** is used to construct a python object which represents a wake field or wake potential. The functions in wake_objects can be called directly to construct and test (and use for purposes outside of tracking in PyAT). The wake object can contain wake fields in multiple planes simultaneously, and may combine wake fields from a table of data with analytical wake functions. All of this is handled by the functions found in this file. 
+**at.collective.wake_objects** is used to construct a python object which represents a wake field or wake potential. The functions in wake_objects can be called directly to construct and test (and use for purposes outside of tracking in PyAT). The wake object can contain wake fields in multiple planes simultaneously, and may combine wake fields from a table of data with analytical wake functions. All of this is handled by the functions found in this module. 
 
-**at.collective.wake_elements** uses the functions found in **at.collective.wake_objects** to generate a wake field element that can be appended to the AT lattice to be used for tracking. The wake elements can be generated directly, without needing to first make the wake_object.
+**at.collective.wake_elements** uses the functions found in **at.collective.wake_objects** to generate a wake field element that can be appended to the AT lattice to be used for tracking. 
 
 **at.collective.haissinski** contains functions and methods to solve the Haissinski equation in the presence of a longitudinal wake potential in order to obtain the analytical bunch distribution. 
 
@@ -86,20 +85,20 @@ Generating a Wake Element
 
 We can start with a simple ring. 
 
-.. code:: ipython3
+.. code:: python
 
     import at
     ring = at.load_m('at/machine_data/esrf.m')
 
 First we can call the fast_ring function to reduce significantly the number of elements we will need to track
 
-.. code:: ipython3
+.. code:: python
 
     fring, _ = at.fast_ring(ring)
 
 First we must define an srange for the wake function. The wake_function will be computed at the values of the srange array, and an interpolation will be made during the tracking if the required dz of the 2 slices falls in between 2 data points. As a way of saving memory, the wake_object contains a useful function for computing the srange such that is is finely sampled only around where the bunches are expected to be. In this example, we will specify how many turns we would like the wake memory to be
 
-.. code:: ipython3
+.. code:: python
 
     from at.constants import clight
     from at.collective import Wake
@@ -116,7 +115,7 @@ First we must define an srange for the wake function. The wake_function will be 
     
 Now we can define a longitudinal resonator by calling the LongResonatorElement function from wake_elements. First we need to define some resonator parameters
 
-.. code:: ipython3
+.. code:: python
 
     from at.collective.wake_elements import LongResonatorElement
 
@@ -133,7 +132,7 @@ Now we can define a longitudinal resonator by calling the LongResonatorElement f
     
 Finally we can append this to the fast ring
 
-.. code:: ipython3
+.. code:: python
 
     fring.append(welem)
     
@@ -143,7 +142,7 @@ Using a Wake Table
 
 A wake function or wake potential can also be provided from a user defined data or a file. Here we can generate a fake data table using the long_resonator_wf function from at.collective.wake_functions, then we can use it to create a wake element
 
-.. code:: ipython3
+.. code:: python
 
     import numpy
     from at.collective import long_resonator_wf
@@ -166,7 +165,7 @@ Using a Wake File
 
 A wake element can also be generated from file. Arguments can be parsed to the add function to describe clearly which columns of the file refer to which parameter. The columns can also be scaled in order to easily sum multiple files or wake contributions.
 
-.. code:: ipython3
+.. code:: python
 
     wa = Wake(srange)
     wake_filename = 'filename.txt'
@@ -176,7 +175,7 @@ A wake element can also be generated from file. Arguments can be parsed to the a
 
 Multiple combinations can all be added to one wake element to bring all wake contributions into one wake element
 
-.. code:: ipython3
+.. code:: python
 
     wa = Wake(srange)
     wake_filename_z1 = 'filename_z1.txt'
@@ -201,7 +200,7 @@ The Haissinski solver is used to compute the equilibrium beam distribution in th
 
 First we initialise a broadband longitudinal resonator wake function in a wake object.
 
-.. code:: ipython3
+.. code:: python
 
     from at.collective.wake_object import Wake
     
@@ -217,7 +216,7 @@ First we initialise a broadband longitudinal resonator wake function in a wake o
 
 Now we need to load and run the Haissinski module. The main parameters here are :math:`m` which defines the number of steps in the distribution, and :math:`k_{max}` which defines the maximum and minimum of the distribution in units of :math:`\sigma_{z}`. numIters is for the number of iterations for the solver to converge to within a convergence criteria of eps. 
 
-.. code:: ipython3
+.. code:: python
 
     from at.collective.haissinski import Haissinski
 
@@ -230,7 +229,7 @@ Now we need to load and run the Haissinski module. The main parameters here are 
 
 The code will now iteratively solve the haissinski equation to determine the beam equilibrium distribution, and will stop running when the distribution no longer changes. Now we can unpack the results and recover some sensible units. 
 
-.. code:: ipython3
+.. code:: python
 
     # The x units in the paper are normalised to sigma. So we remove this normalisation.
     ha_x_tmp = ha.q_array*ha.sigma_l 
@@ -257,7 +256,7 @@ Multi Bunch Collective Effects
 All pass methods are set to work for multi bunch collective effects with very few modifications. 
 First, the filling pattern must be set
 
-.. code:: ipython3
+.. code:: python
 
     Nbunches = 992
     ring.beam_current = 200e-3 #Set total beam current to 200mA
@@ -272,9 +271,9 @@ Two examples of multi bunch collective effects can be found, one for the Longitu
 Parallelisation with Collective Effects
 ---------------------------------------
 
-PyAT can very easily be run with across multiple cores. When using openmpi, the user must remember that each thread will be running exactly the same file. This must be taken into account when writing the script. At the beginning of the script, it must have
+PyAT can very easily be run with across multiple cores. When using MPI, the user must remember that each thread will be running exactly the same file. This must be taken into account when writing the script. At the beginning of the script, it must have
 
-.. code:: ipython3
+.. code:: python
 
     from mpi4py import MPI
     
@@ -284,20 +283,20 @@ PyAT can very easily be run with across multiple cores. When using openmpi, the 
     
 size is an integer that says how many threads have been created, and rank says which thread you are on. Typically, there are many operations (saving of files, collating of particle data, etc) that you only want to happen on one thread, not on all. So therefore a common trick is to use
 
-.. code:: ipython3
+.. code:: python
     
     rank0 = True if rank == 0
     
 then all of these types of operation can be hidden within a, if statement. As mentioned above, the number of particles must be an integer multiple of the number of bunches. When parallelising, this is true of each thread. So if you have 40 threads, and 992 bunches. Each thread, must have an integer multiple of 992 as the number of particles. Otherwise, some particles will be missing and the results will be incorrect. This means that it is not possible to parallelise a computation with 1 particle per bunch. In order to access turn by turn and bunch by bunch data, the beam monitor can be used
 
-.. code:: ipython3
+.. code:: python
 
     bm_elem = at.BeamMoments('monitor')
     ring.append(bm_elem)
     
 This monitor works in parallel computations, and the data can be accessed by :math:`bm_elem.means` and :math:`bm_elem.stds`. If the user wishes to write their own data collation, in order to perform some more advanced analysis, functionalities within the MPI4PY package can be used. For example, to compute yourself the centroid position of each bunch in one turn
 
-.. code:: ipython3
+.. code:: python
 
     def compute_centroid_per_bunch(parts, comm, size, Nparts, Nbunches):
         all_centroid = numpy.zeros((6, Nbunches))
@@ -321,7 +320,7 @@ To consider beam loading in an rf cavity, a loaded shunt impedance :math:`R_{s}`
 
 To intialise the beam loading element, the function **add_beamloading** must be applied a lattice object. This will convert the specified Cavity Element to a **BeamLoadingElement**. This can be done as follows
 
-.. code:: ipython3
+.. code:: python
 
     from at.collective import BeamLoadingElement, add_beamloading, BLMode
     
@@ -338,13 +337,15 @@ An additional keyword argument **cavpts** can be given to specifically transfer 
 
 Bibliography
 ------------
-[1] A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 73, Eqn. 2.84
 
-[2] A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 75, Eqn. 2.88
 
-[3] A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 59, Eqn. 2.53
+[1] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 73, Eqn. 2.84  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
 
-[4] "Numerical solution of the Haïssinski equation for the equilibrium state of  a stored electron beam", R. Warnock, K.Bane, Phys. Rev. Acc. and Beams 21, 124401 (2018)
+[2] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 75, Eqn. 2.88  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
+
+[3] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 59, Eqn. 2.53  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
+
+[4] `R. Warnock, K. Bane, 'Numerical solution of the Haïssinski equation for the equilibrium state of  a stored electron beam', Phys. Rev. Acc. and Beams 21, 124401 (2018) <https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.21.124401>`_
 
 [5] L.R. Carver et al, 'Beam Loading Simulations in PyAT for the ESRF', Proceedings of IPAC23, Venice Italy (2023)
 
