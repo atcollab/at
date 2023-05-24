@@ -831,11 +831,11 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
     # noinspection PyShadowingNames
     @make_copy(copy)
-    def apply(ring, refpts, values, re):
+    def apply(ring, refpts, values, regex):
         for elm, val in zip(refpts_iterator(ring, refpts, regex=regex), values):
             setf(elm, val)
 
-    return apply(ring, refpts, attrvalues, re)
+    return apply(ring, refpts, attrvalues, regex)
 
 
 def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
