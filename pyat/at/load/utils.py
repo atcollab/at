@@ -66,6 +66,8 @@ _PASS_MAP = {'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
              'BndMPoleSymplectic4Pass': elt.Dipole,
              'QuadLinearPass': elt.Quadrupole,
+             'StrMPoleSymplectic4Pass': elt.Multipole,
+             'StrMPoleSymplectic4RadPass': elt.Multipole,
              'CorrectorPass': elt.Corrector,
              'CavityPass': elt.RFCavity, 'RFCavityPass': elt.RFCavity,
              'ThinMPolePass': elt.ThinMultipole,
@@ -213,8 +215,8 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
     def sanitise_class(index, cls, elem_dict):
         """Checks that the Class and PassMethod of the element are a valid
             combination. Some Classes and PassMethods are incompatible and
-            would raise errors during calculation if left, so we raise an error
-            here with a more helpful message.
+            would raise errors during calculation, so we send a
+            warning here.
 
         Args:
             index:          element index
@@ -230,7 +232,7 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
             msg = ''.join(('Error in element', location,
                            'PassMethod {0} '.format(pass_method),
                            message.format(*args), '\n{0}'.format(elem_dict)))
-            return AttributeError(msg)
+            return AtWarning(msg)
 
         class_name = cls.__name__
         pass_method = elem_dict.get('PassMethod')
@@ -240,18 +242,12 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
             file_name = pass_method + _ext_suffix
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
-                raise err("does not have a {0} file.".format(file_name))
+                warn(err(" is missing {0}.".format(file_name)))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
-                raise err("is not compatible with length {0}.", length)
+                warn(err("is not compatible with length {0}.", length))
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
-                    raise err("is not compatible with Class {0}.", class_name)
-            elif issubclass(cls, (elt.Marker, elt.Monitor, RingParam)):
-                if pass_method != 'IdentityPass':
-                    raise err("is not compatible with Class {0}.", class_name)
-            elif cls == elt.Drift:
-                if pass_method != 'DriftPass':
-                    raise err("is not compatible with Class {0}.", class_name)
+                    warn(err("is not compatible with Class {0}.", class_name))
 
     cls = find_class(elem_dict, quiet=quiet)
     if check:
