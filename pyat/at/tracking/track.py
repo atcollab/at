@@ -5,18 +5,16 @@ from .utils import initialize_args
 from ..lattice import Lattice, Element, Particle, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
-from typing import List, Iterable, Optional
+from typing import List, Iterable, Optional, Union
 from functools import partial
 import multiprocessing
 from warnings import warn
 from .atpass import reset_rng
-import numpy as np
 
 
-__all__ = ['lattice_pass', 'element_pass', 'patpass']
+__all__ = ['track_function']
 
-
-_imax = np.iinfo(int).max
+_imax = numpy.iinfo(int).max
 _globring: Optional[List[Element]] = None
 
 
@@ -37,7 +35,7 @@ def _atpass_spawn(ring, seed, rank, rin, **kwargs):
 def _pass(ring, r_in, pool_size, start_method, **kwargs):
     ctx = multiprocessing.get_context(start_method)
     # Split input in as many slices as processes
-    args = enumerate(np.array_split(r_in, pool_size, axis=1))
+    args = enumerate(numpy.array_split(r_in, pool_size, axis=1))
     # Generate a new starting point for C RNGs
     seed = random.common.integers(0, high=_imax, dtype=int)
     global _globring
@@ -54,6 +52,10 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
 
+@fortran_align
+def _element_pass(element: Element, r_in, **kwargs):
+    return _elempass(element, r_in, **kwargs)
+
 
 @fortran_align
 def _lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
@@ -65,210 +67,10 @@ def _lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
 
 
-@initialize_args
-def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = End, **kwargs):
-    """
-    :py:func:`lattice_pass` tracks particles through each element of a lattice
-    calling the element-specific tracking function specified in the Element's
-    *PassMethod* field.
-
-    Parameters:
-        lattice:                list of elements
-        r_in:                   (6, N) array: input coordinates of N particles.
-          *r_in* is modified in-place and reports the coordinates at
-          the end of the element. For the best efficiency, *r_in*
-          should be given as F_CONTIGUOUS numpy array.
-        nturns:                 number of turns to be tracked
-        refpts:                 Selects the location of coordinates output.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-
-    Keyword arguments:
-        keep_lattice (bool):    Use elements persisted from a previous
-          call. If :py:obj:`True`, assume that the lattice has not changed
-          since the previous call.
-        keep_counter (bool):    Keep the turn number from the previous
-          call.
-        turn (int):             Starting turn number. Ignored if
-          *keep_counter* is :py:obj:`True`. The turn number is necessary to
-          compute the absolute path length used in RFCavityPass.
-        losses (bool):          Boolean to activate loss maps output
-        omp_num_threads (int):  Number of OpenMP threads
-          (default: automatic)
-
-    The following keyword arguments overload the Lattice values
-
-    Keyword arguments:
-
-        particle (Optional[Particle]):  circulating particle.
-          Default: :code:`lattice.particle` if existing,
-          otherwise :code:`Particle('relativistic')`
-        energy (Optiona[float]):        lattice energy. Default 0.
-        unfold_beam (bool): Internal beam folding activate, this
-            assumes the input particles are in bucket 0, works only
-            if all bucket see the same RF Voltage.
-            Default: :py:obj:`True`
-
-    If *energy* is not available, relativistic tracking if forced,
-    *rest_energy* is ignored.
-
-    Returns:
-        r_out: (6, N, R, T) array containing output coordinates of N particles
-          at R reference points for T turns.
-        loss_map: If *losses* is :py:obj:`True`: dictionary with the
-          following key:
-
-          ==============    ===================================================
-          **islost**        (npart,) bool array indicating lost particles
-          **turn**          (npart,) int array indicating the turn at
-                            which the particle is lost
-          **element**       ((npart,) int array indicating the element at
-                            which the particle is lost
-          **coord**         (6, npart) float array giving the coordinates at
-                            which the particle is lost (zero for surviving
-                            particles)
-          ==============    ===================================================
-
-    .. note::
-
-       * :pycode:`lattice_pass(lattice, r_in, refpts=len(line))` is the same as
-         :pycode:`lattice_pass(lattice, r_in)` since the reference point
-         len(line) is the exit of the last element.
-       * :pycode:`lattice_pass(lattice, r_in, refpts=0)` is a copy of *r_in*
-         since the reference point 0 is the entrance of the first element.
-       * To resume an interrupted tracking (for instance to get intermediate
-         results), one must use one of the *turn* or *keep_counter*
-         keywords to ensure the continuity of the turn number.
-       * For multiparticle tracking with large number of turn the size of
-         *r_out* may increase excessively. To avoid memory issues
-         :pycode:`lattice_pass(lattice, r_in, refpts=None)` can be used.
-         An empty list is returned and the tracking results of the last turn
-         are stored in *r_in*.
-       * To model buckets with different RF voltage :pycode:`unfold_beam=False`
-         has to be used. The beam can be unfolded using the function
-         :py:func:`.unfold_beam`. This function takes into account
-         the true voltage in each bucket and distributes the particles in the
-         bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
-    """
-    return _lattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
-
-
 @fortran_align
-def element_pass(element: Element, r_in, **kwargs):
-    """Tracks particles through a single element.
-
-    Parameters:
-        element:                AT element
-        r_in:                   (6, N) array: input coordinates of N particles.
-          *r_in* is modified in-place and reports the coordinates at
-          the end of the element. For the best efficiency, *r_in*
-          should be given as F_CONTIGUOUS numpy array.
-
-    Keyword arguments:
-        particle (Particle):    circulating particle.
-          Default: :code:`lattice.particle` if existing,
-          otherwise :code:`Particle('relativistic')`
-        energy (float):         lattice energy. Default 0.
-
-    If *energy* is not available, relativistic tracking if forced,
-    *rest_energy* is ignored.
-
-    Returns:
-        r_out:              (6, N) array containing output the coordinates of
-          the particles at the exit of the element.
-    """
-    return _elempass(element, r_in, **kwargs)
-
-
-@initialize_args
-@fortran_align
-def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
-            refpts: Refpts = End, pool_size: int = None,
-            start_method: str = None, **kwargs):
-    """
-    Simple parallel implementation of :py:func:`.lattice_pass`.
-    If more than one particle is supplied, use multiprocessing. For a
-    single particle or if the lattice contains :py:class:`.Collective`
-    elements, :py:func:`.atpass` is used.
-
-    :py:func:`patpass` tracks particles through each element of a lattice
-    calling the element-specific tracking function specified in the Element's
-    *PassMethod* field.
-
-    Parameters:
-        lattice:                list of elements
-        r_in:                   (6, N) array: input coordinates of N particles.
-          *r_in* is modified in-place and reports the coordinates at
-          the end of the element. For the best efficiency, *r_in*
-          should be given as F_CONTIGUOUS numpy array.
-        nturns:                 number of turns to be tracked
-        refpts:                 Selects the location of coordinates output.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-        pool_size:              number of processes. If None,
-          ``min(npart,nproc)`` is used
-        start_method:           python multiprocessing start method.
-          :py:obj:`None` uses the python default that is considered safe.
-          Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          Default for linux is ``'fork'``, default for macOS and  Windows is
-          ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
-          calculation or to solve Runtime Errors, however it is considered
-          unsafe.
-
-    Keyword arguments:
-        keep_lattice (bool):    Use elements persisted from a previous
-          call. If :py:obj:`True`, assume that the lattice has not changed
-          since the previous call.
-        keep_counter (bool):    Keep the turn number from the previous
-          call.
-        turn (int):             Starting turn number. Ignored if
-          *keep_counter* is :py:obj:`True`. The turn number is necessary to
-          compute the absolute path length used in RFCavityPass.
-        losses (bool):          Boolean to activate loss maps output
-        omp_num_threads (int):  Number of OpenMP threads
-          (default: automatic)
-
-    The following keyword arguments overload the Lattice values
-
-    Keyword arguments:
-        particle (Particle):    circulating particle.
-          Default: *lattice.particle* if existing,
-          otherwise *Particle('relativistic')*
-        energy (float):         lattice energy. Default 0.
-
-    If *energy* is not available, relativistic tracking if forced,
-    *rest_energy* is ignored.
-
-    Returns:
-        r_out: (6, N, R, T) array containing output coordinates of N particles
-          at R reference points for T turns.
-        loss_map: If *losses* is :py:obj:`True`: dictionary with the
-          following key:
-
-          ==============    ===================================================
-          **islost**        (npart,) bool array indicating lost particles
-          **turn**          (npart,) int array indicating the turn at
-                            which the particle is lost
-          **element**       ((npart,) int array indicating the element at
-                            which the particle is lost
-          **coord**         (6, npart) float array giving the coordinates at
-                            which the particle is lost (zero for surviving
-                            particles)
-          ==============    ===================================================
-
-    .. note::
-
-       * For multiparticle tracking with large number of turn the size of
-         *r_out* may increase excessively. To avoid memory issues
-         :pycode:`lattice_pass(lattice, r_in, refpts=[])` can be used.
-         An empty list is returned and the tracking results of the last turn
-         are stored in *r_in*.
-       * By default, :py:func:`patpass` will use all the available CPUs.
-         To change the number of cores used in ALL functions using
-         :py:func:`patpass` (:py:mod:`~at.acceptance.acceptance` module for
-         example) it is possible to set ``at.DConstant.patpass_poolsize``
-         to the desired value.
-
-    """
+def _plattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
+                   refpts: Refpts = End, pool_size: int = None,
+                   start_method: str = None, **kwargs):
     if not isinstance(lattice, list):
         lattice = list(lattice)
     refpts = get_uint32_index(lattice, refpts)
@@ -288,4 +90,52 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-Lattice.lattice_pass = lattice_pass
+@initialize_args
+def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int = 1,
+                   refpts: Refpts = End, use_mp=False, **kwargs):
+
+    pool_size = kwargs.pop('pool_size', None)
+    start_method = kwargs.pop('start_method', None)
+    losses = kwargs.pop('losses', False)
+
+    trackdata = {}
+    trackparam = {'rin': r_in.copy()}
+    elem_kw = ['energy', 'particle']
+    saved_kw = elem_kw + ['turn']
+    try:
+        npart = numpy.shape(r_in)[1]
+    except IndexError:
+        npart = 1
+    [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in saved_kw]
+    trackparam.update({'refpts': lattice.get_uint32_index(refpts),
+                       'nturns': nturns,
+                       'npart': npart})
+
+    ldtype = [('islost', numpy.bool_),
+              ('turn', numpy.uint32),
+              ('elem', numpy.uint32),
+              ('coord', numpy.float64, (6, )),
+              ]
+    loss_map = numpy.recarray((npart,), ldtype)
+
+    if isinstance(lattice, Element):
+        kwargs = {k: v for k, v in kwargs.items() if k in elem_kw}
+        rout = _element_pass(lattice, r_in, **kwargs)
+    elif use_mp:
+        rout = _plattice_pass(lattice, r_in, nturns=nturns, refpts=refpts,
+                              pool_size=pool_size, start_method=start_method,
+                              lossses=losses, **kwargs)
+    else:
+        rout = _lattice_pass(lattice, r_in, nturns=nturns, refpts=refpts,
+                             losses=losses, **kwargs)
+    if losses:
+        rout, lm = rout
+        for k, v in lm.items():
+            loss_map[k] = v
+
+    trackparam.update({'rout': r_in})
+    trackdata.update({'loss_map': loss_map})
+    return rout, trackparam, trackdata
+
+
+Lattice.track = track_function

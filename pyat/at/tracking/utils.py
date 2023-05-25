@@ -4,7 +4,6 @@ Utility functions for tracking simulations
 import numpy
 import functools
 from typing import List, Optional
-from .utils import fortran_align, has_collective, format_results
 from ..lattice import Lattice, Element
 from ..lattice import elements, refpts_iterator
 from ..lattice import  DConstant
@@ -26,11 +25,11 @@ def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
     return len(monitors) == 0
 
 
-def _get_bunch_config(lattice, unfold_beam):
+def _get_bunch_config(lattice, unfoldbeam):
     """Function to get the bunch configuration"""
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
-    if unfold_beam:
+    if unfoldbeam:
         bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
     else:
         bunch_spos = numpy.zeros(len(bunch_currents))
@@ -40,9 +39,9 @@ def _get_bunch_config(lattice, unfold_beam):
 def initialize_args(func):
     @functools.wraps(func)
     def wrapper(lattice, r_in, *args, **kwargs):
-        unfold_beam = kwargs.pop('unfold_beam', False)
+        unfoldbeam = kwargs.pop('unfold_beam', False)
         nturns = kwargs.get('nturns', 1)
-        nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfold_beam)
+        nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
         kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
         no_bm = _set_beam_monitors(lattice, nbunch, nturns)
         kwargs['keep_lattice'] = kwargs.get('keep_lattice', False) and no_bm
