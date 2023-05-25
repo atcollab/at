@@ -10,6 +10,7 @@
 
 struct elem 
 {
+    int dummy;  /* to make Windows compiler happy */
 };
 
 static void RandomPass(double *r_in,
