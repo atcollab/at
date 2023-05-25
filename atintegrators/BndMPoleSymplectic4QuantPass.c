@@ -69,12 +69,15 @@ void BndMPoleSymplectic4QuantPass(double* r, double le, double irho, double* A, 
     double pi = 3.14159265358979;
     double alpha0 = qe * qe / (4 * pi * epsilon0 * hbar * clight);
 
+/*  The behaviour of random generators with OpenMP is doubtful. OpenMP disabled until
+    it's understood
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none)                      \
     shared(r, num_particles, R1, T1, R2, T2, RApertures, EApertures,                                        \
         irho, gap, A, B, L1, L2, K1, K2, max_order, num_int_steps, rng,                                     \
         FringeBendEntrance, entrance_angle, fint1, FringeBendExit, exit_angle, fint2,                       \
         FringeQuadEntrance, useLinFrEleEntrance, FringeQuadExit, useLinFrEleExit, fringeIntM0, fringeIntP0, \
         emass, E0, hbar, clight, alpha0, qe, SL)
+*/
     for (int c = 0; c < num_particles; c++) { /* Loop over particles  */
         double* r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
