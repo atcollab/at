@@ -64,7 +64,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        IdentityPass(r_in,&pcg32_global,&pcg32_global,num_particles);
+        RandomPass(r_in,&pcg32_global,&pcg32_global,num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
