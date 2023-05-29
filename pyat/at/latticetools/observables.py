@@ -243,7 +243,7 @@ class Observable(object):
     @staticmethod
     def _header():
         """Header line"""
-        fstring = "{:<12} {:>16}  {:>16}  {:>16}  {:>16}  {:>16} "
+        fstring = "\n{:<12} {:>16}  {:>16}  {:>16}  {:>16}  {:>16} "
         return fstring.format("location", "Initial", "Actual", "Low bound",
                               "High bound", "residual")
 

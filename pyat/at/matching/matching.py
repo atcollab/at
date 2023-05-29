@@ -68,7 +68,9 @@ def match(ring: Lattice, variables: VariableList, constraints: ObservableList,
                   method=method, **kwargs)
 
     if verbose >= 1:
+        print("\nConstraints:")
         print(constraints)
+        print("\nVariables:")
         print(variables)
 
     return ring if copy else None

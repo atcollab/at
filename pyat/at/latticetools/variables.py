@@ -1,6 +1,81 @@
-"""
+r"""
 Definition of :py:class:`.Variable` objects used in matching and
-response matrices
+response matrices.
+
+Each :py:class:`Variable` has a scalar value
+
+.. rubric:: Class hierarchy
+
+:py:class:`Variable`\ (setfun, getfun, ...)
+    :py:class:`ElementVariable`\ (refpts, attrname, index, ...)
+
+:py:class:`Variable` provides the following methods:
+
+- :py:meth:`~Variable.get`
+- :py:meth:`~Variable.set`
+- :py:meth:`~Variable.set_previous`
+- :py:meth:`~Variable.set_initial`
+- :py:meth:`~Variable.increment`
+- :py:meth:`~Variable.step_up`
+- :py:meth:`~Variable.step_down`
+
+:py:class:`.Variable` provides the following properties:
+
+- :py:attr:`~Variable.initial_value`
+- :py:attr:`~Variable.last_value`
+- :py:attr:`~Variable.previous_value`
+- :py:attr:`~Variable.history`
+
+An :py:class:`ElementVariable` is associated with an attribute of one or
+several lattice elements,
+
+The :py:class:`Variable` class may be used as a base class to define custom
+variables (see examples).
+
+:py:class:`VariableList`\ ( ...)
+    A container based on :py:class:`list` which allows setting several
+    :py:class:`Variable`\ s simultaneously. Used in
+    :py:mod:`~at.matching`. :py:class:`Variable`\ s are set in order.
+
+.. rubric:: Examples
+
+Write a subclass of :py:class:`Variable` which varies two drift lengths so
+that their sum is constant:
+
+.. code-block:: python
+
+    class ElementShifter(at.Variable):
+        \"""Varies the length of the elements identified by *ref1* and *ref2*
+        keeping the sum of their lengths equal to *total_length*.
+
+        If *total_length* is None, it is set to the initial total length
+        \"""
+        def __init__(self, ring, ref1, ref2, total_length=None, **kwargs):
+            # store indexes of the 2 variable elements
+            self.ref1 = ring.get_uint32_index(ref1)[0]
+            self.ref2 = ring.get_uint32_index(ref2)[0]
+            # store the initial total length
+            if total_length is None:
+                total_length = ring[self.ref1].Length + ring[self.ref2].Length
+            self.length = total_length
+            super().__init__(self.setfun, self.getfun,
+                         refpts=[self.ref1, self.ref2],
+                         bounds=(0.0, total_length), **kwargs)
+
+        def setfun(self, ring, value):
+            ring[self.ref1].Length = value
+            ring[self.ref2].Length = self.length - value
+
+        def getfun(self, ring):
+            return  ring[self.ref1].Length
+
+And create a variable varying the length of drifts *DR_01* and *DR_01* and
+keeping their sum constant:
+
+.. code-block:: python
+
+    var2 = ElementShifter(hmba_lattice, "DR_01", "DR_02", name="DR_01")
+
 """
 from __future__ import annotations
 from typing import Optional
@@ -32,8 +107,9 @@ class _setf(object):
 
 
 # noinspection PyPep8Naming
-class _setfun(object):
-    def __init__(self, refpts: Refpts, attrname: str, index: int):
+class element_setfun(object):
+    def __init__(self, refpts: Refpts, attrname: str,
+                 index: Optional[int] = None):
         self.refpts = refpts
         self.attrname = attrname
         if index is None:
@@ -47,8 +123,9 @@ class _setfun(object):
 
 
 # noinspection PyPep8Naming
-class _getfun(object):
-    def __init__(self, refpts: Refpts, attrname: str, index: int):
+class element_getfun(object):
+    def __init__(self, refpts: Refpts, attrname: str,
+                 index: Optional[int] = None):
         self.refpts = refpts
         self.attrname = attrname
         if index is None:
@@ -69,6 +146,7 @@ class Variable(object):
                  setfun: Callable[[Lattice, float], None],
                  getfun: Callable[[Lattice], float], *,
                  name: str = '',
+                 refpts: Refpts = None,
                  bounds: tuple[float, float] = (-np.inf, np.inf),
                  delta: float = 1.0):
         """
@@ -85,12 +163,15 @@ class Variable(object):
               :pycode:`value = getfun(ring)`
 
             name:       Name of the Variable
+            refpts:     Identifies variable elements. It is used when a copy of
+              the variable elements is needed
             bounds:     Lower and upper bounds of the variable value
-            delta:      Step
+            delta:      Initial variation step
         """
         self.setfun = setfun
         self.getfun = getfun
         self.name = name
+        self.refpts = refpts
         self.bounds = bounds
         self.delta = delta
         self._history = []
@@ -131,6 +212,9 @@ class Variable(object):
             ring:   Lattice description
             value:  New value to be applied on the variable
         """
+
+        if value < self.bounds[0] or value > self.bounds[1]:
+            raise ValueError(f"set value must be in {self.bounds}")
         self.setfun(ring, value)
         self._history.append(value)
 
@@ -253,11 +337,11 @@ class ElementVariable(Variable):
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
         """
-        setfun = _setfun(refpts, attrname, index)
-        getfun = _getfun(refpts, attrname, index)
+        setfun = element_setfun(refpts, attrname, index)
+        getfun = element_getfun(refpts, attrname, index)
 
-        self.refpts = refpts
-        super(ElementVariable, self).__init__(setfun, getfun, **kwargs)
+        super(ElementVariable, self).__init__(setfun, getfun,
+                                              refpts=refpts, **kwargs)
 
 
 class VariableList(list):
