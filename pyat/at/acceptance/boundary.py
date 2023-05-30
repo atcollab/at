@@ -166,7 +166,6 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     _, _, td = ring.track(parts, nturns=nturns, losses=True, use_mp=use_mp, **kwargs)
     return numpy.invert(td['loss_map'].islost)
-    return survived
 
 
 def get_grid_boundary(mask, grid, config):
