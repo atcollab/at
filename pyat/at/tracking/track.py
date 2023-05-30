@@ -131,6 +131,7 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
+        squeeze_out: remove all dimension of length 1 in **r_out**
 
     The following keyword arguments overload the lattice values
 
@@ -150,7 +151,8 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
 
     Returns:
         r_out: (6, N, R, T) array containing output coordinates of N particles
-          at R reference points for T turns.
+          at R reference points for T turns. If *squeeze_out* is :py:obj:`True`
+          all dimensions of length 1 are removed
         trackparam: A dictionary containing tracking input parameters with the
           following keys:
 
@@ -241,14 +243,17 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
             rout = _lattice_pass(lattice, r_in, nturns=nturns,
                                  refpts=refpts, **kwargs)
 
-        losses = kwargs.pop('losses', False)
-        if losses:
+        if kwargs.get('losses', False):
             rout, lm = rout
             for k, v in lm.items():
                 loss_map[k] = v
         trackdata.update({'loss_map': loss_map})
 
+        if kwargs.get('squeeze_out', False):
+            rout = numpy.squeeze(rout)
+
     trackparam.update({'rout': r_in})
+
     return rout, trackparam, trackdata
 
 
