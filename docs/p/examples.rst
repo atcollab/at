@@ -7,3 +7,4 @@ Example notebooks
    :maxdepth: 1
 
    notebooks/test_variables
+   notebooks/test_observables

@@ -187,7 +187,7 @@ class Observable(object):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
               :py:class:`Need` enumeration
@@ -400,7 +400,7 @@ class _ElementObservable(Observable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -471,7 +471,7 @@ class OrbitObservable(_ElementObservable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -512,7 +512,7 @@ class MatrixObservable(_ElementObservable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -553,7 +553,7 @@ class _GlobalOpticsObservable(Observable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -602,7 +602,7 @@ class LocalOpticsObservable(_ElementObservable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -715,7 +715,7 @@ class TrajectoryObservable(_ElementObservable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -750,7 +750,7 @@ class EmittanceObservable(Observable):
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
-              [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
         Example:
 
@@ -1109,7 +1109,7 @@ def GlobalOpticsObservable(param: str, plane: AxisDef = Ellipsis,
           :pycode:`((value-target)/weight)**2`
         bounds:         Tuple of lower and upper bounds. The parameter
           is constrained in the interval
-          [*target*\ -\ *low_bound* *target*\ +\ *up_bound*]
+          [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
     The *target*, *weight* and *bounds* inputs must be broadcastable to the
     shape of *value*.
