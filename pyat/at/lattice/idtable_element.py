@@ -4,7 +4,7 @@ import io
 from scipy.constants import c as clight
 
 
-class IdTable(Element):
+class KickMap(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 
@@ -64,8 +64,8 @@ class IdTable(Element):
         kwargs.setdefault('xtable',      xtable)
         kwargs.setdefault('ytable',      ytable)
 
-        super(IdTable, self).__init__(family_name, **kwargs)
-        # the IdTable class uses IdTablePass method that
+        super(KickMap, self).__init__(family_name, **kwargs)
+        # the KickMap class uses IdTablePass method that
         # requires Fortran-aligned memory arguments.
         fortran_aligned_args = ['xkick', 'ykick']
         for key in fortran_aligned_args:
