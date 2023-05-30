@@ -57,7 +57,7 @@ _alias_map = {'rbend': elt.Dipole,
               'ap': elt.Aperture,
               'ringparam': RingParam,
               'wig': elt.Wiggler,
-              'idtable': idtable_element.IdTable
+              'kickmap': idtable_element.KickMap
               }
 
 
@@ -74,7 +74,7 @@ _PASS_MAP = {'BendLinearPass': elt.Dipole,
              'ThinMPolePass': elt.ThinMultipole,
              'Matrix66Pass': elt.M66,
              'AperturePass': elt.Aperture,
-             'IdTablePass': idtable_element.IdTable,
+             'IdTablePass': idtable_element.KickMap,
              'GWigSymplecticPass': elt.Wiggler}
 
 # Matlab to Python attribute translation
@@ -84,7 +84,7 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
 # Python to Matlab class translation
 _matclass_map = {
         'Dipole': 'Bend',
-        'IdTable': 'IdTable'
+        'KickMap': 'KickMap'
         }
 
 # Python to Matlab type translation
@@ -96,7 +96,7 @@ _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
     elt.M66: 'atM66',
-    idtable_element.IdTable: 'atidtable'
+    idtable_element.KickMap: 'atkickmap'
     }
 
 
