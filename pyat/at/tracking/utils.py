@@ -11,7 +11,7 @@ from ..lattice import  DConstant
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
            'get_bunches_std_mean', 'unfold_beam', 'has_collective',
-           'initialize_args']
+           'initialize_lpass']
 
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
@@ -36,17 +36,19 @@ def _get_bunch_config(lattice, unfoldbeam):
     return nbunch, bunch_spos, bunch_currents
 
 
-def initialize_args(func):
-    @functools.wraps(func)
-    def wrapper(lattice, r_in, *args, **kwargs):
-        unfoldbeam = kwargs.pop('unfold_beam', False)
-        nturns = kwargs.get('nturns', 1)
-        nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
-        kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
-        no_bm = _set_beam_monitors(lattice, nbunch, nturns)
-        kwargs['keep_lattice'] = kwargs.get('keep_lattice', False) and no_bm
-        return func(lattice, r_in, *args, **kwargs)
-    return wrapper
+def initialize_lpass(lattice, kwargs):
+    """Function to initialize keyword arguments for lattice tracking"""
+    unfoldbeam = kwargs.pop('unfold_beam', False)
+    nturns = kwargs.get('nturns', 1)
+    nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
+    kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
+    no_bm = _set_beam_monitors(lattice, nbunch, nturns)
+    kwargs['keep_lattice'] = kwargs.get('keep_lattice', False) and no_bm
+    pool_size = kwargs.pop('pool_size', None)
+    start_method = kwargs.pop('start_method', None)
+    if kwargs.get('use_mp', False):
+        kwargs['pool_size'] = pool_size
+        kwargs['start_method'] = start_method
 
 
 def has_collective(ring) -> bool:
@@ -70,7 +72,7 @@ def fortran_align(func):
         ... def element_pass(element: Element, r_in, **kwargs):
         ... ...
 
-        Ensure than *r_in* is Fortran-aligned
+        Ensure that *r_in* is Fortran-aligned
     """
     @functools.wraps(func)
     def wrapper(lattice, r_in, *args, **kwargs):
@@ -93,7 +95,7 @@ def format_results(results, r_in, losses):
     if losses:
         lout, ldic = zip(*lout)
         keys = ldic[0].keys()
-        dicout = dict(((k, numpy.hstack([li[k] for li in ldic])) for k in keys))
+        dicout = dict(((k, numpy.hstack([li[k].T for li in ldic]).T) for k in keys))
         return numpy.concatenate(lout, axis=1), dicout
     else:
         return numpy.concatenate(lout, axis=1)

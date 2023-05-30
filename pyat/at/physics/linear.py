@@ -11,7 +11,7 @@ from ..constants import clight
 from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
 from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
 from ..lattice import frequency_control
-from ..tracking import lattice_pass
+from ..tracking import internal_lpass
 from .orbit import find_orbit4, find_orbit6
 from .matrix import find_m44, find_m66
 from .amat import a_matrix, jmat, jmatswap
@@ -1115,7 +1115,7 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         p0[2] += ampl
         if nv >= 6:
             p0[4] += ampl
-        p1 = numpy.squeeze(lattice_pass(ring, p0, nturns, len(ring)))
+        p1 = numpy.squeeze(internal_lpass(ring, p0, nturns, len(ring)))
         if remove_dc:
             p1 -= numpy.mean(p1, axis=1, keepdims=True)
         p2 = solve(ld.A, p1[:nv, :])

@@ -5,7 +5,7 @@ import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant, Orbit
 from at.lattice import Lattice, get_s_pos, Refpts, frequency_control
-from at.tracking import lattice_pass
+from at.tracking import internal_lpass
 from .energy_loss import ELossMethod, get_timelag_fromU0
 import warnings
 
@@ -47,7 +47,7 @@ def _orbit_dp(ring: Lattice, dp: float = None, guess: Orbit = None, **kwargs):
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
-        _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
+        _ = internal_lpass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
         # the reference particle after one turn
         ref_out = in_mat[:, 4]
         # 4x4 jacobian matrix from numerical differentiation:
@@ -96,7 +96,7 @@ def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
-        _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
+        _ = internal_lpass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
         # the reference particle after one turn
         ref_out = in_mat[:, -1]
         # 5x5 jacobian matrix from numerical differentiation:
@@ -204,8 +204,8 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
     if ring.refcount(refpts) == 0:
         all_points = numpy.empty((0, 6), dtype=float)
     else:
-        all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
-                                  keep_lattice=keep_lattice)
+        all_points = internal_lpass(ring, orbit.copy(order='K'), refpts=refpts,
+                                    keep_lattice=keep_lattice)
         all_points = numpy.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
@@ -296,8 +296,8 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
     if ring.refcount(refpts) == 0:
         all_points = numpy.empty((0, 6), dtype=float)
     else:
-        all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
-                                  keep_lattice=keep_lattice)
+        all_points = internal_lpass(ring, orbit.copy(order='K'), refpts=refpts,
+                                    keep_lattice=keep_lattice)
         all_points = numpy.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
@@ -342,7 +342,7 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
-        _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
+        _ = internal_lpass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
         # the reference particle after one turn
         ref_out = in_mat[:, 6]
         # 6x6 jacobian matrix from numerical differentiation:
@@ -451,8 +451,8 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
     if ring.refcount(refpts) == 0:
         all_points = numpy.empty((0, 6), dtype=float)
     else:
-        all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
-                                  keep_lattice=keep_lattice)
+        all_points = internal_lpass(ring, orbit.copy(order='K'), refpts=refpts,
+                                    keep_lattice=keep_lattice)
         all_points = numpy.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 

@@ -1,13 +1,9 @@
-from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
-from .utils import fortran_align, has_collective
-from .track import _lattice_pass, _pass
-from .utils import initialize_args
+from .utils import fortran_align
+from .track import internal_lpass, internal_epass, internal_plpass
+from .utils import initialize_lpass
 from ..lattice import Lattice, Element, Particle, Refpts, End
-from ..lattice import get_uint32_index
-from ..lattice import AtWarning, DConstant
 from typing import Iterable, Optional
-import multiprocessing
 from warnings import warn
 
 
@@ -75,7 +71,6 @@ def elempass(*args, **kwargs):
     return _elempass(*args, **kwargs)
 
 
-@initialize_args
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
                  refpts: Refpts = End, **kwargs):
     """
@@ -134,7 +129,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
                             which the particle is lost
           **element**       ((npart,) int array indicating the element at
                             which the particle is lost
-          **coord**         (6, npart) float array giving the coordinates at
+          **coord**         (npart, 6) float array giving the coordinates at
                             which the particle is lost (zero for surviving
                             particles)
           ==============    ===================================================
@@ -160,7 +155,8 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          the true voltage in each bucket and distributes the particles in the
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
-    return _lattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
+    initialize_lpass(lattice, kwargs)
+    return internal_lpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
 @fortran_align
@@ -187,11 +183,9 @@ def element_pass(element: Element, r_in, **kwargs):
         r_out:              (6, N) array containing output the coordinates of
           the particles at the exit of the element.
     """
-    return _elempass(element, r_in, **kwargs)
+    return internal_epass(element, r_in, **kwargs)
 
 
-@initialize_args
-@fortran_align
 def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
             refpts: Refpts = End, pool_size: int = None,
             start_method: str = None, **kwargs):
@@ -279,23 +273,12 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
          to the desired value.
 
     """
-    if not isinstance(lattice, list):
-        lattice = list(lattice)
-    refpts = get_uint32_index(lattice, refpts)
-    any_collective = has_collective(lattice)
-    rshape = r_in.shape
-    if len(rshape) >= 2 and rshape[1] > 1 and not any_collective:
-        if pool_size is None:
-            pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
-                            DConstant.patpass_poolsize)
-        return _pass(lattice, r_in, pool_size, start_method, nturns=nturns,
-                     refpts=refpts, **kwargs)
-    else:
-        if any_collective:
-            warn(AtWarning('Collective PassMethod found: use single process'))
-        else:
-            warn(AtWarning('no parallel computation for a single particle'))
-        return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
+    kwargs['use_mp'] = True
+    kwargs['pool_size'] = pool_size
+    kwargs['start_method'] = start_method
+    initialize_lpass(lattice, kwargs)
+    return internal_plpass(lattice, r_in, nturns=nturns,
+                           refpts=refpts, **kwargs)
 
 
 Lattice.lattice_pass = lattice_pass

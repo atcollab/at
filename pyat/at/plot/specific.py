@@ -1,6 +1,6 @@
 """AT plotting functions"""
 from ..lattice import Lattice, Refpts
-from ..tracking import lattice_pass
+from ..tracking import internal_lpass
 from ..physics import get_optics, Orbit
 from .generic import baseplot
 
@@ -191,8 +191,8 @@ def plot_trajectory(ring: Lattice, r_in, nturns: int = 1, **kwargs):
     """
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):
-        r_out = lattice_pass(ring, r_in, refpts=refpts, nturns=nturns,
-                             **kwargs)
+        r_out = internal_lpass(ring, r_in, refpts=refpts, nturns=nturns,
+                               **kwargs)
         s_pos = ring.get_s_pos(refpts)
         particles = range(r_out.shape[1])
         xx = [r_out[0, i, :, :] for i in particles]

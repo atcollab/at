@@ -1,4 +1,4 @@
-from at import elements, patpass
+from at import elements, internal_plpass
 import numpy
 import pytest
 # import sys
@@ -14,7 +14,7 @@ def test_patpass_multiple_particles_and_turns():
     lattice = [d]
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
-    rout = patpass(lattice, rin, nturns)
+    rout = internal_plpass(lattice, rin, nturns)
     # results from Matlab
     assert rout.shape == (6, nparticles, 1, nturns)
     rout_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,

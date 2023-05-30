@@ -48,7 +48,7 @@ fring.append(bmon)
 sigm = at.sigma_matrix(ring.radiation_on(copy=True))
 part = at.beam(Npart, sigm)
 
-_ = at.lattice_pass(fring, part, nturns=nturns)
+at.track_function(fring, part, nturns=nturns)
 
 dp_all = bmon.means[4, 0, :]
 

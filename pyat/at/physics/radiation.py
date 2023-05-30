@@ -11,7 +11,7 @@ from at.lattice import Dipole, Wiggler, DConstant
 from at.lattice import Quadrupole, Multipole, QuantumDiffusion
 from at.lattice import get_refpts, get_value_refpts, frequency_control
 from at.lattice import uint32_refpts, set_value_refpts
-from at.tracking import lattice_pass
+from at.tracking import internal_lpass
 from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
 from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
 from at.physics import ELossMethod
@@ -56,8 +56,8 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         keep_lattice = True
 
     orbs = numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
+        internal_lpass(ring, orbit.copy(order='K'), refpts=allrefs,
+                       keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
           if elem.PassMethod.endswith('RadPass') else b0

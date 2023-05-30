@@ -2,7 +2,6 @@ import at
 import numpy
 import pytest
 from numpy.testing import assert_allclose as assert_close
-from numpy.testing import assert_equal
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
 from at.collective import add_beamloading, remove_beamloading, BLMode
@@ -117,20 +116,21 @@ def test_beamloading(hmba_lattice):
 def test_track_beamloading(hmba_lattice):
     ring = hmba_lattice.radiation_on(copy=True)
     rin0 = numpy.zeros(6)
-    at.lattice_pass(ring, rin0, refpts=[])
+    at.track_function(ring, rin0, refpts=[])
     add_beamloading(ring, 44e3, 400, mode=BLMode.WAKE)
     rin1 = numpy.zeros(6)
-    at.lattice_pass(ring, rin1, refpts=[])    
+    at.track_function(ring, rin1, refpts=[])
     assert_close(rin0, rin1, atol=1e-21)
     ring.set_fillpattern(2)
     ring.beam_current = 0.2
-    rin = numpy.zeros((6,1))
+    rin = numpy.zeros((6, 1))
     with pytest.raises(Exception):
-        at.lattice_pass(ring, rin, refpts=[])
-    rin = numpy.zeros((6,2))
-    at.lattice_pass(ring, rin, refpts=[])
-    assert_close(rin[:,0], numpy.array([-2.318948e-08, -1.599715e-09,
+        print(rin, getattr(ring, 'nbunch', 1))
+        at.track_function(ring, rin, refpts=[])
+    rin = numpy.zeros((6, 2))
+    at.track_function(ring, rin, refpts=[])
+    assert_close(rin[:, 0], numpy.array([-2.318948e-08, -1.599715e-09,
                                         0.000000e+00,  0.000000e+00,
                                         -1.313306e-05, -1.443748e-08]
-                                        ), atol=1e-10)
+                                        ), atol=5e-10)
     

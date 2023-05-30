@@ -164,11 +164,8 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
-    _ = ring.track(parts, nturns=nturns, use_mp=use_mp, **kwargs)
-    if parts.ndim == 1:
-        survived = numpy.invert(numpy.isnan(parts[0]))
-    else:
-        survived = numpy.invert(numpy.isnan(parts[0, :]))
+    _, _, td = ring.track(parts, nturns=nturns, losses=True, use_mp=use_mp, **kwargs)
+    return numpy.invert(td['loss_map'].islost)
     return survived
 
 

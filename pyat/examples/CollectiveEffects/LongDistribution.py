@@ -1,7 +1,6 @@
 import numpy
 import at
 import matplotlib.pyplot as plt
-from matplotlib import cm
 from at.collective import Wake, LongResonatorElement
 from at.collective.haissinski import Haissinski
 
@@ -74,7 +73,7 @@ id0 = 0
 for t in numpy.arange(Nturns):
     if t % 1000 == 0:
         print('Tracking turn ', t, ' of ', Nturns)
-    _ = at.lattice_pass(fring, part)
+    at.track_function(fring, part)
 
     if t > Nturns-numAve:
         if not histAveFlag:
