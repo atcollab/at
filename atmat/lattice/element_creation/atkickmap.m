@@ -1,0 +1,70 @@
+function Elem = atkickmap(  fname, ...
+                            method, ...
+                            filename, ...
+                            Energy, ...
+                            Nslice, ...
+                            length, ...
+                            xkick, ...
+                            ykick, ...
+                            xtable, ...
+                            ytable ...
+                        )
+% ATKICKMAP Creates an KickMap element
+% Elem = atkickmap(           fname, ...
+%                             method, ...
+%                             filename, ...
+%                             Energy, ...
+%                             Nslice, ...
+%                             length, ...
+%                             xkick, ...
+%                             ykick, ...
+%                             xtable, ...
+%                             ytable ...
+%                         )
+%
+% fname  	family name
+% method    'IdTablePass'
+% filename  name of the file used to create the element
+% Energy    energy to which the field table was scaled
+% Nslice	number of slices (1 means the wiggler is represented by a
+%           single kick in the center of the device).
+% length    length of the element
+% xkick     list of x positions
+% ykick     list of y positions
+% xtable    horizontal plane table
+% ytable    vertical plane table
+%
+% The tracking method is described in
+% P. Elleaume, "A new approach to the electron beam dynamics in undulators
+% and wigglers", EPAC92.
+%
+% Returns an element with Class 'KickMap'
+
+%------------------
+% Modification Log:
+% -----------------
+% 24-05-2023:  orblancog, added for compatibility with pyat
+%---------------------------------------------------------------------------
+
+% Parse optional arguments
+
+
+% check if element is already fully defined,
+% otherwise read input file
+
+
+Elem.FamName = fname;
+Elem.PassMethod = method;
+Elem.Filename_in = filename;
+Elem.Energy = Energy;
+Elem.Nslice = Nslice;
+Elem.Length= length;
+Elem.xtable = xtable;
+Elem.ytable = ytable;
+Elem.xkick = xkick;
+Elem.ykick = ykick;
+Elem.xkick1 = xkick;
+Elem.ykick1 = ykick;
+Elem.Class = 'KickMap';
+
+return
