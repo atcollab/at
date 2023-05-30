@@ -2,6 +2,8 @@ r"""
 Definition of :py:class:`.Variable` objects used in matching and
 response matrices.
 
+See :ref:`example-notebooks` for examples of matching and response matrices
+
 Each :py:class:`Variable` has a scalar value
 
 .. rubric:: Class hierarchy

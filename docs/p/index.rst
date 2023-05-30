@@ -25,6 +25,7 @@ Sub-packages
    :hidden:
 
    getting_started
+   examples
 
 .. toctree::
    :maxdepth: 2
