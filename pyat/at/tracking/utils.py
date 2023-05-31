@@ -98,7 +98,7 @@ def format_results(results, r_in, losses):
     if losses:
         lout, ldic = zip(*lout)
         keys = ldic[0].keys()
-        dicout = dict(((k, numpy.hstack([li[k].T for li in ldic]).T) for k in keys))
+        dicout = dict(((k, numpy.hstack([li[k] for li in ldic])) for k in keys))
         return numpy.concatenate(lout, axis=1), dicout
     else:
         return numpy.concatenate(lout, axis=1)

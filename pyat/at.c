@@ -438,8 +438,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if(losses){
         pdims[0]= num_particles;
-        lxdims[0]= num_particles;
-        lxdims[1]= 6;
+        lxdims[0]= 6;
+        lxdims[1]= num_particles;
         xnturn = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
         xnelem = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
         xlost = PyArray_EMPTY(1, pdims, NPY_BOOL, 1);

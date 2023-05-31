@@ -241,6 +241,7 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
 
         if kwargs.get('losses', False):
             rout, lm = rout
+            lm['coord'] = lm['coord'].T
             for k, v in lm.items():
                 loss_map[k] = v
         trackdata.update({'loss_map': loss_map})

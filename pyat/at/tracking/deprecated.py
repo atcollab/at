@@ -129,7 +129,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
                             which the particle is lost
           **element**       ((npart,) int array indicating the element at
                             which the particle is lost
-          **coord**         (npart, 6) float array giving the coordinates at
+          **coord**         (6, npart) float array giving the coordinates at
                             which the particle is lost (zero for surviving
                             particles)
           ==============    ===================================================
