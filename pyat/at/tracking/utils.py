@@ -1,9 +1,11 @@
 """
 Utility functions for tracking simulations
 """
+from __future__ import annotations
 import numpy
 import functools
-from typing import List, Optional, Sequence
+from collections.abc import Sequence, Iterable
+from typing import Optional
 from ..lattice import Lattice, Element
 from ..lattice import elements, refpts_iterator
 from ..lattice import  DConstant
@@ -36,7 +38,7 @@ def _get_bunch_config(lattice, unfoldbeam):
     return nbunch, bunch_spos, bunch_currents
 
 
-def initialize_lpass(lattice, kwargs):
+def initialize_lpass(lattice: Iterable[Element], kwargs) -> list[Element]:
     """Function to initialize keyword arguments for lattice tracking"""
     if not isinstance(lattice, list):
         lattice = list(lattice)

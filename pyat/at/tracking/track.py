@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy
 from .atpass import atpass as _atpass, elempass as _elempass
 from .utils import fortran_align, has_collective, format_results
@@ -5,7 +6,8 @@ from .utils import initialize_lpass
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
-from typing import List, Iterable, Sequence, Optional, Union
+from collections.abc import  Iterable, Sequence
+from typing import Optional, Union
 from functools import partial
 import multiprocessing
 from warnings import warn
@@ -60,7 +62,7 @@ def _element_pass(element: Element, r_in, **kwargs):
 
 
 @fortran_align
-def _lattice_pass(lattice: Sequence[Element], r_in, nturns: int = 1,
+def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
                   refpts: Refpts = End, **kwargs):
     refs = get_uint32_index(lattice, refpts)
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
@@ -68,7 +70,7 @@ def _lattice_pass(lattice: Sequence[Element], r_in, nturns: int = 1,
 
 
 @fortran_align
-def _plattice_pass(lattice: Sequence[Element], r_in, nturns: int = 1,
+def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
                    refpts: Refpts = End, pool_size: int = None,
                    start_method: str = None, **kwargs):
     refpts = get_uint32_index(lattice, refpts)

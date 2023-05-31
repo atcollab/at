@@ -9,7 +9,7 @@ from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import QuantumDiffusion, Collective
 from at.lattice import get_bool_index, set_value_refpts
 from at.constants import clight, Cgamma
-from at.tracking.track import internal_lpass
+from at.tracking import internal_lpass
 
 __all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod',
            'get_timelag_fromU0']
