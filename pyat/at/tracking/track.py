@@ -6,7 +6,7 @@ from .utils import initialize_lpass
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
-from collections.abc import  Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from typing import Optional, Union
 from functools import partial
 import multiprocessing
@@ -91,12 +91,12 @@ def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int = 1,
-                   refpts: Refpts = End, **kwargs):
+def track_function(lattice: Union[Element, Iterable[Element]], r_in,
+                   nturns: int = 1, refpts: Refpts = End, **kwargs):
     """
-    :py:func:`track_function` tracks particles through each element of a lattice
-    or throught a single Element calling the element-specific tracking function
-    specified in the Element's *PassMethod* field.
+    :py:func:`track_function` tracks particles through each element of a
+    lattice or throught a single Element calling the element-specific
+    tracking function specified in the Element's *PassMethod* field.
 
     Usage:
       >>> track_function(lattice, r_in)
@@ -165,10 +165,12 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
                             (only for lattice tracking)
           **nturns**        number of turn (only for lattice tracking)
 
-        trackdata: A dictionary containinf tracking data with the following keys:
+        trackdata: A dictionary containinf tracking data with the following
+          keys:
 
           ==============    ===================================================
-          **loss_map**: recarray containing the loss_map (only for lattice tracking)
+          **loss_map**: recarray containing the loss_map (only for lattice
+                        tracking)
 
 
         The **loss_map** is filled only if *losses* is :py:obj:`True`,
@@ -187,8 +189,8 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
 
     .. note::
 
-       * :pycode:`track_function(lattice, r_in, refpts=len(line))` is the same as
-         :pycode:`track_function(lattice, r_in)` since the reference point
+       * :pycode:`track_function(lattice, r_in, refpts=len(line))` is the same
+         as :pycode:`track_function(lattice, r_in)` since the reference point
          len(line) is the exit of the last element.
        * :pycode:`track_function(lattice, r_in, refpts=0)` is a copy of *r_in*
          since the reference point 0 is the entrance of the first element.
@@ -229,7 +231,8 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int
                   ]
         loss_map = numpy.recarray((npart,), ldtype)
         lat_kw = ['turn']
-        [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in lat_kw]
+        [trackparam.update((kw, kwargs.get(kw)))
+         for kw in kwargs if kw in lat_kw]
         trackparam.update({'refpts': get_uint32_index(lattice, refpts),
                            'nturns': nturns})
 

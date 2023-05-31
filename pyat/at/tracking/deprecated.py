@@ -156,7 +156,8 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
     lattice = initialize_lpass(lattice, kwargs)
-    return internal_lpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
+    return internal_lpass(lattice, r_in, nturns=nturns, refpts=refpts,
+                          **kwargs)
 
 
 @fortran_align
