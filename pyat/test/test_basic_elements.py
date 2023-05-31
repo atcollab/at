@@ -1,6 +1,8 @@
 import pytest
 import numpy
 from at import track_function
+from at import lattice_pass, internal_lpass
+from at import element_pass, internal_epass
 from at import elements
 from numpy.testing import assert_equal
 
@@ -179,20 +181,22 @@ def test_insert_into_drift():
                                       [-0.15, 0.3, 0.7, 0.3, -0.15])
 
 
-def test_correct_dimensions_does_not_raise_error(rin):
-    track_function([], rin, 1)
+@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+def test_correct_dimensions_does_not_raise_error(rin, func):
+    func([], rin, 1)
     rin = numpy.zeros((6,))
-    track_function([], rin, 1)
+    func([], rin, 1)
     rin = numpy.array(numpy.zeros((6, 2), order='F'))
-    track_function([], rin, 1)
+    func([], rin, 1)
 
 
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
-def test_dipole_bend_synonym(rin, dipole_class):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_dipole_bend_synonym(rin, dipole_class, func):
     b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
     rin[0, 0] = 1e-6
     rin_orig = rin.copy()
-    track_function(b, rin)
+    func(b, rin)
     rin_expected = numpy.array([1e-6, 0, 0, 0, 0, 1e-7]).reshape((6, 1))
     numpy.testing.assert_almost_equal(rin_orig, rin_expected)
     assert b.K == 0.0
@@ -202,67 +206,74 @@ def test_dipole_bend_synonym(rin, dipole_class):
     assert b.PolynomB[1] == 0.1
 
 
-def test_marker(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_marker(rin, func):
     m = elements.Marker('marker')
     assert m.Length == 0
     rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
     rin_orig = numpy.array(rin, copy=True, order='F')
-    track_function(m, rin)
+    func(m, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
-def test_monitor(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_monitor(rin, func):
     mon = elements.Monitor('monitor')
     assert mon.Length == 0
     rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
     rin_orig = rin.copy()
-    track_function(mon, rin)
+    func(mon, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
-def test_aperture_inside_limits(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_aperture_inside_limits(rin, func):
     a = elements.Aperture('aperture', [-1e-3, 1e-3, -1e-4, 1e-4])
     assert a.Length == 0
     rin[0, 0] = 1e-5
     rin[2, 0] = -1e-5
     rin_orig = rin.copy()
-    track_function(a, rin)
+    func(a, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
-def test_aperture_outside_limits(rin):
+@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+def test_aperture_outside_limits(rin, func):
     a = elements.Aperture('aperture', [-1e-3, 1e-3, -1e-4, 1e-4])
     assert a.Length == 0
     lattice = [a]
     rin[0, 0] = 1e-2
     rin[2, 0] = -1e-2
-    track_function(lattice, rin, 1)
+    func(lattice, rin, 1)
     assert numpy.isnan(rin[0, 0])
     assert rin[2, 0] == 0.0  # Only the 1st coordinate is nan, the rest is zero
 
 
-def test_drift_offset(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_drift_offset(rin, func):
     d = elements.Drift('drift', 1)
     rin[0, 0] = 1e-6
     rin[2, 0] = 2e-6
     rin_orig = rin.copy()
-    track_function(d, rin)
+    func(d, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
-def test_drift_divergence(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_drift_divergence(rin, func):
     d = elements.Drift('drift', 1.0)
     assert d.Length == 1
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
-    track_function(d, rin)
+    func(d, rin)
     # results from Matlab
     rin_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
                                 2.5e-12]).reshape(6, 1)
     numpy.testing.assert_equal(rin, rin_expected)
 
 
-def test_drift_two_particles(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_drift_two_particles(rin, func):
     d = elements.Drift('drift', 1.0)
     assert d.Length == 1
     two_rin = numpy.array(numpy.concatenate((rin, rin), axis=1), order='F')
@@ -273,7 +284,7 @@ def test_drift_two_particles(rin):
     two_rin[1, 1] = 1e-6
     two_rin[3, 1] = -2e-6
     two_rin_orig = two_rin.copy()
-    track_function(d, two_rin)
+    func(d, two_rin)
     # results from Matlab
     p1_expected = numpy.array(two_rin_orig[:, 0]).reshape(6, 1)
     p2_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
@@ -282,10 +293,11 @@ def test_drift_two_particles(rin):
     numpy.testing.assert_equal(two_rin, two_rin_expected)
 
 
-def test_quad(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_quad(rin, func):
     q = elements.Quadrupole('quad', 0.4, k=1)
     rin[0, 0] = 1e-6
-    track_function(q, rin)
+    func(q, rin)
     expected = numpy.array([0.9210610203854122, -0.3894182419439, 0,
                             0, 0, 0.0000000103303797478]).reshape(6, 1) * 1e-6
     numpy.testing.assert_allclose(rin, expected)
@@ -296,29 +308,32 @@ def test_quad(rin):
     assert q.PolynomB[1] == 0.1
 
 
-def test_rfcavity(rin):
+@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+def test_rfcavity(rin, func):
     rf = elements.RFCavity('rfcavity', 0.0, 187500, 3.5237e+8, 31, 6.e+9)
     lattice = [rf, rf, rf, rf]
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
-    track_function(lattice, rin, 1)
+    func(lattice, rin, 1)
     expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
 
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
 @pytest.mark.parametrize("n", (0, 1, 2, 3, 4, 5))
-def test_m66(rin, n):
+def test_m66(rin, n, func):
     m = numpy.random.rand(6, 6)
     m66 = elements.M66('m66', m)
     assert m66.Length == 0
     rin[n, 0] = 1e-6
-    track_function(m66, rin)
+    func(m66, rin)
     expected = numpy.array([m[0, n], m[1, n], m[2, n], m[3, n], m[4, n],
                             m[5, n]]).reshape(6, 1) * 1e-6
     numpy.testing.assert_equal(rin, expected)
 
 
-def test_corrector(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_corrector(rin, func):
     c = elements.Corrector('corrector', 0.0, numpy.array([0.9, 0.5],
                                                          dtype=numpy.float64))
     assert c.Length == 0
@@ -326,11 +341,12 @@ def test_corrector(rin):
     rin_orig = rin.copy()
     rin_orig[1] = 0.9
     rin_orig[3] = 0.5
-    track_function(c, rin)
+    func(c, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
-def test_wiggler(rin):
+@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+def test_wiggler(rin, func):
     period = 0.05
     periods = 23
     bmax = 1
@@ -340,7 +356,7 @@ def test_wiggler(rin):
     # Expected value from Matlab AT.
     expected = numpy.array(rin, copy=True)
     expected[5] = 0.000000181809691064259
-    track_function(c, rin)
+    func(c, rin)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
 

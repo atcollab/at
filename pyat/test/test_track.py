@@ -1,23 +1,29 @@
-from at import elements, track_function
+from at import elements
+from at import track_function
+from at import lattice_pass, internal_lpass
 import numpy
 import pytest
 
 
+@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
 @pytest.mark.parametrize('input_dim', [(0,), (5,), (7,), (1, 1), (6, 1, 1)])
-def test_track_function_raises_AssertionError_if_rin_incorrect_shape(input_dim):
+def test_track_function_raises_AssertionError_if_rin_incorrect_shape(input_dim, func):
     rin = numpy.zeros(input_dim)
     lattice = []
     with pytest.raises(AssertionError):
-        track_function(lattice, rin)
+        func(lattice, rin)
 
 
-def test_multiple_particles_track_function():
+@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+def test_multiple_particles_track_function(func):
     lattice = [elements.Drift('Drift', 1.0)]
     rin = numpy.zeros((6, 2))
     rin[0, 0] = 1e-6  # particle one offset in x
     rin[2, 1] = 1e-6  # particle two offset in y
     r_original = numpy.copy(rin)
-    r_out, *_ = track_function(lattice, rin, nturns=2)
+    r_out = func(lattice, rin, nturns=2)
+    if isinstance(r_out, tuple):
+        r_out, *_ = r_out 
     # particle position is not changed passing through the drift
     numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 0])
     numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 1])
@@ -25,10 +31,13 @@ def test_multiple_particles_track_function():
     numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 1])
 
 
-def test_lattice_convert_to_list_if_incorrect_type():
+@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+def test_lattice_convert_to_list_if_incorrect_type(func):
     lattice = numpy.array([elements.Drift('Drift', 1.0)])
     rin = numpy.zeros((6, 2))
     rin[0, 0] = 1e-6
     r_original = numpy.copy(rin)
-    r_out, *_ = track_function(lattice, rin, 1)
+    r_out = func(lattice, rin, 1)
+    if isinstance(r_out, tuple):
+        r_out, *_ = r_out 
     numpy.testing.assert_equal(r_original, r_out.reshape(6, 2))
