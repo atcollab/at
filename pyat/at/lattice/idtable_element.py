@@ -249,7 +249,7 @@ def InsertionDeviceKickMap(
     # elem = Element('name', PassMethod='IdTablePass', \
     #                       xkick=x0, ykick=x1, \
     #                       xtable=x2, ytable=x3, Nslice=x4)
-    return IdTable(
+    return KickMap(
                     family_name,
                     PassMethod='IdTablePass',
                     Filename_in=Filename_in,
