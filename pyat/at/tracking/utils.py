@@ -38,6 +38,8 @@ def _get_bunch_config(lattice, unfoldbeam):
 
 def initialize_lpass(lattice, kwargs):
     """Function to initialize keyword arguments for lattice tracking"""
+    if not isinstance(lattice, list):
+        lattice = list(lattice)
     unfoldbeam = kwargs.pop('unfold_beam', False)
     nturns = kwargs.get('nturns', 1)
     nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
@@ -49,6 +51,7 @@ def initialize_lpass(lattice, kwargs):
     if kwargs.get('use_mp', False):
         kwargs['pool_size'] = pool_size
         kwargs['start_method'] = start_method
+    return lattice
 
 
 def has_collective(ring) -> bool:

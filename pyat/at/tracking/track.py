@@ -5,7 +5,7 @@ from .utils import initialize_lpass
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
-from typing import List, Iterable, Optional, Union
+from typing import List, Iterable, Sequence, Optional, Union
 from functools import partial
 import multiprocessing
 from warnings import warn
@@ -89,7 +89,7 @@ def _plattice_pass(lattice: Sequence[Element], r_in, nturns: int = 1,
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-def track_function(lattice: Union[Element, Sequence[Element]], r_in, nturns: int = 1,
+def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int = 1,
                    refpts: Refpts = End, **kwargs):
     """
     :py:func:`track_function` tracks particles through each element of a lattice
@@ -219,7 +219,7 @@ def track_function(lattice: Union[Element, Sequence[Element]], r_in, nturns: int
         kwargs = {k: v for k, v in kwargs.items() if k in part_kw}
         rout = _element_pass(lattice, r_in, **kwargs)
     else:
-        initialize_lpass(lattice, kwargs)
+        lattice = initialize_lpass(lattice, kwargs)
         ldtype = [('islost', numpy.bool_),
                   ('turn', numpy.uint32),
                   ('elem', numpy.uint32),

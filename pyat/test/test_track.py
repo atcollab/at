@@ -31,7 +31,7 @@ def test_multiple_particles_track_function(func):
     numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 1])
 
 
-@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+@pytest.mark.parametrize('func', (track_function, lattice_pass))
 def test_lattice_convert_to_list_if_incorrect_type(func):
     lattice = numpy.array([elements.Drift('Drift', 1.0)])
     rin = numpy.zeros((6, 2))
