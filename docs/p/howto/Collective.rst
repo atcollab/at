@@ -31,13 +31,13 @@ The package is organised as follows:
 **at.collective.wake_functions** contains the analytic wake functions that can be called
 by the other classes
 
-The longitudinal resonator wake function is given by [1]
+The longitudinal resonator wake function is given by [1]_
 
 .. math:: W_{z}(\tau) = \left\{ \begin{array}{lr} \alpha R_{s} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;   \text{for } \tau=0 \\ 2\alpha R_{s}e^{-\alpha \tau} [\text{cos}(\bar{\omega}\tau) - \frac{\alpha}{\bar{\omega}}\text{sin}(\bar{\omega}\tau)]\;\;\;\; \text{for}\ \tau > 0 \\ \end{array} \right. 
 
 where :math:`R_{s}` is the resonator shunt impedance in Ohms, :math:`\alpha=\omega_{R}/2Q`, :math:`\omega_{R}` is the resonator angular frequency in Hz.rad, :math:`Q` is the resonator quality factor and :math:`\bar{\omega}=\sqrt{\omega_{R}^{2} - \alpha^{2}}`  . The units of the longitudinal wake function are V/C.
 
-The transverse resonator wake function is given by [2]
+The transverse resonator wake function is given by [2]_
 
 .. math:: W_{x,y}(z) = -\frac{c R_{s}\omega_{R}}{Q\bar{\omega}}e^{-\alpha z / c} \text{sin}(\bar{\omega} z / c).
 
@@ -50,7 +50,7 @@ The definitions are the same as for the longitudinal resonator.
 
 The units of the transverse resonator wake function are V/C/m
 
-The transverse resistive wall wake function is defined as [3]
+The transverse resistive wall wake function is defined as [3]_
 
 .. math:: W_{x,y}(z) = -\frac{2}{\pi b^{3}}\sqrt{\frac{c}{\sigma_{c}}}\frac{1}{|z|^{1/2}}L.
 
@@ -196,7 +196,7 @@ Using the Haissinski Class
 
 NOTE: This module is due for a re-write and a clean up. But the fundamental process will remain the same.
 
-The Haissinski solver is used to compute the equilibrium beam distribution in the presence of a longitudinal impedance. This class is based entirely on the very nice paper by K. Bane and R. Warnock [4]. In this small overview, we will only talk about how to use it. The details can be seen in the paper of exactly how it is implemented. All the functions within the class are cross referenced with the equations found in the paper. An example file which compares the results of tracking and the results of the Haissinski solver can be found in at/pyat/examples/CollectiveEffects/LongDistribution.py. 
+The Haissinski solver is used to compute the equilibrium beam distribution in the presence of a longitudinal impedance. This class is based entirely on the very nice paper by K. Bane and R. Warnock [4]_. In this small overview, we will only talk about how to use it. The details can be seen in the paper of exactly how it is implemented. All the functions within the class are cross referenced with the equations found in the paper. An example file which compares the results of tracking and the results of the Haissinski solver can be found in at/pyat/examples/CollectiveEffects/LongDistribution.py. 
 
 First we initialise a broadband longitudinal resonator wake function in a wake object.
 
@@ -271,7 +271,7 @@ Two examples of multi bunch collective effects can be found, one for the Longitu
 Parallelisation with Collective Effects
 ---------------------------------------
 
-PyAT can very easily be run with across multiple cores. When using MPI, the user must remember that each thread will be running exactly the same file. This must be taken into account when writing the script. At the beginning of the script, it must have
+PyAT can be run across multiple cores. When using MPI, the user must remember that each thread will be running exactly the same file. This must be taken into account when writing the script. At the beginning of the script, it must have
 
 .. code:: python
 
@@ -287,7 +287,16 @@ size is an integer that says how many threads have been created, and rank says w
     
     rank0 = True if rank == 0
     
-then all of these types of operation can be hidden within a, if statement. As mentioned above, the number of particles must be an integer multiple of the number of bunches. When parallelising, this is true of each thread. So if you have 40 threads, and 992 bunches. Each thread, must have an integer multiple of 992 as the number of particles. Otherwise, some particles will be missing and the results will be incorrect. This means that it is not possible to parallelise a computation with 1 particle per bunch. In order to access turn by turn and bunch by bunch data, the beam monitor can be used
+then all of these types of operation can be hidden within an if statement. 
+
+.. code:: python
+    
+    if rank0:
+        # Retrieve some beam data from all threads
+        # Compute some values to be saved 
+
+
+As mentioned above, the number of particles must be an integer multiple of the number of bunches. When parallelising, this is true of each thread. So if you have 40 threads and 992 bunches, each thread must have an integer multiple of 992 as the number of particles. Otherwise, some particles will be missing and the results will be incorrect. This means that it is not possible to parallelise a computation with 1 particle per bunch. In order to access turn by turn and bunch by bunch data, the beam monitor can be used
 
 .. code:: python
 
@@ -314,11 +323,11 @@ A final note of importants, when parallelising, Nslice refers to the number of s
 Beam Loading
 ------------
 
-An IPAC paper that covers the theory used for the beam loading module can be found in [5]. Only the main functionalities will be mentioned here.
+An IPAC paper that covers the theory used for the beam loading module can be found in [5]_. Only the main functionalities will be mentioned here.
 
 To consider beam loading in an rf cavity, a loaded shunt impedance :math:`R_{s}` and a loaded quality factor :math:`Q_{L}` must be defined. There are two different wake methods available, either the phasor model or the wake model (**BLMode.PHASOR** or **BLMode.WAKE**). The phasor model considers only the present turn, and keeps track of a running voltage and phase. The wake model saves a turn history of length **Nturns** and recomputes the full kick in the same way as the **LongResonator** element. A total and bunch by bunch beam induced voltage and phase is also computed and made available. The phasor model is more appropriate for high-Q resonators, as the wake model would require many turns to be accurate and increases computation time. 
 
-To intialise the beam loading element, the function **add_beamloading** must be applied a lattice object. This will convert the specified Cavity Element to a **BeamLoadingElement**. This can be done as follows
+To intialise the beam loading element, the function **add_beamloading** must be applied to a lattice object. This will convert the specified Cavity Element to a **BeamLoadingElement**. This can be done as follows
 
 .. code:: python
 
@@ -339,13 +348,13 @@ Bibliography
 ------------
 
 
-[1] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 73, Eqn. 2.84  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
+.. [1] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 73, Eqn. 2.84  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
 
-[2] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 75, Eqn. 2.88  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
+.. [2] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 75, Eqn. 2.88  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
 
-[3] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 59, Eqn. 2.53  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
+.. [3] `A. Chao, 'Physics of Collective Beam Instabilities in High Energy Accelerators', p. 59, Eqn. 2.53  <https://www.slac.stanford.edu/~achao/WileyBook/WileyChapter2.pdf>`_.
 
-[4] `R. Warnock, K. Bane, 'Numerical solution of the Haïssinski equation for the equilibrium state of  a stored electron beam', Phys. Rev. Acc. and Beams 21, 124401 (2018) <https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.21.124401>`_
+.. [4] `R. Warnock, K. Bane, 'Numerical solution of the Haïssinski equation for the equilibrium state of  a stored electron beam', Phys. Rev. Acc. and Beams 21, 124401 (2018) <https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.21.124401>`_
 
-[5] L.R. Carver et al, 'Beam Loading Simulations in PyAT for the ESRF', Proceedings of IPAC23, Venice Italy (2023)
+.. [5] L.R. Carver et al, 'Beam Loading Simulations in PyAT for the ESRF', Proceedings of IPAC23, Venice Italy (2023)
 
