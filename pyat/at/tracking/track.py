@@ -18,7 +18,7 @@ __all__ = ['track_function', 'internal_lpass', 'internal_epass',
            'internal_plpass']
 
 _imax = numpy.iinfo(int).max
-_globring: Optional[List[Element]] = None
+_globring: Optional[list[Element]] = None
 
 
 def _atpass_fork(seed, rank, rin, **kwargs):
