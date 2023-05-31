@@ -60,21 +60,17 @@ def _element_pass(element: Element, r_in, **kwargs):
 
 
 @fortran_align
-def _lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
+def _lattice_pass(lattice: Sequence[Element], r_in, nturns: int = 1,
                   refpts: Refpts = End, **kwargs):
-    if not isinstance(lattice, list):
-        lattice = list(lattice)
     refs = get_uint32_index(lattice, refpts)
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
     return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
 
 
 @fortran_align
-def _plattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
+def _plattice_pass(lattice: Sequence[Element], r_in, nturns: int = 1,
                    refpts: Refpts = End, pool_size: int = None,
                    start_method: str = None, **kwargs):
-    if not isinstance(lattice, list):
-        lattice = list(lattice)
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
@@ -93,7 +89,7 @@ def _plattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-def track_function(lattice: Union[Element, Iterable[Element]], r_in, nturns: int = 1,
+def track_function(lattice: Union[Element, Sequence[Element]], r_in, nturns: int = 1,
                    refpts: Refpts = End, **kwargs):
     """
     :py:func:`track_function` tracks particles through each element of a lattice

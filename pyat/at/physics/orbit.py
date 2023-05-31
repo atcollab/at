@@ -127,7 +127,7 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
 
     Finds the closed orbit in the 4-d transverse phase space by numerically
     solving for a fixed point of the one turn map M calculated with
-    :py:func:`.lattice_pass`.
+    :py:func:`.internal_lpass`.
 
     .. math:: \begin{pmatrix}x \\ p_x \\ y \\ p_y \\ dp \\ c\tau_2\end{pmatrix}
        =\mathbf{M} \cdot
@@ -219,7 +219,7 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
 
     Finds the closed orbit, synchronous with the RF cavity (first 5
     components of the phase space vector) by numerically solving for a fixed
-    point of the one turn map M calculated with :py:func:`.lattice_pass`
+    point of the one turn map M calculated with :py:func:`.internal_lpass`
 
     .. math:: \begin{pmatrix}x \\ p_x \\ y \\ p_y \\ dp \\ c\tau_1+
        dc\tau\end{pmatrix} =\mathbf{M} \cdot
@@ -373,7 +373,7 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
 
     Finds the closed orbit in the full 6-D phase space
     by numerically solving  for a fixed point of the one turn
-    map M calculated with :py:func:`.lattice_pass`
+    map M calculated with :py:func:`.internal_lpass`
 
     .. math:: \begin{pmatrix}x \\ p_x \\ y \\ p_y \\ dp \\ c\tau_2\end{pmatrix}
        =\mathbf{M} \cdot

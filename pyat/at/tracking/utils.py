@@ -3,7 +3,7 @@ Utility functions for tracking simulations
 """
 import numpy
 import functools
-from typing import List, Optional
+from typing import List, Optional, Sequence
 from ..lattice import Lattice, Element
 from ..lattice import elements, refpts_iterator
 from ..lattice import  DConstant
@@ -17,7 +17,7 @@ __all__ = ['fortran_align', 'get_bunches', 'format_results',
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
-def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
+def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     """Function to initialize the beam monitors"""
     monitors = list(refpts_iterator(ring, elements.BeamMoments))
     for m in monitors:
