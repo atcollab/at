@@ -3,11 +3,9 @@
 This is not complete but can parse the example files that I have.
 This parser is quite similar to the Tracy parser in tracy.py.
 
-The Elegant file format is described briefly
-`here <https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009>`_.
-
-It is similar to the MAD-X format, described briefly
-`here <http://madx.web.cern.ch/madx/>`_.
+The Elegant file format is described briefly `here
+<https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009>`_.
+It is similar to the `MAD-X format <http://madx.web.cern.ch/madx/>`_.
 
 Note that Elegant scales magnet polynomials in a different way
 to AT, so the parsed coefficients need to be divided by n! for
