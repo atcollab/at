@@ -166,6 +166,9 @@ class Need(Enum):
     ALL_POINTS = 7
     #:  Associated with LOCALOPTICS, require the *get_chrom* keyword
     CHROMATICITY = 8
+    #:  Specify geometry computation and provide the full data at evaluation
+    #:  points
+    GEOMETRY = 9
 
 
 class Observable(object):
@@ -445,6 +448,50 @@ class _ElementObservable(Observable):
         if boolrefs[-1]:
             locs.append("End")
         self._locations = locs
+
+
+class GeometryObservable(_ElementObservable):
+    """Observe the geometrical parameters of the reference trajectory"""
+    field_list = {'x', 'y', 'angle'}
+    def __init__(self, refpts: Refpts, param: str,
+                 name: Optional[str] = None,
+                 **kwargs):
+        # noinspection PyUnresolvedReferences
+        r"""
+        Args:
+            refpts:         Observation points.
+              See ":ref:`Selecting elements in a lattice <refpts>`"
+            param:          Geometry parameter name: one in {'x', 'y', 'angle'}
+            name:           Observable name. If :py:obj:`None`, an explicit
+              name will be generated
+
+        Keyword Args:
+            statfun:        Post-processing function called on the value of the
+              observable. Example: :pycode:`statfun=numpy.mean`
+            target:         Target value for a constraint. If :py:obj:`None`
+              (default), the residual will always be zero.
+            weight:         Weight factor: the residual is
+              :pycode:`((value-target)/weight)**2`
+            bounds:         Tuple of lower and upper bounds. The parameter
+              is constrained in the interval
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+
+        The *target*, *weight* and *bounds* inputs must be broadcastable to the
+        shape of *value*.
+
+        Example:
+
+            >>> obs = GeometryObservable(at.Monitor, param='x')
+
+            Observe x coordinate of monitors
+        """
+        if param not in self.field_list:
+            raise ValueError(
+                f'Expected {param!r} to be one of {self.field_list!r}')
+        name = self._set_name(name, 'geometry', param)
+        fun = _recordaccess(param, None)
+        needs = {Need.GEOMETRY}
+        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
 class OrbitObservable(_ElementObservable):
@@ -909,6 +956,8 @@ class ObservableList(list):
                 data.append(trajs[obsrefs[self.passrefs]])
             if Need.EMITTANCE in obsneeds:
                 data.append(emdata)
+            if Need.GEOMETRY in obsneeds:
+                data.append(geodata[obsrefs])
             obs.evaluate(ring, *data, initial=initial)
 
         @frequency_control
@@ -918,7 +967,7 @@ class ObservableList(list):
                      r_in: Orbit = None):
             """Optics computations"""
 
-            trajs = orbits = rgdata = eldata = emdata = mxdata = None
+            trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = None
             needs = self.needs
 
             if Need.TRAJECTORY in needs:
@@ -955,9 +1004,12 @@ class ObservableList(list):
             if Need.EMITTANCE in needs:
                 emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
 
-            return trajs, orbits, rgdata, eldata, emdata, mxdata
+            if Need.GEOMETRY in needs:
+                geodata, _ = ring.get_geometry()
 
-        trajs, orbits, rgdata, eldata, emdata, mxdata = \
+            return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata
+
+        trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = \
             ringeval(ring, r_in=r_in, **kwargs)
 
         for ob in self:
