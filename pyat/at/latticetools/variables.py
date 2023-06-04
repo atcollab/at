@@ -81,7 +81,8 @@ keeping their sum constant:
 """
 from __future__ import annotations
 from typing import Optional
-from collections.abc import Callable, Iterable, Sequence
+import abc
+from collections.abc import Iterable, Sequence
 import numpy as np
 from ..lattice import Lattice, Refpts
 
@@ -90,8 +91,7 @@ from ..lattice import Lattice, Refpts
 # functions are replaced be module-level callable class instances
 
 
-# noinspection PyPep8Naming
-class _getf(object):
+class _Getf(object):
     def __init__(self, index):
         self.index = index
 
@@ -99,8 +99,7 @@ class _getf(object):
         return getattr(elem, attrname)[self.index]
 
 
-# noinspection PyPep8Naming
-class _setf(object):
+class _Setf(object):
     def __init__(self, index: int):
         self.index = index
 
@@ -108,75 +107,35 @@ class _setf(object):
         getattr(elem, attrname)[self.index] = value
 
 
-# noinspection PyPep8Naming
-class element_setfun(object):
-    def __init__(self, refpts: Refpts, attrname: str,
-                 index: Optional[int] = None):
-        self.refpts = refpts
-        self.attrname = attrname
-        if index is None:
-            self.fun = setattr
-        else:
-            self.fun = _setf(index)
-
-    def __call__(self, ring: Lattice, value: float):
-        for elem in ring.select(self.refpts):
-            self.fun(elem, self.attrname, value)
-
-
-# noinspection PyPep8Naming
-class element_getfun(object):
-    def __init__(self, refpts: Refpts, attrname: str,
-                 index: Optional[int] = None):
-        self.refpts = refpts
-        self.attrname = attrname
-        if index is None:
-            self.fun = getattr
-        else:
-            self.fun = _getf(index)
-
-    def __call__(self, ring: Lattice):
-        values = np.array([self.fun(elem, self.attrname) for elem in
-                           ring.select(self.refpts)])
-        return np.average(values)
-
-
-class Variable(object):
+class Variable(abc.ABC):
     """A :py:class:`Variable` is a scalar value acting on a lattice
     """
     def __init__(self,
-                 setfun: Callable[[Lattice, float], None],
-                 getfun: Callable[[Lattice], float], *,
                  name: str = '',
                  refpts: Refpts = None,
                  bounds: tuple[float, float] = (-np.inf, np.inf),
                  delta: float = 1.0):
         """
         Parameters:
-            setfun:     User-defined function for setting the Variable. Called
-              as:
-
-              :pycode:`setfun(ring, value)`
-
-              where *value* is the scalar value to apply
-            getfun:     User-defined function for retrieving the actual value
-              of the variable: Called as:
-
-              :pycode:`value = getfun(ring)`
-
             name:       Name of the Variable
             refpts:     Identifies variable elements. It is used when a copy of
               the variable elements is needed
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
         """
-        self.setfun = setfun
-        self.getfun = getfun
         self.name = name
         self.refpts = refpts
         self.bounds = bounds
         self.delta = delta
         self._history = []
+
+    @abc.abstractmethod
+    def setfun(self, ring: Lattice, value: float):
+        ...
+
+    @abc.abstractmethod
+    def getfun(self, ring: Lattice) -> float:
+        ...
 
     @property
     def history(self) -> list[float]:
@@ -339,11 +298,36 @@ class ElementVariable(Variable):
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
         """
-        setfun = element_setfun(refpts, attrname, index)
-        getfun = element_getfun(refpts, attrname, index)
+        if index is None:
+            self._getf = getattr
+            self._setf = setattr
+        else:
+            self._getf = _Getf(index)
+            self._setf = _Setf(index)
+        self.attrname = attrname
+        super(ElementVariable, self).__init__(refpts=refpts, **kwargs)
 
-        super(ElementVariable, self).__init__(setfun, getfun,
-                                              refpts=refpts, **kwargs)
+    def setfun(self, ring: Lattice, value: float):
+        for elem in ring.select(self.refpts):
+            self._setf(elem, self.attrname, value)
+
+    def getfun(self, ring: Lattice) -> float:
+        values = np.array([self._getf(elem, self.attrname) for elem in
+                           ring.select(self.refpts)])
+        return np.average(values)
+
+
+class Parameter(Variable):
+    def __init__(self, value: float = 0.0, **kwargs):
+        self._value = value
+        super(Parameter, self).__init__(refpts=None, **kwargs)
+        self._history.append(value)
+
+    def setfun(self, ring: Lattice, value: float):
+        self._value = value
+
+    def getfun(self, ring: Lattice) -> float:
+        return self._value
 
 
 class VariableList(list):
