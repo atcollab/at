@@ -110,6 +110,10 @@ class _Setf(object):
 class Variable(abc.ABC):
     """A :py:class:`Variable` is a scalar value acting on a lattice
     """
+    counter = 0
+    expressions = set()
+    dependents = set()
+
     def __init__(self,
                  name: str = '',
                  refpts: Refpts = None,
@@ -123,11 +127,16 @@ class Variable(abc.ABC):
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
         """
-        self.name = name
+        self.name = name if name else self.newname()
         self.refpts = refpts
         self.bounds = bounds
         self.delta = delta
         self._history = []
+
+    @staticmethod
+    def newname():
+        Variable.counter = Variable.counter+1
+        return f"var{Variable.counter}"
 
     @abc.abstractmethod
     def setfun(self, ring: Lattice, value: float):
@@ -359,6 +368,10 @@ class VariableList(list):
         """
         for var, val in zip(self, values):
             var.set(ring, val)
+        for expr in Variable.expressions:
+            expr.evaluate()
+        for dep in Variable.dependents:
+            dep.evaluate(ring)
 
     def increment(self, ring: Lattice, increment: Iterable[float]) -> None:
         r"""Increment the :py:class:`Variable`\ s' values
@@ -369,6 +382,10 @@ class VariableList(list):
         """
         for var, incr in zip(self, increment):
             var.increment(ring, incr)
+        for expr in Variable.expressions:
+            expr.evaluate()
+        for dep in Variable.dependents:
+            dep.evaluate(ring)
 
     # noinspection PyProtectedMember
     def status(self, ring: Lattice = None) -> str:

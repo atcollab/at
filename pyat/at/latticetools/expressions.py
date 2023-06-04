@@ -1,9 +1,11 @@
 from __future__ import annotations
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from typing import Optional
 from numbers import Number
 from operator import add, sub, mul, truediv, pow
 from .variables import Variable
+from ..lattice import Lattice, Refpts
 
 
 class _Oper(object):
@@ -23,7 +25,18 @@ _opers = {
 }
 
 
-def _parse(fmt, *args):
+class _Setf(object):
+    def __init__(self, index: int):
+        self.index = index
+
+    def __call__(self, elem, attrname, value):
+        getattr(elem, attrname)[self.index] = value
+
+
+def _parse(fmt: str, *args: Variable) -> Generator:
+    """Split a formula in tokens
+    constants, variables, operators, parenthesis
+    """
     inpt = fmt.strip()
     while len(inpt) > 0:
         if inpt[0] == '(':
@@ -65,7 +78,8 @@ def _parse(fmt, *args):
         raise(ValueError(f"Cannot parse {inpt[0]}"))
 
 
-def shunting_yard(fmt: str, *args):
+def shunting_yard(fmt: str, *args: Variable) -> Generator:
+    """Convert a formula to RPN"""
     opstack = []
     for token in _parse(fmt, *args):
         if isinstance(token, Number) or isinstance(token, Variable):
@@ -105,10 +119,16 @@ def shunting_yard(fmt: str, *args):
 
 
 class Expression(object):
-    def __init__(self, fmt: str, *args):
+    def __init__(self, fmt: str, *args: Variable):
         self.rpnstack = list(shunting_yard(fmt, *args))
+        self.value = 0.0
+        Variable.expressions.add(self)
+
+    def __del__(self):
+        Variable.expressions.remove(self)
 
     def evaluate(self):
+        """Evaluate an expression in RPN form"""
         stack = []
         for elem in self.rpnstack:
             if isinstance(elem, Number):
@@ -119,4 +139,27 @@ class Expression(object):
                 right = stack.pop()
                 left = stack.pop()
                 stack.append(elem.fun(left, right))
-        return stack.pop()
+        self.value = stack.pop()
+
+
+class ElementExpression(object):
+    def __init__(self,
+                 expr: Expression,
+                 refpts: Refpts, attrname: str,
+                 index: Optional[int] = None):
+        if index is None:
+            self._setf = setattr
+        else:
+            self._setf = _Setf(index)
+        self.expr = expr
+        self.refpts = refpts
+        self.attrname = attrname
+        Variable.dependents.add(self)
+
+    def __del__(self):
+        Variable.dependents.remove(self)
+
+    def evaluate(self, ring: Lattice):
+        value = self.expr.value
+        for elem in ring.select(self.refpts):
+            self._setf(elem, self.attrname, value)
