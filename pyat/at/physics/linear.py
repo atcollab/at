@@ -1080,8 +1080,8 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
 
           ``'fft'`` tracks a single particle and computes the tunes with fft,
 
-          ``'laskar'`` tracks a single particle and computes the tunes with
-          NAFF.
+          ``'interp_fft'`` tracks a single particle and computes the tunes with
+          interpolated FFT.
         dp (float):             Momentum deviation.
         dct (float):            Path lengthening.
         df (float):             Deviation of RF frequency.
