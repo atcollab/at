@@ -27,7 +27,6 @@ class KickMap(Element):
                                                      'xtable',
                                                      'ytable']
 
-
     def set_DriftPass(self):
         setattr(self, 'PassMethod', 'DriftPass')
 
@@ -100,6 +99,7 @@ class KickMap(Element):
         integer_kwargs = ['Nslice']
         for kw in integer_kwargs:
             setattr(self, kw, numpy.uint8(getattr(self, kw)))
+
 
 __all__ = ['InsertionDeviceKickMap']
 
@@ -295,4 +295,4 @@ def InsertionDeviceKickMap(
                     ytable=ytable
                 )
 
-#EOF
+# EOF
