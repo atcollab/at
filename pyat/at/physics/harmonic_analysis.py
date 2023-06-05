@@ -210,6 +210,6 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         spectrum within [fmin fmax]
     """
     tunes, _, _ = get_main_harmonic(cents, method=method,
-                       num_harmonics=num_harmonics, hann=hann,
-                       fmin=fmin, fmax=fmax, pad_length=pad_length)
+                                    num_harmonics=num_harmonics, hann=hann,
+                                    fmin=fmin, fmax=fmax, pad_length=pad_length)
     return tunes
