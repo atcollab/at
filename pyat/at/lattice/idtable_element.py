@@ -15,7 +15,7 @@ class KickMap(Element):
     """
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PassMethod',
                                                      'Filename_in',
-                                                     'Energy',
+                                                     'Normalization_energy',
                                                      'Nslice',
                                                      'Length',
                                                      'NumX',
@@ -41,7 +41,7 @@ class KickMap(Element):
                  family_name: str,
                  PassMethod: str,
                  Filename_in: str,
-                 Energy: float,
+                 Normalization_energy: float,
                  Nslice: numpy.uint8,
                  Length: float,
                  NumX: numpy.uint8,
@@ -59,7 +59,7 @@ class KickMap(Element):
             family_name:    family name
             PassMethod:     IdTable
             Filename_in:    Input file name
-            Energy:         Energy for KickMap normalization (GeV)
+            Normalization_energy: Energy for KickMap normalization (GeV)
             Nslice:         number of slices for integration, type uint
             Length:         ID length
             NumX:           Number of points in X, type uint8
@@ -76,7 +76,7 @@ class KickMap(Element):
         # Create element properties to pass to the generic Element
         kwargs.setdefault('PassMethod', 'IdTablePass')
         kwargs.setdefault('Filename_in', Filename_in)
-        kwargs.setdefault('Energy',      Energy)
+        kwargs.setdefault('Normalization_energy', Normalization_energy)
         kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
         kwargs.setdefault('Length',      Length)
         kwargs.setdefault('NumX',        numpy.uint8(NumX))
@@ -282,7 +282,7 @@ def InsertionDeviceKickMap(
                     family_name,
                     PassMethod='IdTablePass',
                     Filename_in=Filename_in,
-                    Energy=Energy,
+                    Normalization_energy=Energy,
                     Nslice=numpy.uint8(Nslice),
                     Length=el_length,
                     NumX=NumX,
