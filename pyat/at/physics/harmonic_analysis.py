@@ -6,7 +6,7 @@ Github: https://github.com/pylhc/harpy
 
 from __future__ import annotations
 import numpy
-from warnings import warns
+from warnings import warn
 from scipy.fft import fft, fftfreq
 from at.lattice import AtWarning
 
@@ -99,10 +99,10 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     # laskar kept for backward compatibility
     if method == 'interp_fft' or method == 'laskar':
         if hann:
-            warns(AtWarning('Windowing not efficient for'
+            warn(AtWarning('Windowing not efficient for'
                             'interpolated FFT: ignored'))
         if pad_length is not None:
-            warns(AtWarning('Padding not efficient for'
+            warn(AtWarning('Padding not efficient for'
                             'interpolated FFT: ignored'))
         ha_tune, ha_amp = _interpolated_fft(cent, num_harmonics)
     elif method == 'fft':
