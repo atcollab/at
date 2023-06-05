@@ -5,6 +5,9 @@ from scipy.fft import fft, fftfreq
 from at.lattice import AtWarning
 
 
+__all__ = ['get_spectrum_harmonic', 'get_main_harmonic',
+           'get_tunes_harmonic']
+
 def _pad_signal(samples, pad_length):
     """ Pad signal and round to the next power of 2"""
     if pad_length is not None:
@@ -109,13 +112,13 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     ha_amp = numpy.abs(numpy.array(ha_amp)) / lc
     ha_tune = numpy.array(ha_tune)
     return ha_tune, ha_amp, ha_phase
-
-
-def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
+    
+    
+def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                        num_harmonics: int = 20, hann: bool = False,
                        fmin: float = 0, fmax: float = 1,
                        pad_length=None) -> np.ndarray:
-    """Computes tunes from harmonic analysis
+    """Computes tunes, amplitudes and pahses from harmonic analysis
 
     Parameters:
         cents:          Centroid motions of the particle
@@ -174,3 +177,33 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
             amps[i] = numpy.nan
             phases[i] = numpy.nan
     return tunes, amps, phases
+
+
+def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
+                       num_harmonics: int = 20, hann: bool = False,
+                       fmin: float = 0, fmax: float = 1,
+                       pad_length=None) -> np.ndarray:
+    """Computes tunes from harmonic analysis
+
+    Parameters:
+        cents:          Centroid motions of the particle
+        method:         ``'interp_fft'`` or ``'fft'``.
+                        Default: ``'interp_fft'``
+        num_harmonics:  Number of harmonic components to compute
+                        (before mask applied)
+        fmin:           Lower bound for tune
+        fmax:           Upper bound for tune
+        hann:           Turn on Hanning window. Default: :py:obj:`False`.
+                        Ignored for interpolated FFT
+        pad_length      Zero pad the input signal.
+                        Rounded to the higher power of 2
+                        Ignored for interpolated FFT
+
+    Returns:
+        tunes (ndarray):    numpy array of length len(cents), max of the
+        spectrum within [fmin fmax]
+    """
+    tunes, _, _ = get_main_harmonic(cents, method=method,
+                       num_harmonics=num_harmonics, hann=hann,
+                       fmin=fmin, fmax=fmax, pad_length=pad_length)
+    return tunes
