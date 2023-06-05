@@ -121,7 +121,7 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     
     
 def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
-                      num_harmonics: int = 20, hann: bool = False,
+                      num_harmonics: int = 1, hann: bool = False,
                       fmin: float = 0, fmax: float = 1,
                       pad_length=None) -> numpy.ndarray:
     """Computes tunes, amplitudes and pahses from harmonic analysis
@@ -148,7 +148,9 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         phase (ndarray): (len(cents), ) array of phases
                          corresponding to the tune
     """
-    def get_max_spectrum(freq, amp, phase, fmin, fmax):
+    def get_max_spectrum(freq, amp, phase, fmin, fmax, num_harmonics):
+        if num_harmonics == 1:
+            return freq[0], amp[0], phase[0]
         msk = numpy.logical_and(freq >= fmin, freq <= fmax)
         amp = amp[msk]
         freq = freq[msk]
@@ -177,7 +179,8 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                                                  pad_length=pad_length)
         try:
             tunes[i], amps[i], phases[i] = get_max_spectrum(freq, amp, phase,
-                                                            fmin, fmax)
+                                                            fmin, fmax,
+                                                            num_harmonics)
         except ValueError:
             tunes[i] = numpy.nan
             amps[i] = numpy.nan
