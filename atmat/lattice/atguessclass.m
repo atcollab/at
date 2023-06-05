@@ -52,6 +52,8 @@ elseif isfield(elem,'M66')
     else
         atclass='Matrix66';
     end
+elseif isfield(elem,'xtable')
+    atclass='KickMap';
 elseif isfield(elem,'Length') && elem.Length~=0
     atclass='Drift';
 else
