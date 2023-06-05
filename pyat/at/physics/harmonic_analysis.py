@@ -1,3 +1,9 @@
+"""
+Simplified version of harpy from
+Jaime Coello Maria de Portugal - Martinez Vazquez
+Github: https://github.com/pylhc/harpy
+"""
+
 from __future__ import annotations
 import numpy
 from warnings import warns
