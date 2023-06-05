@@ -95,7 +95,7 @@ class KickMap(Element):
         for key in fortran_aligned_args:
             kwtmp = getattr(self, key)
             if not numpy.isfortran(kwtmp):
-                setattr(self, key, numpy.asfortranarray(kwtmp))
+                setattr(self, key, numpy.asfortranarray(numpy.float64(kwtmp)))
         # Nslice needs to be an integer
         integer_kwargs = ['Nslice']
         for kw in integer_kwargs:
