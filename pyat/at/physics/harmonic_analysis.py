@@ -121,7 +121,7 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     
     
 def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
-                      num_harmonics: int = 1, hann: bool = False,
+                      num_harmonics: int = 2, hann: bool = False,
                       fmin: float = 0, fmax: float = 1,
                       pad_length=None) -> numpy.ndarray:
     """Computes tunes, amplitudes and pahses from harmonic analysis
@@ -189,7 +189,7 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
 
 
 def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
-                       num_harmonics: int = 1, hann: bool = False,
+                       num_harmonics: int = 2, hann: bool = False,
                        fmin: float = 0, fmax: float = 1,
                        pad_length=None) -> numpy.ndarray:
     """Computes tunes from harmonic analysis
