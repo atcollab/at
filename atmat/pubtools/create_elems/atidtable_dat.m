@@ -19,18 +19,24 @@ function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)
 % -----------------
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
 % 17-11-2008:  Modificated by Z.Martí
+% 02-06-2023:  blanco-garcia. Eliminates R1,R1,T1,T2,NumIntSteps,MaxOrder
+%                               PolynomA, PolynomB
+%                               (they are not used in IdTablePass)
+%                             Adds KickMap class
 %---------------------------------------------------------------------------
 
-Elem.FamName        = fname;  % add check for identical family names
-
-Elem.Nslice    	= Nslice;
-Elem.MaxOrder			= 3;
-Elem.NumIntSteps 	= 10;
-Elem.R1             = diag(ones(6,1));
-Elem.R2             = diag(ones(6,1));
-Elem.T1             = zeros(1,6);
-Elem.T2             = zeros(1,6);
-Elem.PassMethod 	= method;
+%Elem.FamName        = fname;  % add check for identical family names
+%Elem.Filename_in    = filename;
+%Elem.Normalization_energy = Energy;
+%Elem.Class          = "KickMap";
+%Elem.Nslice         = Nslice;
+%Elem.MaxOrder			= 3;
+%Elem.NumIntSteps 	= 10;
+%Elem.R1             = diag(ones(6,1));
+%Elem.R2             = diag(ones(6,1));
+%Elem.T1             = zeros(1,6);
+%Elem.T2             = zeros(1,6);
+%Elem.PassMethod 	= method;
 
 
 factor=1/((Energy/0.299792458)^2);
@@ -96,14 +102,31 @@ else
     
 end
 
-Elem.Length= L;
-Elem.NumX = Ny;
-Elem.NumY = Nx;
-Elem.xtable = x;
-Elem.ytable = y;
-Elem.xkick = xkick;
-Elem.ykick = ykick;
-Elem.xkick1 = xkick1;
-Elem.ykick1 = ykick1;
-Elem.PolynomA= [0 0 0 0];	 
-Elem.PolynomB= [0 0 0 0];
+%Elem.Length= L;
+%Elem.NumX = Ny;
+%Elem.NumY = Nx;
+%Elem.xtable = x;
+%Elem.ytable = y;
+%Elem.xkick = xkick;
+%Elem.ykick = ykick;
+%Elem.xkick1 = xkick1;
+%Elem.ykick1 = ykick1;
+%Elem.PolynomA= [0 0 0 0];
+%Elem.PolynomB= [0 0 0 0];
+
+Elem = atkickmap(           fname, ...
+                            method, ...
+                            filename, ...
+                            Energy, ...
+                            Nslice, ...
+                            L, ...
+                            Nx, ...
+                            Ny, ...
+                            xkick, ...
+                            ykick, ...
+                            xkick1, ...
+                            ykick1, ...
+                            x, ...
+                            y ...
+                        );
+
