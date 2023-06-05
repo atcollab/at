@@ -18,11 +18,14 @@ class KickMap(Element):
                                                      'Energy',
                                                      'Nslice',
                                                      'Length',
+                                                     'NumX',
+                                                     'NumY',
                                                      'xkick',
                                                      'ykick',
+                                                     'xkick1',
+                                                     'ykick1',
                                                      'xtable',
-                                                     'ytable'
-                                                     ]
+                                                     'ytable']
 
 
     def set_DriftPass(self):
@@ -41,8 +44,12 @@ class KickMap(Element):
                  Energy: float,
                  Nslice: numpy.uint8,
                  Length: float,
+                 NumX: numpy.uint8,
+                 NumY: numpy.uint8,
                  xkick,
                  ykick,
+                 xkick1,
+                 ykick1,
                  xtable,
                  ytable,
                  **kwargs
@@ -50,8 +57,21 @@ class KickMap(Element):
         """
         Args:
             family_name:    family name
+            PassMethod:     IdTable
+            Filename_in:    Input file name
+            Energy:         Energy for KickMap normalization (GeV)
+            Nslice:         number of slices for integration, type uint
+            Length:         ID length
+            NumX:           Number of points in X, type uint8
+            NumY:           Number of points in Y, type uint8
+            xkick,          horizontal table
+            ykick,          vertical table
+            xkick1,         not used (set to zeros)
+            ykick1,         not used (set to zeros)
+            xtable,         horizontal kick map table
+            ytable,         vertical kick map table
+            **kwargs        others
 
-        Default PassMethod: ``IdTablePass``
         """
         # Create element properties to pass to the generic Element
         kwargs.setdefault('PassMethod', 'IdTablePass')
@@ -59,15 +79,19 @@ class KickMap(Element):
         kwargs.setdefault('Energy',      Energy)
         kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
         kwargs.setdefault('Length',      Length)
+        kwargs.setdefault('NumX',        numpy.uint8(NumX))
+        kwargs.setdefault('NumY',        numpy.uint8(NumY))
         kwargs.setdefault('xkick',       xkick)
         kwargs.setdefault('ykick',       ykick)
+        kwargs.setdefault('xkick1',      xkick1)
+        kwargs.setdefault('ykick1',      ykick1)
         kwargs.setdefault('xtable',      xtable)
         kwargs.setdefault('ytable',      ytable)
 
         super(KickMap, self).__init__(family_name, **kwargs)
         # the KickMap class uses IdTablePass method that
         # requires Fortran-aligned memory arguments.
-        fortran_aligned_args = ['xkick', 'ykick']
+        fortran_aligned_args = ['xkick', 'ykick', 'xkick1', 'ykick1']
         for key in fortran_aligned_args:
             kwtmp = getattr(self, key)
             if not numpy.isfortran(kwtmp):
@@ -183,9 +207,16 @@ def InsertionDeviceKickMap(
                                 vkickmap = numpy.copy(kick_map)
                                 table_cols2 = haxis
                                 table_rows2 = vaxis
+                            if block_counter > 2:
+                                print('atWarning: only two tables are read')
                         block_lines += 1
+        # dummy variables not implemented in the reading function
+        # but required if more than two tables are
+        hkickmap1 = 0 * numpy.copy(hkickmap)
+        vkickmap1 = 0 * numpy.copy(vkickmap)
+
         return el_length, hkickmap, vkickmap, table_cols1, table_rows1, \
-            table_cols2, table_rows2
+            table_cols2, table_rows2, h_points, v_points, hkickmap1, vkickmap1
 
     def sorted_table(table_in, sorted_index, order_axis):
         # numpy.asfortranarray makes a copy of contiguous memory positions
@@ -201,7 +232,9 @@ def InsertionDeviceKickMap(
     # read the input data
     el_length, hkickmap, vkickmap, \
         table_cols1, table_rows1, \
-        table_cols2, table_rows2 \
+        table_cols2, table_rows2, \
+        NumX, NumY, \
+        hkickmap1, vkickmap1 \
         = readRadiaFieldMap(Filename_in)
 
     # set to float
@@ -210,7 +243,7 @@ def InsertionDeviceKickMap(
     table_cols2array = numpy.array(table_cols2, dtype='float64')
     table_rows2array = numpy.array(table_rows2, dtype='float64')
 
-    # Reorder table_axes and kick maps
+    # Reorder table_axes
     cols1sorted_index = numpy.argsort(table_cols1array)
     table_cols1array.sort()
     rows1sorted_index = numpy.argsort(table_rows1array)
@@ -219,36 +252,32 @@ def InsertionDeviceKickMap(
     table_cols2array.sort()
     rows2sorted_index = numpy.argsort(table_rows2array)
     table_rows2array.sort()
+    # Reorder kickmap
     hkickmap_a = sorted_table(hkickmap, cols1sorted_index, 'col')
     hkickmap = sorted_table(hkickmap_a, rows1sorted_index, 'row')
     vkickmap_a = sorted_table(vkickmap, cols2sorted_index, 'col')
     vkickmap = sorted_table(vkickmap_a, rows2sorted_index, 'row')
+    # Reorder kickmap1
+    hkickmap1_a = sorted_table(hkickmap1, cols1sorted_index, 'col')
+    hkickmap1 = sorted_table(hkickmap1_a, rows1sorted_index, 'row')
+    vkickmap1_a = sorted_table(vkickmap1, cols2sorted_index, 'col')
+    vkickmap1 = sorted_table(vkickmap1_a, rows2sorted_index, 'row')
 
     # Field to kick factors
     Brho = 1e9 * Energy/clight
     factor = 1.0/(Brho**2)
     xkick = factor * hkickmap
     ykick = factor * vkickmap
+    # kick1 vars set to zero, not yet implemented
     factor1 = -1.0/(Brho)
-    xtable = table_cols1array
-    ytable = table_rows1array
-
-    # Create element properties
-    #kwargs.setdefault('PassMethod', 'IdTablePass')
-    #kwargs.setdefault('Filename_in', Filename_in)
-    #kwargs.setdefault('Energy',      Energy)
-    #kwargs.setdefault('Nslice',      numpy.uint8(Nslice))
-    #kwargs.setdefault('Length',      el_length)
-    #kwargs.setdefault('xkick',       xkick)
-    #kwargs.setdefault('ykick',       ykick)
-    #kwargs.setdefault('xtable',      xtable)
-    #kwargs.setdefault('ytable',      ytable)
+    xkick1 = factor1 * hkickmap1
+    ykick1 = factor1 * vkickmap1
+    xtable = table_cols1array.T
+    ytable = table_rows1array.T
 
     # Suggestion on how to create the IdTable
     # pyat issue #522
-    # elem = Element('name', PassMethod='IdTablePass', \
-    #                       xkick=x0, ykick=x1, \
-    #                       xtable=x2, ytable=x3, Nslice=x4)
+
     return KickMap(
                     family_name,
                     PassMethod='IdTablePass',
@@ -256,8 +285,12 @@ def InsertionDeviceKickMap(
                     Energy=Energy,
                     Nslice=numpy.uint8(Nslice),
                     Length=el_length,
+                    NumX=NumX,
+                    NumY=NumY,
                     xkick=xkick,
                     ykick=ykick,
+                    xkick1=xkick1,
+                    ykick1=ykick1,
                     xtable=xtable,
                     ytable=ytable
                 )
