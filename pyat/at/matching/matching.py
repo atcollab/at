@@ -460,16 +460,16 @@ class LinoptConstraints(ElementConstraints):
             refpts = []
             self.get_chrom = True       # slower but necessary
         elif param == 'mu' or param == 'mun':
-            norm = norm_mu[param]
-            if use_integer:
-                self.refpts[:] = True # necessary not to miss 2*pi jumps
-            else:
-                target = target % (2*np.pi/norm)  
-            def fun(refdata, tune, chrom):               
+            # noinspection PyUnusedLocal
+            def fun(refdata, tune, chrom):
                 if use_integer:
-                    return getf(refdata, 'mu') / norm
+                    return getf(refdata, 'mu') / norm_mu[param]
                 else:
-                    return (getf(refdata, 'mu') % (2*np.pi)) / norm       
+                    return (getf(refdata, 'mu') % (2*np.pi)) / norm_mu[param]
+            if use_integer:
+                self.refpts[:] = True  # necessary not to miss 2*pi jumps
+            else:
+                target = target % (2 * np.pi / norm_mu[param])
         else:
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):                       
