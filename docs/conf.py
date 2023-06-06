@@ -40,7 +40,7 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.intersphinx',
               'sphinx.ext.githubpages',
               'sphinx.ext.viewcode',
-              'myst_parser',
+              'myst_nb',
               'sphinx_copybutton',
               ]
 
@@ -92,6 +92,7 @@ myst_enable_extensions = [
     "deflist"
 ]
 myst_heading_anchors = 3
+nb_execution_mode = "auto"
 
 # -- Options for HTML output -------------------------------------------------
 
