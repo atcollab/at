@@ -29,65 +29,71 @@ def fmap_parallel_track(ring,
                         verbose=False,
                         lossmap=False,
                         ):
-    """
+    r"""Computes frequency maps
+
     This function calculates the norm of the transverse tune variation per turn
     for a particle tracked along a ring with a set of offsets in the initial
     coordinates.
 
-    It returns a numpy array containing 7 columns,
-        [xoffset, yoffset, nux, nuy, dnux, dnuy,
-            log10( sqrt(dnux*dnux + dnuy*dnuy)/tns )]
-    for every tracked particle that survives 2*tns turns.
-    Particles lost before 2*tns turns are ignored.
+    It returns a numpy array containing 7 columns:
+
+    | ``[xoffset, yoffset, nux, nuy, dnux, dnuy,``
+    | ``log10(sqrt(dnux*dnux + dnuy*dnuy)/tns )]``
+
+    for every tracked particle that survives 2*turns.
+    Particles lost before 2*turns are ignored.
     The log10 tune variation is limited to the interval from -10 to -2;
     values above or below are set to the closer limit.
 
     The transverse offsets are given inside a rectangular coordinate window
-        coords=[xmin,xmax,ymin,ymax]
+
+    ``coords=[xmin, xmax, ymin, *ymax]``
+
     in millimeters, where the window is divided in n steps=[xsteps,ysteps].
     For each yoffset, particle tracking over the whole set of xoffsets is done
-    in parallel, therefore, a number of cpus (ncpu) above the number of xsteps
-    will not reduce the calculation time.
+    in parallel, therefore, a number of cpus (*ncpu*) above the number of
+    *xsteps* will not reduce the calculation time.
 
     The frequency analysis uses a library that is not parallelized.
 
-    The closed orbit (orbit) is calculated and added to the
-    initial particle offset of every particle, otherwise, one could set
-        orbit = tuple(numpy.zeros(6)) to avoid it.
-    Additionally, a numpy array (add_offset6D) with 6 values could be used to
+    The closed orbit is calculated and added to the
+    initial particle offset of every particle. Otherwise, one could set
+    ``orbit = numpy.zeros(6)`` to avoid it.
+    Additionally, a numpy array (*add_offset6D*) with 6 values could be used to
     arbitrarily offset the initial coordinates of every particle.
 
     A dictionary with particle losses is saved for every vertical offset.
-    See the patpass documentation.
+    See the :py:func:`.patpass` documentation.
 
-    Parameters :
+    Parameters:
         ring:     a valid pyat ring
-    Optional:
         coords:   default [-10,10,-10,10] in mm
-        steps:    default [100,100]
+        steps:    (xsteps, ysteps): number of steps in each plane
         scale:    default 'linear'; or 'non-linear'
         turns:    default 512
         ncpu:     default 30; max. number of processors
-                                in parallel tracking patpass
-        orbit:    default None
+          in parallel tracking :py:func:`.patpass`
+        orbit:    If :py:obj:`None`, the closed orbit is computed and added to
+          the coordinates
         add_offset6D: default numpy.zeros((6,1))
         verbose:  prints additional info
         lossmap:  default false
+
     Returns:
         xy_nuxy_lognudiff_array: numpy array with columns
-                    [xcoor, ycoor, nux, ny, dnux, dnuy,
-                        log10(sqrt(sum(dnu**2)/turns)) ]
+         `[xcoor, ycoor, nux, ny, dnux, dnuy,
+         log10(sqrt(sum(dnu**2)/turns)) ]`
         loss_map_array : experimental format.
-                    if loss_map is True, it returns the losses dictionary
-                    provided by patpass per every vertical offset.
-                    if loss_map is False, it returs a one-element list.
+          if *loss_map* is :py:obj:`True`, it returns the losses dictionary
+          provided by :py:func:`.patpass` per every vertical offset.
+          if *loss_map* is :py:obj:`False`, it returns a one-element list.
 
-    WARNING : points with NaN tracking results or non-defined frequency
-              in x,y are ignored.
-    WARNING : if co flag is used, the closed orbit is added using
-                at.physics.find_orbit
-              however, it is not returned by this function.
-    WARNING : loss map format is experimental
+    .. warning::
+
+       points with NaN tracking results or non-defined frequency in x,y
+       are ignored.
+
+    .. warning:: loss map format is experimental
     """
 
     if orbit is None:

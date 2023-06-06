@@ -36,11 +36,17 @@ bring(refs(indx))={NaN};
 bends=atgetcells(newring,'BendingAngle');
 keep=true(size(newring));
 ba=zeros(size(newring));
+inangle=zeros(size(newring));
+outangle=zeros(size(newring));
 invrad=zeros(size(newring));
 ll=atgetfieldvalues(newring,'Length');
 ba(bends)=atgetfieldvalues(newring(bends),'BendingAngle');
+inangle(bends)=atgetfieldvalues(newring(bends),'EntranceAngle');
+outangle(bends)=atgetfieldvalues(newring(bends),'ExitAngle');
 invrad(bends)=ba(bends)./ll(bends);
-islikenext=cellfun(@isequal,[bring(2:end);{NaN}],bring) & abs(invrad([2:end 1])-invrad)<5*eps(invrad);
+islikenext=cellfun(@isequal,[bring(2:end);{NaN}],bring) ...
+    & abs(invrad([2:end 1])-invrad)<5*eps(invrad) ...
+    & abs(inangle([2:end 1])+outangle)<1.e-6;
 islikeprev=circshift(islikenext,1);
 arrayfun(@group,find(islikenext & ~islikeprev),find(~islikenext & islikeprev));
 newring=newring(keep);

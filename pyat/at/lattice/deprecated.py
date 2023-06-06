@@ -8,7 +8,8 @@ __all__ = ['get_cells', 'get_refpts']
 
 
 # noinspection PyIncorrectDocstring
-def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
+def get_cells(ring: Sequence[Element], refpts: Refpts, *args,
+              regex=False) -> BoolRefpts:
     # noinspection PyShadowingNames
     r"""
     get_cells(ring, filtfunc) -> BoolRefpts
@@ -31,6 +32,8 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
         attrvalue (Any):                Attribute value. If absent, select the
           presence of an *attrname* attribute. If present, select
           :py:class:`.Element`\ s with :pycode:`attrname == attrvalue`.
+        regex: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         bool_refs (BoolRefpts):  numpy Array of :py:obj:`bool` with length
@@ -53,12 +56,12 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
     """
     if isinstance(refpts, str):
         refpts = checkattr(refpts, *args)
-    return get_bool_index(ring, refpts)
+    return get_bool_index(ring, refpts, regex=regex)
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
 def get_refpts(ring: Sequence[Element], refpts: Refpts,
-               quiet=True) -> Uint32Refpts:
+               regex=False) -> Uint32Refpts:
     r"""Return a :py:obj:`~numpy.uint32` array of element indices selecting
     ring elements.
 
@@ -69,6 +72,8 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        regex: Use regular expression for refpts string matching;
+            Default: False (Unix shell-style wildcards)
 
     Returns:
         uint32_refs (Uint32Refs):    :py:obj:`~numpy.uint32` numpy array as
@@ -77,7 +82,7 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
     See also:
         :py:meth:`.Lattice.uint32_refpts`, :py:meth:`.Lattice.bool_refpts`
     """
-    return get_uint32_index(ring, refpts)
+    return get_uint32_index(ring, refpts, regex=regex)
 
 
 Lattice.uint32_refpts = get_uint32_index
