@@ -44,9 +44,9 @@ Sub-packages
    :recursive:
 
    at.lattice
+   at.latticetools
    at.tracking
    at.physics
-   at.latticetools
    at.load
    at.matching
    at.acceptance
