@@ -54,7 +54,7 @@ def _compute_coef(samples, freq):
 
 def _interpolated_fft(samples, num_harmonics, fmin, fmax,
                       maxiter):
-    """ Compute the interpolated FFT of a signal"""
+    """Compute the interpolated FFT of a signal"""
     rn = numpy.arange(len(samples))
     coefficients = numpy.zeros(num_harmonics, dtype=complex)
     frequencies = numpy.zeros(num_harmonics)
@@ -80,7 +80,8 @@ def _interpolated_fft(samples, num_harmonics, fmin, fmax,
                'requested range'.format(nfound,num_harmonics))
         warn(AtWarning(msg))
     if nfound == 0:
-        msg = 'No harmonic found within range, consider extending it'
+        msg = ('No harmonic found within range, '
+               'consider extending it or increase maxiter')
         raise AtError(msg)
         
     coefficients, frequencies = zip(*sorted(zip(coefficients, frequencies),
