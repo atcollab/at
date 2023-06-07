@@ -105,11 +105,13 @@ To do this, we use the continuous integration service Github Actions.
 When a tag of the form pyat-* is pushed to Github, wheels for each
 supported platform will be built and automatically uploaded as an 'artifact'.
 
-The version number is of the form of three dot separated numbers:
-``major.minor.patch``. Major versions include major new functionalities but
-may introduce incompatibilites with previous versions. Minor versions offer
-new features without any incompatibility. Patch versions are reserved for
-bug fixes.
+We use `Semantic Versioning <https://semver.org/>`_ for this project. As documented
+by the full specification, we use a version number with three dot-separated
+numbers: ``MAJOR.MINOR.PATCH``. Increment the:
+
+* MAJOR version when you make incompatible API changes
+* MINOR version when you add functionality in a backward compatible manner
+* PATCH version when you make backward compatible bug fixes
 
 Release procedure
 -----------------
@@ -132,8 +134,8 @@ Determine the minimum ``numpy`` and ``scipy`` versions:
 * the version ensuring the requirements necessary to **run** PyAT is set in the
   ``dependencies`` item of the ``[project]`` section of ``pyproject.toml``
 * The version required to **build** PyAT is set in the ``requires`` item of the
-  ``[build]`` section of ``pyproject.toml``. It depends on the python version and
-  must be higher or equal to the "run" version.
+  ``[build-system]`` section of ``pyproject.toml``. It depends on the python version
+  and must be higher or equal to the "run" version.
 * To avoid version conflicts with the user's existing libraries, the pre-compiled
   binaries are built with the exact minimum library versions. This ensures that the
   user's libraries are more recent than the one AT has been compiled with. For
@@ -145,14 +147,15 @@ Determine the minimum ``numpy`` and ``scipy`` versions:
 Prepare the "Release notes"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A draft can be obtained by creating a new tag on GitHub. Click "Draft a new release"
-in the releases page, choose a new tag like "pyat-x.y.z", select
-the master branch as target. In the description area, choose the present release in
-the "previous tag" pull-down, and press "Generate release notes".
+in the releases page, choose a new tag in the form ``pyat-x.y.z`` with the correct
+incremented version number. The ``pyat-`` prefix is necessary to identify python releases.
+Select the master branch as target. In the description area, choose the current
+release in the "previous tag" pull-down, and press "Generate release notes".
 
 The generated notes can now be copied and edited. You can then either cancel or
 save the release as a draft while editing the release notes.
 
-The ``## What's changed`` section should be splitted in ``## Bug fixes`` and
+The ``## What's changed`` section should be split into ``## Bug fixes`` and
 ``## New features``. It must be filtered to keep only the python changes, ignoring
 the Matlab ones. The tags on each pull request are there to help in this filtering.
 
@@ -175,7 +178,7 @@ Build the release
 ~~~~~~~~~~~~~~~~~
 
 Now either go back to the draft release saved above, or start again the procedure,
-but now going to the end.
+but now finalising with the ``Publish`` button.
 
 If all goes well, there will be a build of "Build and upload wheels and sdist"
 associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://github.com/atcollab/at/actions/workflows/build-python-wheels.yml>`_. This build will have
