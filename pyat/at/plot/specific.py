@@ -64,9 +64,22 @@ def plot_beta(ring: Lattice, **kwargs):
         twiss_in:           Initial conditions for transfer line optics. Record
           array as output by :py:func:`.linopt2`, :py:func:`.linopt6`, or
           dictionary.
-
-    See the documentation of the underlying :py:func:`.baseplot` function for
-    additional keywords common to all plots.
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
    """
     return baseplot(ring, pldata_beta_disp, **kwargs)
 
@@ -173,10 +186,22 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
         twiss_in:           Initial conditions for transfer line optics. Record
           array as output by :py:func:`~.linear.linopt2`,
           :py:func:`~.linear.linopt6`, or dictionary.
-
-    See the documentation of the underlying :py:func:`.baseplot` function for
-    additional keywords common to all plots.
-
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
     """
     return baseplot(ring, pldata_linear, *keys, **kwargs)
 
@@ -195,9 +220,22 @@ def plot_trajectory(ring: Lattice, r_in, nturns: int = 1, **kwargs):
     Keyword Args:
         keep_lattice (bool):   Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
-
-    See the documentation of the underlying :py:func:`.baseplot` function for
-    additional keywords common to all plots.
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
     """
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):

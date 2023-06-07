@@ -1,4 +1,5 @@
 """AT generic plotting function"""
+from __future__ import annotations
 from itertools import chain, repeat
 # noinspection PyPackageRequirements
 import matplotlib.pyplot as plt
@@ -49,8 +50,9 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
     Keyword Args:
         s_range:            Lattice range of interest, default: unchanged,
           initially set to the full cell.
-        axes (Axes):        :py:class:`~matplotlib.axes.Axes` for plotting as
-          (primary_axes, secondary_axes). Default: create new axes
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
         slices (int):       Number of slices. Default: 400
         legend (bool):      Show a legend on the plot
         block (bool):       If :py:obj:`True`, block until the figure is closed.
