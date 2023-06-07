@@ -13,6 +13,72 @@ from abc import ABC
 from typing import Optional, Generator, Tuple, List, Iterable
 
 
+class Param(object):
+    def __init__(self, param):
+        if numpy.isscalar(param):
+            self._eval = lambda: param
+        else:
+            self._eval = param
+        super(Param, self).__init__()
+
+    @property
+    def get(self):
+        return self._eval()
+
+    def set(self, value):
+        self._eval = lambda: value
+
+    def __add__(self, other):
+        if numpy.isscalar(other):
+            return Param(lambda: self.get + other)
+        elif isinstance(other, Param):
+            return Param(lambda: self.get + other.get)
+        else:
+            raise TypeError(other)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        if numpy.isscalar(other):
+            return Param(lambda: self.get - other)
+        elif isinstance(other, Param):
+            return Param(lambda: self.get - other.get)
+        else:
+            raise TypeError(other)
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
+
+    def __mul__(self, other):
+        if numpy.isscalar(other):
+            return Param(lambda: self.get * other)
+        elif isinstance(other, Param):
+            return Param(lambda: self.get * other.get)
+        else:
+            raise TypeError(other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if numpy.isscalar(other):
+            return Param(lambda: self.get / other)
+        elif isinstance(other, Param):
+            return Param(lambda: self.get / other.get)
+        else:
+            raise TypeError(other)
+
+    def __rtruediv__(self, other):
+        return self.__truediv__(other)
+
+    def __repr__(self):
+        return str(self.get)
+        
+    def __float__(self):
+        return float(self.get)
+
+
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
@@ -270,8 +336,11 @@ class Element(object):
 
     def __setattr__(self, key, value):
         try:
-            super(Element, self).__setattr__(
-                key, self._conversions.get(key, _nop)(value))
+            if isinstance(value, Param):
+                super(Element, self).__setattr__(key, value)
+            else:
+                super(Element, self).__setattr__(
+                    key, self._conversions.get(key, _nop)(value))
         except Exception as exc:
             exc.args = ('In element {0}, parameter {1}: {2}'.format(
                 self.FamName, key, exc),)
