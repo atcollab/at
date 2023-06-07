@@ -140,8 +140,8 @@ Determine the minimum ``numpy`` and ``scipy`` versions:
   binaries are built with the exact minimum library versions. This ensures that the
   user's libraries are more recent than the one AT has been compiled with. For
   that, a copy of ``pyproject.toml`` named ``githubproject.toml`` is used for
-  compilation. In this copy, the numpy version specifications are set using strict
-  equality(``==``) instead of minimum (``>=``). Apart from these lines, the 2 files
+  compilation. In this copy, the numpy version specifications are set using ``~=``
+  instead of minimum (``>=``). Apart from these lines, the 2 files
   should be strictly identical.
 
 Prepare the "Release notes"
