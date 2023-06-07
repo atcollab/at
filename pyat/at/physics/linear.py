@@ -236,8 +236,6 @@ def _analyze6(mt, ms):
         dtype = _DATAX_DTYPE
     a0, vps = a_matrix(mt)
 
-    print(a0, vps)
-
     astd = standardize(a0, slices)
     phi0, r0, _ = r_matrices(astd)
     el0 = propagate(r0, phi0, astd)

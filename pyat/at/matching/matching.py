@@ -34,23 +34,23 @@ class Variable(object):
           :py:class:`Variable` initialisation
         name:       Name of the Variable; Default: ``''``
         bounds:     Lower and upper bounds of the variable value
-        args:       Positional arguments transmitted to ``setfun`` and
+        fun_args:       Positional arguments transmitted to ``setfun`` and
           ``getfun`` functions
 
     Keyword Args:
-        **kwargs:   Keyword arguments transmitted to ``setfun``and
+        **fun_kwargs:   Keyword arguments transmitted to ``setfun``and
           ``getfun`` functions
     """
     def __init__(self, setfun: Callable, getfun: Callable,
                  name: str = '',
                  bounds: tuple[float, float] = (-np.inf, np.inf),
-                 args: tuple = (), **kwargs):
+                 fun_args: tuple = (), **fun_kwargs):
         self.setfun = setfun
         self.getfun = getfun
         self.name = name
         self.bounds = bounds
-        self.args = args
-        self.kwargs = kwargs
+        self.args = fun_args
+        self.kwargs = fun_kwargs
         super(Variable, self).__init__()
 
     def set(self, ring: Lattice, value):
