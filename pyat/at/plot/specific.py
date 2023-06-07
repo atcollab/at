@@ -64,6 +64,9 @@ def plot_beta(ring: Lattice, **kwargs):
         twiss_in:           Initial conditions for transfer line optics. Record
           array as output by :py:func:`.linopt2`, :py:func:`.linopt6`, or
           dictionary.
+
+    See the documentation of the underlying :py:func:`.baseplot` function for
+    additional keywords common to all plots.
    """
     return baseplot(ring, pldata_beta_disp, **kwargs)
 
@@ -128,7 +131,7 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
           The number of indices is the number of curves to plot.
           All sequences must have the same length.
 
-          Examples:
+        Examples:
 
           :code:`('beta', [0, 1])`:         beta_x, beta_z
 
@@ -168,8 +171,12 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
         DPStep (float):     Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
         twiss_in:           Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, :py:func:`linopt6`, or
-          dictionary. Keys:
+          array as output by :py:func:`~.linear.linopt2`,
+          :py:func:`~.linear.linopt6`, or dictionary.
+
+    See the documentation of the underlying :py:func:`.baseplot` function for
+    additional keywords common to all plots.
+
     """
     return baseplot(ring, pldata_linear, *keys, **kwargs)
 
@@ -188,6 +195,9 @@ def plot_trajectory(ring: Lattice, r_in, nturns: int = 1, **kwargs):
     Keyword Args:
         keep_lattice (bool):   Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
+
+    See the documentation of the underlying :py:func:`.baseplot` function for
+    additional keywords common to all plots.
     """
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):
