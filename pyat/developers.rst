@@ -136,9 +136,9 @@ Determine the minimum ``numpy`` and ``scipy`` versions:
 * The version required to **build** PyAT is set in the ``requires`` item of the
   ``[build-system]`` section of ``pyproject.toml``. It depends on the python version
   and must be higher or equal to the "run" version.
-* To avoid version conflicts with the user's existing libraries, the pre-compiled
-  binaries are built with the exact minimum library versions. This ensures that the
-  user's libraries are more recent than the one AT has been compiled with. For
+* To avoid ABI compatibility issues, the pre-compiled binaries are built with the
+  earliest possible version of numpy for the given Python version.. This ensures that
+  the user's libraries are more recent than the one AT has been compiled with. For
   that, a copy of ``pyproject.toml`` named ``githubproject.toml`` is used for
   compilation. In this copy, the numpy version specifications are set using ``~=``
   instead of minimum (``>=``). Apart from these lines, the 2 files
