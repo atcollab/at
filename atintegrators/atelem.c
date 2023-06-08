@@ -158,16 +158,18 @@ static long atGetLong(const PyObject *element, const char *name)
 {
     const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
     if (!attr) return 0L;
+    long l = PyLong_AsLong((PyObject *)attr);
     Py_DECREF(attr);
-    return PyLong_AsLong((PyObject *)attr);
+    return l;
 }
 
 static double atGetDouble(const PyObject *element, const char *name)
 {
     const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
     if (!attr) return 0.0;
+    double d = PyFloat_AsDouble((PyObject *)attr);
     Py_DECREF(attr);
-    return PyFloat_AsDouble((PyObject *)attr);
+    return d;
 }
 
 static long atGetOptionalLong(const PyObject *element, const char *name, long default_value)

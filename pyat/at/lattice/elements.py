@@ -25,7 +25,7 @@ class Param(float):
    
     @property
     def value(self):
-        return self._fun()
+        return float(self._fun())
 
     @value.setter
     def value(self, value):
@@ -55,7 +55,14 @@ class Param(float):
         return newp
 
     def __rsub__(self, other):
-        return self.__sub__(other)
+        newp = Param()
+        if numpy.isscalar(other):
+            newp.setfun(lambda: other - self.value)
+        elif isinstance(other, Param):
+            newp.setfun(lambda: other.value - self.value)
+        else:
+            raise TypeError(other)
+        return newp
 
     def __mul__(self, other):
         newp = Param()
@@ -81,14 +88,20 @@ class Param(float):
         return newp
 
     def __rtruediv__(self, other):
-        return self.__truediv__(other)
+        newp = Param()
+        if numpy.isscalar(other):
+            newp.setfun(lambda: other / self.value)
+        elif isinstance(other, Param):
+            newp.setfun(lambda: other.value / self.value)
+        else:
+            raise TypeError(other)
+        return newp
 
     def __repr__(self):
         return str(self.value)
-        
+
     def __float__(self):
-        return float(self.value)
-        
+        return self.value
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
