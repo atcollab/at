@@ -13,70 +13,82 @@ from abc import ABC
 from typing import Optional, Generator, Tuple, List, Iterable
 
 
-class Param(object):
-    def __init__(self, param):
+class Param(float):
+    def __init__(self, value=numpy.NaN):
+        self._fun = lambda: value    
+     
+    def setfun(self, param): 
         if numpy.isscalar(param):
-            self._eval = lambda: param
+            self._fun = lambda: param
         else:
-            self._eval = param
-        super(Param, self).__init__()
-
+            self._fun = param
+   
     @property
-    def get(self):
-        return self._eval()
+    def value(self):
+        return self._fun()
 
-    def set(self, value):
-        self._eval = lambda: value
+    @value.setter
+    def value(self, value):
+        self.setfun(value)
 
     def __add__(self, other):
+        newp = Param()
         if numpy.isscalar(other):
-            return Param(lambda: self.get + other)
+            newp.setfun(lambda: self.value + other)
         elif isinstance(other, Param):
-            return Param(lambda: self.get + other.get)
+            newp.setfun(lambda: self.value + other.value)
         else:
             raise TypeError(other)
+        return newp
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
+        newp = Param()
         if numpy.isscalar(other):
-            return Param(lambda: self.get - other)
+            newp.setfun(lambda: self.value - other)
         elif isinstance(other, Param):
-            return Param(lambda: self.get - other.get)
+            newp.setfun(lambda: self.value - other.value)
         else:
             raise TypeError(other)
+        return newp
 
     def __rsub__(self, other):
         return self.__sub__(other)
 
     def __mul__(self, other):
+        newp = Param()
         if numpy.isscalar(other):
-            return Param(lambda: self.get * other)
+            newp.setfun(lambda: self.value * other)
         elif isinstance(other, Param):
-            return Param(lambda: self.get * other.get)
+            newp.setfun(lambda: self.value * other.value)
         else:
             raise TypeError(other)
+        return newp
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __truediv__(self, other):
+        newp = Param()
         if numpy.isscalar(other):
-            return Param(lambda: self.get / other)
+            newp.setfun(lambda: self.value / other)
         elif isinstance(other, Param):
-            return Param(lambda: self.get / other.get)
+            newp.setfun(lambda: self.value / other.value)
         else:
             raise TypeError(other)
+        return newp
 
     def __rtruediv__(self, other):
         return self.__truediv__(other)
 
     def __repr__(self):
-        return str(self.get)
+        return str(self.value)
         
     def __float__(self):
-        return float(self.get)
+        return float(self.value)
+        
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -345,6 +357,13 @@ class Element(object):
             exc.args = ('In element {0}, parameter {1}: {2}'.format(
                 self.FamName, key, exc),)
             raise
+            
+    def __getattribute__(self, key):
+        attr = super(Element, self).__getattribute__(key) 
+        if isinstance(attr, Param):
+            return float(attr)
+        else:
+            return attr  
 
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
