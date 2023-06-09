@@ -159,7 +159,8 @@ The ``## What's changed`` section should be split into ``## Bug fixes`` and
 ``## New features``. It must be filtered to keep only the python changes, ignoring
 the Matlab ones. The tags on each pull request are there to help in this filtering.
 
-The release notes should start with a paragraph pointing out the main modifications.
+The release notes should start with a ``## Main modifications`` section summarising
+the important points of the new release.
 
 They must end with a section pointing out ``## Incompatibilities`` and mentioning the
 necessary actions before upgrading to this release.
