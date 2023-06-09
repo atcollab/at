@@ -13,6 +13,20 @@ from abc import ABC
 from typing import Optional, Generator, Tuple, List, Iterable
 
 
+def _array(value, shape=(-1,), dtype=numpy.float64):
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
+        shape, order='F')
+
+
+def _array66(value):
+    return _array(value, shape=(6, 6))
+
+
+def _nop(value):
+    return value
+
+
 class Param(float):
     def __init__(self, value=numpy.NaN):
         self._fun = lambda: value    
@@ -102,20 +116,31 @@ class Param(float):
 
     def __float__(self):
         return self.value
-
-
-def _array(value, shape=(-1,), dtype=numpy.float64):
-    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
-        shape, order='F')
-
-
-def _array66(value):
-    return _array(value, shape=(6, 6))
-
-
-def _nop(value):
-    return value
+        
+    def __int__(self):
+        return int(self.value)
+      
+        
+class ParamArray(list):
+        
+    def __init__(self, value):
+        if not isinstance(value, list):
+            value = list(value)
+        self._list = value
+        super(ParamArray, self).__init__(value)
+        
+    @property
+    def value(self):
+        return _array(self._list)
+        
+    @value.setter
+    def value(self, value):
+        if not isinstance(value, list):
+            value = list(value)
+        self._list = value
+        
+    def __repr__(self):
+        return str(self._list)
 
 
 class LongtMotion(ABC):
@@ -361,7 +386,7 @@ class Element(object):
 
     def __setattr__(self, key, value):
         try:
-            if isinstance(value, Param):
+            if isinstance(value, (Param, ParamArray)):
                 super(Element, self).__setattr__(key, value)
             else:
                 super(Element, self).__setattr__(
@@ -373,8 +398,8 @@ class Element(object):
             
     def __getattribute__(self, key):
         attr = super(Element, self).__getattribute__(key) 
-        if isinstance(attr, Param):
-            return float(attr)
+        if isinstance(attr, (Param, ParamArray)):
+            return attr.value
         else:
             return attr  
 
@@ -717,8 +742,10 @@ class ThinMultipole(Element):
                 return poly
 
         # Remove MaxOrder, PolynomA and PolynomB
-        poly_a, len_a, ord_a = getpol(_array(kwargs.pop('PolynomA', poly_a)))
-        poly_b, len_b, ord_b = getpol(_array(kwargs.pop('PolynomB', poly_b)))
+        ipola = kwargs.pop('PolynomA', poly_a)
+        ipolb = kwargs.pop('PolynomB', poly_b)     
+        poly_a, len_a, ord_a = getpol(_array(ipola))
+        poly_b, len_b, ord_b = getpol(_array(ipolb))
         deforder = max(getattr(self, 'DefaultOrder', 0), ord_a, ord_b)
         maxorder = kwargs.pop('MaxOrder', deforder)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
@@ -729,12 +756,19 @@ class ThinMultipole(Element):
         len_ab = max(self.MaxOrder + 1, len_a, len_b)
         self.PolynomA = lengthen(poly_a, len_ab - len_a)
         self.PolynomB = lengthen(poly_b, len_ab - len_b)
+        if isinstance(ipola, ParamArray):
+            lista = ipola[:] + list(self.PolynomA)[len(ipola):]
+            self.PolynomA = ParamArray(lista)
+        if isinstance(ipolb, ParamArray):
+            listb = ipolb[:] + list(self.PolynomB)[len(ipolb):]
+            self.PolynomB = ParamArray(listb)
+            
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
         polys = ('PolynomA', 'PolynomB')
         if key in polys:
-            value = _array(value)
+            #value = _array(value)
             lmin = getattr(self, 'MaxOrder')
             if not len(value) > lmin:
                 raise ValueError(
@@ -745,7 +779,6 @@ class ThinMultipole(Element):
             if not value < lmax:
                 raise ValueError(
                     'MaxOrder must be smaller than {0}'.format(lmax))
-
         super(ThinMultipole, self).__setattr__(key, value)
 
 
