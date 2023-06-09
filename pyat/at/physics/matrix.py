@@ -81,7 +81,6 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
     dmat = numpy.concatenate((dg, -dg), axis=1)
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
-    print(in_mat)
     refs = get_uint32_index(ring, refpts)
     out_mat = numpy.rollaxis(
         numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
