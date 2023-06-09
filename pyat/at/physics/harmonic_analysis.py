@@ -216,7 +216,7 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                        hann: bool = False,
                        fmin: float = 0, fmax: float = 1,
                        maxiter: float = 10,
-                       pad_length=None) -> numpy.ndarray:
+                       pad_length=None, **kwargs) -> numpy.ndarray:
     """Computes tunes from harmonic analysis
 
     Parameters:
@@ -236,6 +236,10 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         tunes (ndarray):    numpy array of length len(cents), max of the
         spectrum within [fmin fmax]
     """
+    num_harmonics = kwargs.pop(num_harmonics, 1)  # Backward compatibility
+    if num_harmonics != 1:
+        msg = "num_harmonics is deprecated and ignored for tune calculation"
+        warn(AtWarning(msg))
     tunes, _, _ = get_main_harmonic(cents, method=method, hann=hann, fmin=fmin,
                                     fmax=fmax, pad_length=pad_length)
     return tunes
