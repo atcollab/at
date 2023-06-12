@@ -68,7 +68,6 @@ def _interpolated_fft(samples, num_harmonics, fmin, fmax,
         frequency = _interpolate_peak(fft_data)
         coefficient = _compute_coef(samples, frequency)
         if frequency >= fmin and frequency <= fmax:
-            print(fmin, fmax, frequency)
             frequencies[nfound] = frequency
             coefficients[nfound] = coefficient
             nfound += 1
