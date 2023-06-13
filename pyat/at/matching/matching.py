@@ -359,7 +359,8 @@ class LinoptConstraints(ElementConstraints):
           transfer matrix. Can be :py:obj:`~.linear.linopt2`,
           :py:obj:`~.linear.linopt4`, :py:obj:`~.linear.linopt6`
 
-          * :py:obj:`~.linear.linopt2`: No longitudinal motion, no H/V coupling,
+          * :py:obj:`~.linear.linopt2`: No longitudinal motion,
+                                        no H/V coupling,
           * :py:obj:`~.linear.linopt4`: No longitudinal motion, Sagan/Rubin
             4D-analysis of coupled motion,
           * :py:obj:`~.linear.linopt6` (default): With or without longitudinal
@@ -371,7 +372,8 @@ class LinoptConstraints(ElementConstraints):
 
         Add a beta x (beta[0]) constraint at location ref_inj:
 
-        >>> cnstrs.add('beta', 18.0, refpts=ref_inj, name='beta_x_inj', index=0)
+        >>> cnstrs.add('beta', 18.0, refpts=ref_inj,
+                       name='beta_x_inj', index=0)
 
         Add an horizontal tune (tunes[0]) constraint:
 
@@ -472,8 +474,8 @@ class LinoptConstraints(ElementConstraints):
                 target = target % (2 * np.pi / norm_mu[param])
         else:
             # noinspection PyUnusedLocal
-            def fun(refdata, tune, chrom):                       
-                return getf(refdata, param)                
+            def fun(refdata, tune, chrom):
+                return getf(refdata, param)
 
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,
                                            **kwargs)
