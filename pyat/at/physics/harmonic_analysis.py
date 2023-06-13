@@ -15,6 +15,7 @@ from at.lattice import AtError
 __all__ = ['get_spectrum_harmonic', 'get_main_harmonic',
            'get_tunes_harmonic']
 
+
 def _pad_signal(samples, pad_length):
     """ Pad signal and round to the next power of 2"""
     if pad_length is not None:
@@ -58,12 +59,12 @@ def _interpolated_fft(samples, num_harmonics, fmin, fmax,
     rn = numpy.arange(len(samples))
     coefficients = numpy.zeros(num_harmonics, dtype=complex)
     frequencies = numpy.zeros(num_harmonics)
-    
+
     nfound = 0
     niter = 0
     nmax = num_harmonics*maxiter
 
-    while nfound<num_harmonics and niter<nmax:
+    while (nfound < num_harmonics) and (niter < nmax):
         fft_data = fft(samples)
         frequency = _interpolate_peak(fft_data)
         coefficient = _compute_coef(samples, frequency)
@@ -76,13 +77,13 @@ def _interpolated_fft(samples, num_harmonics, fmin, fmax,
 
     if nfound < num_harmonics:
         msg = ('{0}/{1} harmonics found in '
-               'requested range'.format(nfound,num_harmonics))
+               'requested range'.format(nfound, num_harmonics))
         warn(AtWarning(msg))
     if nfound == 0:
         msg = ('No harmonic found within range, '
                'consider extending it or increase maxiter')
         raise AtError(msg)
-        
+
     coefficients, frequencies = zip(*sorted(zip(coefficients, frequencies),
                                     key=lambda tuple: numpy.abs(tuple[0]),
                                     reverse=True))
@@ -105,7 +106,7 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
         num_harmonics:  Number of harmonics to search for with interp_fft
         fmin:           Lower bound for spectrum search with interp_fft
         fmax:           Upper bound for spectrum search with interp_fft
-        maxiter:        Multiplies ``num_harmonics`` to define the max. 
+        maxiter:        Multiplies ``num_harmonics`` to define the max.
                         number of iteration for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
                         Ignored for interpolated FFT
@@ -123,10 +124,10 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     if method == 'interp_fft' or method == 'laskar':
         if hann:
             warn(AtWarning('Windowing not efficient for'
-                            'interpolated FFT: ignored'))
+                           'interpolated FFT: ignored'))
         if pad_length is not None:
             warn(AtWarning('Padding not efficient for'
-                            'interpolated FFT: ignored'))
+                           'interpolated FFT: ignored'))
         ha_tune, ha_amp = _interpolated_fft(cent, num_harmonics,
                                             fmin, fmax, maxiter)
     elif method == 'fft':
@@ -142,8 +143,8 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     ha_amp = numpy.abs(numpy.array(ha_amp)) / lc
     ha_tune = numpy.array(ha_tune)
     return ha_tune, ha_amp, ha_phase
-    
-    
+
+
 def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                       hann: bool = False,
                       fmin: float = 0, fmax: float = 1,
@@ -160,7 +161,7 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
                         Ignored for interpolated FFT
-        pad_length      Zero pad the input signal.
+        pad_length:     Zero pad the input signal.
                         Rounded to the higher power of 2
                         Ignored for interpolated FFT
 
@@ -196,10 +197,10 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
     phases = numpy.zeros(npart)
 
     for i in range(npart):
-        out = get_spectrum_harmonic(cents[i], num_harmonics=1,method=method,
+        out = get_spectrum_harmonic(cents[i], num_harmonics=1, method=method,
                                     hann=hann, pad_length=pad_length,
                                     fmin=fmin, fmax=fmax, maxiter=maxiter)
-        freq, amp, phase = out                            
+        freq, amp, phase = out
         try:
             tunes[i], amps[i], phases[i] = get_max_spectrum(freq, amp, phase,
                                                             fmin, fmax,
@@ -227,7 +228,7 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
                         Ignored for interpolated FFT
-        pad_length      Zero pad the input signal.
+        pad_length:     Zero pad the input signal.
                         Rounded to the higher power of 2
                         Ignored for interpolated FFT
 
