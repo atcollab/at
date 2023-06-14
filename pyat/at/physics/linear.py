@@ -10,6 +10,7 @@ from scipy.linalg import solve
 from ..constants import clight
 from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
 from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
+from ..lattice import AtError
 from ..lattice import frequency_control
 from ..tracking import lattice_pass
 from .orbit import find_orbit4, find_orbit6
@@ -89,11 +90,18 @@ def _closure(m22):
 def _tunes(ring, **kwargs):
     """"""
     if ring.is_6d:
+        nd = 3
         mt, _ = find_m66(ring, **kwargs)
     else:
+        nd = 2
         mt, _ = find_m44(ring, **kwargs)
-    _, vps = a_matrix(mt)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+    try:
+        _, vps = a_matrix(mt)
+        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+    except AtError:
+        warnings.warn(AtWarning('Unstable ring'))
+        tunes = numpy.empty(nd)
+        tunes[:] = numpy.NaN
     return tunes
 
 
