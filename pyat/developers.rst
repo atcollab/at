@@ -137,7 +137,7 @@ Determine the minimum ``numpy`` and ``scipy`` versions:
   ``[build-system]`` section of ``pyproject.toml``. It depends on the python version
   and must be higher or equal to the "run" version.
 * To avoid ABI compatibility issues, the pre-compiled binaries are built with the
-  earliest possible version of numpy for the given Python version.. This ensures that
+  earliest possible version of numpy for the given Python version. This ensures that
   the user's libraries are more recent than the one AT has been compiled with. For
   that, a copy of ``pyproject.toml`` named ``githubproject.toml`` is used for
   compilation. In this copy, the numpy version specifications are set using ``~=``
