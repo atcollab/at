@@ -25,6 +25,7 @@ Sub-packages
    :hidden:
 
    getting_started
+   examples
 
 .. toctree::
    :maxdepth: 2
@@ -42,14 +43,15 @@ Sub-packages
    :caption: Packages:
    :recursive:
 
-   at.acceptance
-   at.collective
    at.lattice
+   at.latticetools
+   at.tracking
+   at.physics
    at.load
    at.matching
-   at.physics
+   at.acceptance
+   at.collective
    at.plot
-   at.tracking
    at.constants
 
 Indices and tables

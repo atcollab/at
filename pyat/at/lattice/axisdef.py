@@ -22,7 +22,7 @@ for xk, xv in [it for it in _axis_def.items()]:
 _axis_def['delta'] = _axis_def['dp']
 _axis_def['s'] = _axis_def['ct']
 _axis_def['S'] = _axis_def['ct']
-_axis_def[None] = dict(index=slice(None), label="", unit="", code=":")
+_axis_def[None] = dict(index=None, label="", unit="", code=":")
 _axis_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
 _plane_def = dict(
@@ -38,7 +38,7 @@ _plane_def['h'] = _plane_def['x']
 _plane_def['v'] = _plane_def['y']
 _plane_def['H'] = _plane_def['x']
 _plane_def['V'] = _plane_def['y']
-_plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
+_plane_def[None] = dict(index=None, label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
 
