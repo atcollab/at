@@ -70,6 +70,7 @@ from enum import Enum
 from itertools import repeat
 from ..lattice import Lattice, Orbit, Refpts, All, End
 from ..lattice import AxisDef, axis_, plane_, frequency_control
+from ..physics import linopt6
 import numpy as np
 
 RefIndex = Union[int, Tuple[int, ...], slice]
@@ -169,6 +170,7 @@ class Need(Enum):
     #:  Specify geometry computation and provide the full data at evaluation
     #:  points
     GEOMETRY = 9
+    MODULO = 10
 
 
 class Observable(object):
@@ -305,7 +307,7 @@ class Observable(object):
             initial:    It :py:obj:`None`, store the result as the initial
               value
         """
-        val = self.fun(ring, *data, *self.fun_args, **self.kwargs)
+        val = self.fun(ring, *data, *self.args, **self.kwargs)
         if self._shape is None:
             self._shape = np.asarray(val).shape
         if initial:
@@ -708,6 +710,8 @@ class LocalOpticsObservable(_ElementObservable):
             fun = _recordaccess(param, _all_rows(ax_(plane, 'index')))
         if use_integer:
             needs.add(Need.ALL_POINTS)
+        else:
+            needs.add(Need.MODULO)
 
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -1005,12 +1009,16 @@ class ObservableList(list):
             if not needs.isdisjoint({Need.LOCALOPTICS, Need.GLOBALOPTICS}):
                 get_chrom = Need.CHROMATICITY in needs
                 twiss_in = self.kwargs.pop('twiss_in', None)
+                method = self.kwargs.pop('method', linopt6)
                 # noinspection PyUnboundLocalVariable
                 _, rgdata, eldata = ring.get_optics(refpts=self.opticsrefs,
                                                     dp=dp, dct=dct, df=df,
                                                     orbit=o0, keep_lattice=True,
                                                     get_chrom=get_chrom,
-                                                    twiss_in=None)
+                                                    twiss_in=twiss_in,
+                                                    method=method)
+                if Need.MODULO in needs:
+                    eldata['mu'] = eldata['mu'] % (2*np.pi)
 
             if Need.EMITTANCE in needs:
                 emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
@@ -1022,7 +1030,6 @@ class ObservableList(list):
 
         trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = \
             ringeval(ring, r_in=r_in, **kwargs)
-
         for ob in self:
             obseval(ob)
 

@@ -330,7 +330,8 @@ class VariableList(list):
     # noinspection PyProtectedMember
     def status(self, ring: Lattice = None) -> str:
         """String description of the variables"""
-        values = "\n".join(var._line(ring) for var in self)
+        values = "\n".join(var._line(ring) if var.needs_ring
+                           else var._line() for var in self)
         return "\n".join((Variable._header(), values))
 
     def __str__(self) -> str:

@@ -41,8 +41,11 @@ def match(ring: Lattice, variables: VariableList, constraints: ObservableList,
         variables = VariableList(variables)
 
     def fun(vals):
+        print(vals)
         variables.set(ring, vals)
         constraints.evaluate(ring)
+        print(constraints.values)
+        print(variables.get(ring))
         return constraints.flat_weighted_deviations
 
     if copy:
