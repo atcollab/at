@@ -84,7 +84,7 @@ from typing import Optional
 import abc
 from collections.abc import Iterable, Sequence
 import numpy as np
-from ..lattice import Lattice, Refpts
+from ..lattice import Lattice, Refpts, Variable
 
 # Observables must be pickleable. For this, the set and get functions must be
 # module-level functions. No inner, nested function are allowed. So nested
@@ -107,18 +107,17 @@ class _Setf(object):
         getattr(elem, attrname)[self.index] = value
 
 
-class Variable(abc.ABC):
+class LatticeVariable(abc.ABC):
     """A :py:class:`Variable` is a scalar value acting on a lattice
     """
     counter = 0
-    expressions = set()
-    dependents = set()
 
     def __init__(self,
                  name: str = '',
                  refpts: Refpts = None,
                  bounds: tuple[float, float] = (-np.inf, np.inf),
-                 delta: float = 1.0):
+                 delta: float = 1.0,
+                 fun_args: tuple = ()):
         """
         Parameters:
             name:       Name of the Variable
@@ -132,11 +131,11 @@ class Variable(abc.ABC):
         self.bounds = bounds
         self.delta = delta
         self._history = []
-
-    @staticmethod
-    def newname():
-        Variable.counter = Variable.counter+1
-        return f"var{Variable.counter}"
+        super(LatticeVariable, self).__init__(name=name,
+                                              bounds=bounds,
+                                              delta=delta,
+                                              fun_args=fun_args,
+                                              needs_ring=True)
 
     @abc.abstractmethod
     def setfun(self, ring: Lattice, value: float):
@@ -145,35 +144,6 @@ class Variable(abc.ABC):
     @abc.abstractmethod
     def getfun(self, ring: Lattice) -> float:
         ...
-
-    @property
-    def history(self) -> list[float]:
-        """History of the values of the variable"""
-        return self._history
-
-    @property
-    def initial_value(self) -> float:
-        """Initial value of the variable"""
-        if len(self._history) > 0:
-            return self._history[0]
-        else:
-            raise IndexError(f"{self.name}: No value has been set yet")
-
-    @property
-    def last_value(self) -> float:
-        """Last value of the variable"""
-        if len(self._history) > 0:
-            return self._history[-1]
-        else:
-            raise IndexError(f"{self.name}: No value has been set yet")
-
-    @property
-    def previous_value(self) -> float:
-        """Value before the last one"""
-        if len(self._history) > 1:
-            return self._history[-2]
-        else:
-            raise IndexError(f"{self.name}: history too short")
 
     def set(self, ring: Lattice, value: float) -> None:
         """Set the variable value
@@ -244,25 +214,14 @@ class Variable(abc.ABC):
         """Set to initial_value - delta"""
         self._step(ring, -self.delta)
 
-    @staticmethod
-    def _header():
-        return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
-            'Name', 'Initial', 'Final ', 'Variation')
-
-    def _line(self, ring: Lattice = None):
-        if ring is not None:
-            vnow = self.get(ring)
-            vini = self._history[0]
-        elif len(self._history) > 0:
-            vnow = self._history[-1]
-            vini = self._history[0]
-        else:
-            vnow = vini = np.nan
+    def _line(self, ring: Lattice):
+        vnow = self.get(ring)
+        vini = self._history[0]
 
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
             self.name, vini, vnow, (vnow - vini))
 
-    def status(self, ring: Lattice = None):
+    def status(self, ring: Lattice):
         """Return a string describing the current status of the variable
 
         Args:
@@ -279,7 +238,7 @@ class Variable(abc.ABC):
         return self.status()
 
 
-class ElementVariable(Variable):
+class ElementVariable(LatticeVariable):
     r"""A :py:class:`Variable` associated with an attribute of
     :py:class:`.Lattice` elements.
 
@@ -326,19 +285,6 @@ class ElementVariable(Variable):
         return np.average(values)
 
 
-class Parameter(Variable):
-    def __init__(self, value: float = 0.0, **kwargs):
-        self._value = value
-        super(Parameter, self).__init__(refpts=None, **kwargs)
-        self._history.append(value)
-
-    def setfun(self, ring: Lattice, value: float):
-        self._value = value
-
-    def getfun(self, ring: Lattice) -> float:
-        return self._value
-
-
 class VariableList(list):
     """Container for :py:class:`Variable` objects
 
@@ -357,7 +303,8 @@ class VariableList(list):
         Returns:
             values:     1D array of values of all variables
         """
-        return np.array([var.get(ring, initial=initial) for var in self])
+        return np.array([var.get(ring, initial=initial) if var.needs_ring
+                         else var.get(initial=initial) for var in self])
 
     def set(self, ring: Lattice, values: Iterable[float]) -> None:
         r"""Set the :py:class:`Variable`\ s' values
@@ -366,12 +313,8 @@ class VariableList(list):
             ring:       Lattice description
             values:     Iterable of values
         """
-        for var, val in zip(self, values):
-            var.set(ring, val)
-        for expr in Variable.expressions:
-            expr.evaluate()
-        for dep in Variable.dependents:
-            dep.evaluate(ring)
+        [var.set(ring, val) if var.needs_ring
+         else var.set(val) for var, val in zip(self, values)]
 
     def increment(self, ring: Lattice, increment: Iterable[float]) -> None:
         r"""Increment the :py:class:`Variable`\ s' values
@@ -380,12 +323,9 @@ class VariableList(list):
             ring:       Lattice description
             increment:  Iterable of values
         """
-        for var, incr in zip(self, increment):
-            var.increment(ring, incr)
-        for expr in Variable.expressions:
-            expr.evaluate()
-        for dep in Variable.dependents:
-            dep.evaluate(ring)
+        [var.increment(ring, incr) if self.needs_ring
+        else var.increment(incr)
+        for var, incr in zip(self, increment)]
 
     # noinspection PyProtectedMember
     def status(self, ring: Lattice = None) -> str:

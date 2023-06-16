@@ -37,6 +37,9 @@ def match(ring: Lattice, variables: VariableList, constraints: ObservableList,
         newring:        Modified lattice if *copy* is :py:obj:`True`
 
     """
+    if not isinstance(variables, VariableList):
+        variables = VariableList(variables)
+
     def fun(vals):
         variables.set(ring, vals)
         constraints.evaluate(ring)

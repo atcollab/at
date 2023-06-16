@@ -9,6 +9,7 @@ import numpy as np
 from .axisdef import *
 from .options import DConstant, random
 from .particle_object import Particle
+from .parameters import *
 from .elements import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *

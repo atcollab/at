@@ -178,7 +178,9 @@ class Observable(object):
                  target=None,
                  weight=1.0,
                  bounds=(0.0, 0.0),
-                 needs: Optional[Set[Need]] = None):
+                 needs: Optional[Set[Need]] = None,
+                 fun_args: tuple = (),
+                 **kwargs):
         r"""
         Args:
             name:           Observable name. If :py:obj:`None`, an explicit
@@ -239,6 +241,8 @@ class Observable(object):
         self.initial = None
         self._value = None
         self._shape = None
+        self.args = fun_args
+        self.kwargs = kwargs
 
     def __str__(self):
         return "\n".join((self._header(), self._all_lines()))
@@ -301,7 +305,7 @@ class Observable(object):
             initial:    It :py:obj:`None`, store the result as the initial
               value
         """
-        val = self.fun(ring, *data)
+        val = self.fun(ring, *data, *self.fun_args, **self.kwargs)
         if self._shape is None:
             self._shape = np.asarray(val).shape
         if initial:
@@ -453,6 +457,7 @@ class _ElementObservable(Observable):
 class GeometryObservable(_ElementObservable):
     """Observe the geometrical parameters of the reference trajectory"""
     field_list = {'x', 'y', 'angle'}
+
     def __init__(self, refpts: Refpts, param: str,
                  name: Optional[str] = None,
                  **kwargs):
@@ -817,7 +822,8 @@ class ObservableList(list):
     :py:class:`ObservableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
     """
-    def __init__(self, ring: Lattice, obsiter: Iterable[Observable] = ()):
+    def __init__(self, ring: Lattice, obsiter: Iterable[Observable] = (),
+                 **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
@@ -865,6 +871,7 @@ class ObservableList(list):
         self.matrixrefs = noref
         self.ring = ring
         self.needs = set()
+        self.kwargs = kwargs
         super().__init__(self._scan(obs) for obs in obsiter)
 
     # noinspection PyProtectedMember
@@ -978,8 +985,10 @@ class ObservableList(list):
 
             if not needs.isdisjoint({Need.ORBIT, Need.MATRIX, Need.LOCALOPTICS,
                                      Need.GLOBALOPTICS, Need.EMITTANCE}):
+                orbit0 = self.kwargs.pop('orbit', None)
                 o0, orbits = ring.find_orbit(refpts=self.orbitrefs,
-                                             dp=dp, dct=dct, df=df)
+                                             dp=dp, dct=dct, df=df,
+                                             orbit=orbit0)
 
             if Need.MATRIX in needs:
                 if ring.is_6d:
@@ -995,11 +1004,13 @@ class ObservableList(list):
 
             if not needs.isdisjoint({Need.LOCALOPTICS, Need.GLOBALOPTICS}):
                 get_chrom = Need.CHROMATICITY in needs
+                twiss_in = self.kwargs.pop('twiss_in', None)
                 # noinspection PyUnboundLocalVariable
                 _, rgdata, eldata = ring.get_optics(refpts=self.opticsrefs,
                                                     dp=dp, dct=dct, df=df,
                                                     orbit=o0, keep_lattice=True,
-                                                    get_chrom=get_chrom)
+                                                    get_chrom=get_chrom,
+                                                    twiss_in=None)
 
             if Need.EMITTANCE in needs:
                 emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)

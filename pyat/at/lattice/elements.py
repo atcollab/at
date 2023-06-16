@@ -11,6 +11,7 @@ import numpy
 from copy import copy, deepcopy
 from abc import ABC
 from typing import Optional, Generator, Tuple, List, Iterable
+from .parameters import Param, ParamArray
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -25,122 +26,6 @@ def _array66(value):
 
 def _nop(value):
     return value
-
-
-class Param(float):
-    def __init__(self, value=numpy.NaN):
-        self._fun = lambda: value    
-     
-    def setfun(self, param): 
-        if numpy.isscalar(param):
-            self._fun = lambda: param
-        else:
-            self._fun = param
-   
-    @property
-    def value(self):
-        return float(self._fun())
-
-    @value.setter
-    def value(self, value):
-        self.setfun(value)
-
-    def __add__(self, other):
-        newp = Param()
-        if numpy.isscalar(other):
-            newp.setfun(lambda: self.value + other)
-        elif isinstance(other, Param):
-            newp.setfun(lambda: self.value + other.value)
-        else:
-            raise TypeError(other)
-        return newp
-
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    def __sub__(self, other):
-        newp = Param()
-        if numpy.isscalar(other):
-            newp.setfun(lambda: self.value - other)
-        elif isinstance(other, Param):
-            newp.setfun(lambda: self.value - other.value)
-        else:
-            raise TypeError(other)
-        return newp
-
-    def __rsub__(self, other):
-        newp = Param()
-        if numpy.isscalar(other):
-            newp.setfun(lambda: other - self.value)
-        elif isinstance(other, Param):
-            newp.setfun(lambda: other.value - self.value)
-        else:
-            raise TypeError(other)
-        return newp
-
-    def __mul__(self, other):
-        newp = Param()
-        if numpy.isscalar(other):
-            newp.setfun(lambda: self.value * other)
-        elif isinstance(other, Param):
-            newp.setfun(lambda: self.value * other.value)
-        else:
-            raise TypeError(other)
-        return newp
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __truediv__(self, other):
-        newp = Param()
-        if numpy.isscalar(other):
-            newp.setfun(lambda: self.value / other)
-        elif isinstance(other, Param):
-            newp.setfun(lambda: self.value / other.value)
-        else:
-            raise TypeError(other)
-        return newp
-
-    def __rtruediv__(self, other):
-        newp = Param()
-        if numpy.isscalar(other):
-            newp.setfun(lambda: other / self.value)
-        elif isinstance(other, Param):
-            newp.setfun(lambda: other.value / self.value)
-        else:
-            raise TypeError(other)
-        return newp
-
-    def __repr__(self):
-        return str(self.value)
-
-    def __float__(self):
-        return self.value
-        
-    def __int__(self):
-        return int(self.value)
-      
-        
-class ParamArray(list):
-        
-    def __init__(self, value):
-        if not isinstance(value, list):
-            value = list(value)
-        self._list = value
-        super(ParamArray, self).__init__(value)
-        
-    @property
-    def value(self):
-        return _array(self._list)
-        
-    @value.setter
-    def value(self, value):
-        if not isinstance(value, list):
-            value = list(value)
-        self._list = value
-        
-    def __repr__(self):
-        return str(self._list)
 
 
 class LongtMotion(ABC):
@@ -401,7 +286,7 @@ class Element(object):
         if isinstance(attr, (Param, ParamArray)):
             return attr.value
         else:
-            return attr  
+            return attr
 
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
@@ -528,6 +413,13 @@ class Element(object):
     def is_collective(self) -> bool:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
+
+    def evaluate(self):
+        attrs = dict(self.items())
+        for k, v in attrs.items():
+            if isinstance(v, (Param, ParamArray)):
+                setattr(self, k, v.value)
+
 
 
 class LongElement(Element):
@@ -768,7 +660,6 @@ class ThinMultipole(Element):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
         polys = ('PolynomA', 'PolynomB')
         if key in polys:
-            #value = _array(value)
             lmin = getattr(self, 'MaxOrder')
             if not len(value) > lmin:
                 raise ValueError(
