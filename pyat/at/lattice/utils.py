@@ -1065,13 +1065,13 @@ def get_geometry(ring: List[Element],
        >>> geomdata, radius = get_geometry(ring)
     """
 
-    geom_dtype = [('x', numpy.float64, (1, )),
-                  ('y', numpy.float64, (1, )),
-                  ('angle', numpy.float64, (1, ))]
+    geom_dtype = [('x', numpy.float64),
+                  ('y', numpy.float64),
+                  ('angle', numpy.float64)]
     geomdata = numpy.recarray((len(ring)+1, ), dtype=geom_dtype)
-    xx = numpy.zeros((len(ring)+1, 1))
-    yy = numpy.zeros((len(ring)+1, 1))
-    angle = numpy.zeros((len(ring)+1, 1))
+    xx = numpy.zeros(len(ring)+1)
+    yy = numpy.zeros(len(ring)+1)
+    angle = numpy.zeros(len(ring)+1)
     x, y, t = start_coordinates
     x0, y0, t0 = start_coordinates
 

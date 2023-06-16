@@ -227,22 +227,22 @@ def fmap_parallel_track(ring,
 
             # calc frequency from array,
             # jump the cycle is no frequency is found
-            xfreqfirst = get_tunes_harmonic(xfirst, num_harmonics=1)
+            xfreqfirst = get_tunes_harmonic(xfirst)
             if len(xfreqfirst) == 0:
                 verboseprint("  No frequency")
                 continue
             # xfreqlast  = PyNAFF.naff(xlastpart,tns,1,0,False)
-            xfreqlast = get_tunes_harmonic(xlast, num_harmonics=1)
+            xfreqlast = get_tunes_harmonic(xlast)
             if len(xfreqlast) == 0:
                 verboseprint("  No frequency")
                 continue
             # yfreqfirst = PyNAFF.naff(yfirstpart,tns,1,0,False)
-            yfreqfirst = get_tunes_harmonic(yfirst, num_harmonics=1)
+            yfreqfirst = get_tunes_harmonic(yfirst)
             if len(yfreqfirst) == 0:
                 verboseprint("  No frequency")
                 continue
             # yfreqlast  = PyNAFF.naff(ylastpart,tns,1,0,False)
-            yfreqlast = get_tunes_harmonic(ylast, num_harmonics=1)
+            yfreqlast = get_tunes_harmonic(ylast)
             if len(yfreqlast) == 0:
                 verboseprint("  No frequency")
                 continue
