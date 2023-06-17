@@ -170,7 +170,12 @@ class Need(Enum):
     #:  Specify geometry computation and provide the full data at evaluation
     #:  points
     GEOMETRY = 9
+    #:  Specify whether the modulo of the phase has to be used, necessary when
+    #:  matching the fractional part only
     MODULO = 10
+    #:  Specify whether the phase is expressed in units of tune units, in
+    #:  case phase = phase/(2*pi)
+    TUNEUNIT = 11    
 
 
 class Observable(object):
@@ -712,6 +717,13 @@ class LocalOpticsObservable(_ElementObservable):
             needs.add(Need.ALL_POINTS)
         else:
             needs.add(Need.MODULO)
+            target = kwargs.get('target', None)
+            if target is not None and param == 'mu':
+                kwargs['target'] = target % (2*np.pi)
+            elif target is not None and param == 'mun':
+                kwargs['target'] = target % (1)
+                needs.add(Need.TUNEUNIT)
+                fun = _recordaccess('mu', _all_rows(ax_(plane, 'index')))
 
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -989,7 +1001,7 @@ class ObservableList(list):
 
             if not needs.isdisjoint({Need.ORBIT, Need.MATRIX, Need.LOCALOPTICS,
                                      Need.GLOBALOPTICS, Need.EMITTANCE}):
-                orbit0 = self.kwargs.pop('orbit', None)
+                orbit0 = self.kwargs.get('orbit', None)
                 o0, orbits = ring.find_orbit(refpts=self.orbitrefs,
                                              dp=dp, dct=dct, df=df,
                                              orbit=orbit0)
@@ -1008,8 +1020,8 @@ class ObservableList(list):
 
             if not needs.isdisjoint({Need.LOCALOPTICS, Need.GLOBALOPTICS}):
                 get_chrom = Need.CHROMATICITY in needs
-                twiss_in = self.kwargs.pop('twiss_in', None)
-                method = self.kwargs.pop('method', linopt6)
+                twiss_in = self.kwargs.get('twiss_in', None)
+                method = self.kwargs.get('method', linopt6)
                 # noinspection PyUnboundLocalVariable
                 _, rgdata, eldata = ring.get_optics(refpts=self.opticsrefs,
                                                     dp=dp, dct=dct, df=df,
@@ -1017,8 +1029,13 @@ class ObservableList(list):
                                                     get_chrom=get_chrom,
                                                     twiss_in=twiss_in,
                                                     method=method)
-                if Need.MODULO in needs:
+                if Need.TUNEUNIT in needs:
+                    eldata['mu'] = eldata['mu'] / (2*np.pi)
+                    if Need.MODULO in needs:
+                        eldata['mu'] = eldata['mu'] % (1)    
+                elif Need.MODULO in needs:
                     eldata['mu'] = eldata['mu'] % (2*np.pi)
+
 
             if Need.EMITTANCE in needs:
                 emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)

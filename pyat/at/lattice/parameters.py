@@ -14,8 +14,7 @@ class Variable(abc.ABC):
                  name: str = '',
                  bounds: tuple[float, float] = (-numpy.inf, numpy.inf),
                  delta: float = 1.0,
-                 fun_args: tuple = (),
-                 needs_ring: bool = False):
+                 fun_args: tuple = ()):
         """
         Parameters:
             name:       Name of the Variable
@@ -27,7 +26,7 @@ class Variable(abc.ABC):
         self.delta = delta
         self._history = []
         self.args = fun_args
-        self.needs_ring = needs_ring
+        self.needs_ring = True
 
     @staticmethod
     def newname():
@@ -202,9 +201,20 @@ class Param(Variable):
 
     def getfun(self):
         return float(self.value)
+        
+    def _line(self, _):
+        if len(self._history) > 0:
+            vnow = self._history[-1]
+            vini = self._history[0]
+        else:
+            vnow = vini = numpy.nan
+
+        return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
+            self.name, vini, vnow, (vnow - vini))
 
     def status(self, _, **kwargs):
-        return "\n".join((self._header(), self._line()))
+        return "\n".join((self._header(), self._line(_)))
+
 
     def set(self, _, value: float) -> None:
         if value < self.bounds[0] or value > self.bounds[1]:
@@ -220,6 +230,7 @@ class Param(Variable):
         if len(h) == 0 or value != h[-1]:
             h.append(value)
         return value
+
 
     def setvalue(self, param):
         if isinstance(param, Number):

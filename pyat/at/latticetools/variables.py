@@ -134,8 +134,8 @@ class LatticeVariable(abc.ABC):
         super(LatticeVariable, self).__init__(name=name,
                                               bounds=bounds,
                                               delta=delta,
-                                              fun_args=fun_args,
-                                              needs_ring=True)
+                                              fun_args=fun_args)
+        self.needs_ring = True
 
     @abc.abstractmethod
     def setfun(self, ring: Lattice, value: float):
