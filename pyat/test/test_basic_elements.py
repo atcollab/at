@@ -314,7 +314,10 @@ def test_rfcavity(rin, func):
     lattice = [rf, rf, rf, rf]
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
-    func(lattice, rin, 1)
+    if func == track_function:
+        func(lattice, rin, in_place=True)
+    else:
+        func(lattice, rin)
     expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
@@ -326,7 +329,10 @@ def test_m66(rin, n, func):
     m66 = elements.M66('m66', m)
     assert m66.Length == 0
     rin[n, 0] = 1e-6
-    func(m66, rin)
+    if func == track_function:
+        func(m66, rin, in_place=True)
+    else:
+        func(m66, rin)
     expected = numpy.array([m[0, n], m[1, n], m[2, n], m[3, n], m[4, n],
                             m[5, n]]).reshape(6, 1) * 1e-6
     numpy.testing.assert_equal(rin, expected)
@@ -341,7 +347,10 @@ def test_corrector(rin, func):
     rin_orig = rin.copy()
     rin_orig[1] = 0.9
     rin_orig[3] = 0.5
-    func(c, rin)
+    if func == track_function:
+        func(c, rin, in_place=True)
+    else:
+        func(c, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
@@ -356,7 +365,10 @@ def test_wiggler(rin, func):
     # Expected value from Matlab AT.
     expected = numpy.array(rin, copy=True)
     expected[5] = 0.000000181809691064259
-    func(c, rin)
+    if func == track_function:
+        func(c, rin, in_place=True)
+    else:
+        func(c, rin)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
 
