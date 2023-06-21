@@ -92,7 +92,8 @@ def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
 
 
 def track_function(lattice: Union[Element, Iterable[Element]], r_in,
-                   nturns: int = 1, refpts: Refpts = End, **kwargs):
+                   nturns: int = 1, refpts: Refpts = End,
+                   in_place: bool = True, **kwargs):
     """
     :py:func:`track_function` tracks particles through each element of a
     lattice or throught a single Element calling the element-specific
@@ -218,6 +219,9 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in,
 
     [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in part_kw]
     trackparam.update({'npart': npart})
+
+    if in_place:
+        r_in = r_in.copy()
 
     if isinstance(lattice, Element):
         kwargs = {k: v for k, v in kwargs.items() if k in part_kw}
