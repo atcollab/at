@@ -5,12 +5,12 @@ import pytest
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from at.lattice import Element, elements
 from at import shift_elem, tilt_elem
-from at import track_function
+from at import element_track, lattice_track
 from at import lattice_pass, internal_lpass
 from at import element_pass, internal_epass
 
 
-@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+@pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_exact_hamiltonian_pass(rin, func):
     drift = elements.Multipole('m1', 1, [0, 0, 0, 0], [0, 0, 0, 0])
     drift.Type = 0
@@ -19,7 +19,7 @@ def test_exact_hamiltonian_pass(rin, func):
     func(drift, rin)
 
 
-@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+@pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_exact_hamiltonian_pass_with_dls_dipole(rin, func):
     bend = elements.Multipole('rb', 0.15, [0, 0, 0, 0],
                               [-0.0116333, 3.786786, 0, 0])
@@ -28,14 +28,17 @@ def test_exact_hamiltonian_pass_with_dls_dipole(rin, func):
     bend.BendingAngle = -0.001745
     bend.Energy = 3.5e9
     bend.MaxOrder = 3
-    func(bend, rin)
+    if func==element_track:
+        func(bend, rin, in_place=True)
+    else:
+        func(bend, rin)
     # Results from Matlab
     expected = numpy.array([9.23965e-9, 1.22319e-5, 0,
                             0, 0, -4.8100e-10]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, rtol=1e-5, atol=1e-6)
 
 
-@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+@pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 @pytest.mark.parametrize('passmethod',
                          ('GWigSymplecticPass', 'GWigSymplecticRadPass'))
 def test_gwig_symplectic_pass(rin, passmethod, func):
@@ -45,14 +48,14 @@ def test_gwig_symplectic_pass(rin, passmethod, func):
     func(wiggler, rin)
 
 
-@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+@pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_bndstrmpole_symplectic_4_pass(rin, func):
     bend = elements.Dipole('b', 1.0)
     bend.PassMethod = 'BndStrMPoleSymplectic4Pass'
     func(bend, rin)
 
 
-@pytest.mark.parametrize('func', (track_function, element_pass, internal_epass))
+@pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_pydrift(func):
     pydrift = elements.Drift('drift', 1.0, PassMethod='pyDriftPass')
     cdrift = elements.Drift('drift', 1.0, PassMethod='DriftPass')
@@ -78,7 +81,7 @@ def test_pydrift(func):
     numpy.testing.assert_equal(pyout, cout)
 
 
-@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass, internal_lpass))
 def test_pyintegrator(hmba_lattice, func):
     params = {'Length': 0,
               'PassMethod': 'pyIdentityPass',

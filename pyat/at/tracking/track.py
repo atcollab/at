@@ -14,8 +14,8 @@ from warnings import warn
 from .atpass import reset_rng
 
 
-__all__ = ['track_function', 'internal_lpass', 'internal_epass',
-           'internal_plpass']
+__all__ = ['lattice_track', 'element_track', 'internal_lpass',
+           'internal_epass', 'internal_plpass']
 
 _imax = numpy.iinfo(int).max
 _globring: Optional[list[Element]] = None
@@ -91,9 +91,9 @@ def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-def track_function(lattice: Union[Element, Iterable[Element]], r_in,
-                   nturns: int = 1, refpts: Refpts = End,
-                   in_place: bool = True, **kwargs):
+def lattice_track(lattice: Union[Element, Iterable[Element]], r_in,
+                  nturns: int = 1, refpts: Refpts = End,
+                  in_place: bool = True, **kwargs):
     """
     :py:func:`track_function` tracks particles through each element of a
     lattice or throught a single Element calling the element-specific
@@ -110,15 +110,13 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in,
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
 
-    The following arguments and keywords apply only for tracking a list of
-    elements.
-
-    Parameters:
+    Keyword arguments:
         nturns: number of turns to be tracked
         refpts: Selects the location of coordinates output.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-
-    Keyword arguments:
+        in_place (bool): If True *r_in* is modified in-place and
+          reports the coordinates at the end of the element.
+          (default: False)
         keep_lattice (bool):    Use elements persisted from a previous
           call. If :py:obj:`True`, assume that the lattice has not changed
           since the previous call.
@@ -130,7 +128,6 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in,
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
-        squeeze_out: remove all dimension of length 1 in **r_out**
 
     The following keyword arguments overload the lattice values
 
@@ -156,15 +153,12 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in,
           following keys:
 
           ==============    ===================================================
-          **energy**        lattice energy
-          **particle**      particle used for tracking
           **npart**         number of particles
-          **rin**           intitial particle coordinates
           **rout**          final particle coordinates
-          **turn**          starting turn (only for lattice tracking)
+          **turn**          starting turn
           **refpts**        array of index where particle coordinate are saved
                             (only for lattice tracking)
-          **nturns**        number of turn (only for lattice tracking)
+          **nturns**        number of turn
 
         trackdata: A dictionary containinf tracking data with the following
           keys:
@@ -210,7 +204,7 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in,
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
     trackdata = {}
-    trackparam = {'rin': r_in.copy()}
+    trackparam = {}
     part_kw = ['energy', 'particle']
     try:
         npart = numpy.shape(r_in)[1]
@@ -223,48 +217,87 @@ def track_function(lattice: Union[Element, Iterable[Element]], r_in,
     if not in_place:
         r_in = r_in.copy()
 
-    if isinstance(lattice, Element):
-        kwargs = {k: v for k, v in kwargs.items() if k in part_kw}
-        rout = _element_pass(lattice, r_in, **kwargs)
+    lattice = initialize_lpass(lattice, kwargs)
+    ldtype = [('islost', numpy.bool_),
+              ('turn', numpy.uint32),
+              ('elem', numpy.uint32),
+              ('coord', numpy.float64, (6,)),
+              ]
+    loss_map = numpy.recarray((npart,), ldtype)
+    lat_kw = ['turn']
+    [trackparam.update((kw, kwargs.get(kw)))
+     for kw in kwargs if kw in lat_kw]
+    trackparam.update({'refpts': get_uint32_index(lattice, refpts),
+                       'nturns': nturns})
+
+    use_mp = kwargs.pop('use_mp', False)
+    if use_mp:
+        rout = _plattice_pass(lattice, r_in, nturns=nturns,
+                              refpts=refpts, **kwargs)
     else:
-        lattice = initialize_lpass(lattice, kwargs)
-        ldtype = [('islost', numpy.bool_),
-                  ('turn', numpy.uint32),
-                  ('elem', numpy.uint32),
-                  ('coord', numpy.float64, (6,)),
-                  ]
-        loss_map = numpy.recarray((npart,), ldtype)
-        lat_kw = ['turn']
-        [trackparam.update((kw, kwargs.get(kw)))
-         for kw in kwargs if kw in lat_kw]
-        trackparam.update({'refpts': get_uint32_index(lattice, refpts),
-                           'nturns': nturns})
+        rout = _lattice_pass(lattice, r_in, nturns=nturns,
+                             refpts=refpts, **kwargs)
 
-        use_mp = kwargs.pop('use_mp', False)
-        if use_mp:
-            rout = _plattice_pass(lattice, r_in, nturns=nturns,
-                                  refpts=refpts, **kwargs)
-        else:
-            rout = _lattice_pass(lattice, r_in, nturns=nturns,
-                                 refpts=refpts, **kwargs)
+    if kwargs.get('losses', False):
+        rout, lm = rout
+        lm['coord'] = lm['coord'].T
+        for k, v in lm.items():
+            loss_map[k] = v
 
-        if kwargs.get('losses', False):
-            rout, lm = rout
-            lm['coord'] = lm['coord'].T
-            for k, v in lm.items():
-                loss_map[k] = v
-        trackdata.update({'loss_map': loss_map})
-
-        if kwargs.get('squeeze_out', False):
-            rout = numpy.squeeze(rout)
-
+    trackdata.update({'loss_map': loss_map})
     trackparam.update({'rout': r_in})
 
     return rout, trackparam, trackdata
 
 
+def element_track(element: Element, r_in, in_place: bool = True, **kwargs):
+    """
+    :py:func:`element_track` tracks particles through one element of a
+    calling the element-specific tracking function specified in the
+    Element's *PassMethod* field.
+
+    Usage:
+      >>> element_track(element, r_in)
+      >>> element.track(r_in)
+
+    Parameters:
+        element: element to track through
+        r_in: (6, N) array: input coordinates of N particles.
+          For the best efficiency, *r_in*
+          should be given as F_CONTIGUOUS numpy array.
+
+    Keyword arguments:
+        in_place (bool): If True *r_in* is modified in-place and
+          reports the coordinates at the end of the element.
+          (default: False)
+        omp_num_threads (int):  Number of OpenMP threads
+          (default: automatic)
+
+    The following keyword arguments overload the lattice values
+
+    Keyword arguments:
+        particle (Optional[Particle]): circulating particle.
+          Default: :code:`lattice.particle` if existing,
+          otherwise :code:`Particle('relativistic')`
+        energy (Optiona[float]): lattice energy. Default 0.
+
+    If *energy* is not available, relativistic tracking if forced,
+    *rest_energy* is ignored.
+
+    Returns:
+        r_out: (6, N, R, T) array containing output coordinates of N particles
+          at R reference points for T turns. If *squeeze_out* is :py:obj:`True`
+          all dimensions of length 1 are removed
+    """
+    if not in_place:
+        r_in = r_in.copy()
+
+    rout = _element_pass(element, r_in, **kwargs)
+    return rout
+
+
 internal_lpass = _lattice_pass
 internal_epass = _element_pass
 internal_plpass = _plattice_pass
-Lattice.track = track_function
-Element.track = track_function
+Lattice.track = lattice_track
+Element.track = element_track

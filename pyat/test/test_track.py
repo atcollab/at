@@ -1,21 +1,21 @@
 from at import elements
-from at import track_function
+from at import lattice_track
 from at import lattice_pass, internal_lpass
 import numpy
 import pytest
 
 
-@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass, internal_lpass))
 @pytest.mark.parametrize('input_dim', [(0,), (5,), (7,), (1, 1), (6, 1, 1)])
-def test_track_function_raises_AssertionError_if_rin_incorrect_shape(input_dim, func):
+def test_lattice_track_raises_AssertionError_if_rin_incorrect_shape(input_dim, func):
     rin = numpy.zeros(input_dim)
     lattice = []
     with pytest.raises(AssertionError):
         func(lattice, rin)
 
 
-@pytest.mark.parametrize('func', (track_function, lattice_pass, internal_lpass))
-def test_multiple_particles_track_function(func):
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass, internal_lpass))
+def test_multiple_particles_lattice_track(func):
     lattice = [elements.Drift('Drift', 1.0)]
     rin = numpy.zeros((6, 2))
     rin[0, 0] = 1e-6  # particle one offset in x
@@ -31,7 +31,7 @@ def test_multiple_particles_track_function(func):
     numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 1])
 
 
-@pytest.mark.parametrize('func', (track_function, lattice_pass))
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass))
 def test_lattice_convert_to_list_if_incorrect_type(func):
     lattice = numpy.array([elements.Drift('Drift', 1.0)])
     rin = numpy.zeros((6, 2))

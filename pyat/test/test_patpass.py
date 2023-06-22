@@ -1,5 +1,5 @@
 from at import elements
-from at import track_function
+from at import lattice_track
 from at import patpass, internal_plpass
 import numpy
 import pytest
@@ -8,7 +8,7 @@ import pytest
 
 # @pytest.mark.skipif(not sys.platform.startswith("win"),
 #                    reason="May hang on linux and MacOS")
-@pytest.mark.parametrize('func', (track_function, patpass, internal_plpass))
+@pytest.mark.parametrize('func', (lattice_track, patpass, internal_plpass))
 def test_patpass_multiple_particles_and_turns(func):
     nturns = 10
     nparticles = 10

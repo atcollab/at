@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
 from at.collective import add_beamloading, remove_beamloading, BLMode
-from at import track_function
+from at import lattice_track
 from at import lattice_pass, internal_lpass
 
 
@@ -115,7 +115,7 @@ def test_beamloading(hmba_lattice):
         assert cav.PassMethod == 'RFCavityPass' 
     
 
-@pytest.mark.parametrize('func', (track_function, lattice_pass))        
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass))
 def test_track_beamloading(hmba_lattice, func):
     ring = hmba_lattice.radiation_on(copy=True)
     rin0 = numpy.zeros(6)
@@ -130,7 +130,10 @@ def test_track_beamloading(hmba_lattice, func):
     with pytest.raises(Exception):
         func(ring, rin, refpts=[])
     rin = numpy.zeros((6, 2))
-    func(ring, rin, refpts=[])
+    if func == lattice_track:
+        func(ring, rin, refpts=[], in_place=True)
+    else:
+        func(ring, rin, refpts=[])
     assert_close(rin[:, 0], numpy.array([-2.318948e-08, -1.599715e-09,
                                         0.000000e+00,  0.000000e+00,
                                         -1.313306e-05, -1.443748e-08]
