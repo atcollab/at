@@ -12,7 +12,7 @@ from scipy.optimize import fsolve
 from ..constants import qe, clight, _e_radius
 
 
-__all__ = ['get_bunch_length_espread', 'get_lifetime']
+__all__ = ['get_bunch_length_espread', 'get_lifetime', 'get_scattering_rate']
 
 
 def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
@@ -92,12 +92,9 @@ def int_piwinski(k, km, B1, B2):
     return intp
 
 
-def _get_local_vals(ring, rp, ma, emity, bunch_curr,
-                    emitx=None, sigs=None, sigp=None,
-                    zn=None, **kwargs):
-
-    epsabs = kwargs.pop('epsabs', 1.0e-16)
-    epsrel = kwargs.pop('epsrel', 1.0e-12)
+def _get_vals(ring, rp, ma, emity, bunch_curr, emitx=None,
+              sigs=None, sigp=None, zn=None, epsabs=1.0e-16,
+              epsrel=1.0e-12):
 
     emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn,
                                        emitx=emitx, sigs=sigs,
@@ -145,11 +142,56 @@ def _get_local_vals(ring, rp, ma, emity, bunch_curr,
                                         epsrel=epsrel)
 
         val[i] *= (_e_radius**2*clight*nc /
-                (8*numpy.pi*(gamma2)*sigs *
-                 numpy.sqrt(numpy.prod(sig2, axis=1) -
-                 sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
-                2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
+                   (8*numpy.pi*gamma2*sigs *
+                    numpy.sqrt(numpy.prod(sig2, axis=1) -
+                               sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
+                   2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
     return val
+
+
+def _init_ma_rp(ring, refpts=None, momap=None, interpolate=True,
+                check_zero=True, **kwargs):
+    if refpts is None:
+        refpts = ring.get_uint32_index(at.All, endpoint=False)
+    else:
+        refpts = ring.get_uint32_index(refpts)
+    if momap is not None:
+        assert len(momap) == len(refpts), \
+            'Input momap and refpts have different lengths'
+
+    if check_zero:
+        mask = [ring[r].Length > 0.0 for r in refpts]
+    else:
+        mask = [True for _ in refpts]
+
+    if not numpy.all(mask):
+        zerolength_warning = ('zero-length elements removed '
+                              'from lifetime calculation')
+        warnings.warn(AtWarning(zerolength_warning))
+    refpts = refpts[mask]
+
+    if momap is None:
+        resolution = kwargs.pop('resolution', 1.0e-3)
+        amplitude = kwargs.pop('amplitude', 0.1)
+        kwargs.update({'refpts': refpts})
+        momap, _, _ = ring.get_momentum_acceptance(resolution,
+                                                   amplitude, **kwargs)
+    else:
+        momap = momap[mask]
+
+    if interpolate:
+        refpts_all = numpy.array([i for i in range(refpts[0],
+                                                   refpts[-1]+1)
+                                  if ring[i].Length > 0])
+        spos = numpy.squeeze(ring.get_s_pos(refpts))
+        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
+        momp = numpy.interp(spos_all, spos, momap[:, 0])
+        momn = numpy.interp(spos_all, spos, momap[:, 1])
+        momap_all = numpy.vstack((momp, momn)).T
+        ma, rp = momap_all, refpts_all
+    else:
+        ma, rp = momap, refpts
+    return ma, rp
 
 
 def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
@@ -193,57 +235,22 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         ma: momentum aperture (len(refpts), 2) array
         refpts: refpts used for ma calcualtion (len(refpts), ) array
     """
-
     interpolate = kwargs.pop('interpolate', True)
-
-    if refpts is None:
-        refpts = ring.get_uint32_index(at.All, endpoint=False)
-    else:
-        refpts = ring.get_uint32_index(refpts)
-    if momap is not None:
-        assert len(momap) == len(refpts), \
-            'Input momap and refpts have different lengths'
-
-    mask = [ring[r].Length > 0.0 for r in refpts]
-    if not numpy.all(mask):
-        zerolength_warning = ('zero-length elements removed '
-                              'from lifetime calculation')
-        warnings.warn(AtWarning(zerolength_warning))
-    refpts = refpts[mask]
-
-    if momap is None:
-        resolution = kwargs.pop('resolution', 1.0e-3)
-        amplitude = kwargs.pop('amplitude', 0.1)
-        kwargs.update({'refpts': refpts})
-        momap, _, _ = ring.get_momentum_acceptance(resolution,
-                                                   amplitude, **kwargs)
-    else:
-        momap = momap[mask]
-
-    if interpolate:
-        refpts_all = numpy.array([i for i in range(refpts[0],
-                                                   refpts[-1]+1)
-                                  if ring[i].Length > 0])
-        spos = numpy.squeeze(ring.get_s_pos(refpts))
-        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
-        momp = numpy.interp(spos_all, spos, momap[:, 0])
-        momn = numpy.interp(spos_all, spos, momap[:, 1])
-        momap_all = numpy.vstack((momp, momn)).T
-        ma, rp = momap_all, refpts_all
-    else:
-        ma, rp = momap, refpts
-
+    epsabs = kwargs.pop('epsabs', 1.0e-16)
+    epsrel = kwargs.pop('epsrel', 1.0e-12)
+    ma, rp = _init_ma_rp(ring, refpts=refpts, momap=momap,
+                         interpolate=interpolate, **kwargs)
     length_all = numpy.array([e.Length for e in ring[rp]])
-
-    vals = _get_local_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
-                           sigs=sigs, sigp=sigp, zn=zn, **kwargs)
-
-    tl = 1/numpy.meam([sum(v*length_all.T)/sum(length_all) for v in vals])
+    vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
+                     sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
+                     epsrel=epsrel)
+    tl = 1/numpy.mean([sum(v*length_all.T)/sum(length_all) for v in vals])
     return tl, momap, refpts
 
 
-def get_scattering(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
-                 zn=None, momap=None, refpts=None, **kwargs):
+def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
+                        sigp=None, zn=None, momap=None, refpts=None,
+                        **kwargs):
     """Touschek scattering rate calculation
 
     Computes the touschek scattering using the Piwinski formula
@@ -283,45 +290,19 @@ def get_scattering(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         ma: momentum aperture (len(refpts), 2) array
         refpts: refpts used for ma calcualtion (len(refpts), ) array
     """
-
     interpolate = kwargs.pop('interpolate', True)
-
-    if refpts is None:
-        refpts = ring.get_uint32_index(at.All, endpoint=False)
-    else:
-        refpts = ring.get_uint32_index(refpts)
-    if momap is not None:
-        assert len(momap) == len(refpts), \
-            'Input momap and refpts have different lengths'
-
-    if momap is None:
-        resolution = kwargs.pop('resolution', 1.0e-3)
-        amplitude = kwargs.pop('amplitude', 0.1)
-        kwargs.update({'refpts': refpts})
-        momap, _, _ = ring.get_momentum_acceptance(resolution,
-                                                   amplitude, **kwargs)
-
-    if interpolate:
-        refpts_all = numpy.array([i for i in range(refpts[0],
-                                                   refpts[-1] + 1)
-                                  if ring[i].Length > 0])
-        spos = numpy.squeeze(ring.get_s_pos(refpts))
-        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
-        momp = numpy.interp(spos_all, spos, momap[:, 0])
-        momn = numpy.interp(spos_all, spos, momap[:, 1])
-        momap_all = numpy.vstack((momp, momn)).T
-        ma, rp = momap_all, refpts_all
-    else:
-        ma, rp = momap, refpts
-
-    length_all = numpy.array([e.Length for e in ring[rp]])
-
-    vals = _get_local_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
-                           sigs=sigs, sigp=sigp, zn=zn, **kwargs)
-
-    tl = 1 / numpy.meam([sum(v * length_all.T) / sum(length_all) for v in vals])
-    return tl, momap, refpts
+    epsabs = kwargs.pop('epsabs', 1.0e-16)
+    epsrel = kwargs.pop('epsrel', 1.0e-12)
+    ma, rp = _init_ma_rp(ring, refpts=refpts, momap=momap,
+                         interpolate=interpolate, check_zero=False,
+                         **kwargs)
+    vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
+                     sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
+                     epsrel=epsrel)
+    scattering_rate = numpy.mean(vals, axis=2)*bunch_curr/ring.revolution_frequency/qe
+    return scattering_rate, momap, refpts
 
 
 Lattice.get_bunch_length_espread = get_bunch_length_espread
 Lattice.get_lifetime = get_lifetime
+Lattice.get_scattering_rate = get_scattering_rate
