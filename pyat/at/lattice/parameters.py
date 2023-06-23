@@ -289,6 +289,21 @@ class Param(Variable):
         return int(self.value)
 
 
+class _Parray(numpy.ndarray):
+    def __new__(cls, value):
+        arr = numpy.require(value, dtype=value.dtype,
+                            requirements=['F', 'A'])
+        arr.reshape(value.shape, order='F')
+        return numpy.array(arr).view(cls)
+
+    def __init__(self, value):
+        self._dependant = value
+
+    def __setitem__(self, key, value):
+        super(_Parray, self).__setitem__(key, value)
+        self._dependant[key] = value
+
+
 class ParamArray(list):
 
     def __init__(self, value, shape=-1, dtype=numpy.float64):
@@ -296,26 +311,17 @@ class ParamArray(list):
             value = list(value)
         self.shape = shape
         self.dtype = dtype
-        self._list = value
+        super(ParamArray, self).__init__(value)
         self._value = self._build_array()
-        super(ParamArray, self).__init__(self._list)
 
     def _build_array(self):
-        arr = numpy.require(self._list, dtype=self.dtype,
-                            requirements=['F', 'A'])
-        return arr.reshape(self.shape, order='F')
+        arr = _Parray(self)
+        return arr
 
     @property
     def value(self):
-        self._value[:] = self._list[:]
+        self._value[:] = self[:]
         return self._value
-
-    @value.setter
-    def value(self, value):
-        if not isinstance(value, list):
-            value = list(value)
-        self._list = value
-        self._value = self._build_array()
 
     def __repr__(self):
         return repr(self.value)
