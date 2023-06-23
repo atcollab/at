@@ -92,6 +92,66 @@ def int_piwinski(k, km, B1, B2):
     return intp
 
 
+def _get_local_vals(ring, rp, ma, emity, bunch_curr,
+                    emitx=None, sigs=None, sigp=None,
+                    zn=None, **kwargs):
+
+    epsabs = kwargs.pop('epsabs', 1.0e-16)
+    epsrel = kwargs.pop('epsrel', 1.0e-12)
+
+    emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn,
+                                       emitx=emitx, sigs=sigs,
+                                       sigp=sigp)
+
+    nc = bunch_curr/ring.revolution_frequency/qe
+    beta2 = ring.beta*ring.beta
+    gamma2 = ring.gamma*ring.gamma
+
+    emit = numpy.array([emitx, emity])
+    _, _, ld = ring.get_optics(refpts=rp)
+    bxy = ld.beta
+    bxy2 = bxy*bxy
+    axy = ld.alpha
+    dxy = ld.dispersion[:, [0, 2]]
+    dxy2 = dxy*dxy
+    dpxy = ld.dispersion[:, [1, 3]]
+    sigb = numpy.sqrt(bxy*emit)
+    sigb2 = sigb*sigb
+    sigp2 = sigp*sigp
+    sig = numpy.sqrt(sigb2+sigp2*dxy2)
+    sig2 = sig*sig
+    dt = dxy*axy+dpxy*bxy
+    dt2 = dt*dt
+    sigh2 = 1/(1/sigp2 + numpy.sum((dxy2+dt2)/sigb2, axis=1))
+
+    bs = bxy2/sigb2*(1-(sigh2*(dt2/sigb2).T).T)
+    bg2i = 1/(2*beta2*gamma2)
+    B1 = bg2i*numpy.sum(bs, axis=1)
+    B2sq = bg2i*bg2i*(numpy.diff(bs, axis=1).T**2 +
+                      sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
+                      numpy.prod(sigb2*sigb2, axis=1))
+    B2 = numpy.squeeze(numpy.sqrt(B2sq))
+
+    val = numpy.zeros((2, len(rp)))
+    for i in range(2):
+        dpp = ma[:, i]
+        um = beta2*dpp*dpp
+        km = numpy.arctan(numpy.sqrt(um))
+
+        for ii in range(len(rp)):
+            args = (km[ii], B1[ii], B2[ii])
+            val[i, ii], *_ = integrate.quad(int_piwinski, args[0], numpy.pi/2,
+                                        args=args, epsabs=epsabs,
+                                        epsrel=epsrel)
+
+        val[i] *= (_e_radius**2*clight*nc /
+                (8*numpy.pi*(gamma2)*sigs *
+                 numpy.sqrt(numpy.prod(sig2, axis=1) -
+                 sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
+                2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
+    return val
+
+
 def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                  zn=None, momap=None, refpts=None, **kwargs):
     """Touschek lifetime calculation
@@ -134,12 +194,8 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         refpts: refpts used for ma calcualtion (len(refpts), ) array
     """
 
-    epsabs = kwargs.pop('epsabs', 1.0e-16)
-    epsrel = kwargs.pop('epsrel', 1.0e-12)
     interpolate = kwargs.pop('interpolate', True)
 
-    emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn,
-                                       emitx=emitx, sigs=sigs, sigp=sigp)
     if refpts is None:
         refpts = ring.get_uint32_index(at.All, endpoint=False)
     else:
@@ -179,57 +235,91 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
 
     length_all = numpy.array([e.Length for e in ring[rp]])
 
-    nc = bunch_curr/ring.revolution_frequency/qe
-    beta2 = ring.beta*ring.beta
-    gamma2 = ring.gamma*ring.gamma
+    vals = _get_local_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
+                           sigs=sigs, sigp=sigp, zn=zn, **kwargs)
 
-    emit = numpy.array([emitx, emity])
-    _, _, ld = ring.get_optics(refpts=rp)
-    bxy = ld.beta
-    bxy2 = bxy*bxy
-    axy = ld.alpha
-    dxy = ld.dispersion[:, [0, 2]]
-    dxy2 = dxy*dxy
-    dpxy = ld.dispersion[:, [1, 3]]
-    sigb = numpy.sqrt(bxy*emit)
-    sigb2 = sigb*sigb
-    sigp2 = sigp*sigp
-    sig = numpy.sqrt(sigb2+sigp2*dxy2)
-    sig2 = sig*sig
-    dt = dxy*axy+dpxy*bxy
-    dt2 = dt*dt
-    sigh2 = 1/(1/sigp2 + numpy.sum((dxy2+dt2)/sigb2, axis=1))
+    tl = 1/numpy.meam([sum(v*length_all.T)/sum(length_all) for v in vals])
+    return tl, momap, refpts
 
-    bs = bxy2/sigb2*(1-(sigh2*(dt2/sigb2).T).T)
-    bg2i = 1/(2*beta2*gamma2)
-    B1 = bg2i*numpy.sum(bs, axis=1)
-    B2sq = bg2i*bg2i*(numpy.diff(bs, axis=1).T**2 +
-                      sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
-                      numpy.prod(sigb2*sigb2, axis=1))
-    B2 = numpy.squeeze(numpy.sqrt(B2sq))
 
-    invtl = numpy.zeros(2)
-    for i in range(2):
-        dpp = ma[:, i]
-        um = beta2*dpp*dpp
-        km = numpy.arctan(numpy.sqrt(um))
+def get_scattering(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
+                 zn=None, momap=None, refpts=None, **kwargs):
+    """Touschek scattering rate calculation
 
-        val = numpy.zeros(len(rp))
-        for ii in range(len(rp)):
-            args = (km[ii], B1[ii], B2[ii])
-            val[ii], _ = integrate.quad(int_piwinski, args[0], numpy.pi/2,
-                                        args=args, epsabs=epsabs,
-                                        epsrel=epsrel)
+    Computes the touschek scattering using the Piwinski formula
 
-        val *= (_e_radius**2*clight*nc /
-                (8*numpy.pi*(gamma2)*sigs *
-                 numpy.sqrt(numpy.prod(sig2, axis=1) -
-                 sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
-                2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
+    args:
+        ring:            ring use for tracking
+        emity:           verticla emittance
+        bunch_curr:      bunch current
 
-        invtl[i] = sum(val*length_all.T)/sum(length_all)
-    tl = 1/numpy.mean(invtl)
+    keyword args:
+        emitx=None:      horizontal emittance
+        sigs=None:       rms bunch length
+        sigp=None:       energy spread
+        zn=None:         full ring :math:`Z/n`
+        momap=None:      momentum aperture, has to be consistent with ``refpts``
+                         if provided the momentum aperture is not calculated
+        refpts=None:     ``refpts`` where the momentum aperture is calculated,
+                         the default is to compute it for all elements in the
+                         ring, ``len(refpts)>2`` is required
+        resolution:      minimum distance between 2 grid points, default=1.0e-3
+        amplitude:       max. amplitude for ``RADIAL`` and ``CARTESIAN`` or
+                         initial step in ``RECURSIVE``
+                         default = 0.1
+        nturns=1024:     Number of turns for the tracking
+        dp=None:         static momentum offset
+        grid_mode:       ``at.GridMode.CARTESIAN/RADIAL`` track full vector
+                         (default). ``at.GridMode.RECURSIVE``: recursive search
+        use_mp=False:    Use python multiprocessing (``patpass``, default use
+                         ``lattice_pass``). In case multi-processing is not
+                         enabled ``GridMode`` is forced to
+                         ``RECURSIVE`` (most efficient in single core)
+        verbose=False:   Print out some inform
+        epsabs, epsrel:  integral absolute and relative tolerances
 
+    Returns:
+        scattering: touschek lifetime, double expressed in seconds
+        ma: momentum aperture (len(refpts), 2) array
+        refpts: refpts used for ma calcualtion (len(refpts), ) array
+    """
+
+    interpolate = kwargs.pop('interpolate', True)
+
+    if refpts is None:
+        refpts = ring.get_uint32_index(at.All, endpoint=False)
+    else:
+        refpts = ring.get_uint32_index(refpts)
+    if momap is not None:
+        assert len(momap) == len(refpts), \
+            'Input momap and refpts have different lengths'
+
+    if momap is None:
+        resolution = kwargs.pop('resolution', 1.0e-3)
+        amplitude = kwargs.pop('amplitude', 0.1)
+        kwargs.update({'refpts': refpts})
+        momap, _, _ = ring.get_momentum_acceptance(resolution,
+                                                   amplitude, **kwargs)
+
+    if interpolate:
+        refpts_all = numpy.array([i for i in range(refpts[0],
+                                                   refpts[-1] + 1)
+                                  if ring[i].Length > 0])
+        spos = numpy.squeeze(ring.get_s_pos(refpts))
+        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
+        momp = numpy.interp(spos_all, spos, momap[:, 0])
+        momn = numpy.interp(spos_all, spos, momap[:, 1])
+        momap_all = numpy.vstack((momp, momn)).T
+        ma, rp = momap_all, refpts_all
+    else:
+        ma, rp = momap, refpts
+
+    length_all = numpy.array([e.Length for e in ring[rp]])
+
+    vals = _get_local_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
+                           sigs=sigs, sigp=sigp, zn=zn, **kwargs)
+
+    tl = 1 / numpy.meam([sum(v * length_all.T) / sum(length_all) for v in vals])
     return tl, momap, refpts
 
 
