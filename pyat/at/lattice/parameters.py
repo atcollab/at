@@ -312,11 +312,7 @@ class ParamArray(list):
         self.shape = shape
         self.dtype = dtype
         super(ParamArray, self).__init__(value)
-        self._value = self._build_array()
-
-    def _build_array(self):
-        arr = _Parray(self)
-        return arr
+        self._value = _Parray(self)
 
     @property
     def value(self):
