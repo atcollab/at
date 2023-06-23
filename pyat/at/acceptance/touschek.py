@@ -233,7 +233,8 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
     Returns:
         tl: touschek lifetime, double expressed in seconds 
         ma: momentum aperture (len(refpts), 2) array
-        refpts: refpts used for ma calcualtion (len(refpts), ) array
+        refpts: refpts used for momentum aperture calculation
+                (len(refpts), ) array
     """
     interpolate = kwargs.pop('interpolate', True)
     epsabs = kwargs.pop('epsabs', 1.0e-16)
@@ -286,9 +287,11 @@ def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
         epsabs, epsrel:  integral absolute and relative tolerances
 
     Returns:
-        scattering: touschek lifetime, double expressed in seconds
+        scattering_rate: scattering rate double array (len(refpts), )
+                         expressed in event/seconds
         ma: momentum aperture (len(refpts), 2) array
-        refpts: refpts used for ma calcualtion (len(refpts), ) array
+        refpts: refpts used for momentum aperture calculation
+                (len(refpts), ) array
     """
     interpolate = kwargs.pop('interpolate', True)
     epsabs = kwargs.pop('epsabs', 1.0e-16)
