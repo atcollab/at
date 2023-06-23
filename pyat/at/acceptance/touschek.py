@@ -245,7 +245,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                      sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
                      epsrel=epsrel)
     tl = 1/numpy.mean([sum(v*length_all.T)/sum(length_all) for v in vals])
-    return tl, momap, refpts
+    return tl, ma, rp
 
 
 def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
@@ -299,8 +299,8 @@ def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
     vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
                      sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
                      epsrel=epsrel)
-    scattering_rate = numpy.mean(vals, axis=2)*bunch_curr/ring.revolution_frequency/qe
-    return scattering_rate, momap, refpts
+    scattering_rate = numpy.mean(vals, axis=0)*bunch_curr/ring.revolution_frequency/qe
+    return scattering_rate, ma, rp
 
 
 Lattice.get_bunch_length_espread = get_bunch_length_espread
