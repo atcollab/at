@@ -168,14 +168,14 @@ class KickMap(Element):
             return table_out2
 
         # args to input
-        print(len(args))
-        print(args)
+        #print(len(args))
+        #print(args)
         if len(args) == 4:
             family_name = args[0]
             Nslice = args[1]
             Filename_in = args[2]
             Energy = args[3]
-            print("Defining from args")
+            #print("Defining from args")
         # read the input data
         el_length, hkickmap, vkickmap, \
             table_cols1, table_rows1, \
@@ -246,10 +246,31 @@ class KickMap(Element):
         return u
 
     def __new__( cls, *args, **kwargs ):
-        print('new ID')
+        #print('new ID')
+        #if not len(args) == 0:
+        #    print('new args not zero')
+        #print(f'new {kwargs=}')
         return super().__new__(cls)
 
     def __init__( self, *args, **kwargs ):
+        #print(f'init {args=}')
+        #print(f'init {kwargs=}')
+        if not len(args) == 0:
+            self.set_params(family_name=args[0],
+                            PassMethod=args[1],
+                            Filename_in=args[2],
+                            Normalization_energy=args[3],
+                            Nslice=numpy.uint8(args[4]),
+                            Length=args[5],
+                            NumX=args[6],
+                            NumY=args[7],
+                            xkick=args[8],
+                            ykick=args[9],
+                            xkick1=args[10],
+                            ykick1=args[11],
+                            xtable=args[12],
+                            ytable=args[13]
+                            )
         pass
 
     def set_params(self, **kwargs):
@@ -276,7 +297,7 @@ class KickMap(Element):
         super(KickMap, self).__init__(family_name, **kwargs)
         # the KickMap class uses IdTablePass method that
         # requires Fortran-aligned memory arguments.
-        print(self)
+        #print(self)
         fortran_aligned_args = ['xkick', 'ykick', 'xkick1', 'ykick1']
         for key in fortran_aligned_args:
             kwtmp = getattr(self, key)
@@ -284,7 +305,7 @@ class KickMap(Element):
                 setattr(self, key, numpy.asfortranarray(numpy.float64(kwtmp)))
         # Nslice needs to be an integer
         integer_kwargs = ['Nslice']
-        print('here2')
+        #print('here2')
         for kw in integer_kwargs:
             setattr(self, kw, numpy.uint8(getattr(self, kw)))
 
