@@ -49,7 +49,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         double fint1, double fint2, double gap, double scaling,
         int FringeQuadEntrance, int FringeQuadExit,
         double *fringeIntM0,  /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
-        double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */        
+        double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
@@ -65,7 +65,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le; 
+        B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -74,7 +74,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
     FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0) \
     private(c)
-    for (c = 0; c<num_particles; c++) { /*Loop over particles  */
+    for (c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             int m;
@@ -98,9 +98,9 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                     linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
                 else
                     QuadFringePassP(r6, B[1]);
-            }    
+            }
             /* integrator */
-            for (m=0; m < num_int_steps; m++) { /* Loop over slices*/
+            for (m=0; m < num_int_steps; m++) { /* Loop over slices */
                 fastdrift(r6, NormL1);
                 bndthinkick(r6, A, B, K1, irho, max_order);
                 fastdrift(r6, NormL2);
@@ -172,7 +172,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
-        
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -257,7 +257,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();        
         irho = BendingAngle/Length;
-        
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
