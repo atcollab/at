@@ -407,8 +407,8 @@ def tapering(ring: Lattice, multipoles: bool = True,
     """Scales magnet strengths
 
     Scales magnet strengths with local energy to cancel the closed orbit
-    and optics errors due to synchrotron radiations. PolynomB is used for
-    dipoles such that the machine geometry is maintained. This is the ideal
+    and optics errors due to synchrotron radiations. The dipole bending angle
+    is changed by changing the reference momentum. This is the ideal
     tapering scheme where magnets and multipoles components (PolynomB and
     PolynomA) are scaled individually.
 
@@ -434,28 +434,23 @@ def tapering(ring: Lattice, multipoles: bool = True,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
-    dipoles = get_refpts(ring, Dipole)
-    b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
-    k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
-    ld = get_value_refpts(ring, dipoles, 'Length')
+    dipoles = ring.get_bool_index(Dipole)
 
     for i in range(niter):
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step, method=method)
-        dpps = (o6[dipoles, 4] + o6[dipoles+1, 4]) / 2
-        set_value_refpts(ring, dipoles, 'PolynomB', b0/ld*dpps+k0*(1+dpps),
-                         index=0)
+        dpps = (o6[dipoles, 4] + o6[numpy.roll(dipoles, 1), 4]) / 2.0
+        set_value_refpts(ring, dipoles, 'Scaling', 1+dpps)
+
 
     if multipoles:
-        mults = get_refpts(ring, Multipole)
-        k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
+        mults = ring.get_bool_index(Multipole) & ~dipoles
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step, method=method)
-        dpps = (o6[mults, 4] + o6[mults+1, 4]) / 2
+        dpps = (o6[mults, 4] + o6[numpy.roll(mults, 1), 4]) / 2
         for dpp, el in zip(dpps, ring[mults]):
             el.PolynomB *= 1+dpp
             el.PolynomA *= 1+dpp
-        set_value_refpts(ring, dipoles, 'PolynomB', k0, index=0)
 
 
 Lattice.ohmi_envelope = ohmi_envelope
