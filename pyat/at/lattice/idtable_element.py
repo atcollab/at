@@ -3,6 +3,7 @@ import numpy
 import io
 from ..constants import clight
 
+
 class KickMap(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
@@ -36,7 +37,7 @@ class KickMap(Element):
         return getattr(self, 'PassMethod')
 
     @staticmethod
-    def InsertionDeviceKickMap(\
+    def InsertionDeviceKickMap(
             *args,
             **kwargs
             ):
@@ -61,6 +62,7 @@ class KickMap(Element):
             KickMap element
             Default PassMethod: ``IdTablePass``
         """
+        # 2023jul04 changing class to save in .mat and .m
         # 2023apr30 redefinition to function
         # 2023jan18 fix bug with element print
         # 2023jan15 first release
@@ -104,7 +106,7 @@ class KickMap(Element):
 
                 data_lines = 0     # line not starting with '#'
                 header_lines = 0   # line starting with '#'
-                block_counter = 0  # START of the hor.map and START of the vert.map
+                block_counter = 0  # START of the h.map, START of the v.map
                 for line in f:
                     sline = line.split()
                     if sline[0] == '#':  # line is comment
@@ -129,7 +131,7 @@ class KickMap(Element):
                             if block_lines == 1:
                                 haxis = sline
                             if block_lines > 1:
-                                # minus one due to python index starting at zero
+                                # minus one due to python index starting at 0
                                 # and minus another one due
                                 # to the column labels in first line
                                 vaxis[block_lines - 2] = float(sline[0])
@@ -145,7 +147,7 @@ class KickMap(Element):
                                     table_cols2 = haxis
                                     table_rows2 = vaxis
                                 if block_counter > 2:
-                                    print('atWarning: only two tables are read')
+                                    print('atWarning: only two tables read')
                             block_lines += 1
             # dummy variables not implemented in the reading function
             # but required if more than two tables are
@@ -153,8 +155,8 @@ class KickMap(Element):
             vkickmap1 = 0 * numpy.copy(vkickmap)
 
             return el_length, hkickmap, vkickmap, table_cols1, table_rows1, \
-            table_cols2, table_rows2, h_points, v_points, hkickmap1, vkickmap1
-
+                table_cols2, table_rows2, h_points, v_points, \
+                hkickmap1, vkickmap1
 
         def sorted_table(table_in, sorted_index, order_axis):
             # numpy.asfortranarray makes a copy of contiguous memory positions
@@ -168,14 +170,14 @@ class KickMap(Element):
             return table_out2
 
         # args to input
-        #print(len(args))
-        #print(args)
+        # print(len(args))
+        # print(args)
         if len(args) == 4:
             family_name = args[0]
             Nslice = args[1]
             Filename_in = args[2]
             Energy = args[3]
-            #print("Defining from args")
+
         # read the input data
         el_length, hkickmap, vkickmap, \
             table_cols1, table_rows1, \
@@ -245,16 +247,10 @@ class KickMap(Element):
         # print(f'{u}')
         return u
 
-    def __new__( cls, *args, **kwargs ):
-        #print('new ID')
-        #if not len(args) == 0:
-        #    print('new args not zero')
-        #print(f'new {kwargs=}')
+    def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
 
-    def __init__( self, *args, **kwargs ):
-        #print(f'init {args=}')
-        #print(f'init {kwargs=}')
+    def __init__(self, *args, **kwargs):
         if not len(args) == 0:
             self.set_params(family_name=args[0],
                             PassMethod=args[1],
@@ -292,12 +288,12 @@ class KickMap(Element):
             ytable,         vertical kick map table
             **kwargs        others
         """
-        # print(kwargs)
+
         family_name = kwargs.pop('family_name')
         super(KickMap, self).__init__(family_name, **kwargs)
         # the KickMap class uses IdTablePass method that
-        # requires Fortran-aligned memory arguments.
-        #print(self)
+        # requires Fortran-aligned memory arguments
+
         fortran_aligned_args = ['xkick', 'ykick', 'xkick1', 'ykick1']
         for key in fortran_aligned_args:
             kwtmp = getattr(self, key)
@@ -305,7 +301,7 @@ class KickMap(Element):
                 setattr(self, key, numpy.asfortranarray(numpy.float64(kwtmp)))
         # Nslice needs to be an integer
         integer_kwargs = ['Nslice']
-        #print('here2')
+
         for kw in integer_kwargs:
             setattr(self, kw, numpy.uint8(getattr(self, kw)))
 
