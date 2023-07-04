@@ -91,7 +91,7 @@ def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-def lattice_track(lattice: Union[Element, Iterable[Element]], r_in,
+def lattice_track(lattice: Iterable[Element], r_in,
                   nturns: int = 1, refpts: Refpts = End,
                   in_place: bool = True, **kwargs):
     """
@@ -100,13 +100,14 @@ def lattice_track(lattice: Union[Element, Iterable[Element]], r_in,
     tracking function specified in the Element's *PassMethod* field.
 
     Usage:
-      >>> track_function(lattice, r_in)
+      >>> lattice_track(lattice, r_in)
       >>> lattice.track(r_in)
 
     Parameters:
         lattice: list of elements or Element
         r_in: (6, N) array: input coordinates of N particles.
-          *r_in* is modified in-place and reports the coordinates at
+          *r_in* is modified in-place only if *in_place* is 
+          :py:obj:`True` and reports the coordinates at
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
 
@@ -147,8 +148,7 @@ def lattice_track(lattice: Union[Element, Iterable[Element]], r_in,
 
     Returns:
         r_out: (6, N, R, T) array containing output coordinates of N particles
-          at R reference points for T turns. If *squeeze_out* is :py:obj:`True`
-          all dimensions of length 1 are removed
+          at R reference points for T turns
         trackparam: A dictionary containing tracking input parameters with the
           following keys:
 
@@ -254,7 +254,8 @@ def element_track(element: Element, r_in, in_place: bool = True, **kwargs):
     """
     :py:func:`element_track` tracks particles through one element of a
     calling the element-specific tracking function specified in the
-    Element's *PassMethod* field.
+    Element's *PassMethod* field. Particle are always considered
+    relativitic
 
     Usage:
       >>> element_track(element, r_in)
@@ -273,21 +274,9 @@ def element_track(element: Element, r_in, in_place: bool = True, **kwargs):
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
 
-    The following keyword arguments overload the lattice values
-
-    Keyword arguments:
-        particle (Optional[Particle]): circulating particle.
-          Default: :code:`lattice.particle` if existing,
-          otherwise :code:`Particle('relativistic')`
-        energy (Optiona[float]): lattice energy. Default 0.
-
-    If *energy* is not available, relativistic tracking if forced,
-    *rest_energy* is ignored.
-
     Returns:
         r_out: (6, N, R, T) array containing output coordinates of N particles
-          at R reference points for T turns. If *squeeze_out* is :py:obj:`True`
-          all dimensions of length 1 are removed
+          at R reference points for T turns
     """
     if not in_place:
         r_in = r_in.copy()
