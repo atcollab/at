@@ -6,8 +6,8 @@ from .utils import initialize_lpass
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
-from collections.abc import Iterable, Sequence
-from typing import Optional, Union
+from collections.abc import Iterable
+from typing import Optional
 from functools import partial
 import multiprocessing
 from warnings import warn
@@ -104,7 +104,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
       >>> lattice.track(r_in)
 
     Parameters:
-        lattice: list of elements or Element
+        lattice: list of elements
         r_in: (6, N) array: input coordinates of N particles.
           *r_in* is modified in-place only if *in_place* is 
           :py:obj:`True` and reports the coordinates at
