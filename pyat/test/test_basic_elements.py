@@ -255,7 +255,7 @@ def test_aperture_outside_limits(rin, func):
     lattice = [a]
     rin[0, 0] = 1e-2
     rin[2, 0] = -1e-2
-    if func == element_track:
+    if func == lattice_track:
         func(lattice, rin, in_place=True)
     else:
         func(lattice, rin)
@@ -340,7 +340,7 @@ def test_rfcavity(rin, func):
     lattice = [rf, rf, rf, rf]
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
-    if func == element_track:
+    if func == lattice_track:
         func(lattice, rin, in_place=True)
     else:
         func(lattice, rin)
