@@ -1,9 +1,11 @@
 """
 Classes for matching variables and constraints
 """
+from __future__ import annotations
 from itertools import chain
 import numpy as np
-from typing import Optional, Sequence, Callable, Tuple, Union
+from collections.abc import Sequence, Callable
+from typing import Optional, Union
 from scipy.optimize import least_squares
 from itertools import repeat
 from at.lattice import Lattice, Refpts, bool_refpts
@@ -32,23 +34,23 @@ class Variable(object):
           :py:class:`Variable` initialisation
         name:       Name of the Variable; Default: ``''``
         bounds:     Lower and upper bounds of the variable value
-        *args:      Positional arguments transmitted to ``setfun`` and
+        fun_args:       Positional arguments transmitted to ``setfun`` and
           ``getfun`` functions
 
     Keyword Args:
-        **kwargs:   Keyword arguments transmitted to ``setfun``and
+        **fun_kwargs:   Keyword arguments transmitted to ``setfun``and
           ``getfun`` functions
     """
     def __init__(self, setfun: Callable, getfun: Callable,
                  name: str = '',
-                 bounds: Tuple[float, float] = (-np.inf, np.inf),
-                 *args, **kwargs):
+                 bounds: tuple[float, float] = (-np.inf, np.inf),
+                 fun_args: tuple = (), **fun_kwargs):
         self.setfun = setfun
         self.getfun = getfun
         self.name = name
         self.bounds = bounds
-        self.args = args
-        self.kwargs = kwargs
+        self.args = fun_args
+        self.kwargs = fun_kwargs
         super(Variable, self).__init__()
 
     def set(self, ring: Lattice, value):
@@ -90,7 +92,7 @@ class ElementVariable(Variable):
     def __init__(self, refpts: Refpts, attname: str,
                  index: Optional[int] = None,
                  name: str = '',
-                 bounds: Tuple[float, float] = (-np.inf, np.inf)):
+                 bounds: tuple[float, float] = (-np.inf, np.inf)):
         setf, getf = self._access(index)
 
         def setfun(ring, value):
@@ -357,7 +359,8 @@ class LinoptConstraints(ElementConstraints):
           transfer matrix. Can be :py:obj:`~.linear.linopt2`,
           :py:obj:`~.linear.linopt4`, :py:obj:`~.linear.linopt6`
 
-          * :py:obj:`~.linear.linopt2`: No longitudinal motion, no H/V coupling,
+          * :py:obj:`~.linear.linopt2`: No longitudinal motion,
+                                        no H/V coupling,
           * :py:obj:`~.linear.linopt4`: No longitudinal motion, Sagan/Rubin
             4D-analysis of coupled motion,
           * :py:obj:`~.linear.linopt6` (default): With or without longitudinal
@@ -369,7 +372,8 @@ class LinoptConstraints(ElementConstraints):
 
         Add a beta x (beta[0]) constraint at location ref_inj:
 
-        >>> cnstrs.add('beta', 18.0, refpts=ref_inj, name='beta_x_inj', index=0)
+        >>> cnstrs.add('beta', 18.0, refpts=ref_inj,
+                       name='beta_x_inj', index=0)
 
         Add an horizontal tune (tunes[0]) constraint:
 
@@ -435,6 +439,7 @@ class LinoptConstraints(ElementConstraints):
         getf = self._recordaccess(index)
         getv = self._arrayaccess(index)
         use_integer = kwargs.pop('UseInteger', False)
+        norm_mu = {'mu': 1, 'mun': 2*np.pi}
 
         if name is None:                # Generate the constraint name
             name = param.__name__ if callable(param) else param
@@ -444,7 +449,6 @@ class LinoptConstraints(ElementConstraints):
         if callable(param):
             def fun(refdata, tune, chrom):
                 return getv(param(refdata, tune, chrom))
-            # self.refpts[:] = True     # necessary not to miss 2*pi jumps
             self.get_chrom = True       # fun may use dispersion or chroma
         elif param == 'tunes':
             # noinspection PyUnusedLocal
@@ -457,14 +461,20 @@ class LinoptConstraints(ElementConstraints):
                 return getv(chrom)
             refpts = []
             self.get_chrom = True       # slower but necessary
+        elif param == 'mu' or param == 'mun':
+            # noinspection PyUnusedLocal
+            def fun(refdata, tune, chrom):
+                if use_integer:
+                    return getf(refdata, 'mu') / norm_mu[param]
+                else:
+                    return (getf(refdata, 'mu') % (2*np.pi)) / norm_mu[param]
+            if use_integer:
+                self.refpts[:] = True  # necessary not to miss 2*pi jumps
+            else:
+                target = target % (2 * np.pi / norm_mu[param])
         else:
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):
-                if param == 'mu':
-                    return getf(refdata, param) % (2*np.pi)
-                elif param == 'mu' and use_integer:
-                    # necessary not to miss 2*pi jumps
-                    self.refpts[:] = True
                 return getf(refdata, param)
 
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,

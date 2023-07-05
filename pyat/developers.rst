@@ -105,6 +105,14 @@ To do this, we use the continuous integration service Github Actions.
 When a tag of the form pyat-* is pushed to Github, wheels for each
 supported platform will be built and automatically uploaded as an 'artifact'.
 
+We use `Semantic Versioning <https://semver.org/>`_ for this project. As documented
+by the full specification, we use a version number with three dot-separated
+numbers: ``MAJOR.MINOR.PATCH``. Increment the:
+
+* MAJOR version when you make incompatible API changes
+* MINOR version when you add functionality in a backward compatible manner
+* PATCH version when you make backward compatible bug fixes
+
 Release procedure
 -----------------
 
@@ -114,24 +122,79 @@ To upload a release to PyPI, you will need to be a 'maintainer' of
 For testing any version that you have installed, the simple snippet in
 ``README.rst`` is sufficient.
 
-* Decide the Python versions that should be supported in the release
-   * Set these Python versions in ``python_requires`` in ``setup.cfg``
-   * Set at least these Python versions as ``python-version`` in ``.github/workflows/python-tests.yml``
-* Determine the minimum Numpy version that is required for those Python versions
-   * Set this numpy version in ``install_requires`` in ``setup.cfg``
-* Push a tag ``pyat-x.y.z`` to Github
+Decide the Python versions that should be supported in the release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Set these Python versions in ``requires-python`` in ``pyproject.toml``
+* Set at least these Python versions as ``python-version`` in ``.github/workflows/python-tests.yml``
+
+Determine the minimum ``numpy`` and ``scipy`` versions:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* the version ensuring the requirements necessary to **run** PyAT is set in the
+  ``dependencies`` item of the ``[project]`` section of ``pyproject.toml``
+* The version required to **build** PyAT is set in the ``requires`` item of the
+  ``[build-system]`` section of ``pyproject.toml``. It depends on the python version
+  and must be higher or equal to the "run" version.
+* To avoid ABI compatibility issues, the pre-compiled binaries are built with the
+  earliest possible version of numpy for the given Python version. This ensures that
+  the user's libraries are more recent than the one AT has been compiled with. For
+  that, a copy of ``pyproject.toml`` named ``githubproject.toml`` is used for
+  compilation. In this copy, the numpy version specifications are set using ``~=``
+  instead of minimum (``>=``). Apart from these lines, the 2 files
+  should be strictly identical.
+
+Prepare the "Release notes"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A draft can be obtained by creating a new tag on GitHub. Click "Draft a new release"
+in the releases page, choose a new tag in the form ``pyat-x.y.z`` with the correct
+incremented version number. The ``pyat-`` prefix is necessary to identify python releases.
+Select the master branch as target. In the description area, choose the current
+release in the "previous tag" pull-down, and press "Generate release notes".
+
+The generated notes can now be copied and edited. You can then either cancel or
+save the release as a draft while editing the release notes.
+
+The ``## What's changed`` section should be split into ``## Bug fixes`` and
+``## New features``. It must be filtered to keep only the python changes, ignoring
+the Matlab ones. The tags on each pull request are there to help in this filtering.
+
+The release notes should start with a ``## Main modifications`` section summarising
+the important points of the new release.
+
+They must end with a section pointing out ``## Incompatibilities`` and mentioning the
+necessary actions before upgrading to this release.
+
+Open a Pull Request for the new release
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The goal is to make all contributors aware of the new release, to check that no pending
+modifications are worth being included and to review the release notes.
+
+There should be no code modifications except updates of version informations in the
+documentation. Once the pull request is approved and merged, the release may be built.
+
+
+Build the release
+~~~~~~~~~~~~~~~~~
+
+Now either go back to the draft release saved above, or start again the procedure,
+but now finalising with the ``Publish`` button.
 
 If all goes well, there will be a build of "Build and upload wheels and sdist"
 associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://github.com/atcollab/at/actions/workflows/build-python-wheels.yml>`_. This build will have
 'tar.gz' and 'wheels' downloads available.
 
+Upload the release to ``pip``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 * Download the tar.gz and wheels files and unzip them into a directory ``<dir>``
 * Manually install at least one wheel to make sure that it has built correctly
-* Install Twine for uploading the files to PyPI. One way to do this is to create a new virtualenv::
+* Install Twine for uploading the files to PyPI. One way is to use
+  `pipx <https://pypa.github.io/pipx/>`_. Once pipx installed, use::
 
-    $ python3 -m venv venv
-    $ source venv/bin/activate
-    $ pip install twine
+     $ pipx install twine  # or:
+     $ pipx upgrade twine
 
 * Use Twine to upload the files to PyPI. You will be prompted for your PyPI credentials::
 
@@ -145,4 +208,4 @@ associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://git
 Note that 46 different files were uploaded for pyat-0.0.4 covering different
 platforms and architectures.
 
-The configuration for this is in .github/workflows/build-python-wheels.yml.
+The configuration for this is in ``.github/workflows/build-python-wheels.yml``.

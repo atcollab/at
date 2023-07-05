@@ -10,6 +10,7 @@ from scipy.linalg import solve
 from ..constants import clight
 from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
 from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
+from ..lattice import AtError
 from ..lattice import frequency_control
 from ..tracking import lattice_pass
 from .orbit import find_orbit4, find_orbit6
@@ -89,11 +90,18 @@ def _closure(m22):
 def _tunes(ring, **kwargs):
     """"""
     if ring.is_6d:
+        nd = 3
         mt, _ = find_m66(ring, **kwargs)
     else:
+        nd = 2
         mt, _ = find_m44(ring, **kwargs)
-    _, vps = a_matrix(mt)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+    try:
+        _, vps = a_matrix(mt)
+        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+    except AtError:
+        warnings.warn(AtWarning('Unstable ring'))
+        tunes = numpy.empty(nd)
+        tunes[:] = numpy.NaN
     return tunes
 
 
@@ -1080,15 +1088,15 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
 
           ``'fft'`` tracks a single particle and computes the tunes with fft,
 
-          ``'laskar'`` tracks a single particle and computes the tunes with
-          NAFF.
+          ``'interp_fft'`` tracks a single particle and computes the tunes with
+          interpolated FFT.
         dp (float):             Momentum deviation.
         dct (float):            Path lengthening.
         df (float):             Deviation of RF frequency.
         orbit (Orbit):          Avoids looking for the closed orbit if it is
           already known ((6,) array)
 
-    for the ``'fft'`` and ``'laskar'`` methods only:
+    for the ``'fft'`` and ``'interp_fft'`` methods only:
 
     Keyword Args:
         nturns (int):           Number of turns. Default: 512
@@ -1101,7 +1109,7 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         fmin (float):           Lower tune bound. Default: 0
         fmax (float):           Upper tune bound. Default: 1
         hann (bool):            Turn on Hanning window.
-          Default: :py:obj:`False`
+          Default: :py:obj:`False`. Work only for ``'fft'`` 
         get_integer(bool):   Turn on integer tune (slower)
 
     Returns:
@@ -1155,8 +1163,8 @@ def get_chrom(ring: Lattice, *, method: str = 'linopt',
           ``'fft'`` tracks a single particle and computes the tunes with
           :py:func:`~scipy.fftpack.fft`,
 
-          ``'laskar'`` tracks a single particle and computes the tunes with
-          NAFF.
+          ``'interp_fft'`` tracks a single particle and computes the tunes with
+          interpolated FFT.
         dp (float):         Momentum deviation.
         dct (float):        Path lengthening.
         df (float):         Deviation of RF frequency.
@@ -1167,7 +1175,7 @@ def get_chrom(ring: Lattice, *, method: str = 'linopt',
         DPStep (float):     Momentum step for differentiation
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
-    for the ``'fft'`` and ``'laskar'`` methods only:
+    for the ``'fft'`` and ``'interp_fft'`` methods only:
 
     Keyword Args:
         nturns (int):       Number of turns. Default: 512
@@ -1180,7 +1188,7 @@ def get_chrom(ring: Lattice, *, method: str = 'linopt',
         fmin (float):       Lower tune bound. Default: 0
         fmax (float):       Upper tune bound. Default: 1
         hann (bool):        Turn on Hanning window.
-          Default: :py:obj:`False`
+          Default: :py:obj:`False`, Work only for ``'fft'``
 
     Returns:
         chromaticities (ndarray):   array([:math:`\xi_x,\xi_y`])
