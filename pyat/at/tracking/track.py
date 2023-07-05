@@ -93,7 +93,7 @@ def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
 
 def lattice_track(lattice: Iterable[Element], r_in,
                   nturns: int = 1, refpts: Refpts = End,
-                  in_place: bool = True, **kwargs):
+                  in_place: bool = False, **kwargs):
     """
     :py:func:`track_function` tracks particles through each element of a
     lattice or throught a single Element calling the element-specific
