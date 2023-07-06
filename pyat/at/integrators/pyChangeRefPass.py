@@ -10,7 +10,7 @@ at.integratorsand contain a function trackFunction()
 
 
 def trackFunction(rin, elem=None):
-    scaling = elem.Scaling
+    scaling = elem.FieldScaling
     for i in range(0, len(rin), 6):
         rin[i+1] /= scaling
         rin[i+3] /= scaling

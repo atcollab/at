@@ -440,7 +440,7 @@ def tapering(ring: Lattice, multipoles: bool = True,
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step, method=method)
         dpps = (o6[dipoles, 4] + o6[numpy.roll(dipoles, 1), 4]) / 2.0
-        set_value_refpts(ring, dipoles, 'Scaling', 1+dpps)
+        set_value_refpts(ring, dipoles, 'FieldScaling', 1+dpps)
 
 
     if multipoles:

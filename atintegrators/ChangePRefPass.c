@@ -28,7 +28,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double Scaling;
-        Scaling=atGetDouble(ElemData,"Scaling"); check_error();
+        Scaling=atGetDouble(ElemData,"FieldScaling"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Scaling=Scaling;
     }
@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         double Scaling;
-        Scaling=atGetDouble(ElemData,"Scaling"); check_error();
+        Scaling=atGetDouble(ElemData,"FieldScaling"); check_error();
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -57,7 +57,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(1,1);
-        mxSetCell(plhs[0],0,mxCreateString("Scaling"));
+        mxSetCell(plhs[0],0,mxCreateString("FieldScaling"));
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(0,1);
