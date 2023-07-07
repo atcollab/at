@@ -434,23 +434,24 @@ def tapering(ring: Lattice, multipoles: bool = True,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
-    dipoles = ring.get_bool_index(Dipole)
+    dipin = ring.get_bool_index(Dipole)
+    dipout = numpy.roll(dipin, 1)
+
+    if multipoles:
+        multin = ring.get_bool_index(Multipole) & ~dipin
+        multout = numpy.roll(multin, 1)
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step, method=method)
+        dppm = (o6[multin, 4] + o6[multout, 4]) / 2
+        for dpp, el in zip(dppm, ring[multin]):
+            el.PolynomB *= 1 + dpp
+            el.PolynomA *= 1 + dpp
 
     for i in range(niter):
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step, method=method)
-        dpps = (o6[dipoles, 4] + o6[numpy.roll(dipoles, 1), 4]) / 2.0
-        set_value_refpts(ring, dipoles, 'FieldScaling', 1+dpps)
-
-
-    if multipoles:
-        mults = ring.get_bool_index(Multipole) & ~dipoles
-        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
-                            XYStep=xy_step, DPStep=dp_step, method=method)
-        dpps = (o6[mults, 4] + o6[numpy.roll(mults, 1), 4]) / 2
-        for dpp, el in zip(dpps, ring[mults]):
-            el.PolynomB *= 1+dpp
-            el.PolynomA *= 1+dpp
+        dpps = (o6[dipin, 4] + o6[dipout, 4]) / 2.0
+        set_value_refpts(ring, dipin, 'FieldScaling', 1+dpps)
 
 
 Lattice.ohmi_envelope = ohmi_envelope

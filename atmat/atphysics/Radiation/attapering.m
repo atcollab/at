@@ -4,29 +4,31 @@ function ring = attapering(ring,varargin)
 %NEWRING=ATTAPERING(RING)   Scales dipole strengths with local energy to
 %   cancel the closed orbit due to synchrotron radiation.
 %
-%NEWRING=ATTAPERING(RING,'multipoles')  Scales also the multipoles to
-%   cancel optics errors
+%NEWRING=ATTAPERING(RING,'multipoles', false)  Don not scales also the
+%   multipoles to cancel optics errors. The default is true
 %
 %NEWRING=ATTAPERING(RING,'niter',niter) Performs niter iterations (useful
-%   when multipoles are scaled)
+%   when multipoles are scaled). Default 1
 %
 
-[niter, varargs] = getoption(varargin, 'niter', 1);
-[multipoles, varargs] = getflag(varargs, 'multipoles'); %#ok<ASGLU>
+[multipoles, varargs] = getoption(varargin, 'multipoles', true);
+[niter, varargs] = getoption(varargs, 'niter', 1); %#ok<ASGLU>
 dipin = atgetcells(ring, 'BendingAngle'); % Dipole entrance
 dipout = circshift(dipin, 1);             % Dipole exit
+
+if multipoles
     multin = atgetcells(ring,'PolynomB') & ~dipin;
     multout = circshift(multin, 1);
+    o6 = findorbit6(ring,1:length(ring)+1);
+    dppm = 0.5*(o6(5, multin) + o6(5, multout));
+    ring(multin) = cellfun(@scale,ring(multin),num2cell(1.0+dppm'), ...
+        'UniformOutput', false);
+end
+
 for it=1:niter
     o6 = findorbit6(ring,1:length(ring)+1);
     dppd = 0.5*(o6(5, dipin) + o6(5, dipout));
     ring = atsetfieldvalues(ring,dipin,'FieldScaling',1.0+dppd');
-    
-    if multipoles
-        dppm = 0.5*(o6(5, multin) + o6(5, multout));
-        ring(multin) = cellfun(@scale,ring(multin),num2cell(dppm'), ...
-            'UniformOutput', false);
-    end
 end
 
     function elem=scale(elem, factor)
