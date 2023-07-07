@@ -9,10 +9,7 @@
 #define KICK1     1.351207191959657328
 #define KICK2    -1.702414383919314656
 
-
-#define SQR(X) ((X)*(X))
-
-struct elem 
+struct elem
 {
     double Length;
     double *PolynomA;
@@ -39,22 +36,22 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
-    double *KickAngle;    
+    double *KickAngle;
 };
 
 void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, 	double exit_angle,
         int FringeBendEntrance, int FringeBendExit,
-        double fint1, double fint2, double gap, double scaling,
+        double fint1, double fint2, double gap,
         int FringeQuadEntrance, int FringeQuadExit,
         double *fringeIntM0,  /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
         double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, int num_particles)
-{	
+        double *KickAngle, double scaling, int num_particles)
+{
     int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
@@ -70,7 +67,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     }
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
-    irho,gap,scaling,A,B,L1,L2,K1,K2,max_order,num_int_steps,\
+    irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
     FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0) \
     private(c)
@@ -134,10 +131,9 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     }
 }
 
-
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
-			      double *r_in, int num_particles, struct parameters *Param)
+        double *r_in, int num_particles, struct parameters *Param)
 {
     double irho;
     if (!Elem) {
@@ -205,11 +201,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     BndMPoleSymplectic4Pass(r_in,Elem->Length,irho,Elem->PolynomA,Elem->PolynomB,
             Elem->MaxOrder,Elem->NumIntSteps,Elem->EntranceAngle,Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
-            Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,Elem->Scaling,
+            Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,
             Elem->FringeQuadEntrance,Elem->FringeQuadExit,
             Elem->fringeIntM0,Elem->fringeIntP0,Elem->T1,Elem->T2,
             Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,
-            Elem->KickAngle,num_particles);
+            Elem->KickAngle,Elem->Scaling,num_particles);
     return Elem;
 }
 
@@ -255,7 +251,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();        
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         irho = BendingAngle/Length;
 
         /* ALLOCATE memory for the output array of the same size as the input  */
@@ -264,8 +260,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         BndMPoleSymplectic4Pass(r_in, Length, irho, PolynomA, PolynomB,
                 MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
                 FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
-                FullGap,Scaling,FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,KickAngle,num_particles);
+                FullGap,FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
+                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Scaling,num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(8,1);
