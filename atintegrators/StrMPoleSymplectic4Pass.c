@@ -70,7 +70,7 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
             p_norm = 1.0/(1.0+r6[4]);
             NormL1 = L1*p_norm;
             NormL2 = L2*p_norm;
-           /*  misalignment at entrance  */
+            /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
