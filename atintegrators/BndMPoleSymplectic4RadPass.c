@@ -102,7 +102,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
                 ATdrift6(r6,L2);
                 bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
                 ATdrift6(r6,L2);
-                bndthinkickrad(r6, A, B,  K1, irho, E0, max_order);
+                bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
                 ATdrift6(r6,L1);
             }
             /* quadrupole gradient fringe */

@@ -185,7 +185,7 @@ void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, 
                 ATbendhxdrift6(r6,L2,irho);
                 bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
                 ATbendhxdrift6(r6,L2,irho);
-                bndthinkickrad(r6, A, B,  K1, irho, E0, max_order);
+                bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
                 ATbendhxdrift6(r6,L1,irho);
             }
             /* edge focus */
