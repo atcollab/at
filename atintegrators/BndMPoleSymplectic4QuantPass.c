@@ -42,7 +42,7 @@ struct elem
     double *KickAngle;
 };
 
-void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, double *B,
+void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, 	double exit_angle,
         int FringeBendEntrance, int FringeBendExit,

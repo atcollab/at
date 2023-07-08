@@ -129,7 +129,7 @@ static void ATbendhxdrift6(double* r, double L,double h)
 	r[5]+= (1.0+h*x)*i1pd*i1pd*L/2.0*(px*px+py*py);
 }
 
-void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, double *B,
+static void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, 	double exit_angle,
         double fint1, double fint2, double gap,double h1,double h2,
