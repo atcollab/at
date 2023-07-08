@@ -60,6 +60,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     double K2 = SL*KICK2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
+    double B0 = B[0];
+    double A0 = A[0];
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
@@ -126,8 +128,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         }
     }
     if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
-        B[0] += sin(KickAngle[0])/le;
-        A[0] -= sin(KickAngle[1])/le;
+        B[0] = B0;
+        A[0] = A0;
     }
 }
 
@@ -198,14 +200,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->KickAngle=KickAngle;
     }
     irho = Elem->BendingAngle/Elem->Length;
-    BndMPoleSymplectic4Pass(r_in,Elem->Length,irho,Elem->PolynomA,Elem->PolynomB,
-            Elem->MaxOrder,Elem->NumIntSteps,Elem->EntranceAngle,Elem->ExitAngle,
+    BndMPoleSymplectic4Pass(r_in, Elem->Length, irho, Elem->PolynomA, Elem->PolynomB,
+            Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
-            Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,
-            Elem->FringeQuadEntrance,Elem->FringeQuadExit,
-            Elem->fringeIntM0,Elem->fringeIntP0,Elem->T1,Elem->T2,
-            Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,
-            Elem->KickAngle,Elem->Scaling,num_particles);
+            Elem->FringeInt1, Elem->FringeInt2, Elem->FullGap,
+            Elem->FringeQuadEntrance, Elem->FringeQuadExit,
+            Elem->fringeIntM0, Elem->fringeIntP0,
+            Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+            Elem->RApertures, Elem->EApertures,
+            Elem->KickAngle, Elem->Scaling, num_particles);
     return Elem;
 }
 
@@ -258,10 +261,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4Pass(r_in, Length, irho, PolynomA, PolynomB,
-                MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
-                FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
-                FullGap,FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Scaling,num_particles);
+                MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
+                FringeBendEntrance, FringeBendExit,
+                FringeInt1, FringeInt2, FullGap,
+                FringeQuadEntrance, FringeQuadExit,
+                fringeIntM0, fringeIntP0,
+                T1, T2, R1, R2, RApertures, EApertures,
+                KickAngle,Scaling,num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(8,1);
@@ -273,9 +279,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],5,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],6,mxCreateString("MaxOrder"));
         mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
-        
-        if (nlhs>1) {
-            /* list of optional fields */
+
+        if (nlhs>1) {    /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(17,1);
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));

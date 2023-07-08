@@ -39,8 +39,7 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling,
-        double E0, int num_particles)
+        double *KickAngle, double scaling, double E0, int num_particles)
 {
     int c;
     double SL = le/num_int_steps;
@@ -50,6 +49,8 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
     double K2 = SL*KICK2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
+    double B0 = B[0];
+    double A0 = A[0];
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
@@ -105,8 +106,8 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
         }
     }
     if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
-        B[0] += sin(KickAngle[0])/le;
-        A[0] -= sin(KickAngle[1])/le;
+        B[0] = B0;
+        A[0] = A0;
     }
 }
 
@@ -123,7 +124,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         /*optional fields*/
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
@@ -217,8 +218,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],3,mxCreateString("MaxOrder"));
         mxSetCell(plhs[0],4,mxCreateString("NumIntSteps"));
         mxSetCell(plhs[0],5,mxCreateString("Energy"));
-        if (nlhs>1) {
-            /* list of optional fields */
+        if (nlhs>1) {    /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(12,1);
             mxSetCell(plhs[1], 0,mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], 1,mxCreateString("FringeQuadExit"));

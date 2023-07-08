@@ -2,7 +2,14 @@
 #include "atlalib.c"
 #include "atphyslib.c"
 
-struct elem 
+#define DRIFT1    0.6756035959798286638
+#define DRIFT2   -0.1756035959798286639
+#define KICK1     1.351207191959657328
+#define KICK2    -1.702414383919314656
+
+#define SQR(X) ((X)*(X))
+
+struct elem
 {
     double Length;
     double *PolynomA;
@@ -17,6 +24,7 @@ struct elem
     double FringeInt1;
     double FringeInt2;
     double FullGap;
+    double Scaling;
     double h1;
     double h2;
     double *R1;
@@ -25,6 +33,7 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
+    double *KickAngle;
 };
 
 /*
@@ -35,23 +44,9 @@ struct elem
  Last modified on 8/26/2009
  */
 
-#define DRIFT1    0.6756035959798286638
-#define DRIFT2   -0.1756035959798286639
-#define KICK1     1.351207191959657328
-#define KICK2    -1.702414383919314656
-
-#define SQR(X) ((X)*(X))
 
 #define TWOPI     6.28318530717959
 #define CGAMMA    8.846056192e-05
-
-void edge(double* r, double inv_rho, double edge_angle);
-void edge_fringe(double* r, double inv_rho, double edge_angle, double fint, double gap);
-void edge_fringe2A(double* r, double inv_rho, double edge_angle, double fint, double gap,double h1,double K1);
-void edge_fringe2B(double* r, double inv_rho, double edge_angle, double fint, double gap,double h2,double K1);
-void ATmultmv(double *r, const double* A);
-void ATaddvv(double *r, const double *dr);
-void ATdrift6(double* r, double L);
 
 static double B2perp(double bx, double by, double irho, 
                             double x, double xpr, double y, double ypr)
@@ -69,102 +64,6 @@ static double B2perp(double bx, double by, double irho,
     return((SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
 }
  
-
-
-static void bndthinkickrad0(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
-
-/***************************************************************************** 
-Calculate multipole kick in a curved elemrnt (bending magnet)
-The reference coordinate system  has the curvature given by the inverse 
-(design) radius irho.
-IMPORTANT !!!
-The magnetic field Bo that provides this curvature MUST NOT be included in the dipole term
-PolynomB[1](MATLAB notation)(C: B[0] in this function) of the By field expansion
-HOWEVER!!! to calculate the effect of classical radiation the full field must be 
-used in the square of the |v x B|.
-When calling B2perp(Bx, By, ...), use the By = RESum + irho, where ImSum is the sum of
-the polynomial terms in PolynomB.
-
-The kick is given by
-
-           e L      L delta      L x
-theta  = - --- B  + -------  -  -----  , 
-     x     p    y     rho           2
-            0                    rho
-
-         e L
-theta  = --- B
-     y    p   x
-           0
-
-Note: in the US convention the transverse multipole field is written as:
-
-                         max_order+1
-                           ----
-                           \                       n-1
-	   (B + iB  )/ B rho  =  >   (ia  + b ) (x + iy)
-         y    x            /       n    n
-	                       ----
-                          n=1
-	is a polynomial in (x,y) with the highest order = MaxOrder
-	
-
-	Using different index notation 
-   
-                         max_order
-                           ----
-                           \                       n
-	   (B + iB  )/ B rho  =  >   (iA  + B ) (x + iy)
-         y    x            /       n    n
-	                       ----
-                          n=0
-
-	A,B: i=0 ... max_order
-   [0] - dipole, [1] - quadrupole, [2] - sextupole ...
-   units for A,B[i] = 1/[m]^(i+1)
-	Coeficients are stroed in the PolynomA, PolynomB field of the element
-	structure in MATLAB
-
-	A[i] (C++,C) =  PolynomA(i+1) (MATLAB) 
-	B[i] (C++,C) =  PolynomB(i+1) (MATLAB) 
-	i = 0 .. MaxOrder
-
-
-******************************************************************************/
-{
-    int i;
-    double ReSumTemp;
-    double ImSum = A[max_order];
-    double ReSum = B[max_order];
-    double x ,xpr, y, ypr, p_norm,dp_0, B2P;
-    
-    double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
-    
-    /* recursively calculate the local transvrese magnetic field
-     * Bx = ReSum, By = ImSum
-     */
-    for(i=max_order-1;i>=0;i--)
-    {	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
-        ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
-        ReSum = ReSumTemp;
-    }
-    /* calculate angles from momentums 	*/
-    p_norm = 1/(1+r[4]);
-    x   = r[0];
-    xpr = r[1]*p_norm;
-    y   = r[2];
-    ypr = r[3]*p_norm;
-    B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);
-    dp_0 = r[4];
-    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
-    /* recalculate momentums from angles after losing energy for radiation 	*/
-    p_norm = 1/(1+r[4]);
-    r[1] = xpr/p_norm;
-    r[3] = ypr/p_norm;
-    r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
-    r[3] +=  L*ImSum;
-    r[5] +=  L*irho*r[0]; /* pathlength */
-}
 
 static void bndthinkickrad(double* r, double* A, double* B, double L, double h, double E0,int max_order)
 /*****************************************************************************
@@ -213,6 +112,7 @@ static void bndthinkickrad(double* r, double* A, double* B, double L, double h, 
     r[1] -=  L*(-h*r[4] + ReSum + h*(h*r[0]+K1*(r[0]*r[0]-0.5*r[2]*r[2])+K2*(r[0]*r[0]*r[0]-4.0/3.0*r[0]*r[2]*r[2]))    );
     r[3] +=  L*(ImSum+h*(K1*r[0]*r[2]+4.0/3.0*K2*r[0]*r[0]*r[2]+(h/6.0*K1-K2/3.0)*r[2]*r[2]*r[2])) ;
     r[5] +=  L*h*r[0]; /* pathlength */
+
 }
 
 /* the pseudo-drift element described by Hamiltonian H1 = (1+hx) (px^2+py^2)/2(1+delta),     */
@@ -227,7 +127,6 @@ static void ATbendhxdrift6(double* r, double L,double h)
 	
 	r[2]+= (1.0+h*x)*i1pd*py*L*(1.+px*hs/2.0);
 	r[5]+= (1.0+h*x)*i1pd*i1pd*L/2.0*(px*px+py*py);
-
 }
 
 void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, double *B,
@@ -237,108 +136,81 @@ void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, 
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double E0,
-        int num_particles)
+        double *KickAngle, double scaling, double E0, int num_particles)
 {
-    int c,m;
-    double *r6;
-    double SL, L1, L2, K1, K2;
-    bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
-    SL = le/num_int_steps;
-    L1 = SL*DRIFT1;
-    L2 = SL*DRIFT2;
-    K1 = SL*KICK1;
-    K2 = SL*KICK2;
-    
-    if (T1==NULL)
-        useT1=false;
-    else
-        useT1=true;
-    if (T2==NULL)
-        useT2=false;
-    else
-        useT2=true;
-    if (R1==NULL)
-        useR1=false;
-    else
-        useR1=true;
-    if (R2==NULL)
-        useR2=false;
-    else
-        useR2=true;
-    
-    /* if either is 0 - do not calculate fringe effects */
-    if (fint1==0 || gap==0)
-        useFringe1 = false;
-    else
-        useFringe1=true;
-    if (fint2==0 || gap==0)
-        useFringe2 = false;
-    else
-        useFringe2=true;
-    
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
-    for(c = 0;c<num_particles;c++)	/* Loop over particles */
-    {   r6 = r+c*6;
-        if(!atIsNaN(r6[0]))
-        {
-            /*  misalignment at entrance  */
-            if (useT1)
-                ATaddvv(r6,T1);
-            if (useR1)
-                ATmultmv(r6,R1);
+    int c;
+    double SL = le/num_int_steps;
+    double L1 = SL*DRIFT1;
+    double L2 = SL*DRIFT2;
+    double K1 = SL*KICK1;
+    double K2 = SL*KICK2;
+    bool useFringe1 = (fint1 != 0) && (gap != 0);
+    bool useFringe2 = (fint2 != 0) && (gap != 0);
+    double B0 = B[0];
+    double A0 = A[0];
+
+    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
+        B[0] -= sin(KickAngle[0])/le;
+        A[0] += sin(KickAngle[1])/le;
+    }
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
+    irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,E0,scaling,\
+    entrance_angle,useFringe1,fint1,h1,exit_angle,useFringe2,fint2,h2) \
+    private(c)
+      for (c = 0; c<num_particles; c++) { /* Loop over particles */
+        double *r6 = r + 6*c;
+        if (!atIsNaN(r6[0])) {
+            int m;
+            /* Check for change of reference momentum */
+            if (scaling != 1.0) ATChangePRef(r6, scaling);
+           /*  misalignment at entrance  */
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* edge focus */
-            if(useFringe1)
-            {
+            if (useFringe1) {
                 edge_fringe2A(r6, irho, entrance_angle,fint1,gap,h1,B[1]);
                 /* edge_fringe(r6, irho, entrance_angle,fint1,gap); */
             }
-            else
-            {
-                /* edge(r6, irho, entrance_angle);  */
+            else {
                 edge_fringe2A(r6, irho, entrance_angle,0,0,h1,B[1]);
             }
-            /* integrator  */
-            for(m=0; m < num_int_steps; m++) /* Loop over slices */
-            {
-                r6 = r+c*6;
-                
+            /* integrator */
+            for (m=0; m < num_int_steps; m++) { /* Loop over slices */
                 ATbendhxdrift6(r6,L1,irho);
                 bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
-                
                 ATbendhxdrift6(r6,L2,irho);
                 bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
                 ATbendhxdrift6(r6,L2,irho);
-                
                 bndthinkickrad(r6, A, B,  K1, irho, E0, max_order);
                 ATbendhxdrift6(r6,L1,irho);
             }
             /* edge focus */
-            if(useFringe2)
-            {
+            if (useFringe2) {
                 edge_fringe2B(r6, irho, exit_angle,fint2,gap,h2,B[1]);
                 /*	edge_fringe(r6, irho, exit_angle,fint2,gap);  */
             }
-            else
-            {
-                /* edge(r6, irho, exit_angle);	*/
+            else {
                 edge_fringe2B(r6, irho, exit_angle,0,0,h2,B[1]);
             }
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
-            if (useR2)
-                ATmultmv(r6,R2);
-            if (useT2)
-                ATaddvv(r6,T2);   
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
+            /* Check for change of reference momentum */
+            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
+    if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
+        B[0] = B0;
+        A[0] = A0;
+    }
 }
-
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
@@ -346,44 +218,49 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     double irho;
     if (!Elem) {
-        double Length, BendingAngle, EntranceAngle, ExitAngle, Gap, Fint1, Fint2, Energy;
+        double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, Scaling, Energy,
+                FringeInt1, FringeInt2;
         int MaxOrder, NumIntSteps;
-        double *PolynomA, *PolynomB, h1, h2, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        double *PolynomA, *PolynomB, h1, h2, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
-        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
-        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
+        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
+        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         /*optional fields*/
-        Gap=atGetOptionalDouble(ElemData,"FullGap", 0); check_error();
-        Fint1=atGetOptionalDouble(ElemData,"FringeInt1", 0); check_error();
-        Fint2=atGetOptionalDouble(ElemData,"FringeInt2", 0); check_error();
-        h1=atGetOptionalDouble(ElemData,"H1", 0); check_error();
-        h2=atGetOptionalDouble(ElemData,"H2", 0); check_error();
+        FullGap=atGetOptionalDouble(ElemData,"FullGap", 0); check_error();
+        Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
+        FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1", 0); check_error();
+        FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2", 0); check_error();
+        h1=atGetOptionalDouble(ElemData,"H1",0); check_error();
+        h2=atGetOptionalDouble(ElemData,"H2",0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
-        Elem->BendingAngle=BendingAngle;
-        Elem->EntranceAngle=EntranceAngle;
-        Elem->ExitAngle=ExitAngle;
         Elem->PolynomA=PolynomA;
         Elem->PolynomB=PolynomB;
         Elem->MaxOrder=MaxOrder;
         Elem->NumIntSteps=NumIntSteps;
+        Elem->BendingAngle=BendingAngle;
+        Elem->EntranceAngle=EntranceAngle;
+        Elem->ExitAngle=ExitAngle;
         Elem->Energy=Energy;
         /*optional fields*/
-        Elem->FullGap=Gap;
-        Elem->FringeInt1=Fint1;
-        Elem->FringeInt2=Fint2;
+        Elem->FullGap=FullGap;
+        Elem->Scaling=Scaling;
+        Elem->FringeInt1=FringeInt1;
+        Elem->FringeInt2=FringeInt2;
         Elem->h1=h1;
         Elem->h2=h2;
         Elem->R1=R1;
@@ -392,14 +269,16 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
+        Elem->KickAngle=KickAngle;
     }
-    irho = Elem->BendingAngle / Elem->Length;
-    BndMPoleSymplectic4E2RadPass(r_in, Elem->Length, irho, Elem->PolynomA,
-            Elem->PolynomB, Elem->MaxOrder, Elem->NumIntSteps,
-            Elem->EntranceAngle, Elem->ExitAngle, Elem->FringeInt1,
-            Elem->FringeInt2, Elem->FullGap, Elem->h1, Elem->h2,
+    irho = Elem->BendingAngle/Elem->Length;
+    BndMPoleSymplectic4E2RadPass(r_in, Elem->Length, irho, Elem->PolynomA, Elem->PolynomB,
+            Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
+            Elem->FringeInt1, Elem->FringeInt2, Elem->FullGap,
+            Elem->h1, Elem->h2,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
-            Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
+            Elem->RApertures, Elem->EApertures,
+            Elem->KickAngle, Elem->Scaling, Elem->Energy, num_particles);
     return Elem;
 } 
 
@@ -407,33 +286,33 @@ MODULE_DEF(BndMPoleSymplectic4E2RadPass)        /* Dummy module initialisation *
 
 #endif /*MATLAB_MEX_FILE || PYAT*/
 
-#ifdef MATLAB_MEX_FILE
-
-void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+#if defined(MATLAB_MEX_FILE)
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
         double irho;
-        double Length, BendingAngle, EntranceAngle, ExitAngle, Gap, Fint1, Fint2, Energy;
+        double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, Scaling, FringeInt1, FringeInt2, Energy;
         int MaxOrder, NumIntSteps;
-        double *PolynomA, *PolynomB, h1, h2, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        double *PolynomA, *PolynomB, h1, h2, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
         
         Length=atGetDouble(ElemData,"Length"); check_error();
-        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
-        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
-        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
+        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
+        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
+        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
-        Gap=atGetOptionalDouble(ElemData,"FullGap", 0); check_error();
-        Fint1=atGetOptionalDouble(ElemData,"FringeInt1", 0); check_error();
-        Fint2=atGetOptionalDouble(ElemData,"FringeInt2", 0); check_error();
+        FullGap=atGetOptionalDouble(ElemData,"FullGap", 0); check_error();
+        Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
+        FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1", 0); check_error();
+        FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2", 0); check_error();
         h1=atGetOptionalDouble(ElemData,"H1", 0); check_error();
         h2=atGetOptionalDouble(ElemData,"H2", 0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
@@ -442,15 +321,19 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         irho = BendingAngle/Length;
-        
-        /* ALLOCATE memory for the output array of the same size as the input */
+
+        /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        BndMPoleSymplectic4E2RadPass(r_in, Length, irho, PolynomA, PolynomB, MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
-                Fint1, Fint2, Gap, h1, h2, T1, T2, R1, R2, RApertures,EApertures,Energy,num_particles);
-    }
-    else if (nrhs == 0) {
+        BndMPoleSymplectic4E2RadPass(r_in, Length, irho, PolynomA, PolynomB,
+                MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
+                FringeInt1, FringeInt2, FullGap,
+                h1, h2,
+                T1, T2, R1, R2, RApertures, EApertures,
+                KickAngle,Scaling,Energy,num_particles);
+    } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(9,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
@@ -461,9 +344,9 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],5,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],6,mxCreateString("MaxOrder"));
         mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
-        mxSetCell(plhs[0],8,mxCreateString("Energy"));
-        if (nlhs > 1) {    /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(11,1);
+
+        if (nlhs>1) {    /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(12,1);
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
             mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
@@ -475,12 +358,11 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],8,mxCreateString("R2"));
             mxSetCell(plhs[1],9,mxCreateString("RApertures"));
             mxSetCell(plhs[1],10,mxCreateString("EApertures"));
+            mxSetCell(plhs[1],11,mxCreateString("FieldScaling"));
         }
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif /*MATLAB_MEX_FILE*/
-
-
+#endif /* MATLAB_MEX_FILE */
