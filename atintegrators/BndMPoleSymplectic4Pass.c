@@ -41,7 +41,7 @@ struct elem
 
 void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, double *B,
         int max_order, int num_int_steps,
-        double entrance_angle, 	double exit_angle,
+        double entrance_angle, double exit_angle,
         int FringeBendEntrance, int FringeBendExit,
         double fint1, double fint2, double gap,
         int FringeQuadEntrance, int FringeQuadExit,
@@ -261,13 +261,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4Pass(r_in, Length, irho, PolynomA, PolynomB,
-                MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
-                FringeBendEntrance, FringeBendExit,
-                FringeInt1, FringeInt2, FullGap,
-                FringeQuadEntrance, FringeQuadExit,
-                fringeIntM0, fringeIntP0,
-                T1, T2, R1, R2, RApertures, EApertures,
-                KickAngle,Scaling,num_particles);
+            MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
+            FringeBendEntrance, FringeBendExit,
+            FringeInt1, FringeInt2, FullGap,
+            FringeQuadEntrance, FringeQuadExit,
+            fringeIntM0, fringeIntP0,
+            T1, T2, R1, R2, RApertures, EApertures,
+            KickAngle,Scaling,num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(8,1);

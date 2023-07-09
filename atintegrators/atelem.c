@@ -56,6 +56,7 @@ typedef mxArray atElem;
 #define check_error()
 #define atError(...) mexErrMsgIdAndTxt("AT:PassError", __VA_ARGS__)
 #define atWarning(...) mexWarnMsgIdAndTxt("AT:PassWarning", __VA_ARGS__)
+#define atPrintf(...) mexPrintf(__VA_ARGS__)
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
@@ -145,6 +146,7 @@ typedef PyObject atElem;
 #define check_error() if (PyErr_Occurred()) return NULL
 #define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
+#define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
 
 static int array_imported = 0;
 

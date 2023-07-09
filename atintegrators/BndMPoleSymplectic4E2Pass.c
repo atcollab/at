@@ -128,12 +128,10 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* edge focus */
-            if (useFringe1) {
+            if (useFringe1)
                 edge_fringe2A(r6, irho, entrance_angle,fint1,gap,h1,B[1]);
-            }
-            else {
+            else
                 edge_fringe2A(r6, irho, entrance_angle,0,0,h1,B[1]);
-            }
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
                 ATbendhxdrift6(r6,L1,irho);
@@ -145,12 +143,10 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
                 ATbendhxdrift6(r6,L1,irho);
             }
             /* edge focus */
-            if (useFringe2) {
+            if (useFringe2)
                 edge_fringe2B(r6, irho, exit_angle,fint2,gap,h2,B[1]);
-            }
-            else {
+            else
                 edge_fringe2B(r6, irho, exit_angle,0,0,h2,B[1]);
-            }
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
