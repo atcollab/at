@@ -4,7 +4,7 @@ function ring = attapering(ring,varargin)
 %NEWRING=ATTAPERING(RING)   Scales dipole strengths with local energy to
 %   cancel the closed orbit due to synchrotron radiation.
 %
-%NEWRING=ATTAPERING(RING,'multipoles', false)  Don not scales also the
+%NEWRING=ATTAPERING(RING,'multipoles', true)  Scales also the
 %   multipoles to cancel optics errors. The default is true
 %
 %NEWRING=ATTAPERING(RING,'niter',niter) Performs niter iterations (useful
@@ -15,25 +15,18 @@ function ring = attapering(ring,varargin)
 [niter, varargs] = getoption(varargs, 'niter', 1); %#ok<ASGLU>
 dipin = atgetcells(ring, 'BendingAngle'); % Dipole entrance
 dipout = circshift(dipin, 1);             % Dipole exit
-
-if multipoles
-    multin = atgetcells(ring,'PolynomB') & ~dipin;
-    multout = circshift(multin, 1);
-    o6 = findorbit6(ring,1:length(ring)+1);
-    dppm = 0.5*(o6(5, multin) + o6(5, multout));
-    ring(multin) = cellfun(@scale,ring(multin),num2cell(1.0+dppm'), ...
-        'UniformOutput', false);
-end
+multin = atgetcells(ring,'PolynomB') & ~dipin;
+multout = circshift(multin, 1);
 
 for it=1:niter
     o6 = findorbit6(ring,1:length(ring)+1);
     dppd = 0.5*(o6(5, dipin) + o6(5, dipout));
     ring = atsetfieldvalues(ring,dipin,'FieldScaling',1.0+dppd');
-end
 
-    function elem=scale(elem, factor)
-        elem.PolynomB=factor*elem.PolynomB;
-        elem.PolynomQ=factor*elem.PolynomA;
+    if multipoles
+        o6 = findorbit6(ring,1:length(ring)+1);
+        dppm = 0.5*(o6(5, multin) + o6(5, multout));
+        ring = atsetfieldvalues(ring,multin,'FieldScaling',1.0+dppm');
     end
-
+end
 end
