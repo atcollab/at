@@ -52,7 +52,6 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         double *RApertures, double *EApertures,
         double *KickAngle, double scaling, int num_particles)
 {
-    int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
@@ -67,13 +66,13 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
+
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
-    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0) \
-    private(c)
-    for (c = 0; c<num_particles; c++) { /* Loop over particles */
+    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0)
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             int m;
@@ -83,7 +82,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             p_norm = 1.0/(1.0+r6[4]);
             NormL1 = L1*p_norm;
             NormL2 = L2*p_norm;
-           /*  misalignment at entrance  */
+            /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
@@ -229,6 +228,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
+        if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
+
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -267,7 +268,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             FringeQuadEntrance, FringeQuadExit,
             fringeIntM0, fringeIntP0,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle,Scaling,num_particles);
+            KickAngle, Scaling, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(8,1);

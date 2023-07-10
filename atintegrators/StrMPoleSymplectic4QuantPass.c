@@ -72,7 +72,7 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
     FringeQuadEntrance, useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0, \
     emass,E0,hbar,clight,alpha0,qe,SL)
 */
-    for (int c = 0; c < num_particles; c++) { /* Loop over particles */
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             int m;
@@ -208,13 +208,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    StrMPoleSymplectic4QuantPass(r_in,Elem->Length,Elem->PolynomA,Elem->PolynomB,
-            Elem->MaxOrder,Elem->NumIntSteps,Elem->FringeQuadEntrance,
-            Elem->FringeQuadExit,Elem->fringeIntM0,Elem->fringeIntP0,
-            Elem->T1,Elem->T2,Elem->R1,Elem->R2,
-            Elem->RApertures,Elem->EApertures,
-            Elem->KickAngle,Elem->Scaling,Elem->Energy,
-            Param->thread_rng,num_particles);
+    StrMPoleSymplectic4QuantPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
+            Elem->MaxOrder, Elem->NumIntSteps,
+            Elem->FringeQuadEntrance, Elem->FringeQuadExit,
+            Elem->fringeIntM0, Elem->fringeIntP0,
+            Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+            Elem->RApertures, Elem->EApertures,
+            Elem->KickAngle, Elem->Scaling,
+            Elem->Energy, Param->thread_rng, num_particles);
     return Elem;
 }
 
@@ -232,6 +233,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Length, Energy, Scaling;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
         double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
+        if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
+
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -255,10 +258,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        StrMPoleSymplectic4QuantPass(r_in,Length,PolynomA,PolynomB,MaxOrder,NumIntSteps,
-                FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Scaling,Energy,
-                &pcg32_global,num_particles);
+        StrMPoleSymplectic4QuantPass(r_in, Length, PolynomA, PolynomB,
+            MaxOrder, NumIntSteps,
+            FringeQuadEntrance, FringeQuadExit,
+            fringeIntM0, fringeIntP0,
+            T1, T2, R1, R2, RApertures, EApertures,
+            KickAngle, Scaling, Energy, &pcg32_global, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(6, 1);

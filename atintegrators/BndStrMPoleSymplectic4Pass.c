@@ -130,7 +130,6 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
         double *RApertures, double *EApertures,
         double *KickAngle, double scaling, int num_particles)
 {
-    int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
@@ -147,7 +146,7 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
     }
     B[0] += irho;
 
-    for (c = 0; c<num_particles; c++) { /* Loop over particles */
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             int m;
@@ -285,6 +284,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
+        if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
+
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -311,8 +312,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         irho = BendingAngle/Length;
         flen = 2.0/irho*sin(BendingAngle/2.0); /* field length */
 
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
-        /* ALLOCATE memory for the output array of the same size as the input */
+        /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         BndStrMPoleSymplectic4Pass(r_in, flen, irho, PolynomA, PolynomB,

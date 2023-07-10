@@ -69,7 +69,7 @@ static void bndthinkick(double* r, double* A, double* B, double L, double h, int
     r[1] -=  L*(-h*r[4] + ReSum + h*(h*r[0]+K1*(r[0]*r[0]-0.5*r[2]*r[2])+K2*(r[0]*r[0]*r[0]-4.0/3.0*r[0]*r[2]*r[2]))    );
     r[3] +=  L*(ImSum+h*(K1*r[0]*r[2]+4.0/3.0*K2*r[0]*r[0]*r[2]+(h/6.0*K1-K2/3.0)*r[2]*r[2]*r[2])) ;
     r[5] +=  L*h*r[0]; /* pathlength */
-    
+
 }
 
 /* the pseudo-drift element described by Hamiltonian H1 = (1+hx) (px^2+py^2)/2(1+delta),     */
@@ -95,7 +95,6 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
         double *RApertures, double *EApertures,
         double *KickAngle, double scaling, int num_particles)
 {
-    int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
@@ -113,15 +112,14 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
-    entrance_angle,useFringe1,fint1,h1,exit_angle,useFringe2,fint2,h2) \
-    private(c)
-    for (c = 0; c<num_particles; c++) { /* Loop over particles */
+    entrance_angle,useFringe1,fint1,h1,exit_angle,useFringe2,fint2,h2)
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             int m;
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, scaling);
-           /*  misalignment at entrance  */
+            /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
@@ -144,9 +142,9 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
             }
             /* edge focus */
             if (useFringe2)
-                edge_fringe2B(r6, irho, exit_angle,fint2,gap,h2,B[1]);
+                edge_fringe2B(r6, irho, exit_angle, fint2, gap, h2, B[1]);
             else
-                edge_fringe2B(r6, irho, exit_angle,0,0,h2,B[1]);
+                edge_fringe2B(r6, irho, exit_angle, 0, 0, h2, B[1]);
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
@@ -233,7 +231,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 MODULE_DEF(BndMPoleSymplectic4E2Pass)        /* Dummy module initialisation */
 
-#endif /*MATLAB_MEX_FILE || PYAT*/
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -276,11 +274,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4E2Pass(r_in, Length, irho, PolynomA, PolynomB,
-                MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
-                FringeInt1, FringeInt2, FullGap,
-                h1, h2,
-                T1, T2, R1, R2, RApertures, EApertures,
-                KickAngle,Scaling,num_particles);
+            MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
+            FringeInt1, FringeInt2, FullGap,
+            h1, h2,
+            T1, T2, R1, R2, RApertures, EApertures,
+            KickAngle, Scaling, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(8,1);

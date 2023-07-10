@@ -42,7 +42,7 @@ struct elem
 
 void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, double *B,
         int max_order, int num_int_steps,
-        double entrance_angle, 	double exit_angle,
+        double entrance_angle, double exit_angle,
         int FringeBendEntrance, int FringeBendExit,
         double fint1, double fint2, double gap,
         int FringeQuadEntrance, int FringeQuadExit,
@@ -53,7 +53,6 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
         double *RApertures, double *EApertures,
         double *KickAngle, double scaling, double E0, int num_particles)
 {
-    int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
@@ -72,9 +71,8 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,E0,scaling,\
     FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
-    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0) \
-    private(c)
-    for (c = 0; c<num_particles; c++) { /* Loop over particles */
+    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0)
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             int m;
@@ -228,6 +226,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
+        if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
+
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -261,13 +261,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4RadPass(r_in, Length, irho, PolynomA, PolynomB,
-                MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
-                FringeBendEntrance, FringeBendExit,
-                FringeInt1, FringeInt2, FullGap,
-                FringeQuadEntrance, FringeQuadExit,
-                fringeIntM0, fringeIntP0,
-                T1, T2, R1, R2, RApertures, EApertures,
-                KickAngle,Scaling,Energy,num_particles);
+            MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
+            FringeBendEntrance, FringeBendExit,
+            FringeInt1, FringeInt2, FullGap,
+            FringeQuadEntrance, FringeQuadExit,
+            fringeIntM0, fringeIntP0,
+            T1, T2, R1, R2, RApertures, EApertures,
+            KickAngle, Scaling, Energy, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(9,1);
