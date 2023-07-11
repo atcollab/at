@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose as assert_close
 import pytest
 
 
-def simplefodo(ncells: int = 64) -> at.Lattice:
-    """Return a simple FOFO lattice"""
+def simple_fodo(ncells: int = 64) -> at.Lattice:
+    """Return a simple F0D0 lattice"""
     # dipole
     dipole_length = 1.0
     bending_angle = pi / ncells
@@ -35,9 +35,9 @@ def simplefodo(ncells: int = 64) -> at.Lattice:
 @pytest.mark.parametrize('dp', [0.01, -0.01])
 @pytest.mark.parametrize('ncells', [64, 6])
 def test_scaling(dp, ncells):
-    """Chack the FieldScaling attribute"""
+    """Check the FieldScaling attribute"""
     scaling = 1.0 + dp
-    fodo0 = simplefodo(ncells)
+    fodo0 = simple_fodo(ncells)
     magnets = fodo0.get_bool_index(
         at.checktype((Corrector, Dipole, Quadrupole, ThinMultipole)))
 
@@ -50,8 +50,8 @@ def test_scaling(dp, ncells):
         elem.FieldScaling = scaling
     _, rda, ela = at.get_optics(fodoa, dp=dp, refpts=at.All)
     assert_close(rd0.tune, rda.tune, atol=1.e-10, rtol=0)
-    assert_close(el0.closed_orbit[:,[0, 2]],
-                 ela.closed_orbit[:,[0, 2]], atol=1.e-10, rtol=0)
+    assert_close(el0.closed_orbit[:, [0, 2]],
+                 ela.closed_orbit[:, [0, 2]], atol=1.e-10, rtol=0)
 
     # Off-momentum optics with scaling the whole lattice
     scin = at.Element('scin', PassMethod='ChangePRefPass',
@@ -63,5 +63,5 @@ def test_scaling(dp, ncells):
     fodob.append(scout)
     _, rdb, elb = at.get_optics(fodob, dp=dp, refpts=at.All)
     assert_close(rd0.tune, rdb.tune, atol=1.e-10, rtol=0)
-    assert_close(el0.closed_orbit[:,   [0, 2]],
-                 elb.closed_orbit[1:-1,[0, 2]], atol=1.e-10, rtol=0)
+    assert_close(el0.closed_orbit[:,    [0, 2]],
+                 elb.closed_orbit[1:-1, [0, 2]], atol=1.e-10, rtol=0)
