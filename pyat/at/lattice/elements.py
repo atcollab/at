@@ -884,10 +884,6 @@ class Sextupole(Multipole):
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
 
-    def items(self) -> Generator[Tuple, None, None]:
-        yield from super().items()
-        yield 'H', self.H
-
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
