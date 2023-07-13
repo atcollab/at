@@ -5,12 +5,14 @@ Each element has a default PassMethod attribute for which it should have the
 appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
+from __future__ import annotations
 import abc
 import re
 import numpy
 from copy import copy, deepcopy
 from abc import ABC
-from typing import Optional, Generator, Tuple, List, Iterable
+from collections.abc import Generator, Iterable
+from typing import Optional
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -303,7 +305,7 @@ class Element(object):
         """
         return repr(self) == repr(other)
 
-    def divide(self, frac) -> List["Element"]:
+    def divide(self, frac) -> list[Element]:
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
 
@@ -361,20 +363,20 @@ class Element(object):
         for (key, value) in attrs.items():
             setattr(self, key, value)
 
-    def copy(self) -> "Element":
+    def copy(self) -> Element:
         """Return a shallow copy of the element"""
         return copy(self)
 
-    def deepcopy(self) -> "Element":
+    def deepcopy(self) -> Element:
         """Return a deep copy of the element"""
         return deepcopy(self)
 
-    def items(self) -> Generator[Tuple, None, None]:
+    def items(self) -> Generator[tuple, None, None]:
         """Iterates through the data members"""
         for k, v in vars(self).items():
             yield k, v
 
-    def is_compatible(self, other: "Element") -> bool:
+    def is_compatible(self, other: Element) -> bool:
         """Checks if another :py:class:`Element` can be merged"""
         return False
 
@@ -429,7 +431,7 @@ class LongElement(Element):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
-    def divide(self, frac) -> List[Element]:
+    def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
             val = getattr(element, attr)
             delattr(element, attr)
@@ -523,8 +525,8 @@ class Drift(LongElement):
         super(Drift, self).__init__(family_name, length, **kwargs)
 
     def insert(self,
-               insert_list: Iterable[Tuple[float, Optional[Element]]]) \
-            -> List[Element]:
+               insert_list: Iterable[tuple[float, Optional[Element]]]) \
+            -> list[Element]:
         """insert elements inside a drift
 
         Arguments:
@@ -562,7 +564,7 @@ class Drift(LongElement):
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
-        line = [None] * nline  # type: List[Optional[Element]]
+        line = [None] * nline  # type: list[Optional[Element]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
@@ -599,8 +601,10 @@ class ThinMultipole(Element):
             poly_b:         Array of skew multipole components
 
         Keyword arguments:
-            MaxOrder:   Number of desired multipoles. Default: highest index of
-                        non-zero polynomial coefficients
+            MaxOrder:       Number of desired multipoles. Default: highest
+              index of non-zero polynomial coefficients
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``ThinMPolePass``
         """
@@ -664,10 +668,12 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             poly_b:         Array of skew multipole components
 
         Keyword arguments:
-            MaxOrder:   Number of desired multipoles. Default: highest index of
-              non-zero polynomial coefficients
-            NumIntSteps: Number of integration steps (default: 10)
-            KickAngle:  Correction deviation angles (H, V)
+            MaxOrder:       Number of desired multipoles. Default: highest
+              index of non-zero polynomial coefficients
+            NumIntSteps:    Number of integration steps (default: 10)
+            KickAngle:      Correction deviation angles (H, V)
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
@@ -702,7 +708,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     # noinspection PyPep8Naming
     @property
     def H(self) -> float:
-        """Sextupolar strength"""
+        """Sextupolar strength [mˆ-3]"""
         return 0.0 if len(self.PolynomB) < 3 else self.PolynomB[2]
 
     # noinspection PyPep8Naming
@@ -752,23 +758,24 @@ class Dipole(Radiative, Multipole):
             MaxOrder:           Number of desired multipoles
             NumIntSt=10:        Number of integration steps
             FullGap:            Magnet full gap
-            FringeInt1:         Fringe field extension
-            FringeInt2:
+            FringeInt1:         Extension of the entrance fringe field
+            FringeInt2:         Extension of the exit fringe field
             FringeBendEntrance: 1: legacy version Brown First Order (default)
 
               2: SOLEIL close to second order of Brown
 
               3: THOMX
-            FringeBendExit:     See ``FringeBendEntrance``
+            FringeBendExit:     See *FringeBendEntrance*
             FringeQuadEntrance: 0: no fringe field effect (default)
 
               1: Lee-Whiting's thin lens limit formula
 
               2: elegant-like
-            FringeQuadExit:     See ``FringeQuadEntrance``
+            FringeQuadExit:     See *FringeQuadEntrance*
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
             KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
 
         Default PassMethod: ``BndMPoleSymplectic4Pass``
         """
@@ -779,7 +786,7 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
-    def items(self) -> Generator[Tuple, None, None]:
+    def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
         yield 'K', self.K
 
@@ -843,6 +850,8 @@ class Quadrupole(Radiative, Multipole):
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
             KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
@@ -851,7 +860,7 @@ class Quadrupole(Radiative, Multipole):
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
 
-    def items(self) -> Generator[Tuple, None, None]:
+    def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
         yield 'K', self.K
 
@@ -876,6 +885,8 @@ class Sextupole(Multipole):
             MaxOrder:           Number of desired multipoles
             NumIntSteps=10:     Number of integration steps
             KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
@@ -983,6 +994,10 @@ class Corrector(LongElement):
             length:         Element length [m]
             KickAngle:      Correction deviation angles (H, V)
 
+        Keyword Args:
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*KickAngle*)
+
         Default PassMethod: ``CorrectorPass``
         """
         kwargs.setdefault('PassMethod', 'CorrectorPass')
@@ -1061,7 +1076,7 @@ class QuantumDiffusion(_DictLongtMotion, Element):
         Args:
             family_name:    Name of the element
             lmatp      :    Diffusion matrix for generation (see
-                               :py:func:`.gen_quantdiff_elem`)
+              :py:func:`.gen_quantdiff_elem`)
 
         Default PassMethod: ``QuantDiffPass``
         """
