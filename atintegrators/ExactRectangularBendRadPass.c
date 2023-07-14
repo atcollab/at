@@ -46,7 +46,7 @@ struct elem {
   double *KickAngle;
 };
 
-static void ExactRectangularBend(
+static void ExactRectangularBendRad(
   double *r, double le, double bending_angle,
   double *A, double *B, int max_order, int num_int_steps,
   double entrance_angle, double exit_angle,
@@ -165,6 +165,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
     Elem->BendingAngle = BendingAngle;
+    Elem->EntranceAngle = EntranceAngle;
+    Elem->ExitAngle = ExitAngle;
     Elem->Energy=Energy;
     /*optional fields*/
     Elem->multipole_fringe = multipole_fringe;
@@ -177,14 +179,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->RApertures = RApertures;
     Elem->KickAngle = KickAngle;
   }
-  ExactRectangularBend(r_in, Elem->Length, Elem->BendingAngle,
-                       Elem->PolynomA, Elem->PolynomB,
-                       Elem->MaxOrder, Elem->NumIntSteps,
-                       Elem->EntranceAngle, Elem->ExitAngle,
-                       Elem->multipole_fringe, Elem->gK,
-                       Elem->T1, Elem->T2, Elem->R1, Elem->R2,
-                       Elem->RApertures, Elem->EApertures,
-                       Elem->KickAngle, Elem->Energy, num_particles);
+  ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle,
+                          Elem->PolynomA, Elem->PolynomB,
+                          Elem->MaxOrder, Elem->NumIntSteps,
+                          Elem->EntranceAngle, Elem->ExitAngle,
+                          Elem->multipole_fringe, Elem->gK,
+                          Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+                          Elem->RApertures, Elem->EApertures,
+                          Elem->KickAngle, Elem->Energy, num_particles);
   return Elem;
 }
 
@@ -222,13 +224,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
     r_in = mxGetDoubles(plhs[0]);
-    ExactRectangularBend(r_in, Length, BendingAngle,
-                         PolynomA, PolynomB, MaxOrder, NumIntSteps,
-                         EntranceAngle, ExitAngle,
-                         multipole_fringe, gK,
-                         T1, T2, R1, R2,
-                         RApertures, EApertures,
-                         KickAngle, Energy, num_particles);
+    ExactRectangularBendRad(r_in, Length, BendingAngle,
+                            PolynomA, PolynomB, MaxOrder, NumIntSteps,
+                            EntranceAngle, ExitAngle,
+                            multipole_fringe, gK,
+                            T1, T2, R1, R2,
+                            RApertures, EApertures,
+                            KickAngle, Energy, num_particles);
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;

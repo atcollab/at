@@ -44,18 +44,14 @@ static double StrB2perp(double bx, double by,
                             double x, double xpr, double y, double ypr)
 /* Calculates sqr(|B x e|) , where e is a unit vector in the direction of velocity  */
 
-{	double v_norm2;
-	v_norm2 = 1/(1 + SQR(xpr) + SQR(ypr));
-
-	/* components of the normalized velocity vector
+{  /* components of the normalized velocity vector
 	   double ex, ey, ez;
 	   ex = xpr;
 	   ey = ypr;
-	   ez = 1;
+	   ez = sqr(1 - xpr^2 - ypr^2);
 	*/
 
-	return((SQR(by) + SQR(bx) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
-
+	return SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr);
 }
 
 
@@ -154,14 +150,13 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
 
  ******************************************************************************/
 {
-   int i;
    double ReSum = B[max_order];
    double ImSum = A[max_order];
    double ReSumTemp;
-   double x ,xpr, y, ypr, p_norm,B2P;
+   double x ,xpr, y, ypr, p_norm, B2P;
    double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
 
-   for (i=max_order-1; i>=0; i--) {
+   for (int i=max_order-1; i>=0; i--) {
       ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
       ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
       ReSum = ReSumTemp;
