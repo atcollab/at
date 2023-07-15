@@ -22,8 +22,6 @@ print(f"#define KICK2  {d2: .18}")
 #define KICK1   1.35120719195965777
 #define KICK2  -1.70241438391931532
 
-#define MIN(A, B) ((A) < (B) ? (A) : (B))
-
 struct elem
 {
     double Length;
