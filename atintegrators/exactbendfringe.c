@@ -30,7 +30,7 @@ static void Yrot(double *r6, double phi)
     }
 }
 
-void bend_fri(double *r6, double irho, double gK)
+void bend_fringe(double *r6, double irho, double gK)
 {
     /* Forest 13.13, bend fringe in the hard-edge limit */
 
@@ -83,8 +83,6 @@ void bend_fri(double *r6, double irho, double gK)
     double dxf = 0.5 * dpx * yf * yf;
     double dct = 0.5 * dd * yf * yf;
     double dpyf = phi * yf;
-    atPrintf("Fringe dx, dpy, dct: %g, %g, %g\n", dxf, dpyf, dct);
-
 
     r6[y_]  = yf;
     r6[x_]  += dxf;
@@ -117,7 +115,7 @@ static void bend_edge(double *r6, double rhoinv, double theta)
     }
 }
 
-void bend_fringe(double *r6, double irho, double gK)
+void bend_fringe_test(double *r6, double irho, double gK)
 {
     /* Forest 13.13, bend fringe in the hard-edge limit */
 
@@ -154,7 +152,7 @@ void bend_fringe(double *r6, double irho, double gK)
     // atPrintf("Fringe dx, dpy, dct: %g, %g, %g\n", dxf, dpyf, dct);
 
 
-//    r6[x_]  += dxf;
+    r6[x_]  += dxf;
     r6[y_]  = yf;
     r6[py_] -= dpyf;
     r6[ct_] -= dct;

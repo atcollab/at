@@ -44,9 +44,9 @@ static void *atCalloc(size_t count, size_t size)
 #define atCalloc calloc
 #define atFree free
 
-#define SQR(X) ((X)*(X))
-
 #endif /* MATLAB_MEX_FILE */
+
+#define SQR(X) ((X)*(X))
 
 /* AT coordinates */
 
