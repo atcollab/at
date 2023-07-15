@@ -34,7 +34,7 @@ struct elem
     double BendingAngle;
     double EntranceAngle;
     double ExitAngle;
-    double Energy
+    double Energy;
     /* Optional fields */
     int multipole_fringe;
     double gK;
@@ -56,7 +56,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, double energy, int num_particles)
+        double *KickAngle, double scaling, double E0, int num_particles)
 {
     double irho = bending_angle / le;
     double phi2 = 0.5 * bending_angle;
@@ -79,7 +79,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
-    do_fringe,LR,le,phi2,energy)
+    do_fringe,LR,le,phi2,E0)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -144,7 +144,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
-        int MaxOrde=atGetLong(ElemData,"MaxOrder"); check_error();
+        int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         double BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
         double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
@@ -152,7 +152,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*optional fields*/
         double Energy=atGetOptionalDouble(ElemData,"Energy", Param->energy); check_error();
         int multipole_fringe = atGetOptionalLong(ElemData,"MultipoleFringe",0); check_error();
-        double gK=atGetOptionalDouble(ElemData"gK", 0.0); check_error();
+        double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();

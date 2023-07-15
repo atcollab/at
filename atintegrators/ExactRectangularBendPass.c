@@ -143,14 +143,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
-        int MaxOrde=atGetLong(ElemData,"MaxOrder"); check_error();
+        int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         double BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
         double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
         int multipole_fringe = atGetOptionalLong(ElemData,"MultipoleFringe",0); check_error();
-        double gK=atGetOptionalDouble(ElemData"gK", 0.0); check_error();
+        double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
