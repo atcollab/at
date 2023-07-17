@@ -53,7 +53,7 @@ elseif isfield(elem,'M66')
         atclass='Matrix66';
     end
 elseif isfield(elem,'xtable')
-    atclass='KickMap';
+    atclass='InsertionDeviceKickMap';
 elseif isfield(elem,'Length') && elem.Length~=0
     atclass='Drift';
 else

@@ -98,7 +98,7 @@ switch atclass
     case 'Monitor'
         create=@atmonitor;
         [options,args]=doptions(elem,create);
-    case 'KickMap'
+    case 'InsertionDeviceKickMap'
         create=@atkickmap;
         [options,args]=doptions(elem,create,{ ...
                             'PassMethod', ...

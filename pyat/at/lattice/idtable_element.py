@@ -7,7 +7,7 @@ def _anyarray(value):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, requirements=['F', 'A'])
 
-class KickMap(Element):
+class InsertionDeviceKickMap(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 

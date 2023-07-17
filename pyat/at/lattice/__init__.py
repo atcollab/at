@@ -10,7 +10,7 @@ from .axisdef import *
 from .options import DConstant, random
 from .particle_object import Particle
 from .elements import *
-from .idtable_element import KickMap
+from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .lattice_object import *
 from .cavity_access import *

@@ -70,6 +70,6 @@ Elem.xkick = xkick;
 Elem.ykick = ykick;
 Elem.xkick1 = xkick1;
 Elem.ykick1 = ykick1;
-Elem.Class = 'KickMap';
+Elem.Class = 'InsertionDeviceKickMap';
 
 return
