@@ -3,6 +3,9 @@ import numpy
 import io
 from ..constants import clight
 
+def _anyarray(value):
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return numpy.require(value, requirements=['F', 'A'])
 
 class KickMap(Element):
     """
@@ -27,6 +30,14 @@ class KickMap(Element):
                                                      'xtable',
                                                      'ytable']
 
+    _conversions = dict(Element._conversions,
+                        Nslice=int,
+                        xkick=_anyarray,
+                        ykick=_anyarray,
+                        xkick1=_anyarray,
+                        ykick1=_anyarray
+                        )
+
     def set_DriftPass(self):
         setattr(self, 'PassMethod', 'DriftPass')
 
@@ -36,13 +47,9 @@ class KickMap(Element):
     def get_PassMethod(self):
         return getattr(self, 'PassMethod')
 
-    @staticmethod
-    def InsertionDeviceKickMap(
-            *args,
-            **kwargs
-            ):
+    def from_text_file( self, *args, **kwargs):
         """
-            InsertionDeviceKickMap(
+            from_text_file(
                 family_name: str,
                 Nslice: int,
                 Filename_in: str,
@@ -150,9 +157,9 @@ class KickMap(Element):
                                     print('atWarning: only two tables read')
                             block_lines += 1
             # dummy variables not implemented in the reading function
-            # but required if more than two tables are
-            hkickmap1 = 0 * numpy.copy(hkickmap)
-            vkickmap1 = 0 * numpy.copy(vkickmap)
+            # but required
+            hkickmap1 = 0.0 * numpy.copy(hkickmap)
+            vkickmap1 = 0.0 * numpy.copy(vkickmap)
 
             return el_length, hkickmap, vkickmap, table_cols1, table_rows1, \
                 table_cols2, table_rows2, h_points, v_points, \
@@ -170,13 +177,10 @@ class KickMap(Element):
             return table_out2
 
         # args to input
-        # print(len(args))
-        # print(args)
-        if len(args) == 4:
-            family_name = args[0]
-            Nslice = args[1]
-            Filename_in = args[2]
-            Energy = args[3]
+        if len(args) == 3:
+            Nslice = args[0]
+            Filename_in = args[1]
+            Energy = args[2]
 
         # read the input data
         el_length, hkickmap, vkickmap, \
@@ -224,85 +228,45 @@ class KickMap(Element):
         xtable = table_cols1array.T
         ytable = table_rows1array.T
 
-        u = KickMap()
-
-        # Suggestion on how to create the IdTable
-        # pyat issue #522
-        u.set_params(
-                        family_name=family_name,
-                        PassMethod='IdTablePass',
-                        Filename_in=Filename_in,
-                        Normalization_energy=Energy,
-                        Nslice=numpy.uint8(Nslice),
-                        Length=el_length,
-                        NumX=NumX,
-                        NumY=NumY,
-                        xkick=xkick,
-                        ykick=ykick,
-                        xkick1=xkick1,
-                        ykick1=ykick1,
-                        xtable=xtable,
-                        ytable=ytable
-                    )
-        # print(f'{u}')
-        return u
+        args_dict={'PassMethod':'IdTablePass',
+                   'Filename_in':Filename_in,
+                   'Normalization_energy':Energy,
+                   'Nslice':numpy.uint8(Nslice),
+                   'Length':el_length,
+                   'NumX':NumX,
+                   'NumY':NumY,
+                   'xkick':xkick,
+                   'ykick':ykick,
+                   'xkick1':xkick1,
+                   'ykick1':ykick1,
+                   'xtable':xtable,
+                   'ytable':ytable,
+                   }
+        return args_dict
 
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
 
-    def __init__(self, *args, **kwargs):
-        if not len(args) == 0:
-            self.set_params(family_name=args[0],
-                            PassMethod=args[1],
-                            Filename_in=args[2],
-                            Normalization_energy=args[3],
-                            Nslice=numpy.uint8(args[4]),
-                            Length=args[5],
-                            NumX=args[6],
-                            NumY=args[7],
-                            xkick=args[8],
-                            ykick=args[9],
-                            xkick1=args[10],
-                            ykick1=args[11],
-                            xtable=args[12],
-                            ytable=args[13]
-                            )
-        pass
-
-    def set_params(self, **kwargs):
-        """
-        Args:
-            family_name:    family name
-            PassMethod:     IdTable
-            Filename_in:    Input file name
-            Normalization_energy: Energy for KickMap normalization (GeV)
-            Nslice:         number of slices for integration, type uint
-            Length:         ID length
-            NumX:           Number of points in X, type uint8
-            NumY:           Number of points in Y, type uint8
-            xkick,          horizontal table
-            ykick,          vertical table
-            xkick1,         not used (set to zeros)
-            ykick1,         not used (set to zeros)
-            xtable,         horizontal kick map table
-            ytable,         vertical kick map table
-            **kwargs        others
-        """
-
-        family_name = kwargs.pop('family_name')
-        super(KickMap, self).__init__(family_name, **kwargs)
-        # the KickMap class uses IdTablePass method that
-        # requires Fortran-aligned memory arguments
-
-        fortran_aligned_args = ['xkick', 'ykick', 'xkick1', 'ykick1']
-        for key in fortran_aligned_args:
-            kwtmp = getattr(self, key)
-            if not numpy.isfortran(kwtmp):
-                setattr(self, key, numpy.asfortranarray(numpy.float64(kwtmp)))
-        # Nslice needs to be an integer
-        integer_kwargs = ['Nslice']
-
-        for kw in integer_kwargs:
-            setattr(self, kw, numpy.uint8(getattr(self, kw)))
-
+    def __init__(self, family_name:str, *args, **kwargs):
+        _argnames=['PassMethod',
+                   'Filename_in',
+                   'Normalization_energy',
+                   'Nslice',
+                   'Length',
+                   'NumX',
+                   'NumY',
+                   'xkick',
+                   'ykick',
+                   'xkick1',
+                   'ykick1',
+                   'xtable',
+                   'ytable']
+        if len(args) < 13:
+            # get data from text file
+            elemargs = self.from_text_file(*args, **kwargs)
+        else:
+            # get data from arguments
+            elemargs = dict(zip(_argnames, args))
+            elemargs.update(kwargs)
+        super().__init__(family_name, **elemargs)
 # EOF
