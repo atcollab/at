@@ -1,3 +1,10 @@
+#ifndef PXYZ
+#define PXYZ
+static double pxyz(double dp1, double px, double py)
+{
+  return sqrt(dp1*dp1 - px*px - py*py);
+}
+#endif /*PXYZ*/
 
 static void exact_bend(double *r6, double irho, double L)
 {
@@ -13,7 +20,7 @@ static void exact_bend(double *r6, double irho, double L)
     double dasin = L + (asin(r6[px_]/d2) - asin(px/d2))/irho;
     double x = (pxyz(dp1,px,r6[py_]) - pzmx*cs + r6[px_]*sn - 1.0)/irho;
     double dy = r6[py_]*dasin;
-    double dct = dp1*dasin;
+    double dct = dp1*dasin - L;
     
     r6[x_] = x;
     r6[px_] = px;

@@ -1,13 +1,16 @@
 
-double Sec(double x)
+static double Sec(double x)
 {
     return 1.0 / cos(x);
 }
 
+#ifndef PXYZ
+#define PXYZ
 static double pxyz(double dp1, double px, double py)
 {
   return sqrt(dp1*dp1 - px*px - py*py);
 }
+#endif /*PXYZ*/
 
 static void Yrot(double *r6, double phi)
 {
@@ -30,7 +33,7 @@ static void Yrot(double *r6, double phi)
     }
 }
 
-void bend_fringe(double *r6, double irho, double gK)
+static void bend_fringe(double *r6, double irho, double gK)
 {
     /* Forest 13.13, bend fringe in the hard-edge limit */
 
@@ -115,7 +118,7 @@ static void bend_edge(double *r6, double rhoinv, double theta)
     }
 }
 
-void bend_fringe_test(double *r6, double irho, double gK)
+static void bend_fringe_test(double *r6, double irho, double gK)
 {
     /* Forest 13.13, bend fringe in the hard-edge limit */
 
