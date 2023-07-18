@@ -82,8 +82,6 @@ static void multipole_pass(
       if (do_fringe) multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
 
       /*  integrator  */
-      if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
         exact_drift(r6, L1);
         ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
