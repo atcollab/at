@@ -195,7 +195,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-MODULE_DEF(ExactSectorBendPass)        /* Dummy module initialisation */
+MODULE_DEF(ExactSectorBendRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
