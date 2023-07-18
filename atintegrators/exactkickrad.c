@@ -48,7 +48,7 @@ static double StrB2perp(double bx, double by,
 	   double ex, ey, ez;
 	   ex = xpr;
 	   ey = ypr;
-	   ez = sqr(1 - xpr^2 - ypr^2);
+	   ez = sqrt(1 - xpr^2 - ypr^2);
 	*/
 
 	return SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr);
@@ -60,22 +60,23 @@ static double B2perp(double bx, double by, double irho,
         /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
 
 {
-    double v_norm2 = 1/(SQR(1+x*irho)+ SQR(xpr) + SQR(ypr));
+    double fac = x*irho*(x*irho+2);
+    double v_norm2 = 1.0 + fac*(1.0 - SQR(xpr) - SQR(ypr));
 
     /* components of the  velocity vector
      * double ex, ey, ez;
      * ex = xpr;
      * ey = ypr;
-     * ez = (1+x*irho);
+     * ez = (1+x*irho) * sqrt(1 - xpr^2 - ypr^2);
      */
 
-    return((SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
+    return (SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr))/v_norm2;
 }
 
-static void bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
 
 /*****************************************************************************
-Calculate multipole kick in a curved elemrnt (bending magnet)
+Calculate multipole kick in a curved element (bending magnet)
 The reference coordinate system  has the curvature given by the inverse
 (design) radius irho.
 IMPORTANT !!!
@@ -104,15 +105,12 @@ the polynomial terms in PolynomB.
    double ImSum = A[max_order];
    double ReSum = B[max_order];
    double ReSumTemp;
-   double x ,xpr, y, ypr, p_norm,dp_0, B2P;
+   double x ,xpr, y, ypr, p_norm, B2P;
    double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
 
-   /* recursively calculate the local transvrese magnetic field
-    * Bx = ReSum, By = ImSum
-    */
    for (i=max_order-1; i>=0; i--) {
    	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
-        ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
+        ImSum = ImSum*r[0] + ReSum*r[2] + A[i];
         ReSum = ReSumTemp;
    }
 
@@ -125,7 +123,6 @@ the polynomial terms in PolynomB.
 
    B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
 
-   dp_0 = r[4];
    r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1+x*irho) / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
@@ -133,12 +130,11 @@ the polynomial terms in PolynomB.
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
 
-   r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
+   r[1] -=  L*ReSum;
    r[3] +=  L*ImSum;
-   r[5] +=  L*irho*r[0]; /* pathlength */
 }
 
-static void strthinkickrad(double* r, const double* A, const double* B, double L, double E0, int max_order)
+static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
 /*****************************************************************************
  Calculate and apply a multipole kick to a 6-dimentional
  phase space vector in a straight element ( quadrupole)
@@ -158,8 +154,8 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
 
    for (int i=max_order-1; i>=0; i--) {
       ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
-      ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
-      ReSum = ReSumTemp;
+          ImSum = ImSum*r[0] + ReSum*r[2] + A[i];
+          ReSum = ReSumTemp;
    }
 
    /* calculate angles from momentums 	*/
@@ -169,7 +165,7 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    y   = r[2];
    ypr = r[3]*p_norm;
 
-   B2P = StrB2perp(ImSum, ReSum , x , xpr, y ,ypr);
+   B2P = StrB2perp(ImSum, ReSum+B0 , x , xpr, y ,ypr);
 
    r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
 

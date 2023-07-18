@@ -1,7 +1,7 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactdrift.c"
-#include "exactkickrad.c"
+#include "driftkick.c"  /* strthinkick.c */
+#include "exactbend.c"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -32,7 +32,6 @@ struct elem
     double BendingAngle;
     double EntranceAngle;
     double ExitAngle;
-    double Energy;
     /* Optional fields */
     int multipole_fringe;
     double gK;
@@ -46,7 +45,7 @@ struct elem
     double *KickAngle;
 };
 
-static void ExactRectangularBendRad(double *r, double le, double bending_angle,
+static void ExactSectorBend(double *r, double le, double bending_angle,
         double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, double exit_angle,
@@ -54,12 +53,10 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, double E0, int num_particles)
+        double *KickAngle, double scaling, int num_particles)
 {
     double irho = bending_angle / le;
-    double phi2 = 0.5 * bending_angle;
-    double LR = phi2 < 1.e-10 ? le : le *sin(phi2) / phi2;
-    double SL = LR/num_int_steps;
+    double SL = num_int_steps == 0 ? le : le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
@@ -71,13 +68,12 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
-    B[0] += irho;
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
-    do_fringe,LR,le,phi2,E0)
+    do_fringe,le)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -88,45 +84,44 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
 
-            /* Change to the magnet referential */
-            Yrot(r6, entrance_angle);
-
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 
-            /* edge focus */
+            Yrot(r6, entrance_angle);
             bend_fringe(r6, irho, gK);
             if (do_fringe)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
-            bend_edge(r6, irho, phi2-entrance_angle);
+            bend_edge(r6, irho, -entrance_angle);
 
-            /* integrator */
-            for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_drift(r6, L1);
-                ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
-                exact_drift(r6, L2);
-                ex_strthinkickrad(r6, A, B, 0.0, K2, E0, max_order);
-                exact_drift(r6, L2);
-                ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
-                exact_drift(r6, L1);
+            if (num_int_steps == 0) {
+                exact_bend(r6, irho, SL);
+            }
+            else {
+                for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
+                    exact_bend(r6, irho, L1);
+                    strthinkick(r6, A, B, K1, max_order);
+                    exact_bend(r6, irho, L2);
+                    strthinkick(r6, A, B, K2, max_order);
+                    exact_bend(r6, irho, L2);
+                    strthinkick(r6, A, B, K1, max_order);
+                    exact_bend(r6, irho, L1);
+                }
             }
 
             /* Convert absolute path length to path lengthening */
             r6[5] -= le;
 
             /* edge focus */
-            bend_edge(r6, irho, phi2-exit_angle);
+            bend_edge(r6, irho, -exit_angle);
             if (do_fringe)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             bend_fringe(r6, -irho, gK);
+            Yrot(r6, exit_angle);
 
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6, RApertures);
             if (EApertures) checkiflostEllipticalAp(r6, EApertures);
-
-            /* Change back to the lattice referential */
-            Yrot(r6, exit_angle);
 
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
@@ -155,7 +150,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
-        double Energy=atGetOptionalDouble(ElemData,"Energy", Param->energy); check_error();
         int multipole_fringe = atGetOptionalLong(ElemData,"MultipoleFringe",0); check_error();
         double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
@@ -177,7 +171,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->EntranceAngle=EntranceAngle;
         Elem->ExitAngle=ExitAngle;
         /*optional fields*/
-        Elem->Energy=Energy;
         Elem->multipole_fringe=multipole_fringe;
         Elem->gK=gK;
         Elem->Scaling=Scaling;
@@ -189,16 +182,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle, Elem->PolynomA, Elem->PolynomB,
+    ExactSectorBend(r_in, Elem->Length, Elem->BendingAngle,
+            Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->multipole_fringe, Elem->gK,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, Elem->Energy, num_particles);
+            Elem->KickAngle, Elem->Scaling, num_particles);
     return Elem;
 }
 
-MODULE_DEF(ExactRectangularBendRadPass)        /* Dummy module initialisation */
+MODULE_DEF(ExactSectorBendPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -219,7 +213,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle",0.0); check_error();
         double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
-        double Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
         int multipole_fringe =atGetOptionalLong(ElemData,"MultipoleFringe",0); check_error();
         double gK =atGetOptionalDouble(ElemData,"gK",0.0); check_error();
@@ -235,15 +228,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        ExactRectangularBendRad(r_in, Length, BendingAngle, PolynomA, PolynomB,
+        ExactSectorBend(r_in, Length, BendingAngle, PolynomA, PolynomB,
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             multipole_fringe, gK,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, Energy, num_particles);
+            KickAngle, Scaling, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;
-        plhs[0] = mxCreateCellMatrix(9, 1);
+        plhs[0] = mxCreateCellMatrix(8, 1);
         mxSetCell(plhs[0], i0++, mxCreateString("Length"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
@@ -252,7 +245,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0], i0++, mxCreateString("BendingAngle"));
         mxSetCell(plhs[0], i0++, mxCreateString("EntranceAngle"));
         mxSetCell(plhs[0], i0++, mxCreateString("ExitAngle"));
-        mxSetCell(plhs[0], i0++, mxCreateString("Energy"));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
             plhs[1] = mxCreateCellMatrix(10, 1);

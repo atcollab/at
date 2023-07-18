@@ -1,7 +1,7 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkick.c"  /* fastdrift.c, strthinkick.c */
 #include "exactdrift.c"
+#include "driftkick.c"  /* strthinkick.c */
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -87,11 +87,13 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
 
+            /* Change to the magnet referential */
             Yrot(r6, entrance_angle);
 
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+
             /* edge focus */
             bend_fringe(r6, irho, gK);
             if (do_fringe)
@@ -108,22 +110,27 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
                 strthinkick(r6, A, B, K1, max_order);
                 exact_drift(r6, L1);
             }
-            /* Compensate the change of referential */
-            r6[5] += (LR - le);
+
+            /* Convert absolute path length to path lengthening */
+            r6[5] -= le;
+
             /* edge focus */
             bend_edge(r6, irho, phi2-exit_angle);
             if (do_fringe)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             bend_fringe(r6, -irho, gK);
+
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6, RApertures);
             if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
+            /* Change back to the lattice referential */
             Yrot(r6, exit_angle);
 
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
+
             /* Check for change of reference momentum */
 /*          if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);*/
         }

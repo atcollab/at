@@ -78,20 +78,25 @@ static void multipole_pass(
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
       if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
+      /* Fringe field effect */
+      if (do_fringe) multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
+
       /*  integrator  */
-      if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
         exact_drift(r6, L1);
-        strthinkickrad(r6, A, B, K1, E0, max_order);
+        ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
         exact_drift(r6, L2);
-        strthinkickrad(r6, A, B, K2, E0, max_order);
+        ex_strthinkickrad(r6, A, B, 0.0, K2, E0, max_order);
         exact_drift(r6, L2);
-        strthinkickrad(r6, A, B, K1, E0, max_order);
+        ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
         exact_drift(r6, L1);
       }
-      if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
+
+      /* Convert absolute path length to path lengthening */
+      r6[5] -= le;
+
+      /* Fringe field effect */
+      if (do_fringe) multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
 
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);

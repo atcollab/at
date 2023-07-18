@@ -37,6 +37,9 @@ static void drift_pass(double *r_in, double le, const double *T1, const double *
 
       exact_drift(r6, le);
 
+      /* Convert absolute path length to path lengthening */
+      r6[5] -= le;
+
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
       if (EApertures) checkiflostEllipticalAp(r6, EApertures);
