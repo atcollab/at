@@ -1,7 +1,7 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactbend.c"
 #include "exactkickrad.c"
+#include "exactbend.c"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -46,8 +46,7 @@ struct elem
     double *KickAngle;
 };
 
-static void ExactSectorBendRad(
-        double *r, double le, double bending_angle,
+static void ExactSectorBendRad(double *r, double le, double bending_angle,
         double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, double exit_angle,
@@ -75,7 +74,7 @@ static void ExactSectorBendRad(
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
-    do_fringe,le, E0)
+    do_fringe,le,E0)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -100,16 +99,19 @@ static void ExactSectorBendRad(
                 exact_bend(r6, irho, SL);
             }
             else {
-            for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_bend(r6, irho, L1);
-                bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
-                exact_bend(r6, irho, L2);
-                bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
-                exact_bend(r6, irho, L2);
-                bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
-                exact_bend(r6, irho, L1);
+                for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
+                    exact_bend(r6, irho, L1);
+                    ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+                    exact_bend(r6, irho, L2);
+                    ex_bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
+                    exact_bend(r6, irho, L2);
+                    ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+                    exact_bend(r6, irho, L1);
+                }
             }
-      }
+
+            /* Convert absolute path length to path lengthening */
+            r6[5] -= le;
 
             /* edge focus */
             bend_edge(r6, irho, -exit_angle);
@@ -125,6 +127,7 @@ static void ExactSectorBendRad(
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
+
             /* Check for change of reference momentum */
 /*          if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);*/
         }

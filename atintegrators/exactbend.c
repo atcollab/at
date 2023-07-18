@@ -20,7 +20,7 @@ static void exact_bend(double *r6, double irho, double L)
     double dasin = L + (asin(r6[px_]/d2) - asin(px/d2))/irho;
     double x = (pxyz(dp1,px,r6[py_]) - pzmx*cs + r6[px_]*sn - 1.0)/irho;
     double dy = r6[py_]*dasin;
-    double dct = dp1*dasin - L;
+    double dct = dp1*dasin;     /* Absolute path length */
     
     r6[x_] = x;
     r6[px_] = px;
@@ -39,7 +39,7 @@ static void exact_straight_bend(double *r6, double irho, double L)
     double dasin = (asin(r6[px_]/d2) - asin(px/d2))/irho;
     double dx = (pxyz(dp1, px, r6[py_]) - pz)/irho;
     double dy = r6[py_]*dasin;
-    double dct = dp1*dasin;
+    double dct = dp1*dasin;     /* Absolute path length */
 
     r6[x_] += dx;
     r6[px_] = px;

@@ -1,7 +1,7 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactdrift.c"
 #include "exactkickrad.c"
+#include "exactbend.c"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -59,7 +59,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
     double irho = bending_angle / le;
     double phi2 = 0.5 * bending_angle;
     double LR = phi2 < 1.e-10 ? le : le *sin(phi2) / phi2;
-    double SL = LR/num_int_steps;
+    double SL = num_int_steps == 0 ? LR : LR/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
@@ -71,13 +71,12 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
-    B[0] += irho;
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
-    do_fringe,LR,le,phi2,E0)
+    do_fringe,le,E0)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -101,15 +100,19 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             bend_edge(r6, irho, phi2-entrance_angle);
 
-            /* integrator */
-            for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_drift(r6, L1);
-                ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
-                exact_drift(r6, L2);
-                ex_strthinkickrad(r6, A, B, 0.0, K2, E0, max_order);
-                exact_drift(r6, L2);
-                ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
-                exact_drift(r6, L1);
+            if (num_int_steps == 0) {
+                exact_straight_bend(r6, irho, LR);
+            }
+            else {
+                for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
+                    exact_straight_bend(r6, irho, L1);
+                    ex_strthinkickrad(r6, A, B, irho, K1, E0, max_order);
+                    exact_straight_bend(r6, irho, L2);
+                    ex_strthinkickrad(r6, A, B, irho, K2, E0, max_order);
+                    exact_straight_bend(r6, irho, L2);
+                    ex_strthinkickrad(r6, A, B, irho, K1, E0, max_order);
+                    exact_straight_bend(r6, irho, L1);
+                }
             }
 
             /* Convert absolute path length to path lengthening */
@@ -189,7 +192,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle, Elem->PolynomA, Elem->PolynomB,
+    ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle,
+            Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->multipole_fringe, Elem->gK,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
@@ -198,7 +202,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-MODULE_DEF(ExactRectangularBendRadPass)        /* Dummy module initialisation */
+MODULE_DEF(ExactRectBendRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 

@@ -1,7 +1,7 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactbend.c"
 #include "driftkick.c"  /* strthinkick.c */
+#include "exactbend.c"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -45,8 +45,7 @@ struct elem
     double *KickAngle;
 };
 
-static void ExactSectorBend(
-        double *r, double le, double bending_angle,
+static void ExactSectorBend(double *r, double le, double bending_angle,
         double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, double exit_angle,
@@ -99,16 +98,19 @@ static void ExactSectorBend(
                 exact_bend(r6, irho, SL);
             }
             else {
-            for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_bend(r6, irho, L1);
-                strthinkick(r6, A, B, K1, max_order);
-                exact_bend(r6, irho, L2);
-                strthinkick(r6, A, B, K2, max_order);
-                exact_bend(r6, irho, L2);
-                strthinkick(r6, A, B, K1, max_order);
-                exact_bend(r6, irho, L1);
+                for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
+                    exact_bend(r6, irho, L1);
+                    strthinkick(r6, A, B, K1, max_order);
+                    exact_bend(r6, irho, L2);
+                    strthinkick(r6, A, B, K2, max_order);
+                    exact_bend(r6, irho, L2);
+                    strthinkick(r6, A, B, K1, max_order);
+                    exact_bend(r6, irho, L1);
+                }
             }
-      }
+
+            /* Convert absolute path length to path lengthening */
+            r6[5] -= le;
 
             /* edge focus */
             bend_edge(r6, irho, -exit_angle);
@@ -124,6 +126,7 @@ static void ExactSectorBend(
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
+
             /* Check for change of reference momentum */
 /*          if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);*/
         }

@@ -73,10 +73,10 @@ static double B2perp(double bx, double by, double irho,
     return (SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr))/v_norm2;
 }
 
-static void bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
 
 /*****************************************************************************
-Calculate multipole kick in a curved elemrnt (bending magnet)
+Calculate multipole kick in a curved element (bending magnet)
 The reference coordinate system  has the curvature given by the inverse
 (design) radius irho.
 IMPORTANT !!!
@@ -134,7 +134,7 @@ the polynomial terms in PolynomB.
    r[3] +=  L*ImSum;
 }
 
-static void strthinkickrad(double* r, const double* A, const double* B, double L, double E0, int max_order)
+static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
 /*****************************************************************************
  Calculate and apply a multipole kick to a 6-dimentional
  phase space vector in a straight element ( quadrupole)
@@ -165,7 +165,7 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    y   = r[2];
    ypr = r[3]*p_norm;
 
-   B2P = StrB2perp(ImSum, ReSum , x , xpr, y ,ypr);
+   B2P = StrB2perp(ImSum, ReSum+B0 , x , xpr, y ,ypr);
 
    r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
 

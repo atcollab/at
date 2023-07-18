@@ -12,5 +12,5 @@ static void exact_drift(double *r6, double L) {
   double NormL = L / get_pz(r6);
   r6[0] += r6[1] * NormL;
   r6[2] += r6[3] * NormL;
-  r6[5] += NormL * (1.0 + r6[4]) - L;
+  r6[5] += NormL * (1.0 + r6[4]);   /* Absolute path length */
 }
