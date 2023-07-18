@@ -255,8 +255,7 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
                 warn(err(" is missing {0}.".format(file_name)))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
                 warn(err("is not compatible with length {0}.", length))
-            elif pass_to_class is not None and \
-                    pass_method != 'IdTablePass':
+            elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
                     warn(err("is not compatible with Class {0}.", class_name))
 
