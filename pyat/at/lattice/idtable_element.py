@@ -5,7 +5,7 @@ from ..constants import clight
 
 def _anyarray(value):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return numpy.require(value, requirements=['F', 'A'])
+    return numpy.require(value, dtype=numpy.float64, requirements=['F', 'A'])
 
 class InsertionDeviceKickMap(Element):
     """
