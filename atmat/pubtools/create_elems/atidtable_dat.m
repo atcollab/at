@@ -19,10 +19,10 @@ function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)
 % -----------------
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
 % 17-11-2008:  Modificated by Z.Martí
-% 02-06-2023:  blanco-garcia. Eliminates R1,R1,T1,T2,NumIntSteps,MaxOrder
+% 18-07-2023:  blanco-garcia. Eliminates R1,R1,T1,T2,NumIntSteps,MaxOrder
 %                               PolynomA, PolynomB
 %                               (they are not used in IdTablePass)
-%                             Adds KickMap class
+%                             Adds InsertionDeviceKickMap class
 %---------------------------------------------------------------------------
 
 %Elem.FamName        = fname;  % add check for identical family names
@@ -41,7 +41,7 @@ function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)
 
 factor=1/((Energy/0.299792458)^2);
 factor1=-1/((Energy/0.299792458));
-    
+
 % Read the file
 D=importdata(filename);
 if isfield(D,'Kick1x')
@@ -92,16 +92,17 @@ else
     
     xkick1=factor1*txkick1;
     ykick1=factor1*tykick1;
-    
+
     % Sort arrays in ascending order (needed for "IdTablePass.c")
     [y indy]=sort(y);
     [x indx]=sort(x);
     x=x';
     xkick=xkick(indy,indx);
     ykick=ykick(indy,indx);
-    
+
 end
 
+%Deprecated
 %Elem.Length= L;
 %Elem.NumX = Ny;
 %Elem.NumY = Nx;
