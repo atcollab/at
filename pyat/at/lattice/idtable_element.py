@@ -3,9 +3,11 @@ import numpy
 import io
 from ..constants import clight
 
+
 def _anyarray(value):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=numpy.float64, requirements=['F', 'A'])
+
 
 class InsertionDeviceKickMap(Element):
     """
@@ -47,7 +49,7 @@ class InsertionDeviceKickMap(Element):
     def get_PassMethod(self):
         return getattr(self, 'PassMethod')
 
-    def from_text_file( self, *args, **kwargs):
+    def from_text_file(self, *args, **kwargs):
         """
             from_text_file(
                 family_name: str,
@@ -228,39 +230,39 @@ class InsertionDeviceKickMap(Element):
         xtable = table_cols1array.T
         ytable = table_rows1array.T
 
-        args_dict={'PassMethod':'IdTablePass',
-                   'Filename_in':Filename_in,
-                   'Normalization_energy':Energy,
-                   'Nslice':numpy.uint8(Nslice),
-                   'Length':el_length,
-                   'NumX':NumX,
-                   'NumY':NumY,
-                   'xkick':xkick,
-                   'ykick':ykick,
-                   'xkick1':xkick1,
-                   'ykick1':ykick1,
-                   'xtable':xtable,
-                   'ytable':ytable,
-                   }
+        args_dict = {'PassMethod': 'IdTablePass',
+                     'Filename_in': Filename_in,
+                     'Normalization_energy': Energy,
+                     'Nslice': numpy.uint8(Nslice),
+                     'Length': el_length,
+                     'NumX': NumX,
+                     'NumY': NumY,
+                     'xkick': xkick,
+                     'ykick': ykick,
+                     'xkick1': xkick1,
+                     'ykick1': ykick1,
+                     'xtable': xtable,
+                     'ytable': ytable,
+                     }
         return args_dict
 
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
 
-    def __init__(self, family_name:str, *args, **kwargs):
-        _argnames=['PassMethod',
-                   'Filename_in',
-                   'Normalization_energy',
-                   'Nslice',
-                   'Length',
-                   'NumX',
-                   'NumY',
-                   'xkick',
-                   'ykick',
-                   'xkick1',
-                   'ykick1',
-                   'xtable',
-                   'ytable']
+    def __init__(self, family_name: str, *args, **kwargs):
+        _argnames = ['PassMethod',
+                     'Filename_in',
+                     'Normalization_energy',
+                     'Nslice',
+                     'Length',
+                     'NumX',
+                     'NumY',
+                     'xkick',
+                     'ykick',
+                     'xkick1',
+                     'ykick1',
+                     'xtable',
+                     'ytable']
         if len(args) < 13:
             # get data from text file
             elemargs = self.from_text_file(*args, **kwargs)
