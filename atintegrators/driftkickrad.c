@@ -1,3 +1,4 @@
+#undef ZUT
 /***********************************************************************
  Note: in the US convention the transverse multipole field is written as:
  
@@ -141,12 +142,17 @@ the polynomial terms in PolynomB.
    B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);
    
    dp_0 = r[4];
+   #ifdef ZUT
+   double dr4 = SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 );
+   atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
+   #else
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
+   #endif /*ZUT*/
    
    r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
    r[3] +=  L*ImSum;
@@ -190,12 +196,17 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    B2P = StrB2perp(ImSum, ReSum , x , xpr, y ,ypr);
    
    dp_0 = r[4];
+   #ifdef ZUT
+   double dr4 = SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 );
+   atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
+   #else
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
+   #endif /*ZUT*/
    
    r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
    r[3] +=  L*ImSum;

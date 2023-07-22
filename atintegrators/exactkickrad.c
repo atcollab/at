@@ -1,3 +1,4 @@
+#undef ZUT
 /***********************************************************************
  Note: in the US convention the transverse multipole field is written as:
 
@@ -44,14 +45,17 @@ static double StrB2perp(double bx, double by,
                             double x, double xpr, double y, double ypr)
 /* Calculates sqr(|B x e|) , where e is a unit vector in the direction of velocity  */
 
-{  /* components of the normalized velocity vector
+{
+    /* components of the normalized velocity vector
 	   double ex, ey, ez;
 	   ex = xpr;
 	   ey = ypr;
 	   ez = sqrt(1 - xpr^2 - ypr^2);
+
+	   sqr(|B x e|) = sqr(|B|) * sqr(|e|) - sqr(B.e)
 	*/
 
-	return SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr);
+  	return SQR(bx) + SQR(by) - SQR(bx*xpr + by*ypr);
 }
 
 
@@ -60,8 +64,9 @@ static double B2perp(double bx, double by, double irho,
         /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
 
 {
-    double fac = x*irho*(x*irho+2);
-    double v_norm2 = 1.0 + fac*(1.0 - SQR(xpr) - SQR(ypr));
+    double nrm = SQR(1.0+x*irho);
+//  double v_norm2 = nrm + SQR(xpr) + SQR(ypr);
+    double v_norm2 = nrm + SQR(xpr)*(1.0-nrm) + SQR(ypr)*(1.0-nrm);
 
     /* components of the  velocity vector
      * double ex, ey, ez;
@@ -70,7 +75,8 @@ static double B2perp(double bx, double by, double irho,
      * ez = (1+x*irho) * sqrt(1 - xpr^2 - ypr^2);
      */
 
-    return (SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr))/v_norm2;
+    return SQR(bx) + SQR(by) - SQR(bx*xpr + by*ypr)/v_norm2;
+//  return (SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr))/v_norm2 ;
 }
 
 static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
@@ -114,6 +120,9 @@ the polynomial terms in PolynomB.
         ReSum = ReSumTemp;
    }
 
+   r[1] -=  0.5*L*ReSum;
+   r[3] +=  0.5*L*ImSum;
+
    /* calculate angles from momentums 	*/
    p_norm = 1/(1+r[4]);
    x   = r[0];
@@ -123,15 +132,20 @@ the polynomial terms in PolynomB.
 
    B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
 
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1+x*irho) / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
-
+   #ifdef ZUT
+   double dr4 = SQR(1+r[4]) * B2P * (1.0+x*irho);
+   atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
+   #else
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1.0+x*irho) * L;
+//   r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
+   #endif /*ZUT*/
 
-   r[1] -=  L*ReSum;
-   r[3] +=  L*ImSum;
+   r[1] -=  0.5*L*ReSum;
+   r[3] +=  0.5*L*ImSum;
 }
 
 static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
@@ -167,13 +181,61 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
 
    B2P = StrB2perp(ImSum, ReSum+B0 , x , xpr, y ,ypr);
 
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
+   #ifdef ZUT
+   double dr4 = SQR(1+r[4]) * B2P;
+   atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
+   #else
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * L;
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
+   #endif /*ZUT*/
 
    r[1] -=  L*ReSum;
    r[3] +=  L*ImSum;
+}
+
+static void ex2_bndthinkickrad(double* r, double* A, double* B, double K, double L, double irho, double E0, int max_order)
+{
+   int i;
+   double ImSum = A[max_order];
+   double ReSum = B[max_order];
+   double ReSumTemp;
+   double x ,xpr, y, ypr, p_norm, B2P;
+   double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
+
+   for (i=max_order-1; i>=0; i--) {
+   	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
+        ImSum = ImSum*r[0] + ReSum*r[2] + A[i];
+        ReSum = ReSumTemp;
+   }
+
+   r[1] -=  0.5*K*ReSum;
+   r[3] +=  0.5*K*ImSum;
+
+   /* calculate angles from momentums 	*/
+   p_norm = 1/(1+r[4]);
+   x   = r[0];
+   xpr = r[1]*p_norm;
+   y   = r[2];
+   ypr = r[3]*p_norm;
+
+   B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
+
+   #ifdef ZUT
+   double dr4 = SQR(1+r[4]) * B2P * (1.0+x*irho);
+   atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
+   #else
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1.0+x*irho) * L;
+//   r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
+   /* recalculate momentums from angles after losing energy for radiation 	*/
+   p_norm = 1/(1+r[4]);
+   r[1] = xpr/p_norm;
+   r[3] = ypr/p_norm;
+   #endif /*ZUT*/
+
+   r[1] -=  0.5*K*ReSum;
+   r[3] +=  0.5*K*ImSum;
 }
