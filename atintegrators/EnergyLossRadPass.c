@@ -74,7 +74,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(2,1);
         mxSetCell(plhs[0],0,mxCreateString("EnergyLoss"));
-        mxSetCell(plhs[0],1,mxCreateString("EnergyLoss"));
+        mxSetCell(plhs[0],1,mxCreateString("Energy"));
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(0,1);
