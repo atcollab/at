@@ -64,6 +64,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 [bendpass,varargs]=getoption(varargs,'bendpass',default_pass('auto'));
 [cavipass,varargs]=getoption(varargs,'cavipass',default_pass('auto'));
 [quantdiffpass,varargs]=getoption(varargs,'quantdiffpass',default_pass('auto'));
+[energylosspass,varargs]=getoption(varargs,'energylosspass',default_pass('auto'));
 % Process the positional arguments
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
@@ -71,12 +72,13 @@ energy=atenergy(ring);
 
 % Build the modification table
 mod.RFCavity=autoElemPass(cavipass,'RFCavityPass');
-mod.Bend=autoMultipolePass(bendpass);
-mod.Quadrupole=autoMultipolePass(quadpass);
-mod.Sextupole=autoMultipolePass(sextupass);
-mod.Octupole=autoMultipolePass(octupass);
-mod.Wiggler=autoMultipolePass(wigglerpass);
+mod.Bend=autoMultipolePass(bendpass,energy);
+mod.Quadrupole=autoMultipolePass(quadpass,energy);
+mod.Sextupole=autoMultipolePass(sextupass,energy);
+mod.Octupole=autoMultipolePass(octupass,energy);
+mod.Wiggler=autoMultipolePass(wigglerpass,energy);
 mod.QuantDiff=autoElemPass(quantdiffpass,'QuantDiffPass');
+mod.EnergyLoss=autoElemPass(energylosspass,'EnergyLossRadPass', energy);
 mod.Other=@(elem) elem;
 
 % Generate the new lattice
@@ -94,32 +96,26 @@ end
         end
     end
 
-    function modfun=autoMultipolePass(newpass)
+    function modfun=autoMultipolePass(newpass,ener)
         % Returns the multipole processing function
         if isempty(newpass)
             modfun=@(elem) elem;
         elseif strcmp(newpass, 'auto')
             modfun=@varelem;
         else
-            modfun=@fixelem;
+            modfun=setpassenergy(newpass, ener);
         end
         
         function elem=varelem(elem)
             % 'auto' multipole modification
             if ~(endsWith(elem.PassMethod,'RadPass') || (isfield(elem,'BendingAngle') && elem.BendingAngle == 0))
                 elem.PassMethod=strrep(strrep(elem.PassMethod,'QuantPass','Pass'),'Pass','RadPass');
-                elem.Energy=energy;
+                elem.Energy=ener;
             end
-        end
-        
-        function elem=fixelem(elem)
-            % Explicit multipole modification
-            elem.PassMethod=newpass;
-            elem.Energy=energy;
         end
     end
 
-    function modfun=autoElemPass(newpass,defpass)
+    function modfun=autoElemPass(newpass,defpass,ener)
         % Returns the generic processing function
         if isempty(newpass)
             modfun=@(elem) elem;
@@ -127,13 +123,27 @@ end
             if strcmp(newpass, 'auto')
                 newpass=defpass;
             end
-            modfun=@modelem;
+            if nargin >= 3
+                modfun=setpassenergy(newpass,ener);
+            else
+                modfun=setpass(newpass);
+            end
         end
-        
-        function elem=modelem(elem)
-            % Default element modification
-            elem.PassMethod=newpass;
+    end
+
+    function setfun=setpassenergy(npass, ener)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
+            elem.Energy=ener;
         end
+        setfun=@newelem;
+    end
+
+    function setfun=setpass(npass)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
+        end
+        setfun=@newelem;
     end
 
     function defpass=default_pass(defpass)

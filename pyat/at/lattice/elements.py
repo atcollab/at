@@ -1069,6 +1069,39 @@ class QuantumDiffusion(_DictLongtMotion, Element):
         super().__init__(family_name, Lmatp=lmatp, **kwargs)
 
 
+class EnergyLoss(_DictLongtMotion, Element):
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['EnergyLoss']
+    _conversions = dict(Element._conversions, EnergyLoss=float)
+    default_pass = {False: 'IdentityPass', True: 'EnergyLossRadPass'}
+
+    def __init__(self, family_name: str, energy_loss: float, **kwargs):
+        """Energy loss element
+
+        Args:
+            family_name:    Name of the element
+            energy_loss:    Energy loss [eV]
+
+        """
+        kwargs.setdefault('PassMethod', self.default_pass[False])
+        super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
+
+    # noinspection PyShadowingNames
+    def set_longt_motion(self, enable, new_pass=None, **kwargs):
+        ret = super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
+        elem = ret if kwargs.get('copy', False) else self
+        if enable:
+            elem.Energy = kwargs['energy']
+        else:
+            try:
+                del elem.Energy
+            except AttributeError:
+                pass
+        return ret
+
+
+Radiative.register(EnergyLoss)
+
+
 def build_class_map():  # Missing class aliases (Bend)
     global CLASS_MAP
 

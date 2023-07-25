@@ -26,6 +26,8 @@ elseif isfield(elem,'Frequency')
     atclass='RFCavity';
 elseif isfield(elem,'Lmatp')
     atclass='QuantDiff';
+elseif isfield(elem,'EnergyLoss')
+    atclass='EnergyLoss';
 else
     atclass='Other';
 end
