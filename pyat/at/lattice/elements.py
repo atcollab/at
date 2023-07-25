@@ -1085,19 +1085,6 @@ class EnergyLoss(_DictLongtMotion, Element):
         kwargs.setdefault('PassMethod', self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
 
-    # noinspection PyShadowingNames
-    def set_longt_motion(self, enable, new_pass=None, **kwargs):
-        ret = super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
-        elem = ret if kwargs.get('copy', False) else self
-        if enable:
-            elem.Energy = kwargs['energy']
-        else:
-            try:
-                del elem.Energy
-            except AttributeError:
-                pass
-        return ret
-
 
 Radiative.register(EnergyLoss)
 
