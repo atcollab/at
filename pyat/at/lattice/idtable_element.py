@@ -49,14 +49,13 @@ class InsertionDeviceKickMap(Element):
         warn(UserWarning('get_PassMethod is deprecated; do not use'))
         return getattr(self, 'PassMethod')
 
-    def from_text_file(self, *args, **kwargs):
+    def from_text_file(self, Nslice, Filename_in, Energy):
         """
             from_text_file(
                 family_name: str,
                 Nslice: int,
                 Filename_in: str,
                 Energy: float,
-                **kwargs
                 )
         This function creates an Insertion Device Kick Map
         from a Radia field map file.
@@ -178,12 +177,6 @@ class InsertionDeviceKickMap(Element):
             table_out2 = numpy.asfortranarray(table_out)
             return table_out2
 
-        # args to input
-        if len(args) == 3:
-            Nslice = args[0]
-            Filename_in = args[1]
-            Energy = args[2]
-
         # read the input data
         el_length, hkickmap, vkickmap, \
             table_cols1, table_rows1, \
@@ -258,7 +251,7 @@ class InsertionDeviceKickMap(Element):
                      'ytable']
         if len(args) < 13:
             # get data from text file
-            elemargs = self.from_text_file(*args, **kwargs)
+            elemargs = self.from_text_file(*args)
         else:
             # get data from arguments
             elemargs = dict(zip(_argnames, args))
