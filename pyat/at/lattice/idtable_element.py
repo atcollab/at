@@ -2,6 +2,7 @@ from .elements import Element
 import numpy
 import io
 from ..constants import clight
+from warnings import warn
 
 
 def _anyarray(value):
@@ -47,6 +48,7 @@ class InsertionDeviceKickMap(Element):
         setattr(self, 'PassMethod', 'IdTablePass')
 
     def get_PassMethod(self):
+        warn(AtWarning('get_PassMethod is deprecated; do not use'))
         return getattr(self, 'PassMethod')
 
     def from_text_file(self, *args, **kwargs):
