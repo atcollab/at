@@ -248,9 +248,6 @@ class InsertionDeviceKickMap(Element):
                      }
         return args_dict
 
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls)
-
     def __init__(self, family_name: str, *args, **kwargs):
         _argnames = ['PassMethod',
                      'Filename_in',
