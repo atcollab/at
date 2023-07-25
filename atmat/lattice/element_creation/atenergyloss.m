@@ -1,5 +1,5 @@
 function elem = atenergyloss(fname, varargin)
-%atEnergyLoss creates a, energy loss element
+%atenergyloss creates an energy loss element
 %
 %ELEM=ATENERGYLOSS(FAMNAME,ELOSS,PASSMETHOD)
 %   FAMNAME:    family name
