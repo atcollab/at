@@ -1,18 +1,19 @@
-function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)
-% atidtable(fname, Nslice, filename, Energy, method)
+function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
+% atidtable(FamName, Nslice, filename, Energy, method)
 %
-% FamName	family name
-% Nslice	number of slices (1 means the wiggler is represented by a
+% FamName   family name
+% Nslice    number of slices (1 means the Insertion Device is represented by a
 %           single kick in the center of the device).
-% filename	name of file with wiggler tracking tables.
-% Energy    Energy of the machine, needed for scaling
-% method    name of the function to use for tracking. Use 'WigTablePass'
+% filename  name of file with the ID tracking tables.
+% Energy    Normalization energy in GeV, needed for scaling
+% method    name of the function to use for tracking. Use 'IdTablePass'
+%             or 'WigTablePass'
 %
-% The tracking table is described in
+% The tracking table method is described in
 % P. Elleaume, "A new approach to the electron beam dynamics in undulators
 % and wigglers", EPAC92.
 %
-% returns assigned structure
+% returns atinsertiondevicekickmap
 
 %---------------------------------------------------------------------------
 % Modification Log:
@@ -20,7 +21,7 @@ function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
 % 17-11-2008:  Modificated by Z.Martí
 % 18-07-2023:  blanco-garcia. Eliminates R1,R1,T1,T2,NumIntSteps,MaxOrder
-%                               PolynomA, PolynomB
+%                               PolynomA, PolynomB,NumX,NumY
 %                               (they are not used in IdTablePass)
 %                             Adds InsertionDeviceKickMap class
 %---------------------------------------------------------------------------
@@ -115,14 +116,12 @@ end
 %Elem.PolynomA= [0 0 0 0];
 %Elem.PolynomB= [0 0 0 0];
 
-Elem = atinsertiondevicekickmap( fname, ...
+Elem = atinsertiondevicekickmap( FamName, ...
                                  method, ...
                                  filename, ...
                                  Energy, ...
                                  Nslice, ...
                                  L, ...
-                                 Nx, ...
-                                 Ny, ...
                                  xkick, ...
                                  ykick, ...
                                  xkick1, ...
