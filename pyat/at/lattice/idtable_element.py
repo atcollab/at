@@ -249,7 +249,7 @@ class InsertionDeviceKickMap(Element):
                      'ykick1',
                      'xtable',
                      'ytable']
-        if len(args) < 13:
+        if len(args) < 11:
             # get data from text file
             elemargs = self.from_text_file(*args)
         else:
