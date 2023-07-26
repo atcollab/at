@@ -25,16 +25,17 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 %  [...] = ATDISABLE_6D(...[,keyword,value]...)
 %   The following keywords trigger the processing of the following elements:
 %
-%   'allpass'       Defines the default pass method for all elements not
-%                   explicitly specified. Replaces the following default
-%                   values.
-%   'cavipass'      pass method for RF cavities. Default 'auto'
-%   'bendpass'      pass method for bending magnets. Default 'auto'
-%   'quadpass'      pass method for quadrupoles. Default 'auto'
-%   'sextupass'     pass method for sextupoles. Default 'auto'
-%   'octupass'      pass method for bending magnets. Default 'auto'
-%   'wigglerpass'	pass method for wigglers. Default 'auto'
-%   'quantdiffpass' pass method for quantum diffusion. Default 'auto'
+%   'allpass'        Defines the default pass method for all elements not
+%                    explicitly specified. Replaces the following default
+%                    values.
+%   'cavipass'       pass method for RF cavities. Default 'auto'
+%   'bendpass'       pass method for bending magnets. Default 'auto'
+%   'quadpass'       pass method for quadrupoles. Default 'auto'
+%   'sextupass'      pass method for sextupoles. Default 'auto'
+%   'octupass'       pass method for bending magnets. Default 'auto'
+%   'wigglerpass'	 pass method for wigglers. Default 'auto'
+%   'quantdiffpass'  pass method for quantum diffusion. Default 'auto'
+%   'energylosspass' pass method for atenergyloss element. Default 'auto'
 %
 %   OUPUTS:
 %   1. NEWRING   Output ring
@@ -87,6 +88,7 @@ if nargout > 1
 end
 
     function elem=modelem(elem)
+        %Modify the tracking PassMethod removing radiation
         cls=getclass_6d(elem);
         if any(strcmp(cls,fieldnames(modfun)))
             elem=modfun.(cls)(elem);
