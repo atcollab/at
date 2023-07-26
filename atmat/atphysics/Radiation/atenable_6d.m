@@ -26,16 +26,17 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 %  [...] = ATENABLE_6D(...,keyword,value)
 %   The following keywords trigger the processing of the following elements:
 %
-%   'allpass'       Defines the default pass method for all elements not
-%                   explicitly specified. Replaces the following default
-%                   values.
-%   'cavipass'      pass method for RF cavities. Default 'auto'
-%   'bendpass'      pass method for bending magnets. Default 'auto'
-%   'quadpass'      pass method for quadrupoles. Default 'auto'
-%   'sextupass'     pass method for sextupoles. Default ''
-%   'octupass'      pass method for octupoles. Default ''
-%   'wigglerpass'   pass method for wigglers. Default 'auto'
-%   'quantdiffpass' pass method for quantum radiation. default 'auto'
+%   'allpass'        Defines the default pass method for all elements not
+%                    explicitly specified. Replaces the following default
+%                    values.
+%   'cavipass'       pass method for RF cavities. Default 'auto'
+%   'bendpass'       pass method for bending magnets. Default 'auto'
+%   'quadpass'       pass method for quadrupoles. Default 'auto'
+%   'sextupass'      pass method for sextupoles. Default ''
+%   'octupass'       pass method for octupoles. Default ''
+%   'wigglerpass'    pass method for wigglers. Default 'auto'
+%   'quantdiffpass'  pass method for quantum radiation. default 'auto'
+%   'energylosspass' pass method for energyloss element. default 'auto'
 %
 %  OUPUTS:
 %  1. NEWRING   Output ring
@@ -45,7 +46,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 %  EXAMPLES:
 %
 %>> ringrad=atenable_6d(ring);
-%   Turns cavities on and sets radiation in bending magnets, quadrupoles and wigglers (default)
+%   Turns cavities on and sets radiation in bending magnets, quadrupoles, energyloss elements, and wigglers (default)
 %
 %>> ringrad=atenable_6d(ring,'auto','allpass','');
 %   Turns cavities on and leaves everything else unchanged
@@ -90,6 +91,7 @@ if nargout > 1
 end
 
     function elem=modelem(elem)
+        %Modify the tracking PassMethod adding radiation
         cls=getclass_6d(elem);
         if any(strcmp(cls,fieldnames(mod)))
             elem=mod.(cls)(elem);
