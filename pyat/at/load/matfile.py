@@ -266,8 +266,10 @@ def matlab_ring(ring) -> Generator[Element, None, None]:
     famname = dct.pop('FamName')
     energy = dct.pop('Energy')
     # remove title case in EApertures and RApertures
-    if 'Eapertures' in dct: dct['EApertures'] = dct.pop('Eapertures')
-    if 'Rapertures' in dct: dct['RApertures'] = dct.pop('Rapertures')
+    if 'Eapertures' in dct:
+        dct['EApertures'] = dct.pop('Eapertures')
+    if 'Rapertures' in dct:
+        dct['RApertures'] = dct.pop('Rapertures')
     yield RingParam(famname, energy, **dct)
     for elem in ring:
         yield elem
