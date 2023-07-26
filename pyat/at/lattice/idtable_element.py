@@ -255,6 +255,6 @@ class InsertionDeviceKickMap(Element):
         else:
             # get data from arguments
             elemargs = dict(zip(_argnames, args))
-            elemargs.update(kwargs)
+        elemargs.update(kwargs)
         super().__init__(family_name, **elemargs)
 # EOF
