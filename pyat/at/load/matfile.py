@@ -20,7 +20,9 @@ __all__ = ['load_mat', 'save_mat', 'load_m', 'save_m',
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name', 'Particle': '_particle',
                      'cell_harmnumber': '_harmcell',
-                     'HarmNumber': 'harmonic_number'}
+                     'HarmNumber': 'harmonic_number',
+                     'EApertures': 'eapertures', 'RApertures': 'rapertures'
+                     }
 _param_ignore = {'PassMethod', 'Length', 'cavpts'}
 
 # Python to Matlab attribute translation
