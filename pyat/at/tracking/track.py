@@ -194,9 +194,9 @@ def lattice_track(lattice: Iterable[Element], r_in,
          keywords to ensure the continuity of the turn number.
        * For multiparticle tracking with large number of turn the size of
          *r_out* may increase excessively. To avoid memory issues
-         :pycode:`track_function(lattice, r_in, refpts=None)` can be used.
-         An empty list is returned and the tracking results of the last turn
-         are stored in *r_in*.
+         :pycode:`track_function(lattice, r_in, refpts=None, in_place=True)`
+         can be used. An empty list is returned and the tracking results of
+         the last turn are stored in *r_in*.
        * To model buckets with different RF voltage :pycode:`unfold_beam=False`
          has to be used. The beam can be unfolded using the function
          :py:func:`.unfold_beam`. This function takes into account
