@@ -250,12 +250,11 @@ def lattice_track(lattice: Iterable[Element], r_in,
     return rout, trackparam, trackdata
 
 
-def element_track(element: Element, r_in, in_place: bool = True, **kwargs):
+def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
     """
     :py:func:`element_track` tracks particles through one element of a
     calling the element-specific tracking function specified in the
-    Element's *PassMethod* field. Particle are always considered
-    relativitic
+    Element's *PassMethod* field
 
     Usage:
       >>> element_track(element, r_in)
@@ -273,6 +272,10 @@ def element_track(element: Element, r_in, in_place: bool = True, **kwargs):
           (default: False)
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
+        particle (Optional[Particle]): circulating particle.
+          Default: :code:`lattice.particle` if existing,
+          otherwise :code:`Particle('relativistic')`
+        energy (Optiona[float]): lattice energy. Default 0.
 
     Returns:
         r_out: (6, N, R, T) array containing output coordinates of N particles
