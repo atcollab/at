@@ -17,7 +17,10 @@ def test_patpass_multiple_particles_and_turns(func):
     lattice = [d]
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
-    rout = internal_plpass(lattice, rin, nturns)
+    if func == lattice_track:
+        rout, *_ = func(lattice, rin, nturns, use_mp=True)
+    else:
+        rout = func(lattice, rin, nturns)
     # results from Matlab
     assert rout.shape == (6, nparticles, 1, nturns)
     rout_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
