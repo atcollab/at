@@ -274,7 +274,6 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
          to the desired value.
 
     """
-    kwargs['use_mp'] = True
     kwargs['pool_size'] = pool_size
     kwargs['start_method'] = start_method
     lattice = initialize_lpass(lattice, kwargs)
