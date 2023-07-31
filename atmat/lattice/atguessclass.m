@@ -46,6 +46,8 @@ elseif isfield(elem,'PolynomB')
     end
 elseif isfield(elem,'Lmatp')
     atclass='QuantDiff';
+elseif isfield(elem,'EnergyLoss')
+    atclass='EnergyLoss';
 elseif isfield(elem,'M66')
     if isfield(elem,'Tijk')
         atclass='MatrixTijkPass';

@@ -98,6 +98,9 @@ switch atclass
     case 'Monitor'
         create=@atmonitor;
         [options,args]=doptions(elem,create);
+    case 'EnergyLoss'
+        create=@atenergyloss;
+        [options,args]=doptions(elem,create,{'EnergyLoss'});
     case 'InsertionDeviceKickMap'
         create=@atinsertiondevicekickmap;
         [options,args]=doptions(elem,create,{ ...

@@ -75,11 +75,12 @@ global THERING %#ok<GVMIS>
         % For calculating the synchrotron integrals
         [I1d,I2d,I3d,I4d,I5d,I6,~] = ElementRadiation(ring,TD);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
-        smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
+        [I1e,I2e,I3e,I4e,I5e] = ElossRadiation(ring,TD);
+        smm.integrals=[I1d+I1w+I1e,I2d+I2w+I2e,I3d+I3w+I3e,I4d+I4w+I4e,I5d+I5w+I5e,I6];
         
         if is6d
             alphac=mcf(atdisable_6d(ring),dp);
-            eloss=atgetU0(ring,'method','tracking');            % eV
+            eloss=atgetU0(ring,'method','tracking','periods',1);            % eV
         else
             alphac=mcf(ring,dp);
             eloss=1.0e9*Cgamma/2/pi*smm.e0.^4*smm.integrals(2); % eV

@@ -185,6 +185,10 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     Keyword Args:
         XYStep (float): Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
+        particle (Particle):    circulating particle.
+          Default: :code:`lattice.particle` if existing,
+          otherwise :code:`Particle('relativistic')`
+        energy (float):         lattice energy. Default 0.
 
     Returns:
         m66:            6x6 transfer matrix
@@ -200,7 +204,7 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     dmat = numpy.concatenate((dg, -dg), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
-    element_pass(elem, in_mat)
+    element_pass(elem, in_mat, **kwargs)
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
     return m66
 
