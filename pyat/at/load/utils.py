@@ -11,6 +11,7 @@ import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
+from at.lattice import idtable_element
 from at.lattice import Particle, Element
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
@@ -55,7 +56,9 @@ _alias_map = {'rbend': elt.Dipole,
               'bpm': elt.Monitor,
               'ap': elt.Aperture,
               'ringparam': RingParam,
-              'wig': elt.Wiggler}
+              'wig': elt.Wiggler,
+              'insertiondevicekickmap': idtable_element.InsertionDeviceKickMap
+              }
 
 
 # Matlab to Python class translation
@@ -73,6 +76,7 @@ _PASS_MAP = {'BendLinearPass': elt.Dipole,
              'ThinMPolePass': elt.ThinMultipole,
              'Matrix66Pass': elt.M66,
              'AperturePass': elt.Aperture,
+             'IdTablePass': idtable_element.InsertionDeviceKickMap,
              'GWigSymplecticPass': elt.Wiggler}
 
 # Matlab to Python attribute translation
@@ -80,7 +84,10 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name'}
 
 # Python to Matlab class translation
-_matclass_map = {'Dipole': 'Bend'}
+_matclass_map = {
+        'Dipole': 'Bend',
+        'InsertionDeviceKickMap': 'InsertionDeviceKickMap'
+        }
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
@@ -90,7 +97,9 @@ _mattype_map = {int: float,
 _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
-    elt.M66: 'atM66'}
+    elt.M66: 'atM66',
+    idtable_element.InsertionDeviceKickMap: 'atinsertiondevicekickmap'
+    }
 
 
 def hasattrs(kwargs: dict, *attributes) -> bool:
@@ -138,8 +147,9 @@ def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
         if not quiet and class_name:
-            warn(AtWarning("Class '{0}' does not exist.\n"
-                           "{1}".format(class_name, elem_dict)))
+            class_doesnotexist_warning = ("Class '{0}' does not exist.\n"
+                                          "{1}".format(class_name, elem_dict))
+            warn(AtWarning(class_doesnotexist_warning))
         fam_name = elem_dict.get('FamName', '')
         try:
             return _CLASS_MAP[fam_name.lower()]
