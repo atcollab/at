@@ -16,7 +16,7 @@ def pldata_beta_disp(ring: Lattice, refpts: Refpts, **kwargs):
     """Generates data for plotting beta functions and dispersion"""
 
     # compute linear optics at the required locations
-    data0, _, data = get_optics(ring, refpts=refpts, get_chrom=True, **kwargs)
+    data0, _, data = get_optics(ring, refpts=refpts, **kwargs)
 
     # Extract the plot data
     s_pos = data['s_pos']
