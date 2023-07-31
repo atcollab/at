@@ -11,6 +11,9 @@ and pyat parallel tracking (patpass)
 from at.tracking import patpass
 from at.physics import find_orbit
 import numpy
+from warnings import warn
+from at.lattice import AtWarning
+
 
 # Jaime Coello de Portugal (JCdP) frequency analysis implementation
 from .harmonic_analysis import get_tunes_harmonic
@@ -23,11 +26,11 @@ def fmap_parallel_track(ring,
                         steps=[100, 100],
                         scale='linear',
                         turns=512,
-                        ncpu=30,
                         orbit=None,
                         add_offset6D=numpy.zeros(6),
                         verbose=False,
                         lossmap=False,
+                        **kwargs
                         ):
     r"""Computes frequency maps
 
@@ -51,8 +54,7 @@ def fmap_parallel_track(ring,
 
     in millimeters, where the window is divided in n steps=[xsteps,ysteps].
     For each yoffset, particle tracking over the whole set of xoffsets is done
-    in parallel, therefore, a number of cpus (*ncpu*) above the number of
-    *xsteps* will not reduce the calculation time.
+    in parallel.
 
     The frequency analysis uses a library that is not parallelized.
 
@@ -71,13 +73,13 @@ def fmap_parallel_track(ring,
         steps:    (xsteps, ysteps): number of steps in each plane
         scale:    default 'linear'; or 'non-linear'
         turns:    default 512
-        ncpu:     default 30; max. number of processors
-          in parallel tracking :py:func:`.patpass`
         orbit:    If :py:obj:`None`, the closed orbit is computed and added to
           the coordinates
         add_offset6D: default numpy.zeros((6,1))
         verbose:  prints additional info
         lossmap:  default false
+    Optional:
+        pool_size:number of processes. See :py:func:`.patpass`
 
     Returns:
         xy_nuxy_lognudiff_array: numpy array with columns
@@ -95,6 +97,14 @@ def fmap_parallel_track(ring,
 
     .. warning:: loss map format is experimental
     """
+
+    # https://github.com/atcollab/at/pull/608
+    kwargs.setdefault('pool_size', None)
+
+    # https://github.com/atcollab/at/pull/608
+    if 'ncpu' in kwargs:
+        warn(AtWarning('ncpu argument is deprecated; use pool_size instead'))
+        kwargs['pool_size'] = kwargs.pop('ncpu')
 
     if orbit is None:
         # closed orbit values are not returned. It seems not necessary here
@@ -159,16 +169,9 @@ def fmap_parallel_track(ring,
 
     print("Start tracking and frequency analysis")
 
-    # Forcing a maximum value of cpus
-    # I have no idea how to confirm the actual used value from patpass
-    # at.DConstant.patpass_poolsize = ncpu;
-    print(f' Requested POOL size : {ncpu}')
-
     # tracking in parallel multiple x coordinates with the same y coordinate
     for iy, iy_index in zip(iyarray, range(leniyarray)):
-        print(f'Tracked particles {abs(-100.0*iy_index/leniyarray):.1f} %',
-              end='')
-        print(f', with a max. cpu POOL size of {ncpu}')
+        print(f'Tracked particles {abs(-100.0*iy_index/leniyarray):.1f} %')
         verboseprint("y =", iy)
         z0 = numpy.zeros((lenixarray, 6))  # transposed, and C-aligned
         z0 = z0 + add_offset6D + orbit
@@ -181,10 +184,10 @@ def fmap_parallel_track(ring,
         if lossmap:
             # patpass output changes when losses flag is true
             zOUT, dictloss = \
-                patpass(ring, z0.T, nturns, pool_size=ncpu, losses=lossmap)
+                patpass(ring, z0.T, nturns, losses=lossmap, **kwargs)
             loss_map_array = numpy.append(loss_map_array, dictloss)
         else:
-            zOUT = patpass(ring, z0.T, nturns, pool_size=ncpu)
+            zOUT = patpass(ring, z0.T, nturns, **kwargs)
 
         # start of serial frequency analysis
         for ix_index in range(lenixarray):  # cycle over the track results

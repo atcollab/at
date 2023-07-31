@@ -417,7 +417,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                          ('closed_orbit', numpy.float64, (6,)),
                          (mname, numpy.float64, (2*dms, 2*dms)),
                          ('s_pos', numpy.float64)]
-        data0 = (d0, orb0, mt, get_s_pos(ring, len(ring)))
+        data0 = (d0, orb0, mt, get_s_pos(ring, len(ring))[0])
         datas = (ds, orbs, ms, spos)
         if get_w:
             dtype = dtype + _W_DTYPE
