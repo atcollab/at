@@ -42,10 +42,12 @@ def test_lattice_convert_to_list_if_incorrect_type(func):
         r_out, *_ = r_out 
     numpy.testing.assert_equal(r_original, r_out.reshape(6, 2))
 
-def test_in_place_false_tracking():
+def test_in_place_flag_tracking():
     lattice = numpy.array([elements.Drift('Drift', 1.0)])
     rin = numpy.zeros((6, 1))
     rin[1] = 1e-6
     r_original = numpy.copy(rin)
     lattice_track(lattice, rin)
     numpy.testing.assert_equal(r_original, rin.reshape(6, 1))
+    rout, *_ = lattice_track(lattice, rin, in_place=True)
+    numpy.testing.assert_equal(rin, rout.reshape(6, 1))
