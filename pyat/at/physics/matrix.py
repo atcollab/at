@@ -200,7 +200,7 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     dmat = numpy.concatenate((dg, -dg), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
-    internal_epass(elem, in_mat)
+    internal_epass(elem, in_mat, **kwargs)
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
     return m66
 
