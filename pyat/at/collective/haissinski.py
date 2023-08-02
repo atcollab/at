@@ -27,8 +27,7 @@ class Haissinski(object):
         current:        bunch current.
         numIters (int): the number of iterations
         eps:            the convergence criteria.
-    
-    
+
     This class is a direct implementation of the following paper:
     "Numerical solution of the Haïssinski equation for the equilibrium
     state of  a stored electron beam", R. Warnock, K.Bane, Phys. Rev. Acc.
@@ -40,7 +39,8 @@ class Haissinski(object):
 
     The functions solve or solve_steps can be used after initialisation
     An example usage can be found in:
-      at/pyat/examples/Collective/LongDistribution.py
+
+    at/pyat/examples/Collective/LongDistribution.py
 
     Future developments of this class:
         Adding LR wake or harmonic cavity as done at SOLEIL. Needs

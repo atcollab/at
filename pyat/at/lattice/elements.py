@@ -884,10 +884,6 @@ class Sextupole(Multipole):
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
 
-    def items(self) -> Generator[Tuple, None, None]:
-        yield from super().items()
-        yield 'H', self.H
-
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
@@ -1071,6 +1067,26 @@ class QuantumDiffusion(_DictLongtMotion, Element):
         """
         kwargs.setdefault('PassMethod', self.default_pass[True])
         super().__init__(family_name, Lmatp=lmatp, **kwargs)
+
+
+class EnergyLoss(_DictLongtMotion, Element):
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['EnergyLoss']
+    _conversions = dict(Element._conversions, EnergyLoss=float)
+    default_pass = {False: 'IdentityPass', True: 'EnergyLossRadPass'}
+
+    def __init__(self, family_name: str, energy_loss: float, **kwargs):
+        """Energy loss element
+
+        Args:
+            family_name:    Name of the element
+            energy_loss:    Energy loss [eV]
+
+        """
+        kwargs.setdefault('PassMethod', self.default_pass[False])
+        super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
+
+
+Radiative.register(EnergyLoss)
 
 
 def build_class_map():  # Missing class aliases (Bend)

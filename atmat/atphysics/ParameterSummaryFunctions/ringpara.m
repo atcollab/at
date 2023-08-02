@@ -62,16 +62,17 @@ global THERING %#ok<GVMIS>
         [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,varargin{:},'get_chrom');
         [I1d,I2d,I3d,I4d,I5d,~,Iv] = ElementRadiation(ring,lindata);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
-        I1=I1d+I1w;
-        I2=I2d+I2w;
-        I3=I3d+I3w;
-        I4=I4d+I4w;
-        I5=I5d+I5w;
+        [I1e,I2e,I3e,I4e,I5e] = ElossRadiation(ring,lindata);
+        I1=I1d+I1w+I1e;
+        I2=I2d+I2w+I2e;
+        I3=I3d+I3w+I3e;
+        I4=I4d+I4w+I4e;
+        I5=I5d+I5w+I5e;
         if ~isempty(Ux)
             U0 = Ux*1e6; %convert MeV to eV
             fprintf('Radiation loss:  %4.5f keV\n', U0/1000.);
         elseif is6d
-            U0 = atgetU0(ring,'method','tracking');
+            U0 = atgetU0(ring,'method','tracking','periods',1);
         else
             U0 = 1.0e9*Cgamma/2/pi*(energy*1.e-9)^4*I2;    % eV
         end

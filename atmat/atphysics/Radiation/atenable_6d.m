@@ -26,16 +26,17 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 %  [...] = ATENABLE_6D(...,keyword,value)
 %   The following keywords trigger the processing of the following elements:
 %
-%   'allpass'       Defines the default pass method for all elements not
-%                   explicitly specified. Replaces the following default
-%                   values.
-%   'cavipass'      pass method for RF cavities. Default 'auto'
-%   'bendpass'      pass method for bending magnets. Default 'auto'
-%   'quadpass'      pass method for quadrupoles. Default 'auto'
-%   'sextupass'     pass method for sextupoles. Default ''
-%   'octupass'      pass method for octupoles. Default ''
-%   'wigglerpass'   pass method for wigglers. Default 'auto'
-%   'quantdiffpass' pass method for quantum radiation. default 'auto'
+%   'allpass'        Defines the default pass method for all elements not
+%                    explicitly specified. Replaces the following default
+%                    values.
+%   'cavipass'       pass method for RF cavities. Default 'auto'
+%   'bendpass'       pass method for bending magnets. Default 'auto'
+%   'quadpass'       pass method for quadrupoles. Default 'auto'
+%   'sextupass'      pass method for sextupoles. Default ''
+%   'octupass'       pass method for octupoles. Default ''
+%   'wigglerpass'    pass method for wigglers. Default 'auto'
+%   'quantdiffpass'  pass method for quantum radiation. default 'auto'
+%   'energylosspass' pass method for energyloss element. default 'auto'
 %
 %  OUPUTS:
 %  1. NEWRING   Output ring
@@ -45,7 +46,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 %  EXAMPLES:
 %
 %>> ringrad=atenable_6d(ring);
-%   Turns cavities on and sets radiation in bending magnets, quadrupoles and wigglers (default)
+%   Turns cavities on and sets radiation in bending magnets, quadrupoles, energyloss elements, and wigglers (default)
 %
 %>> ringrad=atenable_6d(ring,'auto','allpass','');
 %   Turns cavities on and leaves everything else unchanged
@@ -64,6 +65,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 [bendpass,varargs]=getoption(varargs,'bendpass',default_pass('auto'));
 [cavipass,varargs]=getoption(varargs,'cavipass',default_pass('auto'));
 [quantdiffpass,varargs]=getoption(varargs,'quantdiffpass',default_pass('auto'));
+[energylosspass,varargs]=getoption(varargs,'energylosspass',default_pass('auto'));
 % Process the positional arguments
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
@@ -71,12 +73,13 @@ energy=atenergy(ring);
 
 % Build the modification table
 mod.RFCavity=autoElemPass(cavipass,'RFCavityPass');
-mod.Bend=autoMultipolePass(bendpass);
-mod.Quadrupole=autoMultipolePass(quadpass);
-mod.Sextupole=autoMultipolePass(sextupass);
-mod.Octupole=autoMultipolePass(octupass);
-mod.Wiggler=autoMultipolePass(wigglerpass);
+mod.Bend=autoMultipolePass(bendpass,energy);
+mod.Quadrupole=autoMultipolePass(quadpass,energy);
+mod.Sextupole=autoMultipolePass(sextupass,energy);
+mod.Octupole=autoMultipolePass(octupass,energy);
+mod.Wiggler=autoMultipolePass(wigglerpass,energy);
 mod.QuantDiff=autoElemPass(quantdiffpass,'QuantDiffPass');
+mod.EnergyLoss=autoElemPass(energylosspass,'EnergyLossRadPass', energy);
 mod.Other=@(elem) elem;
 
 % Generate the new lattice
@@ -88,38 +91,33 @@ if nargout > 1
 end
 
     function elem=modelem(elem)
+        %Modify the tracking PassMethod adding radiation
         cls=getclass_6d(elem);
         if any(strcmp(cls,fieldnames(mod)))
             elem=mod.(cls)(elem);
         end
     end
 
-    function modfun=autoMultipolePass(newpass)
+    function modfun=autoMultipolePass(newpass,ener)
         % Returns the multipole processing function
         if isempty(newpass)
             modfun=@(elem) elem;
         elseif strcmp(newpass, 'auto')
             modfun=@varelem;
         else
-            modfun=@fixelem;
+            modfun=setpassenergy(newpass, ener);
         end
         
         function elem=varelem(elem)
             % 'auto' multipole modification
             if ~(endsWith(elem.PassMethod,'RadPass') || (isfield(elem,'BendingAngle') && elem.BendingAngle == 0))
                 elem.PassMethod=strrep(strrep(elem.PassMethod,'QuantPass','Pass'),'Pass','RadPass');
-                elem.Energy=energy;
+                elem.Energy=ener;
             end
-        end
-        
-        function elem=fixelem(elem)
-            % Explicit multipole modification
-            elem.PassMethod=newpass;
-            elem.Energy=energy;
         end
     end
 
-    function modfun=autoElemPass(newpass,defpass)
+    function modfun=autoElemPass(newpass,defpass,ener)
         % Returns the generic processing function
         if isempty(newpass)
             modfun=@(elem) elem;
@@ -127,13 +125,27 @@ end
             if strcmp(newpass, 'auto')
                 newpass=defpass;
             end
-            modfun=@modelem;
+            if nargin >= 3
+                modfun=setpassenergy(newpass,ener);
+            else
+                modfun=setpass(newpass);
+            end
         end
-        
-        function elem=modelem(elem)
-            % Default element modification
-            elem.PassMethod=newpass;
+    end
+
+    function setfun=setpassenergy(npass, ener)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
+            elem.Energy=ener;
         end
+        setfun=@newelem;
+    end
+
+    function setfun=setpass(npass)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
+        end
+        setfun=@newelem;
     end
 
     function defpass=default_pass(defpass)

@@ -96,13 +96,12 @@ Methods:
 Examples:
     >>> at.random.common.random()
     0.8699988509120198
-    
+
     Generates a random number in [0, 1) which is identical in all threads
 
     >>> at.random.thread.normal(size=5)
     array([-0.02326275, -0.89806482, -1.69086929, -0.74399398,  0.70156743])
-    
+
     Generates an array of Gaussian random values which is specific to
     each thread
-    
 """

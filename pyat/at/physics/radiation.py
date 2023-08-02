@@ -32,21 +32,21 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def _cumulb(it):
-    """accumulate diffusion matrices"""
-    cumul = numpy.zeros((6, 6))
-    yield cumul
-    for el, orbin, b in it:
-        m = find_elem_m66(el, orbin)
-        cumul = m.dot(cumul).dot(m.T) + b
-        yield cumul
-
-
 def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
     """
     compute the cumulative diffusion and orbit
     matrices over the ring
     """
+
+    def _cumulb(it):
+        """accumulate diffusion matrices"""
+        cumul = numpy.zeros((6, 6))
+        yield cumul
+        for el, orbin, b in it:
+            m = find_elem_m66(el, orbin, energy=energy, particle=ring.particle)
+            cumul = m.dot(cumul).dot(m.T) + b
+            yield cumul
+
     nelems = len(ring)
     energy = ring.energy
     allrefs = uint32_refpts(range(nelems + 1), nelems)

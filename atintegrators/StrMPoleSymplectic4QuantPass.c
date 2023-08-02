@@ -61,11 +61,14 @@ void StrMPoleSymplectic4QuantPass(double* r, double le, double* A, double* B,
         B[0] -= sin(KickAngle[0]) / le;
         A[0] += sin(KickAngle[1]) / le;
     }
+/*  The behaviour of random generators with OpenMP is doubtful. OpenMP disabled until
+    it's understood
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none)                      \
     shared(r, num_particles, R1, T1, R2, T2, RApertures, EApertures,                                        \
-        A, B, L1, L2, K1, K2, max_order, num_int_steps,                                                     \
+        A, B, L1, L2, K1, K2, max_order, num_int_steps, rng,                                                \
         FringeQuadEntrance, useLinFrEleEntrance, FringeQuadExit, useLinFrEleExit, fringeIntM0, fringeIntP0, \
         emass, E0, hbar, clight, alpha0, qe, SL)
+*/
     for (int c = 0; c < num_particles; c++) { /* Loop over particles  */
         double* r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
