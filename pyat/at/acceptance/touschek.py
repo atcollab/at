@@ -149,12 +149,21 @@ def _get_vals(ring, rp, ma, emity, bunch_curr, emitx=None,
     return val
 
 
-def _init_ma_rp(ring, refpts=None, momap=None, interpolate=True,
-                check_zero=True, **kwargs):
+def _init_ma_rp(ring, refpts=None, offset=None, momap=None,
+                interpolate=True, check_zero=True, **kwargs):
     if refpts is None:
         refpts = ring.get_uint32_index(at.All, endpoint=False)
     else:
         refpts = ring.get_uint32_index(refpts)
+
+    if offset is not None:
+        try:
+            offset = numpy.broadcast_to(offset, (len(refpts), 6))
+        except ValueError:
+            msg = ('offset and refpts have incoherent '
+                   'shapes: {0}, {1}'.format(offset.shape, refpts.shape))
+            raise AtError(msg)
+
     if momap is not None:
         assert len(momap) == len(refpts), \
             'Input momap and refpts have different lengths'
@@ -168,12 +177,16 @@ def _init_ma_rp(ring, refpts=None, momap=None, interpolate=True,
         zerolength_warning = ('zero-length elements removed '
                               'from lifetime calculation')
         warnings.warn(AtWarning(zerolength_warning))
+
     refpts = refpts[mask]
+    if offset is not None:
+        offset = offset[mask]
 
     if momap is None:
         resolution = kwargs.pop('resolution', 1.0e-3)
         amplitude = kwargs.pop('amplitude', 0.1)
         kwargs.update({'refpts': refpts})
+        kwargs.update({'offset': offset})
         momap, _, _ = ring.get_momentum_acceptance(resolution,
                                                    amplitude, **kwargs)
     else:
@@ -195,7 +208,7 @@ def _init_ma_rp(ring, refpts=None, momap=None, interpolate=True,
 
 
 def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
-                 zn=None, momap=None, refpts=None, **kwargs):
+                 zn=None, momap=None, refpts=None, offset=None, **kwargs):
     """Touschek lifetime calculation
     
     Computes the touschek lifetime using the Piwinski formula
@@ -221,6 +234,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                          default = 0.1
         nturns=1024:     Number of turns for the tracking
         dp=None:         static momentum offset
+        offset:         initial orbit. Default: closed orbit
         grid_mode:       ``at.GridMode.CARTESIAN/RADIAL`` track full vector
                          (default). ``at.GridMode.RECURSIVE``: recursive search
         use_mp=False:    Use python multiprocessing (``patpass``, default use
@@ -239,8 +253,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
     interpolate = kwargs.pop('interpolate', True)
     epsabs = kwargs.pop('epsabs', 1.0e-16)
     epsrel = kwargs.pop('epsrel', 1.0e-12)
-    ma, rp = _init_ma_rp(ring, refpts=refpts, momap=momap,
-                         interpolate=interpolate, **kwargs)
+    ma, rp = _init_ma_rp(ring, refpts=refpts, offset=offset,
+                         momap=momap, interpolate=interpolate,
+                         **kwargs)
     length_all = numpy.array([e.Length for e in ring[rp]])
     vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
                      sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
@@ -251,7 +266,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
 
 def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
                         sigp=None, zn=None, momap=None, refpts=None,
-                        **kwargs):
+                        offset=None, **kwargs):
     """Touschek scattering rate calculation
 
     Computes the touschek scattering using the Piwinski formula
@@ -298,7 +313,7 @@ def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
     epsrel = kwargs.pop('epsrel', 1.0e-12)
     ma, rp = _init_ma_rp(ring, refpts=refpts, momap=momap,
                          interpolate=interpolate, check_zero=False,
-                         **kwargs)
+                         offset=offset, **kwargs)
     vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
                      sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
                      epsrel=epsrel)
