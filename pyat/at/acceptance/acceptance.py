@@ -5,7 +5,7 @@ from .boundary import GridMode
 from .boundary import boundary_search
 from typing import Optional, Sequence
 import multiprocessing
-from ..lattice import Lattice, Refpts, frequency_control
+from ..lattice import Lattice, Refpts, frequency_control, AtError
 
 
 __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
@@ -138,10 +138,20 @@ def get_acceptance(
         rp = ring.uint32_refpts(refpts)
     else:
         rp = numpy.atleast_1d(refpts)
-    for r in rp:
+    if offset is not None:
+        try:
+            offset = numpy.broadcast_to(offset, (len(rp), 6))
+        except ValueError:
+            msg = ('offset and refpts have incoherent '
+                   'shapes: {0}, {1}'.format(numpy.shape(offset),
+                                             numpy.shape(refpts)))
+            raise AtError(msg)
+    else:
+        offset=[None for _ in rp]
+    for r, o in zip(rp, offset):
         b, s, g = boundary_search(ring, planes, npoints, amplitudes,
                                   nturns=nturns, obspt=r, dp=dp,
-                                  offset=offset, bounds=bounds,
+                                  offset=o, bounds=bounds,
                                   grid_mode=grid_mode, use_mp=use_mp,
                                   verbose=verbose, divider=divider,
                                   shift_zero=shift_zero, **kwargs)
@@ -159,6 +169,7 @@ def get_1d_acceptance(
         nturns: Optional[int] = 1024,
         refpts: Optional[Refpts] = None,
         dp: Optional[float] = None,
+        offset: Sequence[float] = None,
         grid_mode: Optional[GridMode] = GridMode.RADIAL,
         use_mp: Optional[bool] = False,
         verbose: Optional[bool] = False,
@@ -185,6 +196,7 @@ def get_1d_acceptance(
         nturns:         Number of turns for the tracking
         refpts:         Observation points. Default: start of the machine
         dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
         grid_mode:      defines the evaluation grid:
 
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
@@ -234,7 +246,8 @@ def get_1d_acceptance(
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
                              verbose=verbose, start_method=start_method,
-                             divider=divider, shift_zero=shift_zero)
+                             divider=divider, shift_zero=shift_zero,
+                             offset=offset)
     return numpy.squeeze(b), s, g
 
 
@@ -258,6 +271,7 @@ def get_horizontal_acceptance(ring: Lattice,
         nturns:         Number of turns for the tracking
         refpts:         Observation points. Default: start of the machine
         dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
         grid_mode:      defines the evaluation grid:
 
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
@@ -316,6 +330,7 @@ def get_vertical_acceptance(ring: Lattice,
         nturns:         Number of turns for the tracking
         refpts:         Observation points. Default: start of the machine
         dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
         grid_mode:      defines the evaluation grid:
 
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
@@ -374,6 +389,7 @@ def get_momentum_acceptance(ring: Lattice,
         nturns:         Number of turns for the tracking
         refpts:         Observation points. Default: start of the machine
         dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
         grid_mode:      defines the evaluation grid:
 
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid

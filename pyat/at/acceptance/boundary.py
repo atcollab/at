@@ -156,7 +156,7 @@ def get_parts(config, offset):
         g = get_part_grid_radial(bnd, np, amp)
     parts = numpy.zeros((6, numpy.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
-    offset += config.shift_zero
+    offset = numpy.array(offset) + config.shift_zero
     parts = (parts.T+offset).T
     return parts, grid(g, offset[pind])
 
@@ -331,7 +331,6 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         cs = numpy.around(cs, decimals=9)
         fact = numpy.ones(len(angles))
         survived = numpy.full(len(angles), True)
-        istracked = numpy.full(len(angles), True)
         part = numpy.zeros((6, len(angles)))
         grid = numpy.array([])
         mask = numpy.array([])
