@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.4.1 (#500) 26-Oct-2022
+% Version 2.4.1 (#640) 06-Aug-2023
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, <a href="matlab:web('https://github.com/atcollab')">atcollab</a>
@@ -133,11 +133,11 @@
 %*Parameter summary*
 %
 %       <a href="matlab:help atx">atx</a>                      - Computes and displays global information
-%       <a href="matlab:help atsummary">atsummary</a>                - Print out the parameters of the current AT lattice
-%       <a href="matlab:help ringpara">ringpara</a>                 - Calculates various ring parameters
+%       <a href="matlab:help atsummary">atsummary</a>                - Print out various parameters of the current AT lattice
+%       <a href="matlab:help ringpara">ringpara</a>                 - Print out various parameters of the current AT lattice
 %
 %*Physics*
 %
 %       <a href="matlab:help symplectify">symplectify</a>              - Makes a matrix more symplectic
 %
-%<a href="matlab:web('/Applications/MATLAB_R2022a.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>
+%<a href="matlab:web('/Applications/MATLAB_R2023a.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>
