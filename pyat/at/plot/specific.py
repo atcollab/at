@@ -71,6 +71,8 @@ def plot_beta(ring: Lattice, **kwargs):
           Default: create new axes
         slices (int):       Number of slices. Default: 400
         legend (bool):      Show a legend on the plot
+        labels (Refpts):    display the name of selected elements.
+          Default: :py:obj:`None`
         block (bool):       If :py:obj:`True`, block until the figure is closed.
           Default: :py:obj:`False`
         dipole (dict):      Dictionary of properties overloading the default
@@ -150,7 +152,7 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
 
           :code:`('dispersion', 0)`:        eta_x
 
-          :code:`('closed_orbit'), [1, 3])`:    x', z'
+          :code:`('closed_orbit', [1, 3])`:    x', z'
 
           :code:`('m44', 2, 2)`:            T33
 
@@ -193,6 +195,8 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
           Default: create new axes
         slices (int):       Number of slices. Default: 400
         legend (bool):      Show a legend on the plot
+        labels (Refpts):    display the name of selected elements.
+          Default: :py:obj:`None`
         block (bool):       If :py:obj:`True`, block until the figure is closed.
           Default: :py:obj:`False`
         dipole (dict):      Dictionary of properties overloading the default

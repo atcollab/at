@@ -54,7 +54,9 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
           for plotting as (primary_axes, secondary_axes).
           Default: create new axes
         slices (int):       Number of slices. Default: 400
-        legend (bool):      Show a legend on the plot
+        legend (bool):      Show a legend on the plot. Default: :py:obj:`True`
+        labels (Refpts):    display the name of selected elements.
+          Default: :py:obj:`None`
         block (bool):       If :py:obj:`True`, block until the figure is closed.
           Default: :py:obj:`False`
         dipole (dict):      Dictionary of properties overloading the default
@@ -94,7 +96,8 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
         ring.s_range = kwargs.pop('s_range')
 
     # extract synopt arguments
-    synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole', 'monitor']
+    synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole',
+               'monitor', 'labels']
     kwkeys = list(kwargs.keys())
     synargs = dict((k, kwargs.pop(k)) for k in kwkeys if k in synkeys)
 
