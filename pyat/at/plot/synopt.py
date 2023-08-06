@@ -146,8 +146,8 @@ def plot_synopt(ring: Lattice, axes: matplotlib.axes.Axes = None,
     for idx in ring.get_uint32_index(labels):
         el = ring[idx]
         s = s_pos[idx]
-        axsyn.annotate(el.FamName[:10], xy=[s + 0.5*el.Length, 1.6],
-                       rotation='vertical', horizontalalignment='center',
-                       fontsize='small')
+        axsyn.text(s + 0.5*el.Length, 1.6, el.FamName[:10],
+                   rotation='vertical', horizontalalignment='center',
+                   fontsize='small')
 
     return axsyn
