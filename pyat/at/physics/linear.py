@@ -54,7 +54,15 @@ _DATAX_DTYPE = [('alpha', numpy.float64, (2,)),
                 ('A', numpy.float64, (4, 4)),
                 ]
 
-_W_DTYPE = [('W', numpy.float64, (2,))]
+_W_DTYPE = [('W', numpy.float64, (2,)),
+            ('Wp', numpy.float64, (2,)),
+            ('dalpha', numpy.float64, (2,)),
+            ('dbeta', numpy.float64, (2,)),
+            ('dmu', numpy.float64, (2,)),
+            ('ddispersion', numpy.float64, (4,)),
+            ('dR', numpy.float64, (2,))]
+
+
 
 _IDX_DTYPE = [('idx', numpy.uint32)]
 
@@ -296,23 +304,30 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
         def wget(ddp, elup, eldn):
             """Compute the chromatic amplitude function"""
-            alpha_up, beta_up = elup[:2]  # Extract alpha and beta
-            alpha_dn, beta_dn = eldn[:2]
+            alpha_up, beta_up, mu_up, r_up, _, d_up = elup  # Extract alpha and beta
+            alpha_dn, beta_dn, mu_dn, r_dn, _, d_dn = eldn
             db = (beta_up - beta_dn) / ddp
             mb = (beta_up + beta_dn) / 2
             da = (alpha_up - alpha_dn) / ddp
             ma = (alpha_up + alpha_dn) / 2
-            ww = numpy.sqrt((da - ma / mb * db) ** 2 + (db / mb) ** 2)
-            return ww
+            wa = da - ma / mb * db
+            wb = db / mb
+            ww = numpy.sqrt(wa ** 2 + wb ** 2)
+            wp = numpy.angle(wa, wb)
+            dd = (mu_up - mu_dn) / ddp
+            dmu = (mu_up - mu_dn) / ddp
+            dr = (r_up - r_dn) / ddp
+            return ww, wp, dd, db, da, dmu, dr
 
         tunesup, el0up, elsup = off_momentum(ringup, orbitup)
         tunesdn, el0dn, elsdn = off_momentum(ringdn, orbitdn)
         # in 6D, dp comes out of find_orbit6
         deltap = orbitup[4] - orbitdn[4]
         chrom = (tunesup-tunesdn) / deltap
-        w0 = wget(deltap, el0up, el0dn)
-        ws = wget(deltap, elsup, elsdn)
-        return chrom, w0, ws
+        w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0 = wget(deltap, el0up, el0dn)
+        ws, wps, dds, dbetas, dalphas, dmus, dr = wget(deltap, elsup, elsdn)
+        return chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
+            ws, wps, dds, dbetas, dalphas, dmus, dr
 
     def unwrap(mu):
         """Remove the phase jumps"""
@@ -384,10 +399,12 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             o0dn, _ = get_orbit(rgdn, guess=orb0, **kwargs)
             if get_w:
                 dtype = dtype + _W_DTYPE
-                chrom, w0, ws = chrom_w(rgup, rgdn, o0up, o0dn, refpts,
-                                        **kwargs)
-                data0 = data0 + (w0,)
-                datas = datas + (ws,)
+                chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
+                    ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
+                                                                 o0dn, refpts,
+                                                                 **kwargs)
+                data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
+                datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
             else:
                 tunesup = _tunes(rgup, orbit=o0up)
                 tunesdn = _tunes(rgdn, orbit=o0dn)
@@ -421,9 +438,12 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         datas = (ds, orbs, ms, spos)
         if get_w:
             dtype = dtype + _W_DTYPE
-            chrom, w0, ws = chrom_w(ring, ring, o0up, o0dn, refpts, **kwargs)
-            data0 = data0 + (w0,)
-            datas = datas + (ws,)
+            chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
+                ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(ring, ring, o0up,
+                                                             o0dn, refpts,
+                                                             **kwargs)
+            data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
+            datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
         elif get_chrom:
             tunesup = _tunes(ring, orbit=o0up)
             tunesdn = _tunes(ring, orbit=o0dn)
