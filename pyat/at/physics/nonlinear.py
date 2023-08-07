@@ -5,7 +5,7 @@ import numpy
 from typing import Optional, Sequence
 from scipy.special import factorial
 from ..lattice import Element, Lattice
-from ..tracking import lattice_pass
+from ..tracking import internal_lpass
 from .orbit import Orbit, find_orbit
 from .linear import get_tune, get_chrom, linopt6
 from .harmonic_analysis import get_tunes_harmonic
@@ -46,7 +46,7 @@ def tunes_vs_amp(ring: Lattice, amp: Optional[Sequence[float]] = None,
                             numpy.sqrt(ld['beta'][1])]])
         part = numpy.array([orbit, ] * len(amp)).T + 1.0e-6
         part[dim, :] += amp
-        part = lattice_pass(ring, part, nturns=nturns)
+        part = internal_lpass(ring, part, nturns=nturns)
         sh = part.shape
         partx = numpy.reshape(part[0, :], (sh[1], sh[3]))
         partxp = numpy.reshape(part[1, :], (sh[1], sh[3]))

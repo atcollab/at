@@ -1,11 +1,6 @@
-import numpy as np
-from at.constants import clight, e_mass, qe
-import matplotlib.pyplot as plt
 import at
 from at.collective import Wake, LongResonatorElement
-from at.tracking.utils import get_bunches_std_mean
 from mpi4py import MPI
-import time
 import sys
 import pickle as pkl
 
@@ -87,16 +82,17 @@ def launch():
     part[4, :] = 0
     part[5, :] = 0
 
-    _ = at.lattice_pass(fring, part, nturns=nturns)
+    at.track_function(fring, part, nturns=nturns)
 
     dp_all = bmon.means[4, :, :]
     z_all = bmon.means[5, :, :]
     if rank == 0:
-        outDict = pkl.dump({'dp': dp_all.T, 'z': z_all.T,
-                            'ring': ring, 'fres': fres, 'qfactor': qfactor,
-                            'rshunt': rshunt, 'M': Nbunches,
-                            'current': current},
-                           open('./LCBI_output.pkl', 'wb'))
+        outdict = {'dp': dp_all.T, 'z': z_all.T,
+                   'ring': ring, 'fres': fres, 'qfactor': qfactor,
+                   'rshunt': rshunt, 'M': Nbunches,
+                   'current': current}
+        pkl.dump(outdict, open('./LCBI_output.pkl', 'wb'))
+
 
 if __name__ == '__main__':
     launch()

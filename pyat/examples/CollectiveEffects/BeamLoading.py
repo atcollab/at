@@ -113,7 +113,7 @@ for i in numpy.arange(Nturns):
     if i == kickTurn:
         part[4, :] += 3e-3
 
-    _ = at.lattice_pass(fring, part, nturns=1)
+    at.track_function(fring, part, nturns=1)
 
     # Gather particles over all cores (compatible with MPI on or off)
     allPartsg = comm.gather(part)

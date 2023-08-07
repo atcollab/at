@@ -2,7 +2,9 @@ import at
 import numpy
 from numpy.testing import assert_allclose as assert_close
 import pytest
-from at import AtWarning, physics, lattice_pass
+from at import AtWarning, physics
+from at import lattice_track
+from at import lattice_pass, internal_lpass
 
 
 DP = 1e-5
@@ -46,11 +48,12 @@ def test_find_orbit4_finds_zeros_if_dp_zero(dba_lattice):
     assert_close(orbit4, expected, atol=1e-7)
 
 
-def test_find_orbit4_result_unchanged_by_atpass(dba_lattice):
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass, internal_lpass))
+def test_find_orbit4_result_unchanged_by_atpass(dba_lattice, func):
     orbit, _ = physics.find_orbit4(dba_lattice, DP)
     orbit_copy = numpy.copy(orbit)
     orbit[4] = DP
-    lattice_pass(dba_lattice, orbit, 1)
+    func(dba_lattice, orbit, 1)
     assert_close(orbit[:4], orbit_copy[:4], atol=1e-12)
 
 
