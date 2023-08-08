@@ -54,13 +54,32 @@ _DATAX_DTYPE = [('alpha', numpy.float64, (2,)),
                 ('A', numpy.float64, (4, 4)),
                 ]
 
-_W_DTYPE = [('W', numpy.float64, (2,)),
+_W24_DTYPE = [('W', numpy.float64, (2,)),
             ('Wp', numpy.float64, (2,)),
             ('dalpha', numpy.float64, (2,)),
             ('dbeta', numpy.float64, (2,)),
             ('dmu', numpy.float64, (2,)),
             ('ddispersion', numpy.float64, (4,)),
-            ('dR', numpy.float64, (2, 4, 4))]
+             ]
+
+
+_W6_DTYPE = [('W', numpy.float64, (2,)),
+            ('Wp', numpy.float64, (2,)),
+            ('dalpha', numpy.float64, (2,)),
+            ('dbeta', numpy.float64, (2,)),
+            ('dmu', numpy.float64, (3,)),
+            ('ddispersion', numpy.float64, (4,)),
+            ('dR', numpy.float64, (3, 6, 6)),
+             ]
+
+_WX_DTYPE = [('W', numpy.float64, (2,)),
+            ('Wp', numpy.float64, (2,)),
+            ('dalpha', numpy.float64, (2,)),
+            ('dbeta', numpy.float64, (2,)),
+            ('dmu', numpy.float64, (2,)),
+            ('ddispersion', numpy.float64, (4,)),
+            ('dR', numpy.float64, (2, 4, 4)),
+             ]
 
 
 
@@ -128,7 +147,7 @@ def _analyze2(mt, ms):
     els = (numpy.stack((alpha_a, alpha_b), axis=1),
            numpy.stack((beta_a, beta_b), axis=1),
            numpy.stack((mu_a, mu_b), axis=1))
-    return vps, _DATA2_DTYPE, el0, els
+    return vps, _DATA2_DTYPE, el0, els, _W24_DTYPE
 
 
 def _analyze4(mt, ms):
@@ -189,7 +208,7 @@ def _analyze4(mt, ms):
                numpy.empty((0, 2)), numpy.empty((0,)),
                numpy.empty((0, 2, 2)), numpy.empty((0, 2, 2)),
                numpy.empty((0, 2, 2)))
-    return vps, _DATA4_DTYPE, el0, els
+    return vps, _DATA4_DTYPE, el0, els, _W24_DTYPE
 
 
 def _analyze6(mt, ms):
@@ -239,9 +258,11 @@ def _analyze6(mt, ms):
     if dms >= 3:
         propagate = propagate6
         dtype = _DATA6_DTYPE
+        wtype = _W6_DTYPE
     else:
         propagate = propagate4
         dtype = _DATAX_DTYPE
+        wtype = _WX_DTYPE
     a0, vps = a_matrix(mt)
 
     astd = standardize(a0, slices)
@@ -259,7 +280,7 @@ def _analyze6(mt, ms):
         els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
                numpy.empty((0, dms)),
                numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)))
-    return vps, dtype, el0, els
+    return vps, dtype, el0, els, wtype
 
 
 # noinspection PyShadowingNames,PyPep8Naming
@@ -308,7 +329,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         def off_momentum(rng, orb0, **kwargs):
             dp_step = kwargs.get('DPStep', DConstant.DPStep)
             mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
-            vps, _, el0, els = analyze(mt, ms)
+            vps, _, el0, els, _ = analyze(mt, ms)
             tunes = numpy.mod(numpy.angle(vps)/2.0/pi, 1.0)
             dpup = orb0[4] + 0.5 * dp_step
             dpdn = orb0[4] - 0.5 * dp_step
@@ -389,7 +410,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         o0dn = orbit - dorbit * 0.5 * dp_step
 
     # Perform analysis
-    vps, dtype, el0, els = analyze(mxx, ms)
+    vps, dtype, el0, els, wtype = analyze(mxx, ms)
     tunes = _tunes(ring, orbit=orbit)
 
     if (get_chrom or get_w) and mt.shape == (6, 6):
@@ -400,6 +421,9 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         if o0up is None:
             o0up, _ = get_orbit(rgup, guess=orbit, orbit=o0up, **kwargs)
             o0dn, _ = get_orbit(rgdn, guess=orbit, orbit=o0dn, **kwargs)
+    elif get_chrom or get_w:
+        rgup = ring
+        rgdn = ring
 
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
@@ -414,29 +438,9 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                          ('s_pos', numpy.float64)]
         data0 = (orb0, numpy.identity(2*dms), 0.0)
         datas = (orbs, ms, spos)
-        if get_w:
-            dtype = dtype + _W_DTYPE
-            chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
-                ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
-                                                             o0dn, refpts,
-                                                             **kwargs)
-            data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
-            datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
-        elif get_chrom:
-            tunesup = _tunes(rgup, orbit=o0up)
-            tunesdn = _tunes(rgdn, orbit=o0dn)
-            deltap = o0up[4] - o0dn[4]
-            chrom = (tunesup - tunesdn) / deltap
-        else:
-            chrom = numpy.NaN
         length = ring.get_s_pos(len(ring))[0]
         damping_rates = -numpy.log(numpy.absolute(vps))
         damping_times = length / clight / damping_rates
-        beamdata = numpy.array((tunes, chrom, damping_times),
-                               dtype=[('tune', numpy.float64, (dms,)),
-                                      ('chromaticity', numpy.float64, (dms,)),
-                                      ('damping_time', numpy.float64, (dms,))
-                                      ]).view(numpy.recarray)
     else:               # 4D processing
         kwargs['keep_lattice'] = True
         dpup = orb0[4] + 0.5*dp_step
@@ -453,24 +457,29 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                          ('s_pos', numpy.float64)]
         data0 = (d0, orb0, mt, get_s_pos(ring, len(ring))[0])
         datas = (ds, orbs, ms, spos)
-        if get_w:
-            dtype = dtype + _W_DTYPE
-            chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
-                ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(ring, ring, o0up,
+        damping_times = numpy.NaN
+
+    if get_w:
+        dtype = dtype + wtype
+        chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
+            ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
                                                              o0dn, refpts,
                                                              **kwargs)
-            data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
-            datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
-        elif get_chrom:
-            tunesup = _tunes(ring, orbit=o0up)
-            tunesdn = _tunes(ring, orbit=o0dn)
-            chrom = (tunesup - tunesdn) / dp_step
-        else:
-            chrom = numpy.NaN
-        beamdata = numpy.array((tunes, chrom),
-                               dtype=[('tune', numpy.float64, (dms,)),
-                                      ('chromaticity', numpy.float64, (dms,)),
-                                      ]).view(numpy.recarray)
+        data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
+        datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
+    elif get_chrom:
+        tunesup = _tunes(rgup, orbit=o0up)
+        tunesdn = _tunes(rgdn, orbit=o0dn)
+        deltap = o0up[4] - o0dn[4]
+        chrom = (tunesup - tunesdn) / deltap
+    else:
+        chrom = numpy.NaN
+
+    beamdata = numpy.array((tunes, chrom, damping_times),
+                           dtype=[('tune', numpy.float64, (dms,)),
+                                  ('chromaticity', numpy.float64, (dms,)),
+                                  ('damping_time', numpy.float64, (dms,))
+                                  ]).view(numpy.recarray)
 
     dtype = dtype + addtype
     elemdata0 = numpy.array(el0+data0+add0, dtype=dtype).view(numpy.recarray)
