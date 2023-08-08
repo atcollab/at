@@ -418,8 +418,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             dtype = dtype + _W_DTYPE
             chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
                 ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
-                                                                 o0dn, refpts,
-                                                                 **kwargs)
+                                                             o0dn, refpts,
+                                                             **kwargs)
             data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
             datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
         elif get_chrom:
