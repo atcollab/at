@@ -60,7 +60,7 @@ _W_DTYPE = [('W', numpy.float64, (2,)),
             ('dbeta', numpy.float64, (2,)),
             ('dmu', numpy.float64, (2,)),
             ('ddispersion', numpy.float64, (4,)),
-            ('dR', numpy.float64, (2,))]
+            ('dR', numpy.float64, (2, 4, 4))]
 
 
 
@@ -276,22 +276,31 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             except (ValueError, KeyError):  # record arrays throw ValueError !
                 orbit = numpy.zeros((6,))
         try:
-            # For some reason, "emittances" must be different...
-            sigm = twin['R'][0, ...]+10.0*twin['R'][1, ...]
-            if twin['R'].shape[0] >= 3:
-                sigm = sigm+0.1*twin['R'][2, ...]
+            rmat = twin['R']
         except (ValueError, KeyError):  # record arrays throw ValueError !
+            rmat = None
+
+        try:
+            d0 = twin['dispersion']
+        except (ValueError, KeyError):  # record arrays throw ValueError !
+            d0 = numpy.zeros((4,))
+
+        dorbit = numpy.hstack((d0, 1.0, 0.0))
+        if rmat is not None:
+            # For some reason, "emittances" must be different...
+            sigm = rmat[0, ...]+10.0*rmat[1, ...]
+            if rmat.shape[0] >= 3:
+                sigm = sigm+0.1*rmat[2, ...]
+                dorbit = rmat[2, :, 4] / rmat[2, 4, 4, numpy.newaxis]
+        else:
             slices = [slice(2 * i, 2 * (i + 1)) for i in range(2)]
             ab = numpy.stack((twin['alpha'], twin['beta']), axis=1)
             sigm = numpy.zeros((4, 4))
             for slc, (alpha, beta) in zip(slices, ab):
                 gamma = (1.0+alpha*alpha)/beta
                 sigm[slc, slc] = numpy.array([[beta, -alpha], [-alpha, gamma]])
-        try:
-            d0 = twin['dispersion']
-        except (ValueError, KeyError):  # record arrays throw ValueError !
-            d0 = numpy.zeros((4,))
-        return orbit, sigm, d0
+
+        return orbit, sigm, dorbit
 
     def chrom_w(ringup, ringdn, orbitup, orbitdn, refpts=None, **kwargs):
         """Compute the chromaticity and W-functions"""
@@ -322,10 +331,10 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             wa = da - ma / mb * db
             wb = db / mb
             ww = numpy.sqrt(wa ** 2 + wb ** 2)
-            wp = numpy.angle(wa, wb)
+            wp = numpy.arctan2(wa, wb)
             dmu = (mu_up - mu_dn) / ddp
             dr = (r_up - r_dn) / ddp
-            return ww, wp, dd, db, da, dmu, dr
+            return ww, wp, db, da, dmu, dr
 
         tunesup, el0up, elsup, d0up, dsup = off_momentum(ringup, orbitup,
                                                          **kwargs)
@@ -358,7 +367,9 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         get_matrix = find_m44
         get_orbit = find_orbit4
 
-    if twiss_in is None:        # Ring
+    o0up = None
+    o0dn = None
+    if twiss_in is None:   # Ring
         if orbit is None:
             orbit, _ = get_orbit(ring, dp=dp, dct=dct, df=df,
                                  keep_lattice=keep_lattice, **kwargs)
@@ -366,28 +377,29 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         # Get 1-turn transfer matrix
         mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
         mxx = mt
-        o0up = None
-        o0dn = None
     else:                       # Transfer line
-        if get_chrom or get_w:
-            warnings.warn(AtWarning("'get_chrom' and 'get_w' are ignored in "
-                                    "transfer-line mode"))
-            get_chrom = False
+        if get_w:
+            warnings.warn(AtWarning("'get_w' ignored in transfer-line mode"))
             get_w = False
-        orbit, sigma, d0 = build_sigma(twiss_in, orbit)
-        dorbit = numpy.hstack((0.5*dp_step*d0, 0.5*dp_step, 0.0))
+        orbit, sigma, dorbit = build_sigma(twiss_in, orbit)
         # Get 1-turn transfer matrix
         mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
         mxx = sigma @ jmat(sigma.shape[0] // 2)
-        o0up = orbit+dorbit
-        o0dn = orbit-dorbit
+        o0up = orbit + dorbit * 0.5 * dp_step
+        o0dn = orbit - dorbit * 0.5 * dp_step
 
     # Perform analysis
     vps, dtype, el0, els = analyze(mxx, ms)
-    if twiss_in is None:
-        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
-    else:
-        tunes = numpy.NaN
+    tunes = _tunes(ring, orbit=orbit)
+
+    if (get_chrom or get_w) and mt.shape == (6, 6):
+        f0 = ring.get_rf_frequency(cavpts=cavpts)
+        df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
+        rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
+        rgdn = ring.set_rf_frequency(f0 - 0.5 * df, cavpts=cavpts, copy=True)
+        if o0up is None:
+            o0up, _ = get_orbit(rgup, guess=orbit, orbit=o0up, **kwargs)
+            o0dn, _ = get_orbit(rgdn, guess=orbit, orbit=o0dn, **kwargs)
 
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
@@ -402,26 +414,19 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                          ('s_pos', numpy.float64)]
         data0 = (orb0, numpy.identity(2*dms), 0.0)
         datas = (orbs, ms, spos)
-        if get_chrom or get_w:
-            f0 = ring.get_rf_frequency(cavpts=cavpts)
-            df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
-            rgup = ring.set_rf_frequency(f0 + 0.5*df, cavpts=cavpts, copy=True)
-            rgdn = ring.set_rf_frequency(f0 - 0.5*df, cavpts=cavpts, copy=True)
-            o0up, _ = get_orbit(rgup, guess=orb0, **kwargs)
-            o0dn, _ = get_orbit(rgdn, guess=orb0, **kwargs)
-            if get_w:
-                dtype = dtype + _W_DTYPE
-                chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
-                    ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
+        if get_w:
+            dtype = dtype + _W_DTYPE
+            chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
+                ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
                                                                  o0dn, refpts,
                                                                  **kwargs)
-                data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
-                datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
-            else:
-                tunesup = _tunes(rgup, orbit=o0up)
-                tunesdn = _tunes(rgdn, orbit=o0dn)
-                deltap = o0up[4] - o0dn[4]
-                chrom = (tunesup - tunesdn) / deltap
+            data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
+            datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
+        elif get_chrom:
+            tunesup = _tunes(rgup, orbit=o0up)
+            tunesdn = _tunes(rgdn, orbit=o0dn)
+            deltap = o0up[4] - o0dn[4]
+            chrom = (tunesup - tunesdn) / deltap
         else:
             chrom = numpy.NaN
         length = ring.get_s_pos(len(ring))[0]
