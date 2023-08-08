@@ -296,16 +296,25 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
     def chrom_w(ringup, ringdn, orbitup, orbitdn, refpts=None, **kwargs):
         """Compute the chromaticity and W-functions"""
         # noinspection PyShadowingNames
-        def off_momentum(rng, orb0):
+        def off_momentum(rng, orb0, **kwargs):
+            dp_step = kwargs.get('DPStep', DConstant.DPStep)
             mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
             vps, _, el0, els = analyze(mt, ms)
             tunes = numpy.mod(numpy.angle(vps)/2.0/pi, 1.0)
-            return tunes, el0, els
+            dpup = orb0[4] + 0.5 * dp_step
+            dpdn = orb0[4] - 0.5 * dp_step
+            o0up, oup = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpup,
+                                  **kwargs)
+            o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
+                                  **kwargs)
+            d0 = (o0up - o0dn)[:4] / dp_step
+            ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
+            return tunes, el0, els, d0, ds
 
         def wget(ddp, elup, eldn):
             """Compute the chromatic amplitude function"""
-            alpha_up, beta_up, mu_up, r_up, _, d_up = elup  # Extract alpha and beta
-            alpha_dn, beta_dn, mu_dn, r_dn, _, d_dn = eldn
+            alpha_up, beta_up, mu_up, r_up, *_ = elup  # Extract alpha and beta
+            alpha_dn, beta_dn, mu_dn, r_dn, *_ = eldn
             db = (beta_up - beta_dn) / ddp
             mb = (beta_up + beta_dn) / 2
             da = (alpha_up - alpha_dn) / ddp
@@ -314,18 +323,21 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             wb = db / mb
             ww = numpy.sqrt(wa ** 2 + wb ** 2)
             wp = numpy.angle(wa, wb)
-            dd = (mu_up - mu_dn) / ddp
             dmu = (mu_up - mu_dn) / ddp
             dr = (r_up - r_dn) / ddp
             return ww, wp, dd, db, da, dmu, dr
 
-        tunesup, el0up, elsup = off_momentum(ringup, orbitup)
-        tunesdn, el0dn, elsdn = off_momentum(ringdn, orbitdn)
+        tunesup, el0up, elsup, d0up, dsup = off_momentum(ringup, orbitup,
+                                                         **kwargs)
+        tunesdn, el0dn, elsdn, d0dn, dsdn = off_momentum(ringdn, orbitdn,
+                                                         **kwargs)
         # in 6D, dp comes out of find_orbit6
         deltap = orbitup[4] - orbitdn[4]
         chrom = (tunesup-tunesdn) / deltap
-        w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0 = wget(deltap, el0up, el0dn)
-        ws, wps, dds, dbetas, dalphas, dmus, dr = wget(deltap, elsup, elsdn)
+        dd0 = (d0up-d0dn) / deltap
+        dds = (dsup - dsdn) / deltap
+        w0, wp0, dbeta0, dalpha0, dmu0, dr0 = wget(deltap, el0up, el0dn)
+        ws, wps, dbetas, dalphas, dmus, dr = wget(deltap, elsup, elsdn)
         return chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
             ws, wps, dds, dbetas, dalphas, dmus, dr
 
