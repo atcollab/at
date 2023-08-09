@@ -100,7 +100,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double emit_x, emit_y, sigma_dp, tau_x, tau_y, tau_z, beta_x, beta_y;
+        double emit_x, emit_y, sigma_dp, tau_x, tau_y, tau_z, beta_x, beta_y, sigma_xp, sigma_yp;
 
         emit_x=atGetDouble(ElemData,"emit_x"); check_error();
         emit_y=atGetDouble(ElemData,"emit_y"); check_error();
@@ -110,7 +110,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         tau_z=atGetDouble(ElemData,"tau_z"); check_error();
         beta_x=atGetDouble(ElemData,"beta_x"); check_error();  
         beta_y=atGetDouble(ElemData,"beta_y"); check_error();  
-
+        sigma_xp=sqrt(emit_x/beta_x);
+        sigma_yp=sqrt(emit_y/beta_y);
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
