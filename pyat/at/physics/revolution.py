@@ -1,7 +1,7 @@
 from ..lattice import Lattice, get_rf_frequency, check_6d, get_s_pos
 from ..lattice import DConstant
 from ..constants import clight
-from ..tracking import lattice_pass
+from ..tracking import internal_lpass
 from .orbit import find_orbit4
 import numpy
 from typing import Optional
@@ -34,7 +34,7 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
     fp_b, _ = find_orbit4(ring, dp=dp + 0.5*dp_step, keep_lattice=True)
     fp = numpy.stack((fp_a, fp_b),
                      axis=0).T  # generate a Fortran contiguous array
-    b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
+    b = numpy.squeeze(internal_lpass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
     alphac = (b[5, 1] - b[5, 0]) / dp_step / ring_length[0]
     return alphac
@@ -82,7 +82,7 @@ def get_revolution_frequency(ring: Lattice,
     elif dp is not None:
         # Find the path lengthening for dp
         rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
-        orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
+        orbit = internal_lpass(rnorad, rnorad.find_orbit4(dp=dp)[0])
         dct = numpy.squeeze(orbit)[5]
         cell_frev *= lcell / (lcell + dct)
     elif df is not None:

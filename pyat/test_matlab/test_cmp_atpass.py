@@ -19,7 +19,7 @@ def test_atpass(engine, lattices):
     ml_rout = engine.atpass(ml_lattice, ml_rin, 1, 1)
 
     py_rin = numpy.asfortranarray(numpy.diag(scaling))
-    at.lattice_pass(py_lattice, py_rin, 1)
+    at.track_function(py_lattice, py_rin, 1)
 
     assert_close(py_rin, ml_rout, rtol=0, atol=1.e-30)
 
@@ -38,7 +38,7 @@ def test_linepass(engine, lattices):
     ml_rout = numpy.array(engine.linepass(ml_lattice, ml_rin))
 
     py_rin = numpy.asfortranarray(numpy.diag(scaling))
-    py_rout = numpy.squeeze(at.lattice_pass(py_lattice, py_rin,
-                                            refpts=len(py_lattice)))
+    py_rout, *_ = at.track_function(py_lattice, py_rin, refpts=len(py_lattice))
+    py_rout = numpy.squeeze(py_rout)
 
     assert_close(py_rout, ml_rout, rtol=0, atol=1.e-30)

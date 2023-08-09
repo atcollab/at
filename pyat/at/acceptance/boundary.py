@@ -5,7 +5,6 @@ grid definitions
 """
 
 from at.lattice import Lattice, AtError
-from at.tracking import lattice_pass, patpass
 from typing import Optional, Sequence
 from enum import Enum
 import numpy
@@ -165,15 +164,8 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
-    if use_mp:
-        _ = patpass(ring, parts, nturns=nturns, **kwargs)
-    else:
-        _ = lattice_pass(ring, parts, nturns=nturns, **kwargs)
-    if parts.ndim == 1:
-        survived = numpy.invert(numpy.isnan(parts[0]))
-    else:
-        survived = numpy.invert(numpy.isnan(parts[0, :]))
-    return survived
+    _, _, td = ring.track(parts, nturns=nturns, losses=True, use_mp=use_mp, **kwargs)
+    return numpy.invert(td['loss_map'].islost)
 
 
 def get_grid_boundary(mask, grid, config):
