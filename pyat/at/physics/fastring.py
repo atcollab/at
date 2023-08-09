@@ -11,7 +11,7 @@ from at.constants import clight, e_mass
 import copy
 
 
-__all__ = ['fast_ring', 'gen_linear_ring']
+__all__ = ['fast_ring', 'gen_simple_ring']
 
 
 def _rearrange(ring: Lattice, split_inds=[]):
