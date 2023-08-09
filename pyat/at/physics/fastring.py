@@ -4,13 +4,14 @@ Functions relating to fast_ring
 from functools import reduce
 import numpy
 from typing import Tuple
-from at.lattice import RFCavity, Marker, Lattice, get_cells, checkname
-from at.lattice import get_elements
+from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
+from at.lattice import get_elements, M66, EnergyLoss, SimpleQuantDiff
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
+from at.constants import clight, e_mass
 import copy
 
 
-__all__ = ['fast_ring']
+__all__ = ['fast_ring', 'gen_linear_ring']
 
 
 def _rearrange(ring: Lattice, split_inds=[]):
@@ -63,7 +64,7 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     try:
         qd_elem = gen_quantdiff_elem(merged_ring)
         fastring.append(qd_elem)
-    except ValueError:      # No synchrotron radiation => no diffusion element
+    except ValueError:  # No synchrotron radiation => no diffusion element
         pass
     fastring = Lattice(fastring, **vars(ring))
     return fastring
@@ -100,3 +101,141 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
                          split_inds=split_inds,
                          detuning_elem=detuning_elem)
     return fastringnorad, fastringrad
+
+
+def gen_simple_ring(ring_dictionary):
+    """Generates a "simple ring" based on a given dictionary
+       of global parameters
+
+    A simple ring consists of:
+
+    * an RF cavity,
+    * a 6x6 linear transfer map,
+    * a detuning and chromaticity element,
+    * an energy loss element
+    * a simplified quantum diffusion element
+
+    Parameters:
+        ring_dictionary:       Lattice description
+        The ring_dictionary must contain the following parameters,
+            * energy [eV]
+            * circumference [m]
+            * harmonic_number
+            * alpha_x, alpha_y
+            * beta_x, beta_y [m]
+            * Qx, Qy - full or fractional tunes
+            * alpha (momentum compaction factor)
+            * U0 - energy loss [eV] (positive number)
+            * Vrf - RF Voltage set point [V]
+            * Qpx, Qpy - linear chromaticities
+            * A1, A2, A3 - amplitude detuning coefficients
+            * emit_x, emit_y, sigma_dp - equilibrium values [m.rad, m.rad, -]
+
+    Returns:
+        ring (Lattice):    Simple ring
+    """
+
+    # parse everything first
+
+    circumference = ring_dictionary['circumference']
+    harmonic_number = ring_dictionary['harmonic_number']
+
+    energy = ring_dictionary['energy']
+
+    alpha_x = ring_dictionary['alpha_x']
+    alpha_y = ring_dictionary['alpha_y']
+
+    beta_x = ring_dictionary['beta_x']
+    beta_y = ring_dictionary['beta_y']
+
+    Qx = ring_dictionary['Qx']
+    Qy = ring_dictionary['Qy']
+
+    alpha = ring_dictionary['alpha']
+    U0 = ring_dictionary['U0']
+    Vrf = ring_dictionary['Vrf']
+
+    Qpx = ring_dictionary['Qpx']
+    Qpy = ring_dictionary['Qpy']
+
+    A1 = ring_dictionary['A1']
+    A2 = ring_dictionary['A2']
+    A3 = ring_dictionary['A3']
+
+    emit_x = ring_dictionary['emit_x']
+    emit_y = ring_dictionary['emit_y']
+    sigma_dp = ring_dictionary['sigma_dp']
+
+    # compute rf frequency
+    frf = harmonic_number * clight / circumference
+
+    # compute slip factor
+    gamma = energy / e_mass
+    eta = alpha-1/gamma**2
+
+    # assuming fixed damping partitions, compute
+    # analytical damping rate (positive value)
+    damping_partitions = numpy.array([1, 1, 2])  # x, y, z
+    tau = 2 * energy / U0 / damping_partitions
+
+    # compute the synchronous phase and the TimeLag
+    phi_s = numpy.arcsin(U0/Vrf)
+    TimeLag = clight * phi_s / (2 * numpy.pi * frf)
+    # generate rf cavity element
+    rfcav = RFCavity('RFC', 0, Vrf, frf, harmonic_number, energy,
+                     TimeLag=TimeLag)
+
+    # Now we will use the optics parameters to compute the uncoupled M66 matrix
+    def sincos(x):
+        return numpy.sin(x), numpy.cos(x)
+
+    s_dphi_x, c_dphi_x = sincos(2*numpy.pi*Qx)
+    s_dphi_y, c_dphi_y = sincos(2*numpy.pi*Qy)
+
+    M00 = c_dphi_x + alpha_x * s_dphi_x
+    M01 = beta_x * s_dphi_x
+    M10 = -(1. + alpha_x**2) / beta_x * s_dphi_x
+    M11 = c_dphi_x - alpha_x * s_dphi_x
+
+    M22 = c_dphi_y + alpha_y * s_dphi_y
+    M23 = beta_y * s_dphi_y
+    M32 = -(1. + alpha_y**2) / beta_y * s_dphi_y
+    M33 = c_dphi_y - alpha_y * s_dphi_y
+
+    M44 = 1.
+    M45 = 0.
+    M54 = eta*circumference
+    M55 = 1
+
+    Mat66 = numpy.array([[M00, M01, 0., 0., 0., 0.],
+                         [M10, M11, 0., 0., 0., 0.],
+                         [0., 0., M22, M23, 0., 0.],
+                         [0., 0., M32, M33, 0., 0.],
+                         [0., 0., 0., 0., M44, M45],
+                         [0., 0., 0., 0., M54, M55]], order='F')
+
+    # generate the linear tracking element, we set a length
+    # which is needed to give the lattice object the correct length
+    # (although it is not used)
+    lin_elem = M66('Linear', m66=Mat66, Length=circumference)
+
+    # Generate the simple quantum diffusion element
+    quantdiff = SimpleQuantDiff('SQD', emit_x, emit_y, sigma_dp,
+                                tau[0], tau[1], tau[2],
+                                beta_x, beta_y)
+
+    # Generate the energy loss element
+    energyloss = EnergyLoss('eloss', U0, PassMethod='EnergyLossRadPass')
+
+    # Generate the detuning element
+    nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
+                          Betax=beta_x, Betay=beta_y,
+                          Alphax=alpha_x, Alphay=alpha_y,
+                          Qpx=Qpx, Qpy=Qpy,
+                          A1=A1, A2=A2, A3=A3)
+
+    # Assemble all elements into the lattice object
+    ring = Lattice([rfcav, lin_elem, nonlin_elem, energyloss, quantdiff],
+                   energy=energy)
+
+    return ring

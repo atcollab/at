@@ -203,8 +203,8 @@ class Radiative(_Radiative):
 class Collective(_DictLongtMotion):
     """Mixin class for elements representing collective effects
 
-    Derived classes will automatically set the :py:attr:`~Element.is_collective`
-    property when the element is active.
+    Derived classes will automatically set the
+    :py:attr:`~Element.is_collective` property when the element is active.
 
     The class must have a ``default_pass`` class attribute, a dictionary such
     that:
@@ -228,7 +228,7 @@ class Collective(_DictLongtMotion):
     def _get_collective(self):
         # noinspection PyUnresolvedReferences
         return self.PassMethod != self.default_pass[False]
-        
+
     @abc.abstractmethod
     def clear_history(self):
         pass
@@ -328,7 +328,7 @@ class Element(object):
             val = getattr(element, attri)
             delattr(element, attri)
             return attro, val
-        if copy: 
+        if copy:
             el = self.copy()
         else:
             el = self
@@ -480,14 +480,14 @@ class BeamMoments(Element):
     def set_buffers(self, nturns, nbunch):
         self._stds = numpy.zeros((6, nbunch, nturns), order='F')
         self._means = numpy.zeros((6, nbunch, nturns), order='F')
-        
+
     @property
     def stds(self):
         return self._stds
-        
+
     @property
     def means(self):
-        return self._means    
+        return self._means
 
 
 class Aperture(Element):
@@ -970,6 +970,43 @@ class M66(Element):
             m66 = numpy.identity(6)
         kwargs.setdefault('PassMethod', 'Matrix66Pass')
         super(M66, self).__init__(family_name, M66=m66, **kwargs)
+
+
+class SimpleQuantDiff(Element):
+    """Linear tracking element for simplified quantum diffusion"""
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['emit_x',
+                                                     'emit_y',
+                                                     'sigma_dp',
+                                                     'tau_x',
+                                                     'tau_y',
+                                                     'tau_z',
+                                                     'beta_x',
+                                                     'beta_y']
+
+    def __init__(self, family_name: str, emit_x: float, emit_y: float,
+                 sigma_dp: float, tau_x: float, tau_y: float, tau_z: float,
+                 beta_x: float, beta_y: float, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            emit_x:         Horizontal equilibrium emittance [m.rad]
+            emit_y:         Vertical equilibrium emittance [m.rad]
+            sigma_dp:       Equilibrium energy spread
+            tau_x:          Horizontal damping time [turns]
+            tau_y:          Vertical damping time [turns]
+            tau_z:          Longitudinal damping time [turns]
+            beta_x:         Horizontal beta function at element [m]
+            beta_y:         Vertical beta function at element [m]
+
+        Default PassMethod: ``SimpleQuantDiffDamp``
+       """
+        kwargs.setdefault('PassMethod', 'SimpleQuantDiffPass')
+        super(SimpleQuantDiff, self).__init__(family_name,
+                                              emit_x=emit_x, emit_y=emit_y,
+                                              sigma_dp=sigma_dp, tau_x=tau_x,
+                                              tau_y=tau_y, tau_z=tau_z,
+                                              beta_x=beta_x, beta_y=beta_y,
+                                              **kwargs)
 
 
 class Corrector(LongElement):
