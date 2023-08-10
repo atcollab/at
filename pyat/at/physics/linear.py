@@ -401,7 +401,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             wp = numpy.arctan2(wa, wb)
             dmu = (mu_up - mu_dn) / ddp
             dr = (r_up - r_dn) / ddp
-            return ww, wp, db, da, dmu, dr
+            return ww, wp, da, db, dmu, dr
 
         deltap = orbitup[4] - orbitdn[4]
         tunesup, el0up, elsup, d0up, dsup = off_momentum(ringup, orbitup,
@@ -416,10 +416,10 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         chrom = (tunesup-tunesdn) / deltap
         dd0 = (d0up - d0dn) / deltap
         dds = (dsup - dsdn) / deltap
-        w0, wp0, dbeta0, dalpha0, dmu0, dr0 = wget(deltap, el0up, el0dn)
-        ws, wps, dbetas, dalphas, dmus, dr = wget(deltap, elsup, elsdn)
-        return chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
-            ws, wps, dds, dbetas, dalphas, dmus, dr
+        w0, wp0, dalpha0, dbeta0, dmu0, dr0 = wget(deltap, el0up, el0dn)
+        ws, wps, dalphas, dbetas, dmus, dr = wget(deltap, elsup, elsdn)
+        return chrom, w0, wp0, dd0, dalpha0, dbeta0, dmu0, dr0, \
+            ws, wps, dds, dalphas, dbetas, dmus, dr
 
     def unwrap(mu):
         """Remove the phase jumps"""
@@ -508,7 +508,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
     if get_w:
         dtype = dtype + wtype
-        chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
+        chrom, w0, wp0, dd0, dalpha0, dbeta0, dmu0, dr0, \
             ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
                                                          o0dn, twiss_in,
                                                          refpts, **kwargs)
