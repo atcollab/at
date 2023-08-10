@@ -68,8 +68,8 @@ _W6_DTYPE = [('W', numpy.float64, (2,)),
             ('dalpha', numpy.float64, (2,)),
             ('dbeta', numpy.float64, (2,)),
             ('dmu', numpy.float64, (3,)),
-            ('ddispersion', numpy.float64, (4,)),
             ('dR', numpy.float64, (3, 6, 6)),
+            ('ddispersion', numpy.float64, (4,)),
              ]
 
 _WX_DTYPE = [('W', numpy.float64, (2,)),
@@ -77,8 +77,8 @@ _WX_DTYPE = [('W', numpy.float64, (2,)),
             ('dalpha', numpy.float64, (2,)),
             ('dbeta', numpy.float64, (2,)),
             ('dmu', numpy.float64, (2,)),
-            ('ddispersion', numpy.float64, (4,)),
             ('dR', numpy.float64, (2, 4, 4)),
+            ('ddispersion', numpy.float64, (4,)),
              ]
 
 
@@ -357,7 +357,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
         return orbit, sigm, dorbit
 
-    def chrom_w(ringup, ringdn, orbitup, orbitdn, twin=None, refpts=None, **kwargs):
+    def chrom_w(ringup, ringdn, orbitup, orbitdn, twin=None,
+                refpts=None, **kwargs):
         """Compute the chromaticity and W-functions"""
         # noinspection PyShadowingNames
         def off_momentum(rng, orb0, dp=None, twin=None, **kwargs):
@@ -377,7 +378,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                 o0dn = orbit - dorbit * 0.5 * dp_step
                 dpup = None
                 dpdn = None
-            vps, _, el0, els, _ = analyze(mxx, ms)
+            vps, _, el0, els, wtype = analyze(mxx, ms)
             tunes = _tunes(rng, orbit=orb0)
             o0up, oup = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpup,
                                   orbit = o0up, **kwargs)
@@ -385,41 +386,48 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                                   orbit = o0dn, **kwargs)
             d0 = (o0up - o0dn)[:4] / dp_step
             ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
-            return tunes, el0, els, d0, ds
+            return tunes, el0, els, d0, ds, wtype
 
-        def wget(ddp, elup, eldn):
+        def wget(ddp, elup, eldn, has_r):
             """Compute the chromatic amplitude function"""
-            alpha_up, beta_up, mu_up, r_up, *_ = elup  # Extract alpha and beta
-            alpha_dn, beta_dn, mu_dn, r_dn, *_ = eldn
-            db = (beta_up - beta_dn) / ddp
+            *data_up, = elup  # Extract alpha and beta
+            *data_dn, = eldn
+            alpha_up, beta_up, mu_up = data_up[:3]
+            alpha_dn, beta_dn, mu_dn = data_dn[:3]
+            db = numpy.array(beta_up - beta_dn) / ddp
             mb = (beta_up + beta_dn) / 2
-            da = (alpha_up - alpha_dn) / ddp
+            da = numpy.array(alpha_up - alpha_dn) / ddp
             ma = (alpha_up + alpha_dn) / 2
             wa = da - ma / mb * db
             wb = db / mb
             ww = numpy.sqrt(wa ** 2 + wb ** 2)
             wp = numpy.arctan2(wa, wb)
-            dmu = (mu_up - mu_dn) / ddp
-            dr = (r_up - r_dn) / ddp
-            return ww, wp, da, db, dmu, dr
+            dmu = numpy.array(mu_up - mu_dn) / ddp
+            data_out = (ww, wp, da, db, dmu)
+            if has_r:
+                r_up = data_up[3]
+                r_dn = data_dn[3]
+                data_out += (numpy.array(r_up - r_dn) / ddp, )
+            return data_out
 
         deltap = orbitup[4] - orbitdn[4]
-        tunesup, el0up, elsup, d0up, dsup = off_momentum(ringup, orbitup,
-                                                         twin=twin,
-                                                         dp=0.5*deltap,
-                                                         **kwargs)
-        tunesdn, el0dn, elsdn, d0dn, dsdn = off_momentum(ringdn, orbitdn,
-                                                         twin=twin,
-                                                         dp=-0.5*deltap,
-                                                         **kwargs)
+        *data_up, = off_momentum(ringup, orbitup, twin=twin, dp=0.5*deltap,
+                                 **kwargs)
+        *data_dn, = off_momentum(ringdn, orbitdn, twin=twin, dp=-0.5*deltap,
+                                 **kwargs)
+        tunesup, el0up, elsup, d0up, dsup, wtype = data_up
+        tunesdn, el0dn, elsdn, d0dn, dsdn, _ = data_dn
+        has_r = len(wtype) == 7
         # in 6D, dp comes out of find_orbit6
         chrom = (tunesup-tunesdn) / deltap
-        dd0 = (d0up - d0dn) / deltap
-        dds = (dsup - dsdn) / deltap
-        w0, wp0, dalpha0, dbeta0, dmu0, dr0 = wget(deltap, el0up, el0dn)
-        ws, wps, dalphas, dbetas, dmus, dr = wget(deltap, elsup, elsdn)
-        return chrom, w0, wp0, dd0, dalpha0, dbeta0, dmu0, dr0, \
-            ws, wps, dds, dalphas, dbetas, dmus, dr
+        dd0 = numpy.array(d0up - d0dn) / deltap
+        dds = numpy.array(dsup - dsdn) / deltap
+        data0 = wget(deltap, el0up, el0dn, has_r)
+        datas = wget(deltap, elsup, elsdn, has_r)
+        data0 = data0 + (dd0,)
+        datas = datas + (dds,)
+        return chrom, data0, datas
+
 
     def unwrap(mu):
         """Remove the phase jumps"""
@@ -508,12 +516,10 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
     if get_w:
         dtype = dtype + wtype
-        chrom, w0, wp0, dd0, dalpha0, dbeta0, dmu0, dr0, \
-            ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
-                                                         o0dn, twiss_in,
-                                                         refpts, **kwargs)
-        data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
-        datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
+        chrom, ddata0, ddatas =  chrom_w(rgup, rgdn, o0up, o0dn,
+                                         twiss_in, refpts, **kwargs)
+        data0 = data0 + ddata0
+        datas = datas + ddatas
     elif get_chrom:
         tunesup = _tunes(rgup, orbit=o0up)
         tunesdn = _tunes(rgdn, orbit=o0dn)
@@ -565,7 +571,8 @@ def linopt2(ring: Lattice, *args, **kwargs):
         get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
         get_w (bool):           Computes chromatic amplitude functions
-          (W) [4]_. Needs to compute the optics at 2 different momentum
+          (W, WP) [4]_, and derivatives of the dispersion and twiss parameters
+          versus dp. Needs to compute the optics at 2 different momentum
           deviations around the central one.
         keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
@@ -607,6 +614,16 @@ def linopt2(ring: Lattice, *args, **kwargs):
                         (modulo :math:`2\pi`)
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
+    **Wp**               :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+                        is :py:obj:`True`: chromatic phase function
+    **dalpha**          (2,) alpha derivative vector
+                        (:math:`\Delta \alpha/ \delta_p`)
+    **dbeta**           (2,) beta derivative vector
+                        (:math:`\Delta \beta/ \delta_p`)
+    **dmu**             (2,) mu derivative vector
+                        (:math:`\Delta \mu/ \delta_p`)
+    **ddispersion**     (4,) dispersion derivative vector
+                        (:math:`\Delta D/ \delta_p`)
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
@@ -707,6 +724,16 @@ def linopt4(ring: Lattice, *args, **kwargs):
                         eigenmodes [7]_
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
+    **Wp**               :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+                        is :py:obj:`True`: chromatic phase function
+    **dalpha**          (2,) alpha derivative vector
+                        (:math:`\Delta \alpha/ \delta_p`)
+    **dbeta**           (2,) beta derivative vector
+                        (:math:`\Delta \beta/ \delta_p`)
+    **dmu**             (2,) mu derivative vector
+                        (:math:`\Delta \mu/ \delta_p`)
+    **ddispersion**     (4,) dispersion derivative vector
+                        (:math:`\Delta D/ \delta_p`)
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
@@ -817,6 +844,18 @@ def linopt6(ring: Lattice, *args, **kwargs):
                         (modulo :math:`2\pi`)
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
+    **Wp**               :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+                        is :py:obj:`True`: chromatic phase function
+    **dalpha**          (2,) alpha derivative vector
+                        (:math:`\Delta \alpha/ \delta_p`)
+    **dbeta**           (2,) beta derivative vector
+                        (:math:`\Delta \beta/ \delta_p`)
+    **dmu**             (2,) mu derivative vector
+                        (:math:`\Delta \mu/ \delta_p`)
+    **ddispersion**     (4,) dispersion derivative vector
+                        (:math:`\Delta D/ \delta_p`)
+    **dR**              (3, 6, 6) R derivative vector
+                        (:math:`\Delta R/ \delta_p`)
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
