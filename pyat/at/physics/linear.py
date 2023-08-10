@@ -55,32 +55,31 @@ _DATAX_DTYPE = [('alpha', numpy.float64, (2,)),
                 ]
 
 _W24_DTYPE = [('W', numpy.float64, (2,)),
-            ('Wp', numpy.float64, (2,)),
-            ('dalpha', numpy.float64, (2,)),
-            ('dbeta', numpy.float64, (2,)),
-            ('dmu', numpy.float64, (2,)),
-            ('ddispersion', numpy.float64, (4,)),
-             ]
+              ('Wp', numpy.float64, (2,)),
+              ('dalpha', numpy.float64, (2,)),
+              ('dbeta', numpy.float64, (2,)),
+              ('dmu', numpy.float64, (2,)),
+              ('ddispersion', numpy.float64, (4,)),
+              ]
 
 
 _W6_DTYPE = [('W', numpy.float64, (2,)),
-            ('Wp', numpy.float64, (2,)),
-            ('dalpha', numpy.float64, (2,)),
-            ('dbeta', numpy.float64, (2,)),
-            ('dmu', numpy.float64, (3,)),
-            ('dR', numpy.float64, (3, 6, 6)),
-            ('ddispersion', numpy.float64, (4,)),
+             ('Wp', numpy.float64, (2,)),
+             ('dalpha', numpy.float64, (2,)),
+             ('dbeta', numpy.float64, (2,)),
+             ('dmu', numpy.float64, (3,)),
+             ('dR', numpy.float64, (3, 6, 6)),
+             ('ddispersion', numpy.float64, (4,)),
              ]
 
 _WX_DTYPE = [('W', numpy.float64, (2,)),
-            ('Wp', numpy.float64, (2,)),
-            ('dalpha', numpy.float64, (2,)),
-            ('dbeta', numpy.float64, (2,)),
-            ('dmu', numpy.float64, (2,)),
-            ('dR', numpy.float64, (2, 4, 4)),
-            ('ddispersion', numpy.float64, (4,)),
+             ('Wp', numpy.float64, (2,)),
+             ('dalpha', numpy.float64, (2,)),
+             ('dbeta', numpy.float64, (2,)),
+             ('dmu', numpy.float64, (2,)),
+             ('dR', numpy.float64, (2, 4, 4)),
+             ('ddispersion', numpy.float64, (4,)),
              ]
-
 
 
 _IDX_DTYPE = [('idx', numpy.uint32)]
@@ -381,9 +380,9 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             vps, _, el0, els, wtype = analyze(mxx, ms)
             tunes = _tunes(rng, orbit=orb0)
             o0up, oup = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpup,
-                                  orbit = o0up, **kwargs)
+                                  orbit=o0up, **kwargs)
             o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
-                                  orbit = o0dn, **kwargs)
+                                  orbit=o0dn, **kwargs)
             d0 = (o0up - o0dn)[:4] / dp_step
             ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
             return tunes, el0, els, d0, ds, wtype
@@ -427,7 +426,6 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         data0 = data0 + (dd0,)
         datas = datas + (dds,)
         return chrom, data0, datas
-
 
     def unwrap(mu):
         """Remove the phase jumps"""
@@ -516,8 +514,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
     if get_w:
         dtype = dtype + wtype
-        chrom, ddata0, ddatas =  chrom_w(rgup, rgdn, o0up, o0dn,
-                                         twiss_in, refpts, **kwargs)
+        chrom, ddata0, ddatas = chrom_w(rgup, rgdn, o0up, o0dn,
+                                        twiss_in, refpts, **kwargs)
         data0 = data0 + ddata0
         datas = datas + ddatas
     elif get_chrom:
