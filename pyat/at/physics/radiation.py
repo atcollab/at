@@ -6,11 +6,10 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from typing import Union
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import Lattice, check_radiation, Refpts
+from at.lattice import Lattice, check_radiation, Refpts, All
 from at.lattice import Dipole, Wiggler, DConstant
 from at.lattice import Quadrupole, Multipole, QuantumDiffusion
-from at.lattice import get_refpts, get_value_refpts, frequency_control
-from at.lattice import uint32_refpts, set_value_refpts
+from at.lattice import frequency_control, set_value_refpts
 from at.tracking import internal_lpass
 from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
 from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
@@ -47,16 +46,14 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
             cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
-    nelems = len(ring)
     energy = ring.energy
-    allrefs = uint32_refpts(range(nelems + 1), nelems)
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
     orbs = numpy.squeeze(
-        internal_lpass(ring, orbit.copy(order='K'), refpts=allrefs,
+        internal_lpass(ring, orbit.copy(order='K'), refpts=All,
                        keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
@@ -163,8 +160,7 @@ def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
-    nelems = len(ring)
-    uint32refs = uint32_refpts(refpts, nelems)
+    uint32refs = ring.get_uint32_index(refpts)
     bbcum, orbs = _dmatr(ring, orbit=orbit, keep_lattice=keep_lattice)
     mring, ms = find_m66(ring, uint32refs, orbit=orbs[0], keep_lattice=True)
     # ------------------------------------------------------------------------
@@ -239,7 +235,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
             xpi = vini.closed_orbit[1]/(1+vini.closed_orbit[4])
             xpo = vend.closed_orbit[1]/(1+vend.closed_orbit[4])
             theta = xpi-xpo
-        if abs(theta)<1.0e-7:
+        if abs(theta) < 1.0e-7:
             return numpy.zeros(5)
         angin = getattr(elem, 'EntranceAngle', 0.0)
         angout = getattr(elem, 'ExitAngle', 0.0)
