@@ -289,24 +289,58 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             keep_lattice=False, mname='M', add0=(), adds=(), cavpts=None,
             **kwargs):
     """"""
-    def build_sigma(twin, orbit):
+    def build_sigma(twin, orbit, dp=None):
         """Build the initial distribution at entrance of the transfer line"""
-        if orbit is None:
-            try:
-                orbit = twiss_in['closed_orbit']
-            except (ValueError, KeyError):  # record arrays throw ValueError !
-                orbit = numpy.zeros((6,))
+        try:
+            d0 = twin['dispersion']
+        except (ValueError, KeyError):  # record arrays throw ValueError !
+            d0 = numpy.zeros((4,))
+
         try:
             rmat = twin['R']
         except (ValueError, KeyError):  # record arrays throw ValueError !
             rmat = None
 
         try:
-            d0 = twin['dispersion']
+            alphas = twin['alpha']
+            betas = twin['beta']
         except (ValueError, KeyError):  # record arrays throw ValueError !
-            d0 = numpy.zeros((4,))
+            alphas = numpy.zeros((2,))
+            betas = numpy.ones((2,))
 
         dorbit = numpy.hstack((d0, 1.0, 0.0))
+        if orbit is None:
+            try:
+                orbit = twiss_in['closed_orbit']
+            except (ValueError, KeyError):  # record arrays throw ValueError !
+                orbit = numpy.zeros((6,))
+            if dp is not None:
+                orbit = orbit + dorbit * dp
+
+        if dp is not None:
+            try:
+                drmat = twin['dR']
+            except (ValueError, KeyError):  # record arrays throw ValueError !
+                drmat = None
+
+            try:
+                dd0 = twin['ddispersion']
+                dalpha = twin['dalpha']
+                dbeta = twin['dbeta']
+            except (ValueError, KeyError):  # record arrays throw ValueError !
+                msg = ("'get_w' option for a line requires 'twiss_in' calculated "
+                       "with 'get_w' activated")
+                raise AtError(msg)
+
+            orbit = orbit + numpy.hstack((dd0, 1.0, 0.0)) * dp * dp
+            dorbit = numpy.hstack((d0+dd0*dp, 1.0, 0.0))
+
+            if (rmat is not None) and (drmat is not None):
+                rmat = rmat + drmat * dp
+            else:
+                alphas = alphas + dalpha * dp
+                betas = betas + dbeta * dp
+
         if rmat is not None:
             # For some reason, "emittances" must be different...
             sigm = rmat[0, ...]+10.0*rmat[1, ...]
@@ -315,7 +349,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                 dorbit = rmat[2, :, 4] / rmat[2, 4, 4, numpy.newaxis]
         else:
             slices = [slice(2 * i, 2 * (i + 1)) for i in range(2)]
-            ab = numpy.stack((twin['alpha'], twin['beta']), axis=1)
+            ab = numpy.stack((alphas, betas), axis=1)
             sigm = numpy.zeros((4, 4))
             for slc, (alpha, beta) in zip(slices, ab):
                 gamma = (1.0+alpha*alpha)/beta
@@ -323,20 +357,32 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
         return orbit, sigm, dorbit
 
-    def chrom_w(ringup, ringdn, orbitup, orbitdn, refpts=None, **kwargs):
+    def chrom_w(ringup, ringdn, orbitup, orbitdn, twin=None, refpts=None, **kwargs):
         """Compute the chromaticity and W-functions"""
         # noinspection PyShadowingNames
-        def off_momentum(rng, orb0, **kwargs):
+        def off_momentum(rng, orb0, dp=None, twin=None, **kwargs):
             dp_step = kwargs.get('DPStep', DConstant.DPStep)
-            mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
-            vps, _, el0, els, _ = analyze(mt, ms)
-            tunes = numpy.mod(numpy.angle(vps)/2.0/pi, 1.0)
-            dpup = orb0[4] + 0.5 * dp_step
-            dpdn = orb0[4] - 0.5 * dp_step
+            if twin is None:
+                mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
+                mxx = mt
+                dpup = orb0[4] + 0.5 * dp_step
+                dpdn = orb0[4] - 0.5 * dp_step
+                o0up = None
+                o0dn = None
+            else:
+                orbit, sigma, dorbit = build_sigma(twiss_in, orb0, dp=dp)
+                mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
+                mxx = sigma @ jmat(sigma.shape[0] // 2)
+                o0up = orbit + dorbit * 0.5 * dp_step
+                o0dn = orbit - dorbit * 0.5 * dp_step
+                dpup = None
+                dpdn = None
+            vps, _, el0, els, _ = analyze(mxx, ms)
+            tunes = _tunes(rng, orbit=orb0)
             o0up, oup = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpup,
-                                  **kwargs)
+                                  orbit = o0up, **kwargs)
             o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
-                                  **kwargs)
+                                  orbit = o0dn, **kwargs)
             d0 = (o0up - o0dn)[:4] / dp_step
             ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
             return tunes, el0, els, d0, ds
@@ -357,14 +403,18 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             dr = (r_up - r_dn) / ddp
             return ww, wp, db, da, dmu, dr
 
+        deltap = orbitup[4] - orbitdn[4]
         tunesup, el0up, elsup, d0up, dsup = off_momentum(ringup, orbitup,
+                                                         twin=twin,
+                                                         dp=0.5*deltap,
                                                          **kwargs)
         tunesdn, el0dn, elsdn, d0dn, dsdn = off_momentum(ringdn, orbitdn,
+                                                         twin=twin,
+                                                         dp=-0.5*deltap,
                                                          **kwargs)
         # in 6D, dp comes out of find_orbit6
-        deltap = orbitup[4] - orbitdn[4]
         chrom = (tunesup-tunesdn) / deltap
-        dd0 = (d0up-d0dn) / deltap
+        dd0 = (d0up - d0dn) / deltap
         dds = (dsup - dsdn) / deltap
         w0, wp0, dbeta0, dalpha0, dmu0, dr0 = wget(deltap, el0up, el0dn)
         ws, wps, dbetas, dalphas, dmus, dr = wget(deltap, elsup, elsdn)
@@ -399,9 +449,6 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
         mxx = mt
     else:                       # Transfer line
-        if get_w:
-            warnings.warn(AtWarning("'get_w' ignored in transfer-line mode"))
-            get_w = False
         orbit, sigma, dorbit = build_sigma(twiss_in, orbit)
         # Get 1-turn transfer matrix
         mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
@@ -421,7 +468,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         if o0up is None:
             o0up, _ = get_orbit(rgup, guess=orbit, orbit=o0up, **kwargs)
             o0dn, _ = get_orbit(rgdn, guess=orbit, orbit=o0dn, **kwargs)
-    elif get_chrom or get_w:
+    else:
         rgup = ring
         rgdn = ring
 
@@ -443,8 +490,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         damping_times = length / clight / damping_rates
     else:               # 4D processing
         kwargs['keep_lattice'] = True
-        dpup = orb0[4] + 0.5*dp_step
-        dpdn = orb0[4] - 0.5*dp_step
+        dpup = orb0[4] + 0.5 * dp_step
+        dpdn = orb0[4] - 0.5 * dp_step
         o0up, oup = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpup,
                               orbit=o0up, **kwargs)
         o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
@@ -463,8 +510,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         dtype = dtype + wtype
         chrom, w0, wp0, dd0, dbeta0, dalpha0, dmu0, dr0, \
             ws, wp, dd, dalpha, dbeta, dmu, dr = chrom_w(rgup, rgdn, o0up,
-                                                             o0dn, refpts,
-                                                             **kwargs)
+                                                         o0dn, twiss_in,
+                                                         refpts, **kwargs)
         data0 = data0 + (w0, wp0, dalpha0, dbeta0, dmu0, dd0, dr0)
         datas = datas + (ws, wp, dalpha, dbeta, dmu, dd, dr)
     elif get_chrom:
