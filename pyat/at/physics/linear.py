@@ -288,21 +288,21 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             keep_lattice=False, mname='M', add0=(), adds=(), cavpts=None,
             **kwargs):
     """"""
-    def build_sigma(twin, orbit, dp=None):
+    def build_sigma(orbit, dp=None):
         """Build the initial distribution at entrance of the transfer line"""
         try:
-            d0 = twin['dispersion']
+            d0 = twiss_in['dispersion']
         except (ValueError, KeyError):  # record arrays throw ValueError !
             d0 = numpy.zeros((4,))
 
         try:
-            rmat = twin['R']
+            rmat = twiss_in['R']
         except (ValueError, KeyError):  # record arrays throw ValueError !
             rmat = None
 
         try:
-            alphas = twin['alpha']
-            betas = twin['beta']
+            alphas = twiss_in['alpha']
+            betas = twiss_in['beta']
         except (ValueError, KeyError):  # record arrays throw ValueError !
             alphas = numpy.zeros((2,))
             betas = numpy.ones((2,))
@@ -318,14 +318,14 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
         if dp is not None:
             try:
-                drmat = twin['dR']
+                drmat = twiss_in['dR']
             except (ValueError, KeyError):  # record arrays throw ValueError !
                 drmat = None
 
             try:
-                dd0 = twin['ddispersion']
-                dalpha = twin['dalpha']
-                dbeta = twin['dbeta']
+                dd0 = twiss_in['ddispersion']
+                dalpha = twiss_in['dalpha']
+                dbeta = twiss_in['dbeta']
             except (ValueError, KeyError):  # record arrays throw ValueError !
                 msg = ("'get_w' option for a line requires 'twiss_in' calculated "
                        "with 'get_w' activated")
@@ -356,12 +356,12 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
         return orbit, sigm, dorbit
 
-    def chrom_w(ringup, ringdn, orbitup, orbitdn, twin=None,
+    def chrom_w(ringup, ringdn, orbitup, orbitdn,
                 refpts=None, **kwargs):
         """Compute the chromaticity and W-functions"""
         # noinspection PyShadowingNames
-        def off_momentum(rng, orb0, dp=None, twin=None, **kwargs):
-            if twin is None:
+        def off_momentum(rng, orb0, dp=None, **kwargs):
+            if twiss_in is None:
                 mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
                 mxx = mt
                 dpup = orb0[4] + 0.5 * dp_step
@@ -369,7 +369,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                 o0up = None
                 o0dn = None
             else:
-                orbit, sigma, dorbit = build_sigma(twiss_in, orb0, dp=dp)
+                orbit, sigma, dorbit = build_sigma(orb0, dp=dp)
                 mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
                 mxx = sigma @ jmat(sigma.shape[0] // 2)
                 o0up = orbit + dorbit * 0.5 * dp_step
@@ -409,9 +409,9 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             return data_out
 
         deltap = orbitup[4] - orbitdn[4]
-        *data_up, = off_momentum(ringup, orbitup, twin=twin, dp=0.5*deltap,
+        *data_up, = off_momentum(ringup, orbitup, dp=0.5*deltap,
                                  **kwargs)
-        *data_dn, = off_momentum(ringdn, orbitdn, twin=twin, dp=-0.5*deltap,
+        *data_dn, = off_momentum(ringdn, orbitdn, dp=-0.5*deltap,
                                  **kwargs)
         tunesup, el0up, elsup, d0up, dsup, wtype = data_up
         tunesdn, el0dn, elsdn, d0dn, dsdn, _ = data_dn
@@ -454,7 +454,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
         mxx = mt
     else:                       # Transfer line
-        orbit, sigma, dorbit = build_sigma(twiss_in, orbit)
+        orbit, sigma, dorbit = build_sigma(orbit)
         # Get 1-turn transfer matrix
         mt, ms = get_matrix(ring, refpts=refpts, orbit=orbit, **kwargs)
         mxx = sigma @ jmat(sigma.shape[0] // 2)
@@ -514,7 +514,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
     if get_w:
         dtype = dtype + wtype
         chrom, ddata0, ddatas = chrom_w(rgup, rgdn, o0up, o0dn,
-                                        twiss_in, refpts, **kwargs)
+                                        refpts, **kwargs)
         data0 = data0 + ddata0
         datas = datas + ddatas
     elif get_chrom:
