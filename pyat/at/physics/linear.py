@@ -361,7 +361,6 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         """Compute the chromaticity and W-functions"""
         # noinspection PyShadowingNames
         def off_momentum(rng, orb0, dp=None, twin=None, **kwargs):
-            dp_step = kwargs.get('DPStep', DConstant.DPStep)
             if twin is None:
                 mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
                 mxx = mt
