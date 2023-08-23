@@ -981,11 +981,12 @@ class SimpleQuantDiff(Element):
                                                      'tau_y',
                                                      'tau_z',
                                                      'beta_x',
-                                                     'beta_y']
+                                                     'beta_y',
+                                                     'U0']
 
     def __init__(self, family_name: str, emit_x: float, emit_y: float,
                  sigma_dp: float, tau_x: float, tau_y: float, tau_z: float,
-                 beta_x: float, beta_y: float, **kwargs):
+                 beta_x: float, beta_y: float, U0: float, **kwargs):
         """
         Args:
             family_name:    Name of the element
@@ -997,8 +998,9 @@ class SimpleQuantDiff(Element):
             tau_z:          Longitudinal damping time [turns]
             beta_x:         Horizontal beta function at element [m]
             beta_y:         Vertical beta function at element [m]
-
-        Default PassMethod: ``SimpleQuantDiffDamp``
+            U0:             Energy Loss [eV]
+            
+        Default PassMethod: ``SimpleQuantDiffPass``
        """
         kwargs.setdefault('PassMethod', 'SimpleQuantDiffPass')
         super(SimpleQuantDiff, self).__init__(family_name,
@@ -1006,7 +1008,7 @@ class SimpleQuantDiff(Element):
                                               sigma_dp=sigma_dp, tau_x=tau_x,
                                               tau_y=tau_y, tau_z=tau_z,
                                               beta_x=beta_x, beta_y=beta_y,
-                                              **kwargs)
+                                              U0=U0, **kwargs)
 
 
 class Corrector(LongElement):
