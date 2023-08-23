@@ -166,17 +166,14 @@ def gen_simple_ring(ring_dictionary):
     emit_y = ring_dictionary['emit_y']
     sigma_dp = ring_dictionary['sigma_dp']
 
+    tau = ring_dictionary['tau']
+    
     # compute rf frequency
     frf = harmonic_number * clight / circumference
 
     # compute slip factor
     gamma = energy / e_mass
     eta = alpha-1/gamma**2
-
-    # assuming fixed damping partitions, compute
-    # analytical damping rate (positive value)
-    damping_partitions = numpy.array([1, 1, 2])  # x, y, z
-    tau = 2 * energy / U0 / damping_partitions
 
     # compute the synchronous phase and the TimeLag
     phi_s = numpy.arcsin(U0/Vrf)
@@ -222,10 +219,7 @@ def gen_simple_ring(ring_dictionary):
     # Generate the simple quantum diffusion element
     quantdiff = SimpleQuantDiff('SQD', emit_x, emit_y, sigma_dp,
                                 tau[0], tau[1], tau[2],
-                                beta_x, beta_y)
-
-    # Generate the energy loss element
-    energyloss = EnergyLoss('eloss', U0, PassMethod='EnergyLossRadPass')
+                                beta_x, beta_y, U0)
 
     # Generate the detuning element
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
@@ -235,7 +229,7 @@ def gen_simple_ring(ring_dictionary):
                           A1=A1, A2=A2, A3=A3)
 
     # Assemble all elements into the lattice object
-    ring = Lattice([rfcav, lin_elem, nonlin_elem, energyloss, quantdiff],
+    ring = Lattice([rfcav, lin_elem, nonlin_elem, quantdiff],
                    energy=energy)
 
     return ring
