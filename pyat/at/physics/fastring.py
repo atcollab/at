@@ -112,7 +112,8 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 A3: Optional[float]=0.0, emit_x: Optional[float]=0.0,
                 emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
                 tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
-                tau_z: Optional[float]=0.0, U0: Optional[float]=0.0
+                tau_z: Optional[float]=0.0, U0: Optional[float]=0.0,
+                SetTimeLag: Optional[bool]=False
                 ):
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -128,10 +129,10 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     Positional Arguments:
         * energy [eV]
         * circumference [m]
-        * harmonic_number
+        * harmonic_number - can be scalar or 1d array
         * Qx - horizontal tune
         * Qy - vertical tune
-        * Vrf - RF Voltage set point [V]
+        * Vrf - RF Voltage set point [V] - can be scalar or 1d array
         * alpha (momentum compaction factor)
 
     Optional Arguments:
@@ -142,9 +143,10 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         * emit_x, emit_y, sigma_dp - equilibrium values [m.rad, m.rad, -]
         * tau_x, tau_y, tau_z - radiation damping times [turns]
         * U0 - energy loss [eV] (positive number)
+        * SetTimeLag - Boolean to determine if TimeLag of cavity should be set
 
-    If the given emit_x,emit_y or sigma_dp is 0, then no equlibrium emittance is
-    applied in this plane.
+    If the given emit_x,emit_y or sigma_dp is 0, then no equlibrium emittance
+    is applied in this plane.
     If the given tau is 0, then no radiation damping is applied for this plane.
 
 
@@ -152,19 +154,33 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         ring (Lattice):    Simple ring
     """
 
-    # compute rf frequency
-    frf = harmonic_number * clight / circumference
-
     # compute slip factor
     gamma = energy / e_mass
     eta = alpha - 1/gamma**2
 
-    # compute the synchronous phase and the TimeLag
-    phi_s = numpy.arcsin(U0/Vrf)
-    TimeLag = clight * phi_s / (2 * numpy.pi * frf)
-    # generate rf cavity element
-    rfcav = RFCavity('RFC', 0, Vrf, frf, harmonic_number, energy,
-                     TimeLag=TimeLag)
+    harmonic_number = numpy.atleast_1d(harmonic_number)
+    Vrf = numpy.atleast_1d(Vrf)
+
+    assert len(harmonic_number) == len(Vrf), (
+        "harmonic_number input must match length of Vrf input"
+        )
+
+    # compute rf frequency
+    frf = harmonic_number * clight / circumference
+
+    all_cavities = []
+    for icav in numpy.arange(len(harmonic_number)):
+        if icav == 0 and SetTimeLag:
+            # compute the synchronous phase and the TimeLag
+            phi_s = numpy.arcsin(U0/Vrf)
+            TimeLag = clight * phi_s / (2 * numpy.pi * frf)
+        else:
+            TimeLag = 0
+
+        # generate rf cavity element
+        rfcav = RFCavity('RFC', 0, Vrf[icav], frf[icav], harmonic_number[icav],
+                         energy, TimeLag=TimeLag)
+        all_cavities.append(rfcav)
 
     # Now we will use the optics parameters to compute the uncoupled M66 matrix
     def sincos(x):
@@ -214,7 +230,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                           A1=A1, A2=A2, A3=A3)
 
     # Assemble all elements into the lattice object
-    ring = Lattice([rfcav, lin_elem, nonlin_elem, quantdiff],
+    ring = Lattice(all_cavities + [lin_elem, nonlin_elem, quantdiff],
                    energy=energy, periodicity=1)
 
     return ring
