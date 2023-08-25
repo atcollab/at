@@ -183,11 +183,11 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         all_cavities.append(rfcav)
 
     # Now we will use the optics parameters to compute the uncoupled M66 matrix
-    def sincos(x):
-        return numpy.sin(x), numpy.cos(x)
 
-    s_dphi_x, c_dphi_x = sincos(2*numpy.pi*Qx)
-    s_dphi_y, c_dphi_y = sincos(2*numpy.pi*Qy)
+    s_dphi_x = numpy.sin(2*numpy.pi*Qx)
+    c_dphi_x = numpy.cos(2*numpy.pi*Qx)
+    s_dphi_y = numpy.sin(2*numpy.pi*Qy)
+    c_dphi_y = numpy.cos(2*numpy.pi*Qy)
 
     M00 = c_dphi_x + alpha_x * s_dphi_x
     M01 = beta_x * s_dphi_x
