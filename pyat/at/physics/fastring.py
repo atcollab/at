@@ -143,6 +143,11 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         * tau_x, tau_y, tau_z - radiation damping times [turns]
         * U0 - energy loss [eV] (positive number)
 
+    If the given emit_x,emit_y or sigma_dp is 0, then no equlibrium emittance is
+    applied in this plane.
+    If the given tau is 0, then no radiation damping is applied for this plane.
+
+
     Returns:
         ring (Lattice):    Simple ring
     """
