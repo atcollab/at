@@ -973,7 +973,10 @@ class M66(Element):
 
 
 class SimpleQuantDiff(_DictLongtMotion, Element):
-    """Linear tracking element for simplified quantum diffusion"""
+    """
+    Linear tracking element for a simplified quantum diffusion,
+    radiation damping and energy loss
+    """
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
 
