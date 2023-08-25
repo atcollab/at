@@ -122,10 +122,10 @@ def simple_ring(energy: float, circumference: float, harmonic_number: float,
     * an RF cavity,
     * a 6x6 linear transfer map,
     * a detuning and chromaticity element,
-    * an energy loss element
     * a simplified quantum diffusion element
+        which contains equilibrium emittance and radiation damping
 
-    Parameters:
+    Positional Arguments:
         * energy [eV]
         * circumference [m]
         * harmonic_number
@@ -134,8 +134,8 @@ def simple_ring(energy: float, circumference: float, harmonic_number: float,
         * Vrf - RF Voltage set point [V]
         * alpha (momentum compaction factor)
 
-    Optional Arguments:   
-        * beta_x, beta_y [m]         
+    Optional Arguments:
+        * beta_x, beta_y [m]
         * alpha_x, alpha_y
         * Qpx, Qpy - linear chromaticities
         * A1, A2, A3 - amplitude detuning coefficients
@@ -147,7 +147,6 @@ def simple_ring(energy: float, circumference: float, harmonic_number: float,
         ring (Lattice):    Simple ring
     """
 
-            
     # compute rf frequency
     frf = harmonic_number * clight / circumference
 
@@ -197,7 +196,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: float,
     lin_elem = M66('Linear', m66=Mat66, Length=circumference)
 
     # Generate the simple quantum diffusion element
-    quantdiff = SimpleQuantDiff('SQD', beta_x=beta_x, beta_y=beta_y, 
+    quantdiff = SimpleQuantDiff('SQD', beta_x=beta_x, beta_y=beta_y,
                                 emit_x=emit_x, emit_y=emit_y,
                                 sigma_dp=sigma_dp, tau_x=tau_x,
                                 tau_y=tau_y, tau_z=tau_z, U0=U0)
