@@ -210,6 +210,6 @@ def simple_ring(energy: float, circumference: float, harmonic_number: float,
 
     # Assemble all elements into the lattice object
     ring = Lattice([rfcav, lin_elem, nonlin_elem, quantdiff],
-                   energy=energy)
+                   energy=energy, periodicity=1)
 
     return ring
