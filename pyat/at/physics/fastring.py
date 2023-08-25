@@ -103,7 +103,7 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
     return fastringnorad, fastringrad
 
 
-def simple_ring(energy: float, circumference: float, harmonic_number: float,
+def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 Qx: float, Qy: float, Vrf: float, alpha: float,
                 beta_x: Optional[float]=1.0, beta_y: Optional[float]=1.0,
                 alpha_x: Optional[float]=0.0, alpha_y: Optional[float]=0.0,
