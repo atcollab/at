@@ -998,7 +998,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             tau_z:          Longitudinal damping time [turns]
             U0:             Energy Loss [eV]
             
-        Default PassMethod: ``IdentityPass``
+        Default PassMethod: ``SimpleQuantDiffPass``
        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
        
