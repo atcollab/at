@@ -1000,7 +1000,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             
         Default PassMethod: ``IdentityPass``
        """
-        kwargs.setdefault('PassMethod', self.default_pass[False])
+        kwargs.setdefault('PassMethod', self.default_pass[True])
        
         assert tau_x>=0.0, 'tau_x must be greater than or equal to 0'
         self.tau_x = tau_x

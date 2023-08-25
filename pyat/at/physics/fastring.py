@@ -152,7 +152,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: float,
 
     # compute slip factor
     gamma = energy / e_mass
-    eta = alpha-1/gamma**2
+    eta = alpha - 1/gamma**2
 
     # compute the synchronous phase and the TimeLag
     phi_s = numpy.arcsin(U0/Vrf)
