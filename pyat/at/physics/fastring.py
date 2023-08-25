@@ -3,15 +3,15 @@ Functions relating to fast_ring
 """
 from functools import reduce
 import numpy
-from typing import Tuple
+from typing import Tuple, Optional
 from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
-from at.lattice import get_elements, M66, EnergyLoss, SimpleQuantDiff
+from at.lattice import get_elements, M66, SimpleQuantDiff
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from at.constants import clight, e_mass
 import copy
 
 
-__all__ = ['fast_ring', 'gen_simple_ring']
+__all__ = ['fast_ring', 'simple_ring']
 
 
 def _rearrange(ring: Lattice, split_inds=[]):
@@ -103,7 +103,17 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
     return fastringnorad, fastringrad
 
 
-def gen_simple_ring(ring_dictionary):
+def simple_ring(energy: float, circumference: float, harmonic_number: float,
+                Qx: float, Qy: float, Vrf: float, alpha: float,
+                beta_x: Optional[float]=1.0, beta_y: Optional[float]=1.0,
+                alpha_x: Optional[float]=0.0, alpha_y: Optional[float]=0.0,
+                Qpx: Optional[float]=0.0, Qpy: Optional[float]=0.0,
+                A1: Optional[float]=0.0, A2: Optional[float]=0.0,
+                A3: Optional[float]=0.0, emit_x: Optional[float]=0.0,
+                emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
+                tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
+                tau_z: Optional[float]=0.0, U0: Optional[float]=0.0
+                ):
     """Generates a "simple ring" based on a given dictionary
        of global parameters
 
@@ -116,58 +126,28 @@ def gen_simple_ring(ring_dictionary):
     * a simplified quantum diffusion element
 
     Parameters:
-        ring_dictionary:       Lattice description
-        The ring_dictionary must contain the following parameters,
-            * energy [eV]
-            * circumference [m]
-            * harmonic_number
-            * alpha_x, alpha_y
-            * beta_x, beta_y [m]
-            * Qx, Qy - full or fractional tunes
-            * alpha (momentum compaction factor)
-            * U0 - energy loss [eV] (positive number)
-            * Vrf - RF Voltage set point [V]
-            * Qpx, Qpy - linear chromaticities
-            * A1, A2, A3 - amplitude detuning coefficients
-            * emit_x, emit_y, sigma_dp - equilibrium values [m.rad, m.rad, -]
+        * energy [eV]
+        * circumference [m]
+        * harmonic_number
+        * Qx - horizontal tune
+        * Qy - vertical tune
+        * Vrf - RF Voltage set point [V]
+        * alpha (momentum compaction factor)
+
+    Optional Arguments:   
+        * beta_x, beta_y [m]         
+        * alpha_x, alpha_y
+        * Qpx, Qpy - linear chromaticities
+        * A1, A2, A3 - amplitude detuning coefficients
+        * emit_x, emit_y, sigma_dp - equilibrium values [m.rad, m.rad, -]
+        * tau_x, tau_y, tau_z - radiation damping times [turns]
+        * U0 - energy loss [eV] (positive number)
 
     Returns:
         ring (Lattice):    Simple ring
     """
 
-    # parse everything first
-
-    circumference = ring_dictionary['circumference']
-    harmonic_number = ring_dictionary['harmonic_number']
-
-    energy = ring_dictionary['energy']
-
-    alpha_x = ring_dictionary['alpha_x']
-    alpha_y = ring_dictionary['alpha_y']
-
-    beta_x = ring_dictionary['beta_x']
-    beta_y = ring_dictionary['beta_y']
-
-    Qx = ring_dictionary['Qx']
-    Qy = ring_dictionary['Qy']
-
-    alpha = ring_dictionary['alpha']
-    U0 = ring_dictionary['U0']
-    Vrf = ring_dictionary['Vrf']
-
-    Qpx = ring_dictionary['Qpx']
-    Qpy = ring_dictionary['Qpy']
-
-    A1 = ring_dictionary['A1']
-    A2 = ring_dictionary['A2']
-    A3 = ring_dictionary['A3']
-
-    emit_x = ring_dictionary['emit_x']
-    emit_y = ring_dictionary['emit_y']
-    sigma_dp = ring_dictionary['sigma_dp']
-
-    tau = ring_dictionary['tau']
-    
+            
     # compute rf frequency
     frf = harmonic_number * clight / circumference
 
@@ -217,9 +197,10 @@ def gen_simple_ring(ring_dictionary):
     lin_elem = M66('Linear', m66=Mat66, Length=circumference)
 
     # Generate the simple quantum diffusion element
-    quantdiff = SimpleQuantDiff('SQD', emit_x, emit_y, sigma_dp,
-                                tau[0], tau[1], tau[2],
-                                beta_x, beta_y, U0)
+    quantdiff = SimpleQuantDiff('SQD', beta_x=beta_x, beta_y=beta_y, 
+                                emit_x=emit_x, emit_y=emit_y,
+                                sigma_dp=sigma_dp, tau_x=tau_x,
+                                tau_y=tau_y, tau_z=tau_z, U0=U0)
 
     # Generate the detuning element
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',

@@ -972,43 +972,65 @@ class M66(Element):
         super(M66, self).__init__(family_name, M66=m66, **kwargs)
 
 
-class SimpleQuantDiff(Element):
+class SimpleQuantDiff(_DictLongtMotion, Element):
     """Linear tracking element for simplified quantum diffusion"""
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['emit_x',
-                                                     'emit_y',
-                                                     'sigma_dp',
-                                                     'tau_x',
-                                                     'tau_y',
-                                                     'tau_z',
-                                                     'beta_x',
-                                                     'beta_y',
-                                                     'U0']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
 
-    def __init__(self, family_name: str, emit_x: float, emit_y: float,
-                 sigma_dp: float, tau_x: float, tau_y: float, tau_z: float,
-                 beta_x: float, beta_y: float, U0: float, **kwargs):
+    def __init__(self, family_name: str, beta_x: Optional[float]=1.0,
+                 beta_y: Optional[float]=1.0, emit_x: Optional[float]=0.0,
+                 emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
+                 tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
+                 tau_z: Optional[float]=0.0, U0: Optional[float]=0.0,
+                 **kwargs):
         """
         Args:
             family_name:    Name of the element
+            
+        Optional Args:
+            beta_x:         Horizontal beta function at element [m]
+            beta_y:         Vertical beta function at element [m]
             emit_x:         Horizontal equilibrium emittance [m.rad]
             emit_y:         Vertical equilibrium emittance [m.rad]
             sigma_dp:       Equilibrium energy spread
             tau_x:          Horizontal damping time [turns]
             tau_y:          Vertical damping time [turns]
             tau_z:          Longitudinal damping time [turns]
-            beta_x:         Horizontal beta function at element [m]
-            beta_y:         Vertical beta function at element [m]
             U0:             Energy Loss [eV]
             
-        Default PassMethod: ``SimpleQuantDiffPass``
+        Default PassMethod: ``IdentityPass``
        """
-        kwargs.setdefault('PassMethod', 'SimpleQuantDiffPass')
-        super(SimpleQuantDiff, self).__init__(family_name,
-                                              emit_x=emit_x, emit_y=emit_y,
-                                              sigma_dp=sigma_dp, tau_x=tau_x,
-                                              tau_y=tau_y, tau_z=tau_z,
-                                              beta_x=beta_x, beta_y=beta_y,
-                                              U0=U0, **kwargs)
+        kwargs.setdefault('PassMethod', self.default_pass[False])
+       
+        assert tau_x>=0.0, 'tau_x must be greater than or equal to 0'
+        self.tau_x = tau_x
+            
+        assert tau_y>=0.0, 'tau_y must be greater than or equal to 0'
+        self.tau_y = tau_y
+
+        assert tau_z>=0.0, 'tau_z must be greater than or equal to 0'
+        self.tau_z = tau_z
+
+        assert emit_x>=0.0, 'emit_x must be greater than or equal to 0'
+        self.emit_x = emit_x
+        if emit_x>0.0:
+            assert tau_x>0.0, 'if emit_x is given, tau_x must be non zero'
+            
+        assert emit_y>=0.0, 'emit_x must be greater than or equal to 0'
+        self.emit_y = emit_y
+        if emit_y>0.0:
+            assert tau_y>0.0, 'if emit_y is given, tau_y must be non zero'
+            
+        assert sigma_dp>=0.0, 'sigma_dp must be greater than or equal to 0'
+        self.sigma_dp = sigma_dp
+        if sigma_dp>0.0:
+            assert tau_z>0.0, 'if sigma_dp is given, tau_z must be non zero'
+            
+        self.U0 = U0
+        self.beta_x = beta_x
+        self.beta_y = beta_y
+        super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
+
 
 
 class Corrector(LongElement):
@@ -1123,7 +1145,6 @@ class EnergyLoss(_DictLongtMotion, Element):
         """
         kwargs.setdefault('PassMethod', self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
-
 
 Radiative.register(EnergyLoss)
 
