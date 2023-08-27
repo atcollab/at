@@ -1,6 +1,7 @@
 import at
 import numpy
 from numpy.testing import assert_allclose as assert_close
+from numpy.testing import assert_equal
 import pytest
 from at import AtWarning, physics
 from at import lattice_track
@@ -319,7 +320,14 @@ def test_quantdiff(hmba_lattice):
                    0.00000000e+00, 3.71123417e-14, 5.61789810e-17]],
                  rtol=1e-5, atol=1e-20)
 
-
+def test_simple_ring():
+    ring = physics.simple_ring(6e9, 844, 992, 0.1, 0.2, 6e6, 8.5e-5)
+    assert_equal(len(ring), 4)
+    assert_equal(ring[-1].PassMethod, 'SimpleQuantDiffPass')
+    ring.disable_6d()
+    assert_equal(ring[-1].PassMethod, 'IdentityPass')
+    assert_close(ring.get_tune(), [0.1,0.2], atol=1e-10)
+    
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
 def test_ohmi_envelope(hmba_lattice, refpts):
     hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)

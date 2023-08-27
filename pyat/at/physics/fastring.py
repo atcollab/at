@@ -5,7 +5,7 @@ from functools import reduce
 import numpy
 from typing import Tuple, Optional
 from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
-from at.lattice import get_elements, M66, SimpleQuantDiff
+from at.lattice import get_elements, M66, SimpleQuantDiff, AtError
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from at.constants import clight, e_mass
 import copy
@@ -113,7 +113,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
                 tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
                 tau_z: Optional[float]=0.0, U0: Optional[float]=0.0,
-                SetTimeLag: Optional[bool]=False
+                TimeLag: Optional[bool]=False
                 ):
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -129,21 +129,38 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     Positional Arguments:
         * energy [eV]
         * circumference [m]
-        * harmonic_number - can be scalar or 1d array
+        * harmonic_number - can be scalar or sequence of scalars. The RF 
+            frequency is derived from this and the ring circumference
         * Qx - horizontal tune
         * Qy - vertical tune
-        * Vrf - RF Voltage set point [V] - can be scalar or 1d array
+        * Vrf - RF Voltage set point [V] - can be scalar or sequence of scalars
         * alpha (momentum compaction factor)
 
     Optional Arguments:
-        * beta_x, beta_y [m]
-        * alpha_x, alpha_y
-        * Qpx, Qpy - linear chromaticities
-        * A1, A2, A3 - amplitude detuning coefficients
-        * emit_x, emit_y, sigma_dp - equilibrium values [m.rad, m.rad, -]
-        * tau_x, tau_y, tau_z - radiation damping times [turns]
-        * U0 - energy loss [eV] (positive number)
-        * SetTimeLag - Boolean to determine if TimeLag of cavity should be set
+        * beta_x: horizontal beta function [m], Default=1
+        * beta_y: vertical beta function [m], Default=1
+        * alpha_x: horizontal alpha function, Default=0
+        * alpha_y: vertical alpha function, Default=0
+        * Qpx: horizontal linear chromaticity, Default=0
+        * Qpy: vertical linear chromaticity, Default=0
+        * A1: horizontal amplitude detuning coefficient, Default=0
+        * A2: cross term for amplitude detuning coefficient, Default=0
+        * A3: vertical amplitude detuning coefficient, Default=0
+        * emit_x: horizontal equilibrium emittance [m.rad], Default=0
+            ignored if emit_x=0
+        * emit_y: vertical equilibrium emittance [m.rad], Default=0
+            ignored if emit_y=0
+        * sigma_dp: equilibrium momentum spread, Default=0
+            ignored if sigma_dp=0
+        * tau_x: horizontal radiation damping time [turns], Default=0
+            ignored if tau_x=0
+        * tau_y: vertical radiation damping time [turns], Default=0
+            ignored if tau_y=0
+        * tau_z: longitudinal radiation damping time [turns], Default=0
+            ignored if tau_z=0
+        * U0: - energy loss [eV] (positive number), Default=0
+        * TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
+            or sequence of scalars (as with harmonic_number and Vrf).
 
     If the given emit_x,emit_y or sigma_dp is 0, then no equlibrium emittance
     is applied in this plane.
@@ -160,26 +177,22 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
 
     harmonic_number = numpy.atleast_1d(harmonic_number)
     Vrf = numpy.atleast_1d(Vrf)
+    try:
+        TimeLag = numpy.broadcast_to(TimeLag, Vrf.shape)
+    except ValueError:
+        raise AtError('TimeLag needs to be broadcastable to Vrf (same shape)')
 
-    assert len(harmonic_number) == len(Vrf), (
-        "harmonic_number input must match length of Vrf input"
-        )
+    if (len(harmonic_number) != len(Vrf)):
+        raise AtError('harmonic_number input must match length of Vrf input')
 
     # compute rf frequency
     frf = harmonic_number * clight / circumference
 
     all_cavities = []
     for icav in numpy.arange(len(harmonic_number)):
-        if icav == 0 and SetTimeLag:
-            # compute the synchronous phase and the TimeLag
-            phi_s = numpy.arcsin(U0/Vrf)
-            TimeLag = clight * phi_s / (2 * numpy.pi * frf)
-        else:
-            TimeLag = 0
-
         # generate rf cavity element
         rfcav = RFCavity('RFC', 0, Vrf[icav], frf[icav], harmonic_number[icav],
-                         energy, TimeLag=TimeLag)
+                         energy, TimeLag=TimeLag[icav])
         all_cavities.append(rfcav)
 
     # Now we will use the optics parameters to compute the uncoupled M66 matrix
