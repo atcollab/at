@@ -50,6 +50,7 @@ _DEFAULT_PASS = {
         ('collective_pass', elt.Collective, 'auto'),
         ('diffusion_pass', elt.QuantumDiffusion, 'auto'),
         ('energyloss_pass', elt.EnergyLoss, 'auto'),
+        ('simplequantdiff_pass', elt.SimpleQuantDiff, 'auto')
     ),
     True: (
         ('cavity_pass', elt.RFCavity, 'auto'),
@@ -62,6 +63,7 @@ _DEFAULT_PASS = {
         ('collective_pass', elt.Collective, 'auto'),
         ('diffusion_pass', elt.QuantumDiffusion, 'auto'),
         ('energyloss_pass', elt.EnergyLoss, 'auto'),
+        ('simplequantdiff_pass', elt.SimpleQuantDiff, 'auto')
     )
 }
 

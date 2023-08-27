@@ -3,14 +3,15 @@ Functions relating to fast_ring
 """
 from functools import reduce
 import numpy
-from typing import Tuple
-from at.lattice import RFCavity, Marker, Lattice, get_cells, checkname
-from at.lattice import get_elements
+from typing import Tuple, Optional
+from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
+from at.lattice import get_elements, M66, SimpleQuantDiff, AtError
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
+from at.constants import clight, e_mass
 import copy
 
 
-__all__ = ['fast_ring']
+__all__ = ['fast_ring', 'simple_ring']
 
 
 def _rearrange(ring: Lattice, split_inds=[]):
@@ -63,7 +64,7 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     try:
         qd_elem = gen_quantdiff_elem(merged_ring)
         fastring.append(qd_elem)
-    except ValueError:      # No synchrotron radiation => no diffusion element
+    except ValueError:  # No synchrotron radiation => no diffusion element
         pass
     fastring = Lattice(fastring, **vars(ring))
     return fastring
@@ -100,3 +101,149 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
                          split_inds=split_inds,
                          detuning_elem=detuning_elem)
     return fastringnorad, fastringrad
+
+
+def simple_ring(energy: float, circumference: float, harmonic_number: int,
+                Qx: float, Qy: float, Vrf: float, alpha: float,
+                beta_x: Optional[float]=1.0, beta_y: Optional[float]=1.0,
+                alpha_x: Optional[float]=0.0, alpha_y: Optional[float]=0.0,
+                Qpx: Optional[float]=0.0, Qpy: Optional[float]=0.0,
+                A1: Optional[float]=0.0, A2: Optional[float]=0.0,
+                A3: Optional[float]=0.0, emit_x: Optional[float]=0.0,
+                emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
+                tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
+                tau_z: Optional[float]=0.0, U0: Optional[float]=0.0,
+                TimeLag: Optional[bool]=False
+                ):
+    """Generates a "simple ring" based on a given dictionary
+       of global parameters
+
+    A simple ring consists of:
+
+    * an RF cavity,
+    * a 6x6 linear transfer map,
+    * a detuning and chromaticity element,
+    * a simplified quantum diffusion element
+        which contains equilibrium emittance and radiation damping
+
+    Positional Arguments:
+        * energy [eV]
+        * circumference [m]
+        * harmonic_number - can be scalar or sequence of scalars. The RF 
+            frequency is derived from this and the ring circumference
+        * Qx - horizontal tune
+        * Qy - vertical tune
+        * Vrf - RF Voltage set point [V] - can be scalar or sequence of scalars
+        * alpha (momentum compaction factor)
+
+    Optional Arguments:
+        * beta_x: horizontal beta function [m], Default=1
+        * beta_y: vertical beta function [m], Default=1
+        * alpha_x: horizontal alpha function, Default=0
+        * alpha_y: vertical alpha function, Default=0
+        * Qpx: horizontal linear chromaticity, Default=0
+        * Qpy: vertical linear chromaticity, Default=0
+        * A1: horizontal amplitude detuning coefficient, Default=0
+        * A2: cross term for amplitude detuning coefficient, Default=0
+        * A3: vertical amplitude detuning coefficient, Default=0
+        * emit_x: horizontal equilibrium emittance [m.rad], Default=0
+            ignored if emit_x=0
+        * emit_y: vertical equilibrium emittance [m.rad], Default=0
+            ignored if emit_y=0
+        * sigma_dp: equilibrium momentum spread, Default=0
+            ignored if sigma_dp=0
+        * tau_x: horizontal radiation damping time [turns], Default=0
+            ignored if tau_x=0
+        * tau_y: vertical radiation damping time [turns], Default=0
+            ignored if tau_y=0
+        * tau_z: longitudinal radiation damping time [turns], Default=0
+            ignored if tau_z=0
+        * U0: - energy loss [eV] (positive number), Default=0
+        * TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
+            or sequence of scalars (as with harmonic_number and Vrf).
+
+    If the given emit_x,emit_y or sigma_dp is 0, then no equlibrium emittance
+    is applied in this plane.
+    If the given tau is 0, then no radiation damping is applied for this plane.
+
+
+    Returns:
+        ring (Lattice):    Simple ring
+    """
+
+    # compute slip factor
+    gamma = energy / e_mass
+    eta = alpha - 1/gamma**2
+
+    harmonic_number = numpy.atleast_1d(harmonic_number)
+    Vrf = numpy.atleast_1d(Vrf)
+    try:
+        TimeLag = numpy.broadcast_to(TimeLag, Vrf.shape)
+    except ValueError:
+        raise AtError('TimeLag needs to be broadcastable to Vrf (same shape)')
+
+    if (len(harmonic_number) != len(Vrf)):
+        raise AtError('harmonic_number input must match length of Vrf input')
+
+    # compute rf frequency
+    frf = harmonic_number * clight / circumference
+
+    all_cavities = []
+    for icav in numpy.arange(len(harmonic_number)):
+        # generate rf cavity element
+        rfcav = RFCavity('RFC', 0, Vrf[icav], frf[icav], harmonic_number[icav],
+                         energy, TimeLag=TimeLag[icav])
+        all_cavities.append(rfcav)
+
+    # Now we will use the optics parameters to compute the uncoupled M66 matrix
+
+    s_dphi_x = numpy.sin(2*numpy.pi*Qx)
+    c_dphi_x = numpy.cos(2*numpy.pi*Qx)
+    s_dphi_y = numpy.sin(2*numpy.pi*Qy)
+    c_dphi_y = numpy.cos(2*numpy.pi*Qy)
+
+    M00 = c_dphi_x + alpha_x * s_dphi_x
+    M01 = beta_x * s_dphi_x
+    M10 = -(1. + alpha_x**2) / beta_x * s_dphi_x
+    M11 = c_dphi_x - alpha_x * s_dphi_x
+
+    M22 = c_dphi_y + alpha_y * s_dphi_y
+    M23 = beta_y * s_dphi_y
+    M32 = -(1. + alpha_y**2) / beta_y * s_dphi_y
+    M33 = c_dphi_y - alpha_y * s_dphi_y
+
+    M44 = 1.
+    M45 = 0.
+    M54 = eta*circumference
+    M55 = 1
+
+    Mat66 = numpy.array([[M00, M01, 0., 0., 0., 0.],
+                         [M10, M11, 0., 0., 0., 0.],
+                         [0., 0., M22, M23, 0., 0.],
+                         [0., 0., M32, M33, 0., 0.],
+                         [0., 0., 0., 0., M44, M45],
+                         [0., 0., 0., 0., M54, M55]], order='F')
+
+    # generate the linear tracking element, we set a length
+    # which is needed to give the lattice object the correct length
+    # (although it is not used)
+    lin_elem = M66('Linear', m66=Mat66, Length=circumference)
+
+    # Generate the simple quantum diffusion element
+    quantdiff = SimpleQuantDiff('SQD', beta_x=beta_x, beta_y=beta_y,
+                                emit_x=emit_x, emit_y=emit_y,
+                                sigma_dp=sigma_dp, tau_x=tau_x,
+                                tau_y=tau_y, tau_z=tau_z, U0=U0)
+
+    # Generate the detuning element
+    nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
+                          Betax=beta_x, Betay=beta_y,
+                          Alphax=alpha_x, Alphay=alpha_y,
+                          Qpx=Qpx, Qpy=Qpy,
+                          A1=A1, A2=A2, A3=A3)
+
+    # Assemble all elements into the lattice object
+    ring = Lattice(all_cavities + [lin_elem, nonlin_elem, quantdiff],
+                   energy=energy, periodicity=1)
+
+    return ring
