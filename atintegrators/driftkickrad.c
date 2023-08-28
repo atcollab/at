@@ -1,4 +1,5 @@
-#undef ZUT
+#define ZUT
+#undef NOP
 /***********************************************************************
  Note: in the US convention the transverse multipole field is written as:
  
@@ -145,7 +146,8 @@ the polynomial terms in PolynomB.
    #ifdef ZUT
    double dr4 = SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 );
    atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
-   #else
+   #endif
+   #ifndef NOP
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    
    /* recalculate momentums from angles after losing energy for radiation 	*/
@@ -199,7 +201,8 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    #ifdef ZUT
    double dr4 = SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 );
    atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
-   #else
+   #endif
+   #ifndef NOP
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    
    /* recalculate momentums from angles after losing energy for radiation 	*/
