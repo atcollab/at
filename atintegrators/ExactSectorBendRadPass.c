@@ -232,7 +232,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        ExactSectorBend(r_in, Length, BendingAngle, PolynomA, PolynomB,
+        ExactSectorBendRad(r_in, Length, BendingAngle, PolynomA, PolynomB,
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             multipole_fringe, gK,
             T1, T2, R1, R2, RApertures, EApertures,
