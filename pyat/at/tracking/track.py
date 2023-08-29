@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy
 from .atpass import atpass as _atpass, elempass as _elempass
 from .utils import fortran_align, has_collective, format_results
-from .utils import initialize_lpass, remove_collective
+from .utils import initialize_lpass, disable_collective
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
@@ -290,7 +290,7 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
 def _internal_lpass(lattice: list[Element], r_in, nturns: int = 1,
                     refpts: Refpts = End, **kwargs):
-    lattice = remove_collective(lattice)
+    lattice = disable_collective(lattice)
     return _lattice_pass(lattice, r_in, nturns=nturns, refpts=refpts,
                          **kwargs)
     

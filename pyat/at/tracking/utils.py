@@ -14,11 +14,11 @@ from ..lattice import DConstant
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
            'get_bunches_std_mean', 'unfold_beam', 'has_collective',
-           'initialize_lpass', 'remove_collective']
+           'initialize_lpass', 'disable_collective']
 
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
-_DEL_ELEMS = (BeamMoments, Collective)
+_DISABLE_ELEMS = (BeamMoments, Collective)
 
 
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
@@ -29,16 +29,16 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     return len(monitors) == 0
     
     
-def remove_collective(ring):
-    ring = ring.copy()
+def disable_collective(ring):
+    "Function to disable collective effects elements"
     refs = numpy.zeros(len(ring), dtype=bool)
-    for elmt in _DEL_ELEMS:
+    for elmt in _DISABLE_ELEMS:
         refe = ring.get_bool_index(elmt, endpoint=False)
         refs = refs | refe
     if sum(refs) > 0:
-        ring = ring.copy()
-        for i in ring.uint32_refpts(refs, len(ring))[::-1]:
-            del ring[i]
+        ring.replace(refs)
+        for e in ring[refs]:
+            e.PassMethod = 'IdentityPass'
     return ring  
 
 
