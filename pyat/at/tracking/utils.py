@@ -9,7 +9,7 @@ from typing import Optional
 from ..lattice import Lattice, Element
 from ..lattice import BeamMoments, Collective
 from ..lattice import elements, refpts_iterator, set_value_refpts
-from ..lattice import DConstant, get_bool_index, uint32_refpts
+from ..lattice import DConstant, get_bool_index
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
