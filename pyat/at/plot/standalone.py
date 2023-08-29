@@ -1,6 +1,6 @@
 """AT plotting functions"""
-from typing import Tuple
-from at.lattice import Lattice, axis_descr
+from __future__ import annotations
+from at.lattice import Lattice, axis_
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import numpy
@@ -24,7 +24,7 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
           *'yp'*, *'dp'*, *'ct'*
 
     Keyword Args:
-        acceptance (Tuple[ndarray, ndarray, ndarray]): Tuple containing
+        acceptance (tuple[ndarray, ndarray, ndarray]): tuple containing
           pre-computed acceptance *(boundary, survived, grid)*
         npoints:        (len(planes),) array: number of points in each
           dimension
@@ -60,7 +60,7 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
           :py:obj:`None` uses the python default that is considered safe.
           Available parameters: *'fork'*, *'spawn'*, *'forkserver'*.
           The default for linux is *'fork'*, the default for macOS and
-          Windows is *'spawn'*. *'fork'* may used for macOS to speed up
+          Windows is *'spawn'*. *'fork'* may be used for macOS to speed up
           the calculation or to solve runtime errors, however  it is
           considered unsafe.
 
@@ -87,12 +87,12 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
     plt.plot(*grid, '.', label='Tracked particles')
     plt.plot(*survived, '.', label='Survived particles')
     if len(planes) == 1:
-        pl0, = axis_descr(planes[0])
+        pl0 = axis_(planes[0])
         plt.plot(boundary, numpy.zeros(2), label='Acceptance')
         plt.title('1D {0} acceptance'.format(pl0['label']))
         plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
     else:
-        pl0, pl1 = axis_descr(*planes)
+        pl0, pl1 = axis_(planes)
         plt.plot(*boundary, label='Acceptance')
         plt.title('2D {0}-{1} acceptance'.format(pl0['label'], pl1['label']))
         plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
@@ -103,7 +103,7 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
 
 
 def plot_geometry(ring: Lattice,
-                  start_coordinates: Tuple[float, float, float] = (0, 0, 0),
+                  start_coordinates: tuple[float, float, float] = (0, 0, 0),
                   centered: bool = False, ax: Axes = None, **kwargs):
     """Compute and plot the 2D ring geometry in cartesian coordinates.
 
@@ -138,7 +138,7 @@ def plot_geometry(ring: Lattice,
     return geom, radius, ax
 
 
-def plot_sigma(sigma, axis: Tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
+def plot_sigma(sigma, axis: tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
                ax: Axes = None, **kwargs):
     r"""Plot the projection of the phase space defined by a
     :math:`\Sigma`-matrix on the selected plane.
@@ -156,8 +156,8 @@ def plot_sigma(sigma, axis: Tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
     """
     if not ax:
         fig, ax = plt.subplots()
-    ax1, ax2 = axis_descr(*axis)
-    axid = axis_descr(*axis, key='index')
+    ax1, ax2 = axis_(axis)
+    axid = axis_(axis, key='index')
     sig22 = sigma[numpy.ix_(axid, axid)]
     eps = sqrt(sig22[0, 0] * sig22[1, 1] - sig22[1, 0] * sig22[0, 1])
     sigx = sqrt(sig22[0, 0])
