@@ -35,8 +35,10 @@ function ring = atsetcavity(ring,varargin)
 %   Set the time lag [m]
 %
 %NEWRING=ATSETCAVITY(RING,...,'cavpts',CAVPTS)
-%   CAVPTS is the location of RF cavities. This allows to ignore harmonic
-%   cavities. The default is to use all cavities
+%   CAVPTS is the location of RF cavities. The default is to act on the
+%   "main" cavities: if there is is a 'cavpts' ring property. it defined
+%   the main cavities, otherwise the main cavities are cavities with the
+%   lowest frequency
 %
 %  NOTES
 %  1. In this mode, the radiation state of the lattice is not modified.
