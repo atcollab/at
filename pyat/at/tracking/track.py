@@ -63,7 +63,9 @@ def _element_pass(element: Element, r_in, **kwargs):
 
 @fortran_align
 def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
-                  refpts: Refpts = End, **kwargs):
+                  refpts: Refpts = End, no_col=True, **kwargs):
+    if no_col:
+        lattice = disable_collective(lattice)
     refs = get_uint32_index(lattice, refpts)
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
     return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
@@ -236,7 +238,8 @@ def lattice_track(lattice: Iterable[Element], r_in,
                               refpts=refpts, **kwargs)
     else:
         rout = _lattice_pass(lattice, r_in, nturns=nturns,
-                             refpts=refpts, **kwargs)
+                             refpts=refpts, no_col=False,
+                             **kwargs)
 
     if kwargs.get('losses', False):
         rout, lm = rout
@@ -286,16 +289,9 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
     rout = _element_pass(element, r_in, **kwargs)
     return rout
-
-
-def _internal_lpass(lattice: list[Element], r_in, nturns: int = 1,
-                    refpts: Refpts = End, **kwargs):
-    lattice = disable_collective(lattice)
-    return _lattice_pass(lattice, r_in, nturns=nturns, refpts=refpts,
-                         **kwargs)
     
 
-internal_lpass = _internal_lpass
+internal_lpass = _lattice_pass
 internal_epass = _element_pass
 internal_plpass = _plattice_pass
 Lattice.track = lattice_track

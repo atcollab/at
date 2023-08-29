@@ -36,7 +36,7 @@ def disable_collective(ring):
         refe = get_bool_index(ring, elmt, endpoint=False)
         refs = refs | refe
     if sum(refs) > 0:
-        ring= set_value_refpts(ring, refs, 'PassMethod',
+        ring = set_value_refpts(ring, refs, 'PassMethod',
                                'IdentityPass', copy=True)
     return ring  
 
