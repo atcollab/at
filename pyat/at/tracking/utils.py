@@ -8,8 +8,8 @@ from collections.abc import Sequence, Iterable
 from typing import Optional
 from ..lattice import Lattice, Element
 from ..lattice import BeamMoments, Collective
-from ..lattice import elements, refpts_iterator
-from ..lattice import DConstant
+from ..lattice import elements, refpts_iterator, set_value_refpts
+from ..lattice import DConstant, get_bool_index, uint32_refpts
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
@@ -33,12 +33,11 @@ def disable_collective(ring):
     "Function to disable collective effects elements"
     refs = numpy.zeros(len(ring), dtype=bool)
     for elmt in _DISABLE_ELEMS:
-        refe = ring.get_bool_index(elmt, endpoint=False)
+        refe = get_bool_index(ring, elmt, endpoint=False)
         refs = refs | refe
     if sum(refs) > 0:
-        ring.replace(refs)
-        for e in ring[refs]:
-            e.PassMethod = 'IdentityPass'
+        ring= set_value_refpts(ring, refs, 'PassMethod',
+                               'IdentityPass', copy=True)
     return ring  
 
 
