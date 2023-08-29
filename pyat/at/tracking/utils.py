@@ -7,16 +7,18 @@ import functools
 from collections.abc import Sequence, Iterable
 from typing import Optional
 from ..lattice import Lattice, Element
+from ..lattice import BeamMoments, Collective
 from ..lattice import elements, refpts_iterator
 from ..lattice import DConstant
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
            'get_bunches_std_mean', 'unfold_beam', 'has_collective',
-           'initialize_lpass']
+           'initialize_lpass', 'remove_collective']
 
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
+_DEL_ELEMS = (BeamMoments, Collective)
 
 
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
@@ -25,6 +27,19 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     for m in monitors:
         m.set_buffers(nturns, nbunch)
     return len(monitors) == 0
+    
+    
+def remove_collective(ring):
+    ring = ring.copy()
+    refs = numpy.zeros(len(ring), dtype=bool)
+    for elmt in _DEL_ELEMS:
+        refe = ring.get_bool_index(elmt, endpoint=False)
+        refs = refs | refe
+    if sum(refs) > 0:
+        ring = ring.copy()
+        for i in ring.uint32_refpts(refs, len(ring))[::-1]:
+            del ring[i]
+    return ring  
 
 
 def _get_bunch_config(lattice, unfoldbeam):
