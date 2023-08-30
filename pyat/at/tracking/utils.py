@@ -7,18 +7,21 @@ import functools
 from collections.abc import Sequence, Iterable
 from typing import Optional
 from ..lattice import Lattice, Element
-from ..lattice import BeamMoments, Collective
+from ..lattice import BeamMoments, Collective, QuantumDiffusion
+from ..lattice import SimpleQuantDiff, VariableMultipole
 from ..lattice import elements, refpts_iterator, set_value_refpts
-from ..lattice import DConstant, get_bool_index
+from ..lattice import DConstant, checktype
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
            'get_bunches_std_mean', 'unfold_beam', 'has_collective',
-           'initialize_lpass', 'disable_collective']
+           'initialize_lpass', 'disable_varelem', 'variable_refs']
 
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
-_DISABLE_ELEMS = (BeamMoments, Collective)
+_DISABLE_ELEMS = (BeamMoments, Collective,
+                  QuantumDiffusion, SimpleQuantDiff,
+                  VariableMultipole)
 
 
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
@@ -27,14 +30,15 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     for m in monitors:
         m.set_buffers(nturns, nbunch)
     return len(monitors) == 0
-    
-    
-def disable_collective(ring):
+
+
+def variable_refs(ring):
+    return ring.get_bool_index(checktype(_DISABLE_ELEMS))
+
+
+def disable_varelem(ring):
     "Function to disable collective effects elements"
-    refs = numpy.zeros(len(ring), dtype=bool)
-    for elmt in _DISABLE_ELEMS:
-        refe = get_bool_index(ring, elmt, endpoint=False)
-        refs = refs | refe
+    refs = variable_refs(ring)
     if sum(refs) > 0:
         ring = set_value_refpts(ring, refs, 'PassMethod',
                                 'IdentityPass', copy=True)

@@ -157,7 +157,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     """
     lattice = initialize_lpass(lattice, kwargs)
     return internal_lpass(lattice, r_in, nturns=nturns, refpts=refpts,
-                          no_col=False, **kwargs)
+                          no_varelem=False, **kwargs)
 
 
 @fortran_align
