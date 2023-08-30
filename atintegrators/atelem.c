@@ -228,6 +228,8 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
 {
     PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
     if (array == NULL) {
+        *msz=0;
+        *nsz=0;
         return NULL;
     }
     return (double *) atGetArrayData(array, name, NPY_DOUBLE, msz, nsz);
@@ -244,6 +246,8 @@ static double *atGetOptionalDoubleArraySz(const PyObject *element, char *name, i
     PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
     if (array == NULL) {
         PyErr_Clear();
+        *msz=0;
+        *nsz=0;
         return NULL;
     }
     return (double *) atGetArrayData(array, name, NPY_DOUBLE, msz, nsz);

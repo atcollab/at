@@ -10,6 +10,7 @@ struct elem;
 struct parameters
 {
   int nturn;
+  int num_turns;
   double RingLength;
   double T0;
   double s_coord;

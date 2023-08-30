@@ -73,14 +73,18 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                                       double *r_in, int num_particles, struct parameters *Param)
 {
     double *means;
-    double *stds;  
+    double *stds;
+    int mn, ml, sn, sl;
     if (!Elem) {   
-        means=atGetDoubleArray(ElemData,"_means"); check_error();
-        stds=atGetDoubleArray(ElemData,"_stds"); check_error();
+        means=atGetDoubleArraySz(ElemData,"_means", &mn, &ml); check_error();
+        stds=atGetDoubleArraySz(ElemData,"_stds", &sn, &sl); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds=stds;
         Elem->means=means;
         Elem->turn = 0;
+    }
+    if(Param->nbunch>ml || Param->nbunch>sl){
+        atError("BeamMoments buffers are wrongly initialized, please check.");
     }
     BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
     Elem->turn++;
