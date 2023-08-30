@@ -84,7 +84,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->turn = 0;
     }
     if(Param->nbunch>ml || Param->nbunch>sl){
-        atError("BeamMoments buffers are wrongly initialized, please check.");
+        atError("BeamMoments buffers are wrongly initialized, please set them as (6, nbunch, nturns).");
     }
     BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
     Elem->turn++;
