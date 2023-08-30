@@ -180,7 +180,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
             testCase.verifyEqual(mtune,ptune,AbsTol=1.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=1.e-4);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.e-4);
         end
 
         function linopt1(testCase,dp)

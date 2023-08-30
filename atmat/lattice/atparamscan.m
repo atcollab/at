@@ -5,6 +5,20 @@ function [parmelem,pvals] = atparamscan(ring,parmelem,varargin)
 %
 %  See also ATGETRINGPROPERTIES, ATSETRINGPROPERTIES
 
+% Temporary storage for:
+% - is_6d
+% - mcf -> slip_factor
+% - cell_length -> circumference, cell_revolution_frequency
+% - cell_revolution_frequency -> revolution_frequency, cell_harmnumber
+% - cavpts -> rf_frequency, cell_rf_voltage, rf_timelag
+%
+% Permanent storage (RingParam)
+% - name (FamName)
+% - Energy
+% - Periodicity
+% - Particle
+% - cell_harmnumber
+
 global GLOBVAL %#ok<GVMIS>
 
 TWO_PI_ERROR = 1.e-4;
@@ -193,10 +207,12 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
     function maincav=getmaincav(ring)
         if isfield(parmelem,'cavpts')
             maincav=parmelem.cavpts;
+        elseif isfield(store,'cavpts')
+            maincav=store.cavpts;
         else
             % disp('Compute maincav');
             maincav=atmaincavities(ring);
-            parmelem.cavpts=maincav;
+            store.cavpts=maincav;
         end
     end
 
