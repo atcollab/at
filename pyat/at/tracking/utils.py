@@ -10,7 +10,7 @@ from ..lattice import Lattice, Element
 from ..lattice import BeamMoments, Collective, QuantumDiffusion
 from ..lattice import SimpleQuantDiff, VariableMultipole
 from ..lattice import elements, refpts_iterator, set_value_refpts
-from ..lattice import DConstant, checktype
+from ..lattice import DConstant, checktype, get_bool_index
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
@@ -33,7 +33,7 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
 
 
 def variable_refs(ring):
-    return ring.get_bool_index(checktype(_DISABLE_ELEMS))
+    return get_bool_index(ring, checktype(_DISABLE_ELEMS))
 
 
 def disable_varelem(ring):
