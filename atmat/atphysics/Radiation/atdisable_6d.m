@@ -102,7 +102,7 @@ end
         elseif strcmp(newpass, 'auto')
             modfun=@varelem;
         else
-            modfun=setpass(newpass);
+            modfun=setpassenergy(newpass);
         end
         
         function elem=varelem(elem)
@@ -121,7 +121,7 @@ end
             if strcmp(newpass, 'auto')
                 newpass=defpass;
             end
-            modfun=setpass(newpass);
+            modfun=setpassenergy(newpass);
         end
     end
 
@@ -146,6 +146,13 @@ end
     end
 
     function setfun=setpass(npass)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
+        end
+        setfun=@newelem;
+    end
+
+    function setfun=setpassenergy(npass)
         function elem=newelem(elem)
             elem.PassMethod=npass;
             if isfield(elem,'Energy'), elem=rmfield(elem,'Energy'); end
