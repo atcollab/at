@@ -1,4 +1,4 @@
-#define ZUT
+#undef DPRINT
 #undef NOP
 /***********************************************************************
  Note: in the US convention the transverse multipole field is written as:
@@ -143,10 +143,10 @@ the polynomial terms in PolynomB.
    B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);
    
    dp_0 = r[4];
-   #ifdef ZUT
+   #ifdef DPRINT
    double dr4 = SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 );
    atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
-   #endif
+   #endif /*DPRINT*/
    #ifndef NOP
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    
@@ -154,7 +154,7 @@ the polynomial terms in PolynomB.
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
-   #endif /*ZUT*/
+   #endif /*NOP*/
    
    r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
    r[3] +=  L*ImSum;
@@ -198,10 +198,10 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    B2P = StrB2perp(ImSum, ReSum , x , xpr, y ,ypr);
    
    dp_0 = r[4];
-   #ifdef ZUT
+   #ifdef DPRINT
    double dr4 = SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 );
    atPrintf("B2P: % 15.12g\t% 15.12g\t% 15.12g\t% 15.12g\n", x, xpr, B2P, dr4);
-   #endif
+   #endif /*DPRINT */
    #ifndef NOP
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
    
@@ -209,7 +209,7 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
-   #endif /*ZUT*/
+   #endif /*NOP*/
    
    r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
    r[3] +=  L*ImSum;
