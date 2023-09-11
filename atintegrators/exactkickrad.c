@@ -44,14 +44,17 @@ static double StrB2perp(double bx, double by,
                             double x, double xpr, double y, double ypr)
 /* Calculates sqr(|B x e|) , where e is a unit vector in the direction of velocity  */
 
-{  /* components of the normalized velocity vector
+{
+    /* components of the normalized velocity vector
 	   double ex, ey, ez;
 	   ex = xpr;
 	   ey = ypr;
 	   ez = sqrt(1 - xpr^2 - ypr^2);
+
+	   sqr(|B x e|) = sqr(|B|) * sqr(|e|) - sqr(B.e)
 	*/
 
-	return SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr);
+  	return SQR(bx) + SQR(by) - SQR(bx*xpr + by*ypr);
 }
 
 
@@ -60,8 +63,9 @@ static double B2perp(double bx, double by, double irho,
         /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
 
 {
-    double fac = x*irho*(x*irho+2);
-    double v_norm2 = 1.0 + fac*(1.0 - SQR(xpr) - SQR(ypr));
+    double nrm = SQR(1.0+x*irho);
+//  double v_norm2 = nrm + SQR(xpr) + SQR(ypr);
+    double v_norm2 = nrm + SQR(xpr)*(1.0-nrm) + SQR(ypr)*(1.0-nrm);
 
     /* components of the  velocity vector
      * double ex, ey, ez;
@@ -70,7 +74,8 @@ static double B2perp(double bx, double by, double irho,
      * ez = (1+x*irho) * sqrt(1 - xpr^2 - ypr^2);
      */
 
-    return (SQR(bx) + SQR(by) + SQR(bx*xpr + by*ypr))/v_norm2;
+    return SQR(bx) + SQR(by) - SQR(bx*xpr + by*ypr)/v_norm2;
+//  return (SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr))/v_norm2 ;
 }
 
 static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
@@ -114,6 +119,10 @@ the polynomial terms in PolynomB.
         ReSum = ReSumTemp;
    }
 
+   /* Half kick */
+   r[1] -=  0.5*L*ReSum;
+   r[3] +=  0.5*L*ImSum;
+
    /* calculate angles from momentums 	*/
    p_norm = 1/(1+r[4]);
    x   = r[0];
@@ -123,15 +132,18 @@ the polynomial terms in PolynomB.
 
    B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
 
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1+x*irho) / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
+   /* Momentum loss */
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1.0+x*irho) * L;
+//   r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
 
-   r[1] -=  L*ReSum;
-   r[3] +=  L*ImSum;
+   /* Half kick */
+   r[1] -=  0.5*L*ReSum;
+   r[3] +=  0.5*L*ImSum;
 }
 
 static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
@@ -158,6 +170,10 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
           ReSum = ReSumTemp;
    }
 
+   /* Half kick */
+   r[1] -=  0.5*L*ReSum;
+   r[3] +=  0.5*L*ImSum;
+
    /* calculate angles from momentums 	*/
    p_norm = 1/(1+r[4]);
    x   = r[0];
@@ -167,13 +183,15 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
 
    B2P = StrB2perp(ImSum, ReSum+B0 , x , xpr, y ,ypr);
 
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P / sqrt(1.0-xpr*xpr-ypr*ypr) * L;
+   /* Momentum loss */
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * L;
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
 
-   r[1] -=  L*ReSum;
-   r[3] +=  L*ImSum;
+   /* Half kick */
+   r[1] -=  0.5*L*ReSum;
+   r[3] +=  0.5*L*ImSum;
 }
