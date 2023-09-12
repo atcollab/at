@@ -56,7 +56,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
         double *KickAngle, double scaling, int num_particles)
 {
     double irho = bending_angle / le;
-    double SL = num_int_steps == 0 ? le : le/num_int_steps;
+    double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
@@ -78,7 +78,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             /* Check for change of reference momentum */
-/*          if (scaling != 1.0) ATChangePRef(r6, scaling);*/
+            if (scaling != 1.0) ATChangePRef(r6, scaling);
 
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
@@ -95,7 +95,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             bend_edge(r6, irho, -entrance_angle);
 
             if (num_int_steps == 0) {
-                exact_bend(r6, irho, SL);
+                exact_bend(r6, irho, le);
             }
             else {
                 for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
@@ -128,7 +128,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (T2) ATaddvv(r6,T2);
 
             /* Check for change of reference momentum */
-/*          if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);*/
+            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
     /* Remove corrector component in polynomial coefficients */

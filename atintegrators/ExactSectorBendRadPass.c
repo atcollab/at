@@ -57,7 +57,7 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
         double *KickAngle, double scaling, double E0, int num_particles)
 {
     double irho = bending_angle / le;
-    double SL = num_int_steps == 0 ? le : le/num_int_steps;
+    double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
@@ -79,7 +79,7 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             /* Check for change of reference momentum */
-/*          if (scaling != 1.0) ATChangePRef(r6, scaling);*/
+            if (scaling != 1.0) ATChangePRef(r6, scaling);
 
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
@@ -95,19 +95,14 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             bend_edge(r6, irho, -entrance_angle);
 
-            if (num_int_steps == 0) {
-                exact_bend(r6, irho, SL);
-            }
-            else {
-                for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                    exact_bend(r6, irho, L1);
-                    ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
-                    exact_bend(r6, irho, L2);
-                    ex_bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
-                    exact_bend(r6, irho, L2);
-                    ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
-                    exact_bend(r6, irho, L1);
-                }
+            for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
+                exact_bend(r6, irho, L1);
+                ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+                exact_bend(r6, irho, L2);
+                ex_bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
+                exact_bend(r6, irho, L2);
+                ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+                exact_bend(r6, irho, L1);
             }
 
             /* Convert absolute path length to path lengthening */
@@ -129,7 +124,7 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
             if (T2) ATaddvv(r6,T2);
 
             /* Check for change of reference momentum */
-/*          if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);*/
+            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
     /* Remove corrector component in polynomial coefficients */

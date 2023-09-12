@@ -82,7 +82,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
             /* Check for change of reference momentum */
-/*          if (scaling != 1.0) ATChangePRef(r6, scaling);*/
+            if (scaling != 1.0) ATChangePRef(r6, scaling);
 
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
@@ -133,7 +133,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
             if (T2) ATaddvv(r6,T2);
 
             /* Check for change of reference momentum */
-/*          if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);*/
+            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
     /* Remove corrector component in polynomial coefficients */
