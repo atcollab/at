@@ -165,6 +165,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
 
+        if (NumIntSteps <= 0) {
+            atError("NumIntSteps must be positive"); check_error();
+        }
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -227,6 +231,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+
+        if (NumIntSteps <= 0) {
+            atError("NumIntSteps must be positive"); check_error();
+        }
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
