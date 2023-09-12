@@ -37,7 +37,7 @@ def variable_refs(ring):
 
 
 def disable_varelem(ring):
-    "Function to disable collective effects elements"
+    """Function to disable collective effects elements"""
     refs = variable_refs(ring)
     if sum(refs) > 0:
         ring = set_value_refpts(ring, refs, 'PassMethod',
@@ -56,12 +56,12 @@ def _get_bunch_config(lattice, unfoldbeam):
     return nbunch, bunch_spos, bunch_currents
 
 
-def initialize_lpass(lattice: Iterable[Element], kwargs) -> list[Element]:
+def initialize_lpass(lattice: Iterable[Element], nturns: int,
+                     kwargs) -> list[Element]:
     """Function to initialize keyword arguments for lattice tracking"""
     if not isinstance(lattice, list):
         lattice = list(lattice)
     unfoldbeam = kwargs.pop('unfold_beam', False)
-    nturns = kwargs.get('nturns', 1)
     nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
     kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
     no_bm = _set_beam_monitors(lattice, nbunch, nturns)

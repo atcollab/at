@@ -475,13 +475,13 @@ class BeamMoments(Element):
 
     def __init__(self, family_name: str, **kwargs):
         kwargs.setdefault('PassMethod', 'BeamMomentsPass')
-        self._stds = numpy.zeros((6, 0, 0), order='F')
-        self._means = numpy.zeros((6, 0, 0), order='F')
+        self._stds = numpy.zeros((0, 1, 6), order='F')
+        self._means = numpy.zeros((0, 1, 6), order='F')
         super(BeamMoments, self).__init__(family_name, **kwargs)
 
     def set_buffers(self, nturns, nbunch):
-        self._stds = numpy.zeros((6, nbunch, nturns), order='F')
-        self._means = numpy.zeros((6, nbunch, nturns), order='F')
+        self._stds = numpy.zeros((nturns, nbunch, 6), order='F')
+        self._means = numpy.zeros((nturns, nbunch, 6), order='F')
 
     @property
     def stds(self):

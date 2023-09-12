@@ -222,7 +222,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
     if not in_place:
         r_in = r_in.copy()
 
-    lattice = initialize_lpass(lattice, kwargs)
+    lattice = initialize_lpass(lattice, nturns, kwargs)
     ldtype = [('islost', numpy.bool_),
               ('turn', numpy.uint32),
               ('elem', numpy.uint32),

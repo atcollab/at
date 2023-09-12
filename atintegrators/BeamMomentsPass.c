@@ -52,8 +52,8 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
     MPI_Allreduce(MPI_IN_PLACE,nparts,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
-    
-    for (i=0; i<nbunch; i++){       
+
+    for (i=0; i<nbunch; i++){
         for (ii=0; ii<6; ii++){
             meanp[6*i+ii] = meanp[6*i+ii]/nparts[i];
             stdp[6*i+ii] = sqrt(stdp[6*i+ii]/nparts[i]-meanp[6*i+ii]*meanp[6*i+ii]); 
@@ -72,19 +72,22 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                                       double *r_in, int num_particles, struct parameters *Param)
 {
-    double *means;
-    double *stds;
-    int mn, ml, sn, sl;
-    if (!Elem) {   
+    if (!Elem) {
+        double *means;
+        double *stds;
+        int mn, ml, sn, sl;
         means=atGetDoubleArraySz(ElemData,"_means", &mn, &ml); check_error();
         stds=atGetDoubleArraySz(ElemData,"_stds", &sn, &sl); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds=stds;
         Elem->means=means;
         Elem->turn = 0;
-    }
-    if(Param->nbunch>ml || Param->nbunch>sl){
-        atError("BeamMoments buffers are wrongly initialized, please set them as (6, nbunch, nturns).");
+        if(Param->nbunch>ml || Param->nbunch>sl){
+            atError("BeamMoments nbunch wrongly initialized, please set them as (nturns, nbunch, 6).");
+        }
+        if(Param->num_turns>mn || Param->num_turns>sn){
+            atError("BeamMoments nturns wrongly initialized, please set them as (nturns, nbunch, 6).");
+        }
     }
     BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
     Elem->turn++;
