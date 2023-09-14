@@ -30,7 +30,8 @@ struct elem {
   /* Optional fields */
   double Energy;
   double Scaling;
-  int multipole_fringe;
+  int FringeQuadEntrance;
+  int FringeQuadExit;
   double *R1;
   double *R2;
   double *T1;
@@ -42,7 +43,7 @@ struct elem {
 
 static void multipole_pass(
   double *r, double le, double *A, double *B, int max_order, int num_int_steps,
-  int do_fringe,
+  int FringeQuadEntrance, int FringeQuadExit, /* 0 (no fringe), else  */
   double *T1, double *T2, double *R1, double *R2, double *RApertures,
   double *EApertures, double *KickAngle, double E0, double scaling, int num_particles)
 {
@@ -62,7 +63,8 @@ static void multipole_pass(
                        default(none) \
                        shared(r, num_particles, R1, T1, R2, T2, RApertures, \
                        EApertures, A, B, L1, L2, K1, K2, max_order, \
-                       num_int_steps, E0, scaling, le, do_fringe)
+                       FringeQuadEntrance, FringeQuadExit, \
+                       num_int_steps, E0, scaling, le)
   for (int c = 0; c < num_particles; c++) { /*Loop over particles  */
     double *r6 = r + c * 6;
     if (!atIsNaN(r6[0])) {
@@ -80,7 +82,7 @@ static void multipole_pass(
       if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
       /* Fringe field effect */
-      if (do_fringe) multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
+      if (FringeQuadEntrance) multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
 
       /*  integrator  */
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
@@ -97,7 +99,7 @@ static void multipole_pass(
       r6[5] -= le;
 
       /* Fringe field effect */
-      if (do_fringe) multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
+      if (FringeQuadExit) multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
 
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
@@ -129,7 +131,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     /*optional fields*/
     double Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
     double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
-    int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
+    int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
+    int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
     double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
     double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
     double *T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
@@ -151,7 +154,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->Energy=Energy;
     /*optional fields*/
     Elem->Scaling=Scaling;
-    Elem->multipole_fringe = multipole_fringe;
+    Elem->FringeQuadEntrance=FringeQuadEntrance;
+    Elem->FringeQuadExit=FringeQuadExit;
     Elem->R1 = R1;
     Elem->R2 = R2;
     Elem->T1 = T1;
@@ -162,7 +166,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
   }
   multipole_pass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                  Elem->MaxOrder, Elem->NumIntSteps,
-                 Elem->multipole_fringe,
+                 Elem->FringeQuadEntrance, Elem->FringeQuadExit,
                  Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                  Elem->RApertures, Elem->EApertures,
                  Elem->KickAngle, Elem->Energy, Elem->Scaling, num_particles);
@@ -188,7 +192,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /*optional fields*/
     double Energy=atGetDouble(ElemData,"Energy"); check_error();
     double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
-    int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
+    int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
+    int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
     double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
     double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
     double *T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
@@ -204,7 +209,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     plhs[0] = mxDuplicateArray(prhs[1]);
     r_in = mxGetDoubles(plhs[0]);
     multipole_pass(r_in, Length, PolynomA, PolynomB, MaxOrder, NumIntSteps,
-                   multipole_fringe,
+                   FringeQuadEntrance, FringeQuadExit,
                    T1, T2, R1, R2,
                    RApertures, EApertures,
                    KickAngle, Energy, Scaling, num_particles);
@@ -220,10 +225,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nlhs > 1) {
       /* list of optional fields */
       int i1 = 0;
-      plhs[1] = mxCreateCellMatrix(10, 1);
+      plhs[1] = mxCreateCellMatrix(11, 1);
       mxSetCell(plhs[1], i0++, mxCreateString("Energy"));
       mxSetCell(plhs[1], i1++, mxCreateString("FieldScaling"));
-      mxSetCell(plhs[1], i1++, mxCreateString("MultipoleFringe"));
+      mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
+      mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
       mxSetCell(plhs[1], i1++, mxCreateString("T1"));
       mxSetCell(plhs[1], i1++, mxCreateString("T2"));
       mxSetCell(plhs[1], i1++, mxCreateString("R1"));
