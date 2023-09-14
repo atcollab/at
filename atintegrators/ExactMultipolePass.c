@@ -28,6 +28,7 @@ struct elem {
   int MaxOrder;
   int NumIntSteps;
   /* Optional fields */
+  double Scaling;
   int multipole_fringe;
   double *R1;
   double *R2;
@@ -42,9 +43,8 @@ static void multipole_pass(
   double *r, double le, double *A, double *B, int max_order, int num_int_steps,
   int do_fringe,
   double *T1, double *T2, double *R1, double *R2, double *RApertures,
-  double *EApertures, double *KickAngle, int num_particles)
+  double *EApertures, double *KickAngle, double scaling, int num_particles)
 {
-  int c;
   double SL = le / num_int_steps;
   double L1 = SL * DRIFT1;
   double L2 = SL * DRIFT2;
@@ -61,13 +61,14 @@ static void multipole_pass(
                        default(none) \
                        shared(r, num_particles, R1, T1, R2, T2, RApertures, \
                        EApertures, A, B, L1, L2, K1, K2, max_order, \
-                       num_int_steps, FringeQuadEntrance, useLinFrEleEntrance, \
-                       FringeQuadExit, useLinFrEleExit, fringeIntM0, fringeIntP0) \
-                       private(c)
-  for (c = 0; c < num_particles; c++) { /*Loop over particles  */
+                       num_int_steps, scaling, le, do_fringe)
+  for (int c = 0; c < num_particles; c++) { /*Loop over particles  */
     double *r6 = r + c * 6;
     if (!atIsNaN(r6[0])) {
       int m;
+
+      /* Check for change of reference momentum */
+      if (scaling != 1.0) ATChangePRef(r6, scaling);
 
       /*  misalignment at entrance  */
       if (T1) ATaddvv(r6, T1);
@@ -104,6 +105,9 @@ static void multipole_pass(
       /* Misalignment at exit */
       if (R2) ATmultmv(r6, R2);
       if (T2) ATaddvv(r6, T2);
+
+      /* Check for change of reference momentum */
+      if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
     }
   }
   /* Remove corrector component in polynomial coefficients */
@@ -122,6 +126,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
     int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
     /*optional fields*/
+    double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
     int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
     double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
     double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
@@ -142,6 +147,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
     /*optional fields*/
+    Elem->Scaling=Scaling;
     Elem->multipole_fringe = multipole_fringe;
     Elem->R1 = R1;
     Elem->R2 = R2;
@@ -156,7 +162,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                  Elem->multipole_fringe,
                  Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                  Elem->RApertures, Elem->EApertures,
-                 Elem->KickAngle, num_particles);
+                 Elem->KickAngle, Elem->Scaling, num_particles);
   return Elem;
 }
 
@@ -177,6 +183,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
     int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
     /*optional fields*/
+    double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
     int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
     double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
     double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
@@ -196,7 +203,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                    multipole_fringe,
                    T1, T2, R1, R2,
                    RApertures, EApertures,
-                   KickAngle, num_particles);
+                   KickAngle, Scaling, num_particles);
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;
@@ -209,7 +216,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nlhs > 1) {
       /* list of optional fields */
       int i1 = 0;
-      plhs[1] = mxCreateCellMatrix(8, 1);
+      plhs[1] = mxCreateCellMatrix(9, 1);
+      mxSetCell(plhs[1], i1++, mxCreateString("FieldScaling"));
       mxSetCell(plhs[1], i1++, mxCreateString("MultipoleFringe"));
       mxSetCell(plhs[1], i1++, mxCreateString("T1"));
       mxSetCell(plhs[1], i1++, mxCreateString("T2"));

@@ -75,7 +75,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
-    do_fringe,le)
+    phi2, LR, do_fringe,le)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
