@@ -155,7 +155,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          the true voltage in each bucket and distributes the particles in the
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
-    lattice = initialize_lpass(lattice, kwargs)
+    lattice = initialize_lpass(lattice, nturns, kwargs)
     return internal_lpass(lattice, r_in, nturns=nturns, refpts=refpts,
                           no_varelem=False, **kwargs)
 
