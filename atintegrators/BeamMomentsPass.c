@@ -60,12 +60,10 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
         }
     }    
 
-    for(i=0;i<6;i++){
-        means += nbunch*turn;
-        stds += nbunch*turn;
-        means = meanp[i], nbunch*sizeof(double));
-        stds = stdp[i], nbunch*sizeof(double));
-    }
+    means += 6*nbunch*turn;
+    stds += 6*nbunch*turn;
+    memcpy(means, meanp, 6*nbunch*sizeof(double));
+    memcpy(stds, stdp, 6*nbunch*sizeof(double));
     atFree(buffer);  
 }
 
@@ -77,22 +75,16 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double *means;
         double *stds;
-        int mn, ml, sn, sl;
-        means=atGetDoubleArraySz(ElemData,"_means", &mn, &ml); check_error();
-        stds=atGetDoubleArraySz(ElemData,"_stds", &sn, &sl); check_error();
+        int ndim = 3;
+        int dims[] = {6, Param->nbunch, Param->num_turns};
+        means=atGetDoubleArray(ElemData,"_means"); check_error();
+        stds=atGetDoubleArray(ElemData,"_stds"); check_error();
+        atCheckArrayDims(ElemData,"_means", ndim, dims); check_error();
+        atCheckArrayDims(ElemData,"_stds", ndim, dims); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds=stds;
         Elem->means=means;
         Elem->turn = 0;
-        printf("%i %i\n", mn, ml);
-        printf("%i %i\n", sn, sl);
-        printf("%i %i\n", Param->nbunch, Param->num_turns);
-        if(Param->nbunch>ml || Param->nbunch>sl){
-            atError("BeamMoments nbunch wrongly initialized, please set them as (nturns, nbunch, 6).");
-        }
-        if(Param->num_turns>mn || Param->num_turns>sn){
-            atError("BeamMoments nturns wrongly initialized, please set them as (nturns, nbunch, 6).");
-        }
     }
     BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
     Elem->turn++;

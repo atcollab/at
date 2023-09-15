@@ -192,6 +192,36 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
+void *atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
+{
+    char errmessage[60];
+    PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
+    if (!array_imported) {
+        init_numpy();
+        array_imported = 1;
+    }
+    Py_DECREF(array);
+    if (array == NULL) {
+        snprintf(errmessage, 60, "The attribute %s is not an array.", name);
+        PyErr_SetString(PyExc_RuntimeError, errmessage);
+    }
+    int ndima, i;
+    npy_intp *dimsa;
+    ndima = PyArray_NDIM(array);
+    dimsa = PyArray_SHAPE(array);
+
+    if (ndima != ndim) {
+        snprintf(errmessage, 60, "The attribute %s has the wrong size.", name);
+        PyErr_SetString(PyExc_RuntimeError, errmessage);
+    }
+    for(i=0; i<ndim;i++){
+        if (dims[i] != dimsa[i]) {
+            snprintf(errmessage, 60, "The attribute %s has the wrong shape.", name);
+            PyErr_SetString(PyExc_RuntimeError, errmessage);
+        }
+    }
+}
+
 static double *atGetArrayData(PyArrayObject *array, char *name, int atype, int *msz, int *nsz)
 {
     char errmessage[60];
