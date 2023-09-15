@@ -147,22 +147,22 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         * A2: cross term for amplitude detuning coefficient, Default=0
         * A3: vertical amplitude detuning coefficient, Default=0
         * emitx: horizontal equilibrium emittance [m.rad], Default=0
-            ignored if emit_x=0
+            ignored if emitx=0
         * emity: vertical equilibrium emittance [m.rad], Default=0
-            ignored if emit_y=0
+            ignored if emity=0
         * espread: equilibrium momentum spread, Default=0
             ignored if espread=0
         * taux: horizontal radiation damping time [turns], Default=0
-            ignored if tau_x=0
+            ignored if taux=0
         * tauy: vertical radiation damping time [turns], Default=0
-            ignored if tau_y=0
+            ignored if tauy=0
         * tauz: longitudinal radiation damping time [turns], Default=0
-            ignored if tau_z=0
+            ignored if tauz=0
         * U0: - energy loss [eV] (positive number), Default=0
         * TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
             or sequence of scalars (as with harmonic_number and Vrf).
 
-    If the given emit_x,emit_y or sigma_dp is 0, then no equlibrium emittance
+    If the given emitx, emity or espread is 0, then no equlibrium emittance
     is applied in this plane.
     If the given tau is 0, then no radiation damping is applied for this plane.
 
