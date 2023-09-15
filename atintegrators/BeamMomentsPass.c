@@ -59,11 +59,13 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
             stdp[6*i+ii] = sqrt(stdp[6*i+ii]/nparts[i]-meanp[6*i+ii]*meanp[6*i+ii]); 
         }
     }    
-     
-    means += 6*nbunch*turn;
-    stds += 6*nbunch*turn;
-    memcpy(means, meanp, 6*nbunch*sizeof(double)); 
-    memcpy(stds, stdp, 6*nbunch*sizeof(double));
+
+    for(i=0;i<6;i++){
+        means += nbunch*turn;
+        stds += nbunch*turn;
+        means = meanp[i], nbunch*sizeof(double));
+        stds = stdp[i], nbunch*sizeof(double));
+    }
     atFree(buffer);  
 }
 
@@ -82,6 +84,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->stds=stds;
         Elem->means=means;
         Elem->turn = 0;
+        printf("%i %i\n", mn, ml);
+        printf("%i %i\n", sn, sl);
+        printf("%i %i\n", Param->nbunch, Param->num_turns);
         if(Param->nbunch>ml || Param->nbunch>sl){
             atError("BeamMoments nbunch wrongly initialized, please set them as (nturns, nbunch, 6).");
         }

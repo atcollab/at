@@ -19,9 +19,9 @@ __all__ = ['fortran_align', 'get_bunches', 'format_results',
 
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
-_DISABLE_ELEMS = (BeamMoments, Collective,
-                  QuantumDiffusion, SimpleQuantDiff,
-                  VariableMultipole)
+_COLLECTIVE_ELEMS = (BeamMoments, Collective)
+_VAR_ELEMS = (QuantumDiffusion, SimpleQuantDiff, VariableMultipole)
+_DISABLE_ELEMS = _COLLECTIVE_ELEMS + _VAR_ELEMS
 
 
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
@@ -34,6 +34,12 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
 
 def variable_refs(ring):
     return get_bool_index(ring, checktype(_DISABLE_ELEMS))
+
+
+def has_collective(ring) -> bool:
+    """True if any element involves collective effects"""
+    refs = get_bool_index(ring, checktype(_COLLECTIVE_ELEMS))
+    return sum(refs) > 0
 
 
 def disable_varelem(ring):
@@ -72,14 +78,6 @@ def initialize_lpass(lattice: Iterable[Element], nturns: int,
         kwargs['pool_size'] = pool_size
         kwargs['start_method'] = start_method
     return lattice
-
-
-def has_collective(ring) -> bool:
-    """True if any element involves collective effects"""
-    for elem in ring:
-        if elem.is_collective:
-            return True
-    return False
 
 
 def fortran_align(func):
