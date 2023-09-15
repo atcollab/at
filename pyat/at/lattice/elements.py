@@ -991,58 +991,58 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
 
-    def __init__(self, family_name: str, beta_x: Optional[float]=1.0,
-                 beta_y: Optional[float]=1.0, emit_x: Optional[float]=0.0,
-                 emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
-                 tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
-                 tau_z: Optional[float]=0.0, U0: Optional[float]=0.0,
+    def __init__(self, family_name: str, betax: Optional[float]=1.0,
+                 betay: Optional[float]=1.0, emitx: Optional[float]=0.0,
+                 emity: Optional[float]=0.0, espread: Optional[float]=0.0,
+                 taux: Optional[float]=0.0, tauy: Optional[float]=0.0,
+                 tauz: Optional[float]=0.0, U0: Optional[float]=0.0,
                  **kwargs):
         """
         Args:
             family_name:    Name of the element
             
         Optional Args:
-            beta_x:         Horizontal beta function at element [m]
-            beta_y:         Vertical beta function at element [m]
-            emit_x:         Horizontal equilibrium emittance [m.rad]
-            emit_y:         Vertical equilibrium emittance [m.rad]
-            sigma_dp:       Equilibrium energy spread
-            tau_x:          Horizontal damping time [turns]
-            tau_y:          Vertical damping time [turns]
-            tau_z:          Longitudinal damping time [turns]
+            betax:         Horizontal beta function at element [m]
+            betay:         Vertical beta function at element [m]
+            emitx:         Horizontal equilibrium emittance [m.rad]
+            emity:         Vertical equilibrium emittance [m.rad]
+            espread:       Equilibrium energy spread
+            taux:          Horizontal damping time [turns]
+            tauy:          Vertical damping time [turns]
+            tauz:          Longitudinal damping time [turns]
             U0:             Energy Loss [eV]
             
         Default PassMethod: ``SimpleQuantDiffPass``
        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
        
-        assert tau_x>=0.0, 'tau_x must be greater than or equal to 0'
-        self.tau_x = tau_x
+        assert taux>=0.0, 'taux must be greater than or equal to 0'
+        self.taux = taux
             
-        assert tau_y>=0.0, 'tau_y must be greater than or equal to 0'
-        self.tau_y = tau_y
+        assert tauy>=0.0, 'tauy must be greater than or equal to 0'
+        self.tauy = tauy
 
-        assert tau_z>=0.0, 'tau_z must be greater than or equal to 0'
-        self.tau_z = tau_z
+        assert tauz>=0.0, 'tauz must be greater than or equal to 0'
+        self.tauz = tauz
 
-        assert emit_x>=0.0, 'emit_x must be greater than or equal to 0'
-        self.emit_x = emit_x
-        if emit_x>0.0:
-            assert tau_x>0.0, 'if emit_x is given, tau_x must be non zero'
+        assert emitx>=0.0, 'emitx must be greater than or equal to 0'
+        self.emitx = emitx
+        if emitx>0.0:
+            assert taux>0.0, 'if emitx is given, taux must be non zero'
             
-        assert emit_y>=0.0, 'emit_x must be greater than or equal to 0'
-        self.emit_y = emit_y
-        if emit_y>0.0:
-            assert tau_y>0.0, 'if emit_y is given, tau_y must be non zero'
+        assert emity>=0.0, 'emity must be greater than or equal to 0'
+        self.emity = emity
+        if emity>0.0:
+            assert tauy>0.0, 'if emity is given, tauy must be non zero'
             
-        assert sigma_dp>=0.0, 'sigma_dp must be greater than or equal to 0'
-        self.sigma_dp = sigma_dp
-        if sigma_dp>0.0:
-            assert tau_z>0.0, 'if sigma_dp is given, tau_z must be non zero'
+        assert espread>=0.0, 'espread must be greater than or equal to 0'
+        self.espread = espread
+        if espread>0.0:
+            assert tauz>0.0, 'if espread is given, tauz must be non zero'
             
         self.U0 = U0
-        self.beta_x = beta_x
-        self.beta_y = beta_y
+        self.betax = betax
+        self.betay = betay
         super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
 
 

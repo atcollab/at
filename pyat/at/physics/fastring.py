@@ -105,14 +105,14 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
 
 def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 Qx: float, Qy: float, Vrf: float, alpha: float,
-                beta_x: Optional[float]=1.0, beta_y: Optional[float]=1.0,
-                alpha_x: Optional[float]=0.0, alpha_y: Optional[float]=0.0,
+                betax: Optional[float]=1.0, betay: Optional[float]=1.0,
+                alphax: Optional[float]=0.0, alphay: Optional[float]=0.0,
                 Qpx: Optional[float]=0.0, Qpy: Optional[float]=0.0,
                 A1: Optional[float]=0.0, A2: Optional[float]=0.0,
-                A3: Optional[float]=0.0, emit_x: Optional[float]=0.0,
-                emit_y: Optional[float]=0.0, sigma_dp: Optional[float]=0.0,
-                tau_x: Optional[float]=0.0, tau_y: Optional[float]=0.0,
-                tau_z: Optional[float]=0.0, U0: Optional[float]=0.0,
+                A3: Optional[float]=0.0, emitx: Optional[float]=0.0,
+                emity: Optional[float]=0.0, espread: Optional[float]=0.0,
+                taux: Optional[float]=0.0, tauy: Optional[float]=0.0,
+                tauz: Optional[float]=0.0, U0: Optional[float]=0.0,
                 TimeLag: Optional[bool]=False
                 ):
     """Generates a "simple ring" based on a given dictionary
@@ -137,26 +137,26 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         * alpha (momentum compaction factor)
 
     Optional Arguments:
-        * beta_x: horizontal beta function [m], Default=1
-        * beta_y: vertical beta function [m], Default=1
-        * alpha_x: horizontal alpha function, Default=0
-        * alpha_y: vertical alpha function, Default=0
+        * betax: horizontal beta function [m], Default=1
+        * betay: vertical beta function [m], Default=1
+        * alphax: horizontal alpha function, Default=0
+        * alphay: vertical alpha function, Default=0
         * Qpx: horizontal linear chromaticity, Default=0
         * Qpy: vertical linear chromaticity, Default=0
         * A1: horizontal amplitude detuning coefficient, Default=0
         * A2: cross term for amplitude detuning coefficient, Default=0
         * A3: vertical amplitude detuning coefficient, Default=0
-        * emit_x: horizontal equilibrium emittance [m.rad], Default=0
+        * emitx: horizontal equilibrium emittance [m.rad], Default=0
             ignored if emit_x=0
-        * emit_y: vertical equilibrium emittance [m.rad], Default=0
+        * emity: vertical equilibrium emittance [m.rad], Default=0
             ignored if emit_y=0
-        * sigma_dp: equilibrium momentum spread, Default=0
-            ignored if sigma_dp=0
-        * tau_x: horizontal radiation damping time [turns], Default=0
+        * espread: equilibrium momentum spread, Default=0
+            ignored if espread=0
+        * taux: horizontal radiation damping time [turns], Default=0
             ignored if tau_x=0
-        * tau_y: vertical radiation damping time [turns], Default=0
+        * tauy: vertical radiation damping time [turns], Default=0
             ignored if tau_y=0
-        * tau_z: longitudinal radiation damping time [turns], Default=0
+        * tauz: longitudinal radiation damping time [turns], Default=0
             ignored if tau_z=0
         * U0: - energy loss [eV] (positive number), Default=0
         * TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
@@ -170,7 +170,6 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     Returns:
         ring (Lattice):    Simple ring
     """
-
     # compute slip factor
     gamma = energy / e_mass
     eta = alpha - 1/gamma**2
@@ -202,15 +201,15 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     s_dphi_y = numpy.sin(2*numpy.pi*Qy)
     c_dphi_y = numpy.cos(2*numpy.pi*Qy)
 
-    M00 = c_dphi_x + alpha_x * s_dphi_x
-    M01 = beta_x * s_dphi_x
-    M10 = -(1. + alpha_x**2) / beta_x * s_dphi_x
-    M11 = c_dphi_x - alpha_x * s_dphi_x
+    M00 = c_dphi_x + alphax * s_dphi_x
+    M01 = betax * s_dphi_x
+    M10 = -(1. + alphax**2) / betax * s_dphi_x
+    M11 = c_dphi_x - alphax * s_dphi_x
 
-    M22 = c_dphi_y + alpha_y * s_dphi_y
-    M23 = beta_y * s_dphi_y
-    M32 = -(1. + alpha_y**2) / beta_y * s_dphi_y
-    M33 = c_dphi_y - alpha_y * s_dphi_y
+    M22 = c_dphi_y + alphay * s_dphi_y
+    M23 = betay * s_dphi_y
+    M32 = -(1. + alphay**2) / betay * s_dphi_y
+    M33 = c_dphi_y - alphay * s_dphi_y
 
     M44 = 1.
     M45 = 0.
@@ -230,15 +229,15 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     lin_elem = M66('Linear', m66=Mat66, Length=circumference)
 
     # Generate the simple quantum diffusion element
-    quantdiff = SimpleQuantDiff('SQD', beta_x=beta_x, beta_y=beta_y,
-                                emit_x=emit_x, emit_y=emit_y,
-                                sigma_dp=sigma_dp, tau_x=tau_x,
-                                tau_y=tau_y, tau_z=tau_z, U0=U0)
+    quantdiff = SimpleQuantDiff('SQD', betax=betax, betay=betay,
+                                emitx=emitx, emity=emity,
+                                espread=espread, taux=taux,
+                                tauy=tauy, tauz=tauz, U0=U0)
 
     # Generate the detuning element
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
-                          Betax=beta_x, Betay=beta_y,
-                          Alphax=alpha_x, Alphay=alpha_y,
+                          Betax=betax, Betay=betay,
+                          Alphax=alphax, Alphay=alphay,
                           Qpx=Qpx, Qpy=Qpy,
                           A1=A1, A2=A2, A3=A3)
 
