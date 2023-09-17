@@ -72,7 +72,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 energy=atenergy(ring);
 
 % Build the modification table
-mod.RFCavity=autoClassPass(cavipass);
+mod.RFCavity=autoElemPass(cavipass,'RFCavityPass');
 mod.Bend=autoMultipolePass(bendpass,energy);
 mod.Quadrupole=autoMultipolePass(quadpass,energy);
 mod.Sextupole=autoMultipolePass(sextupass,energy);
