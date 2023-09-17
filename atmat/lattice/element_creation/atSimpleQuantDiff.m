@@ -1,34 +1,34 @@
 function elem = atSimpleQuantDiff(fname,varargin)
 %SimpleQuantDiff creates a simple quantum difusion element
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...)
 %   FAMNAME:   family name
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Betax',BETAX,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Betax',BETAX,...)
 %   BETAX:   Horizontal beta function. Default: 1.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Betay',BETAY,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Betay',BETAY,...)
 %   BETAY:   Vertical beta function. Default: 1.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Emitx',EMITX,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Emitx',EMITX,...)
 %   EMITX:   Horizontal equilibrium emittance. Default: 0.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Emity',EMITY,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Emity',EMITY,...)
 %   EMITY:   Vertical equilibrium emittance. Default: 0.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Espread',ESPREAD,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Espread',ESPREAD,...)
 %   ESPREAD: Equilibrium momentum spread. Default: 0.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Taux',TAU_X,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Taux',TAU_X,...)
 %   TAU_X: Horizontal damping time. Default: 0.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Tauy',TAU_Y,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Tauy',TAU_Y,...)
 %   TAU_Y: Vertical damping time. Default: 0.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'Tauz',TAU_Z,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Tauz',TAU_Z,...)
 %   TAU_Z: Longitudinal damping time. Default: 0.0
 %
-%ELEM=SIMPLEQUANTDIFFPASS(FAMNAME,...,'U0',U0,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'U0',U0,...)
 %   U0:     Energy loss [eV]. Default: 0.0
 
 [rsrc,method]=decodeatargs({'SimpleQuantDiffPass'},varargin);

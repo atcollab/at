@@ -2,7 +2,7 @@ function ring = atsimplering(energy,circumference,hnum,...
     qx,qy,vrf,alpha,varargin)
 %ATSIMPLERING   Creates a "simple ring"
 %
-% A "simple ring" consists in:
+% A "simple ring" consists of:
 % - A RF cavity
 % - a 6x6 linear transfer map
 % - a detuning and chromaticity element
