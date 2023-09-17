@@ -72,13 +72,13 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 energy=atenergy(ring);
 
 % Build the modification table
-mod.RFCavity=autoElemPass(cavipass,'RFCavityPass');
+mod.RFCavity=autoClassPass(cavipass);
 mod.Bend=autoMultipolePass(bendpass,energy);
 mod.Quadrupole=autoMultipolePass(quadpass,energy);
 mod.Sextupole=autoMultipolePass(sextupass,energy);
 mod.Octupole=autoMultipolePass(octupass,energy);
 mod.Wiggler=autoMultipolePass(wigglerpass,energy);
-mod.QuantDiff=autoElemPass(quantdiffpass,'QuantDiffPass');
+mod.QuantDiff=autoClassPass(quantdiffpass);
 mod.EnergyLoss=autoElemPass(energylosspass,'EnergyLossRadPass', energy);
 mod.Other=@(elem) elem;
 
@@ -130,6 +130,23 @@ end
             else
                 modfun=setpass(newpass);
             end
+        end
+    end
+
+    function modfun=autoClassPass(newpass)
+        % Returns a processing function which sets the PassMethod according
+        % to the Class
+        if isempty(newpass)
+            modfun=@(elem) elem;
+        else
+            if strcmp(newpass, 'auto')
+                modfun=@newelem;
+            else
+                modfun=setpass(newpass);
+            end
+        end
+        function elem=newelem(elem)
+            elem.PassMethod=[elem.Class 'Pass'];
         end
     end
 
