@@ -31,6 +31,7 @@ def _orbit_dp(ring: Lattice, dp: float = None, guess: Orbit = None, **kwargs):
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    kwargs.pop('DPStep', DConstant.DPStep)
     rem = kwargs.keys()
     if len(rem) > 0:
         raise AtError(f'Unexpected keywords for orbit_dp: {", ".join(rem)}')
@@ -76,6 +77,7 @@ def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    kwargs.pop('DPStep', DConstant.DPStep)
     rem = kwargs.keys()
     if len(rem) > 0:
         raise AtError(f'Unexpected keywords for orbit_dct: {", ".join(rem)}')
