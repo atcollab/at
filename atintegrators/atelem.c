@@ -116,6 +116,27 @@ static double atGetOptionalDouble(const mxArray *ElemData, const char *fieldname
     return (field) ? mxGetScalar(field) : default_value;
 }
 
+void atCheckArrayDims(const mxArray *ElemData, char *fieldname, int ndim, int *dims)
+{
+    const mwSize *dptr, *dlim;
+    mwSize nd;
+
+    mxArray *field=get_field(ElemData,fieldname);
+    if (!field)
+        mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    nd=mxGetNumberOfDimensions(field);
+    if (nd != ndim)
+        mexErrMsgIdAndTxt("AT:WrongArg", "%s should have %d dimensions instead of %d.", fieldname, ndim, nd);
+    dptr = mxGetDimensions(field);
+    dlim = dptr+nd;
+    while (dptr < dlim) {
+        if (*dptr != *dims)
+            mexErrMsgIdAndTxt("AT:WrongArg", "%s dimension error: %d / %d", fieldname, *dptr, *dims);
+        dptr++;
+        dims++;
+    }
+}
+
 static double* atGetOptionalDoubleArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
 {
     double *ptr = NULL;
@@ -192,7 +213,7 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-void *atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
+void atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
 {
     char errmessage[60];
     PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
@@ -202,7 +223,7 @@ void *atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
     }
     Py_DECREF(array);
     if (array == NULL) {
-        snprintf(errmessage, 60, "The attribute %s is not an array.", name);
+        snprintf(errmessage, 60, "The required attribute %s is missing.", name);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
     }
     int ndima, i;
@@ -211,12 +232,12 @@ void *atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
     dimsa = PyArray_SHAPE(array);
 
     if (ndima != ndim) {
-        snprintf(errmessage, 60, "The attribute %s has the wrong size.", name);
+        snprintf(errmessage, 60, "The attribute %s should have %d dimensions instead of %d.", name, ndim, ndima);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
     }
     for(i=0; i<ndim;i++){
         if (dims[i] != dimsa[i]) {
-            snprintf(errmessage, 60, "The attribute %s has the wrong shape.", name);
+            snprintf(errmessage, 60, "The attribute %s dimension %d has the wrong size", name, i);
             PyErr_SetString(PyExc_RuntimeError, errmessage);
         }
     }

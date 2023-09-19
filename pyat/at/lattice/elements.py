@@ -475,8 +475,8 @@ class BeamMoments(Element):
 
     def __init__(self, family_name: str, **kwargs):
         kwargs.setdefault('PassMethod', 'BeamMomentsPass')
-        self._stds = numpy.zeros((6, 1, 0), order='F')
-        self._means = numpy.zeros((6, 1, 0), order='F')
+        self._stds = numpy.zeros((6, 1, 1), order='F')
+        self._means = numpy.zeros((6, 1, 1), order='F')
         super(BeamMoments, self).__init__(family_name, **kwargs)
 
     def set_buffers(self, nturns, nbunch):
