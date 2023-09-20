@@ -78,7 +78,7 @@ id0 = 0
 for t in numpy.arange(Nturns):
     if t % 1000 == 0:
         print('Tracking turn ', t, ' of ', Nturns)
-    at.track_function(fring, part)
+    fring.track(part, in_place=True)
 
     if t > Nturns-numAve:
 
