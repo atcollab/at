@@ -42,12 +42,12 @@ static double getTableWake(double *waketable,double *waketableT,double distance,
 };
 
 
-static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
+static void rotate_table_history_old(long nturns,long nslice,double *turnhistory,double circumference){
     double *xtmp,*xtmp0;
     double *ytmp,*ytmp0;
     double *ztmp,*ztmp0;
     double *wtmp,*wtmp0;
-    int i, ii;    
+    int i, ii;
     /*First rotate array*/
 
     for (i=0;i<nturns-1;i++){
@@ -78,9 +78,24 @@ static void rotate_table_history(long nturns,long nslice,double *turnhistory,dou
         ytmp[ii]=0.0;
         ztmp[ii]=0.0;
         wtmp[ii]=0.0;
-    }        
+    }
 };
 
+static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
+    memmove(turnhistory, turnhistory + nslice, nslice*nturns*sizeof(double));
+    memmove(turnhistory+nslice*nturns, turnhistory + nslice*(nturns+1), nslice*nturns*sizeof(double));
+    memmove(turnhistory+2*nslice*nturns, turnhistory + nslice*(2*nturns+1), nslice*nturns*sizeof(double));
+    memmove(turnhistory+3*nslice*nturns, turnhistory + nslice*(3*nturns+1), nslice*nturns*sizeof(double));
+    double *z = turnhistory+nslice*nturns*2;
+    int i;
+    for(i=0; i<nslice*nturns; i++){
+        z[i] += -circumference;
+    }
+    memset(turnhistory + (nturns-1)*nslice, 0.0, nslice*sizeof(double));
+    memset(turnhistory + (2*nturns-1)*nslice, 0.0, nslice*sizeof(double));
+    memset(turnhistory + (3*nturns-1)*nslice, 0.0, nslice*sizeof(double));
+    memset(turnhistory + (4*nturns-1)*nslice, 0.0, nslice*sizeof(double));
+};
 
 static void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
                double *smax, double *z_cuts){
