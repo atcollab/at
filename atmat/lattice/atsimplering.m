@@ -70,7 +70,14 @@ if isempty(sigma)
     [betay,varargs]=getoption(varargs,'betay',1.0);
     [emitx,varargs]=getoption(varargs,'emitx',0.0);
     [emity,varargs]=getoption(varargs,'emity',0.0);
-    sigma=atsigma(betax,alphax,emitx,betay,alphay,emity);
+    sigma=atsigma(betax,alphax,10.0,betay,alphay,1.0);
+    [am,~]=amat(sigma(1:4,1:4)*jmat(2));
+else
+    [am,lambda]=amat(sigma(1:4,1:4)*jmat(2));
+    [alphax,betax]=ab(am(1,1),am(2,1),am(2,2));
+    [alphay,betay]=ab(am(3,3),am(4,3),am(4,4));
+    emitx=real(-1i*lambda(1));
+    emity=real(-1i*lambda(2));
 end
 
 gammainv=particle.rest_energy/energy;
@@ -78,11 +85,7 @@ eta = alpha - gammainv*gammainv;
 [vrf,hnum]=broadcast(vrf(:),hnum(:));
 frf = hnum * clight / circumference;
 
-[am,lambda]=amat(sigma(1:4,1:4)*jmat(2));
 rots=blkdiag(rotmat(qx), rotmat(qy));
-[alphax,betax]=ab(am(1,1),am(2,1),am(2,2));
-[alphay,betay]=ab(am(3,3),am(4,3),am(4,4));
-emit=real(-1i*lambda);
 
 m66=eye(6);
 m66(1:4,1:4)=am*rots/am;
@@ -96,7 +99,7 @@ nonlin_elem=atbaselem('NonLinear','DeltaQPass',...
     'Qpx',qpx,'Qpy',qpy,...
     'A1',A1,'A2',A2,'A3',A3);
 quantdiff=atSimpleQuantDiff('SQD','betax',betax,'betay',betay,...
-    'emitx',emit(1),'emity',emit(2),'espread',espread,...
+    'emitx',emitx,'emity',emity,'espread',espread,...
     'taux',taux,'tauy',tauy,'tauz',tauz,'U0',U0);
 ring=atSetRingProperties([rf_cavity;{lin_elem;nonlin_elem;quantdiff}],...
     'Energy',energy,'Periodicity',1,'Particle',particle,varargs{:});
