@@ -41,51 +41,8 @@ static double getTableWake(double *waketable,double *waketableT,double distance,
     };
 };
 
-
-static void rotate_table_history_old(long nturns,long nslice,double *turnhistory,double circumference){
-    double *xtmp,*xtmp0;
-    double *ytmp,*ytmp0;
-    double *ztmp,*ztmp0;
-    double *wtmp,*wtmp0;
-    int i, ii;
-    /*First rotate array*/
-
-    for (i=0;i<nturns-1;i++){
-        xtmp0 = turnhistory + i*nslice;
-        xtmp = turnhistory + (i+1)*nslice;
-        ytmp0 = turnhistory + (i+nturns)*nslice;
-        ytmp = turnhistory + (i+nturns+1)*nslice;
-        ztmp0 = turnhistory + (i+2*nturns)*nslice;
-        ztmp = turnhistory + (i+2*nturns+1)*nslice;
-        wtmp0 = turnhistory + (i+3*nturns)*nslice;
-        wtmp = turnhistory + (i+3*nturns+1)*nslice;
-        for(ii=0;ii<nslice;ii++){
-            xtmp0[ii]=xtmp[ii];
-            ytmp0[ii]=ytmp[ii];
-            /*shift zpos by one turn*/
-            ztmp0[ii]=ztmp[ii]-circumference;
-            wtmp0[ii]=wtmp[ii];
-        }
-    }
-    /*Now set last row to 0 (present slices)*/
-    
-    xtmp = turnhistory + (nturns-1)*nslice;
-    ytmp = turnhistory + (2*nturns-1)*nslice;
-    ztmp = turnhistory + (3*nturns-1)*nslice;
-    wtmp = turnhistory + (4*nturns-1)*nslice; 
-    for(ii=0;ii<nslice;ii++){
-        xtmp[ii]=0.0;
-        ytmp[ii]=0.0;
-        ztmp[ii]=0.0;
-        wtmp[ii]=0.0;
-    }
-};
-
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
-    memmove(turnhistory, turnhistory + nslice, nslice*nturns*sizeof(double));
-    memmove(turnhistory+nslice*nturns, turnhistory + nslice*(nturns+1), nslice*nturns*sizeof(double));
-    memmove(turnhistory+2*nslice*nturns, turnhistory + nslice*(2*nturns+1), nslice*nturns*sizeof(double));
-    memmove(turnhistory+3*nslice*nturns, turnhistory + nslice*(3*nturns+1), nslice*nturns*sizeof(double));
+    memmove(turnhistory, turnhistory + nslice, 4*nslice*nturns*sizeof(double));
     double *z = turnhistory+nslice*nturns*2;
     int i;
     for(i=0; i<nslice*nturns; i++){
@@ -265,11 +222,11 @@ static void compute_kicks(int nslice,int nturns,int nelem,
         }
     }
     #ifdef MPI
-    MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableDX)MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableDY)MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableQX)MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableQY)MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableZ)MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
 };
