@@ -34,17 +34,17 @@ function elem = atSimpleQuantDiff(fname,varargin)
 [rsrc,method]=decodeatargs({'SimpleQuantDiffPass'},varargin);
 [method,rsrc]=getoption(rsrc,'PassMethod',method);
 [cl,rsrc]=getoption(rsrc,'Class','SimpleQuantDiff');
-[betax,rsrc]      = getoption(rsrc,'Betax',1.0);
-[betay,rsrc]      = getoption(rsrc,'Betay',1.0);
-[emitx,rsrc]      = getoption(rsrc,'Emitx',0.0);
-[emity,rsrc]      = getoption(rsrc,'Emity',0.0);
-[espread,rsrc]    = getoption(rsrc,'Espread',0.0);
-[taux,rsrc]       = getoption(rsrc,'Taux',0.0);
-[tauy,rsrc]       = getoption(rsrc,'Tauy',0.0);
-[tauz,rsrc]       = getoption(rsrc,'Tauz',0.0);
+[betax,rsrc]      = getoption(rsrc,'betax',1.0);
+[betay,rsrc]      = getoption(rsrc,'betay',1.0);
+[emitx,rsrc]      = getoption(rsrc,'emitx',0.0);
+[emity,rsrc]      = getoption(rsrc,'emity',0.0);
+[espread,rsrc]    = getoption(rsrc,'espread',0.0);
+[taux,rsrc]       = getoption(rsrc,'taux',0.0);
+[tauy,rsrc]       = getoption(rsrc,'tauy',0.0);
+[tauz,rsrc]       = getoption(rsrc,'tauz',0.0);
 [U0,rsrc]         = getoption(rsrc,'U0',0.0);
-elem=atbaselem(fname,method,'Class',cl,'Betax',betax,'Betay',betay,...
-    'Emitx',emitx,'emity',emity,'Espread',espread,...
+elem=atbaselem(fname,method,'Class',cl,'betax',betax,'betay',betay,...
+    'emitx',emitx,'emity',emity,'espread',espread,...
     'taux',taux,'tauy',tauy,'tauz',tauz,...
     'U0',U0,rsrc{:});
 end
