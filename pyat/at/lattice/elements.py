@@ -991,11 +991,11 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
 
-    def __init__(self, family_name: str, betax: Optional[float]=1.0,
-                 betay: Optional[float]=1.0, emitx: Optional[float]=0.0,
-                 emity: Optional[float]=0.0, espread: Optional[float]=0.0,
-                 taux: Optional[float]=0.0, tauy: Optional[float]=0.0,
-                 tauz: Optional[float]=0.0, U0: Optional[float]=0.0,
+    def __init__(self, family_name: str, betax: float = 1.0,
+                 betay: float = 1.0, emitx: float = 0.0,
+                 emity: float = 0.0, espread: float = 0.0,
+                 taux: float = 0.0, tauy: float = 0.0,
+                 tauz: float = 0.0, U0: float = 0.0,
                  **kwargs):
         """
         Args:
@@ -1016,29 +1016,29 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
        
-        assert taux>=0.0, 'taux must be greater than or equal to 0'
+        assert taux >= 0.0, 'taux must be greater than or equal to 0'
         self.taux = taux
             
-        assert tauy>=0.0, 'tauy must be greater than or equal to 0'
+        assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
         self.tauy = tauy
 
-        assert tauz>=0.0, 'tauz must be greater than or equal to 0'
+        assert tauz >= 0.0, 'tauz must be greater than or equal to 0'
         self.tauz = tauz
 
-        assert emitx>=0.0, 'emitx must be greater than or equal to 0'
+        assert emitx >= 0.0, 'emitx must be greater than or equal to 0'
         self.emitx = emitx
-        if emitx>0.0:
-            assert taux>0.0, 'if emitx is given, taux must be non zero'
+        if emitx > 0.0:
+            assert taux > 0.0, 'if emitx is given, taux must be non zero'
             
-        assert emity>=0.0, 'emity must be greater than or equal to 0'
+        assert emity >= 0.0, 'emity must be greater than or equal to 0'
         self.emity = emity
-        if emity>0.0:
-            assert tauy>0.0, 'if emity is given, tauy must be non zero'
+        if emity > 0.0:
+            assert tauy > 0.0, 'if emity is given, tauy must be non zero'
             
-        assert espread>=0.0, 'espread must be greater than or equal to 0'
+        assert espread >= 0.0, 'espread must be greater than or equal to 0'
         self.espread = espread
-        if espread>0.0:
-            assert tauz>0.0, 'if espread is given, tauz must be non zero'
+        if espread > 0.0:
+            assert tauz > 0.0, 'if espread is given, tauz must be non zero'
             
         self.U0 = U0
         self.betax = betax

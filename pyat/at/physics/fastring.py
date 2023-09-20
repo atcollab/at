@@ -105,15 +105,15 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
 
 def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 Qx: float, Qy: float, Vrf: float, alpha: float,
-                betax: Optional[float]=1.0, betay: Optional[float]=1.0,
-                alphax: Optional[float]=0.0, alphay: Optional[float]=0.0,
-                Qpx: Optional[float]=0.0, Qpy: Optional[float]=0.0,
-                A1: Optional[float]=0.0, A2: Optional[float]=0.0,
-                A3: Optional[float]=0.0, emitx: Optional[float]=0.0,
-                emity: Optional[float]=0.0, espread: Optional[float]=0.0,
-                taux: Optional[float]=0.0, tauy: Optional[float]=0.0,
-                tauz: Optional[float]=0.0, U0: Optional[float]=0.0,
-                TimeLag: Optional[bool]=False
+                betax: float = 1.0, betay: float = 1.0,
+                alphax: float = 0.0, alphay: float = 0.0,
+                Qpx: float = 0.0, Qpy: float = 0.0,
+                A1: float = 0.0, A2: float = 0.0,
+                A3: float = 0.0, emitx: float = 0.0,
+                emity: float = 0.0, espread: float = 0.0,
+                taux: float = 0.0, tauy: float = 0.0,
+                tauz: float = 0.0, U0: float = 0.0,
+                TimeLag: bool = False
                 ):
     """Generates a "simple ring" based on a given dictionary
        of global parameters
