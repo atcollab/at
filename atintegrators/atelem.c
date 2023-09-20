@@ -119,6 +119,7 @@ static double atGetOptionalDouble(const mxArray *ElemData, const char *fieldname
 void atCheckArrayDims(const mxArray *ElemData, char *fieldname, int ndim, int *dims)
 {
     const mwSize *dptr, *dlim;
+    int i;
     mwSize nd;
 
     mxArray *field=get_field(ElemData,fieldname);
@@ -128,12 +129,10 @@ void atCheckArrayDims(const mxArray *ElemData, char *fieldname, int ndim, int *d
     if (nd != ndim)
         mexErrMsgIdAndTxt("AT:WrongArg", "%s should have %d dimensions instead of %d.", fieldname, ndim, nd);
     dptr = mxGetDimensions(field);
-    dlim = dptr+nd;
-    while (dptr < dlim) {
-        if (*dptr != *dims)
-            mexErrMsgIdAndTxt("AT:WrongArg", "%s dimension error: %d / %d", fieldname, *dptr, *dims);
-        dptr++;
-        dims++;
+    for (i=0; i < ndim; i++){
+        if (dptr[i] != dims[i]){
+            mexErrMsgIdAndTxt("AT:WrongArg", "%s dimension %d has size %d instead of %d", fieldname, i, dptr[i], dims[i]);
+        }
     }
 }
 
