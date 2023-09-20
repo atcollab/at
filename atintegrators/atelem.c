@@ -116,6 +116,26 @@ static double atGetOptionalDouble(const mxArray *ElemData, const char *fieldname
     return (field) ? mxGetScalar(field) : default_value;
 }
 
+void atCheckArrayDims(const mxArray *ElemData, char *fieldname, int ndim, int *dims)
+{
+    const mwSize *dptr, *dlim;
+    int i;
+    mwSize nd;
+
+    mxArray *field=get_field(ElemData,fieldname);
+    if (!field)
+        mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    nd=mxGetNumberOfDimensions(field);
+    if (nd != ndim)
+        mexErrMsgIdAndTxt("AT:WrongArg", "%s should have %d dimensions instead of %d.", fieldname, ndim, nd);
+    dptr = mxGetDimensions(field);
+    for (i=0; i < ndim; i++){
+        if (dptr[i] != dims[i]){
+            mexErrMsgIdAndTxt("AT:WrongArg", "%s dimension %d has size %d instead of %d", fieldname, i, dptr[i], dims[i]);
+        }
+    }
+}
+
 static double* atGetOptionalDoubleArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
 {
     double *ptr = NULL;
@@ -192,6 +212,36 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
+void atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
+{
+    char errmessage[60];
+    PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
+    if (!array_imported) {
+        init_numpy();
+        array_imported = 1;
+    }
+    Py_DECREF(array);
+    if (array == NULL) {
+        snprintf(errmessage, 60, "The required attribute %s is missing.", name);
+        PyErr_SetString(PyExc_RuntimeError, errmessage);
+    }
+    int ndima, i;
+    npy_intp *dimsa;
+    ndima = PyArray_NDIM(array);
+    dimsa = PyArray_SHAPE(array);
+
+    if (ndima != ndim) {
+        snprintf(errmessage, 60, "The attribute %s should have %d dimensions instead of %d.", name, ndim, ndima);
+        PyErr_SetString(PyExc_RuntimeError, errmessage);
+    }
+    for(i=0; i<ndim;i++){
+        if (dims[i] != dimsa[i]) {
+            snprintf(errmessage, 60, "The attribute %s dimension %d has the wrong size", name, i);
+            PyErr_SetString(PyExc_RuntimeError, errmessage);
+        }
+    }
+}
+
 static double *atGetArrayData(PyArrayObject *array, char *name, int atype, int *msz, int *nsz)
 {
     char errmessage[60];
@@ -228,6 +278,8 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
 {
     PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
     if (array == NULL) {
+        *msz=0;
+        *nsz=0;
         return NULL;
     }
     return (double *) atGetArrayData(array, name, NPY_DOUBLE, msz, nsz);
@@ -244,6 +296,8 @@ static double *atGetOptionalDoubleArraySz(const PyObject *element, char *name, i
     PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
     if (array == NULL) {
         PyErr_Clear();
+        *msz=0;
+        *nsz=0;
         return NULL;
     }
     return (double *) atGetArrayData(array, name, NPY_DOUBLE, msz, nsz);

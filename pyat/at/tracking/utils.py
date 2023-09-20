@@ -7,16 +7,21 @@ import functools
 from collections.abc import Sequence, Iterable
 from typing import Optional
 from ..lattice import Lattice, Element
-from ..lattice import elements, refpts_iterator
-from ..lattice import DConstant
+from ..lattice import BeamMoments, Collective, QuantumDiffusion
+from ..lattice import SimpleQuantDiff, VariableMultipole
+from ..lattice import elements, refpts_iterator, set_value_refpts
+from ..lattice import DConstant, checktype, get_bool_index
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
            'get_bunches_std_mean', 'unfold_beam', 'has_collective',
-           'initialize_lpass']
+           'initialize_lpass', 'disable_varelem', 'variable_refs']
 
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
+_COLLECTIVE_ELEMS = (BeamMoments, Collective)
+_VAR_ELEMS = (QuantumDiffusion, SimpleQuantDiff, VariableMultipole)
+_DISABLE_ELEMS = _COLLECTIVE_ELEMS + _VAR_ELEMS
 
 
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
@@ -25,6 +30,25 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     for m in monitors:
         m.set_buffers(nturns, nbunch)
     return len(monitors) == 0
+
+
+def variable_refs(ring):
+    return get_bool_index(ring, checktype(_DISABLE_ELEMS))
+
+
+def has_collective(ring) -> bool:
+    """True if any element involves collective effects"""
+    refs = get_bool_index(ring, checktype(_COLLECTIVE_ELEMS))
+    return sum(refs) > 0
+
+
+def disable_varelem(ring):
+    """Function to disable collective effects elements"""
+    refs = variable_refs(ring)
+    if sum(refs) > 0:
+        ring = set_value_refpts(ring, refs, 'PassMethod',
+                                'IdentityPass', copy=True)
+    return ring  
 
 
 def _get_bunch_config(lattice, unfoldbeam):
@@ -38,12 +62,12 @@ def _get_bunch_config(lattice, unfoldbeam):
     return nbunch, bunch_spos, bunch_currents
 
 
-def initialize_lpass(lattice: Iterable[Element], kwargs) -> list[Element]:
+def initialize_lpass(lattice: Iterable[Element], nturns: int,
+                     kwargs) -> list[Element]:
     """Function to initialize keyword arguments for lattice tracking"""
     if not isinstance(lattice, list):
         lattice = list(lattice)
     unfoldbeam = kwargs.pop('unfold_beam', False)
-    nturns = kwargs.get('nturns', 1)
     nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
     kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
     no_bm = _set_beam_monitors(lattice, nbunch, nturns)
@@ -54,14 +78,6 @@ def initialize_lpass(lattice: Iterable[Element], kwargs) -> list[Element]:
         kwargs['pool_size'] = pool_size
         kwargs['start_method'] = start_method
     return lattice
-
-
-def has_collective(ring) -> bool:
-    """True if any element involves collective effects"""
-    for elem in ring:
-        if elem.is_collective:
-            return True
-    return False
 
 
 def fortran_align(func):

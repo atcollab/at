@@ -337,6 +337,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.energy = 0.0;
     param.rest_energy = 0.0;
     param.charge = -1.0;
+    param.nbunch = 1;
+    param.num_turns = num_turns;
     if (keep_counter)
         param.nturn = last_turn;
     else

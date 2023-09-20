@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy
 from .atpass import atpass as _atpass, elempass as _elempass
 from .utils import fortran_align, has_collective, format_results
-from .utils import initialize_lpass
+from .utils import initialize_lpass, disable_varelem, variable_refs
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..lattice import AtWarning, DConstant, random
@@ -63,9 +63,14 @@ def _element_pass(element: Element, r_in, **kwargs):
 
 @fortran_align
 def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
-                  refpts: Refpts = End, **kwargs):
-    refs = get_uint32_index(lattice, refpts)
+                  refpts: Refpts = End, no_varelem=True, **kwargs):
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
+    if no_varelem:
+        lattice = disable_varelem(lattice)
+    else:
+        if sum(variable_refs(lattice)) > 0:
+            kwargs['reuse'] = False
+    refs = get_uint32_index(lattice, refpts)
     return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
 
 
@@ -217,7 +222,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
     if not in_place:
         r_in = r_in.copy()
 
-    lattice = initialize_lpass(lattice, kwargs)
+    lattice = initialize_lpass(lattice, nturns, kwargs)
     ldtype = [('islost', numpy.bool_),
               ('turn', numpy.uint32),
               ('elem', numpy.uint32),
@@ -236,7 +241,8 @@ def lattice_track(lattice: Iterable[Element], r_in,
                               refpts=refpts, **kwargs)
     else:
         rout = _lattice_pass(lattice, r_in, nturns=nturns,
-                             refpts=refpts, **kwargs)
+                             refpts=refpts, no_varelem=False,
+                             **kwargs)
 
     if kwargs.get('losses', False):
         rout, lm = rout
@@ -286,7 +292,7 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
     rout = _element_pass(element, r_in, **kwargs)
     return rout
-
+    
 
 internal_lpass = _lattice_pass
 internal_epass = _element_pass
