@@ -404,7 +404,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     param.thread_rng=&thread_state;
     param.energy=0.0;
     param.rest_energy=0.0;
-    param.charge=-1.0;       
+    param.charge=-1.0;
+    param.num_turns=num_turns;
     
     if (keep_counter)
         param.nturn = last_turn;
