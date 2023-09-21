@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_and_run_tests:
+  build_and_publish_doc:
 
     runs-on: ubuntu-latest
 
