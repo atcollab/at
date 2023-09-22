@@ -9,7 +9,7 @@ idcav=atgetcells(ring,'Frequency');
 if any(idcav)
     fall=atgetfieldvalues(ring(idcav),'Frequency');
     [~,~,ic]=unique(fall);
-    idcav(ic~=1)=false;
+    idcav(idcav)=(ic==1);
 end
 idcav=find(idcav);
 end
