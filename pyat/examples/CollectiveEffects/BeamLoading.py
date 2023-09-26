@@ -20,29 +20,29 @@ def analytical_qs(ring, I):
     U0 = envel.U0 * qe
 
     Q0 = bl_elem.Qfactor * (1 + beta)
-    Rsh = 2 * bl_elem.Rshunt * (1 + beta)  # Difference in definition
+    Rsh = bl_elem.Rshunt * (1 + beta)  # Difference in definition
 
-    phi_s = numpy.arccos(U0 / (qe * Vc))  # sync. phase in radian
-    psi = - numpy.arctan(Rsh * I * numpy.sin(phi_s) /
+    phi_s = numpy.pi - numpy.arcsin(U0 / (qe * Vc))  # sync. phase in radian
+    psi = numpy.arctan(-2 * Rsh * I * numpy.cos(numpy.pi - phi_s) /
                          (Vc * (1 + beta)))  # tuning angle
-
+                         
     omega_res = (omega_rf /
-                 (1 + Rsh * I * numpy.sin(phi_s) /
+                 (1 - 2 * Rsh * I * (numpy.cos(numpy.pi - phi_s)) /
                   (2 * Q0 * Vc)))  # resonant freq.
 
     h = ring.harmonic_number  # harmonic number
     omega0 = omega_rf / h  # rev. freq.
     T0 = 2 * numpy.pi / omega0  # rev. time
 
-    omega_s0 = numpy.sqrt(qe * Vc * omega_rf * alpha_c * numpy.sin(phi_s) /
+    omega_s0 = numpy.sqrt(qe * Vc * omega_rf * alpha_c * numpy.cos(numpy.pi - phi_s) /
                           (E0 * T0))  # Synch. freq. for a single particle
 
-    K = alpha_c * qe * I / (E0 * T0) * (Rsh / 2) / (1 + beta)
+    K = alpha_c * qe * I / (E0 * T0) * Rsh / (1 + beta)
 
     # Synch. freq. with beam loading
     tilde_omega_s = numpy.sqrt(omega_s0**2 +
                                K * omega_rf * numpy.sin(2 * psi) + 1j * 0)
-    return tilde_omega_s / omega0
+    return tilde_omega_s / omega0, omega_s0/omega0
 
 
 comm = MPI.COMM_WORLD
@@ -113,7 +113,7 @@ for i in numpy.arange(Nturns):
     if i == kickTurn:
         part[4, :] += 3e-3
 
-    _ = at.lattice_pass(fring, part, nturns=1)
+    at.track_function(fring, part, nturns=1)
 
     # Gather particles over all cores (compatible with MPI on or off)
     allPartsg = comm.gather(part)
@@ -139,7 +139,7 @@ if rank == 0:
 
     qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
 
-    qs_theory = analytical_qs(ring, current)
+    qs_theory, qs_zerocurrent = analytical_qs(ring, current)
 
     print('Analytical:', numpy.real(qs_theory))
     print('Simulated:', qs_mn, 'pm', qs_std)
@@ -162,5 +162,7 @@ if rank == 0:
                 linestyle='dashed', color='k')
     plt.axvline(numpy.real(qs_theory), label='Analytical Beam Loaded Tune',
                 linestyle='dashed', color='r')
+    plt.axvline(qs_zerocurrent, label='Zero Current Tune',
+                linestyle='dashed', color='b')
     plt.legend()
     plt.show()

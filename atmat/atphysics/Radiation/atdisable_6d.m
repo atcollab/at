@@ -25,16 +25,17 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 %  [...] = ATDISABLE_6D(...[,keyword,value]...)
 %   The following keywords trigger the processing of the following elements:
 %
-%   'allpass'       Defines the default pass method for all elements not
-%                   explicitly specified. Replaces the following default
-%                   values.
-%   'cavipass'      pass method for RF cavities. Default 'auto'
-%   'bendpass'      pass method for bending magnets. Default 'auto'
-%   'quadpass'      pass method for quadrupoles. Default 'auto'
-%   'sextupass'     pass method for sextupoles. Default 'auto'
-%   'octupass'      pass method for bending magnets. Default 'auto'
-%   'wigglerpass'	pass method for wigglers. Default 'auto'
-%   'quantdiffpass' pass method for quantum diffusion. Default 'auto'
+%   'allpass'        Defines the default pass method for all elements not
+%                    explicitly specified. Replaces the following default
+%                    values.
+%   'cavipass'       pass method for RF cavities. Default 'auto'
+%   'bendpass'       pass method for bending magnets. Default 'auto'
+%   'quadpass'       pass method for quadrupoles. Default 'auto'
+%   'sextupass'      pass method for sextupoles. Default 'auto'
+%   'octupass'       pass method for bending magnets. Default 'auto'
+%   'wigglerpass'	 pass method for wigglers. Default 'auto'
+%   'quantdiffpass'  pass method for quantum diffusion. Default 'auto'
+%   'energylosspass' pass method for atenergyloss element. Default 'auto'
 %
 %   OUPUTS:
 %   1. NEWRING   Output ring
@@ -63,6 +64,7 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 [bendpass,varargs]=getoption(varargs,'bendpass',default_pass('auto'));
 [cavipass,varargs]=getoption(varargs,'cavipass',default_pass('auto'));
 [quantdiffpass,varargs]=getoption(varargs,'quantdiffpass',default_pass('auto'));
+[energylosspass,varargs]=getoption(varargs,'energylosspass',default_pass('auto'));
 % Process the positional arguments
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
@@ -74,6 +76,7 @@ modfun.Sextupole=autoMultipolePass(sextupass);
 modfun.Octupole=autoMultipolePass(octupass);
 modfun.Wiggler=autoMultipolePass(wigglerpass);
 modfun.QuantDiff=autoElemPass(quantdiffpass,'IdentityPass');
+modfun.EnergyLoss=autoElemPass(energylosspass,'IdentityPass');
 modfun.Other=@(elem) elem;
 
 % Generate the new lattice
@@ -85,6 +88,7 @@ if nargout > 1
 end
 
     function elem=modelem(elem)
+        %Modify the tracking PassMethod removing radiation
         cls=getclass_6d(elem);
         if any(strcmp(cls,fieldnames(modfun)))
             elem=modfun.(cls)(elem);
@@ -98,19 +102,13 @@ end
         elseif strcmp(newpass, 'auto')
             modfun=@varelem;
         else
-            modfun=@fixelem;
+            modfun=setpassenergy(newpass);
         end
         
         function elem=varelem(elem)
             % 'auto' multipole modification
             strrep(elem.PassMethod,'QuantPass','Pass)');
             elem.PassMethod=strrep(strrep(elem.PassMethod,'QuantPass','Pass'),'RadPass','Pass');
-            if isfield(elem,'Energy'), elem=rmfield(elem,'Energy'); end
-        end
-        
-        function elem=fixelem(elem)
-            % Explicit multipole modification
-            elem.PassMethod=newpass;
             if isfield(elem,'Energy'), elem=rmfield(elem,'Energy'); end
         end
     end
@@ -123,12 +121,7 @@ end
             if strcmp(newpass, 'auto')
                 newpass=defpass;
             end
-            modfun=@modelem;
-        end
-        
-        function elem=modelem(elem)
-            % Default element modification
-            elem.PassMethod=newpass;
+            modfun=setpassenergy(newpass);
         end
     end
 
@@ -139,7 +132,7 @@ end
         elseif strcmp(newpass, 'auto')
             modfun=@varelem;
         else
-            modfun=@fixelem;
+            modfun=setpass(newpass);
         end
         
         function elem=varelem(elem)
@@ -150,12 +143,22 @@ end
                 elem.PassMethod='IdentityPass';
             end
         end
-        
-        function elem=fixelem(elem)
-            % Explicit RF modification
-            elem.PassMethod=newpass;
+    end
+
+    function setfun=setpass(npass)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
         end
-    end                
+        setfun=@newelem;
+    end
+
+    function setfun=setpassenergy(npass)
+        function elem=newelem(elem)
+            elem.PassMethod=npass;
+            if isfield(elem,'Energy'), elem=rmfield(elem,'Energy'); end
+        end
+        setfun=@newelem;
+    end
 
     function defpass=default_pass(defpass)
         % Substitute the default pass method if 'allpass' is specified

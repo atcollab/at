@@ -29,7 +29,8 @@ The ``cavpts`` argument is used as follows:
 - ``cavpts is None`` (default value), and the ``Lattice`` object has a
   ``cavpts`` attribute: the lattice attribute is used to select the cavities.
 - ``cavpts is None``, and the lattice has no ``cavpts`` attribute (or it is
-  ``None``): all cavities are taken into account.
+  ``None``): if ``array is True``, all cavities are taken into account.
+  Otherwise, the cavities with the lowest frequency are selected.
 
 .. note::
 
@@ -120,7 +121,7 @@ The properties provide an even easier way to control the cavities, but
 are restricted to the default behaviour of the equivalent Lattice
 method:
 
-- cavities are selected by the ``Lattice.cavpts`` attribute (all
+- cavities are selected by the ``Lattice.cavpts`` attribute if present (lowest frequency
   cavities by default),
 - Setting a property modifies the ring in-place (no copy).
 

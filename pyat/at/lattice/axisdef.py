@@ -20,6 +20,8 @@ for xk, xv in [it for it in _axis_def.items()]:
     _axis_def[xv['index']] = xv
     _axis_def[xk.upper()] = xv
 _axis_def['delta'] = _axis_def['dp']
+_axis_def['xp'] = _axis_def['px']   # For backward compatibility
+_axis_def['yp'] = _axis_def['py']   # For backward compatibility
 _axis_def['s'] = _axis_def['ct']
 _axis_def['S'] = _axis_def['ct']
 _axis_def[None] = dict(index=slice(None), label="", unit="", code=":")
@@ -75,7 +77,7 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
 
           5, 'ct', 'CT', 's', 'S'
 
-          :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all axes
+          :py:obj:`None` and :py:obj:`Ellipsis` select all axes
 
         key:            key in the coordinate descriptor dictionary,
           selecting the desired information. One of :
@@ -92,7 +94,7 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
             entire description dictionary
 
     Returns:
-        descr : value of tuple[values]
+        descr : value or tuple[values]
 
     Examples:
 

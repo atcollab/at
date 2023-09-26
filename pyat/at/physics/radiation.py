@@ -1,15 +1,16 @@
 """
 Radiation and equilibrium emittances
 """
+from __future__ import annotations
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
-from typing import Tuple
+from typing import Union
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import Lattice, check_radiation, Refpts
-from at.lattice import Dipole, Wiggler, DConstant, Multipole, QuantumDiffusion
-from at.lattice import get_refpts, get_value_refpts
-from at.lattice import uint32_refpts, set_value_refpts
-from at.tracking import lattice_pass
+from at.lattice import Lattice, check_radiation, Refpts, All
+from at.lattice import Dipole, Wiggler, DConstant
+from at.lattice import Quadrupole, Multipole, QuantumDiffusion
+from at.lattice import frequency_control, set_value_refpts
+from at.tracking import internal_lpass
 from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
 from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
 from at.physics import ELossMethod
@@ -30,32 +31,30 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def _cumulb(it):
-    """accumulate diffusion matrices"""
-    cumul = numpy.zeros((6, 6))
-    yield cumul
-    for el, orbin, b in it:
-        m = find_elem_m66(el, orbin)
-        cumul = m.dot(cumul).dot(m.T) + b
-        yield cumul
-
-
 def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
     """
     compute the cumulative diffusion and orbit
     matrices over the ring
     """
-    nelems = len(ring)
+
+    def _cumulb(it):
+        """accumulate diffusion matrices"""
+        cumul = numpy.zeros((6, 6))
+        yield cumul
+        for el, orbin, b in it:
+            m = find_elem_m66(el, orbin, energy=energy, particle=ring.particle)
+            cumul = m.dot(cumul).dot(m.T) + b
+            yield cumul
+
     energy = ring.energy
-    allrefs = uint32_refpts(range(nelems + 1), nelems)
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
     orbs = numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
+        internal_lpass(ring, orbit.copy(order='K'), refpts=All,
+                       keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
           if elem.PassMethod.endswith('RadPass') else b0
@@ -161,8 +160,7 @@ def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
-    nelems = len(ring)
-    uint32refs = uint32_refpts(refpts, nelems)
+    uint32refs = ring.get_uint32_index(refpts)
     bbcum, orbs = _dmatr(ring, orbit=orbit, keep_lattice=keep_lattice)
     mring, ms = find_m66(ring, uint32refs, orbit=orbs[0], keep_lattice=True)
     # ------------------------------------------------------------------------
@@ -197,19 +195,20 @@ def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
     return data0, r66data, data
 
 
+@frequency_control
 def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
-        -> Tuple[float, float, float, float, float]:
+        -> tuple[float, float, float, float, float]:
     r"""Computes the 5 radiation integrals for uncoupled lattices.
 
     Parameters:
         ring:   Lattice description
-        dp:     Momentum deviation. Ignored if radiation is ON
         twiss:  Linear optics at all points (from :py:func:`.linopt6`).
           If ``None``, it will be computed.
 
     Keyword Args:
-        dct (float):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
+        dp (float):             Momentum deviation. Defaults to :py:obj:`None`
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to       
         method (Callable):  Method for linear optics:
 
           :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
@@ -225,21 +224,28 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         i5 (float): :math:`I_5 \quad [m^{-1}]`
     """
 
-    def dipole_radiation(elem: Dipole, vini, vend):
+    def element_radiation(elem: Union[Dipole, Quadrupole], vini, vend):
         """Analytically compute the radiation integrals in dipoles"""
         beta0 = vini.beta[0]
         alpha0 = vini.alpha[0]
         eta0 = vini.dispersion[0]
         etap0 = vini.dispersion[1]
+        theta = getattr(elem, 'BendingAngle', None)
+        if theta is None:
+            xpi = vini.closed_orbit[1]/(1+vini.closed_orbit[4])
+            xpo = vend.closed_orbit[1]/(1+vend.closed_orbit[4])
+            theta = xpi-xpo
+        if abs(theta) < 1.0e-7:
+            return numpy.zeros(5)
+        angin = getattr(elem, 'EntranceAngle', 0.0)
+        angout = getattr(elem, 'ExitAngle', 0.0)
 
         ll = elem.Length
-        theta = elem.BendingAngle
         rho = ll / theta
         rho2 = rho * rho
         k2 = elem.K + 1.0 / rho2
-        eps1 = tan(elem.EntranceAngle) / rho
-        eps2 = tan(elem.ExitAngle) / rho
-
+        eps1 = tan(angin) / rho
+        eps2 = tan(angout) / rho
         eta3 = vend.dispersion[0]
         alpha1 = alpha0 - beta0 * eps1
         gamma1 = (1.0 + alpha1 * alpha1) / beta0
@@ -349,8 +355,8 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         raise ValueError('length of Twiss data should be {0}'
                          .format(len(ring) + 1))
     for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
-        if isinstance(el, Dipole) and el.BendingAngle != 0.0:
-            integrals += dipole_radiation(el, vini, vend)
+        if isinstance(el, (Dipole, Quadrupole)):
+            integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != 'DriftPass':
             integrals += wiggler_radiation(el, vini)
     return tuple(integrals)
@@ -397,8 +403,8 @@ def tapering(ring: Lattice, multipoles: bool = True,
     """Scales magnet strengths
 
     Scales magnet strengths with local energy to cancel the closed orbit
-    and optics errors due to synchrotron radiations. PolynomB is used for
-    dipoles such that the machine geometry is maintained. This is the ideal
+    and optics errors due to synchrotron radiations. The dipole bending angle
+    is changed by changing the reference momentum. This is the ideal
     tapering scheme where magnets and multipoles components (PolynomB and
     PolynomA) are scaled individually.
 
@@ -424,28 +430,21 @@ def tapering(ring: Lattice, multipoles: bool = True,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
-    dipoles = get_refpts(ring, Dipole)
-    b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
-    k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
-    ld = get_value_refpts(ring, dipoles, 'Length')
+    dipin = ring.get_bool_index(Dipole)
+    dipout = numpy.roll(dipin, 1)
+    multin = ring.get_bool_index(Multipole) & ~dipin
+    multout = numpy.roll(multin, 1)
 
     for i in range(niter):
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step, method=method)
-        dpps = (o6[dipoles, 4] + o6[dipoles+1, 4]) / 2
-        set_value_refpts(ring, dipoles, 'PolynomB', b0/ld*dpps+k0*(1+dpps),
-                         index=0)
-
-    if multipoles:
-        mults = get_refpts(ring, Multipole)
-        k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
-        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
-                            XYStep=xy_step, DPStep=dp_step, method=method)
-        dpps = (o6[mults, 4] + o6[mults+1, 4]) / 2
-        for dpp, el in zip(dpps, ring[mults]):
-            el.PolynomB *= 1+dpp
-            el.PolynomA *= 1+dpp
-        set_value_refpts(ring, dipoles, 'PolynomB', k0, index=0)
+        dpps = (o6[dipin, 4] + o6[dipout, 4]) / 2.0
+        set_value_refpts(ring, dipin, 'FieldScaling', 1+dpps)
+        if multipoles:
+            _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                                XYStep=xy_step, DPStep=dp_step, method=method)
+            dppm = (o6[multin, 4] + o6[multout, 4]) / 2
+            set_value_refpts(ring, multin, 'FieldScaling', 1+dppm)
 
 
 Lattice.ohmi_envelope = ohmi_envelope

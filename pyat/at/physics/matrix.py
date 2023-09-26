@@ -7,7 +7,7 @@ import numpy
 from ..lattice import Lattice, Element, DConstant, Refpts, Orbit
 from ..lattice import frequency_control, get_uint32_index
 from ..lattice.elements import Dipole, M66
-from ..tracking import lattice_pass, element_pass
+from ..tracking import internal_lpass, internal_epass
 from .orbit import find_orbit4, find_orbit6
 from .amat import jmat, symplectify
 
@@ -84,8 +84,8 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
 
     refs = get_uint32_index(ring, refpts)
     out_mat = numpy.rollaxis(
-        numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
-                                   keep_lattice=keep_lattice), axis=3), -1
+        numpy.squeeze(internal_lpass(ring, in_mat, refpts=refs,
+                                     keep_lattice=keep_lattice), axis=3), -1
     )
     # out_mat: 8 particles at n refpts for one turn
     # (x + d) - (x - d) / d
@@ -157,8 +157,8 @@ def find_m66(ring: Lattice, refpts: Refpts = None,
 
     refs = get_uint32_index(ring, refpts)
     out_mat = numpy.rollaxis(
-        numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
-                                   keep_lattice=keep_lattice), axis=3), -1
+        numpy.squeeze(internal_lpass(ring, in_mat, refpts=refs,
+                                     keep_lattice=keep_lattice), axis=3), -1
     )
     # out_mat: 12 particles at n refpts for one turn
     # (x + d) - (x - d) / d
@@ -185,6 +185,10 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     Keyword Args:
         XYStep (float): Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
+        particle (Particle):    circulating particle.
+          Default: :code:`lattice.particle` if existing,
+          otherwise :code:`Particle('relativistic')`
+        energy (float):         lattice energy. Default 0.
 
     Returns:
         m66:            6x6 transfer matrix
@@ -200,7 +204,7 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     dmat = numpy.concatenate((dg, -dg), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
-    element_pass(elem, in_mat)
+    internal_epass(elem, in_mat, **kwargs)
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
     return m66
 

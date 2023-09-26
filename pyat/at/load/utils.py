@@ -11,6 +11,7 @@ import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
+from at.lattice import idtable_element
 from at.lattice import Particle, Element
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
@@ -55,7 +56,9 @@ _alias_map = {'rbend': elt.Dipole,
               'bpm': elt.Monitor,
               'ap': elt.Aperture,
               'ringparam': RingParam,
-              'wig': elt.Wiggler}
+              'wig': elt.Wiggler,
+              'insertiondevicekickmap': idtable_element.InsertionDeviceKickMap
+              }
 
 
 # Matlab to Python class translation
@@ -66,11 +69,14 @@ _PASS_MAP = {'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
              'BndMPoleSymplectic4Pass': elt.Dipole,
              'QuadLinearPass': elt.Quadrupole,
+             'StrMPoleSymplectic4Pass': elt.Multipole,
+             'StrMPoleSymplectic4RadPass': elt.Multipole,
              'CorrectorPass': elt.Corrector,
              'CavityPass': elt.RFCavity, 'RFCavityPass': elt.RFCavity,
              'ThinMPolePass': elt.ThinMultipole,
              'Matrix66Pass': elt.M66,
              'AperturePass': elt.Aperture,
+             'IdTablePass': idtable_element.InsertionDeviceKickMap,
              'GWigSymplecticPass': elt.Wiggler}
 
 # Matlab to Python attribute translation
@@ -78,7 +84,10 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name'}
 
 # Python to Matlab class translation
-_matclass_map = {'Dipole': 'Bend'}
+_matclass_map = {
+        'Dipole': 'Bend',
+        'InsertionDeviceKickMap': 'InsertionDeviceKickMap'
+        }
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
@@ -88,7 +97,9 @@ _mattype_map = {int: float,
 _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
-    elt.M66: 'atM66'}
+    elt.M66: 'atM66',
+    idtable_element.InsertionDeviceKickMap: 'atinsertiondevicekickmap'
+    }
 
 
 def hasattrs(kwargs: dict, *attributes) -> bool:
@@ -136,8 +147,9 @@ def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
         if not quiet and class_name:
-            warn(AtWarning("Class '{0}' does not exist.\n"
-                           "{1}".format(class_name, elem_dict)))
+            class_doesnotexist_warning = ("Class '{0}' does not exist.\n"
+                                          "{1}".format(class_name, elem_dict))
+            warn(AtWarning(class_doesnotexist_warning))
         fam_name = elem_dict.get('FamName', '')
         try:
             return _CLASS_MAP[fam_name.lower()]
@@ -213,8 +225,8 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
     def sanitise_class(index, cls, elem_dict):
         """Checks that the Class and PassMethod of the element are a valid
             combination. Some Classes and PassMethods are incompatible and
-            would raise errors during calculation if left, so we raise an error
-            here with a more helpful message.
+            would raise errors during calculation, so we send a
+            warning here.
 
         Args:
             index:          element index
@@ -230,7 +242,7 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
             msg = ''.join(('Error in element', location,
                            'PassMethod {0} '.format(pass_method),
                            message.format(*args), '\n{0}'.format(elem_dict)))
-            return AttributeError(msg)
+            return AtWarning(msg)
 
         class_name = cls.__name__
         pass_method = elem_dict.get('PassMethod')
@@ -240,18 +252,12 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
             file_name = pass_method + _ext_suffix
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
-                raise err("does not have a {0} file.".format(file_name))
+                warn(err(" is missing {0}.".format(file_name)))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
-                raise err("is not compatible with length {0}.", length)
+                warn(err("is not compatible with length {0}.", length))
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
-                    raise err("is not compatible with Class {0}.", class_name)
-            elif issubclass(cls, (elt.Marker, elt.Monitor, RingParam)):
-                if pass_method != 'IdentityPass':
-                    raise err("is not compatible with Class {0}.", class_name)
-            elif cls == elt.Drift:
-                if pass_method != 'DriftPass':
-                    raise err("is not compatible with Class {0}.", class_name)
+                    warn(err("is not compatible with Class {0}.", class_name))
 
     cls = find_class(elem_dict, quiet=quiet)
     if check:

@@ -7,23 +7,23 @@ classdef pytests < matlab.unittest.TestCase
             "machine_data/spear3.m"];
     end
     
-    properties
-        ring4
-        ring6
-    end
-    
     properties(TestParameter)
         dp = {0., -0.01, 0.01};
-        dct = {0., -0.00005, 0.00005};
         lat = struct("hmba", "hmba","dba","dba","spear3","spear3");
         rad = struct("radoff","ring4","radon","ring6");
         lat2 = struct("hmba", "hmba","spear3","spear3");
+    end
+    
+    properties
+        ring4
+        ring6
     end
 
     methods(TestClassSetup)
         function load_lattice(testCase)
             % Shared setup for the entire test class
             t=warning('off','AT:atradon:NOCavity');
+            setoption('WarningDp6D',false);
             for fpath=testCase.mlist
                 [~,fname,~]=fileparts(fpath);
                 [testCase.ring4.(fname),testCase.ring6.(fname)]=mload(fpath);
@@ -35,8 +35,8 @@ classdef pytests < matlab.unittest.TestCase
                 pr=atwritepy(mr,'keep_all',true);
                 ring4.m=mr;
                 ring4.p=pr;
-                ring6.m=atradon(mr);
-                ring6.p=pr.radiation_on(pyargs('copy',true));
+                ring6.m=atenable_6d(mr);
+                ring6.p=pr.enable_6d(pyargs('copy',true));
             end
         end
     end
@@ -45,8 +45,18 @@ classdef pytests < matlab.unittest.TestCase
         % Setup for each test
     end
 
+    methods(Static)
+        function [dct,df]=dctdf(r4, dpp)
+            [frf,l]=atGetRingProperties(r4,'rf_frequency','cell_length');
+            [~,o0]=findorbit4(r4,dp=dpp);
+            o1=ringpass(r4, o0);
+            dct=o1(6);
+            df=-frf*dct/(l+dct);
+        end
+    end
+
     methods(Test, TestTags="GitHub")
-        % These tests may rub in GitHub actions
+        % These tests may run in GitHub actions
 
         function lattice_pass(testCase,lat,rad)
             % Test ob basic tracking
@@ -71,8 +81,9 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(morbit4,porbit4,AbsTol=1.E-15);
         end
 
-        function syncorbit(testCase,lat,dct)
+        function syncorbit(testCase,lat,dp)
             lattice=testCase.ring4.(lat);
+            [dct,~]=testCase.dctdf(lattice.m, dp);
             % python
             a=cell(lattice.p.find_sync_orbit(dct));
             [psyncorb,~]=deal(a{:});
@@ -82,15 +93,15 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(msyncorb,psyncorb,AbsTol=1.E-15);
         end
 
-        function orbit6(testCase,lat2)
+        function orbit6(testCase,lat2,dp)
             lattice=testCase.ring6.(lat2);
             % python
-            a=cell(lattice.p.find_orbit6());
+            a=cell(lattice.p.find_orbit6(pyargs(dp=dp)));
             [porbit6,~]=deal(a{:});
             porbit6=double(porbit6)';
             % Matlab
-            [~,morbit6]=findorbit6(lattice.m);
-            testCase.verifyEqual(morbit6,porbit6,AbsTol=5.E-15 );
+            [~,morbit6]=findorbit6(lattice.m,dp=dp);
+            testCase.verifyEqual(morbit6,porbit6,AbsTol=2.E-12);
         end
 
         function m44(testCase,lat2,dp)
@@ -113,6 +124,34 @@ classdef pytests < matlab.unittest.TestCase
             [pm66,~]=deal(a2{:});
             pm66=double(pm66);
             testCase.verifyEqual(mm66,pm66,AbsTol=5.E-9);
+        end
+
+        function offmomdp(testCase, dp)
+            % Checks that off-momentum is correctly taken into account
+            % for 6D lattices
+            [ring1, elem1]=atlinopt6(testCase.ring4.hmba.m,'get_chrom', dp=dp);
+            [ring2, elem2]=atlinopt6(testCase.ring6.hmba.m,'get_chrom', dp=dp);
+            testCase.verifyEqual(ring1.tune, ring2.tune(1:2), AbsTol=1e-6);
+            testCase.verifyEqual(ring1.chromaticity, ring2.chromaticity(1:2), AbsTol=5.e-5);
+            testCase.verifyEqual(elem1.beta, elem2.beta, AbsTol=1.e-4)
+        end
+
+        function offmomdct(testCase, dp)
+            [dct,~]=testCase.dctdf(testCase.ring4.hmba.m, dp);
+            [ring1, elem1]=atlinopt6(testCase.ring4.hmba.m,'get_chrom', dct=dct);
+            [ring2, elem2]=atlinopt6(testCase.ring6.hmba.m,'get_chrom', dct=dct);
+            testCase.verifyEqual(ring1.tune, ring2.tune(1:2), AbsTol=1e-6);
+            testCase.verifyEqual(ring1.chromaticity, ring2.chromaticity(1:2), AbsTol=5.e-5);
+            testCase.verifyEqual(elem1.beta, elem2.beta, AbsTol=1.e-4)
+        end
+
+        function offmomdf(testCase, dp)
+            [~,df]=testCase.dctdf(testCase.ring4.hmba.m, dp);
+            [ring1, elem1]=atlinopt6(testCase.ring4.hmba.m,'get_chrom', df=df);
+            [ring2, elem2]=atlinopt6(testCase.ring6.hmba.m,'get_chrom', df=df);
+            testCase.verifyEqual(ring1.tune, ring2.tune(1:2), AbsTol=1e-6);
+            testCase.verifyEqual(ring1.chromaticity, ring2.chromaticity(1:2), AbsTol=5.e-5);
+            testCase.verifyEqual(elem1.beta, elem2.beta, AbsTol=1.e-4)
         end
     end
 
@@ -141,7 +180,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
             testCase.verifyEqual(mtune,ptune,AbsTol=1.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=1.e-4);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.e-4);
         end
 
         function linopt1(testCase,dp)

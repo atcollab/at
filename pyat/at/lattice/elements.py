@@ -5,12 +5,14 @@ Each element has a default PassMethod attribute for which it should have the
 appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
+from __future__ import annotations
 import abc
 import re
 import numpy
 from copy import copy, deepcopy
 from abc import ABC
-from typing import Optional, Generator, Tuple, List, Iterable
+from collections.abc import Generator, Iterable
+from typing import Optional
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -203,8 +205,8 @@ class Radiative(_Radiative):
 class Collective(_DictLongtMotion):
     """Mixin class for elements representing collective effects
 
-    Derived classes will automatically set the :py:attr:`~Element.is_collective`
-    property when the element is active.
+    Derived classes will automatically set the
+    :py:attr:`~Element.is_collective` property when the element is active.
 
     The class must have a ``default_pass`` class attribute, a dictionary such
     that:
@@ -228,7 +230,7 @@ class Collective(_DictLongtMotion):
     def _get_collective(self):
         # noinspection PyUnresolvedReferences
         return self.PassMethod != self.default_pass[False]
-        
+
     @abc.abstractmethod
     def clear_history(self):
         pass
@@ -303,7 +305,7 @@ class Element(object):
         """
         return repr(self) == repr(other)
 
-    def divide(self, frac) -> List["Element"]:
+    def divide(self, frac) -> list[Element]:
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
 
@@ -328,7 +330,7 @@ class Element(object):
             val = getattr(element, attri)
             delattr(element, attri)
             return attro, val
-        if copy: 
+        if copy:
             el = self.copy()
         else:
             el = self
@@ -361,20 +363,20 @@ class Element(object):
         for (key, value) in attrs.items():
             setattr(self, key, value)
 
-    def copy(self) -> "Element":
+    def copy(self) -> Element:
         """Return a shallow copy of the element"""
         return copy(self)
 
-    def deepcopy(self) -> "Element":
+    def deepcopy(self) -> Element:
         """Return a deep copy of the element"""
         return deepcopy(self)
 
-    def items(self) -> Generator[Tuple, None, None]:
+    def items(self) -> Generator[tuple, None, None]:
         """Iterates through the data members"""
         for k, v in vars(self).items():
             yield k, v
 
-    def is_compatible(self, other: "Element") -> bool:
+    def is_compatible(self, other: Element) -> bool:
         """Checks if another :py:class:`Element` can be merged"""
         return False
 
@@ -429,7 +431,7 @@ class LongElement(Element):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
-    def divide(self, frac) -> List[Element]:
+    def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
             val = getattr(element, attr)
             delattr(element, attr)
@@ -473,21 +475,21 @@ class BeamMoments(Element):
 
     def __init__(self, family_name: str, **kwargs):
         kwargs.setdefault('PassMethod', 'BeamMomentsPass')
-        self._stds = numpy.zeros((6, 1, 0), order='F')
-        self._means = numpy.zeros((6, 1, 0), order='F')
+        self._stds = numpy.zeros((6, 1, 1), order='F')
+        self._means = numpy.zeros((6, 1, 1), order='F')
         super(BeamMoments, self).__init__(family_name, **kwargs)
 
     def set_buffers(self, nturns, nbunch):
         self._stds = numpy.zeros((6, nbunch, nturns), order='F')
         self._means = numpy.zeros((6, nbunch, nturns), order='F')
-        
+
     @property
     def stds(self):
         return self._stds
-        
+
     @property
     def means(self):
-        return self._means    
+        return self._means
 
 
 class Aperture(Element):
@@ -523,8 +525,8 @@ class Drift(LongElement):
         super(Drift, self).__init__(family_name, length, **kwargs)
 
     def insert(self,
-               insert_list: Iterable[Tuple[float, Optional[Element]]]) \
-            -> List[Element]:
+               insert_list: Iterable[tuple[float, Optional[Element]]]) \
+            -> list[Element]:
         """insert elements inside a drift
 
         Arguments:
@@ -562,7 +564,7 @@ class Drift(LongElement):
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
-        line = [None] * nline  # type: List[Optional[Element]]
+        line = [None] * nline  # type: list[Optional[Element]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
@@ -599,8 +601,10 @@ class ThinMultipole(Element):
             poly_b:         Array of skew multipole components
 
         Keyword arguments:
-            MaxOrder:   Number of desired multipoles. Default: highest index of
-                        non-zero polynomial coefficients
+            MaxOrder:       Number of desired multipoles. Default: highest
+              index of non-zero polynomial coefficients
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``ThinMPolePass``
         """
@@ -664,10 +668,12 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             poly_b:         Array of skew multipole components
 
         Keyword arguments:
-            MaxOrder:   Number of desired multipoles. Default: highest index of
-              non-zero polynomial coefficients
-            NumIntSteps: Number of integration steps (default: 10)
-            KickAngle:  Correction deviation angles (H, V)
+            MaxOrder:       Number of desired multipoles. Default: highest
+              index of non-zero polynomial coefficients
+            NumIntSteps:    Number of integration steps (default: 10)
+            KickAngle:      Correction deviation angles (H, V)
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
@@ -702,7 +708,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     # noinspection PyPep8Naming
     @property
     def H(self) -> float:
-        """Sextupolar strength"""
+        """Sextupolar strength [mˆ-3]"""
         return 0.0 if len(self.PolynomB) < 3 else self.PolynomB[2]
 
     # noinspection PyPep8Naming
@@ -752,23 +758,24 @@ class Dipole(Radiative, Multipole):
             MaxOrder:           Number of desired multipoles
             NumIntSt=10:        Number of integration steps
             FullGap:            Magnet full gap
-            FringeInt1:         Fringe field extension
-            FringeInt2:
+            FringeInt1:         Extension of the entrance fringe field
+            FringeInt2:         Extension of the exit fringe field
             FringeBendEntrance: 1: legacy version Brown First Order (default)
 
               2: SOLEIL close to second order of Brown
 
               3: THOMX
-            FringeBendExit:     See ``FringeBendEntrance``
+            FringeBendExit:     See *FringeBendEntrance*
             FringeQuadEntrance: 0: no fringe field effect (default)
 
               1: Lee-Whiting's thin lens limit formula
 
               2: elegant-like
-            FringeQuadExit:     See ``FringeQuadEntrance``
+            FringeQuadExit:     See *FringeQuadEntrance*
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
             KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
 
         Default PassMethod: ``BndMPoleSymplectic4Pass``
         """
@@ -779,7 +786,7 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
-    def items(self) -> Generator[Tuple, None, None]:
+    def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
         yield 'K', self.K
 
@@ -843,6 +850,8 @@ class Quadrupole(Radiative, Multipole):
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
             KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
@@ -851,7 +860,7 @@ class Quadrupole(Radiative, Multipole):
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
 
-    def items(self) -> Generator[Tuple, None, None]:
+    def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
         yield 'K', self.K
 
@@ -876,6 +885,8 @@ class Sextupole(Multipole):
             MaxOrder:           Number of desired multipoles
             NumIntSteps=10:     Number of integration steps
             KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
@@ -883,10 +894,6 @@ class Sextupole(Multipole):
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
-
-    def items(self) -> Generator[Tuple, None, None]:
-        yield from super().items()
-        yield 'H', self.H
 
 
 class Octupole(Multipole):
@@ -976,6 +983,70 @@ class M66(Element):
         super(M66, self).__init__(family_name, M66=m66, **kwargs)
 
 
+class SimpleQuantDiff(_DictLongtMotion, Element):
+    """
+    Linear tracking element for a simplified quantum diffusion,
+    radiation damping and energy loss
+    """
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
+
+    def __init__(self, family_name: str, betax: float = 1.0,
+                 betay: float = 1.0, emitx: float = 0.0,
+                 emity: float = 0.0, espread: float = 0.0,
+                 taux: float = 0.0, tauy: float = 0.0,
+                 tauz: float = 0.0, U0: float = 0.0,
+                 **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            
+        Optional Args:
+            betax:         Horizontal beta function at element [m]
+            betay:         Vertical beta function at element [m]
+            emitx:         Horizontal equilibrium emittance [m.rad]
+            emity:         Vertical equilibrium emittance [m.rad]
+            espread:       Equilibrium energy spread
+            taux:          Horizontal damping time [turns]
+            tauy:          Vertical damping time [turns]
+            tauz:          Longitudinal damping time [turns]
+            U0:             Energy Loss [eV]
+            
+        Default PassMethod: ``SimpleQuantDiffPass``
+       """
+        kwargs.setdefault('PassMethod', self.default_pass[True])
+       
+        assert taux >= 0.0, 'taux must be greater than or equal to 0'
+        self.taux = taux
+            
+        assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
+        self.tauy = tauy
+
+        assert tauz >= 0.0, 'tauz must be greater than or equal to 0'
+        self.tauz = tauz
+
+        assert emitx >= 0.0, 'emitx must be greater than or equal to 0'
+        self.emitx = emitx
+        if emitx > 0.0:
+            assert taux > 0.0, 'if emitx is given, taux must be non zero'
+            
+        assert emity >= 0.0, 'emity must be greater than or equal to 0'
+        self.emity = emity
+        if emity > 0.0:
+            assert tauy > 0.0, 'if emity is given, tauy must be non zero'
+            
+        assert espread >= 0.0, 'espread must be greater than or equal to 0'
+        self.espread = espread
+        if espread > 0.0:
+            assert tauz > 0.0, 'if espread is given, tauz must be non zero'
+            
+        self.U0 = U0
+        self.betax = betax
+        self.betay = betay
+        super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
+
+
+
 class Corrector(LongElement):
     """Corrector element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['KickAngle']
@@ -986,6 +1057,10 @@ class Corrector(LongElement):
             family_name:    Name of the element
             length:         Element length [m]
             KickAngle:      Correction deviation angles (H, V)
+
+        Keyword Args:
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*KickAngle*)
 
         Default PassMethod: ``CorrectorPass``
         """
@@ -1065,12 +1140,31 @@ class QuantumDiffusion(_DictLongtMotion, Element):
         Args:
             family_name:    Name of the element
             lmatp      :    Diffusion matrix for generation (see
-                               :py:func:`.gen_quantdiff_elem`)
+              :py:func:`.gen_quantdiff_elem`)
 
         Default PassMethod: ``QuantDiffPass``
         """
         kwargs.setdefault('PassMethod', self.default_pass[True])
         super().__init__(family_name, Lmatp=lmatp, **kwargs)
+
+
+class EnergyLoss(_DictLongtMotion, Element):
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['EnergyLoss']
+    _conversions = dict(Element._conversions, EnergyLoss=float)
+    default_pass = {False: 'IdentityPass', True: 'EnergyLossRadPass'}
+
+    def __init__(self, family_name: str, energy_loss: float, **kwargs):
+        """Energy loss element
+
+        Args:
+            family_name:    Name of the element
+            energy_loss:    Energy loss [eV]
+
+        """
+        kwargs.setdefault('PassMethod', self.default_pass[False])
+        super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
+
+Radiative.register(EnergyLoss)
 
 
 def build_class_map():  # Missing class aliases (Bend)

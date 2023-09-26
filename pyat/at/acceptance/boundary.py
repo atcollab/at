@@ -5,7 +5,6 @@ grid definitions
 """
 
 from at.lattice import Lattice, AtError
-from at.tracking import lattice_pass, patpass
 from typing import Optional, Sequence
 from enum import Enum
 import numpy
@@ -88,7 +87,7 @@ def set_ring_orbit(ring, dp, obspt, orbit):
 
 
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
-                       shift_zero=1.0e-9):
+                       shift_zero=1.0e-6):
     """
     Return a grid configuration based on user input parameters, the ordering
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
@@ -156,9 +155,7 @@ def get_parts(config, offset):
         g = get_part_grid_radial(bnd, np, amp)
     parts = numpy.zeros((6, numpy.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
-    if len(pind) == 2:
-        parts[pind[0]][parts[pind[1]] == 0.0] += config.shift_zero
-        parts[pind[1]][parts[pind[0]] == 0.0] += config.shift_zero
+    offset = numpy.array(offset) + config.shift_zero
     parts = (parts.T+offset).T
     return parts, grid(g, offset[pind])
 
@@ -167,15 +164,8 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
-    if use_mp:
-        _ = patpass(ring, parts, nturns=nturns, **kwargs)
-    else:
-        _ = lattice_pass(ring, parts, nturns=nturns, **kwargs)
-    if parts.ndim == 1:
-        survived = numpy.invert(numpy.isnan(parts[0]))
-    else:
-        survived = numpy.invert(numpy.isnan(parts[0, :]))
-    return survived
+    _, _, td = ring.track(parts, nturns=nturns, losses=True, use_mp=use_mp, **kwargs)
+    return numpy.invert(td['loss_map'].islost)
 
 
 def get_grid_boundary(mask, grid, config):
@@ -333,7 +323,6 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         cs = numpy.around(cs, decimals=9)
         fact = numpy.ones(len(angles))
         survived = numpy.full(len(angles), True)
-        istracked = numpy.full(len(angles), True)
         part = numpy.zeros((6, len(angles)))
         grid = numpy.array([])
         mask = numpy.array([])

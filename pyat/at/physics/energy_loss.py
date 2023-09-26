@@ -4,12 +4,12 @@ from math import pi
 from typing import Optional, Tuple
 import numpy
 from scipy.optimize import least_squares
-from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
+from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import QuantumDiffusion, Collective
 from at.lattice import get_bool_index, set_value_refpts
 from at.constants import clight, Cgamma
-from at.tracking import lattice_pass
+from at.tracking import internal_lpass
 
 __all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod',
            'get_timelag_fromU0']
@@ -55,13 +55,19 @@ def get_energy_loss(ring: Lattice,
         def dipole_i2(dipole: Dipole):
             return dipole.BendingAngle ** 2 / dipole.Length
 
+        def eloss_i2(eloss: EnergyLoss):
+            return eloss.EnergyLoss / coef
+
         i2 = 0.0
+        coef = Cgamma / 2.0 / pi * ring.energy ** 4
         for el in ring:
             if isinstance(el, Dipole):
                 i2 += dipole_i2(el)
             elif isinstance(el, Wiggler) and el.PassMethod != 'DriftPass':
                 i2 += wiggler_i2(el)
-        e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
+            elif isinstance(el, EnergyLoss) and el.PassMethod != 'IdentityPass':
+                i2 += eloss_i2(el)
+        e_loss = coef * i2
         return e_loss
 
     # noinspection PyShadowingNames
@@ -71,12 +77,12 @@ def get_energy_loss(ring: Lattice,
         """
         ringtmp = ring.disable_6d(RFCavity, QuantumDiffusion, Collective,
                                   copy=True)
-        o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
-                           refpts=len(ringtmp)))
+        o6 = numpy.squeeze(internal_lpass(ringtmp, numpy.zeros(6),
+                                          refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
             dp = 0
             for e in ringtmp:
-                ot = numpy.squeeze(lattice_pass([e], numpy.zeros(6)))
+                ot = numpy.squeeze(internal_lpass([e], numpy.zeros(6)))
                 dp += -ot[4] * ring.energy
             return dp
         else:
@@ -97,7 +103,8 @@ def get_energy_loss(ring: Lattice,
 def get_timelag_fromU0(ring: Lattice,
                        method: Optional[ELossMethod] = ELossMethod.TRACKING,
                        cavpts: Optional[Refpts] = None,
-                       divider: Optional[int] = 4) -> Tuple[float, float]:
+                       divider: Optional[int] = 4,
+                       ts_tol: Optional[float] = 1.0e-9) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -111,6 +118,8 @@ def get_timelag_fromU0(ring: Lattice,
           See :py:class:`ELossMethod`.
         cavpts:             Cavity location. If None, use all cavities.
           This allows to ignore harmonic cavities.
+        divider: number of segments to search for ts
+        phis_tol: relative tolerance for ts calculation
     Returns:
         timelag (float):    Timelag
         ts (float):         Time difference with the present value
@@ -123,12 +132,12 @@ def get_timelag_fromU0(ring: Lattice,
 
     def eq(x, freq, rfv, tl0, u0):
         omf = 2*numpy.pi*freq/clight
-        eq1 = numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0
+        eq1 = (numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0)/u0
         eq2 = numpy.sum(-omf*rfv*numpy.cos(omf*(x-tl0)))
         if eq2 > 0:
             return numpy.sqrt(eq1**2+eq2**2)
         else:
-            return eq1
+            return abs(eq1)
 
     if cavpts is None:
         cavpts = get_bool_index(ring, RFCavity)
@@ -151,8 +160,8 @@ def get_timelag_fromU0(ring: Lattice,
                                    args=args, bounds=bounds+tt0))
             r.append(least_squares(eq, bounds[1]*fact+tt0,
                                    args=args, bounds=bounds+tt0))
-        res = numpy.array([abs(ri.fun[0]) for ri in r])
-        ok = res < 1.0e-6
+        res = numpy.array([ri.fun[0] for ri in r])
+        ok = res < ts_tol
         vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '

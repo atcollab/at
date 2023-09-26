@@ -1,12 +1,8 @@
 import sys
 import numpy as np
-from at.constants import clight, e_mass, qe
-import matplotlib.pyplot as plt
 import at
 from at.collective import Wake, ResWallElement, WakeComponent
-from at.tracking.utils import get_bunches_std_mean
 from mpi4py import MPI
-import time
 import pickle as pkl
 
 
@@ -94,16 +90,17 @@ def launch():
     part[0, :] = 1e-6
     part[1, :] = 0
 
-    _ = at.lattice_pass(fring, part, nturns=nturns)
+    at.track_function(fring, part, nturns=nturns)
 
     x_all = bmon.means[0, :, :]
     xp_all = bmon.means[1, :, :]
     if rank == 0:
-        outDict = pkl.dump({'x': x_all.T, 'xp': xp_all.T,
-                            'ring': ring, 'sigmac': sigmac, 'rvac': rvac,
-                            'M': Nbunches, 'alphax': l0['alpha'][0],
-                            'betax': l0['beta'][0], 'current': current},
-                           open('./TRW_output.pkl', 'wb'))
+        outdict = {'x': x_all.T, 'xp': xp_all.T,
+                   'ring': ring, 'sigmac': sigmac, 'rvac': rvac,
+                   'M': Nbunches, 'alphax': l0['alpha'][0],
+                   'betax': l0['beta'][0], 'current': current}
+        pkl.dump(outdict, open('./TRW_output.pkl', 'wb'))
+
 
 if __name__ == '__main__':
     launch()

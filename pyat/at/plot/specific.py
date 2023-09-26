@@ -1,6 +1,6 @@
 """AT plotting functions"""
 from ..lattice import Lattice, Refpts
-from ..tracking import lattice_pass
+from ..tracking import internal_lpass
 from ..physics import get_optics, Orbit
 from .generic import baseplot
 
@@ -16,7 +16,7 @@ def pldata_beta_disp(ring: Lattice, refpts: Refpts, **kwargs):
     """Generates data for plotting beta functions and dispersion"""
 
     # compute linear optics at the required locations
-    data0, _, data = get_optics(ring, refpts=refpts, get_chrom=True, **kwargs)
+    data0, _, data = get_optics(ring, refpts=refpts, **kwargs)
 
     # Extract the plot data
     s_pos = data['s_pos']
@@ -64,6 +64,24 @@ def plot_beta(ring: Lattice, **kwargs):
         twiss_in:           Initial conditions for transfer line optics. Record
           array as output by :py:func:`.linopt2`, :py:func:`.linopt6`, or
           dictionary.
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot
+        labels (Refpts):    display the name of selected elements.
+          Default: :py:obj:`None`
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
    """
     return baseplot(ring, pldata_beta_disp, **kwargs)
 
@@ -128,13 +146,13 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
           The number of indices is the number of curves to plot.
           All sequences must have the same length.
 
-          Examples:
+        Examples:
 
           :code:`('beta', [0, 1])`:         beta_x, beta_z
 
           :code:`('dispersion', 0)`:        eta_x
 
-          :code:`('closed_orbit'), [1, 3])`:    x', z'
+          :code:`('closed_orbit', [1, 3])`:    x', z'
 
           :code:`('m44', 2, 2)`:            T33
 
@@ -168,8 +186,26 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
         DPStep (float):     Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
         twiss_in:           Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, :py:func:`linopt6`, or
-          dictionary. Keys:
+          array as output by :py:func:`~.linear.linopt2`,
+          :py:func:`~.linear.linopt6`, or dictionary.
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot
+        labels (Refpts):    display the name of selected elements.
+          Default: :py:obj:`None`
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
     """
     return baseplot(ring, pldata_linear, *keys, **kwargs)
 
@@ -188,11 +224,27 @@ def plot_trajectory(ring: Lattice, r_in, nturns: int = 1, **kwargs):
     Keyword Args:
         keep_lattice (bool):   Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
     """
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):
-        r_out = lattice_pass(ring, r_in, refpts=refpts, nturns=nturns,
-                             **kwargs)
+        r_out = internal_lpass(ring, r_in, refpts=refpts, nturns=nturns,
+                               **kwargs)
         s_pos = ring.get_s_pos(refpts)
         particles = range(r_out.shape[1])
         xx = [r_out[0, i, :, :] for i in particles]

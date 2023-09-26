@@ -60,43 +60,28 @@ global THERING %#ok<GVMIS>
 
         beta_c = betar*cspeed;
         [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,varargin{:},'get_chrom');
-        if is6d
-            offmom = (abs(frev*harm - freq_rf) > 2);
-        else
-            offmom = (abs(lindata(1).ClosedOrbit(5)) > 1.e-4);
-        end
-        [I1d,I2d,I3d,I4d,I5d,~,Iv] = DipoleRadiation(ring,lindata);
+        [I1d,I2d,I3d,I4d,I5d,~,Iv] = ElementRadiation(ring,lindata);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
-        I1=I1d+I1w;
-        I2=I2d+I2w;
-        I3=I3d+I3w;
-        I4=I4d+I4w;
-        I5=I5d+I5w;
+        [I1e,I2e,I3e,I4e,I5e] = ElossRadiation(ring,lindata);
+        I1=I1d+I1w+I1e;
+        I2=I2d+I2w+I2e;
+        I3=I3d+I3w+I3e;
+        I4=I4d+I4w+I4e;
+        I5=I5d+I5w+I5e;
         if ~isempty(Ux)
             U0 = Ux*1e6; %convert MeV to eV
-            fprintf('dipole radiation loss:  %4.5f keV\n', U0/1000.);
+            fprintf('Radiation loss:  %4.5f keV\n', U0/1000.);
         elseif is6d
-            U0 = atgetU0(ring,'method','tracking');
+            U0 = atgetU0(ring,'method','tracking','periods',1);
         else
             U0 = 1.0e9*Cgamma/2/pi*(energy*1.e-9)^4*I2;    % eV
         end
         Jx = 1-I4/I2;
         Jy = 1.00;
         Je = 2+I4/I2;
-        if offmom
-            warning('AT:NoEmit','\n%s\n%s\n%s',...
-                'For off-momentum lattices, the equilibrium emittance',...
-                'cannot be computed because the contribution of quadrupoles is missing.',...
-                'To avoid this warning, use ">> warning(''off'',''AT:NoEmit'')"');
-            emittx = NaN;
-            sigma_E = NaN;
-            alphac = NaN;
-        else
-            emittx = Cq*gamma^2*I5/(I2-I4);
-            sigma_E = gamma*sqrt(Cq*I3/(2*I2+I4));
-            alphac = I1/circ;
-        end
-
+        emittx = Cq*gamma^2*I5/(I2-I4);
+        sigma_E = gamma*sqrt(Cq*I3/(2*I2+I4));
+        alphac = I1/circ;
         % minimum emittance due to radiation 1/gamma cone (Handbook, Chao, eq23, pag 211)
         emitty_lim = 13/55*Cq/Jy/I2*Iv;
 

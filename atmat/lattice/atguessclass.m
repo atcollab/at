@@ -46,12 +46,16 @@ elseif isfield(elem,'PolynomB')
     end
 elseif isfield(elem,'Lmatp')
     atclass='QuantDiff';
+elseif isfield(elem,'EnergyLoss')
+    atclass='EnergyLoss';
 elseif isfield(elem,'M66')
     if isfield(elem,'Tijk')
         atclass='MatrixTijkPass';
     else
         atclass='Matrix66';
     end
+elseif isfield(elem,'xtable')
+    atclass='InsertionDeviceKickMap';
 elseif isfield(elem,'Length') && elem.Length~=0
     atclass='Drift';
 else
