@@ -285,12 +285,14 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
     double totalW = 0;
+    double totalWb[nbunch];
     
     for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
         kz[i]=0.0;
         vbr[ib] = 0.0;
         vbi[ib] = 0.0;
+        totalWb[ib] = 0.0;
     }
 
     vbeamk[0] = 0.0;
@@ -306,16 +308,15 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
     for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){  
         ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
         wi = turnhistoryW[i];
-        totalW += wi;
-        
         if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
+            totalW += wi;
+            totalWb[ib] += wi;
             for (ii=0;ii<nslice*nbunch*nturns;ii++){
                 ds = turnhistoryZ[i]-turnhistoryZ[ii];
                 if(turnhistoryW[ii]>0.0 && ds>=0){
                     wii = turnhistoryW[ii];
                     wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta,wake);       
                     kz[i-nslice*nbunch*(nturns-1)] += normfact*wii*wake[0];
-                    
                     vbeamk[0] += normfact*wii*wake[0]*energy*wi;
                     vbeamk[1] -= normfact*wii*wake[1]*energy*wi;
                     vbr[ib] += normfact*wii*wake[0]*energy*wi;
@@ -324,37 +325,28 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
             }
         }
     }
-    
-    vbeamk[0] /= totalW;
-    vbeamk[1] /= totalW;
-    
-    for(i=0;i<nbunch;i++){
-        totalW = 0.0;
-        loopstart = nslice*nbunch*(nturns-1) + i*nslice;
-        loopend = loopstart + nslice;
-        for(ii=loopstart;ii<loopend;ii++){
-            totalW += turnhistoryW[ii];
-        }
-        
-        double vr = vbr[i]/totalW;
-        double vi = vbi[i]/totalW;
-        vbr[i] = sqrt(vr*vr+vi*vi); 
-        vbi[i] = atan2(vi,vr);
-    }
-
 
     #ifdef MPI
     MPI_Allreduce(MPI_IN_PLACE,kz,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbeamk,2,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbr,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbi,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,&totalW,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,totalWb,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
-    vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1]);   
-    vbp = atan2(vbeamk[1],vbeamk[0]);
+    vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1])/totalW;
+    vbp = atan2(vbeamk[1],vbeamk[0])/totalW;
     vbeamk[0] = vba;
     vbeamk[1] = vbp;
+    
+    for(i=0;i<nbunch;i++){
+        double vr = vbr[i]/totalWb[i];
+        double vi = vbi[i]/totalWb[i];
+        vbr[i] = sqrt(vr*vr+vi*vi); 
+        vbi[i] = atan2(vi,vr);
+    }
 };
 
 
