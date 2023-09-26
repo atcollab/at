@@ -112,8 +112,6 @@ class BeamLoadingElement(RFCavity, Collective):
                         _beta=float, _wakefact=float, _nslice=int,
                         ZCuts=lambda v: _array(v),
                         _nturns=int, _phis=float,
-                        _turnhistory=lambda v: _array(v),
-                        _vbunch=lambda v: _array(v),
                         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
                         _vbeam=lambda v: _array(v, shape=(2,)),
                         _vcav=lambda v: _array(v, shape=(2,)),
