@@ -31,13 +31,14 @@ function Elem=atsolenoid(fname,varargin)
 %          atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
-[rsrc,L,KS,method]  = decodeatargs({0,0,'SolenoidLinearPass'},varargin);
+[rsrc,L,K,method]   = decodeatargs({0,0,'SolenoidLinearPass'},varargin);
 [L,rsrc]            = getoption(rsrc,'Length',L);
-[KS,rsrc]           = getoption(rsrc,'KS',KS);
+[K,rsrc]            = getoption(rsrc,'KS',K);  % Kept for compatibilty
+[K,rsrc]            = getoption(rsrc,'K',K);   % Correct attribute name
 [method,rsrc]       = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]           = getoption(rsrc,'Class','Solenoid');
 
 % Gradient setting if not specified explicitly
 Elem=atbaselem(fname,method,'Class',cl,'Length',L,...
-    'KS',KS,rsrc{:});
+    'K',K,rsrc{:});
 end
