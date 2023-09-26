@@ -207,6 +207,32 @@ class BeamLoadingElement(RFCavity, Collective):
                                    numpy.pi-psi])
 
     @property
+    def Nslice(self):
+        """Number of slices per bunch"""
+        return self._nslice
+
+    @Nslice.setter
+    def Nslice(self, nslice):
+        self._nslice = nslice
+        self.clear_history()
+
+    @property
+    def Nturns(self):
+        """Number of turn for the wake field"""
+        return self._nturns
+
+    @Nturns.setter
+    def Nturns(self, nturns):
+        self._nturns = nturns
+        self.clear_history()
+
+    @property
+    def TurnHistory(self):
+        """Turn history of the slices center of mass"""
+        return self._turnhistory
+
+
+    @property
     def ResFrequency(self):
         """Resonator frequency"""
         return self.Frequency/(1-numpy.tan(self.Vgen[1])/(2*self.Qfactor))
