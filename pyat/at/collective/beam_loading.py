@@ -112,8 +112,6 @@ class BeamLoadingElement(RFCavity, Collective):
                         _beta=float, _wakefact=float, _nslice=int,
                         ZCuts=lambda v: _array(v),
                         _nturns=int, _phis=float,
-                        _turnhistory=lambda v: _array(v),
-                        _vbunch=lambda v: _array(v),
                         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
                         _vbeam=lambda v: _array(v, shape=(2,)),
                         _vcav=lambda v: _array(v, shape=(2,)),
@@ -205,6 +203,32 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vgen = numpy.array([vgen, psi])
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
+
+    @property
+    def Nslice(self):
+        """Number of slices per bunch"""
+        return self._nslice
+
+    @Nslice.setter
+    def Nslice(self, nslice):
+        self._nslice = nslice
+        self.clear_history()
+
+    @property
+    def Nturns(self):
+        """Number of turn for the wake field"""
+        return self._nturns
+
+    @Nturns.setter
+    def Nturns(self, nturns):
+        self._nturns = nturns
+        self.clear_history()
+
+    @property
+    def TurnHistory(self):
+        """Turn history of the slices center of mass"""
+        return self._turnhistory
+
 
     @property
     def ResFrequency(self):
