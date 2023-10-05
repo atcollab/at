@@ -126,6 +126,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         waketableZ=atGetOptionalDoubleArray(ElemData,"_wakeZ"); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
 
+        int dimsth[] = {Param->nbunch*nslice*nturns, 4};
+        atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->nslice=nslice;
