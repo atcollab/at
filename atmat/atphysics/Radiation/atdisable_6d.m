@@ -69,14 +69,14 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
 % Build the modification table
-modfun.RFCavity=autoRFPass(cavipass);
+modfun.RFCavity=autoIdentityPass(cavipass);
 modfun.Bend=autoMultipolePass(bendpass);
 modfun.Quadrupole=autoMultipolePass(quadpass);
 modfun.Sextupole=autoMultipolePass(sextupass);
 modfun.Octupole=autoMultipolePass(octupass);
 modfun.Wiggler=autoMultipolePass(wigglerpass);
-modfun.QuantDiff=autoElemPass(quantdiffpass,'IdentityPass');
-modfun.EnergyLoss=autoElemPass(energylosspass,'IdentityPass');
+modfun.QuantDiff=autoIdentityPass(quantdiffpass);
+modfun.EnergyLoss=autoIdentityPass(energylosspass);
 modfun.Other=@(elem) elem;
 
 % Generate the new lattice
@@ -113,19 +113,7 @@ end
         end
     end
 
-    function modfun=autoElemPass(newpass,defpass)
-        % Returns the generic processing function
-        if isempty(newpass)
-            modfun=@(elem) elem;
-        else
-            if strcmp(newpass, 'auto')
-                newpass=defpass;
-            end
-            modfun=setpassenergy(newpass);
-        end
-    end
-
-    function modfun=autoRFPass(newpass)
+    function modfun=autoIdentityPass(newpass)
         % Returns the RF processing function
         if isempty(newpass)
             modfun=@(elem) elem;
