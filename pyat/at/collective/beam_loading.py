@@ -160,6 +160,7 @@ class BeamLoadingElement(RFCavity, Collective):
                                                ring.energy*ring.beta**3)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
+        self._nbunch = ring.nbunch
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
         if zcuts is not None:
@@ -181,16 +182,14 @@ class BeamLoadingElement(RFCavity, Collective):
         return False
 
     def clear_history(self, ring=None):
-        if ring is None:
-            current = 0.0
-            nbunch = 1
-        else:
+        if ring is not None:
+            self._nbunch = ring.nbunch
             current = ring.beam_current
             nbunch = ring.nbunch
-        tl = self._nturns*self._nslice*nbunch
+            self._vbunch = numpy.zeros((nbunch, 2), order='F')
+            self._init_bl_params(current)
+        tl = self._nturns * self._nslice * self._nbunch
         self._turnhistory = numpy.zeros((tl, 4), order='F')
-        self._vbunch = numpy.zeros((nbunch, 2), order='F')
-        self._init_bl_params(current)
 
     def _init_bl_params(self, current):
         theta = -self._vcav[1]+numpy.pi/2
@@ -228,7 +227,6 @@ class BeamLoadingElement(RFCavity, Collective):
     def TurnHistory(self):
         """Turn history of the slices center of mass"""
         return self._turnhistory
-
 
     @property
     def ResFrequency(self):
