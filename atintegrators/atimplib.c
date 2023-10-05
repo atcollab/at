@@ -370,19 +370,20 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
     double totalW=0.0;
+    double totalWb[nbunch];
     
     for (i=0;i<sliceperturn;i++) {
         ib = (int)(i/nslice);
         kz[i]=0.0;
         vbr[ib] = 0.0;
         vbi[ib] = 0.0;
+        totalWb[ib] = 0.0;
     }
     
     for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
         ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
         selfkick = normfact*wi*kloss*energy;
-
         if(i==sliceperturn*(nturns-1)){
             /*At the end of the turn, the vbeamc is
             reverted to -final value, which stores the
@@ -392,18 +393,15 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         }else{
             /* This is dt between each slice*/
             dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
-        }      
-        
-        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);   
-        
+        }
+        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
         /*vbeamkc is average kick i.e. average vbeam*/   
         vbeamkc += (vbeamc+selfkick)*wi;
         totalW += wi;
+        totalWb[ib] += wi;
         kz[i-sliceperturn*(nturns-1)] = creal((vbeamc + selfkick)/energy);
-                
         vbr[ib] += creal((vbeamc + selfkick)*wi);
         vbi[ib] += cimag((vbeamc + selfkick)*wi);
-
         vbeamc += 2*selfkick;    
     }
     
@@ -413,19 +411,14 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
 
     vbeam[0] = cabs(vbeamc);
-    vbeam[1] = carg(vbeamc); 
-    
+    vbeam[1] = carg(vbeamc);
     vbeamkc /= (totalW);
     vbeamk[0] = cabs(vbeamkc);
     vbeamk[1] = carg(vbeamkc);   
     
     for(i=0;i<nbunch;i++){
-        totalW = 0.0;
-        for(is=nslice*i;is<nslice*(i+1);is++){
-            totalW += turnhistoryW[is];
-        }
-        double vr = vbr[i]/totalW;
-        double vi = vbi[i]/totalW;
+        double vr = vbr[i]/totalWb[i];
+        double vi = vbi[i]/totalWb[i];
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
