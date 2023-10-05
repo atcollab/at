@@ -240,7 +240,6 @@ def lattice_track(lattice: Iterable[Element], r_in,
         rout = _plattice_pass(lattice, r_in, nturns=nturns,
                               refpts=refpts, **kwargs)
     else:
-        print(kwargs)
         rout = _lattice_pass(lattice, r_in, nturns=nturns,
                              refpts=refpts, no_varelem=False,
                              **kwargs)

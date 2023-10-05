@@ -55,7 +55,7 @@ def _get_bunch_config(lattice, unfoldbeam):
     """Function to get the bunch configuration"""
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
-    if not unfoldbeam:
+    if unfoldbeam:
         bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
     else:
         bunch_spos = numpy.zeros(len(bunch_currents))
