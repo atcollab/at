@@ -140,4 +140,4 @@
 %
 %       <a href="matlab:help symplectify">symplectify</a>              - Makes a matrix more symplectic
 %
-%<a href="matlab:web('/Applications/MATLAB_R2023a.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>
+%<a href="matlab:web('/Applications/MATLAB_R2023b.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>

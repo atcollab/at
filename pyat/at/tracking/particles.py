@@ -128,8 +128,8 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         try:
             Rin = twin['R']
         except (ValueError, KeyError):  # record arrays throw ValueError !
-            Rm = r_4d(twin['alpha'][0], twin['beta'][0],
-                      twin['alpha'][1], twin['beta'][1], r56)
+            Rm = r_4d(twin['alpha'][0], twin['alpha'][1],
+                      twin['beta'][0], twin['beta'][1], r56)
         else:
             Rm = r_expand(Rin, r56)
         sigmat = sigma_from_rmat(Rm, None, em56)
