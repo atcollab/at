@@ -20,7 +20,7 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %       a scalar offset value is equivalent to [0 OFFSET]
 %
 %POSDATA=ATGEOMETRY(...,'centered')
-%       The offset is set as [0 RADIUS 0]
+%       The offset is set as [0 RADIUS]
 %
 %POSDATA=ATGEOMETRY(...,'Hangle',h_angle)
 %       Set the initial trajectory angle
@@ -28,11 +28,12 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %
 %See also: ATGEOMETRY3
 
-[thetac,args]=getoption(varargin,'Hangle',0);
-centered=getflag(args,'centered');
-[refpts,offset]=parseargs({1:length(ring)+1,[0 0]},args);
+[centered,args]=getflag(varargin,'centered');
+[theta0,args]=getoption(args,'Hangle',0);
+[refpts,offset]=getargs(args,1:length(ring)+1,[0 0]);
 xc=0;
 yc=0;
+thetac=theta0;
 if isscalar(offset)
     yc=offset;
 else
@@ -40,9 +41,10 @@ else
     yc=offset(2);
 end
 [xx,yy,txy,lg,tr]=cellfun(@incr,[{struct()};ring]);    % Add a dummy element to get the origin
-radius=-(yc+xc/tan(thetac));
+radius=-(yc+xc/tan(thetac-theta0));
 if centered
-    yy=yy+radius;
+    xx=xx-radius*sin(theta0);
+    yy=yy+radius*cos(theta0);
 end
 posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
     'angle',num2cell(txy(refpts)),'long',num2cell(lg(refpts)),...
