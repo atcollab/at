@@ -269,8 +269,8 @@ static double *atGetArrayData(PyArrayObject *array, char *name, int atype, int *
     }
     ndims = PyArray_NDIM(array);
     dims = PyArray_SHAPE(array);
-    *nsz = (ndims >= 2) ? dims[1] : 0;
-    *msz = (ndims >= 1) ? dims[0] : 0;
+    *nsz = (ndims >= 2) ? (int)dims[1] : 0;
+    *msz = (ndims >= 1) ? (int)dims[0] : 0;
     return (double *) PyArray_DATA(array);
 }
 

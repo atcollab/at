@@ -48,10 +48,16 @@ static void rotate_table_history(long nturns,long nslice,double *turnhistory,dou
     for(i=0; i<nslice*nturns; i++){
         z[i] += -circumference;
     }
-    memset(turnhistory + (nturns-1)*nslice, 0.0, nslice*sizeof(double));
-    memset(turnhistory + (2*nturns-1)*nslice, 0.0, nslice*sizeof(double));
-    memset(turnhistory + (3*nturns-1)*nslice, 0.0, nslice*sizeof(double));
-    memset(turnhistory + (4*nturns-1)*nslice, 0.0, nslice*sizeof(double));
+    double *x0 = turnhistory + (nturns-1)*nslice;
+    double *y0 = turnhistory + (2*nturns-1)*nslice;
+    double *z0 = turnhistory + (3*nturns-1)*nslice;
+    double *w0 = turnhistory + (4*nturns-1)*nslice;
+    for(i=0; i<nslice; i++){
+        x0[i] = 0.0;
+        y0[i] = 0.0;
+        z0[i] = 0.0;
+        w0[i] = 0.0;
+    }
 };
 
 static void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
@@ -285,7 +291,7 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
     double totalW = 0;
-    double totalWb[nbunch];
+    double *totalWb = atMalloc(nbunch*sizeof(double));
     
     for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
@@ -347,6 +353,7 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
+    atFree(totalWb);
 };
 
 
@@ -370,7 +377,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
     double totalW=0.0;
-    double totalWb[nbunch];
+    double *totalWb = atMalloc(nbunch*sizeof(double));
     
     for (i=0;i<sliceperturn;i++) {
         ib = (int)(i/nslice);
@@ -422,6 +429,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
+    atFree(totalWb);
     #endif    
 };
 
