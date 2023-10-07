@@ -2,7 +2,18 @@ function elem=attunerbend(elem)
 %ATTUNERBEND    Set X0ref and RefDZ for rectangular bending magnets
 %
 %NEWELEM=ATTUNERBEND(ELEM)
-%   Set the X0ref and RefDZ attributes for rectangular beanding magnets
+%   Set the X0ref and RefDZ attributes for rectangular bending magnets
+%
+%This function must be called after creating a rectangular bending magnet
+%or after setting its polynomA/B attributes. It will set the correct X0ref
+%and RefDZ attributes to get a zero closed orbit for the reference particle.
+%
+%Example:
+%
+%>> % Identify the rectangular bends
+%>> rbends=atgetcells(ring,...);
+%>> % Set their correct attributes
+%>> ring(rbends)=cellfun(@attunerbend,ring(rbends),'UniformOutput',false);
 %
 %Does nothing if the passmethod is not a rectangular bend passmethod
 
