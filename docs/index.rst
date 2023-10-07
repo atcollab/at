@@ -27,6 +27,6 @@ by two interfaces:
    :maxdepth: 2
    :hidden:
 
-   About <common/index>
+   About <common/indx>
    Python <p/index>
    Matlab <m/index>
