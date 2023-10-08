@@ -1,7 +1,7 @@
-function elem=attunerbend(elem)
-%ATTUNERBEND    Set X0ref and RefDZ for rectangular bending magnets
+function elem=atrbendtune(elem)
+%ATRBENDTUNE    Set X0ref and RefDZ for rectangular bending magnets
 %
-%NEWELEM=ATTUNERBEND(ELEM)
+%NEWELEM=ATRBENDTUNE(ELEM)
 %   Set the X0ref and RefDZ attributes for rectangular bending magnets
 %
 %This function must be called after creating a rectangular bending magnet
@@ -13,7 +13,7 @@ function elem=attunerbend(elem)
 %>> % Identify the rectangular bends
 %>> rbends=atgetcells(ring,...);
 %>> % Set their correct attributes
-%>> ring(rbends)=cellfun(@attunerbend,ring(rbends),'UniformOutput',false);
+%>> ring(rbends)=cellfun(@atrbendtune,ring(rbends),'UniformOutput',false);
 %
 %Does nothing if the passmethod is not a rectangular bend passmethod
 

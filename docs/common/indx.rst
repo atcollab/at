@@ -38,6 +38,8 @@ attribute of the element.
 The tracking engine is written in C for the best performance. Each passmethod
 is dynamically loaded on-demand when encountering the first element requiring it.
 
+See :doc:`passmethods` for a description of the available passmethods,
+
 .. toctree::
    :hidden:
 

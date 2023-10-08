@@ -14,9 +14,13 @@ def rbendtune(self: Dipole) -> None:
         or after setting its *PolynomA/B* attributes. It will set the correct *X0ref*
         and *RefDZ* attributes to get a zero closed orbit for the reference particle.
 
-        Examples:
+        The method will do nothing on dipoles with a non-rectangular passmethod.
 
+        Example:
+
+            >>> # Identify the rectangular bends
             >>> rbends = ring.get_bool_index(...)
+            >>> # Set their correct attributes
             >>> for dip in ring.select(rbends):
             ...     dip.rbendtune()
 
