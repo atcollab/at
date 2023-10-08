@@ -44,10 +44,10 @@ integrate the whole magnet in one step, resulting in a much faster transfer. For
 this, use `NumIntSteps=0`.
 ```
 
-Length, PolynomB, PolynomA, MaxOrder, NumIntSteps
+PolynomB, PolynomA, MaxOrder, NumIntSteps
 : see [StrMPoleSymplectic4Pass](#strmpole)
 
-BendingAngle, EntranceAngle, ExitAngle
+Length, BendingAngle, EntranceAngle, ExitAngle
 : see [BndMPoleSymplectic4Pass](#bndmpole)
 
 ```{Caution}
@@ -82,6 +82,8 @@ If the magnet field includes quadrupole or higher components, the reference traj
 in the magnet is no more an arc of a circle. A tuning of the `X0ref` attribute is
 necessary to get the correct output angle from the magnet. This can be seen as a
 horizontal translation of the magnet until the correct deviation angle is obtained.
+Similarly, the path lengthening must be adjusted to take into account the
+length of the non-circular trajectory.
 
 This tuning is performed using a dedicated function/method:
 
@@ -101,10 +103,10 @@ This tuning is performed using a dedicated function/method:
   ring(rbends)=cellfun(@attunerbend,ring(rbends),'UniformOutput',false);
   ```
 
-Length, PolynomB, PolynomA, MaxOrder, NumIntSteps
+PolynomB, PolynomA, MaxOrder, NumIntSteps
 : see [StrMPoleSymplectic4Pass](#strmpole)
 
-BendingAngle, EntranceAngle, ExitAngle
+Length, BendingAngle, EntranceAngle, ExitAngle
 : see [BndMPoleSymplectic4Pass](#bndmpole)
 
 [^Forest]: Étienne Forest, _Beam Dynamics, a new Attitude and Framework_, 

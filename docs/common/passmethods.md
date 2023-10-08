@@ -7,7 +7,7 @@ The same passmethods are used by both the Matlab and python interfaces, ensuring
 strict equality of tracking results in both version.
 
 AT comes with a set of passmethods covering most needs, but it is very simple to
-add a custom passmethod: 
+add a custom passmethod.
 
 ```{toctree}
 :maxdepth: 1
