@@ -1,12 +1,13 @@
 # AT Passmethods
 
-The tracking through each AT element is performed by an integrator, called its
-"passmethod". There is no correlation between an element class and its associated
-passmethod. The passmethod must be explicitly specified by the `PassMethod` attribute 
-of the element.
-
-Passmethods are usually written in C for the best performance, but thys may also be
+Passmethods are usually written in C for the best performance, but they may also be
 written in python or Matlab for prototyping.
+
+The same passmethods are used by both the Matlab and python interfaces, ensuring a
+strict equality of tracking results in both version.
+
+AT comes with a set of passmethods covering most needs, but it is very simple to
+add a custom passmethod: 
 
 ```{toctree}
 :maxdepth: 1
