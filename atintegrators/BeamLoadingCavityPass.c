@@ -74,7 +74,9 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     int *pslice;
     double *kz;
     double freqres = rffreq/(1-tan(vgenk[1])/(2*qfactor));
-    
+    double vgen = 0.0;
+    double psi = 0.0;
+        
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
@@ -82,8 +84,8 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     if(cavitymode==2){
         freqres = rffreq;
     }else if(cavitymode==1){
-        double vgen = vgenk[0];
-        double psi = vgenk[1];
+        vgen = vgenk[0];
+        psi = vgenk[1];
     }
 
     /*Track RF cavity is always done. */
