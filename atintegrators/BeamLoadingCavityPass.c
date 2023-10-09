@@ -84,10 +84,11 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     }else if(cavitymode==1){
         double vgen = vgenk[0];
         double psi = vgenk[1];
-
-        /*Track RF cavity is always done. */
-        trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
     }
+
+    /*Track RF cavity is always done. */
+    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
+    
     
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
