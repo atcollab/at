@@ -341,9 +341,9 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
     MPI_Allreduce(MPI_IN_PLACE,totalWb,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
-
+    
     vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1])/totalW;
-    vbp = atan2(vbeamk[1],vbeamk[0])/totalW;
+    vbp = atan2(vbeamk[1],vbeamk[0]);
     vbeamk[0] = vba;
     vbeamk[1] = vbp;
     
