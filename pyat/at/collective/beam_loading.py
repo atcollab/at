@@ -44,7 +44,7 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
             used
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
-        Passive (bool):     Define Passive (True) or active (False) cavity 
+        cavitymode (CavityMode):     Define PASSIVE or ACTIVE cavity
     """
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
@@ -152,6 +152,8 @@ class BeamLoadingElement(RFCavity, Collective):
         kwargs.setdefault('PassMethod', self.default_pass[True])
         assert isinstance(mode, BLMode), \
             'Beam loading mode has to be an instance of BLMode'
+        assert isinstance(cavitymode, CavityMode), \
+            'Cavity mode has to be an instance of CavityMode'
         zcuts = kwargs.pop('ZCuts', None)
         phil = kwargs.pop('phil', 0)
         energy = ring.energy
@@ -201,16 +203,26 @@ class BeamLoadingElement(RFCavity, Collective):
         self._init_bl_params(current)
 
     def _init_bl_params(self, current):
-        theta = -self._vcav[1]+numpy.pi/2
-        vb = 2*current*self.Rshunt
-        a = self.Voltage*numpy.cos(theta-self._phis)
-        b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
-        psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
-        vgen = self.Voltage*numpy.cos(psi) + \
-            vb*numpy.cos(psi)*numpy.sin(self._phis)
-        self._vgen = numpy.array([vgen, psi])
+        if (self._cavitymode == 1) and (current > 0.0):
+            theta = -self._vcav[1]+numpy.pi/2
+            vb = 2*current*self.Rshunt
+            a = self.Voltage*numpy.cos(theta-self._phis)
+            b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
+            psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
+            vgen = self.Voltage*numpy.cos(psi) + \
+                vb*numpy.cos(psi)*numpy.sin(self._phis)
+                
+            print(psi)
+        elif (self._cavitymode == 1) and (current == 0.0):
+            vgen = self.Voltage
+            psi = 0
+        else:
+            vgen = 0
+            psi = 0
+            
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
-                                   numpy.pi-psi])
+                                   numpy.pi-psi])                                   
+        self._vgen = numpy.array([vgen, psi])
 
     @property
     def Nslice(self):
@@ -271,6 +283,7 @@ class BeamLoadingElement(RFCavity, Collective):
     def build_from_cav(cav: RFCavity, ring: Sequence,
                        qfactor: float, rshunt: float,
                        mode: Optional[BLMode] = BLMode.PHASOR,
+                       cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                        **kwargs):
         r"""Function to build the BeamLoadingElement from a cavity
         the FamName, Length, Voltage, Frequency and HarmNumber are
@@ -290,6 +303,9 @@ class BeamLoadingElement(RFCavity, Collective):
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
+            cavitymode (CavityMode):  type of beam loaded cavity ACTIVE
+                (default) for a cavity with active compensation, or 
+                PASSIVE to only include the beam induced voltage
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -300,6 +316,10 @@ class BeamLoadingElement(RFCavity, Collective):
         [cav_attrs.pop(k) for k in _EXCL_ATTRIBUTES]
         cav_args = [cav_attrs.pop(k, getattr(cav, k)) for k in
                     _CAV_ATTRIBUTES]
+        print(cav_args)
+        if cavitymode==CavityMode.PASSIVE:
+            cav_args[1] = 0.0
+        print(cav_args)
         return BeamLoadingElement(family_name, *cav_args, ring,
                                   qfactor, rshunt, mode=mode,
                                   **cav_attrs, **kwargs)
