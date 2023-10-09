@@ -126,7 +126,7 @@ EntranceAngle
 perpendicular to the input trajectory. Use 0 for a sector magnet,
 {math}`\theta/2` for a rectangular magnet.
 
-EntranceAngle
+ExitAngle
 : Angle of the exit pole face {math}`\varepsilon_2` with respect to the plane
 perpendicular to the output trajectory. Use 0 for a sector magnet,
 {math}`\theta/2` for a rectangular magnet.
