@@ -1,13 +1,13 @@
 import numpy
 from enum import IntEnum
-from ..lattice import Lattice
+from ..lattice import Lattice, AtWarning
 from at.lattice import RFCavity, Collective
 from at.lattice.elements import _array
 from at.lattice.utils import Refpts, uint32_refpts, make_copy
 from at.physics import get_timelag_fromU0
 from at.constants import clight
 from typing import Sequence, Optional, Union
-
+import warnings
 
 class BLMode(IntEnum):
     WAKE = 1
@@ -212,7 +212,6 @@ class BeamLoadingElement(RFCavity, Collective):
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
                 
-            print(psi)
         elif (self._cavitymode == 1) and (current == 0.0):
             vgen = self.Voltage
             psi = 0
@@ -223,7 +222,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])                                   
         self._vgen = numpy.array([vgen, psi])
-
+        
     @property
     def Nslice(self):
         """Number of slices per bunch"""
@@ -316,12 +315,13 @@ class BeamLoadingElement(RFCavity, Collective):
         [cav_attrs.pop(k) for k in _EXCL_ATTRIBUTES]
         cav_args = [cav_attrs.pop(k, getattr(cav, k)) for k in
                     _CAV_ATTRIBUTES]
-        print(cav_args)
         if cavitymode==CavityMode.PASSIVE:
+            if cav_args[1] != 0.0:
+                warnings.warn(AtWarning('Cavity Voltage setpoint will be set to 0.'))
             cav_args[1] = 0.0
-        print(cav_args)
         return BeamLoadingElement(family_name, *cav_args, ring,
                                   qfactor, rshunt, mode=mode,
+                                  cavitymode=cavitymode,
                                   **cav_attrs, **kwargs)
 
     def __repr__(self):
