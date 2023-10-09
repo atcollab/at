@@ -51,12 +51,6 @@ class InsertionDeviceKickMap(Element):
 
     def from_text_file(self, Nslice, Filename_in, Energy):
         """
-            from_text_file(
-                family_name: str,
-                Nslice: int,
-                Filename_in: str,
-                Energy: float,
-                )
         This function creates an Insertion Device Kick Map
         from a Radia field map file.
 
