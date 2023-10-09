@@ -49,7 +49,7 @@ PhaseLag
   \mathbf{PhaseLag} - 2 \pi f_{RF} \frac{\mathbf{TimeLag}}{\beta c}
   ```
 
-(strmpole)=
+(StrMPoleSymplectic4Pass)=
 ## `StrMPoleSymplectic4Pass`
 4{sup}`th` order Forest-Knuth integrator for straight magnets
 
@@ -66,7 +66,7 @@ MaxOrder
 NumIntSteps
 : Number of integration steps (magnet slices). Optional, default 10.
 
-(bndmpole)=
+(BndMPoleSymplectic4Pass)=
 ## `BndMPoleSymplectic4Pass`
 4{sup}`th` order Forest-Knuth integrator for curved magnets
 
@@ -74,7 +74,7 @@ Length
 : Length {math}`L` of the arc.
 
 PolynomB, PolynomA, MaxOrder, NumIntSteps
-: see [StrMPoleSymplectic4Pass](#strmpole)
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)
 
 BendingAngle
 : Dipole bending angle {math}`\theta`
@@ -93,7 +93,7 @@ perpendicular to the output trajectory. Use 0 for a sector magnet,
 Thin multipolar kick
 
 PolynomB, PolynomA, MaxOrder
-: see [StrMPoleSymplectic4Pass](#strmpole)
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)
 
 ```{rubric} Linear passmethods
 ```
@@ -108,6 +108,7 @@ PolynomB, K
 : Quadrupole strength. If `PolynomB[1]` exists, it is used for the strength, otherwise
 `K` is used
 
+(BendLinearPass)=
 ## `BendLinearPass`
 
 Length

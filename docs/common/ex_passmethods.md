@@ -20,6 +20,10 @@ radius, large angles).
 ## `ExactDriftPass`
 Exact integration in a free space region
 
+(ExactMultipolePass)=
+## `ExactMultipolePass`
+
+(ExactSectorBendPass)=
 ## `ExactSectorBendPass`
 Exact integration in a curved magnet.
 
@@ -45,10 +49,10 @@ this, use `NumIntSteps=0`.
 ```
 
 PolynomB, PolynomA, MaxOrder, NumIntSteps
-: see [StrMPoleSymplectic4Pass](#strmpole)
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)
 
 Length, BendingAngle, EntranceAngle, ExitAngle
-: see [BndMPoleSymplectic4Pass](#bndmpole)
+: see [BndMPoleSymplectic4Pass](#BndMPoleSymplectic4Pass)
 
 ```{Caution}
 `ExactSectorBendPass` show a small discontinuity around origin. Therefore it is
@@ -57,6 +61,7 @@ optics). This can be mitigated by increasing the differentiation steps `XYStep`
 and `DPStep` with respect to their default values.
 ```
 
+(ExactRectangularBendPass)=
 ## `ExactRectangularBendPass`
 Exact integration in a bending magnet with Cartesian layout.
 
@@ -82,12 +87,12 @@ If the magnet field includes quadrupole or higher components, the reference traj
 in the magnet is no more an arc of a circle. A tuning of the `X0ref` attribute is
 necessary to get the correct output angle from the magnet. This can be seen as a
 horizontal translation of the magnet until the correct deviation angle is obtained.
-Similarly, the path lengthening must be adjusted to take into account the
-length of the non-circular trajectory.
+Similarly, the path lengthening must be adjusted through the `RefDZ` attribute to
+take into account the length of the non-circular trajectory.
 
 This tuning is performed using a dedicated function/method:
 
-- python
+- python: {py:meth}`.Dipole.rbendtune`
   ```python
   # Identify the rectangular bends (for example...)
   rbends = ring.get_bool_index(checkattr("PassMethod", "ExactRectangularBendPass")
@@ -95,7 +100,7 @@ This tuning is performed using a dedicated function/method:
   for dip in ring.select(rbends):
       dip.rbendtune()
   ```
-- Matlab
+- Matlab: `atrbendtune()`
   ```Matlab
   % Identify the rectangular bends (for example...)
   rbends=atgetcells(ring,'PassMethod', 'ExactRectangularBendPass');
@@ -104,10 +109,10 @@ This tuning is performed using a dedicated function/method:
   ```
 
 PolynomB, PolynomA, MaxOrder, NumIntSteps
-: see [StrMPoleSymplectic4Pass](#strmpole)
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)
 
 Length, BendingAngle, EntranceAngle, ExitAngle
-: see [BndMPoleSymplectic4Pass](#bndmpole)
+: see [BndMPoleSymplectic4Pass](#BndMPoleSymplectic4Pass)
 
 [^Forest]: Étienne Forest, _Beam Dynamics, a new Attitude and Framework_, 
 Harwood Academic Publishers.

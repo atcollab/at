@@ -777,7 +777,10 @@ class Dipole(Radiative, Multipole):
             KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
 
-        Default PassMethod: ``BndMPoleSymplectic4Pass``
+        Available PassMethods: :ref:`BndMPoleSymplectic4Pass`, :ref:`BendLinearPass`,
+        :ref:`ExactSectorBendPass`, :ref:`ExactRectangularBendPass`
+
+        Default PassMethod: :ref:`BndMPoleSymplectic4Pass`
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         kwargs.setdefault('BendingAngle', bending_angle)
