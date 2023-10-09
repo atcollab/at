@@ -60,8 +60,8 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
     new_elems = []
     for ref, qf, rs in zip(cavpts, qfactor, rshunt):
         cav = ring[ref]
-        assert isinstance(cav, RFCavity), \
-            'Beam loading can only be assigned to a cavity element'
+        if not isinstance(cav, RFCavity):
+            raise TypeError('Beam loading can only be assigned to a cavity element')
         new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf,
                                                            rs, **kwargs))
     return apply(ring, cavpts, new_elems)
@@ -94,8 +94,8 @@ def remove_beamloading(ring, cavpts: Refpts = None,
     new_elems = []
     for ref in cavpts:
         bl = ring[ref]
-        assert isinstance(bl, BeamLoadingElement), \
-            'Cannot remove beam loading: not a beam loading element'
+        if not isinstance(bl, BeamLoadingElement):
+            raise TypeError('Cannot remove beam loading: not a beam loading element')
         family_name = bl.FamName.replace('_BL', '')
         harm = numpy.round(bl.Frequency*ring.circumference/clight)
         new_elems.append(RFCavity(family_name, bl.Length, bl.Voltage,
@@ -150,10 +150,10 @@ class BeamLoadingElement(RFCavity, Collective):
             bl_elem (Element): beam loading element
         """
         kwargs.setdefault('PassMethod', self.default_pass[True])
-        assert isinstance(mode, BLMode), \
-            'Beam loading mode has to be an instance of BLMode'
-        assert isinstance(cavitymode, CavityMode), \
-            'Cavity mode has to be an instance of CavityMode'
+        if not isinstance(mode, BLMode):
+            raise TypeError('Beam loading mode has to be an instance of BLMode')
+        if not isinstance(cavitymode, CavityMode):
+            raise TypeError('Cavity mode has to be an instance of CavityMode')
         zcuts = kwargs.pop('ZCuts', None)
         phil = kwargs.pop('phil', 0)
         energy = ring.energy
