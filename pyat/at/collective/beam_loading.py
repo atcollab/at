@@ -38,7 +38,7 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
         Nturns (int):       Number of turn for the wake field. Default: 1
         ZCuts:              Limits for fixed slicing, default is adaptive
         NormFact (float):   Normalization factor
-        mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+        blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
             (default) uses the phasor method, BLMode.WAKE uses the wake
             function. For high Q resonator, the phasor method should be
             used
@@ -112,7 +112,7 @@ class BeamLoadingElement(RFCavity, Collective):
     default_pass = {False: 'DriftPass', True: 'BeamLoadingCavityPass'}
     _conversions = dict(RFCavity._conversions,
                         Rshunt=float, Qfactor=float, NormFact=float,
-                        PhaseGain=float, VoltGain=float, _mode=int,
+                        PhaseGain=float, VoltGain=float, _blmode=int,
                         _beta=float, _wakefact=float, _nslice=int,
                         ZCuts=lambda v: _array(v), _cavitymode=int,
                         _nturns=int, _phis=float,
@@ -124,7 +124,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
-                 rshunt: float, mode: Optional[BLMode] = BLMode.PHASOR,
+                 rshunt: float, blmode: Optional[BLMode] = BLMode.PHASOR,
                  cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                  **kwargs):
         r"""
@@ -141,7 +141,7 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+            blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
@@ -150,7 +150,7 @@ class BeamLoadingElement(RFCavity, Collective):
             bl_elem (Element): beam loading element
         """
         kwargs.setdefault('PassMethod', self.default_pass[True])
-        if not isinstance(mode, BLMode):
+        if not isinstance(blmode, BLMode):
             raise TypeError('Beam loading mode has to be an instance of BLMode')
         if not isinstance(cavitymode, CavityMode):
             raise TypeError('Cavity mode has to be an instance of CavityMode')
@@ -163,7 +163,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self.NormFact = kwargs.pop('NormFact', 1.0)
         self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
         self.VoltGain = kwargs.pop('VoltGain', 1.0)
-        self._mode = int(mode)
+        self._blmode = int(blmode)
         self._cavitymode = int(cavitymode)
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
@@ -281,7 +281,7 @@ class BeamLoadingElement(RFCavity, Collective):
     @staticmethod
     def build_from_cav(cav: RFCavity, ring: Sequence,
                        qfactor: float, rshunt: float,
-                       mode: Optional[BLMode] = BLMode.PHASOR,
+                       blmode: Optional[BLMode] = BLMode.PHASOR,
                        cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                        **kwargs):
         r"""Function to build the BeamLoadingElement from a cavity
@@ -298,7 +298,7 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+            blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
@@ -320,7 +320,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 warnings.warn(AtWarning('Cavity Voltage setpoint will be set to 0.'))
             cav_args[1] = 0.0
         return BeamLoadingElement(family_name, *cav_args, ring,
-                                  qfactor, rshunt, mode=mode,
+                                  qfactor, rshunt, blmode=blmode,
                                   cavitymode=cavitymode,
                                   **cav_attrs, **kwargs)
 

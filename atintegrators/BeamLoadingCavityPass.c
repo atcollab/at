@@ -13,7 +13,7 @@ struct elem
 {
   int nslice;
   int nturnsw;
-  int mode;
+  int blmode;
   int cavitymode;
   double normfact;
   double phasegain;
@@ -48,7 +48,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     long cavitymode = Elem->cavitymode;
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw;
-    long mode = Elem->mode;
+    long blmode = Elem->blmode;
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double energy = Elem->Energy;
@@ -105,11 +105,11 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         rotate_table_history(nturnsw,nslice*nbunch,turnhistory,circumference);
         slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
                     turnhistory,pslice,z_cuts);
-        if(mode==2){
+        if(blmode==2){
             compute_kicks_phasor(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                                  qfactor,rshunt,vbeam_phasor,circumference,energy,beta,
                                  vbeamk,vbunch);                        
-        }else if(mode==1){
+        }else if(blmode==1){
             compute_kicks_longres(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                                   qfactor,rshunt,beta,vbeamk,energy,vbunch);
         }
@@ -140,7 +140,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double rl = Param->RingLength;
     int nturn=Param->nturn;
     if (!Elem) {
-        long nslice,nturns,mode,cavitymode;
+        long nslice,nturns,blmode,cavitymode;
         double wakefact;
         double normfact, phasegain, voltgain;
         double *turnhistory;
@@ -161,7 +161,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*attributes for resonator*/
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
-        mode=atGetLong(ElemData,"_mode"); check_error();
+        blmode=atGetLong(ElemData,"_blmode"); check_error();
         cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
@@ -183,7 +183,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         
         Elem->Length=Length;
-        Elem->mode=mode;
+        Elem->blmode=blmode;
         Elem->Frequency=Frequency;
         Elem->HarmNumber=round(Frequency*rl/C0);
         Elem->Energy = Energy;
@@ -211,7 +211,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
     #ifdef _MSC_VER
-    if(Elem->mode==2){
+    if(Elem->blmode==2){
         atError("Beam loading Phasor mode not implemented in Windows.");
     }
     #endif
@@ -235,7 +235,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
       
-      long nslice,nturns,mode,cavitymode;
+      long nslice,nturns,blmode,cavitymode;
       double wakefact;
       double normfact, phasegain, voltgain;
       double *turnhistory;
@@ -255,7 +255,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /*attributes for resonator*/
       nslice=atGetLong(ElemData,"_nslice"); check_error();
       nturns=atGetLong(ElemData,"_nturns"); check_error();
-      mode=atGetLong(ElemData,"_mode"); check_error();
+      blmode=atGetLong(ElemData,"_blmode"); check_error();
       cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
       wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
       qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
@@ -275,7 +275,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
-      Elem->mode=mode;
+      Elem->blmode=blmode;
       Elem->cavitymode=cavitymode;
       Elem->Frequency=Frequency;
       Elem->HarmNumber=1;
@@ -314,7 +314,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
       mxSetCell(plhs[0],3,mxCreateString("_nslice"));
       mxSetCell(plhs[0],4,mxCreateString("_nturns"));
-      mxSetCell(plhs[0],5,mxCreateString("_mode"));
+      mxSetCell(plhs[0],5,mxCreateString("_blmode"));
       mxSetCell(plhs[0],6,mxCreateString("_cavitymode"));
       mxSetCell(plhs[0],7,mxCreateString("_wakefact"));
       mxSetCell(plhs[0],8,mxCreateString("Qfactor"));
