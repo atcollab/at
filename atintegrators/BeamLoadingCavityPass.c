@@ -87,7 +87,6 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         vgen = vgenk[0];
         psi = vgenk[1];
     }
-
     /*Track RF cavity is always done. */
     trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
     
@@ -210,6 +209,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }else if (num_particles%Param->nbunch!=0){
         atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
+    if(Elem->cavitymode==0 || Elem->cavitymode>=3){
+        atError("Unknown cavitymode provided.");    
+    } 
+    if(Elem->blmode==0 || Elem->blmode>=3){
+        atError("Unknown blmode provided.");    
+    } 
+
     #ifdef _MSC_VER
     if(Elem->blmode==2){
         atError("Beam loading Phasor mode not implemented in Windows.");

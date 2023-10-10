@@ -8,7 +8,7 @@ from at.physics import get_timelag_fromU0
 from at.constants import clight
 from typing import Sequence, Optional, Union
 import warnings
-
+from ..lattice import AtError
 
 class BLMode(IntEnum):
     WAKE = 1
@@ -99,7 +99,7 @@ def remove_beamloading(ring, cavpts: Refpts = None,
     for ref in cavpts:
         bl = ring[ref]
         if not isinstance(bl, BeamLoadingElement):
-            raise TypeError('Cannot remove beam loading:' +
+            raise TypeError('Cannot remove beam loading: ' +
                             'not a BeamLoadingElement')
         family_name = bl.FamName.replace('_BL', '')
         harm = numpy.round(bl.Frequency*ring.circumference/clight)
@@ -156,10 +156,10 @@ class BeamLoadingElement(RFCavity, Collective):
         """
         kwargs.setdefault('PassMethod', self.default_pass[True])
         if not isinstance(blmode, BLMode):
-            raise TypeError('blmode mode has to be an' +
+            raise TypeError('blmode mode has to be an ' +
                             'instance of BLMode')
         if not isinstance(cavitymode, CavityMode):
-            raise TypeError('cavitymode has to be an' +
+            raise TypeError('cavitymode has to be an ' +
                             'instance of CavityMode')
         zcuts = kwargs.pop('ZCuts', None)
         phil = kwargs.pop('phil', 0)
@@ -218,13 +218,15 @@ class BeamLoadingElement(RFCavity, Collective):
             psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
-
         elif (self._cavitymode == 1) and (current == 0.0):
             vgen = self.Voltage
             psi = 0
-        else:
+        elif self._cavitymode == 2:
             vgen = 0
             psi = 0
+        else:
+            raise AtError('Unknown cavitymode and current ' +
+                          'configuration provided')
 
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
