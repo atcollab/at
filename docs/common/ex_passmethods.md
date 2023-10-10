@@ -18,10 +18,31 @@ the default methods. They are mainly useful for small rings (small bending
 radius, large angles).
 
 ## `ExactDriftPass`
-Exact integration in a free space region
+Exact integration in a free space region.
+
+Length
+: Drift length.
 
 (ExactMultipolePass)=
 ## `ExactMultipolePass`
+Exact integration in a straight magnet.
+
+Length, PolynomB, PolynomA, MaxOrder, NumIntSteps
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass).
+
+```{rubric} Bending magnet passmethods
+```
+
+For bending magnet passmethods, the term "rectangular" refers to the layout of the
+magnetic field, not to the shape of the magnet or to the angle of the pole faces.
+
+- In a "sector" magnet, the magnetic axis is an arc of a circle following the
+design trajectory,
+- In a "rectangular" magnet, the magnetic axis is a straight line (ex.: off-axis
+quadrupole).
+
+In case of a pure dipole (uniform magnetic field), both are equivalent, so one can use
+any of the available methods. They give identical results.
 
 (ExactSectorBendPass)=
 ## `ExactSectorBendPass`
@@ -31,9 +52,9 @@ This method uses the bend-kick split of the Hamiltonian. The "bend" step integra
 the order 0 of the field expansion (dipole field) while the kick includes the effects
 of the higher orders of the field expansion and of the synchrotron radiation.
 Following the notations in [^Forest],
-the map corresponds to {math}`\mathcal{Y}(\varepsilon_1)
-\mathcal{F}_1\mathcal{U}(-\varepsilon_1)\mathcal{W}\mathcal{U}(-\varepsilon_2)
-\mathcal{F}_2\mathcal{Y}(\varepsilon_2)` with:
+the map corresponds to {math}`\mathcal{Y}(\varepsilon_1) \mathcal{F}_1
+\mathcal{U}(-\varepsilon_1) \: \mathcal{W} \: \mathcal{U}(-\varepsilon_2)
+\mathcal{F}_2 \mathcal{Y}(\varepsilon_2)` with:
 - {math}`\mathcal{Y}(\varepsilon_1)`: y-axis rotation (Eq. 10.26)
 - {math}`\mathcal{F}_1`: dipole fringe field in the hard-edge limit (Eq. 13.13), [^F2]
 - {math}`\mathcal{U}(-\varepsilon_1)`: entrance wedge (Eq. 12.41)
@@ -68,9 +89,9 @@ Exact integration in a bending magnet with Cartesian layout.
 This method uses the drift-kick split of the Hamiltonian in the Cartesian
 coordinates of the magnet.
 Following the notations in [^Forest],
-the map corresponds to {math}`\mathcal{Y}(\varepsilon_1)
-\mathcal{F}_1\mathcal{U}(\theta/2-\varepsilon_1)\mathcal{D}
-\mathcal{U}(\theta/2-\varepsilon_2)\mathcal{F}_2\mathcal{Y}(\varepsilon_2)` with:
+the map corresponds to {math}`\mathcal{Y}(\varepsilon_1) \mathcal{F}_1
+\mathcal{U}(\theta/2-\varepsilon_1) \: \mathcal{D} \: \mathcal{U}(\theta/2-\varepsilon_2)
+\mathcal{F}_2 \mathcal{Y}(\varepsilon_2)` with:
 - {math}`\mathcal{Y}(\varepsilon_1)`: y-axis rotation (Eq. 10.26)
 - {math}`\mathcal{F}_1`: dipole fringe field in the hard-edge limit (Eq. 13.13), [^F2]
 - {math}`\mathcal{U}(\theta/2-\varepsilon_1)`: entrance wedge (Eq. 12.41)
@@ -107,6 +128,39 @@ This tuning is performed using a dedicated function/method:
   % Set their correct attributes
   ring(rbends)=cellfun(@attunerbend,ring(rbends),'UniformOutput',false);
   ```
+
+PolynomB, PolynomA, MaxOrder, NumIntSteps
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)
+
+Length, BendingAngle, EntranceAngle, ExitAngle
+: see [BndMPoleSymplectic4Pass](#BndMPoleSymplectic4Pass)
+
+(ExactRectBendPass)=
+## `ExactRectBendPass`
+Exact integration in a bending magnet with Cartesian layout.
+
+Similar to [ExactRectangularBendPass](#ExactRectangularBendPass), but using a
+different formalism. The map is expressed by
+{math}`\mathcal{Y}(\varepsilon_1) \mathcal{F}_1
+\mathcal{U}(\theta/2-\varepsilon_1) \: \mathcal{V} \: \mathcal{U}(\theta/2-\varepsilon_2)
+\mathcal{F}_2 \mathcal{Y}(\varepsilon_2)`:
+- {math}`\mathcal{Y}(\varepsilon_1)`: y-axis rotation (Eq. 10.26)
+- {math}`\mathcal{F}_1`: dipole fringe field in the hard-edge limit (Eq. 13.13), [^F2]
+- {math}`\mathcal{U}(\theta/2-\varepsilon_1)`: entrance wedge (Eq. 12.41)
+- {math}`\mathcal{V}`: bend-kick sequence in cartesian geometry(Eq. 12.39)
+- {math}`\mathcal{U}(\theta/2-\varepsilon_2)`: exit wedge
+- {math}`\mathcal{F}_2`: dipole fringe field in the hard-edge limit
+- {math}`\mathcal{Y}(\varepsilon_2)`: y-axis rotation
+
+`ExactRectBendPass` needs more computations per step than
+`ExactRectangularBendPass` and suffers from the same discontinuities as
+`ExactSectorBendPass`. However, in the case of a pure dipole field, one can set
+`NumIntSteps` to zero.
+
+This method is available for tests but it is recommended
+to use `ExactRectangularBendPass` or`ExactSectorBendPass`.
+
+See [ExactRectangularBendPass](#ExactRectangularBendPass) for usage and tuning.
 
 PolynomB, PolynomA, MaxOrder, NumIntSteps
 : see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)

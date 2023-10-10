@@ -778,7 +778,8 @@ class Dipole(Radiative, Multipole):
             FieldScaling:       Scaling factor applied to the magnetic field
 
         Available PassMethods: :ref:`BndMPoleSymplectic4Pass`, :ref:`BendLinearPass`,
-        :ref:`ExactSectorBendPass`, :ref:`ExactRectangularBendPass`
+        :ref:`ExactSectorBendPass`, :ref:`ExactRectangularBendPass`,
+        :ref:`ExactRectBendPass`, BndStrMPoleSymplectic4Pass
 
         Default PassMethod: :ref:`BndMPoleSymplectic4Pass`
         """
