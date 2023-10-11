@@ -218,16 +218,13 @@ class BeamLoadingElement(RFCavity, Collective):
             psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
-        elif (self._cavitymode == 1) and (current == 0.0):
-            vgen = self.Voltage
-            psi = 0
         elif self._cavitymode == 2:
             vgen = 0
             psi = 0
         else:
-            raise AtError('Unknown cavitymode and current ' +
-                          'configuration provided')
-
+            vgen = self.Voltage
+            psi = 0
+            
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
         self._vgen = numpy.array([vgen, psi])

@@ -36,7 +36,7 @@ void trackRFCavity(double *r_in, double le, double nv, double freq, double h, do
                 /* Propagate through a drift equal to half cavity length */
                 drift6(r6, halflength);
                 /* Longitudinal momentum kick */
-                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
+                if(nv!=0.0) r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
                 /* Propagate through a drift equal to half cavity length */
                 drift6(r6, halflength);
             }
