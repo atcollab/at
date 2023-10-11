@@ -8,7 +8,6 @@ from at.physics import get_timelag_fromU0
 from at.constants import clight
 from typing import Sequence, Optional, Union
 import warnings
-from ..lattice import AtError
 
 class BLMode(IntEnum):
     WAKE = 1
