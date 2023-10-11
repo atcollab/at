@@ -398,7 +398,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-	    plhs[0] = mxCreateCellMatrix(8,1);
+	    plhs[0] = mxCreateCellMatrix(9,1);
 	    mxSetCell(plhs[0],0,mxCreateString("Length"));
 	    mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
 	    mxSetCell(plhs[0],2,mxCreateString("EntranceAngle"));
@@ -409,7 +409,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
         mxSetCell(plhs[0],8,mxCreateString("Energy"));
 	    if(nlhs>1) {    /* list of optional fields */
-	        plhs[1] = mxCreateCellMatrix(7,1);
+	        plhs[1] = mxCreateCellMatrix(10,1);
 	        mxSetCell(plhs[1],0,mxCreateString("FullGap"));
 	        mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
 	        mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
