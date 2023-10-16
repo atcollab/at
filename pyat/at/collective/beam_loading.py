@@ -1,17 +1,22 @@
 import numpy
 from enum import IntEnum
-from ..lattice import Lattice
+from ..lattice import Lattice, AtWarning
 from at.lattice import RFCavity, Collective
 from at.lattice.elements import _array
 from at.lattice.utils import Refpts, uint32_refpts, make_copy
 from at.physics import get_timelag_fromU0
 from at.constants import clight
 from typing import Sequence, Optional, Union
-
+import warnings
 
 class BLMode(IntEnum):
     WAKE = 1
     PHASOR = 2
+
+
+class CavityMode(IntEnum):
+    ACTIVE = 1
+    PASSIVE = 2
 
 
 def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
@@ -35,12 +40,13 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
         Nturns (int):       Number of turn for the wake field. Default: 1
         ZCuts:              Limits for fixed slicing, default is adaptive
         NormFact (float):   Normalization factor
-        mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+        blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
             (default) uses the phasor method, BLMode.WAKE uses the wake
             function. For high Q resonator, the phasor method should be
             used
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
+        cavitymode (CavityMode):     Define PASSIVE or ACTIVE cavity
     """
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
@@ -56,8 +62,9 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
     new_elems = []
     for ref, qf, rs in zip(cavpts, qfactor, rshunt):
         cav = ring[ref]
-        assert isinstance(cav, RFCavity), \
-            'Beam loading can only be assigned to a cavity element'
+        if not isinstance(cav, RFCavity):
+            raise TypeError('Beam loading can only be assigned' +
+                            'to an RFCavity element')
         new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf,
                                                            rs, **kwargs))
     return apply(ring, cavpts, new_elems)
@@ -90,8 +97,9 @@ def remove_beamloading(ring, cavpts: Refpts = None,
     new_elems = []
     for ref in cavpts:
         bl = ring[ref]
-        assert isinstance(bl, BeamLoadingElement), \
-            'Cannot remove beam loading: not a beam loading element'
+        if not isinstance(bl, BeamLoadingElement):
+            raise TypeError('Cannot remove beam loading: ' +
+                            'not a BeamLoadingElement')
         family_name = bl.FamName.replace('_BL', '')
         harm = numpy.round(bl.Frequency*ring.circumference/clight)
         new_elems.append(RFCavity(family_name, bl.Length, bl.Voltage,
@@ -108,18 +116,20 @@ class BeamLoadingElement(RFCavity, Collective):
     default_pass = {False: 'DriftPass', True: 'BeamLoadingCavityPass'}
     _conversions = dict(RFCavity._conversions,
                         Rshunt=float, Qfactor=float, NormFact=float,
-                        PhaseGain=float, VoltGain=float, _mode=int,
+                        PhaseGain=float, VoltGain=float, _blmode=int,
                         _beta=float, _wakefact=float, _nslice=int,
-                        ZCuts=lambda v: _array(v),
+                        ZCuts=lambda v: _array(v), _cavitymode=int,
                         _nturns=int, _phis=float,
                         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
                         _vbeam=lambda v: _array(v, shape=(2,)),
                         _vcav=lambda v: _array(v, shape=(2,)),
-                        _vgen=lambda v: _array(v, shape=(2,)))
+                        _vgen=lambda v: _array(v, shape=(2,)),
+                        )
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
-                 rshunt: float, mode: Optional[BLMode] = BLMode.PHASOR,
+                 rshunt: float, blmode: Optional[BLMode] = BLMode.PHASOR,
+                 cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                  **kwargs):
         r"""
         Parameters:
@@ -135,16 +145,21 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+            blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
+            cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
         Returns:
             bl_elem (Element): beam loading element
         """
         kwargs.setdefault('PassMethod', self.default_pass[True])
-        assert isinstance(mode, BLMode), \
-            'Beam loading mode has to be an instance of BLMode'
+        if not isinstance(blmode, BLMode):
+            raise TypeError('blmode mode has to be an ' +
+                            'instance of BLMode')
+        if not isinstance(cavitymode, CavityMode):
+            raise TypeError('cavitymode has to be an ' +
+                            'instance of CavityMode')
         zcuts = kwargs.pop('ZCuts', None)
         phil = kwargs.pop('phil', 0)
         energy = ring.energy
@@ -154,7 +169,8 @@ class BeamLoadingElement(RFCavity, Collective):
         self.NormFact = kwargs.pop('NormFact', 1.0)
         self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
         self.VoltGain = kwargs.pop('VoltGain', 1.0)
-        self._mode = int(mode)
+        self._blmode = int(blmode)
+        self._cavitymode = int(cavitymode)
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
@@ -193,16 +209,24 @@ class BeamLoadingElement(RFCavity, Collective):
         self._init_bl_params(current)
 
     def _init_bl_params(self, current):
-        theta = -self._vcav[1]+numpy.pi/2
-        vb = 2*current*self.Rshunt
-        a = self.Voltage*numpy.cos(theta-self._phis)
-        b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
-        psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
-        vgen = self.Voltage*numpy.cos(psi) + \
-            vb*numpy.cos(psi)*numpy.sin(self._phis)
-        self._vgen = numpy.array([vgen, psi])
+        if (self._cavitymode == 1) and (current > 0.0):
+            theta = -self._vcav[1]+numpy.pi/2
+            vb = 2*current*self.Rshunt
+            a = self.Voltage*numpy.cos(theta-self._phis)
+            b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
+            psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
+            vgen = self.Voltage*numpy.cos(psi) + \
+                vb*numpy.cos(psi)*numpy.sin(self._phis)
+        elif self._cavitymode == 2:
+            vgen = 0
+            psi = 0
+        else:
+            vgen = self.Voltage
+            psi = 0
+            
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
+        self._vgen = numpy.array([vgen, psi])
 
     @property
     def Nslice(self):
@@ -228,7 +252,6 @@ class BeamLoadingElement(RFCavity, Collective):
     def TurnHistory(self):
         """Turn history of the slices center of mass"""
         return self._turnhistory
-
 
     @property
     def ResFrequency(self):
@@ -262,7 +285,8 @@ class BeamLoadingElement(RFCavity, Collective):
     @staticmethod
     def build_from_cav(cav: RFCavity, ring: Sequence,
                        qfactor: float, rshunt: float,
-                       mode: Optional[BLMode] = BLMode.PHASOR,
+                       blmode: Optional[BLMode] = BLMode.PHASOR,
+                       cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                        **kwargs):
         r"""Function to build the BeamLoadingElement from a cavity
         the FamName, Length, Voltage, Frequency and HarmNumber are
@@ -278,10 +302,13 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+            blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
+            cavitymode (CavityMode):  type of beam loaded cavity ACTIVE
+                (default) for a cavity with active compensation, or
+                PASSIVE to only include the beam induced voltage
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -292,8 +319,13 @@ class BeamLoadingElement(RFCavity, Collective):
         [cav_attrs.pop(k) for k in _EXCL_ATTRIBUTES]
         cav_args = [cav_attrs.pop(k, getattr(cav, k)) for k in
                     _CAV_ATTRIBUTES]
+        if cavitymode == CavityMode.PASSIVE:
+            if cav_args[1] != 0.0:
+                warnings.warn(AtWarning('Setting Cavity Voltage to 0'))
+            cav_args[1] = 0.0
         return BeamLoadingElement(family_name, *cav_args, ring,
-                                  qfactor, rshunt, mode=mode,
+                                  qfactor, rshunt, blmode=blmode,
+                                  cavitymode=cavitymode,
                                   **cav_attrs, **kwargs)
 
     def __repr__(self):

@@ -391,7 +391,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double rshunt, double *vbeam, double circumference,
                           double energy, double beta, double *vbeamk, double *vbunch){  
     #ifndef _MSC_VER  
-    int i,ib,it,is;
+    int i,ib,is;
     double wi;
     double selfkick;
     int sliceperturn = nslice*nbunch;
