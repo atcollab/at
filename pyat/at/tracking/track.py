@@ -178,22 +178,25 @@ def lattice_track(lattice: Iterable[Element], r_in,
           **refpts**        array of index where particle coordinate are saved
                             (only for lattice tracking)
           **nturns**        number of turn
+          ==============    ===================================================
 
         trackdata: A dictionary containinf tracking data with the following
           keys:
 
           ==============    ===================================================
-          **loss_map**: recarray containing the loss_map (only for lattice
-                        tracking)
+          **loss_map**:     recarray containing the loss_map (only for lattice
+                            tracking)
+          ==============    ===================================================
 
 
-        The **loss_map** is filled only if *losses* is :py:obj:`True`,
+          The **loss_map** is filled only if *losses* is :py:obj:`True`,
           it contains the following keys:
+
           ==============    ===================================================
           **islost**        (npart,) bool array indicating lost particles
           **turn**          (npart,) int array indicating the turn at
                             which the particle is lost
-          **element**       ((npart,) int array indicating the element at
+          **element**       (npart,) int array indicating the element at
                             which the particle is lost
           **coord**         (npart, 6) float array giving the coordinates at
                             which the particle is lost (zero for surviving

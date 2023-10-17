@@ -86,7 +86,7 @@ Npart = Nbunches
 # Now we give the fring and convert it
 # into a beam loaded cavity.
 add_beamloading(fring, qfactor, rshunt, Nslice=1,
-                Nturns=50, mode=blm,
+                Nturns=50, blmode=blm,
                 VoltGain=0.1, PhaseGain=0.1)
 
 bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
