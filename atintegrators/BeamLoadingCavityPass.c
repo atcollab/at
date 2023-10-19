@@ -178,6 +178,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*optional attributes*/
 
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+
+        int dimsth[] = {Param->nbunch*nslice*nturns, 4};
+        atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
+        int dimsvb[] = {Param->nbunch, 2};
+        atCheckArrayDims(ElemData,"_vbunch", 2, dimsvb); check_error();
        
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         
