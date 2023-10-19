@@ -76,7 +76,7 @@ class WakeElement(Collective, Element):
         self._turnhistory = numpy.zeros((tl, 4), order='F')
 
     def set_normfactxy(self, ring):
-        l0, _, _ = ring.get_optics(ring)
+        l0, _, _ = ring.get_optics()
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
 
