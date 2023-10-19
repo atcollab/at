@@ -611,7 +611,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
                         (modulo :math:`2\pi`)
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
-    **Wp**               :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+    **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic phase function
     **dalpha**          (2,) alpha derivative vector
                         (:math:`\Delta \alpha/ \delta_p`)
@@ -721,7 +721,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
                         eigenmodes [7]_
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
-    **Wp**               :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+    **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic phase function
     **dalpha**          (2,) alpha derivative vector
                         (:math:`\Delta \alpha/ \delta_p`)
@@ -841,7 +841,7 @@ def linopt6(ring: Lattice, *args, **kwargs):
                         (modulo :math:`2\pi`)
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
-    **Wp**               :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+    **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic phase function
     **dalpha**          (2,) alpha derivative vector
                         (:math:`\Delta \alpha/ \delta_p`)
