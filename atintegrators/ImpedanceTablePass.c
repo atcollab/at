@@ -4,7 +4,7 @@
 
 /*
  * Impedance pass method by Simon White.  
- * User may contact simon.white@esrf.fr for questions and comments.
+ * 
  */
 
 struct elem

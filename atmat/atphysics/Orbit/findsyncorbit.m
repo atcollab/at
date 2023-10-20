@@ -1,4 +1,4 @@
-function [orb5,orbitin] = findsyncorbit(ring,dct,varargin)
+function [orb5,orbitin] = findsyncorbit(ring,varargin)
 %FINDSYNCORBIT finds closed orbit, synchronous with the RF cavity
 % and momentum deviation dP (first 5 components of the phase space vector)
 % by numerically solving  for a fixed point
@@ -20,15 +20,22 @@ function [orb5,orbitin] = findsyncorbit(ring,dct,varargin)
 %    2. have any time dependence (localized impedance, fast kickers etc).
 %
 %
-% FINDSYNCORBIT(RING,DCT) is 5x1 vector - fixed point at the
+% FINDSYNCORBIT(RING) is 5x1 vector - fixed point at the
 %		entrance of the 1-st element of the RING (x,px,y,py,dP)
 %
-% FINDSYNCORBIT(RING,DCT,REFPTS) is 5xLength(REFPTS)
+% FINDSYNCORBIT(RING,REFPTS) is 5xLength(REFPTS)
 %   array of column vectors - fixed points (x,px,y,py,dP)
 %   at the entrance of each element indexed by the REFPTS array.
 %   REFPTS is an array of increasing indexes that  select elements
 %   from the range 1 to length(RING)+1.
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
+%
+%FINDORBIT4(RING,DCT,REFPTS,...) Obsolete syntax
+%FINDORBIT4(RING,...,'dct',DCT)  Specifies the path lengthening
+%
+%FINDORBIT4(RING,...,'dp',DP)   Specifies the off-momentum
+%
+%FINDORBIT4(RING,...,'df',DF) Specifies RF frequency deviation
 %
 % FINDSYNCORBIT(RING,DCT,REFPTS,GUESS)
 % FINDSYNCORBIT(...,'guess',GUESS)     The search for the fixed point
@@ -49,13 +56,21 @@ if ~iscell(ring)
     error('First argument must be a cell array');
 end
 [orbitin,varargs]=getoption(varargin,'orbit',[]);
+[dct,varargs]=getdparg(varargs,0.0,'key','dct');
 [dp,varargs]=getoption(varargs,'dp',NaN);
+[df,varargs]=getoption(varargs,'df',NaN);
 [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+[~,varargs]=getoption(varargs,'is_6d',[]); % Consume the is_6d option
 if isempty(orbitin)
-    if isfinite(dp)
-        orbitin=xorbit_dp(ring,dp,varargs);
+    if isfinite(df)
+        [cell_l,cell_frev,cell_h]=atGetRingProperties(ring,'cell_length',...
+            'cell_harmnumber','cell_revolution_frequency');
+        dct=-cell_l*df/(cell_frev*cell_h+df);
+        orbitin=xorbit_ct(ring,dct,varargs{:});
+    elseif isfinite(dp)
+        orbitin=xorbit_dp(ring,dp,varargs{:});
     else
-        orbitin=xorbit_ct(ring,dct,varargs);
+        orbitin=xorbit_ct(ring,dct,varargs{:});
     end
     args={'KeepLattice'};
 else
@@ -69,7 +84,7 @@ if isempty(refpts)
     % return only the fixed point at the entrance of RING{1}
     orb5=orbitin(1:5,1);
 else
-    orb6 = linepass(ring,orbitin,varargin{1},args{:});
+    orb6 = linepass(ring,orbitin,refpts,args{:});
     orb5 = orb6(1:5,:);
 end
 end

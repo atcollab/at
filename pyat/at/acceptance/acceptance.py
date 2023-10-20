@@ -1,83 +1,99 @@
+"""Acceptance computation"""
 import numpy
 from .boundary import GridMode
+# noinspection PyProtectedMember
 from .boundary import boundary_search
+from typing import Optional, Sequence
 import multiprocessing
-from ..lattice import Lattice
+from ..lattice import Lattice, Refpts, frequency_control, AtError
 
 
 __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
            'get_vertical_acceptance', 'get_momentum_acceptance']
 
 
-def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
-                   refpts=None, dp=None, offset=None, bounds=None,
-                   grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
-                   start_method=None, divider=2, shift_zero=1.0e-9):
-    """
-    Computes the acceptance at repfts observation points
-    Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
-    (r, theta). Scalar inputs can be used for 1D grid.
-    The grid can be changed using grid_mode input:
-    at.GridMode.CARTESIAN: (x,y) grid
-    at.GridMode.RADIAL: (r,theta) grid
-    at.GridMode.RECURSIVE: (r,theta) recursive boundary search
+@frequency_control
+def get_acceptance(
+        ring: Lattice, planes, npoints, amplitudes,
+        nturns: Optional[int] = 1024,
+        refpts: Optional[Refpts] = None,
+        dp: Optional[float] = None,
+        offset: Sequence[float] = None, bounds=None,
+        grid_mode: Optional[GridMode] = GridMode.RADIAL,
+        use_mp: Optional[bool] = False,
+        verbose: Optional[bool] = True,
+        divider: Optional[int] = 2,
+        shift_zero: Optional[float] = 1.0e-6,
+        start_method: Optional[str] = None,
+):
+    # noinspection PyUnresolvedReferences
+    r"""Computes the acceptance at ``repfts`` observation points
 
-    Example usage:
-    bf,sf,gf = ring.get_acceptance(planes, npoints, amplitudes)
-    plt.plot(*gf,'.')
-    plt.plot(*sf,'.')
-    plt.plot(*bf)
-    plt.show()
+    Parameters:
+        ring:           Lattice definition
+        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
+          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
+          ``'yp'``, ``'dp'``, ``'ct'``
+        npoints:        (len(planes),) array: number of points in each
+          dimension
+        amplitudes:     (len(planes),) array: set the search range:
 
-    PARAMETERS
-        ring            ring use for tracking
-        planes          max. dimension 2, defines the plane where to search
-                        for the acceptance, allowed values are: x,xp,y,yp,dp,ct
-        npoints         number of points in each dimension shape (len(planes),)
-        amplitudes      max. amplitude for RADIAL and CARTESIAN or initial step
-                        in RECURSIVE in each dimension. Shape is (len(planes),)
-                        for RADIAL/RECURSIVE grid: amplitude = sqrt(x**2+y**2)
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+        nturns:         Number of turns for the tracking
+        refpts:         Observation points. Default: start of the machine
+        dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        bounds:         defines the tracked range: range=bounds*amplitude.
+          It can be use to select quadrants. For example, default values are:
 
-    KEYWORDS
-        nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
-        dp=None         static momentum offset
-        offset=None     initial orbit, default closed orbit
-        bounds=None     defines the tracked range: range=bounds*amplitude, it
-                        can be use to select quadrants for example
-                        default values are:
-                        GridMode.CARTESIAN: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
-        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
-                        (default) at.GridMode.RECURSIVE: recursive search
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass). In case multi-processing is not
-                        enabled GridMode is forced to
-                        RECURSIVE (most efficient in single core)
-        divider=2       Value of the divider used in RECURSIVE boundary search
-        verbose=True    Print out some inform
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however
-                        it is considered unsafe.
+          * :py:attr:`.GridMode.CARTESIAN`: ((-1, 1), (0, 1))
+          * :py:attr:`GridMode.RADIAL/RECURSIVE <.GridMode.RADIAL>`: ((0, 1),
+            (:math:`\pi`, 0))
+        grid_mode:      defines the evaluation grid:
 
-    OUTPUT
-        Returns 3 numpy arrays with shape (2,n) (or lists of numpy arrays for
-        multiple refpts): the 2D acceptance , the full grid that was
-        tracked and the particles of the grid that survived. The length
-        of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
-        survived arrays are returned directly.
-        The units depend on the selected planes and are the same as for the 6D
-        particle coordinates
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`).
+        verbose:        Print out some information
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero: Epsilon offset applied on all 6 coordinates
+        start_method:   Python multiprocessing start method. The default
+          ``None`` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for MacOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
+          the calculation or to solve runtime errors, however  it is
+          considered unsafe.
+
+    Returns:
+        boundary:   (2,n) array: 2D acceptance
+        survived:   (2,n) array: Coordinates of surviving particles
+        tracked:    (2,n) array: Coordinates of tracked particles
+
+    In case of multiple refpts, return values are lists of arrays, with one
+    array per ref. point.
+
+    Examples:
+
+        >>> bf,sf,gf = ring.get_acceptance(planes, npoints, amplitudes)
+        >>> plt.plot(*gf,'.')
+        >>> plt.plot(*sf,'.')
+        >>> plt.plot(*bf)
+        >>> plt.show()
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     kwargs = {}
-    if not use_mp:
-        grid_mode = GridMode.RECURSIVE
-    elif start_method is not None:
+    if start_method is not None:
         kwargs['start_method'] = start_method
 
     if verbose:
@@ -122,10 +138,20 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         rp = ring.uint32_refpts(refpts)
     else:
         rp = numpy.atleast_1d(refpts)
-    for r in rp:
+    if offset is not None:
+        try:
+            offset = numpy.broadcast_to(offset, (len(rp), 6))
+        except ValueError:
+            msg = ('offset and refpts have incoherent '
+                   'shapes: {0}, {1}'.format(numpy.shape(offset),
+                                             numpy.shape(refpts)))
+            raise AtError(msg)
+    else:
+        offset=[None for _ in rp]
+    for r, o in zip(rp, offset):
         b, s, g = boundary_search(ring, planes, npoints, amplitudes,
                                   nturns=nturns, obspt=r, dp=dp,
-                                  offset=offset, bounds=bounds,
+                                  offset=o, bounds=bounds,
                                   grid_mode=grid_mode, use_mp=use_mp,
                                   verbose=verbose, divider=divider,
                                   shift_zero=shift_zero, **kwargs)
@@ -138,194 +164,269 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         return boundary, survived, grid
 
 
-def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
-                      refpts=None, grid_mode=GridMode.RADIAL, use_mp=False,
-                      verbose=False, start_method=None, divider=2):
+def get_1d_acceptance(
+        ring: Lattice, plane: str, resolution: float, amplitude: float,
+        nturns: Optional[int] = 1024,
+        refpts: Optional[Refpts] = None,
+        dp: Optional[float] = None,
+        offset: Sequence[float] = None,
+        grid_mode: Optional[GridMode] = GridMode.RADIAL,
+        use_mp: Optional[bool] = False,
+        verbose: Optional[bool] = False,
+        divider: Optional[int] = 2,
+        shift_zero: Optional[float] = 1.0e-6,
+        start_method: Optional[str] = None,
+
+):
+    r"""Computes the 1D acceptance at ``refpts`` observation points
+
+    See :py:func:`get_acceptance`
+
+    Parameters:
+        ring:           Lattice definition
+        plane:          Plane to scan for the acceptance.
+          Allowed values are: ``'x'``, ``'xp'``, ``'y'``, ``'yp'``, ``'dp'``,
+          ``'ct'``
+        resolution:     Minimum distance between 2 grid points
+        amplitude:      Search range:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+        nturns:         Number of turns for the tracking
+        refpts:         Observation points. Default: start of the machine
+        dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        grid_mode:      defines the evaluation grid:
+
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing
+          is not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        verbose:        Print out some information
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero: Epsilon offset applied on all 6 coordinates
+        start_method:   Python multiprocessing start method. The default
+          ``None`` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for MacOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
+          the calculation or to solve runtime errors, however  it is considered
+          unsafe.
+
+    Returns:
+        boundary:   (len(refpts),2) array: 1D acceptance
+        tracked:    (n,) array: Coordinates of tracked particles
+        survived:   (n,) array: Coordinates of surviving particles
+
+    In case of multiple ``tracked`` and ``survived`` are lists of arrays,
+    with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
-    Computes the 1D acceptance at refpts observation points
-    Scalar parameters required
-
-    See get_acceptance
-
-    PARAMETERS
-        ring            ring use for tracking
-        plane           max. dimension 2, defines the plane where to search
-                        for the acceptance, allowed values are: x,xp,y,yp,dp,ct
-        resolution      minimum distance between 2 grid points
-        amplitude       max. amplitude of the grid or initial step in RECURSIVE
-
-    KEYWORDS
-        nturns=1024     Number of turns for the tracking
-        dp=0            static momentum offset
-        refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
-                        (default) at.GridMode.RECURSIVE: recursive search
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass).
-                        In case multi-processing is not enabled GridMode is
-                        forced to RECURSIVE (most efficient in single core)
-        divider=2       Value of the divider used in RECURSIVE boundary search
-        verbose=False   Print out some information
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however
-                        it is considered unsafe.
-
-
-    OUTPUT
-        Returns 3 lists containing the 1D acceptance, the grid that was tracked
-        and the particles of the grid that survived.
-        The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-        grid, suvived arrays are returned.
-        The boundary output is squeezed to an array with shape (len(refpts),2)
-    """
+    if not use_mp:
+        grid_mode = GridMode.RECURSIVE
     assert len(numpy.atleast_1d(plane)) == 1, \
         '1D acceptance: single plane required'
     assert numpy.isscalar(resolution), '1D acceptance: scalar args required'
     assert numpy.isscalar(amplitude), '1D acceptance: scalar args required'
     npoint = numpy.ceil(amplitude/resolution)
+    if grid_mode is not GridMode.RECURSIVE:
+        assert npoint > 1, \
+            'Grid has only one point: increase amplitude or reduce resolution'
     b, s, g = get_acceptance(ring, plane, npoint, amplitude,
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
                              verbose=verbose, start_method=start_method,
-                             divider=2, shift_zero=0.0)
+                             divider=divider, shift_zero=shift_zero,
+                             offset=offset)
     return numpy.squeeze(b), s, g
 
 
-def get_horizontal_acceptance(ring, *args, **kwargs):
+def get_horizontal_acceptance(ring: Lattice,
+                              resolution: float, amplitude: float,
+                              *args, **kwargs):
+    r"""Computes the 1D horizontal acceptance at ``refpts`` observation points
+
+    See :py:func:`get_acceptance`
+
+    Parameters:
+        ring:           Lattice definition
+        resolution:     Minimum distance between 2 grid points
+        amplitude:      Search range:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+
+    Keyword Args:
+        nturns:         Number of turns for the tracking
+        refpts:         Observation points. Default: start of the machine
+        dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        grid_mode:      defines the evaluation grid:
+
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing
+          is not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        verbose:        Print out some information
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero: Epsilon offset applied on all 6 coordinates
+        start_method:   Python multiprocessing start method. The default
+          ``None`` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for MacOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
+          the calculation or to solve runtime errors, however  it is considered
+          unsafe.
+
+    Returns:
+        boundary:   (len(refpts),2) array: 1D acceptance
+        tracked:    (n,) array: Coordinates of tracked particles
+        survived:   (n,) array: Coordinates of surviving particles
+
+    In case of multiple ``tracked`` and ``survived`` are lists of arrays,
+    with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
-    Computes the 1D horizontal acceptance at refpts observation points
-    Scalar parameters required
-
-    See get_acceptance
-
-    PARAMETERS
-        ring            ring use for tracking
-        resolution      minimum distance between 2 grid points
-        amplitude       max. amplitude of the grid or initial step in RECURSIVE
-
-    KEYWORDS
-        nturns=1024     Number of turns for the tracking
-        dp=0            static momentum offset
-        refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
-                        (default) at.GridMode.RECURSIVE: recursive search
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass).
-        divider=2       Value of the divider used in RECURSIVE boundary search
-                        In case multi-processing is not enabled GridMode is
-                        forced to RECURSIVE (most efficient in single core)
-        verbose=False   Print out some information
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however
-                        it is considered unsafe.
+    return get_1d_acceptance(ring, 'x', resolution, amplitude, *args, **kwargs)
 
 
-    OUTPUT
-        Returns 3 lists containing the 1D acceptance, the grid that was tracked
-        and the particles of the grid that survived.
-        The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-        grid, suvived arrays are returned.
-        The boundary output is squeezed to an array with shape (len(refpts),2)
+def get_vertical_acceptance(ring: Lattice,
+                            resolution: float, amplitude: float,
+                            *args, **kwargs):
+    r"""Computes the 1D vertical acceptance at refpts observation points
+
+    See :py:func:`get_acceptance`
+
+    Parameters:
+        ring:           Lattice definition
+        resolution:     Minimum distance between 2 grid points
+        amplitude:      Search range:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+
+    Keyword Args:
+        nturns:         Number of turns for the tracking
+        refpts:         Observation points. Default: start of the machine
+        dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        grid_mode:      defines the evaluation grid:
+
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing
+          is not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        verbose:        Print out some information
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero: Epsilon offset applied on all 6 coordinates
+        start_method:   Python multiprocessing start method. The default
+          ``None`` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for MacOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
+          the calculation or to solve runtime errors, however  it is considered
+          unsafe.
+
+    Returns:
+        boundary:   (len(refpts),2) array: 1D acceptance
+        tracked:    (n,) array: Coordinates of tracked particles
+        survived:   (n,) array: Coordinates of surviving particles
+
+    In case of multiple ``tracked`` and ``survived`` are lists of arrays,
+    with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
-    return get_1d_acceptance(ring, 'x', *args, **kwargs)
+    return get_1d_acceptance(ring, 'y', resolution, amplitude, *args, **kwargs)
 
 
-def get_vertical_acceptance(ring, *args, **kwargs):
+def get_momentum_acceptance(ring: Lattice,
+                            resolution: float, amplitude: float,
+                            *args, **kwargs):
+    r"""Computes the 1D momentum acceptance at refpts observation points
+
+    See :py:func:`get_acceptance`
+
+    Parameters:
+        ring:           Lattice definition
+        resolution:     Minimum distance between 2 grid points
+        amplitude:      Search range:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+
+    Keyword Args:
+        nturns:         Number of turns for the tracking
+        refpts:         Observation points. Default: start of the machine
+        dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        grid_mode:      defines the evaluation grid:
+
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing is
+          not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        verbose:        Print out some information
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero: Epsilon offset applied on all 6 coordinates
+        start_method:   Python multiprocessing start method. The default
+          ``None`` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for MacOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
+          the calculation or to solve runtime errors, however  it is considered
+          unsafe.
+
+    Returns:
+        boundary:   (len(refpts),2) array: 1D acceptance
+        tracked:    (n,) array: Coordinates of tracked particles
+        survived:   (n,) array: Coordinates of surviving particles
+
+    In case of multiple ``tracked`` and ``survived`` are lists of arrays,
+    with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
-    Computes the 1D vertical acceptance at refpts observation points
-    Scalar parameters required
-
-    See get_acceptance
-
-    PARAMETERS
-        ring            ring use for tracking
-        resolution      minimum distance between 2 grid points
-        amplitude       max. amplitude of the grid or initial step in RECURSIVE
-
-    KEYWORDS
-        nturns=1024     Number of turns for the tracking
-        dp=0            static momentum offset
-        refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
-                        (default) at.GridMode.RECURSIVE: recursive search
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass).
-        divider=2       Value of the divider used in RECURSIVE boundary search
-                        In case multi-processing is not enabled GridMode is
-                        forced to RECURSIVE (most efficient in single core)
-        verbose=False   Print out some information
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however
-                        it is considered unsafe.
-
-
-    OUTPUT
-        Returns 3 lists containing the 1D acceptance, the grid that was tracked
-        and the particles of the grid that survived.
-        The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-        grid, suvived arrays are returned.
-        The boundary output is squeezed to an array with shape (len(refpts),2)
-    """
-    return get_1d_acceptance(ring, 'y', *args, **kwargs)
-
-
-def get_momentum_acceptance(ring, *args, **kwargs):
-    """
-    Computes the 1D momentum acceptance at refpts observation points
-    Scalar parameters required
-
-    See get_acceptance
-
-    PARAMETERS
-        ring            ring use for tracking
-        resolution      minimum distance between 2 grid points
-        amplitude       max. amplitude of the grid or initial step in RECURSIVE
-
-    KEYWORDS
-        nturns=1024     Number of turns for the tracking
-        dp=0            static momentum offset
-        refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
-                        (default) at.GridMode.RECURSIVE: recursive search
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass).
-        divider=2       Value of the divider used in RECURSIVE boundary search
-                        In case multi-processing is not enabled GridMode is
-                        forced to RECURSIVE (most efficient in single core)
-        verbose=False   Print out some information
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however
-                        it is considered unsafe.
-
-
-    OUTPUT
-        Returns 3 lists containing the 1D acceptance, the grid that was tracked
-        and the particles of the grid that survived.
-        The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-        grid, suvived arrays are returned.
-        The boundary output is squeezed to an array with shape (len(refpts),2)
-    """
-    return get_1d_acceptance(ring, 'dp', *args, **kwargs)
+    return get_1d_acceptance(ring, 'dp', resolution, amplitude,
+                             *args, **kwargs)
 
 
 Lattice.get_acceptance = get_acceptance

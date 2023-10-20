@@ -7,13 +7,22 @@ To enable the Matlab developer functions, use
 ```
 
 ### Versioning
-A new version should be set on each pull request, using the pull request ID:
-```Matlab
->> setversion('major.minor-dev.xxx');
-```
-where 'xxx' is the pull request ID.
 
-The command updates the version number in _atroot_/Contents.m and in _atroot_/at.m.
+#### development version
+
+A new release should be set on each pull request, using the pull request ID:
+```Matlab
+>> setversion()
+```
+This will keep the version number unchanged and set the release to the number
+of the Pull Request.
+
+#### Release version
+```Matlab
+>> setversion('major.minor')
+```
+This sets the version number in _atroot_/Contents.m and in _atroot_/at.m.
+The release is set to 'atcollab'
 
 Tagged version should use `'major.minor'` or `'major.minor.patch'`. Extensions are
 not allowed by the toolbox packager.

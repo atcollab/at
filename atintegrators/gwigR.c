@@ -2,15 +2,15 @@
  *----------------------------------------------------------------------------
  * Modification Log:
  * -----------------
- * .04  2003-04-29      YK Wu, Duke University, wu@fel.duke.edu 
+ * .04  2003-04-29      YK Wu, Duke University 
  *			using scientific notation for constants. 
  *                      Checked with TRACY pascal code.
  *                      Computing differential pathlength only.
  *
- * .03  2003-04-28      YK Wu, Duke University, wu@fel.duke.edu 
+ * .03  2003-04-28      YK Wu, Duke University 
  *			Convert to C code and cross-checked with the pascal version;
  *
- * .02  2001-12-xx      Y. K. Wu, Duke University, wu@fel.duke.edu
+ * .02  2001-12-xx      Y. K. Wu, Duke University
  *                      Implementing DA version of the wiggler integrator for Pascal.
  *                      Gauge is disabled !!! (Dec. 4, 2001)
  *  

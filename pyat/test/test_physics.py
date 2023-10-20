@@ -1,8 +1,11 @@
 import at
 import numpy
 from numpy.testing import assert_allclose as assert_close
+from numpy.testing import assert_equal
 import pytest
-from at import AtWarning, physics, lattice_pass
+from at import AtWarning, physics
+from at import lattice_track
+from at import lattice_pass, internal_lpass
 
 
 DP = 1e-5
@@ -46,11 +49,12 @@ def test_find_orbit4_finds_zeros_if_dp_zero(dba_lattice):
     assert_close(orbit4, expected, atol=1e-7)
 
 
-def test_find_orbit4_result_unchanged_by_atpass(dba_lattice):
+@pytest.mark.parametrize('func', (lattice_track, lattice_pass, internal_lpass))
+def test_find_orbit4_result_unchanged_by_atpass(dba_lattice, func):
     orbit, _ = physics.find_orbit4(dba_lattice, DP)
     orbit_copy = numpy.copy(orbit)
     orbit[4] = DP
-    lattice_pass(dba_lattice, orbit, 1)
+    func(dba_lattice, orbit, 1)
     assert_close(orbit[:4], orbit_copy[:4], atol=1e-12)
 
 
@@ -241,9 +245,9 @@ def test_linopt_no_refpts(dba_lattice):
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
 
-@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
+@pytest.mark.parametrize('refpts', ([121], [1, 2, 3, 121]))
 def test_linopt_line(hmba_lattice, refpts):
-    refpts.append(len(hmba_lattice))
+#    refpts.append(len(hmba_lattice))
     l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts)
     lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
     assert_close(ld['beta'], ltd['beta'], rtol=1e-12)
@@ -256,8 +260,8 @@ def test_linopt_line(hmba_lattice, refpts):
 def test_get_tune_chrom(hmba_lattice):
     qlin = hmba_lattice.get_tune()
     qplin = hmba_lattice.get_chrom()
-    qharm = hmba_lattice.get_tune(method='laskar')
-    qpharm = hmba_lattice.get_chrom(method='laskar')
+    qharm = hmba_lattice.get_tune(method='interp_fft')
+    qpharm = hmba_lattice.get_chrom(method='interp_fft')
     assert_close(qlin, [0.38156245, 0.85437541], rtol=1e-8)
     assert_close(qharm, [0.38156245, 0.85437541], rtol=1e-8)
     assert_close(qplin, [0.1791909, 0.12242558], rtol=1e-5)
@@ -267,9 +271,9 @@ def test_get_tune_chrom(hmba_lattice):
 def test_nl_detuning_chromaticity(hmba_lattice):
     nlqplin, _, _ = at.nonlinear.chromaticity(hmba_lattice, npoints=11)
     nlqpharm, _, _ = at.nonlinear.chromaticity(hmba_lattice,
-                                               method='laskar', npoints=11)
+                                               method='interp_fft', npoints=11)
     q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
-                                               npoints=11, window=1)
+                                               npoints=11)
     assert_close(nlqplin, [[0.38156741, 0.17908231, 1.18656034, -16.47368694],
                            [0.85437409, 0.1224062, 2.01744075, -3.06407764]],
                  atol=1e-12, rtol=1e-5)
@@ -316,7 +320,14 @@ def test_quantdiff(hmba_lattice):
                    0.00000000e+00, 3.71123417e-14, 5.61789810e-17]],
                  rtol=1e-5, atol=1e-20)
 
-
+def test_simple_ring():
+    ring = physics.simple_ring(6e9, 844, 992, 0.1, 0.2, 6e6, 8.5e-5)
+    assert_equal(len(ring), 4)
+    assert_equal(ring[-1].PassMethod, 'SimpleQuantDiffPass')
+    ring.disable_6d()
+    assert_equal(ring[-1].PassMethod, 'IdentityPass')
+    assert_close(ring.get_tune(), [0.1,0.2], atol=1e-10)
+    
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
 def test_ohmi_envelope(hmba_lattice, refpts):
     hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)

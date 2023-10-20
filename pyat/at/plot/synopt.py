@@ -1,4 +1,6 @@
-"""Plot a lattice synoptic"""
+"""Lattice synoptics"""
+# noinspection PyPackageRequirements
+import matplotlib.axes
 import numpy
 # noinspection PyPackageRequirements
 import matplotlib.pyplot as plt
@@ -6,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 # noinspection PyPackageRequirements
 from matplotlib.collections import PatchCollection
-from at.lattice import elements as elts
+from at.lattice import Lattice, Refpts, elements as elts
 
 __all__ = ['plot_synopt']
 
@@ -19,27 +21,27 @@ MONITOR = dict(label='Monitors', linestyle=None, marker=10, color='k')
 
 
 # noinspection PyDefaultArgument
-def plot_synopt(ring, axes=None, dipole={}, quadrupole={}, sextupole={},
-                multipole={}, monitor={}):
-    """Plot a synoptic of a lattice
+def plot_synopt(ring: Lattice, axes: matplotlib.axes.Axes = None,
+                dipole: dict = {}, quadrupole: dict = {}, sextupole: dict = {},
+                multipole: dict = {}, monitor: dict = {},
+                labels: Refpts = None):
+    """Plots a synoptic of a lattice
 
-    PARAMETERS
-        ring            Lattice object
+    Parameters:
+        ring:           Lattice description.
+        axes:           :py:class:`~matplotlib.axes.Axes` for plotting the
+          synoptic. If :py:obj:`None`, a new figure will be created. Otherwise,
+          a new axes object sharing the same x-axis as the given one is created.
+        labels:         display the name of selected elements.
+        dipole:         Dictionary of properties overloading the default
+          properties. If :py:obj:`None`, dipoles will not be shown.
+        quadrupole:     Same definition as for dipole
+        sextupole:      Same definition as for dipole
+        multipole:      Same definition as for dipole
+        monitor:        Same definition as for dipole
 
-    KEYWORDS
-        s_range=None    plot range, defaults to the full ring
-        axes=None       axes for plotting the synoptic. If None, a new
-                        figure will be created. Otherwise, a new axes object
-                        sharing the same x-axis as the given one is created.
-        dipole={}       Dictionary of properties overloading the default
-                        properties. If None, dipoles will not be shown.
-        quadrupole={}   Same definition as for dipole
-        sextupole={}    Same definition as for dipole
-        multipole={}    Same definition as for dipole
-        monitor={}      Same definition as for dipole
-
-    RETURN
-        synopt_axes     Synoptic axes
+    Returns:
+        synopt_axes (Axes): Synoptic axes
      """
 
     class Dipole(Polygon):
@@ -140,5 +142,12 @@ def plot_synopt(ring, axes=None, dipole={}, quadrupole={}, sextupole={},
         y = numpy.zeros(s.shape)
         # noinspection PyUnusedLocal
         monitors = axsyn.plot(s, y, **props)
+
+    for idx in ring.get_uint32_index(labels):
+        el = ring[idx]
+        s = s_pos[idx]
+        axsyn.text(s + 0.5*el.Length, 1.6, el.FamName[:10],
+                   rotation='vertical', horizontalalignment='center',
+                   fontsize='small')
 
     return axsyn

@@ -1,15 +1,13 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkickrad.c"	/* drift6.c, strthinkickrad.c */
-#include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 #include "atquantlib.c"
+#include "driftkick.c"  	/* fastdrift.c, strthinkick.c */
+#include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 #define DRIFT1    0.6756035959798286638
 #define DRIFT2   -0.1756035959798286639
 #define KICK1     1.351207191959657328
 #define KICK2    -1.702414383919314656
-
-#define SQR(X) ((X)*(X))
 
 struct elem
 {
@@ -20,6 +18,7 @@ struct elem
     int NumIntSteps;
     double Energy;
     /* Optional fields */
+    double Scaling;
     int FringeQuadEntrance;
     int FringeQuadExit;
     double *fringeIntM0;
@@ -41,39 +40,44 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double E0,
-        int num_particles)
+        double *KickAngle, double scaling, double E0,
+        pcg32_random_t* rng, int num_particles)
 {
-    int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
     double K2 = SL*KICK2;
-    double  qe = 1.60217733e-19;
-    double  epsilon0 = 8.854187817e-12;
-    double  clight = 2.99792458e8;
-    double  emass = 510998.9461; /* electron mass in eV */ /* 9.10938188e-31; in kg*/
-    double  hbar = 1.054571726e-34;
-    double  pi = 3.14159265358979;
-    double  alpha0 = qe*qe/(4*pi*epsilon0*hbar*clight);
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
+    double qe = 1.60217733e-19;
+    double epsilon0 = 8.854187817e-12;
+    double clight = 2.99792458e8;
+    double emass = 510998.9461; /* electron mass in eV */ /* 9.10938188e-31; in kg*/
+    double hbar = 1.054571726e-34;
+    double pi = 3.14159265358979;
+    double alpha0 = qe * qe / (4 * pi * epsilon0 * hbar * clight);
+    double B0 = B[0];
+    double A0 = A[0];
 
-    if (KickAngle) {  /* Convert corrector component to polynomial coefficients */
+    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
-    A,B,L1,L2,K1,K2,max_order,num_int_steps,\
-    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0,\
-    emass,E0,hbar,clight,alpha0,qe,SL) \
-    private(c)
-    for (c = 0;c<num_particles;c++)	{   /* Loop over particles  */
-        double *r6 = r+c*6;
-        if(!atIsNaN(r6[0])) {
+/*  The behaviour of random generators with OpenMP is doubtful. OpenMP disabled until
+    it's understood
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none)              \
+    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,                                       \
+    A,B,L1,L2,K1,K2,max_order,num_int_steps,rng,scaling,                                            \
+    FringeQuadEntrance, useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0, \
+    emass,E0,hbar,clight,alpha0,qe,SL)
+*/
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
+        double *r6 = r + 6*c;
+        if (!atIsNaN(r6[0])) {
             int m;
+            /* Check for change of reference momentum */
+            if (scaling != 1.0) ATChangePRef(r6, scaling);
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
@@ -92,45 +96,46 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
                 double ng, ec, de, energy, gamma, cstec, cstng;
                 double ds, rho, dxp, dyp;
                 int nph;
+                double p_norm = 1.0 / (1.0 + r6[4]);
+                double NormL1 = L1 * p_norm;
+                double NormL2 = L2 * p_norm;
                 double dpp0 = r6[4];
-                double xp0 = r6[1]/(1+r6[4]);
-                double yp0 = r6[3]/(1+r6[4]);
+                double xp0 = r6[1] * p_norm;
+                double yp0 = r6[3] * p_norm;
                 double s0 = r6[5];
-                
-                ATdrift6(r6,L1);
-                strthinkickrad(r6, A, B, K1, E0, max_order);
-                ATdrift6(r6,L2);
-                strthinkickrad(r6, A, B, K2, E0, max_order);
-                ATdrift6(r6,L2);
-                strthinkickrad(r6, A, B, K1, E0, max_order);
-                ATdrift6(r6,L1);
-                
-                energy = dpp0*E0+E0;
-                
-                gamma = energy/emass;/* emass in eV */
-                cstec = 3.0*gamma*gamma*gamma*clight/(2.0)*hbar/qe;
-                cstng = 5.0*sqrt(3.0)*alpha0*gamma/(6.0);
-                
-                dxp = r6[1]/(1+r6[4])-xp0;
-                dyp = r6[3]/(1+r6[4])-yp0;
-                ds = r6[5]-s0;
-                
-                rho = (SL+ds)/sqrt(dxp*dxp+dyp*dyp);
-                
-                ng =  cstng*1/rho*(SL+ds);
-                ec =  cstec*1/rho;
-                
-                nph = poissonRandomNumber(ng);
+
+                fastdrift(r6, NormL1);
+                strthinkick(r6, A, B, K1, max_order);
+                fastdrift(r6, NormL2);
+                strthinkick(r6, A, B, K2, max_order);
+                fastdrift(r6, NormL2);
+                strthinkick(r6, A, B, K1, max_order);
+                fastdrift(r6, NormL1);
+
+                energy = dpp0 * E0 + E0;
+
+                gamma = energy / emass; /* emass in eV */
+                cstec = 3.0 * gamma * gamma * gamma * clight / (2.0) * hbar / qe;
+                cstng = 5.0 * sqrt(3.0) * alpha0 * gamma / (6.0);
+
+                dxp = r6[1] * p_norm - xp0;
+                dyp = r6[3] * p_norm - yp0;
+                ds = r6[5] - s0;
+
+                rho = (SL + ds) / sqrt(dxp * dxp + dyp * dyp);
+
+                ng = cstng / rho * (SL + ds);
+                ec = cstec / rho;
+
+                nph = atrandp_r(rng, ng);
+
                 de = 0.0;
-                if(nph>0){
-                    for(i=0;i<nph;i++){
-                        de = de + getEnergy(ec);
-                    };
+                for (i = 0; i < nph; i++) {
+                    de = de + getEnergy(rng, ec);
                 };
-                
-                r6[1] = r6[1]/(1+r6[4])*(1+r6[4]-de/E0);
-                r6[3] = r6[3]/(1+r6[4])*(1+r6[4]-de/E0);
-                r6[4] = r6[4]-de/E0;
+                r6[4] = r6[4] - de / E0;
+                r6[1] = r6[1] * p_norm * (1 + r6[4]);
+                r6[3] = r6[3] * p_norm * (1 + r6[4]);
             }
             if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
@@ -144,11 +149,13 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
+            /* Check for change of reference momentum */
+            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
     if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
-        B[0] += sin(KickAngle[0])/le;
-        A[0] -= sin(KickAngle[1])/le;
+        B[0] = B0;
+        A[0] = A0;
     }
 }
 
@@ -157,7 +164,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double Length, Energy;
+        double Length, Energy, Scaling;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
         double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
@@ -165,10 +172,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         /*optional fields*/
-        FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0);
-        FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0);
+        Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
+        FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
+        FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
         fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
         fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
@@ -178,7 +186,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
-        
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -187,6 +195,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->NumIntSteps=NumIntSteps;
         Elem->Energy=Energy;
         /*optional fields*/
+        Elem->Scaling=Scaling;
         Elem->FringeQuadEntrance=FringeQuadEntrance;
         Elem->FringeQuadExit=FringeQuadExit;
         Elem->fringeIntM0=fringeIntM0;
@@ -199,11 +208,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    StrMPoleSymplectic4QuantPass(r_in,Elem->Length,Elem->PolynomA,Elem->PolynomB,
-            Elem->MaxOrder,Elem->NumIntSteps,Elem->FringeQuadEntrance,
-            Elem->FringeQuadExit,Elem->fringeIntM0,Elem->fringeIntP0,
-            Elem->T1,Elem->T2,Elem->R1,Elem->R2,
-            Elem->RApertures,Elem->EApertures,Elem->KickAngle,Elem->Energy,num_particles);
+    StrMPoleSymplectic4QuantPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
+            Elem->MaxOrder, Elem->NumIntSteps,
+            Elem->FringeQuadEntrance, Elem->FringeQuadExit,
+            Elem->fringeIntM0, Elem->fringeIntP0,
+            Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+            Elem->RApertures, Elem->EApertures,
+            Elem->KickAngle, Elem->Scaling,
+            Elem->Energy, Param->thread_rng, num_particles);
     return Elem;
 }
 
@@ -212,15 +224,17 @@ MODULE_DEF(StrMPoleSymplectic4QuantPass)        /* Dummy module initialisation *
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)
-void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length, Energy;
+        double Length, Energy, Scaling;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
         double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
+        if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
+
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -228,6 +242,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
+        Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
         fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
@@ -239,26 +254,27 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
-        
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        StrMPoleSymplectic4QuantPass(r_in,Length,PolynomA,PolynomB,MaxOrder,NumIntSteps,
-                FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Energy,num_particles);
-    }
-    else if (nrhs == 0) {
+        StrMPoleSymplectic4QuantPass(r_in, Length, PolynomA, PolynomB,
+            MaxOrder, NumIntSteps,
+            FringeQuadEntrance, FringeQuadExit,
+            fringeIntM0, fringeIntP0,
+            T1, T2, R1, R2, RApertures, EApertures,
+            KickAngle, Scaling, Energy, &pcg32_global, num_particles);
+    } else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(6,1);
+        plhs[0] = mxCreateCellMatrix(6, 1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
         mxSetCell(plhs[0],1,mxCreateString("PolynomA"));
         mxSetCell(plhs[0],2,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],3,mxCreateString("MaxOrder"));
         mxSetCell(plhs[0],4,mxCreateString("NumIntSteps"));
         mxSetCell(plhs[0],5,mxCreateString("Energy"));
-        if (nlhs>1) {
-            /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(11,1);
+        if (nlhs>1) {    /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(12,1);
             mxSetCell(plhs[1], 0,mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], 1,mxCreateString("FringeQuadExit"));
             mxSetCell(plhs[1], 2,mxCreateString("fringeIntM0"));
@@ -270,11 +286,11 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1], 8,mxCreateString("RApertures"));
             mxSetCell(plhs[1], 9,mxCreateString("EApertures"));
             mxSetCell(plhs[1],10,mxCreateString("KickAngle"));
+            mxSetCell(plhs[1],11,mxCreateString("FieldScaling"));
         }
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif /*MATLAB_MEX_FILE*/
-
+#endif /* MATLAB_MEX_FILE */

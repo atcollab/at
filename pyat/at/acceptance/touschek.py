@@ -1,31 +1,37 @@
+"""
+Module to compute the touschek lifetime of the ring
+"""
+
 import at
 import numpy
-from ..lattice import Lattice, AtError
+from ..lattice import Lattice, AtError, AtWarning
+import warnings
 from scipy.special import iv
 from scipy import integrate
 from scipy.optimize import fsolve
-from ..lattice.constants import clight, e_mass, qe, clight, _e_radius
-from .acceptance import get_momentum_acceptance
+from ..constants import qe, clight, _e_radius
 
 
-__all__ = ['get_bunch_length_espread', 'get_lifetime']
+__all__ = ['get_bunch_length_espread', 'get_lifetime', 'get_scattering_rate']
 
 
 def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
-    """
+    """Haissinski equation solver
+    
     Solves the Haissinski formula and returns the bunch length and energy
-    spread for given bunch current and Z/n. If both zn and bunch_curr are None,
-    zero current case, otherwise both are needed for the calculation
+    spread for given bunch current and :math:`Z/n`. If both ``zn`` and
+    ``bunch_curr`` are ``None``, zero current case, otherwise both are needed
+    for the calculation
 
-    PARAMETERS
-        ring              ring use for tracking
+    args:
+        ring:             ring use for tracking
 
-    KEYWORDS
-        zn=None           Z/n for the full ring
-        bunch_curr=None   Bunch current
-        espread=None      Energy spread, if None use lattice parameter
+    keyword args:
+        zn=None:          :math:`Z/n` for the full ring
+        bunch_curr=None:  Bunch current
+        espread=None:     Energy spread, if ``None`` use lattice parameter
 
-    OUTPUT
+    Returns:
         Bunch length, energy spread
     """
     def haissinski(x, cst):
@@ -48,7 +54,7 @@ def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
         nus = ep.f_s/ring.revolution_frequency
         cst = (-0.5 * numpy.sqrt(numpy.pi) * bunch_curr * zn /
                (vrf * h * cs * (abs(etac) * espread / nus)**3))
-        bl = numpy.float(bl0*fsolve(haissinski, (1,), args=(cst)))
+        bl = numpy.float(bl0*fsolve(haissinski, (1,), args=cst))
     return bl, espread
 
 
@@ -86,86 +92,13 @@ def int_piwinski(k, km, B1, B2):
     return intp
 
 
-def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
-                 zn=None, momap=None, refpts=None, **kwargs):
-    """
-    Computes the touschek lifetime using the piwinski formula
-
-    PARAMETERS
-        ring            ring use for tracking
-        emity           verticla emittance
-        bunch_curr      bunch current
-
-    KEYWORDS
-        emitx=None      horizontal emittance
-        sigs=None       rms bunch length
-        sigp=None       energy spread
-        zn=None         full ring Z/n
-        momap=None      momentum aperture, has to be consistent with refpts
-                        if provided the momentum aperture is not calculated
-        refpts=None     refpts where the momentum aperture is calculated, the
-                        default is to compute it for all elements in the ring
-                        len(refpts)>2 is required
-        resolution      minimum distance between 2 grid points, default=1.0e-3
-        amplitude       max. amplitude of the grid or initial step in RECURSIVE
-                        default = 0.1
-        nturns=1024     Number of turns for the tracking
-        dp=None         static momentum offset
-        offset=None     initial orbit, default closed orbit
-        bounds=None     Allows to define boundaries for the grid default
-                        values are:
-                        GridMode.GRID: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
-        grid_mode       mode for the gird default GridMode.RADIAL
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass). In case multi-processing is not
-                        enabled GridMode is forced to
-                        RECURSIVE (most efficient in single core)
-        verbose=True    Print out some inform
-        epsabs, epsrel  integral absolute and relative tolerances
-
-    OUTPUT
-        Returns the touschek lifetime in seconds, the momentum aperture
-        and the refpts at which the aperture was computed
-    """
-
-    epsabs = kwargs.pop('epsabs', 1.0e-16)
-    epsrel = kwargs.pop('epsrel', 1.0e-12)
-    interpolate = kwargs.pop('interpolate', True)
+def _get_vals(ring, rp, ma, emity, bunch_curr, emitx=None,
+              sigs=None, sigp=None, zn=None, epsabs=1.0e-16,
+              epsrel=1.0e-12):
 
     emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn,
-                                       emitx=emitx, sigs=sigs, sigp=sigp)
-    if refpts is None:
-        refpts = range(len(ring))
-    else:
-        refpts = ring.uint32_refpts(refpts)
-    refpts = numpy.array([r for r in refpts
-                          if ring[r].Length > 0.0])
-
-    if momap is None:
-        resolution = kwargs.pop('resolution', 1.0e-3)
-        amplitude = kwargs.pop('amplitude', 0.1)
-        kwargs.update({'refpts': refpts})
-        momap, _, _ = ring.get_momentum_acceptance(resolution,
-                                                   amplitude, **kwargs)
-    else:
-        assert len(momap) == len(refpts), \
-            'momap and refpts have different lengths'
-
-    if interpolate:
-        refpts_all = numpy.array([i for i in range(refpts[0],
-                                                   refpts[-1]+1)
-                                  if ring[i].Length > 0])
-        spos = numpy.squeeze(ring.get_s_pos(refpts))
-        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
-        momp = numpy.interp(spos_all, spos, momap[:, 0])
-        momn = numpy.interp(spos_all, spos, momap[:, 1])
-        momap_all = numpy.vstack((momp, momn)).T
-        ma, rp = momap_all, refpts_all
-    else:
-        ma, rp = momap, refpts
-
-    length_all = numpy.array([e.Length for e in ring[rp]])
+                                       emitx=emitx, sigs=sigs,
+                                       sigp=sigp)
 
     nc = bunch_curr/ring.revolution_frequency/qe
     beta2 = ring.beta*ring.beta
@@ -186,10 +119,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
     sig2 = sig*sig
     dt = dxy*axy+dpxy*bxy
     dt2 = dt*dt
-    sigt = numpy.sqrt(sig2 + sigp2*dt2)
-    sigt2 = sigt*sigt
-    sigh2 = 1/(1/sigp2 + numpy.sum((dxy2+dt2)/(sigb2), axis=1))
-    sigh = numpy.sqrt(sigh2)
+    sigh2 = 1/(1/sigp2 + numpy.sum((dxy2+dt2)/sigb2, axis=1))
 
     bs = bxy2/sigb2*(1-(sigh2*(dt2/sigb2).T).T)
     bg2i = 1/(2*beta2*gamma2)
@@ -199,30 +129,198 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                       numpy.prod(sigb2*sigb2, axis=1))
     B2 = numpy.squeeze(numpy.sqrt(B2sq))
 
-    invtl = numpy.zeros(2)
+    val = numpy.zeros((2, len(rp)))
     for i in range(2):
         dpp = ma[:, i]
         um = beta2*dpp*dpp
         km = numpy.arctan(numpy.sqrt(um))
 
-        val = numpy.zeros(len(rp))
         for ii in range(len(rp)):
             args = (km[ii], B1[ii], B2[ii])
-            val[ii], _ = integrate.quad(int_piwinski, args[0], numpy.pi/2,
+            val[i, ii], *_ = integrate.quad(int_piwinski, args[0], numpy.pi/2,
                                         args=args, epsabs=epsabs,
                                         epsrel=epsrel)
 
-        val *= (_e_radius**2*clight*nc /
-                (8*numpy.pi*(gamma2)*sigs *
-                 numpy.sqrt(numpy.prod(sig2, axis=1) -
-                 sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
-                2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
+        val[i] *= (_e_radius**2*clight*nc /
+                   (8*numpy.pi*gamma2*sigs *
+                    numpy.sqrt(numpy.prod(sig2, axis=1) -
+                               sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
+                   2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
+    return val
 
-        invtl[i] = sum(val*length_all.T)/sum(length_all)
-    tl = 1/numpy.mean(invtl)
 
-    return tl, momap, refpts
+def _init_ma_rp(ring, refpts=None, offset=None, momap=None,
+                interpolate=True, check_zero=True, **kwargs):
+    if refpts is None:
+        refpts = ring.get_uint32_index(at.All, endpoint=False)
+    else:
+        refpts = ring.get_uint32_index(refpts)
+
+    if offset is not None:
+        try:
+            offset = numpy.broadcast_to(offset, (len(refpts), 6))
+        except ValueError:
+            msg = ('offset and refpts have incoherent '
+                   'shapes: {0}, {1}'.format(offset.shape, refpts.shape))
+            raise AtError(msg)
+
+    if momap is not None:
+        assert len(momap) == len(refpts), \
+            'Input momap and refpts have different lengths'
+
+    if check_zero:
+        mask = [ring[r].Length > 0.0 for r in refpts]
+    else:
+        mask = [True for _ in refpts]
+
+    if not numpy.all(mask):
+        zerolength_warning = ('zero-length elements removed '
+                              'from lifetime calculation')
+        warnings.warn(AtWarning(zerolength_warning))
+
+    refpts = refpts[mask]
+    if offset is not None:
+        offset = offset[mask]
+
+    if momap is None:
+        resolution = kwargs.pop('resolution', 1.0e-3)
+        amplitude = kwargs.pop('amplitude', 0.1)
+        kwargs.update({'refpts': refpts})
+        kwargs.update({'offset': offset})
+        momap, _, _ = ring.get_momentum_acceptance(resolution,
+                                                   amplitude, **kwargs)
+    else:
+        momap = momap[mask]
+
+    if interpolate:
+        refpts_all = numpy.array([i for i in range(refpts[0],
+                                                   refpts[-1]+1)
+                                  if ring[i].Length > 0])
+        spos = numpy.squeeze(ring.get_s_pos(refpts))
+        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
+        momp = numpy.interp(spos_all, spos, momap[:, 0])
+        momn = numpy.interp(spos_all, spos, momap[:, 1])
+        momap_all = numpy.vstack((momp, momn)).T
+        ma, rp = momap_all, refpts_all
+    else:
+        ma, rp = momap, refpts
+    return ma, rp
+
+
+def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
+                 zn=None, momap=None, refpts=None, offset=None, **kwargs):
+    """Touschek lifetime calculation
+    
+    Computes the touschek lifetime using the Piwinski formula
+
+    args:
+        ring:            ring use for tracking
+        emity:           verticla emittance
+        bunch_curr:      bunch current
+
+    keyword args:
+        emitx=None:      horizontal emittance
+        sigs=None:       rms bunch length
+        sigp=None:       energy spread
+        zn=None:         full ring :math:`Z/n`
+        momap=None:      momentum aperture, has to be consistent with ``refpts``
+                         if provided the momentum aperture is not calculated
+        refpts=None:     ``refpts`` where the momentum aperture is calculated,
+                         the default is to compute it for all elements in the
+                         ring, ``len(refpts)>2`` is required
+        resolution:      minimum distance between 2 grid points, default=1.0e-3
+        amplitude:       max. amplitude for ``RADIAL`` and ``CARTESIAN`` or
+                         initial step in ``RECURSIVE``
+                         default = 0.1
+        nturns=1024:     Number of turns for the tracking
+        dp=None:         static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        grid_mode:       ``at.GridMode.CARTESIAN/RADIAL`` track full vector
+                         (default). ``at.GridMode.RECURSIVE``: recursive search
+        use_mp=False:    Use python multiprocessing (``patpass``, default use
+                         ``lattice_pass``). In case multi-processing is not
+                         enabled ``GridMode`` is forced to
+                         ``RECURSIVE`` (most efficient in single core)
+        verbose=False:   Print out some inform
+        epsabs, epsrel:  integral absolute and relative tolerances
+
+    Returns:
+        tl: touschek lifetime, double expressed in seconds 
+        ma: momentum aperture (len(refpts), 2) array
+        refpts: refpts used for momentum aperture calculation
+                (len(refpts), ) array
+    """
+    interpolate = kwargs.pop('interpolate', True)
+    epsabs = kwargs.pop('epsabs', 1.0e-16)
+    epsrel = kwargs.pop('epsrel', 1.0e-12)
+    ma, rp = _init_ma_rp(ring, refpts=refpts, offset=offset,
+                         momap=momap, interpolate=interpolate,
+                         **kwargs)
+    length_all = numpy.array([e.Length for e in ring[rp]])
+    vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
+                     sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
+                     epsrel=epsrel)
+    tl = 1/numpy.mean([sum(v*length_all.T)/sum(length_all) for v in vals])
+    return tl, ma, rp
+
+
+def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
+                        sigp=None, zn=None, momap=None, refpts=None,
+                        offset=None, **kwargs):
+    """Touschek scattering rate calculation
+
+    Computes the touschek scattering using the Piwinski formula
+
+    args:
+        ring:            ring use for tracking
+        emity:           verticla emittance
+        bunch_curr:      bunch current
+
+    keyword args:
+        emitx=None:      horizontal emittance
+        sigs=None:       rms bunch length
+        sigp=None:       energy spread
+        zn=None:         full ring :math:`Z/n`
+        momap=None:      momentum aperture, has to be consistent with ``refpts``
+                         if provided the momentum aperture is not calculated
+        refpts=None:     ``refpts`` where the momentum aperture is calculated,
+                         the default is to compute it for all elements in the
+                         ring, ``len(refpts)>2`` is required
+        resolution:      minimum distance between 2 grid points, default=1.0e-3
+        amplitude:       max. amplitude for ``RADIAL`` and ``CARTESIAN`` or
+                         initial step in ``RECURSIVE``
+                         default = 0.1
+        nturns=1024:     Number of turns for the tracking
+        dp=None:         static momentum offset
+        grid_mode:       ``at.GridMode.CARTESIAN/RADIAL`` track full vector
+                         (default). ``at.GridMode.RECURSIVE``: recursive search
+        use_mp=False:    Use python multiprocessing (``patpass``, default use
+                         ``lattice_pass``). In case multi-processing is not
+                         enabled ``GridMode`` is forced to
+                         ``RECURSIVE`` (most efficient in single core)
+        verbose=False:   Print out some inform
+        epsabs, epsrel:  integral absolute and relative tolerances
+
+    Returns:
+        scattering_rate: scattering rate double array (len(refpts), )
+                         expressed in event/seconds
+        ma: momentum aperture (len(refpts), 2) array
+        refpts: refpts used for momentum aperture calculation
+                (len(refpts), ) array
+    """
+    interpolate = kwargs.pop('interpolate', True)
+    epsabs = kwargs.pop('epsabs', 1.0e-16)
+    epsrel = kwargs.pop('epsrel', 1.0e-12)
+    ma, rp = _init_ma_rp(ring, refpts=refpts, momap=momap,
+                         interpolate=interpolate, check_zero=False,
+                         offset=offset, **kwargs)
+    vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
+                     sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
+                     epsrel=epsrel)
+    scattering_rate = numpy.mean(vals, axis=0)*bunch_curr/ring.revolution_frequency/qe
+    return scattering_rate, ma, rp
 
 
 Lattice.get_bunch_length_espread = get_bunch_length_espread
 Lattice.get_lifetime = get_lifetime
+Lattice.get_scattering_rate = get_scattering_rate

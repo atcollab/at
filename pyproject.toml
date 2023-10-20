@@ -1,0 +1,76 @@
+[build-system]
+requires = [
+    "setuptools >= 62",
+    "setuptools_scm >= 7",
+    "oldest-supported-numpy",
+    "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
+    "wheel",
+]
+# build-backend = "setuptools.build_meta"
+build-backend = "backend"
+backend-path = ["_custom_build"]
+
+[project]
+name = "accelerator-toolbox"
+authors = [{name="The AT collaboration", email="atcollab-general@lists.sourceforge.net"}]
+description = "Accelerator Toolbox"
+readme = "pyat/README.rst"
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11"
+]
+requires-python = ">=3.7"
+dependencies = [
+    "importlib-resources;python_version<'3.9'",
+    "numpy>=1.16.6",
+    "scipy>=1.4.0"
+]
+
+[project.urls]
+GitHub = "https://github.com/atcollab/at"
+Home="https://atcollab.github.io/at/"
+
+[project.optional-dependencies]
+mpi = ["mpi4py"]
+plot = ["matplotlib"]
+dev = ["pytest >= 2.9", "pytest-lazy-fixture", "pytest-cov", "flake8"]
+doc = ["Sphinx ~= 5.3", "myst-parser", "pydata-sphinx-theme ~= 0.11.0", "sphinx-copybutton"]
+
+# tool.setuptools is still in BETA, so we keep temporarily setup.cfg
+
+#[tool.setuptools]
+#zip-safe = false
+#include-package-data = false
+
+#[tool.setuptools.packages.find]
+#where = ["pyat"]
+#namespaces = false
+
+#[tool.setuptools.package-data]
+#machine_data = ["*.m", "*.mat"]
+
+[tool.cibuildwheel]
+# Pypy does not have Scipy so we cannot support it.
+build = ["cp3{7,8,9,10,11}*"]
+#skip = ["*-musllinux*", "*_i686", "*win32"]
+build-verbosity = "1"
+# "build" frontend fails on windows
+# build-frontend = "build"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+
+#[tool.cibuildwheel.linux]
+## Pass the detected PyAT version to the linux docker containers
+#environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
+
+[tool.setuptools_scm]
+write_to = "pyat/at/_version.py"
+git_describe_command = "git describe --dirty --tags --long --match pyat-[0-9]*"
+fallback_version = "0.0.0"

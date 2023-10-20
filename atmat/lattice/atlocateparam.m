@@ -1,11 +1,10 @@
-function idx = atlocateparam(ring,varargin)
+function idx = atlocateparam(ring)
 %ATLOCATEPARAM    Private function. Locate the RingParam element
 %
 % IDX=ATLOCATEPARAM(ring)
-%	Extract the RingParam element of the lattice, if present, or create
-%	a new one from the lattice elements
 %
 % ring:         Ring structure
+% IDX:          Index of the 1st RingParam element in the ring
 %
 %  See also ATGETRINGPROPERTIES, ATSETRINGPROPERTIES
 
@@ -20,6 +19,6 @@ end
 if ~(length(ring) >= location && ...
      isfield(ring{location},'Class') && ...
      strcmp(ring{location}.Class, 'RingParam'))
-    location=find(atgetcells(ring(:,1),'Class','RingParam'), 1);
+    location=find(atgetcells(ring,'Class','RingParam'), 1);
 end
 idx = location;

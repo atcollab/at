@@ -4,7 +4,7 @@ function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 %
 %  INPUTS
 %  1. Y  - position vector
-%  2. Yp -
+%  2. Yp - angle vector
 %  3. WindowType  - Window type - 0 {Default} no windowing
 %                                 1 Window of Hann
 %                                 2 etc
@@ -33,7 +33,7 @@ function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 %  above 1024 = pow2(10)
 %
 %  Examples
-%  NT = 9996; % divided by 6
+%  NT = 9996; % divisible by 6
 %  simple quasiperiodic (even period) motion 
 %  y =2+0.1*cos(pi*(0:NT-1))+0.00125*cos(pi/3*(0:NT-1));
 %  yp=2+0.1*sin(pi*(0:NT-1))+0.00125*sin(pi/3*(0:NT-1));
@@ -43,11 +43,6 @@ function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 
 % Written by Laurent S. Nadolski
 % April 6th, 2007
-% Modification September 2009: 
-%  test if constant data or nan data
-
-% BUG in nafflib: returns nan even if valid data. Number of try
-nitermax = 10;
 
 % Flag factory
 [wraw1,args]=getflag(varargin,'Raw'); %#ok<ASGLU>
@@ -58,12 +53,11 @@ nitermax = 10;
 [WindowType,nfreq,DebugFlag]=getargs(args,0,10,double(dbg));
 if whann, WindowType=1; end
 
-
 % Test wether nan or constant data
 if any(isnan(Y(1,:)))
     fprintf('Warning Y contains NaNs\n');
     frequency =NaN; amplitude = NaN;  phase = NaN;
-elseif any(isnan(Y(1,:)))
+elseif any(isnan(Yp(1,:)))
     fprintf('Warning Yp contains NaNs\n');
     frequency =NaN; amplitude = NaN;  phase = NaN;
 elseif (mean(Y) == Y(1) && mean(Yp) == Yp(1))
@@ -71,15 +65,6 @@ elseif (mean(Y) == Y(1) && mean(Yp) == Yp(1))
     frequency = 0; amplitude = 0;  phase = 0;
 else % Frequency map analysis
     [frequency,amplitude,phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);
-    %It seems there is a bug in nafflib, something returns nan even for valid data 
-    niter = 0;
-    while any(isnan(frequency)) && (niter < nitermax)
-        pause(2);
-        fprintf('Warning Nan returned by NAFF (x%d)\n', niter);
-        niter = niter +1;
-        [frequency,amplitude,phase] = nafflib(Y, Yp, WindowType,nfreq,1); % add debugging
-    end
-        
     if DisplayFlag
         fprintf('*** Naff run on %s\n', datestr(clock))
         for k = 1:length(frequency)

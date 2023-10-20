@@ -14,10 +14,13 @@ function varargout = tunechrom(ring,varargin)
 %   already known;
 %
 %[...]=TUNECHROM(RING,DP)       (obsolete)
-%[...]=TUNECHROM(...,'dp',DP)	Specify the momentum deviation when
+%[...]=TUNECHROM(RING,...,'dp',DP)	Specify the momentum deviation when
 %   radiation is OFF (default: 0)
 %
-%[...]=TUNECHROM(...,'dct',DCT) Specify the path lengthening when
+%[...]=TUNECHROM(RING,...,'dct',DCT) Specify the path lengthening when
+%   radiation is OFF (default: 0)
+%
+%[...]=TUNECHROM(RING,...,'df',DF) Specify the RF frequency deviation when
 %   radiation is OFF (default: 0)
 %
 % Note: TUNECHROM computes tunes and chromaticities from the one-turn
@@ -37,15 +40,16 @@ allargs=getdparg(allargs);
 if cpl1 || ~cpl2
     warning('AT:ObsoleteParameter','The "coupled" flag is ignored: coupling is always assumed');
 end
-[varargout{1:nargout}]=wrapper6d(ring,@xtunechrom,allargs{:});
+[varargout{1:nargout}]=frequency_control(@xtunechrom,ring,allargs{:});
 
-    function [tune, chrom] = xtunechrom(ring,is6d,varargin)
+    function [tune, chrom] = xtunechrom(ring,varargin)
         [oldchrom,varargs]=getflag(varargin,'chrom');
         [chrom,varargs]=getflag(varargs,'get_chrom');
-        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
-        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
+        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct','df'});
+        [cavargs,varargs]=getoption(varargs,{'cavpts'});
         [DPStep,~]=getoption(varargs,'DPStep');
-        if is6d
+        is_6d=getoption(varargs,'is_6d',[]); % Always set by frequency_control, keep in varargs
+        if is_6d
             tunefunc=@tune6;
         else
             tunefunc=@tune4;
@@ -56,13 +60,13 @@ end
         tune=tunefunc(ring,'orbit',orbitin,varargs{:});
 
         if chrom || oldchrom || nargout == 2
-            if is6d
+            if is_6d
                 frf=get_rf_frequency(ring);
                 DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
-                [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
-                [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,cavargs{:});
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,cavargs{:});
+                [~,o1P]=findorbit6(rgup,'guess',orbitin,varargs{:});
+                [~,o1M]=findorbit6(rgdn,'guess',orbitin,varargs{:});
                 deltap=o1P(5)-o1M(5);
             else
                 dp=orbitin(5);

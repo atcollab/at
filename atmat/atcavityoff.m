@@ -15,6 +15,7 @@ function [ring, ATCavityIndex]=atcavityoff(ring)
 
 %% Written by Laurent S. Nadolski
 
-[ring,~,ATCavityIndex]=atradoff(ring,'auto','','','','');
+ATCavityIndex=atgetcells(ring,'Frequency');
+ring=atradoff(ring,'auto','','','','','');
 
 end

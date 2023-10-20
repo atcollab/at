@@ -67,7 +67,10 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %   Specify off-momentum 
 %
 % [...] = ATLINOPT6(...,'dct',DCT)
-%   Specify path lengthening
+%   Specify the path lengthening
+%
+% [...] = ATLINOPT6(...,'df',DF)
+%   Specify the RF frequency deviation
 %
 %  REFERENCES
 %   [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
@@ -75,19 +78,20 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %       Published 3 February 2006
 %   [3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %
-%  See also atlinopt atlinopt2 atlinopt4 tunechrom
+%  See also atlinopt2 atlinopt4 tunechrom
 
-[ringdata,elemdata]=wrapper6d(ring,@xlinopt6,varargin{:});
+[ringdata,elemdata]=frequency_control(@xlinopt6,ring,varargin{:});
 
-    function [ringdata,elemdata] = xlinopt6(ring, is6d, varargin)
+    function [ringdata,elemdata] = xlinopt6(ring, varargin)
         clight = PhysConstant.speed_of_light_in_vacuum.value;   % m/s
         [get_chrom, varargs]=getflag(varargin, 'get_chrom');
         [get_w, varargs]=getflag(varargs, 'get_w');
-        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
+        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct','df'});
         [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
-        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
+        [cavargs,varargs]=getoption(varargs,{'cavpts'});
         [refpts,varargs]=getargs(varargs,1,'check',@(arg) isnumeric(arg) || islogical(arg));
+        is_6d=getoption(varargs,'is_6d',[]); % Always set by frequency_control, keep in varargs
 
         if isempty(twiss_in)        % Circular machine
             [orbs,orbitin]=findorbit(ring,refpts,dpargs{:},varargs{:});
@@ -117,15 +121,15 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
             )';
         ringdata=struct('tune',tunes,'damping_time',damping_times);
 
-        if is6d                     % 6D processing
+        if is_6d                     % 6D processing
             [alpha,beta,disp]=cellfun(@output6,ri,'UniformOutput',false);
             if get_w || get_chrom
                 frf=get_rf_frequency(ring);
                 DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
-                [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
-                [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,cavargs{:});
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,cavargs{:});
+                [~,o1P]=findorbit6(rgup,'guess',orbitin,varargs{:});
+                [~,o1M]=findorbit6(rgdn,'guess',orbitin,varargs{:});
                 if get_w
                     [ringdata.chromaticity,w]=chrom_w(rgup,rgdn,o1P,o1M,refpts);
                     [elemdata.W]=deal(w{:});
@@ -177,7 +181,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 
         function [vals,ms,phis,rmats,as]=build_1turn_map(ring,refpts,orbit,varargin)
             % Build the initial distribution at entrance of the transfer line
-            if is6d
+            if is_6d
                 [mt,ms]=findm66(ring,refpts,'orbit',orbit,varargs{:});
             else
                 [mt,ms]=findm44(ring,NaN,refpts,'orbit',orbit,varargs{:});

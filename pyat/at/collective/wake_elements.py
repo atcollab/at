@@ -1,29 +1,21 @@
 import numpy
+from ..lattice import Lattice
 # noinspection PyProtectedMember
-from ..lattice.elements import Element, _array
-from ..lattice.constants import clight, qe
+from ..lattice.elements import Element, Collective, _array
+from ..constants import clight, qe
 from .wake_object import Wake, WakeComponent
 
 
 # noinspection PyPep8Naming
-class WakeElement(Element):
+class WakeElement(Collective, Element):
     """Class to generate an AT wake element using the passmethod WakeFieldPass
-    args:  family name, ring, wake object
-    kwargs: PassMethod=WakeFieldPass
-            Current=0   Bunch current [A]
-            Nslice=101  Number of slices per bunch
-            Nturns=1    Number of turn for the wake field
-            ZCuts=None  Limits for fixed slicing, default is adaptive
-            NormFact    (default=[1,1,1]) normalization for the 3 planes,
-                        to account for beta function at the observation
-                        point for example
     """
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
-
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
-                        _nelem=int, NumParticles=float, Circumference=float,
+                        _nelem=int, _wakeFact=float,
                         NormFact=lambda v: _array(v, (3,)),
-                        WakeFact=float,
+                        ZCuts=lambda v: _array(v),
                         _wakeDX=lambda v: _array(v),
                         _wakeDY=lambda v: _array(v),
                         _wakeQX=lambda v: _array(v),
@@ -31,17 +23,29 @@ class WakeElement(Element):
                         _wakeZ=lambda v: _array(v),
                         _wakeT=lambda v: _array(v))
 
-    def __init__(self, family_name, ring, wake, **kwargs):
-        kwargs.setdefault('PassMethod', 'WakeFieldPass')
+    def __init__(self, family_name: str, ring: Lattice, wake: Wake, **kwargs):
+        """
+        Parameters:
+            family name:    Element name
+            ring:           Lattice in which the element will be inserted
+            wake:           :py:class:`.Wake` object
+
+        Keyword Arguments:
+            Nslice (int):       Number of slices per bunch. Default: 101
+            Nturns (int):       Number of turn for the wake field. Default: 1
+            ZCuts:              Limits for fixed slicing, default is adaptive
+            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+              to account for beta function at the observation point for
+              example. Default: (1,1,1)
+"""
+        kwargs.setdefault('PassMethod', self.default_pass[True])
         zcuts = kwargs.pop('ZCuts', None)
-        betrel = ring.beta
-        self._charge2current = clight*betrel*qe/ring.circumference
-        self._wakefact = -qe/(ring.energy*betrel**2)
-        self.NumParticles = kwargs.pop('NumParticles', 0.0)
+        self._wakefact = - ring.circumference/(clight *
+                                               ring.energy*ring.beta**3)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
         self._turnhistory = None    # Defined here to avoid warning
-        self.clear_history()
+        self.clear_history(ring=ring)
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
         self._build(wake)
         if zcuts is not None:
@@ -65,12 +69,14 @@ class WakeElement(Element):
     def rebuild_wake(self, wake):
         self._build(wake)
 
-    def clear_history(self):
-        self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
-                                        order='F')
+    def clear_history(self, ring=None):
+        if ring is not None:
+            self._nbunch = ring.nbunch
+        tl = self._nturns*self._nslice*self._nbunch
+        self._turnhistory = numpy.zeros((tl, 4), order='F')
 
     def set_normfactxy(self, ring):
-        l0, _, _ = ring.get_optics(ring)
+        l0, _, _ = ring.get_optics()
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
 
@@ -80,26 +86,32 @@ class WakeElement(Element):
 
     @property
     def WakeZ(self):
+        """Longitudinal component"""
         return getattr(self, '_wakeZ', None)
 
     @property
     def WakeDX(self):
+        """Dipole X component"""
         return getattr(self, '_wakeDX', None)
 
     @property
     def WakeDY(self):
+        """Dipole Y component"""
         return getattr(self, '_wakeDY', None)
 
     @property
     def WakeQX(self):
+        """Quadrupole X component"""
         return getattr(self, '_wakeQX', None)
 
     @property
     def WakeQY(self):
+        """Quadrupole Y component"""
         return getattr(self, '_wakeQY', None)
 
     @property
     def Nslice(self):
+        """Number of slices per bunch"""
         return self._nslice
 
     @Nslice.setter
@@ -109,20 +121,18 @@ class WakeElement(Element):
 
     @property
     def Nturns(self):
-        return self._nslice
+        """Number of turn for the wake field"""
+        return self._nturns
 
     @Nturns.setter
-    def Nturns(self, nslice):
-        self._nslice = nslice
+    def Nturns(self, nturns):
+        self._nturns = nturns
         self.clear_history()
 
     @property
-    def Current(self):
-        return self.NumParticles*self._charge2current
-
-    @Current.setter
-    def Current(self, current):
-        self.NumParticles = current/self._charge2current
+    def TurnHistory(self):
+        """Turn histroy of the slices center of mass"""
+        return self._turnhistory
 
     def __repr__(self):
         """Simplified __repr__ to avoid errors due to arguments
@@ -137,8 +147,30 @@ class ResonatorElement(WakeElement):
     """Class to generate a resonator, inherits from WakeElement
        additonal argument are frequency, qfactor, rshunt
     """
-    def __init__(self, family_name, ring, srange, wakecomp, frequency, qfactor,
-                 rshunt, yokoya_factor=1, **kwargs):
+    def __init__(self, family_name: str, ring: Lattice, srange,
+                 wakecomp: WakeComponent,
+                 frequency: float, qfactor: float, rshunt: float,
+                 yokoya_factor=1, **kwargs):
+        r"""
+        Parameters:
+            family name:    Element name
+            ring:           Lattice in which the element will be inserted
+            srange:         Vector of s position where to sample the wake
+            wakecomp:       Wake component
+            frequency:      Resonator frequency [Hz]
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
+            yokoya_factor:  Yokoya factor
+
+        Keyword Arguments:
+            Nslice (int):       Number of slices per bunch. Default: 101
+            Nturns (int):       Number of turn for the wake field. Default: 1
+            ZCuts:              Limits for fixed slicing, default is adaptive
+            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+              to account for beta function at the observation point for
+              example. Default: (1,1,1)
+"""
         self._resfrequency = frequency
         self._qfactor = qfactor
         self._rshunt = rshunt
@@ -158,6 +190,7 @@ class ResonatorElement(WakeElement):
 
     @property
     def ResFrequency(self):
+        """Resonator frequency [Hz]"""
         return self._resfrequency
 
     @ResFrequency.setter
@@ -167,6 +200,7 @@ class ResonatorElement(WakeElement):
 
     @property
     def Qfactor(self):
+        """Resonator Q factor"""
         return self._qfactor
 
     @Qfactor.setter
@@ -176,6 +210,8 @@ class ResonatorElement(WakeElement):
 
     @property
     def Rshunt(self):
+        r"""Resonator shunt impedance, [:math:`\Omega`] for longitudinal,
+        [:math:`\Omega/m`] for transverse"""
         return self._rshunt
 
     @Rshunt.setter
@@ -185,6 +221,7 @@ class ResonatorElement(WakeElement):
 
     @property
     def Yokoya(self):
+        """Resonator Yokoya factor"""
         return self._yokoya
 
     @Yokoya.setter
@@ -197,24 +234,59 @@ class LongResonatorElement(ResonatorElement):
     """Class to generate a longitudinal resonator, inherits from WakeElement
        additional argument are frequency, qfactor, rshunt
     """
-    def __init__(self, family_name, ring, srange, frequency, qfactor, rshunt,
+    def __init__(self, family_name: str, ring: Lattice, srange,
+                 frequency: float, qfactor: float, rshunt: float,
                  **kwargs):
+        r"""
+        Parameters:
+            family name:    Element name
+            ring:           Lattice in which the element will be inserted
+            srange:         Vector of s position where to sample the wake
+            frequency:      Resonator frequency [Hz]
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
+
+        Keyword Arguments:
+            yokoya_factor:  Yokoya factor
+            Nslice (int):       Number of slices per bunch. Default: 101
+            Nturns (int):       Number of turn for the wake field. Default: 1
+            ZCuts:              Limits for fixed slicing, default is adaptive
+            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+              to account for beta function at the observation point for
+              example. Default: (1,1,1)
+"""
         super(LongResonatorElement, self).__init__(family_name, ring, srange,
                                                    WakeComponent.Z, frequency,
                                                    qfactor, rshunt, **kwargs)
-
-    def rebuild_wake(self):
-        wake = Wake.long_resonator(self.WakeT, self._resfrequency,
-                                   self._qfactor, self._rshunt, self._beta)
-        self._build(wake)
 
 
 class ResWallElement(WakeElement):
     """Class to generate a resistive wall element, inherits from WakeElement
        additional argument are yokoya_factor, length, pipe radius, conductivity
     """
-    def __init__(self, family_name, ring, srange, wakecomp, rwlength,
-                 rvac, conduc, yokoya_factor=1, **kwargs):
+    def __init__(self, family_name: str, ring: Lattice, srange,
+                 wakecomp: WakeComponent, rwlength: float,
+                 rvac: float, conduc: float, yokoya_factor=1, **kwargs):
+        """
+        Parameters:
+            family name:    Element name
+            ring:           Lattice in which the element will be inserted
+            srange:         Vector of s position where to sample the wake
+            wakecomp:       Wake component
+            rwlength:
+            rvac:
+            conduc:
+            yokoya_factor:  Yokoya factor
+
+        Keyword Arguments:
+            Nslice (int):       Number of slices per bunch. Default: 101
+            Nturns (int):       Number of turn for the wake field. Default: 1
+            ZCuts:              Limits for fixed slicing, default is adaptive
+            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+              to account for beta function at the observation point for
+              example. Default: (1,1,1)
+        """
         self._wakecomponent = wakecomp
         self._rwlength = rwlength
         self._rvac = rvac
@@ -226,13 +298,15 @@ class ResWallElement(WakeElement):
         super(ResWallElement, self).__init__(family_name, ring, wake, **kwargs)
 
     def rebuild_wake(self):
-        wake = Wake.resistive_wall(self.WakeT, self._wakecomp, self._rwlength,
-                                   self._rvac, self._conduc, self._beta,
+        wake = Wake.resistive_wall(self.WakeT, self._wakecomponent,
+                                   self._rwlength, self._rvac,
+                                   self._conductivity, self._beta,
                                    yokoya_factor=self._yokoya)
         self._build(wake)
 
     @property
     def RWLength(self):
+        """Length of the resistive wall"""
         return self._rwlength
 
     @RWLength.setter
@@ -242,6 +316,7 @@ class ResWallElement(WakeElement):
 
     @property
     def Conductivity(self):
+        """Conductivity of the beam pipe [S/m]"""
         return self._conductivity
 
     @Conductivity.setter
@@ -251,6 +326,7 @@ class ResWallElement(WakeElement):
 
     @property
     def Rvac(self):
+        """Radius of the beam pipe [m]"""
         return self._rvac
 
     @Rvac.setter
@@ -260,6 +336,7 @@ class ResWallElement(WakeElement):
 
     @property
     def Yokoya(self):
+        """Yokoya factor for the reistive wall"""
         return self._yokoya
 
     @Yokoya.setter

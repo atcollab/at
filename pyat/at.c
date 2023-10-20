@@ -13,6 +13,7 @@
 #include <stdbool.h> 
 #include <math.h>
 #include <float.h>
+#include <atrandom.c>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
@@ -63,6 +64,10 @@ static PyObject **kwargs_list = NULL;
 static char integrator_path[300];
 static PyObject *particle_type;
 static PyObject *element_type;
+
+/* state buffers for RNGs */
+static pcg32_random_t common_state = COMMON_PCG32_INITIALIZER;
+static pcg32_random_t thread_state = THREAD_PCG32_INITIALIZER;
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
@@ -295,6 +300,25 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
     PyErr_Clear();
 }
 
+void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
+                             struct parameters *param){ 
+    if(bcurrents != NULL){
+        PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_MAXDIMS, 
+                                            PyArray_DESCR(bcurrents)->type_num,
+                                            NULL); 
+        param->beam_current = PyFloat_AsDouble(bcurrentsum);
+        Py_DECREF(bcurrentsum);    
+        param->nbunch = PyArray_SIZE(bspos);
+        param->bunch_spos = PyArray_DATA(bspos);
+        param->bunch_currents = PyArray_DATA(bcurrents); 
+    }else{
+        param->beam_current=0.0;
+        param->nbunch=1;
+        param->bunch_spos = (double[1]){0.0};
+        param->bunch_currents = (double[1]){0.0};
+    }   
+}
+
 /*
  * Parse the arguments to atpass, set things up, and execute.
  * Arguments:
@@ -307,7 +331,8 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
-                             "reuse","omp_num_threads","losses", NULL};
+                             "reuse","omp_num_threads","losses",
+                             "bunch_spos", "bunch_currents", NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
     static int valid = 0;
@@ -327,6 +352,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     int *ixnelem = NULL;
     bool *bxlost = NULL;
     double *dxlostcoord = NULL;
+    PyArrayObject *bcurrents;
+    PyArrayObject *bspos;
     int num_turns;
     npy_uint32 omp_num_threads=0;
     npy_uint32 num_particles, np6;
@@ -352,11 +379,15 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     particle=NULL;
     energy=NULL;
     refs=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIp", kwlist,
+    bspos=NULL;
+    bcurrents=NULL;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
-        &keep_counter, &keep_lattice, &omp_num_threads, &losses)) {
+        &keep_counter, &keep_lattice, &omp_num_threads, &losses,
+        &PyArray_Type, &bspos, &PyArray_Type, &bcurrents)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -369,14 +400,20 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
 
+    param.common_rng=&common_state;
+    param.thread_rng=&thread_state;
     param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;
+    param.num_turns=num_turns;
+    
     if (keep_counter)
         param.nturn = last_turn;
     else
         param.nturn = counter;
-    set_energy_particle(lattice, energy, particle, &param);
+
+    set_energy_particle(lattice, energy, particle, &param);   
+    set_current_fillpattern(bspos, bcurrents, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
@@ -629,6 +666,10 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 
     param.RingLength = 0.0;
     param.T0 = 0.0;
+    param.beam_current=0.0;
+    param.nbunch=1;
+    param.bunch_spos = (double[1]){0.0};
+    param.bunch_currents = (double[1]){0.0};
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;
@@ -650,67 +691,84 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     return (PyObject *) rin;
 }
 
-
-static PyObject *isopenmp(PyObject *self)
+static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-#ifdef _OPENMP
-    Py_RETURN_TRUE;
-#else
-    Py_RETURN_FALSE;
-#endif /*_OPENMP)*/
+    static char *kwlist[] = {"rank", "seed", NULL};
+    uint64_t rank = 0;
+    uint64_t seed = AT_RNG_STATE;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|K$K", kwlist,
+        &rank, &seed)) {
+        return NULL;
+    }
+    pcg32_srandom_r(&common_state, seed, AT_RNG_INC);
+    pcg32_srandom_r(&thread_state, seed, rank);
+    Py_RETURN_NONE;
 }
 
-
-static PyObject *ismpi(PyObject *self)
+static PyObject *common_rng(PyObject *self)
 {
-#ifdef MPI
-    Py_RETURN_TRUE;
-#else
-    Py_RETURN_FALSE;
-#endif /*MPI)*/
+    double drand = atrandd_r(&common_state);
+    return Py_BuildValue("d", drand);
 }
 
+static PyObject *thread_rng(PyObject *self)
+{
+    double drand = atrandd_r(&thread_state);
+    return Py_BuildValue("d", drand);
+}
 
-/* Boilerplate to register methods. */
+/* Method table */
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)\n\n"
-              "Track input particles rin along line for nturns turns.\n"
+    PyDoc_STR("atpass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
+              "reuse: Optional[bool] = False, omp_num_threads: Optional[int] = 0)\n\n"
+              "Track input particles r_in along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
-              "line:    list of elements\n"
-              "rin:     6 x n_particles Fortran-ordered numpy array.\n"
-              "         On return, rin contains the final coordinates of the particles\n"
-              "n_turns: number of turns to be tracked\n"
-              "refpts:  numpy array of indices of elements where output is desired\n"
-              "         0 means entrance of the first element\n"
-              "         len(line) means end of the last element\n"
-              "energy:  nominal energy [eV]\n"
-              "rest_energy:  rest_energy of the particle [eV]\n"
-              "charge:  particle charge [elementary charge]\n"
-              "reuse:   if True, use previously cached description of the lattice.\n\n"
-              "omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
-              "losses:  if True, process losses\n"
-              "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
-              "         of particle coordinates\n"
+              "Parameters:\n"
+              "    line:    list of elements\n"
+              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "      On return, rin contains the final coordinates of the particles\n"
+              "    n_turns: number of turns to be tracked\n"
+              "    refpts:  numpy array of indices of elements where output is desired\n"
+              "       0 means entrance of the first element\n"
+              "       len(line) means end of the last element\n"
+              "    energy:  nominal energy [eV]\n"
+              "    particle (Optional[Particle]):  circulating particle\n"
+              "    reuse:   if True, use previously cached description of the lattice.\n"
+              "    omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
+              "    losses:  if True, process losses\n\n"
+              "Returns:\n"
+              "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
+              "         of particle coordinates\n\n"
+              ":meta private:"
               )},
     {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("elempass(element, rin)\n\n"
-              "Track input particles rin through a single element.\n\n"
-              "element: AT element\n"
-              "rin:     6 x n_particles Fortran-ordered numpy array.\n"
-              "         On return, rin contains the final coordinates of the particles\n"
-              "energy:  nominal energy [eV]\n"
-              "rest_energy:  rest_energy of the particle [eV]\n"
-              "charge:  particle charge [elementary charge]\n"
+    PyDoc_STR("elempass(element, r_in)\n\n"
+              "Track input particles r_in through a single element.\n\n"
+              "Parameters:\n"
+              "    element (Element):   AT element\n"
+              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "      On return, rin contains the final coordinates of the particles\n"
+              "    energy (float):      nominal energy [eV]\n"
+              "    particle (Optional[Particle]):  circulating particle\n\n"
+              ":meta private:"
             )},
-    {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
-    PyDoc_STR("isopenmp()\n\n"
-              "Return whether OpenMP is active.\n"
+    {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("reset_rng(rank=0, seed=None)\n\n"
+              "Reset the *common* and *thread* random generators.\n\n"
+              "Parameters:\n"
+              "    rank (int):    thread identifier (for MPI and python multiprocessing)\n"
+              "    seed (int):    single seed for both generators\n"
+            )},
+    {"common_rng",  (PyCFunction)common_rng, METH_NOARGS,
+    PyDoc_STR("common_rng()\n\n"
+              "Return a double from the *common* generator .\n"
              )},
-    {"ismpi",  (PyCFunction)ismpi, METH_NOARGS,
-    PyDoc_STR("ismpi()\n\n"
-              "Return whether MPI is active.\n"
+    {"thread_rng",  (PyCFunction)thread_rng, METH_NOARGS,
+    PyDoc_STR("thread_rng()\n\n"
+              "Return a double from the *thread* generator .\n"
              )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };

@@ -25,32 +25,23 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %
 %  See also atGetRingProperties atgetU0 atsetcavity
 
-global GLOBVAL %#ok<GVMIS> 
 s=warning;                          % Save the warning state
 warning('Off','AT:NoRingParam');    % Disable warning
-props = atGetRingProperties(ring);  % Get ring propeties
-warning(s);                         % Restore the warning state
-energy = props.Energy;
-if ~isfinite(energy)
-    if isfield(GLOBVAL,'E0')
-        energy=GLOBVAL.E0;
-    else
-        error('AT:NoEnergy',...
-                ['Energy not defined (searched in ''RingParam'',''RFCavity'', ',...
-                'the ''Energy'' field of each element, GLOBVAL.E0)\n' ...
-                'You can set it with:\n>> ring=atSetRingProperties(ring,''Energy'',energy)\n'...
-                'or by using the global variable GLOBVAL:\n>> GLOBVAL.E0=energy;'...
-                ]);
-    end
+if nargout >= 4
+    [energy,nbper,cavpts,harmnumber]=atGetRingProperties(ring,...
+        'Energy','Periodicity','cavpts','HarmNumber');
+elseif nargout >= 3
+    [energy,nbper,cavpts]=atGetRingProperties(ring,...
+        'Energy','Periodicity','cavpts');
+elseif nargout >= 2
+    [energy,nbper]=atGetRingProperties(ring,'Energy','Periodicity');
+else
+    energy=atGetRingProperties(ring,'Energy');
 end
-nbper = props.Periodicity;
+warning(s);                         % Restore the warning state
 
 if nargout >= 3
-    if isfield(props, 'cavpts')
-        maincavs = ring(props.cavpts);
-    else
-        maincavs = findmaincavs(ring);
-    end
+    maincavs=ring(cavpts);
     if ~isempty(maincavs)
         voltage=nbper*sum(atgetfieldvalues(maincavs,'Voltage'));
     elseif nargout >= 5
@@ -59,27 +50,8 @@ if nargout >= 3
         error('AT:NoCavity','No cavity element in the ring');
     end
 end
-if nargout >= 4
-    if isfield(props,'HarmNumber')
-        harmnumber = props.HarmNumber;
-    else
-        harmnumber=NaN;
-    end
-end
+
 if nargout >= 5
     U0 = atgetU0(ring);
 end
-
-    function cavs=findmaincavs(ring)
-        cavities = atgetcells(ring,'Frequency');
-        if any(cavities)
-            freqs = atgetfieldvalues(ring(cavities), 'Frequency');
-            [~,~,ic]=unique(freqs);
-            cavities(cavities) = (ic == 1);
-            cavs = ring(cavities);
-        else
-            cavs={};
-        end
-    end
-
 end

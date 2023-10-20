@@ -1,6 +1,4 @@
-import sys
 import numpy
-from io import BytesIO, StringIO
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
@@ -17,8 +15,9 @@ import pytest
 ))
 def test_uint32_refpts_converts_numerical_inputs_correctly(ref_in, expected):
     numpy.testing.assert_equal(uint32_refpts(ref_in, 5), expected)
-    ref_in2 = numpy.asarray(ref_in).astype(numpy.float64)
-    numpy.testing.assert_equal(uint32_refpts(ref_in2, 5), expected)
+    # float indexes are deprecated
+    # ref_in2 = numpy.asarray(ref_in).astype(numpy.float64)
+    # numpy.testing.assert_equal(uint32_refpts(ref_in2, 5), expected)
     ref_in2 = numpy.asarray(ref_in).astype(numpy.int64)
     numpy.testing.assert_equal(uint32_refpts(ref_in2, 5), expected)
 
@@ -44,8 +43,8 @@ def test_uint32_refpts_converts_other_input_types_correctly(ref_in, expected):
 # indexing misordered
 @pytest.mark.parametrize('ref_in', ([0, 1, 2, 3], [2, 1], [0, 0], [-1, 0],
                                     [0, -2], [3, 0], [1, 3], [-1, 3], [3, -2]))
-def test_uint32_refpts_throws_ValueError_correctly(ref_in):
-    with pytest.raises(ValueError):
+def test_uint32_refpts_throws_IndexError_correctly(ref_in):
+    with pytest.raises(IndexError):
         uint32_refpts(ref_in, 2)
 
 
@@ -84,11 +83,11 @@ def test_checktype(simple_ring):
 
 
 def test_get_cells(simple_ring):
-    a = numpy.ones(6, dtype=bool)
+    a = numpy.array([True, True, True, True, True, True, False])
     numpy.testing.assert_equal(get_cells(simple_ring, checkattr('Length')), a)
-    a = numpy.array([False, True, False, False, False, False])
+    a = numpy.array([False, True, False, False, False, False, False])
     numpy.testing.assert_equal(get_cells(simple_ring, 'attr'), a)
-    a = numpy.array([True, False, False, False, False, False])
+    a = numpy.array([True, False, False, False, False, False, False])
     numpy.testing.assert_equal(get_cells(simple_ring, 'FamName', 'D1'), a)
 
 
@@ -123,26 +122,11 @@ def test_get_elements(hmba_lattice):
     assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError
     with pytest.raises(TypeError):
-        get_elements(hmba_lattice, None)
-    # test quiet suppresses print statement correctly
-    if sys.version_info < (3, 0):
-        capturedOutput = BytesIO()
-    else:
-        capturedOutput = StringIO()
-    sys.stdout = capturedOutput
-    get_elements(hmba_lattice, 'BPM_06', quiet=True)
-    sys.stdout = sys.__stdout__
-    assert capturedOutput.getvalue() == ''
-    sys.stdout = capturedOutput
-    get_elements(hmba_lattice, 'BPM_06', quiet=False)
-    sys.stdout = sys.__stdout__
-    assert capturedOutput.getvalue() == ("String 'BPM_06' matched 1 family: "
-                                         "BPM_06\nall corresponding elements "
-                                         "have been returned.\n")
+        get_elements(hmba_lattice, 1.0)
 
 
 def test_get_s_pos_returns_zero_for_empty_lattice():
-    numpy.testing.assert_equal(get_s_pos([], None), numpy.array((0,)))
+    numpy.testing.assert_equal(get_s_pos([]), numpy.array((0,)))
 
 
 def test_get_s_pos_returns_length_for_lattice_with_one_element():
@@ -150,12 +134,10 @@ def test_get_s_pos_returns_length_for_lattice_with_one_element():
     assert get_s_pos([e], [1]) == numpy.array([0.1])
 
 
-def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_and_refpts_None():
+def test_get_s_pos_returns_all_pts_for_lat_with_2_elements():
     e = elements.LongElement('e', 0.1)
     f = elements.LongElement('e', 2.1)
-    print(get_s_pos([e, f], None))
-    numpy.testing.assert_equal(get_s_pos([e, f], None),
-                               numpy.array([0, 0.1, 2.2]))
+    numpy.testing.assert_equal(get_s_pos([e, f]), numpy.array([0, 0.1, 2.2]))
 
 
 def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_using_int_refpts():

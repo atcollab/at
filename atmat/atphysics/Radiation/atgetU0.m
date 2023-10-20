@@ -20,7 +20,7 @@ function U0 = atgetU0(ring,varargin)
 %
 % See also RINGPARA ATSETCAVITY ATENERGY
 
-[energy, nper]=atenergy(ring);
+[energy, nper]=atGetRingProperties(ring,'Energy','Periodicity');
 [nper,varargs]=getoption(varargin,'periods',nper);
 [method, varargs]=getoption(varargs,'method','integral'); %#ok<ASGLU>
 if strcmpi(method, 'integral')
@@ -36,8 +36,9 @@ end
         e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
         cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
         e_radius=PhysConstant.classical_electron_radius.value;                  % m
-        Cgamma=4.0E27*pi*e_radius/3/e_mass^3;                                   % [m/GeV^3]
+        Cgamma=4.0*pi*e_radius/3/e_mass^3;                                      % [m/eV^3]
         Brho=sqrt(energy*energy - e_mass*e_mass)/cspeed;
+        coef=Cgamma/2/pi*energy^4;
         
         % Dipole radiation
         dipoles  = atgetcells(ring,'BendingAngle');
@@ -49,10 +50,15 @@ end
             && ~strcmp(elem.PassMethod,'DriftPass');
         wigglers=cellfun(iswiggler, ring);
         I2w=sum(cellfun(@wiggler_i2,ring(wigglers)));
+        % EnergyLoss radiation
+        iseloss=@(elem) isfield(elem,'Class') && strcmp(elem.Class,'EnergyLoss') ...
+            && ~strcmp(elem.PassMethod,'IdentityPass');
+        eloss=cellfun(iseloss, ring);
+        I2e=sum(cellfun(@eloss_i2, ring(eloss)));
         % Additional radiation
         I2x=sum(atgetfieldvalues(ring(atgetcells(ring,'I2')),'I2'));
-        I2=I2d+I2w+I2x;                             % [m-1]
-        U0=Cgamma/2/pi*(energy*1.e-9)^4*I2*1e9;     % [eV]
+        I2=I2d+I2w+I2e+I2x;            % [m-1]
+        U0=coef*I2;                    % [eV]
         
         function i2=wiggler_i2(elem)
             rhoinv=elem.Bmax/Brho;
@@ -60,12 +66,17 @@ end
             coefv=elem.Bx(2,:)*rhoinv;
             i2=elem.Length*(coefh*coefh'+coefv*coefv')/2;
         end
+
+        function i2=eloss_i2(elem)
+            i2=elem.EnergyLoss/coef;
+        end
     end
 
     function U0=tracking(ring)
-        check_radiation(ring,true);
-        ringtmp=atradoff(ring, 'bendpass', '', 'quadpass', '',...
-            'sextupass', '', 'octupass', '', 'wigglerpass','');
+        % Ensure 6d is enabled
+        check_6d(ring,true);
+        % Turn cavities off
+        ringtmp=atdisable_6d(ring,'allpass','','cavipass','auto');
         o0=zeros(6,1);
         o6=ringpass(ringtmp,o0);
         U0=-o6(5)*energy;

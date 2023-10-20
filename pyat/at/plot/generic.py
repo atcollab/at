@@ -1,66 +1,77 @@
 """AT generic plotting function"""
+from __future__ import annotations
 from itertools import chain, repeat
 # noinspection PyPackageRequirements
 import matplotlib.pyplot as plt
-from at.plot import plot_synopt
+from typing import Callable
+from .synopt import plot_synopt
+from ..lattice import Lattice
 
 SLICES = 400
 
 __all__ = ['baseplot']
 
 
-def baseplot(ring, plot_function, *args, **kwargs):
-    """
-    baseplot divides the region of interest of ring into small elements,
-    calls the specified function to get the plot data and calls matplotlib
-    functions to generate the plot.
-    By default it creates a new figure for the plot, but if provided with
-    axes objects it can be used as part of a GUI
+def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
+    """Generic lattice plot
 
-    PARAMETERS
-        ring            Lattice object
-        plot_function   specific data generating function to be called
+    :py:func:`baseplot` divides the region of interest of ring into small
+    elements, calls the specified function to get the plot data and calls
+    matplotlib functions to generate the plot.
+    By default, it creates a new figure for the plot, but if provided with
+    :py:class:`~matplotlib.axes.Axes` objects it can be used as part of a GUI
 
-        All other positional parameters are sent to the plotting function
+    Parameters:
+        ring:           Lattice description.
+        plot_function:  Specific data generating function to be called
+          plotting function. ``plot_function`` is called as:
 
-        plot_function is called as:
+          :code:`title, left, right = plot_function(ring, refpts, *args,
+          **kwargs)`
 
-        title, left, right = plot_function(ring, refpts, *args, **kwargs)
+          and should return 2 or 3 output:
 
-        and should return 2 or 3 output:
+          ``title``: plot title or :py:obj:`None`
 
-        title   plot title or None
-        left    tuple returning the data for the main (left) axis
-           left[0]   y-axis label
-           left[1]   xdata: (N,) array (s coordinate)
-           left[2]   ydata: iterable of (N,) or (N,M) arrays. Lines from a
-                     (N, M) array share the same style and label
-           left[3]   labels: (optional) iterable of strings as long as ydata
-        right   tuple returning the data for the secondary (right) axis
-                (optional)
+          ``left``: tuple returning the data for the main (left) axis
 
-    KEYWORDS
-        s_range         lattice range of interest, default: unchanged,
-                        initially set to the full cell.
-        axes=None       axes for plotting as (primary_axes, secondary_axes)
-                        Default: create new axes
-        slices=400      Number of slices
-        legend=True     Show a legend on the plot
-        block=False     if True, block until the figure is closed
-        dipole={}       Dictionary of properties overloading the default
-                        properties of dipole representation.
-                        See 'plot_synopt' for details
-        quadrupole={}   Same definition as for dipole
-        sextupole={}    Same definition as for dipole
-        multipole={}    Same definition as for dipole
-        monitor={}      Same definition as for dipole
+            left[0] - y-axis label
 
-        All other keywords are sent to the plotting function
+            left[1] - xdata: (N,) array (s coordinate)
 
-    RETURN
-        left_axes       Main (left) axes
-        right_axes      Secondary (right) axes or None
-        synopt_axes     Synoptic axes
+            left[2] - ydata: iterable of (N,) or (N,M) arrays. Lines from a
+            (N, M) array share the same style and label
+
+            left[3]   labels: (optional) iterable of strings as long as ydata
+
+          ``right``: tuple returning the data for the secondary (right) axis
+        *args:          All other positional parameters are sent to the
+
+    Keyword Args:
+        s_range:            Lattice range of interest, default: unchanged,
+          initially set to the full cell.
+        axes (tuple[Axes, Optional[Axes]): :py:class:`~matplotlib.axes.Axes`
+          for plotting as (primary_axes, secondary_axes).
+          Default: create new axes
+        slices (int):       Number of slices. Default: 400
+        legend (bool):      Show a legend on the plot. Default: :py:obj:`True`
+        labels (Refpts):    display the name of selected elements.
+          Default: :py:obj:`None`
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of dipole representation. See :py:func:`.plot_synopt`
+          for details
+        quadrupole (dict):  Same definition as for dipole
+        sextupole (dict):   Same definition as for dipole
+        multipole (dict):   Same definition as for dipole
+        monitor (dict):     Same definition as for dipole
+        **kwargs:           All other keywords are sent to the plotting function
+
+    Returns:
+        left_axes (Axes):   Main (left) axes
+        right_axes (Axes):  Secondary (right) axes or :py:obj:`None`
+        synopt_axes (Axes): Synoptic axes
     """
 
     def plot1(ax, yaxis_label, x, y, labels=()):
@@ -85,7 +96,8 @@ def baseplot(ring, plot_function, *args, **kwargs):
         ring.s_range = kwargs.pop('s_range')
 
     # extract synopt arguments
-    synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole', 'monitor']
+    synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole',
+               'monitor', 'labels']
     kwkeys = list(kwargs.keys())
     synargs = dict((k, kwargs.pop(k)) for k in kwkeys if k in synkeys)
 

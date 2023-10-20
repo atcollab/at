@@ -1,9 +1,13 @@
-import at
-from at.lattice import AtError
-from at.tracking import lattice_pass, patpass
+"""
+Functions used to
+calculate the loss boundary for different
+grid definitions
+"""
+
+from at.lattice import Lattice, AtError
+from typing import Optional, Sequence
 from enum import Enum
 import numpy
-import warnings
 from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
@@ -16,13 +20,12 @@ _pdict = {'x': 0, 'xp': 1,
 
 
 class GridMode(Enum):
-    """"
-    Class to defined the grid mode use when searching
-    for the boundary
     """
-    RADIAL = 0
-    CARTESIAN = 1
-    RECURSIVE = 2
+    Grid definition for 2D acceptance boundary search
+    """
+    RADIAL = 0      #: full [:math:`\:r, \theta\:`] grid
+    CARTESIAN = 1   #: full [:math:`\:x, y\:`] grid
+    RECURSIVE = 2   #: radial recursive search
 
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode,
@@ -73,24 +76,18 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     Returns a ring starting at obspt and initial
     closed orbit
     """
-    if ring.radiation:
-        newring = ring.set_rf_frequency(dp=dp, copy=True)
-        dp = None
-    else:
-        newring = ring
-
     if obspt is not None:
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
-        newring = newring.rotate(obspt)
+        ring = ring.rotate(obspt)
 
     if orbit is None:
-        orbit, _ = newring.find_orbit(dp=dp)
+        orbit = ring.find_orbit(dp=dp)[0]
 
-    return orbit, newring
+    return orbit, ring
 
 
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
-                       shift_zero=1.0e-9):
+                       shift_zero=1.0e-6):
     """
     Return a grid configuration based on user input parameters, the ordering
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
@@ -158,9 +155,7 @@ def get_parts(config, offset):
         g = get_part_grid_radial(bnd, np, amp)
     parts = numpy.zeros((6, numpy.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
-    if len(pind) == 2:
-        parts[pind[0]][parts[pind[1]] == 0.0] += config.shift_zero
-        parts[pind[1]][parts[pind[0]] == 0.0] += config.shift_zero
+    offset = numpy.array(offset) + config.shift_zero
     parts = (parts.T+offset).T
     return parts, grid(g, offset[pind])
 
@@ -169,16 +164,8 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
-    if use_mp:
-        pout = numpy.squeeze(patpass(ring, parts,
-                                     nturns=nturns, **kwargs))
-    else:
-        pout = numpy.squeeze(lattice_pass(ring, parts,
-                             nturns=nturns, **kwargs))
-    if pout.ndim == 2:
-        return numpy.invert(numpy.isnan(pout[0, -1]))
-    else:
-        return numpy.invert(numpy.isnan(pout[0, :, -1]))
+    _, _, td = ring.track(parts, nturns=nturns, losses=True, use_mp=use_mp, **kwargs)
+    return numpy.invert(td['loss_map'].islost)
 
 
 def get_grid_boundary(mask, grid, config):
@@ -272,6 +259,10 @@ def get_grid_boundary(mask, grid, config):
             bnd[:, i] = search_bnd(ma, sa)
         return bnd
 
+    if not numpy.any(mask):
+        raise AtError("No particle survived, please check your grid "
+                      "or lattice.")
+
     if config.mode is GridMode.RADIAL:
         return radial_boundary(mask, grid)
     elif config.mode is GridMode.CARTESIAN:
@@ -332,7 +323,6 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         cs = numpy.around(cs, decimals=9)
         fact = numpy.ones(len(angles))
         survived = numpy.full(len(angles), True)
-        istracked = numpy.full(len(angles), True)
         part = numpy.zeros((6, len(angles)))
         grid = numpy.array([])
         mask = numpy.array([])
@@ -359,8 +349,12 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                                  pm[planesi]]) if mask.size else pm[planesi]
             for i in range(len(angles)):
                 if not survived[i] and fact[i] > ftol:
-                    for j, pi in enumerate(planesi):
-                        part[pi, i] -= cs[j, i]*rsteps[j]*min(1, 2*fact[i])
+                    deltas = cs[:, i]*rsteps[:]*min(1, 2*fact[i])
+                    if numpy.any(abs(deltas) > abs(part[planesi, i])):
+                        part[planesi, i] = numpy.zeros(len(planesi))
+                    else:
+                        for j, pi in enumerate(planesi):
+                            part[pi, i] -= deltas[j]
                     survived[i] = True
                     fact[i] *= 1/divider
 
@@ -405,10 +399,15 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     return result
 
 
-def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
-                    obspt=None, dp=None, offset=None, bounds=None,
-                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
-                    shift_zero=1.0e-9, **kwargs):
+def boundary_search(ring: Lattice, planes, npoints, amplitudes,
+                    nturns: Optional[int] = 1024,
+                    obspt: Optional[int] = None, dp: Optional[float] = None,
+                    offset: Sequence[float] = None, bounds=None,
+                    grid_mode: Optional[GridMode] = GridMode.RADIAL,
+                    use_mp: Optional[bool] = False,
+                    verbose: Optional[bool] = True,
+                    shift_zero: Optional[float] = 1.0e-9,
+                    **kwargs):
     """
     Computes the loss boundary at a single point in the machine
     """

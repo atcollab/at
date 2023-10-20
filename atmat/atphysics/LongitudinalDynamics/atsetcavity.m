@@ -1,5 +1,5 @@
 function ring = atsetcavity(ring,varargin)
-%ATSECAVITY Set the cavity parameters
+%ATSECAVITY Set the parameters of RF cavities
 %
 %WARNING: This function modifies the time reference,
 %this should be avoided
@@ -15,25 +15,30 @@ function ring = atsetcavity(ring,varargin)
 %   Set the cavity frequency to the nominal value according to
 %   circumference and harmonic number
 %
-%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dp',dp)
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dp',DP)
 %   Set the cavity frequency to the nominal value for the specified dp
 %
-%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dct',dct)
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dct',DCT)
 %   Set the cavity frequency to the nominal value for the specified dct
+%
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','df',DF)
+%   Set the cavity frequency to the nominal value + df
 %
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
 %   Set the total voltage (all cells) [V]
 %   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
 %
-%NEWRING=ATSETCAVITY(RING,...,'HarmNumber',h,...)
+%NEWRING=ATSETCAVITY(RING,...,'HarmNumber',H,...)
 %   Set the harmonic number
 %
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
 %   Set the time lag [m]
 %
 %NEWRING=ATSETCAVITY(RING,...,'cavpts',CAVPTS)
-%   CAVPTS is the location of RF cavities. This allows to ignore harmonic
-%   cavities. The default is to use all cavities
+%   CAVPTS is the location of RF cavities. The default is to act on the
+%   "main" cavities: if there is is a 'cavpts' ring property. it defined
+%   the main cavities, otherwise the main cavities are cavities with the
+%   lowest frequency
 %
 %  NOTES
 %  1. In this mode, the radiation state of the lattice is not modified.
@@ -46,9 +51,9 @@ function ring = atsetcavity(ring,varargin)
 %===================================================
 %NEWRING = ATSETCAVITY(RING,RFV,RADFLAG,HARM_NUMBER)
 %  RING         Ring structure
-%  RFV          RF voltage (per cell) [V]
+%  RFV          RF voltage (full ring) [V]
 %  RADFLAG      0/1: activate/desactivate radiation (atradon/atradoff)
-%  HARMNUMBER 	Harmonic number (for 1 cell)
+%  HARMNUMBER 	Harmonic number (full ring)
 %
 %  NOTES
 %  1. This mode is deprecated and should be replaced by
@@ -61,21 +66,26 @@ function ring = atsetcavity(ring,varargin)
 %     on radflag says whether or not we want radiation on, which affects
 %     synchronous phase.
 %
-%  See also atSetCavityPhase, atsetRFcavity, atradon, atradoff, atgetU0
+%  See also atSetCavityPhase, atsetRFcavity, atenable_6d, atdisable_6d, atgetU0
 
 % Speed of light
 CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 
-[props,idx]=atGetRingProperties(ring);
-[cavpts,varargs]=getcavptsarg(varargin,ring,props);
+[cavpts,varargs]=getoption(varargin,'cavpts',[]);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
 [harmnumber,varargs]=getoption(varargs, 'HarmNumber',[]);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
+[vcell,varargs]=getoption(varargs, 'cell_voltage', []);
 [timelag,varargs]=getoption(varargs, 'TimeLag', []);
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [dct,varargs]=getoption(varargs,'dct',NaN);
+[df,varargs]=getoption(varargs,'df',NaN);
 
-ncells=props.Periodicity;
+if isempty(cavpts)
+    [ncells,cell_h,beta0,cavpts]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta','cavpts');
+else
+    [ncells,cell_h,beta0]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta');
+end
 cavities=ring(cavpts);
 ncavs=length(cavities);
 if ncavs == 0
@@ -83,71 +93,81 @@ if ncavs == 0
 end
 
 if isempty(varargs)             % New syntax
+    if isempty(harmnumber)
+        harmcell=[];
+    else
+        harmcell=harmnumber/ncells;
+    end
     if ~isempty(frequency)
         lcell=findspos(ring,length(ring)+1);
-        gamma0=props.Energy/props.Particle.rest_energy;
-        beta0=sqrt(1-1/gamma0/gamma0);
-        frev=beta0*CLIGHT/lcell/ncells;
+        frev=beta0*CLIGHT/lcell;
         if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            if isfinite(dct)
+            hh=props_harmnumber(harmcell,cell_h);
+            if isfinite(df)
+                frev = frev + df/hh;
+            elseif isfinite(dct)
                 frev=frev * lcell/(lcell+dct);
             elseif isfinite(dp)
-                [~,ringrad]=check_radiation(ring,false,'force');
-                etac=1/gamma0^2 - mcf(ringrad);
-                frev=frev + frev*etac*dp;
+                % Find the path lengthening for dp
+                [~,rnorad]=check_radiation(ring,false,'force');
+                [~,orbitin]=findorbit4(rnorad,dp);
+                orbitout=ringpass(rnorad,orbitin);
+                dct=orbitout(6);
+                frev=frev * lcell/(lcell+dct);
             end
-            frequency = frev * props_harmnumber(harmnumber,props);
+            frequency = hh * frev;
         else
-            harmnumber=round(frequency/frev);
+            harmcell=round(frequency/frev);
         end
         cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     end
     if ~isempty(vring)
         cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncells/ncavs);
     end
+    if ~isempty(vcell)
+        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncavs);
+    end
     if ~isempty(timelag)
         cavities=atsetfieldvalues(cavities, 'TimeLag', timelag);
     end
     ring(cavpts)=cavities;
 else                            % Old syntax, for compatibility
-    [vcell,radflag,harmnumber]=deal(varargin{:});
+    [vring,radflag,harmnumber]=deal(varargin{:});
     harmcell=harmnumber/ncells;
     lcell=findspos(ring,length(ring)+1);
-    gamma0=props.Energy/props.Particle.rest_energy;
-    beta0=sqrt(1-1/gamma0/gamma0);
     frequency = (beta0*CLIGHT/lcell)*harmcell;
 
     %now set cavity frequencies, Harmonic Number and RF Voltage
     cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     cavities=atsetfieldvalues(cavities, 'HarmNumber', harmnumber);
-    cavities=atsetfieldvalues(cavities, 'Voltage', vcell/ncavs);
+    cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncavs);
     ring(cavpts)=cavities;
 
     %now set phaselags in cavities
     if radflag
         U0=atgetU0(ring);
-        timelag= (lcell/(2*pi*harmcell))*asin(U0/vcell/ncells);
-        ring=atradon(ring);  % set radiation on. nothing if radiation is already on
+        timelag= (lcell/(2*pi*harmcell))*asin(U0/vring);
+        ring=atenable_6d(ring);  % set radiation on. nothing if radiation is already on
     else
-        ring=atradoff(ring,'RFCavityPass');  % set radiation off. nothing if radiation is already off
+        ring=atdisable_6d(ring,'cavipass','RFCavityPass');  % set radiation off and turn on cavities
         timelag=0;
     end
     ring=atsetfieldvalues(ring, cavpts, 'TimeLag', timelag);
 end
 
 % Update the ring properties if HarmNumber has changed
-if ~(isempty(idx) || isempty(harmnumber) || ...
-    (isfield(props, 'HarmNumber') && harmnumber == props.HarmNumber))
-    ring=atSetRingProperties(ring,'HarmNumber',harmnumber);
+idx=atlocateparam(ring);
+if ~(isempty(idx) || isempty(harmcell) || ...
+    (harmcell == cell_h))
+    ring=atSetRingProperties(ring,'cell_harmnumber',harmcell);
 end
 
-    function h=props_harmnumber(h, props)
-        if isempty(h)
-            if isfield(props,'HarmNumber') && props.HarmNumber ~= 0
-                h=props.HarmNumber;
-            else
+    function cellharm=props_harmnumber(cellharm, cell_h)
+        if isempty(cellharm)
+            if ~isfinite(cell_h)
                 error('AT:NoCavity','Harmonic number is unknown')
             end
+            cellharm=cell_h;
         end
     end
 end

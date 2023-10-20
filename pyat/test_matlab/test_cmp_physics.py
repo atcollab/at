@@ -14,7 +14,7 @@ def _py_data(ml_data):
 def _ml_refs(refpts, nelems):
     """Convert refpoints to Matlab"""
     uintrefs = uint32_refpts(refpts, nelems)
-    return matlab.double([ref+1 for ref in uintrefs])
+    return matlab.double([float(ref+1) for ref in uintrefs])
 
 
 def _compare_physdata(py_data, ml_data, fields, atol=12, rtol=1.e-7):
@@ -43,8 +43,7 @@ def test_linear_analysis(engine, lattices, dp):
               ('gamma', 'gamma')]
     refpts = range(nelems + 1)
     py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp,
-                                                          refpts, True,
-                                                          ddp=1.E-6)
+                                                          refpts, True)
     # Matlab call
     ml_data, ml_tune, ml_chrom = engine.pyproxy('atlinopt', ml_lattice, dp,
                                                 _ml_refs(refpts, nelems),

@@ -1,0 +1,38 @@
+name: Docs CI
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build_and_publish_doc:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v4
+      with:
+        # Necessary to fetch tags and allow setuptools_scm
+        # see: https://github.com/pypa/setuptools_scm/issues/480
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - name: Build and install at
+      run: python -m pip install ".[plot, doc]"
+
+    - name: Compile docs
+      run: make html
+      working-directory: docs
+
+    - name: Publish Docs to gh-pages
+      uses: peaceiris/actions-gh-pages@373f7f263a76c20808c831209c920827a82a2847
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/_build/html

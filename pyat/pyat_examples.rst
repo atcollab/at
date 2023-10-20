@@ -1,17 +1,18 @@
 pyAT Examples
 =============
 
-Please follow ``at/pyat/README.rst`` for installation instructions.
-In these examples, we use the ring from `hmba.mat` found in ``test_matlab``;
+Please follow ``<at>/pyat/README.rst`` for installation instructions.
+In these examples, we use the ring from `hmba.mat` found in ``<at>/pyat/machine_data``;
 however, they will also work on the ``err.mat`` ring if you want to be more
 representative of a real accelerator.
 
 Initialisation:
 ---------------
 
-- Start Python inside the ``pyat`` directory::
+- Start Python within the virtual environment where PyAT in installed and
+  import ``at``::
 
-    $ cd pyat
+    $ cd <at>
     $ source venv/bin/activate
     $ python
     Python 2.7.3 (default, Nov  9 2013, 21:59:00)
@@ -22,8 +23,7 @@ Initialisation:
 
 - Load a pyAT ring from a .mat file::
 
-    >>> import at
-    >>> ring = at.load_lattice('test_matlab/hmba.mat')
+    >>> ring = at.load_lattice('pyat/machine_data/hmba.mat')
 
 Basic Use:
 ----------

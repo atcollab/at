@@ -1,4 +1,5 @@
 import numpy
+from numpy.testing import assert_allclose, assert_equal
 import pytest
 from at import elements
 from at.lattice import Lattice, AtWarning, AtError
@@ -22,6 +23,7 @@ def test_lattice_energy_radiation_periodicity():
     assert lat.energy == 3.e+6
     assert lat.periodicity == 32
     assert lat.radiation is True
+    assert lat.is_6d is True
 
 
 def test_lattice_voltage_harmonic_number():
@@ -47,7 +49,7 @@ def test_lattice_creation_from_lattice_inherits_attributes():
     assert lat2.name == 'lattice'
     assert lat2.energy == 3.e+6
     assert lat2.periodicity == 32
-    assert lat2.radiation is True
+    assert lat2.is_6d is True
     assert lat2.another_attr == 5
     with pytest.raises(AttributeError):
         assert lat2.an_attr == 12
@@ -70,14 +72,14 @@ def test_lattice_string_ordering():
     latstr = str(lat)
     assert latstr.startswith("Lattice(<1 elements>, name='lat', "
                              "energy=5, particle=Particle('relativistic'), "
-                             "periodicity=1")
+                             "periodicity=1, beam_current=0.0, nbunch=1")
     assert latstr.endswith("attr2=3)")
 
     latrepr = repr(lat)
     assert latrepr.startswith("Lattice([Drift('D0', 1.0, attr1=array(0))], "
                               "name='lat', "
                               "energy=5, particle=Particle('relativistic'), "
-                              "periodicity=1")
+                              "periodicity=1, beam_current=0.0, nbunch=1")
     assert latrepr.endswith("attr2=3)")
 
 
@@ -139,6 +141,7 @@ def test_radiation_change(hmba_lattice):
                                                          elements.Quadrupole)]
     hmba_lattice.radiation_on(None, 'pass2', 'auto')
     assert hmba_lattice.radiation is True
+    assert hmba_lattice.has_cavity is False
     for elem in rfs:
         assert elem.PassMethod == 'IdentityPass'
     for elem in dipoles:
@@ -163,9 +166,42 @@ def test_radiation_state_errors(hmba_lattice):
     hmba_lattice.linopt()
     with pytest.raises(AtError):
         hmba_lattice.ohmi_envelope()
-    hmba_lattice.radiation_on()
+    hmba_lattice.enable_6d()
     hmba_lattice.ohmi_envelope()
     with pytest.raises(AtError):
         hmba_lattice.get_mcf()
-    hmba_lattice.radiation_off()
+    hmba_lattice.disable_6d()
     hmba_lattice.get_mcf()
+
+@pytest.mark.parametrize('ring',
+                         [pytest.lazy_fixture('hmba_lattice')])
+def test_develop(ring):
+    newring = ring.develop()
+    assert_allclose(ring.circumference, newring.circumference)
+    assert_allclose(ring.rf_voltage, newring.rf_voltage)
+    assert_allclose(ring.revolution_frequency*ring.harmonic_number,
+                    newring.revolution_frequency*newring.harmonic_number)
+    rp1 = ring.radiation_parameters()
+    rp2 = newring.radiation_parameters()
+    assert_allclose(rp1.fulltunes, rp2.fulltunes)
+    assert_allclose(rp1.U0, rp2.U0)
+
+@pytest.mark.parametrize('ring',
+                         [pytest.lazy_fixture('hmba_lattice')])
+def test_operators(ring):
+    newring1 = ring + ring
+    newring2 = ring.concatenate(ring, copy=True)
+    assert_equal(len(newring1), len(ring)*2)
+    assert_equal(len(newring2), len(ring) * 2)
+    newring1 += ring
+    newring2.concatenate(ring, copy=False)
+    assert_equal(len(newring1), len(ring)*3)
+    assert_equal(len(newring2), len(ring)*3)
+    newring1 = ring * 2
+    newring2 = ring.repeat(2)
+    assert_equal(len(newring1), len(ring)*2)
+    assert_equal(len(newring2), len(ring) * 2)
+    assert_equal(newring1.harmonic_number, ring.harmonic_number)
+    newring1 = ring.reverse(copy=True)
+    assert_equal(newring1[-1].FamName, ring[0].FamName)
+

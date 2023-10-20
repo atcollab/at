@@ -1,4 +1,4 @@
-function [M44, varargout]  = findm44(LATTICE,dp,varargin)
+function [M44, varargout]  = findm44(LATTICE,varargin)
 %FINDM44 numerically finds the 4x4 transfer matrix of an accelerator lattice
 % for a particle with relative momentum deviation DP
 %
@@ -8,12 +8,12 @@ function [M44, varargout]  = findm44(LATTICE,dp,varargin)
 %     (cavities , magnets with radiation, ...)
 %   2.have any time dependence (localized impedance, fast kickers, ...)
 %
-% M44 = FINDM44(LATTICE,DP) finds the full one-turn
+% M44 = FINDM44(LATTICE) finds the full one-turn
 %    matrix at the entrance of the first element
 %    !!! With this syntax FINDM44 assumes that the LATTICE
 %    is a ring and first finds the closed orbit
 %
-% [M44,T] = FINDM44(LATTICE,DP,REFPTS) also returns
+% [M44,T] = FINDM44(LATTICE,REFPTS) also returns
 %    4x4 transfer matrixes  between entrance of
 %    the first element and each element indexed by REFPTS.
 %    T is 4x4xlength(REFPTS) 3 dimensional array
@@ -32,7 +32,17 @@ function [M44, varargout]  = findm44(LATTICE,dp,varargin)
 %    it is also the entrance of the first element
 %    after 1 turn: T(:,:,end) = M
 %
-% [...] = FINDM44(...,'orbit',ORBITIN)
+% [...] = FINDM44(RING,...,'dp',DP)
+% [...] = FINDM44(RING,DP,REFPTS,...)  (Deprecated syntax)
+%   Computes for the off-momentum DP
+%
+% [...] = FINDM44(RING,...,'dct',DCT)
+%   Computes for the path lenghening specified by CT.
+%
+% [...] = FINDM44(RING,...,'df',DF)
+%   Computes for a deviation of RF frequency DF
+%
+% [...] = FINDM44(RING,...,'orbit',ORBITIN)
 % [...] = FINDM44(RING,DP,REFPTS,ORBITIN)  (Deprecated syntax)
 %   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
 %   of initial conditions is used: [x0; px0; y0; py0; DP; 0].
@@ -43,11 +53,6 @@ function [M44, varargout]  = findm44(LATTICE,dp,varargin)
 % [...] = FINDM44(...,'full')
 %   Same as above except that matrices returned in T are full 1-turn
 %   matrices at the entrance of each element indexed by REFPTS.
-%
-% [...] = FINDM44(...,'ct',CT)
-%   Instead of computing the linear optics for  the specified DP/P,
-%   computes for the path lenghening specified by CT.
-%   The DP argument is ignored.
 %
 % [M44,T,orbit] = FINDM44(...)
 %   In addition returns the closed orbit at the entrance of each element
@@ -62,10 +67,6 @@ function [M44, varargout]  = findm44(LATTICE,dp,varargin)
 %       --------------------------------------
 %              2*delta
 %
-%    with optimal differentiation step delta given by !!!! DO LATER
-%    The relative error in the derivative computed this way
-%    is !!!!!!!!!!!!!!!!! DO LATER
-%    Reference: Numerical Recipes.
 
 if ~iscell(LATTICE)
     error('First argument must be a cell array');
@@ -74,7 +75,10 @@ NE = length(LATTICE);
 [fullflag,varargs]=getflag(varargin,'full');
 [XYStep,varargs]=getoption(varargs,'XYStep');
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
-[ct,varargs]=getoption(varargs,'ct',NaN);
+varargs=getdparg(varargs);
+[dp,varargs]=getoption(varargs,'dp',0.0);
+[dpargs,varargs]=getoption(varargs,{'dct','df'});
+[~,varargs]=getoption(varargs,'is_6d',[]); % Consume the is_6d option
 [refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU>
 
 if islogical(refpts)
@@ -90,10 +94,8 @@ if ~isempty(orbitin)
         dp=orbitin(5);
     end
     orbitin = [orbitin(1:4);dp;0];
-elseif isnan(ct)
-    [~,orbitin] = findorbit4(LATTICE,dp);
 else
-    [~,orbitin]=findsyncorbit(LATTICE,ct);
+    [~,orbitin]=findorbit4(LATTICE,'dp',dp,dpargs{:});
 end
 
 refs=setelems(refpts,NE+1); % Add end-of-lattice

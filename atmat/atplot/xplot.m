@@ -11,8 +11,7 @@ npts=400; % number of point
 [dpargs,varargs]=getoption(varargs,{'dp','df','dct'});
 [srange,varargs]=getargs(varargs,[0 inf],'check',@(x) isnumeric(x) && numel(x)==2);
 
-props = atGetRingProperties(ring);
-curve.periodicity=props.Periodicity;
+curve.periodicity=atGetRingProperties(ring,'Periodicity');
 elt0=length(ring);
 
 % Select the plotting range
@@ -75,7 +74,8 @@ end
 if nargout>0, varargout={curve}; end
 
     function newelems=splitelem(elem)
-        if isfield(elem,'Length') && elem.Length > 0
+        if isfield(elem,'Length') && elem.Length > 0 ...
+                && ~strcmp(elem.PassMethod, 'IdTablePass')
             nslices=ceil(elem.Length/elmlength);
             if ~KeepAxis
                 newelems=atdivelem(elem,ones(1,nslices)./nslices);

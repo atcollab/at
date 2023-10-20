@@ -3,12 +3,30 @@ from at import radiation_parameters
 from at.constants import clight, qe
 from scipy.interpolate import interp1d
 import time
+from at.collective import Wake
+from at.lattice import Lattice
 
 
 class Haissinski(object):
-    '''
+    r"""
     Class to find the longitudinal distribution in the presence
     of a short range wakefield.
+
+    Parameters: 
+    
+        wake_object:    class initialized with Wake that contains a 
+          longitudinal wake Z and equivalent srange.
+        ring:           a lattice object that is used to extract 
+         machine parameters
+
+    Keyword Args:
+        m (int):        the number of points in the full
+          distribution
+        kmax:           the min and max of the range of the distribution.
+          See equation 27. In units of [:math:`\sigma_z0`]
+        current:        bunch current.
+        numIters (int): the number of iterations
+        eps:            the convergence criteria.
 
     This class is a direct implementation of the following paper:
     "Numerical solution of the Haïssinski equation for the equilibrium
@@ -19,27 +37,18 @@ class Haissinski(object):
     The equation number of key formula are written next to the relevant
     function.
 
-    As input:
-    wake_object is a object that contains an srange and Z array.
-    ring is a ring instance which is needed for machine parameters
-    (sigma_l, sigma_e, etc)
+    The functions solve or solve_steps can be used after initialisation
+    An example usage can be found in:
 
-    m is the number of points in the full distribution that you want
-    kmax is the min and max of the range of the distribution.
-    See equation 27. In units of sigma_z0
-    current is the bunch current.
-    numIters is the number of iterations
-    eps is the convergence criteria.
-
-    the functions solve or solve_steps can be used after initialisation
+    at/pyat/examples/Collective/LongDistribution.py
 
     Future developments of this class:
         Adding LR wake or harmonic cavity as done at SOLEIL. Needs
         to be added WITH this class which is just for short range wake.
-    '''
+    """
 
-    def __init__(self, wake_object, ring, m=12, kmax=1,
-                 current=1e-4, numIters=10, eps=1e-10):
+    def __init__(self, wake_object: Wake, ring: Lattice, m: int = 12, kmax: float = 1,
+                 current: float = 1e-4, numIters: int = 10, eps: float = 1e-10):
 
         self.circumference = ring.circumference
         self.energy = ring.energy
@@ -61,9 +70,10 @@ class Haissinski(object):
 
         #  negative s to be consistent with paper and negative Wz
         s = wake_object.srange/self.sigma_l
-        self.ds = numpy.diff(s)[0]
+        self.ds = numpy.diff(s)[-1]
         self.s = -s
-        self.wtot_fun = interp1d(self.s, -wake_object.Z)
+        self.wtot_fun = interp1d(self.s, -wake_object.Z,
+                                 bounds_error=False, fill_value = 0)
 
         if m % 2 != 0:
             raise AttributeError('m must be even and int')

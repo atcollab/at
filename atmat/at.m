@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.3 (atcollab) 01-Apr-2022
+% Version 2.4.1 (#657) 18-Sep-2023
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, <a href="matlab:web('https://github.com/atcollab')">atcollab</a>
@@ -119,12 +119,12 @@
 %
 %*Radiation*
 %
-%       <a href="matlab:help check_radiation">check_radiation</a>          - Check the radiation state of a ring
+%       <a href="matlab:help check_radiation">check_radiation</a>          - Obsolete: check the radiation state of a ring
 %       <a href="matlab:help atenergy">atenergy</a>                 - Gets the lattice energy
 %       <a href="matlab:help atgetU0">atgetU0</a>                  - Computes Energy loss per turn in eV 
 %       <a href="matlab:help atdampingrates">atdampingrates</a>           - Find tunes and damping rates from one map matrix with radiation
-%       <a href="matlab:help atradon">atradon</a>                  - Switches RF and radiation on
-%       <a href="matlab:help atradoff">atradoff</a>                 - Switches radiation and cavity off
+%       <a href="matlab:help atradon">atradon</a>                  - Obsolete: switches RF and radiation on
+%       <a href="matlab:help atradoff">atradoff</a>                 - Obsolete: switches RF and radiation off
 %       <a href="matlab:help quantumDiff">quantumDiff</a>              - Compute the radiation-diffusion matrix
 %       <a href="matlab:help ohmienvelope">ohmienvelope</a>             - Calculates equilibrium beam envelope in a
 %       <a href="matlab:help DipoleRadiation">DipoleRadiation</a>          - Compute the radiation integrals in dipoles
@@ -133,11 +133,11 @@
 %*Parameter summary*
 %
 %       <a href="matlab:help atx">atx</a>                      - Computes and displays global information
-%       <a href="matlab:help atsummary">atsummary</a>                - Print out the parameters of the current AT lattice
-%       <a href="matlab:help ringpara">ringpara</a>                 - Calculates various ring parameters
+%       <a href="matlab:help atsummary">atsummary</a>                - Print out various parameters of the current AT lattice
+%       <a href="matlab:help ringpara">ringpara</a>                 - Print out various parameters of the current AT lattice
 %
 %*Physics*
 %
 %       <a href="matlab:help symplectify">symplectify</a>              - Makes a matrix more symplectic
 %
-%<a href="matlab:web('/Applications/MATLAB_R2022a.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>
+%<a href="matlab:web('/Applications/MATLAB_R2023b.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>

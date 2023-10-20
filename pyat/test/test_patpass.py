@@ -1,4 +1,6 @@
-from at import elements, patpass
+from at import elements
+from at import lattice_track
+from at import patpass, internal_plpass
 import numpy
 import pytest
 # import sys
@@ -6,7 +8,8 @@ import pytest
 
 # @pytest.mark.skipif(not sys.platform.startswith("win"),
 #                    reason="May hang on linux and MacOS")
-def test_patpass_multiple_particles_and_turns():
+@pytest.mark.parametrize('func', (lattice_track, patpass, internal_plpass))
+def test_patpass_multiple_particles_and_turns(func):
     nturns = 10
     nparticles = 10
     rin = numpy.zeros((6, nparticles))
@@ -14,7 +17,10 @@ def test_patpass_multiple_particles_and_turns():
     lattice = [d]
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
-    rout = patpass(lattice, rin, nturns)
+    if func == lattice_track:
+        rout, *_ = func(lattice, rin, nturns, use_mp=True)
+    else:
+        rout = func(lattice, rin, nturns)
     # results from Matlab
     assert rout.shape == (6, nparticles, 1, nturns)
     rout_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,

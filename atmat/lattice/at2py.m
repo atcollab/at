@@ -74,10 +74,10 @@ switch atclass
         create=@atrfcavity;
         pycreate=@py.at.RFCavity;
         [args,options]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber','Energy'});
-    case 'RingParam'
-        create=@atringparam;
-        pycreate=@py.at.RingParam;
-        [args,options]=doptions(elem,create,{'Energy','Periodicity'});
+%     case 'RingParam'
+%         create=@atringparam;
+%         pycreate=@py.at.RingParam;
+%         [args,options]=doptions(elem,create,{'Energy','Periodicity'});
     case 'Aperture'
         create=@ataperture;
         pycreate=@py.at.Aperture;

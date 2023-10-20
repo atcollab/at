@@ -7,7 +7,7 @@ from at.lattice import Lattice, elements, params_filter, no_filter
 from at.load.utils import find_class, element_from_dict
 from at.load.utils import _CLASS_MAP, _PASS_MAP
 from at.load.utils import RingParam, split_ignoring_parentheses
-from at.load import ringparam_filter
+from at.load.matfile import ringparam_filter
 
 
 def _matlab_scanner(element_list, **kwargs):
@@ -231,15 +231,12 @@ def test_find_Element(elem_kwargs):
          'FamName': 'fam'},
         {'Class': 'Marker', 'PassMethod': 'StrMPoleSymplectic4Pass',
          'FamName': 'fam'},
-        {'Class': 'Monitor', 'PassMethod': 'StrMPoleSymplectic4Pass',
-         'FamName': 'fam'},
-        {'Class': 'RingParam', 'PassMethod': 'StrMPoleSymplectic4Pass',
-         'Energy': 3E9, 'FamName': 'fam'},
         {'Class': 'Drift', 'PassMethod': 'StrMPoleSymplectic4Pass',
          'Length': 1.0, 'FamName': 'fam'},
-        {'Class': 'Drift', 'PassMethod': 'InvalidPass'}))
+        {'Class': 'Drift', 'PassMethod': 'InvalidPass',
+         'Length': 1.0, 'FamName': 'fam'}))
 def test_sanitise_class_error(elem_kwargs):
-    with pytest.raises(AttributeError):
+    with pytest.warns(AtWarning):
         element_from_dict(elem_kwargs)
 
 

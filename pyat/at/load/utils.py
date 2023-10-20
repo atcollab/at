@@ -2,21 +2,23 @@
 Conversion utilities for creating pyat elements
 """
 import collections
-import sys
 import os
 import re
 import numpy
 from warnings import warn
+from typing import Optional
 import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
-from at.lattice import Particle
+from at.lattice import idtable_element
+from at.lattice import Particle, Element
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from numpy import array, uint8  # For global namespace
 
 _ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+
 
 def _particle(value):
     if isinstance(value, Particle):
@@ -29,9 +31,13 @@ def _particle(value):
 
 
 class RingParam(elt.Element):
-    """Private class for Matlab RingParam element"""
-    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
-                                                             'Periodicity']
+    """Private class for Matlab RingParam element
+
+    :meta private:
+    """
+    # noinspection PyProtectedMember
+    _BUILD_ATTRIBUTES = elt.Element._BUILD_ATTRIBUTES + ['Energy',
+                                                         'Periodicity']
     _conversions = dict(elt.Element._conversions, Energy=float,
                         Periodicity=int, Particle=_particle)
 
@@ -50,7 +56,9 @@ _alias_map = {'rbend': elt.Dipole,
               'bpm': elt.Monitor,
               'ap': elt.Aperture,
               'ringparam': RingParam,
-              'wig': elt.Wiggler}
+              'wig': elt.Wiggler,
+              'insertiondevicekickmap': idtable_element.InsertionDeviceKickMap
+              }
 
 
 # Matlab to Python class translation
@@ -61,11 +69,14 @@ _PASS_MAP = {'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
              'BndMPoleSymplectic4Pass': elt.Dipole,
              'QuadLinearPass': elt.Quadrupole,
+             'StrMPoleSymplectic4Pass': elt.Multipole,
+             'StrMPoleSymplectic4RadPass': elt.Multipole,
              'CorrectorPass': elt.Corrector,
              'CavityPass': elt.RFCavity, 'RFCavityPass': elt.RFCavity,
              'ThinMPolePass': elt.ThinMultipole,
              'Matrix66Pass': elt.M66,
              'AperturePass': elt.Aperture,
+             'IdTablePass': idtable_element.InsertionDeviceKickMap,
              'GWigSymplecticPass': elt.Wiggler}
 
 # Matlab to Python attribute translation
@@ -73,7 +84,10 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name'}
 
 # Python to Matlab class translation
-_matclass_map = {'Dipole': 'Bend'}
+_matclass_map = {
+        'Dipole': 'Bend',
+        'InsertionDeviceKickMap': 'InsertionDeviceKickMap'
+        }
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
@@ -83,22 +97,24 @@ _mattype_map = {int: float,
 _class_to_matfunc = {
     elt.Dipole: 'atsbend',
     elt.Bend: 'atsbend',
-    elt.M66: 'atM66'}
+    elt.M66: 'atM66',
+    idtable_element.InsertionDeviceKickMap: 'atinsertiondevicekickmap'
+    }
 
 
-def hasattrs(kwargs, *attributes):
-    """Check if the element would have the specified attribute(s), i.e. if they
-    are in kwargs; allows checking for multiple attributes in one go.
+def hasattrs(kwargs: dict, *attributes) -> bool:
+    """Checks the presence of keys in a :py:class:`dict`
+
+    Returns :py:obj:`True` if any of the ``attributes`` is in ``kwargs``
 
     Args:
-        kwargs (dict): The dictionary of keyword arguments passed to the
-                        Element constructor.
-        attributes (iterable): A list of strings, the attribute names to be
-                                checked.
+        kwargs:     The dictionary of keyword arguments passed to the
+          Element constructor.
+        attributes: A list of strings, the attribute names to be checked.
 
     Returns:
-        bool: A single boolean, True if the element has any of the specified
-               attributes.
+        found (bool):   :py:obj:`True` if the element has any of the specified
+          attributes.
     """
     for attribute in attributes:
         if attribute in kwargs:
@@ -106,14 +122,13 @@ def hasattrs(kwargs, *attributes):
     return False
 
 
-def find_class(elem_dict, quiet=False):
-    """Attempts to correctly identify the Class of the element from its kwargs.
+def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
+    """Identify the class of an element from its attributes
 
     Args:
-        elem_dict       The dictionary of keyword arguments passed to the
+        elem_dict:      The dictionary of keyword arguments passed to the
                         Element constructor.
-    Keywords:
-        quiet=False     If True, suppress the warning for non-standard classes
+        quiet:          Suppress the warning for non-standard classes
 
     Returns:
         element_class:  The guessed Class name
@@ -132,8 +147,9 @@ def find_class(elem_dict, quiet=False):
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
         if not quiet and class_name:
-            warn(AtWarning("Class '{0}' does not exist.\n"
-                           "{1}".format(class_name, elem_dict)))
+            class_doesnotexist_warning = ("Class '{0}' does not exist.\n"
+                                          "{1}".format(class_name, elem_dict))
+            warn(AtWarning(class_doesnotexist_warning))
         fam_name = elem_dict.get('FamName', '')
         try:
             return _CLASS_MAP[fam_name.lower()]
@@ -191,21 +207,31 @@ def find_class(elem_dict, quiet=False):
                     return elt.Element
 
 
-def element_from_dict(elem_dict, index=None, check=True, quiet=False):
-    """return an AT element from a dictionary of attributes
+def element_from_dict(elem_dict: dict, index: Optional[int] = None,
+                      check: bool = True, quiet: bool = False) -> Element:
+    """Builds an :py:class:`.Element` from a dictionary of attributes
+
+    Parameters:
+        elem_dict:      Dictionary of element attributes
+        index:          Element index
+        check:          Check the compatibility of class and PassMethod
+        quiet:          Suppress the warning for non-standard classes
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
     """
 
     # noinspection PyShadowingNames
     def sanitise_class(index, cls, elem_dict):
         """Checks that the Class and PassMethod of the element are a valid
             combination. Some Classes and PassMethods are incompatible and
-            would raise errors during calculation if left, so we raise an error
-            here with a more helpful message.
+            would raise errors during calculation, so we send a
+            warning here.
 
         Args:
             index:          element index
             cls:            Proposed class
-            elem_dict:      he dictionary of keyword arguments passed to the
+            elem_dict:      The dictionary of keyword arguments passed to the
                             Element constructor.
 
         Raises:
@@ -216,7 +242,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             msg = ''.join(('Error in element', location,
                            'PassMethod {0} '.format(pass_method),
                            message.format(*args), '\n{0}'.format(elem_dict)))
-            return AttributeError(msg)
+            return AtWarning(msg)
 
         class_name = cls.__name__
         pass_method = elem_dict.get('PassMethod')
@@ -226,18 +252,12 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             file_name = pass_method + _ext_suffix
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
-                raise err("does not have a {0} file.".format(file_name))
+                warn(err(" is missing {0}.".format(file_name)))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
-                raise err("is not compatible with length {0}.", length)
+                warn(err("is not compatible with length {0}.", length))
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
-                    raise err("is not compatible with Class {0}.", class_name)
-            elif issubclass(cls, (elt.Marker, elt.Monitor, RingParam)):
-                if pass_method != 'IdentityPass':
-                    raise err("is not compatible with Class {0}.", class_name)
-            elif cls == elt.Drift:
-                if pass_method != 'DriftPass':
-                    raise err("is not compatible with Class {0}.", class_name)
+                    warn(err("is not compatible with Class {0}.", class_name))
 
     cls = find_class(elem_dict, quiet=quiet)
     if check:
@@ -245,18 +265,32 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     # Remove mandatory attributes from the keyword arguments.
     # Create list rather than generator to ensure that elements are removed
     # from elem_dict.
-    elem_args = [elem_dict.pop(attr, None) for attr in cls.REQUIRED_ATTRIBUTES]
+    elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
     element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
     return element
 
 
-def element_from_string(elem_string):
-    """Generate an AT-element from its repr string"""
+def element_from_string(elem_string: str) -> Element:
+    """Builds an :py:class:`.Element` from its python :py:func:`repr` string
+
+    Parameters:
+        elem_string:    String representation of an :py:class:`.Element`
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
+    """
     return eval(elem_string, globals(), CLASS_MAP)
 
 
-def element_from_m(line):
-    """Generate a AT-element from a line in a m-file"""
+def element_from_m(line: str) -> Element:
+    """Builds an :py:class:`.Element` from a line in an m-file
+
+    Parameters:
+        line:           Matlab string representation of an :py:class:`.Element`
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
+    """
     def argsplit(value):
         return [a.strip() for a in split_ignoring_parentheses(value, ',')]
 
@@ -291,18 +325,32 @@ def element_from_m(line):
 
     left = line.index('(')
     right = line.rindex(')')
-    cls = _CLASS_MAP[line[:left].strip()[2:]]
+    matcls = line[:left].strip()[2:]
+    cls = _CLASS_MAP[matcls]
     arguments = argsplit(line[left + 1:right])
-    ll = len(cls.REQUIRED_ATTRIBUTES)
+    ll = len(cls._BUILD_ATTRIBUTES)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
     args = [convert(v) for v in arguments[:ll]]
     kwargs = makedir(arguments[ll:])
+    if matcls == 'rbend':
+        # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
+        # necessary for using the python sector bend
+        halfangle = 0.5 * args[2]
+        kwargs.setdefault('EntranceAngle', halfangle)
+        kwargs.setdefault('ExitAngle', halfangle)
     return cls(*args, **kwargs)
 
 
-def element_to_dict(elem):
-    """Generate the Matlab structure for a AT element"""
+def element_to_dict(elem: Element) -> dict:
+    """Builds the Matlab structure of an :py:class:`.Element`
+
+    Parameters:
+        elem:           :py:class:`.Element`
+
+    Returns:
+        dct (dict):     Dictionary of :py:class:`.Element` attributes
+    """
     dct = dict((k, _mattype_map.get(type(v), lambda attr: attr)(v))
                for k, v in elem.items())
     class_name = elem.__class__.__name__
@@ -310,8 +358,16 @@ def element_to_dict(elem):
     return dct
 
 
-def element_to_m(elem):
-    """Generate the Matlab-evaluable string for a AT element"""
+def element_to_m(elem: Element) -> str:
+    """Builds the Matlab-evaluable string for an :py:class:`.Element`
+
+    Parameters:
+        elem:           :py:class:`.Element`
+
+    Returns:
+        mstr (str):     Matlab string representation of the
+          :py:class:`.Element` attributes
+    """
 
     def convert(arg):
         def convert_dict(pdir):
@@ -344,7 +400,8 @@ def element_to_m(elem):
         return _class_to_matfunc.get(elclass, stdname)
 
     attrs = dict(elem.items())
-    args = [attrs.pop(k, getattr(elem, k)) for k in elem.REQUIRED_ATTRIBUTES]
+    # noinspection PyProtectedMember
+    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
     defelem = elem.__class__(*args)
     kwds = dict((k, v) for k, v in attrs.items()
                 if not numpy.array_equal(v, getattr(defelem, k, None)))
@@ -365,6 +422,7 @@ PASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _PASS_MAP.items())
 
 
 def find_class_name(elem_dict, quiet=False):
+    """Derive the class name of an Element from its attributes"""
     return find_class(elem_dict, quiet=quiet).__name__
 
 
