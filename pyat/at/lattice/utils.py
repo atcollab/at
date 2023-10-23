@@ -355,7 +355,7 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
-                     endpoint: bool = True, regex=False) -> Uint32Refpts:
+                     endpoint: bool = True, regex: bool = False) -> Uint32Refpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns an integer array of element indices, selecting ring elements.
 
@@ -364,8 +364,8 @@ def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         uint32_ref (Uint32Refpts): uint32 numpy array used for indexing
@@ -456,7 +456,7 @@ def bool_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_bool_index(ring: Sequence[Element], refpts: Refpts,
-                   endpoint: bool = True, regex=False) -> BoolRefpts:
+                   endpoint: bool = True, regex: bool = False) -> BoolRefpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns a bool array of element indices, selecting ring elements.
 
@@ -465,8 +465,8 @@ def get_bool_index(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         bool_refs (BoolRefpts):  A bool numpy array used for indexing
@@ -576,7 +576,7 @@ def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
     return lambda el: isinstance(el, eltype)
 
 
-def checkname(pattern: str, regex=False) -> ElementFilter:
+def checkname(pattern: str, regex: bool = False) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the name of an element
 
@@ -588,8 +588,8 @@ def checkname(pattern: str, regex=False) -> ElementFilter:
     Parameters:
         pattern: Desired :py:class:`.Element` name. Unix shell-style
           wildcards are supported (see :py:func:`fnmatch.fnmatch`)
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         checkfun (ElementFilter):   Element filter function
@@ -607,7 +607,7 @@ def checkname(pattern: str, regex=False) -> ElementFilter:
         return lambda el: fnmatch(el.FamName, pattern)
 
 
-def refpts_iterator(ring: Sequence[Element], refpts: Refpts, regex=False) \
+def refpts_iterator(ring: Sequence[Element], refpts: Refpts, regex: bool = False) \
         -> Iterator[Element]:
     r"""Return an iterator over selected elements in a lattice
 
@@ -615,8 +615,8 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts, regex=False) \
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         elem_iter (Iterator[Element]):  Iterator over the elements in *ring*
@@ -688,7 +688,7 @@ def refpts_count(refpts: RefIndex, n_elements: int,
 
 
 def _refcount(ring: Sequence[Element], refpts: Refpts,
-              endpoint: bool = True, regex=False) -> int:
+              endpoint: bool = True, regex: bool = False) -> int:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns the number of reference points
 
@@ -697,8 +697,8 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         endpoint:   if :py:obj:`True`, allow *len(ring)* as a
           special index, referring to the end of the last element.
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         nrefs (int):  The number of reference points
@@ -735,7 +735,7 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
-def get_elements(ring: Sequence[Element], refpts: Refpts, regex=False) \
+def get_elements(ring: Sequence[Element], refpts: Refpts, regex: bool = False) \
         -> list:
     r"""Returns a list of elements selected by *key*.
 
@@ -745,8 +745,8 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, regex=False) \
         ring:           Lattice description
         refpts:         Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         elem_list (list):  list of :py:class:`.Element`\ s matching key
@@ -755,7 +755,7 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, regex=False) \
 
 
 def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
-                     attrname: str, index: Optional[int] = None, regex=False):
+                     attrname: str, index: Optional[int] = None, regex: bool = False):
     r"""Extracts attribute values from selected
         lattice :py:class:`.Element`\ s.
 
@@ -765,11 +765,9 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
           See ":ref:`Selecting elements in a lattice <refpts>`"
         attrname:   Attribute name
         index:      index of the value to retrieve if *attrname* is
-          an array.
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
-
-          If :py:obj:`None` the full array is retrieved
+          an array. If :py:obj:`None` the full array is retrieved
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         attrvalues: numpy Array of attribute values.
@@ -787,8 +785,8 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
 def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
                      attrname: str, attrvalues, index: Optional[int] = None,
-                     increment: Optional[bool] = False,
-                     copy: Optional[bool] = False, regex=False):
+                     increment: bool = False,
+                     copy: bool = False, regex: bool = False):
     r"""Set the values of an attribute of an array of elements based on
     their refpts
 
@@ -802,11 +800,9 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
         index:      index of the value to set if *attrname* is
           an array. if :py:obj:`None`, the full array is replaced by
           *attrvalue*
-        increment:  Add values to the initial values.
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
-
-          If :py:obj:`False` the initial value is replaced (Default)
+        increment:  If :py:obj:`True`, *attrvalues* are added to the initial values.
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
         copy:       If :py:obj:`False`, the modification is done in-place,
 
           If :py:obj:`True`, return a shallow copy of the lattice. Only the
@@ -816,7 +812,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
              a shallow copy means that all non-modified
              elements are shared with the original lattice.
-             Any further modification will affect in both lattices.
+             Any further modification will affect both lattices.
     """
     if index is None:
         def setf(elem, value):
@@ -841,7 +837,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
     return apply(ring, refpts, attrvalues, regex)
 
 
-def get_s_pos(ring: Sequence[Element], refpts: Refpts = All, regex=False) \
+def get_s_pos(ring: Sequence[Element], refpts: Refpts = All, regex: bool = False) \
         -> Sequence[float]:
     # noinspection PyUnresolvedReferences
     r"""Returns the locations of selected elements
@@ -850,8 +846,8 @@ def get_s_pos(ring: Sequence[Element], refpts: Refpts = All, regex=False) \
         ring:       Lattice description
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        regex: Use regular expression for refpts string matching;
-            Default: False (Unix shell-style wildcards)
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         s_pos:  Array of locations of the elements selected by *refpts*
@@ -969,7 +965,7 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
 
 
 def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
-               relative: Optional[bool] = False) -> None:
+               relative: bool = False) -> None:
     r"""Sets the transverse displacement of an :py:class:`.Element`
 
     The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
@@ -1072,9 +1068,9 @@ def get_geometry(ring: List[Element],
        >>> geomdata, radius = get_geometry(ring)
     """
 
-    geom_dtype = [('x', numpy.float64),
-                  ('y', numpy.float64),
-                  ('angle', numpy.float64)]
+    geom_dtype = [("x", numpy.float64),
+                  ("y", numpy.float64),
+                  ("angle", numpy.float64)]
     geomdata = numpy.recarray((len(ring)+1, ), dtype=geom_dtype)
     xx = numpy.zeros(len(ring)+1)
     yy = numpy.zeros(len(ring)+1)
@@ -1120,7 +1116,7 @@ def get_geometry(ring: List[Element],
     else:
         xx += x0
         yy += y0
-    geomdata['x'] = xx
-    geomdata['y'] = yy
-    geomdata['angle'] = angle
+    geomdata["x"] = xx
+    geomdata["y"] = yy
+    geomdata["angle"] = angle
     return geomdata, radius
