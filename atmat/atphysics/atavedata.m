@@ -1,4 +1,4 @@
-function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata(ring,dpp,refpts,varargin)
+function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata_zeus(ring,dpp,refpts,varargin)
 %ATAVEDATA       Average of optical functions on selected elements
 %
 %[LINDATA,AVEBETA,AVEMU,AVEDISP,TUNES,CHROMS]=ATAVEDATA(RING,DPP,REFPTS)
@@ -30,7 +30,6 @@ avebeta=cat(1,lindata.beta); %refpts
 avemu=cat(1,lindata.mu); %refpts
 avedisp=cat(2,lindata.Dispersion)'; %refpts
 ClosedOrbit=cat(2,lindata.ClosedOrbit)'; %refpts
-%plot(avebeta);hold all;
 
 
 if any(long)
@@ -46,8 +45,6 @@ if any(long)
     disp0=avedisp(lg,:); %long
     ClosedOrbit0=ClosedOrbit(lg,:); %long
     
-    %beta1=cat(1,lind(final).beta); %long
-    %alpha1=cat(1,lind(final).alpha); %long
     mu1=cat(1,lind(final).mu); %long
     disp1=cat(2,lind(final).Dispersion)'; %long
     ClosedOrbit1=cat(2,lind(final).ClosedOrbit)'; %long
@@ -56,7 +53,7 @@ if any(long)
     avebeta(lg,:)=betadrift(beta0,alpha0,L2);
     avemu(lg,:)=0.5*(mu0+mu1);
     avedisp(lg,[1 3])=(disp1(:,[1 3])+disp0(:,[1 3]))*0.5;
-
+    avedisp(lg,[2 4])=(disp1(:,[1 3])-disp0(:,[1 3]))./L2;
     foc=atgetcells(ring(long),'PolynomB',@(el,polb) length(polb)>=2 && polb(2)~=0||polb(3)~=0); %long
     if any(foc)
         qp=false(size(lg));
@@ -79,6 +76,7 @@ if any(long)
         Cp=[ba.*tan(e1)./L(foc) -ba.*tan(e1-d_csi)./L(foc)];
         for ii=1:2
             alpha0(foc,ii)=alpha0(foc,ii)-beta0(foc,ii).*Cp(:,ii);
+            disp0(foc,2+(ii-1)*2)=disp0(foc,2+(ii-1)*2)-disp0(foc,1+(ii-1)*2).*Cp(:,ii);
         end
         R11(isnan(R11))=1;
         irho(isnan(irho))=0;
@@ -89,12 +87,13 @@ if any(long)
         K(foc)=q.*R11+2*m.*(dx0-dx);
         K2=[K -K]; %long
         K2(foc,1)=K2(foc,1)+irho.^2;
+        irho2=[irho 0*irho];
         sel=false(size(avebeta,1),1); %refpts
         sel(lg)=foc;
         avebeta(sel,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2(foc,:),L2(foc,:));
-        avedisp(sel,[1 3])=dispfoc(disp0(foc,[1 3]),disp0(foc,[2 4]),K2(foc,:),L2(foc,:));
+        avedisp(sel,:)=dispfoc(disp0(foc,:),irho2(foc,:),K2(foc,:),L2(foc,:));
     end
-    avedisp(lg,[2 4])=(disp1(:,[1 3])-disp0(:,[1 3]))./L2;
+    
 end
 
     function avebeta=betadrift(beta0,alpha0,L)
@@ -107,8 +106,13 @@ end
         avebeta=((beta0+gamma0./K).*L+(beta0-gamma0./K).*sin(2.0*sqrt(K).*L)./sqrt(K)/2.0+(cos(2.0*sqrt(K).*L)-1.0).*alpha0./K)./L/2.0;
     end
 
-    function avedisp=dispfoc(disp0,dispp0,K,L)
-        avedisp=(disp0.*(sin(sqrt(K).*L)./sqrt(K))+dispp0.*(1-cos(sqrt(K).*L))./K)./L;
+    function avedisp=dispfoc(disp0,ir,K,L)
+        avedisp=disp0;
+        avedisp(:,[1 3])=(disp0(:,[1 3]).*(sin(sqrt(K).*L)./sqrt(K))+...
+            disp0(:,[2 4]).*(1-cos(sqrt(K).*L))./K)./L+...
+            ir.*(L-sin(sqrt(K).*L)./sqrt(K))./K./L;
+        avedisp(:,[2 4])=(disp0(:,[2 3]).*(sin(sqrt(K).*L)./sqrt(K))-...
+            disp0(:,[1 3]).*(1-cos(sqrt(K).*L)))./L+...
+            ir.*(L-cos(sqrt(K).*L))./K./L;
     end
-%plot(avebeta);hold all;
 end
