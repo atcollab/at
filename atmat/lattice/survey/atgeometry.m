@@ -13,14 +13,15 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %
 %[POSDATA,RADIUS]=ATGEOMETRY(RING,REFPTS)
 %       Outputs the machine radius at the beginning of the lattice.
-%       Meaningful if RING is a cell of a periodic lattice.
-%
-%POSDATA=ATGEOMETRY(RING,REFPTS,OFFSET)
-%       Start at x=offset(1), y=offset(2)
-%       a scalar offset value is equivalent to [0 OFFSET]
+%       Note: this is different from the radius usually defined as
+%       circumference/2/pi
 %
 %POSDATA=ATGEOMETRY(...,'centered')
-%       The offset is set as [0 RADIUS]
+%       The offset is set so that the origin is at the centre of the ring
+%
+%POSDATA=ATGEOMETRY(RING,REFPTS,OFFSET)
+%       Start at x=offset(1), y=offset(2). Ignored if 'centered' is set.
+%       A scalar offset value is equivalent to [0 OFFSET].
 %
 %POSDATA=ATGEOMETRY(...,'Hangle',h_angle)
 %       Set the initial trajectory angle
@@ -28,6 +29,7 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %
 %See also: ATGEOMETRY3
 
+epsil=1.e-3;
 [centered,args]=getflag(varargin,'centered');
 [theta0,args]=getoption(args,'Hangle',0);
 [refpts,offset]=getargs(args,1:length(ring)+1,[0 0]);
@@ -35,16 +37,29 @@ xc=0;
 yc=0;
 thetac=theta0;
 if isscalar(offset)
-    yc=offset;
-else
-    xc=offset(1);
-    yc=offset(2);
+    offset=[0 offset];
 end
 [xx,yy,txy,lg,tr]=cellfun(@incr,[{struct()};ring]);    % Add a dummy element to get the origin
-radius=-(yc+xc/tan(thetac-theta0));
+dff=mod(thetac+epsil, 2*pi)+epsil;
+if abs(dff) < epsil         % Full ring
+    xcenter=mean(xx);
+    ycenter=mean(yy);
+elseif abs(dff-pi) < epsil  % Half ring
+    xcenter=0.5*xc;
+    ycenter=0.5*yc;
+else                        % Single cell
+    num=cos(thetac)*xc + sin(thetac)*yc;
+    den=sin(thetac-theta0);
+    xcenter=-num*sin(theta0)/den;
+    ycenter= num*cos(theta0)/den;
+end
+radius=sqrt(xcenter*xcenter+ycenter*ycenter);
 if centered
-    xx=xx-radius*sin(theta0);
-    yy=yy+radius*cos(theta0);
+    xx=xx-xcenter;
+    yy=yy-ycenter;
+else
+    xx=xx+offset(1);
+    yy=yy+offset(2);
 end
 posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
     'angle',num2cell(txy(refpts)),'long',num2cell(lg(refpts)),...

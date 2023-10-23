@@ -40,6 +40,8 @@ from itertools import compress
 from fnmatch import fnmatch
 from .elements import Element, Dipole
 
+_EPSIL = 1.0e-3
+
 ElementFilter = Callable[[Element], bool]
 BoolRefpts = numpy.ndarray
 Uint32Refpts = numpy.ndarray
@@ -1051,14 +1053,19 @@ def get_geometry(ring: List[Element],
     r"""Compute the 2D ring geometry in cartesian coordinates
 
     Parameters:
-        ring:               Lattice description
-        start_coordinates:  x ,y, angle at starting point
+        ring:               Lattice description.
+        start_coordinates:  *x*, *y*, *angle* at starting point. *x* and *y* are
+          ignored if *centered* is :py:obj:`True`.
         centered:           if :py:obj:`True` the coordinates origin is the
-          center of the ring
+          center of the ring.
 
     Returns:
-        geomdata:           recarray containing, x, y, angle
-        radius:             machine radius
+        geomdata:           recarray containing, x, y, angle.
+        radius:             machine radius at the beginning of the lattice.
+
+            .. attention::
+               This radius is different from the radius usually defined as
+               :math:`C/2\pi`
 
     Example:
 
@@ -1072,10 +1079,14 @@ def get_geometry(ring: List[Element],
     xx = numpy.zeros(len(ring)+1)
     yy = numpy.zeros(len(ring)+1)
     angle = numpy.zeros(len(ring)+1)
-    x, y, t = start_coordinates
     x0, y0, t0 = start_coordinates
+    x, y = 0.0, 0.0
+    t = t0
 
-    for ind, el in enumerate(ring+[ring[0]]):
+    xx[0] = x
+    yy[0] = y
+    angle[0] = t
+    for ind, el in enumerate(ring):
         ll = el.Length
         if isinstance(el, Dipole) and el.BendingAngle != 0:
             ang = 0.5 * el.BendingAngle
@@ -1086,15 +1097,29 @@ def get_geometry(ring: List[Element],
         x += ll * numpy.cos(t)
         y += ll * numpy.sin(t)
         t -= ang
-        xx[ind] = x
-        yy[ind] = y
-        angle[ind] = t
+        xx[ind+1] = x
+        yy[ind+1] = y
+        angle[ind+1] = t
 
-    radius = get_s_pos(ring, len(ring))[0] / abs(t-t0) \
-        if t != 0.0 else 0.0
+    dff = (t+_EPSIL) % (2.0*numpy.pi) - _EPSIL
+    if abs(dff) < _EPSIL:
+        xcenter = numpy.mean(xx)
+        ycenter = numpy.mean(yy)
+    elif abs(dff-numpy.pi) < _EPSIL:
+        xcenter = 0.5*x
+        ycenter = 0.5*y
+    else:
+        num = numpy.cos(t)*x + numpy.sin(t)*y
+        den = numpy.sin(t-t0)
+        xcenter = -num*numpy.sin(t0)/den
+        ycenter = num*numpy.cos(t0)/den
+    radius = numpy.sqrt(xcenter*xcenter + ycenter*ycenter)
     if centered:
-        xx += -abs(radius)*numpy.sin(t0) - x0
-        yy += abs(radius)*numpy.cos(t0) - y0
+        xx -= xcenter
+        yy -= ycenter
+    else:
+        xx += x0
+        yy += y0
     geomdata['x'] = xx
     geomdata['y'] = yy
     geomdata['angle'] = angle
