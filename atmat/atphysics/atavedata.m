@@ -1,4 +1,4 @@
-function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata_zeus(ring,dpp,refpts,varargin)
+function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata(ring,dpp,refpts,varargin)
 %ATAVEDATA       Average of optical functions on selected elements
 %
 %[LINDATA,AVEBETA,AVEMU,AVEDISP,TUNES,CHROMS]=ATAVEDATA(RING,DPP,REFPTS)
