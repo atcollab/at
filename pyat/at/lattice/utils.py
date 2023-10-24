@@ -40,7 +40,7 @@ from itertools import compress
 from fnmatch import fnmatch
 from .elements import Element, Dipole
 
-_EPSIL = 1.0e-3
+_GEOMETRY_EPSIL = 1.0e-3
 
 ElementFilter = Callable[[Element], bool]
 BoolRefpts = numpy.ndarray
@@ -1097,11 +1097,11 @@ def get_geometry(ring: List[Element],
         yy[ind+1] = y
         angle[ind+1] = t
 
-    dff = (t+_EPSIL) % (2.0*numpy.pi) - _EPSIL
-    if abs(dff) < _EPSIL:
+    dff = (t + _GEOMETRY_EPSIL) % (2.0 * numpy.pi) - _GEOMETRY_EPSIL
+    if abs(dff) < _GEOMETRY_EPSIL:
         xcenter = numpy.mean(xx)
         ycenter = numpy.mean(yy)
-    elif abs(dff-numpy.pi) < _EPSIL:
+    elif abs(dff-numpy.pi) < _GEOMETRY_EPSIL:
         xcenter = 0.5*x
         ycenter = 0.5*y
     else:
