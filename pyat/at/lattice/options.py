@@ -30,6 +30,7 @@ class _Dst(object):
     OrbMaxIter = 20          # Max. number of iterations for orbit
     omp_num_threads = int(os.environ.get('OMP_NUM_THREADS', '0'))
     patpass_poolsize = multiprocessing.cpu_count()
+    patpass_startmethod = None
     _rank = _MPI_rk         # MPI rank
 
     def __setattr__(self, name, value):
@@ -67,14 +68,15 @@ DConstant = _Dst()
 Default values for AT algorithms
 
 Attributes:
-    XYStep:             Coordinate step for differentiation
-    DPStep:             Momentum step for dispersion and chromaticity
-    OrbConvergence:     Convergence criterion for orbit
-    OrbMaxIter:         Max. number of iterations for orbit
-    omp_num_threads:    Default number of OpenMP threads
-    patpass_poolsize:   Default size of multiprocessing pool
-    mpi:               :py:obj:`True` if MPI is active
-    openmp:            :py:obj:`True` if OpenMP is active
+    XYStep:              Coordinate step for differentiation
+    DPStep:              Momentum step for dispersion and chromaticity
+    OrbConvergence:      Convergence criterion for orbit
+    OrbMaxIter:          Max. number of iterations for orbit
+    omp_num_threads:     Default number of OpenMP threads
+    patpass_poolsize:    Default size of multiprocessing pool
+    patpass_startmethod: Default start method for the multiprocessing
+    mpi:                 :py:obj:`True` if MPI is active
+    openmp:              :py:obj:`True` if OpenMP is active
 
 Methods:
     reset(attrname):    Reset the attribute to its default value
