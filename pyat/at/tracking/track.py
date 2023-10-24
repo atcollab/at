@@ -180,7 +180,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
           **nturns**        number of turn
           ==============    ===================================================
 
-        trackdata: A dictionary containinf tracking data with the following
+        trackdata: A dictionary containing tracking data with the following
           keys:
 
           ==============    ===================================================
