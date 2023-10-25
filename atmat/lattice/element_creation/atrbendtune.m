@@ -24,9 +24,13 @@ passmethod=strrep(elem.PassMethod,'RadPass','Pass');
 if any(strcmp(passmethod,{'BndStrMPoleSymplectic4Pass', ...
         'ExactRectangularBendPass','ExactRectBendPass'}))
     theta=elem.BendingAngle;
-
+    if abs(theta) < 1.0e-4
+        cs=-theta/12;
+    else
+        cs=(cos(0.5*theta)-1.0)/theta + sin(0.5*theta)/12;
+    end
     % Analytical estimate
-    x0ref=elem.Length*((cos(0.5*theta)-1.0)/theta + sin(0.5*theta)/12);
+    x0ref=elem.Length*cs;
 
     % Search if there are multipoles
     if checkmul(elem)

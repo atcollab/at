@@ -97,7 +97,7 @@ static void bend_edge(double *r6, double rhoinv, double theta)
 {
     /* Forest 12.41, ideal wedge, map U(theta, rhoinv) */
 
-    if (theta != 0.0) {
+    if (fabs(rhoinv) >= 1.e-6) {
         double dp1 = 1.0 + r6[4];
         double c = cos(theta);
         double s = sin(theta);
