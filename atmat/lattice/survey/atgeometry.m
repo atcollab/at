@@ -40,7 +40,7 @@ if isscalar(offset)
     offset=[0 offset];
 end
 [xx,yy,txy,lg,tr]=cellfun(@incr,[{struct()};ring]);    % Add a dummy element to get the origin
-dff=mod(thetac+epsil, 2*pi)+epsil;
+dff=mod(thetac+epsil, 2*pi)-epsil;
 if abs(dff) < epsil         % Full ring
     xcenter=mean(xx);
     ycenter=mean(yy);
