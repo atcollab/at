@@ -1043,17 +1043,24 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
 
 
 def get_geometry(ring: List[Element],
+                 refpts: Refpts = All,
                  start_coordinates: Tuple[float, float, float] = (0, 0, 0),
-                 centered: bool = False):
+                 centered: bool = False,
+                 regex: bool = False
+                 ):
     # noinspection PyShadowingNames
     r"""Compute the 2D ring geometry in cartesian coordinates
 
     Parameters:
         ring:               Lattice description.
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         start_coordinates:  *x*, *y*, *angle* at starting point. *x* and *y* are
           ignored if *centered* is :py:obj:`True`.
         centered:           if :py:obj:`True` the coordinates origin is the
           center of the ring.
+        regex: Use regular expression for *refpts* string matching instead of
+          Unix shell-style wildcards.
 
     Returns:
         geomdata:           recarray containing, x, y, angle.
@@ -1071,7 +1078,9 @@ def get_geometry(ring: List[Element],
     geom_dtype = [("x", numpy.float64),
                   ("y", numpy.float64),
                   ("angle", numpy.float64)]
-    geomdata = numpy.recarray((len(ring)+1, ), dtype=geom_dtype)
+    boolrefs = get_bool_index(ring, refpts, endpoint=True, regex=regex)
+    nrefs = refpts_count(boolrefs, len(ring))
+    geomdata = numpy.recarray((nrefs, ), dtype=geom_dtype)
     xx = numpy.zeros(len(ring)+1)
     yy = numpy.zeros(len(ring)+1)
     angle = numpy.zeros(len(ring)+1)
@@ -1116,7 +1125,7 @@ def get_geometry(ring: List[Element],
     else:
         xx += x0
         yy += y0
-    geomdata["x"] = xx
-    geomdata["y"] = yy
-    geomdata["angle"] = angle
+    geomdata["x"] = xx[boolrefs]
+    geomdata["y"] = yy[boolrefs]
+    geomdata["angle"] = angle[boolrefs]
     return geomdata, radius
