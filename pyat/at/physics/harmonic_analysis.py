@@ -209,8 +209,8 @@ def _get_main_multi(cents, **kwargs):
     ctx = multiprocessing.get_context(start_method)
     args = numpy.array_split(cents, pool_size, axis=0)
     with ctx.Pool(pool_size) as pool:
-        results = pool.map(partial(_get_main_single, **kwargs), cents)
-    results = [numpy.squeeze(results[:][i]) for i in range(3)]
+        results = pool.map(partial(_get_main_single, **kwargs), args) 
+    results = numpy.concatenate(results, axis=1)    
     return results
     
 
