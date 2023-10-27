@@ -1,5 +1,5 @@
 function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
-% atidtable(FamName, Nslice, filename, Energy, method)
+% atidtable_dat(FamName, Nslice, filename, Energy, method)
 %
 % FamName   family name
 % Nslice    number of slices (1 means the Insertion Device is represented by a
@@ -9,11 +9,14 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 % method    name of the function to use for tracking. Use 'IdTablePass'
 %             or 'WigTablePass'
 %
+% returns   atinsertiondevicekickmap
+%
+%
+% This function creates an AT element read from an integrated kickmap file.
+%
 % The tracking table method is described in
 % P. Elleaume, "A new approach to the electron beam dynamics in undulators
 % and wigglers", EPAC92.
-%
-% returns atinsertiondevicekickmap
 
 %---------------------------------------------------------------------------
 % Modification Log:
