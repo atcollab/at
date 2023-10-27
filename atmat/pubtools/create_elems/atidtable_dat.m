@@ -63,9 +63,9 @@ if isfield(D,'Kick1x')
 %     ElemData.nkicks= nn(3);
 else
     [~, data_mat]=mhdrload_bis(filename);
-    L  = data_mat(1,1,1);
-    Nx = data_mat(1,1,2);
-    Ny = data_mat(1,1,3);
+    L=data_mat(1,1,1);
+    Nx=data_mat(1,1,2);
+    Ny=data_mat(1,1,3);
     A = importdata(filename,' ',10);
     x=A.data;
     x=x(1,1:Nx);
