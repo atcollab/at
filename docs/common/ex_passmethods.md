@@ -126,7 +126,7 @@ This tuning is performed using a dedicated function/method:
   % Identify the rectangular bends (for example...)
   rbends=atgetcells(ring,'PassMethod', 'ExactRectangularBendPass');
   % Set their correct attributes
-  ring(rbends)=cellfun(@attunerbend,ring(rbends),'UniformOutput',false);
+  ring(rbends)=cellfun(@atrbendtune,ring(rbends),'UniformOutput',false);
   ```
 
 PolynomB, PolynomA, MaxOrder, NumIntSteps
