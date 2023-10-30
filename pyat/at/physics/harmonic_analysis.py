@@ -206,7 +206,6 @@ def _get_main_multi(cents, **kwargs):
     fun = partial(_get_main_single, **kwargs)
     with ctx.Pool(pool_size) as pool:
         results = pool.map(fun, cents) 
-    print(numpy.shape(results))
     results = numpy.concatenate(results, axis=1)    
     return results
     
