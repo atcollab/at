@@ -161,6 +161,32 @@ def _get_max_spectrum(freq, amp, phase, fmin, fmax, method):
     
    
 def _get_main_single(cents, **kwargs):
+
+    def get_hmain(cents):
+        fmin = kwargs.get('fmin', 0)
+        fmax = kwargs.get('fmax', 1)
+        method = kwargs.get('method', 'interp_fft')
+        try:
+            out = get_spectrum_harmonic(cents, **kwargs)
+            freq, amp, phase = out
+            tunes, amps, phases = _get_max_spectrum(freq, amp,
+                                                    phase, fmin,
+                                                    fmax, method)
+        except AtError:
+            msg = ('No harmonic found within range, '
+                   'consider extending it or increase maxiter')
+            warn(AtWarning(msg)) 
+            tunes = numpy.nan
+            amps = numpy.nan
+            phases = numpy.nan        
+        except ValueError:
+            msg = ('Invalid input vector provided')
+            warn(AtWarning(msg)) 
+            tunes = numpy.nan
+            amps = numpy.nan
+            phases = numpy.nan
+        return tunes, amps, phases
+        
     cents = numpy.array(cents)
     if cents.ndim > 1:
         npart = cents.shape[0]
@@ -170,30 +196,8 @@ def _get_main_single(cents, **kwargs):
     tunes = numpy.zeros(npart)
     amps = numpy.zeros(npart)
     phases = numpy.zeros(npart)
-    fmin = kwargs.get('fmin', 0)
-    fmax = kwargs.get('fmax', 1)
-    method = kwargs.get('method', 'interp_fft')
-    for i in range(npart):
-        try:
-            out = get_spectrum_harmonic(cents[i], **kwargs)
-            freq, amp, phase = out
-            tunes[i], amps[i], phases[i] = _get_max_spectrum(freq, amp,
-                                                             phase, fmin,
-                                                             fmax, method)
-        except AtError:
-            msg = ('No harmonic found within range, '
-                   'consider extending it or increase maxiter')
-            warn(AtWarning(msg)) 
-            tunes[i] = numpy.nan
-            amps[i] = numpy.nan
-            phases[i] = numpy.nan        
-        except ValueError:
-            msg = ('Invalid input vector provided')
-            warn(AtWarning(msg)) 
-            tunes[i] = numpy.nan
-            amps[i] = numpy.nan
-            phases[i] = numpy.nan
-    return tunes, amps, phases
+    results = [get_hmain(c) for c in cents]   
+    return numpy.array(results).T
     
 
 def _get_main_multi(cents, **kwargs):
@@ -207,9 +211,10 @@ def _get_main_multi(cents, **kwargs):
     if pool_size is None:
        pool_size = min(npart, multiprocessing.cpu_count())
     ctx = multiprocessing.get_context(start_method)
-    args = numpy.array_split(cents, pool_size, axis=0)
+    fun = partial(_get_main_single, **kwargs)
     with ctx.Pool(pool_size) as pool:
-        results = pool.map(partial(_get_main_single, **kwargs), args) 
+        results = pool.map(fun, cents) 
+    print(numpy.shape(results))
     results = numpy.concatenate(results, axis=1)    
     return results
     
