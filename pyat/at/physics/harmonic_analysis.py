@@ -145,8 +145,8 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     ha_amp = numpy.abs(numpy.array(ha_amp)) / lc
     ha_tune = numpy.array(ha_tune)
     return ha_tune, ha_amp, ha_phase
-    
-    
+
+
 def _get_max_spectrum(freq, amp, phase, fmin, fmax, method):
     if method == 'interp_fft':
         return freq[0], amp[0], phase[0]
@@ -158,8 +158,8 @@ def _get_max_spectrum(freq, amp, phase, fmin, fmax, method):
     phase = phase[numpy.argmax(amp)]
     amp = numpy.amax(amp)
     return freq, amp, phase
-    
-   
+
+
 def _get_main_single(cents, **kwargs):
 
     def get_hmain(cents):
@@ -175,22 +175,22 @@ def _get_main_single(cents, **kwargs):
         except AtError:
             msg = ('No harmonic found within range, '
                    'consider extending it or increase maxiter')
-            warn(AtWarning(msg)) 
+            warn(AtWarning(msg))
             tunes = numpy.nan
             amps = numpy.nan
-            phases = numpy.nan        
+            phases = numpy.nan
         except ValueError:
             msg = ('Invalid input vector provided')
-            warn(AtWarning(msg)) 
+            warn(AtWarning(msg))
             tunes = numpy.nan
             amps = numpy.nan
             phases = numpy.nan
         return tunes, amps, phases
-        
+
     cents = numpy.atleast_2d(cents)
-    results = [get_hmain(c) for c in cents]   
+    results = [get_hmain(c) for c in cents]
     return numpy.transpose(results)
-    
+
 
 def _get_main_multi(cents, **kwargs):
     cents = numpy.array(cents)
@@ -201,14 +201,13 @@ def _get_main_multi(cents, **kwargs):
     else:
         return _get_main_single(cents, **kwargs)
     if pool_size is None:
-       pool_size = min(npart, multiprocessing.cpu_count())
+        pool_size = min(npart, multiprocessing.cpu_count())
     ctx = multiprocessing.get_context(start_method)
     fun = partial(_get_main_single, **kwargs)
     with ctx.Pool(pool_size) as pool:
-        results = pool.map(fun, cents) 
-    results = numpy.concatenate(results, axis=1)    
+        results = pool.map(fun, cents)
+    results = numpy.concatenate(results, axis=1)
     return results
-    
 
 
 def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
@@ -249,7 +248,7 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         phase (ndarray): (len(cents), ) array of phases
                          corresponding to the tune
     """
-    if use_mp:       
+    if use_mp:
         tunes, amps, phases = _get_main_multi(cents, num_harmonics=1,
                                               method=method, hann=hann,
                                               pad_length=pad_length,
