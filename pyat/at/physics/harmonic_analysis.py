@@ -187,17 +187,9 @@ def _get_main_single(cents, **kwargs):
             phases = numpy.nan
         return tunes, amps, phases
         
-    cents = numpy.array(cents)
-    if cents.ndim > 1:
-        npart = cents.shape[0]
-    else:
-        cents = [cents]
-        npart = 1
-    tunes = numpy.zeros(npart)
-    amps = numpy.zeros(npart)
-    phases = numpy.zeros(npart)
+    cents = numpy.atleast_2d(cents)
     results = [get_hmain(c) for c in cents]   
-    return numpy.array(results).T
+    return numpy.transpose(results)
     
 
 def _get_main_multi(cents, **kwargs):
