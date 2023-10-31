@@ -119,10 +119,6 @@ the polynomial terms in PolynomB.
         ReSum = ReSumTemp;
    }
 
-   /* Half kick */
-   r[1] -=  0.5*L*ReSum;
-   r[3] +=  0.5*L*ImSum;
-
    /* calculate angles from momentums 	*/
    p_norm = 1/(1+r[4]);
    x   = r[0];
@@ -133,7 +129,7 @@ the polynomial terms in PolynomB.
    B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
 
    /* Momentum loss */
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1.0+x*irho) * L;
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1.0+x*irho) * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
 //   r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
@@ -141,9 +137,9 @@ the polynomial terms in PolynomB.
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
 
-   /* Half kick */
-   r[1] -=  0.5*L*ReSum;
-   r[3] +=  0.5*L*ImSum;
+   /* Multipole kick */
+   r[1] -=  L*ReSum;
+   r[3] +=  L*ImSum;
 }
 
 static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
@@ -170,10 +166,6 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
           ReSum = ReSumTemp;
    }
 
-   /* Half kick */
-   r[1] -=  0.5*L*ReSum;
-   r[3] +=  0.5*L*ImSum;
-
    /* calculate angles from momentums 	*/
    p_norm = 1/(1+r[4]);
    x   = r[0];
@@ -184,14 +176,14 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
    B2P = StrB2perp(ImSum, ReSum+B0 , x , xpr, y ,ypr);
 
    /* Momentum loss */
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * L;
+   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
    r[1] = xpr/p_norm;
    r[3] = ypr/p_norm;
 
-   /* Half kick */
-   r[1] -=  0.5*L*ReSum;
-   r[3] +=  0.5*L*ImSum;
+   /* multipole kick */
+   r[1] -=  L*ReSum;
+   r[3] +=  L*ImSum;
 }
