@@ -1,12 +1,17 @@
-
-<!DOCTYPE html
-  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-   <!--
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Radiation</title><meta name="generator" content="MATLAB 9.12"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-09-05"><meta name="DC.source" content="atradiation.m"><style type="text/css">
+      -->
+<title>Radiation</title>
+<meta name="generator" content="MATLAB 23.2">
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+<meta name="DC.date" content="2023-11-01">
+<meta name="DC.source" content="atradiation.m">
+<style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -67,12 +72,45 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Radiation</h1><!--introduction--><!--/introduction--><p><a href="matlab:doc('check_radiation')">check_radiation</a> - Check the radiation state of a ring</p><p><a href="matlab:doc('atenergy')">atenergy</a> - Gets the lattice energy</p><p><a href="matlab:doc('atgetU0')">atgetU0</a> - Computes Energy loss per turn in eV</p><p><a href="matlab:doc('atdampingrates')">atdampingrates</a> - Find tunes and damping rates from one map matrix with radiation</p><p><a href="matlab:doc('atradon')">atradon</a> - Switches RF and radiation on</p><p><a href="matlab:doc('atradoff')">atradoff</a> - Switches radiation and cavity off</p><p><a href="matlab:doc('quantumDiff')">quantumDiff</a> - Compute the radiation-diffusion matrix</p><p><a href="matlab:doc('ohmienvelope')">ohmienvelope</a> - Calculates equilibrium beam envelope in a</p><p><a href="matlab:doc('DipoleRadiation')">DipoleRadiation</a> - Compute the radiation integrals in dipoles</p><p><a href="matlab:doc('WigglerRadiation')">WigglerRadiation</a> - Compute the radiation integrals in wigglers</p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2022a</a><br></p></div><!--
+  </style>
+</head>
+<body>
+<div class="content">
+<h1>Radiation</h1>
+<!--introduction-->
+<!--/introduction-->
+<p>
+<a href="matlab:doc('check_radiation')">check_radiation</a> - Obsolete: check the radiation state of a ring</p>
+<p>
+<a href="matlab:doc('atenergy')">atenergy</a> - Gets the lattice energy</p>
+<p>
+<a href="matlab:doc('atgetU0')">atgetU0</a> - Computes Energy loss per turn in eV</p>
+<p>
+<a href="matlab:doc('atdampingrates')">atdampingrates</a> - Find tunes and damping rates from one map matrix with radiation</p>
+<p>
+<a href="matlab:doc('atradon')">atradon</a> - Obsolete: switches RF and radiation on</p>
+<p>
+<a href="matlab:doc('atradoff')">atradoff</a> - Obsolete: switches RF and radiation off</p>
+<p>
+<a href="matlab:doc('quantumDiff')">quantumDiff</a> - Compute the radiation-diffusion matrix</p>
+<p>
+<a href="matlab:doc('ohmienvelope')">ohmienvelope</a> - Calculates equilibrium beam envelope in a</p>
+<p>
+<a href="matlab:doc('DipoleRadiation')">DipoleRadiation</a> - Compute the radiation integrals in dipoles</p>
+<p>
+<a href="matlab:doc('WigglerRadiation')">WigglerRadiation</a> - Compute the radiation integrals in wigglers</p>
+<p class="footer">
+<br>
+<a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2023b</a>
+<br>
+</p>
+</div>
+<!--
 ##### SOURCE BEGIN #####
 %% Radiation
 % 
 %%
-% <matlab:doc('check_radiation') check_radiation> - Check the radiation state of a ring
+% <matlab:doc('check_radiation') check_radiation> - Obsolete: check the radiation state of a ring
 %
 % <matlab:doc('atenergy') atenergy> - Gets the lattice energy
 %
@@ -80,9 +118,9 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 %
 % <matlab:doc('atdampingrates') atdampingrates> - Find tunes and damping rates from one map matrix with radiation
 %
-% <matlab:doc('atradon') atradon> - Switches RF and radiation on
+% <matlab:doc('atradon') atradon> - Obsolete: switches RF and radiation on
 %
-% <matlab:doc('atradoff') atradoff> - Switches radiation and cavity off
+% <matlab:doc('atradoff') atradoff> - Obsolete: switches RF and radiation off
 %
 % <matlab:doc('quantumDiff') quantumDiff> - Compute the radiation-diffusion matrix
 %
@@ -94,4 +132,6 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 %
 
 ##### SOURCE END #####
---></body></html>
+-->
+</body>
+</html>
