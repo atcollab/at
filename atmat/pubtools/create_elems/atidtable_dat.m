@@ -62,10 +62,12 @@ if isfield(D,'Kick1x')
 %     ElemData.MultiKick= 1;
 %     ElemData.nkicks= nn(3);
 else
-    [~, data_mat]=mhdrload_bis(filename);
-    L=data_mat(1,1,1);
-    Nx=data_mat(1,1,2);
-    Ny=data_mat(1,1,3);
+    A = importdata(filename,' ',3);
+    L = A.data;
+    A = importdata(filename,' ',5);
+    Nx = A.data;
+    A = importdata(filename,' ',7);
+    Ny = A.data;
     A = importdata(filename,' ',10);
     x=A.data;
     x=x(1,1:Nx);
