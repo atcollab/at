@@ -51,8 +51,8 @@ def _compute_coef(samples, freq):
     """
     n = len(samples)
     exponents = numpy.exp(-2j*numpy.pi * freq * numpy.arange(n))
-    coef = numpy.sum(exponents * samples)
-    return coef / n
+    coef = numpy.sum(exponents * samples)/n
+    return coef
 
 
 def _interpolated_fft(samples, num_harmonics, fmin, fmax,
@@ -216,6 +216,7 @@ def _get_main_multi(cents, **kwargs):
 def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                       hann: bool = False,
                       fmin: float = 0, fmax: float = 1,
+                      num_harmonics: int = 1,
                       maxiter: float = 10,
                       pad_length=None,
                       use_mp: bool = False,
@@ -224,7 +225,9 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                       remove_mean: bool = True) -> tuple[numpy.ndarray,
                                                          numpy.ndarray,
                                                          numpy.ndarray]:
-    """Computes tunes, amplitudes and pahses from harmonic analysis
+    """Computes tunes, amplitudes and phases from harmonic analysis
+    The tune is defined as the harmonic with the maximum amplitude
+    within the search range.
 
     Parameters:
         cents:          Centroid motions of the particle
@@ -232,6 +235,8 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                         Default: ``'interp_fft'``
         fmin:           Lower bound for tune search
         fmax:           Upper bound for tune search
+        num_harmonics   Number of harmonics to search for.
+                        Default=1.
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
                         Ignored for interpolated FFT
@@ -257,7 +262,8 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                          corresponding to the tune
     """
     if use_mp:
-        tunes, amps, phases = _get_main_multi(cents, num_harmonics=1,
+        tunes, amps, phases = _get_main_multi(cents,
+                                              num_harmonics=num_harmonics,
                                               method=method, hann=hann,
                                               pad_length=pad_length,
                                               fmin=fmin, fmax=fmax,
@@ -266,7 +272,8 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                                               start_method=start_method,
                                               remove_mean=remove_mean)
     else:
-        tunes, amps, phases = _get_main_single(cents, num_harmonics=1,
+        tunes, amps, phases = _get_main_single(cents,
+                                               num_harmonics=num_harmonics,
                                                method=method, hann=hann,
                                                pad_length=pad_length,
                                                fmin=fmin, fmax=fmax,
@@ -278,6 +285,7 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
 def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                        hann: bool = False,
                        fmin: float = 0, fmax: float = 1,
+                       num_harmonics: int = 1,
                        maxiter: float = 10,
                        pad_length=None,
                        use_mp: bool = False,
@@ -285,7 +293,8 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                        start_method: str = None,
                        remove_mean: bool = True,
                        **kwargs) -> numpy.ndarray:
-    """Computes tunes from harmonic analysis
+    """Computes tunes from harmonic analysis. The tune is defined
+    as the harmonic with the maximum amplitude within the search range.
 
     Parameters:
         cents:          Centroid motions of the particle
@@ -293,6 +302,8 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                         Default: ``'interp_fft'``
         fmin:           Lower bound for tune search
         fmax:           Upper bound for tune search
+        num_harmonics   Number of harmonics to search for.
+                        Default=1.
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
                         Ignored for interpolated FFT
@@ -313,13 +324,10 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
         tunes (ndarray):    numpy array of length len(cents), max of the
         spectrum within [fmin fmax]
     """
-    num_harmonics = kwargs.pop('num_harmonics', 1)  # Backward compatibility
-    if num_harmonics != 1:
-        msg = "num_harmonics is deprecated and ignored for tune calculation"
-        warn(AtWarning(msg))
     tunes, _, _ = get_main_harmonic(cents, method=method, hann=hann, fmin=fmin,
                                     fmax=fmax, pad_length=pad_length,
                                     use_mp=use_mp, pool_size=pool_size,
                                     start_method=start_method, maxiter=maxiter,
-                                    remove_mean=remove_mean)
+                                    remove_mean=remove_mean,
+                                    num_harmonics=num_harmonics)
     return tunes
