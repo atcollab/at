@@ -52,7 +52,7 @@ def _compute_coef(samples, freq):
     n = len(samples)
     exponents = numpy.exp(-2j*numpy.pi * freq * numpy.arange(n))
     coef = numpy.sum(exponents * samples)
-    return coef
+    return coef / n
 
 
 def _interpolated_fft(samples, num_harmonics, fmin, fmax,
@@ -64,7 +64,7 @@ def _interpolated_fft(samples, num_harmonics, fmin, fmax,
 
     nfound = 0
     niter = 0
-    nmax = num_harmonics*maxiter
+    nmax = num_harmonics * maxiter
 
     while (nfound < num_harmonics) and (niter < nmax):
         fft_data = fft(samples)
@@ -97,7 +97,7 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
                           hann: bool = False,
                           fmin: float = 0, fmax: float = 1,
                           maxiter: float = 10,
-                          pad_length=None,
+                          pad_length: float = None,
                           remove_mean: bool = True) -> tuple[numpy.ndarray,
                                                              numpy.ndarray,
                                                              numpy.ndarray]:
@@ -153,17 +153,15 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     return ha_tune, ha_amp, ha_phase
 
 
-def _get_max_spectrum(freq, amp, phase, fmin, fmax, method):
-    if method == 'interp_fft':
-        return freq[0], amp[0], phase[0]
-    msk = numpy.logical_and(freq >= fmin, freq <= fmax)
+def _get_max_spectrum(freq, amp, phase, fmin, fmax):
+    msk = (freq >= fmin) & (freq <= fmax)
     amp = amp[msk]
     freq = freq[msk]
     phase = phase[msk]
-    freq = freq[numpy.argmax(amp)]
+    tune = freq[numpy.argmax(amp)]
     phase = phase[numpy.argmax(amp)]
     amp = numpy.amax(amp)
-    return freq, amp, phase
+    return tune, amp, phase
 
 
 def _get_main_single(cents, **kwargs):
@@ -171,13 +169,12 @@ def _get_main_single(cents, **kwargs):
     def get_hmain(cents):
         fmin = kwargs.get('fmin', 0)
         fmax = kwargs.get('fmax', 1)
-        method = kwargs.get('method', 'interp_fft')
         try:
             out = get_spectrum_harmonic(cents, **kwargs)
             freq, amp, phase = out
             tunes, amps, phases = _get_max_spectrum(freq, amp,
                                                     phase, fmin,
-                                                    fmax, method)
+                                                    fmax)
         except AtError:
             msg = ('No harmonic found within range, '
                    'consider extending it or increase maxiter')
