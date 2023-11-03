@@ -97,7 +97,6 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
 
             /* Change to the magnet referential */
             Yrot(r6, entrance_angle);
-            r6[0] += x0ref;
 
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
@@ -111,6 +110,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             bend_edge(r6, irho, phi2-entrance_angle);
 
             /* integrator */
+            r6[0] += x0ref;
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
                 exact_drift(r6, L1);
                 strthinkick(r6, A, B, K1, max_order);
@@ -120,6 +120,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
                 strthinkick(r6, A, B, K1, max_order);
                 exact_drift(r6, L1);
             }
+            r6[0] -= x0ref;
 
             /* Convert absolute path length to path lengthening */
             r6[5] -= (le+refdz);
@@ -136,7 +137,6 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
             /* Change back to the lattice referential */
-            r6[0] -= x0ref;
             Yrot(r6, exit_angle);
 
             /* Misalignment at exit */
