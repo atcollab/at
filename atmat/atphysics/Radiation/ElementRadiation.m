@@ -10,20 +10,18 @@ function [I1, I2, I3, I4, I5, I6, Iv] = ElementRadiation(ring, lindata, varargin
 
 [quadon, ~] = getoption(varargin, 'UseQuadrupoles', true);
 
-% Much faster with indices
-dipoleIdx = findcells(ring, 'BendingAngle');
-angle = atgetfieldvalues(ring, dipoleIdx, 'BendingAngle');
+% Look for dipole elements with non zero angles
 isdipole = atgetcells(ring, 'BendingAngle');
-isdipole(dipoleIdx) = isfinite(angle) & (angle ~= 0);
+angle = atgetfieldvalues(ring, isdipole, 'BendingAngle');
+isdipole(isdipole) = (angle ~= 0);
 
+% Look for quadrupole elements with non zero focusing
 if quadon
     isquadrupole = atgetcells(ring, 'Class', 'Quadrupole');
-    quadIdx = findcells(ring, 'Class', 'Quadrupole');
-    pb = atgetfieldvalues(ring, quadIdx, 'PolynomB', {2});
-    isquadrupole(quadIdx) = (pb ~= 0);
+    pb = atgetfieldvalues(ring, isquadrupole, 'PolynomB', {2});
+    isquadrupole(isquadrupole) = (pb ~= 0);
 
     iselement = isdipole | isquadrupole;
-
 else
     iselement = isdipole;
 end
