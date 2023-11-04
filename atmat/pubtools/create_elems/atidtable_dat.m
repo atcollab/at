@@ -1,5 +1,5 @@
 function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
-% atidtable_dat(FamName, Nslice, filename, Energy, method)
+% atidtable_dat Read - RADIA kick maps of 1st and 2nd order in energy
 %
 % FamName   family name
 % Nslice    number of slices (1 means the Insertion Device is represented by a
@@ -42,69 +42,76 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 %Elem.T2             = zeros(1,6);
 %Elem.PassMethod 	= method;
 
+lightspeed = PhysConstant.speed_of_light_in_vacuum.value * 1e-9;
 
-factor=1/((Energy/0.299792458)^2);
-factor1=-1/((Energy/0.299792458));
+% energy scaling for 1st order kick-map
+factor1 = -1 / ((Energy / lightspeed));
+% energy scaling for 2st order kick-map
+factor2 = (factor1) ^ 2;
 
 % Read the file
-D=importdata(filename);
-if isfield(D,'Kick1x')
-    x=(D.x)';
-    y=(D.y)';
-    xkick1=factor1*D.Kick1x;
-    ykick1=factor1*D.Kick1y;
-    xkick=factor*D.Kick2x;
-    ykick=factor*D.Kick2y;
-    L=D.Len;
-    nn=size(xkick1);
-    Ny=nn(1);
-    Nx=nn(2);
-%     ElemData.MultiKick= 1;
-%     ElemData.nkicks= nn(3);
+D = importdata(filename);
+
+if isfield(D, 'Kick1x')
+    x = (D.x)';
+    y = (D.y)';
+    xkick1 = factor1 * D.Kick1x;
+    ykick1 = factor1 * D.Kick1y;
+    xkick2 = factor2 * D.Kick2x;
+    ykick2 = factor2 * D.Kick2y;
+    L  = D.Len;
+    nn = size(xkick1);
+    Ny = nn(1);
+    Nx = nn(2);
+    %     ElemData.MultiKick= 1;
+    %     ElemData.nkicks= nn(3);
 else
-    A = importdata(filename,' ',3);
+    A = importdata(filename, ' ', 3);
     L = A.data;
-    A = importdata(filename,' ',5);
+    A = importdata(filename, ' ', 5);
     Nx = A.data;
-    A = importdata(filename,' ',7);
+    A = importdata(filename, ' ', 7);
     Ny = A.data;
-    A = importdata(filename,' ',10);
-    x=A.data;
-    x=x(1,1:Nx);
-    A = importdata(filename,' ',11);
-    txkick=A.data;
-    y=txkick(1:Ny,1);
-    txkick=txkick(:,2:end);
-    A=importdata(filename,' ',11+Ny+3);
-    tykick=A.data;
-    tykick=tykick(:,2:end);
-    A=importdata(filename,' ',11+2*Ny+2*3);
+    A = importdata(filename, ' ', 10);
+    x = A.data;
+    x = x(1, 1:Nx);
+    A = importdata(filename, ' ', 11);
+    txkick = A.data;
+    y = txkick(1:Ny, 1);
+    txkick = txkick(:, 2:end);
+    A = importdata(filename, ' ', 11 + Ny + 3);
+    tykick = A.data;
+    tykick = tykick(:, 2:end);
+    A = importdata(filename, ' ', 11 + 2 * Ny + 2 * 3);
+
     if isstruct(A)
-        txkick1=A.data;
-        txkick1=txkick1(:,2:end);
+        txkick1 = A.data;
+        txkick1 = txkick1(:, 2:end);
     else
-        txkick1=0*txkick;
-    end
-    A=importdata(filename,' ',11+3*Ny+3*3);
-    if isstruct(A)
-        tykick1=A.data;
-        tykick1=tykick1(:,2:end);
-    else
-        tykick1=0*tykick;
+        txkick1 = 0 * txkick;
     end
 
-    xkick=factor*txkick;
-    ykick=factor*tykick;
+    A = importdata(filename, ' ', 11 + 3 * Ny + 3 * 3);
 
-    xkick1=factor1*txkick1;
-    ykick1=factor1*tykick1;
+    if isstruct(A)
+        tykick1 = A.data;
+        tykick1 = tykick1(:, 2:end);
+    else
+        tykick1 = 0 * tykick;
+    end
+
+    xkick2 = factor2 * txkick;
+    ykick2 = factor2 * tykick;
+
+    xkick1 = factor1 * txkick1;
+    ykick1 = factor1 * tykick1;
 
     % Sort arrays in ascending order (needed for "IdTablePass.c")
-    [y indy]=sort(y);
-    [x indx]=sort(x);
-    x=x';
-    xkick=xkick(indy,indx);
-    ykick=ykick(indy,indx);
+    [y, indy] = sort(y);
+    [x, indx] = sort(x);
+    x = x';
+    xkick2 = xkick2(indy, indx);
+    ykick2 = ykick2(indy, indx);
 
 end
 
@@ -121,17 +128,17 @@ end
 %Elem.PolynomA= [0 0 0 0];
 %Elem.PolynomB= [0 0 0 0];
 
-Elem = atinsertiondevicekickmap( FamName, ...
-                                 method, ...
-                                 filename, ...
-                                 Energy, ...
-                                 Nslice, ...
-                                 L, ...
-                                 xkick, ...
-                                 ykick, ...
-                                 xkick1, ...
-                                 ykick1, ...
-                                 x, ...
-                                 y ...
-                               );
-
+Elem = atinsertiondevicekickmap( ...
+    FamName, ...
+    method, ...
+    filename, ...
+    Energy, ...
+    Nslice, ...
+    L, ...
+    xkick2, ...
+    ykick2, ...
+    xkick1, ...
+    ykick1, ...
+    x, ...
+    y ...
+);
