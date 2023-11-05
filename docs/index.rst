@@ -23,10 +23,12 @@ by two interfaces:
 - a :doc:`Matlab interface <m/index>`, available as a Matlab toolbox,
 - a :doc:`python interface <p/index>`, available as a python package.
 
+See :doc:`common/indx` for the global documentation.
+
 .. toctree::
    :maxdepth: 2
    :hidden:
 
+   AT basics <common/indx>
    Python <p/index>
    Matlab <m/index>
-   About <pabout>

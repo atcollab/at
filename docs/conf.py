@@ -109,7 +109,7 @@ html_theme_options = {
 }
 html_sidebars = {
     "index": [],
-    "pabout": [],
+    "common/about": [],
 }
 # creates an additional page, but impossible to link to it...
 # if os.environ.get('READTHEDOCS') == 'True':
