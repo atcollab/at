@@ -235,7 +235,7 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                         Default: ``'interp_fft'``
         fmin:           Lower bound for tune search
         fmax:           Upper bound for tune search
-        num_harmonics   Number of harmonics to search for.
+        num_harmonics:  Number of harmonics to search for.
                         Default=1.
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
@@ -260,6 +260,18 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                              corresponding to the tune
         phase (ndarray): (len(cents), ) array of phases
                          corresponding to the tune
+
+
+    .. note::
+
+       * The tune is defined as the harmonic with the maximum amplitude within
+         the search range ``(fmin, fmax)``.
+       * For the method ``'interp_fft'``, harmonics are calculated iteratively
+         starting from the maximum peak of the raw FFT. ``num_harmonics=1``
+         is the default, only the first harmonic is calculated.
+         However, it is possible that the maximum of the interpolated
+         FFT does not correspond to the maximum of the raw FFT, in which case
+         ``num_harmonics`` has to be increased to get the correct peak.
     """
     if use_mp:
         tunes, amps, phases = _get_main_multi(cents,
@@ -293,8 +305,7 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                        start_method: str = None,
                        remove_mean: bool = True,
                        **kwargs) -> numpy.ndarray:
-    """Computes tunes from harmonic analysis. The tune is defined
-    as the harmonic with the maximum amplitude within the search range.
+    """Computes tunes from harmonic analysis.
 
     Parameters:
         cents:          Centroid motions of the particle
@@ -302,11 +313,11 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                         Default: ``'interp_fft'``
         fmin:           Lower bound for tune search
         fmax:           Upper bound for tune search
-        num_harmonics   Number of harmonics to search for.
+        num_harmonics:  Number of harmonics to search for.
                         Default=1.
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
-                        Ignored for interpolated FFT
+                        Ignored for interpolated FFT.
         pad_length:     Zero pad the input signal.
                         Rounded to the higher power of 2
                         Ignored for interpolated FFT
@@ -323,6 +334,17 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
     Returns:
         tunes (ndarray):    numpy array of length len(cents), max of the
         spectrum within [fmin fmax]
+
+    .. note::
+
+       * The tune is defined as the harmonic with the maximum amplitude within
+         the search range ``(fmin, fmax)``.
+       * For the method ``'interp_fft'``, harmonics are calculated iteratively
+         starting from the maximum peak of the raw FFT. ``num_harmonics=1``
+         is the default, only the first harmonic is calculated.
+         However, it is possible that the maximum of the interpolated
+         FFT does not correspond to the maximum of the raw FFT, in which case
+         ``num_harmonics`` has to be increased to get the correct peak.
     """
     tunes, _, _ = get_main_harmonic(cents, method=method, hann=hann, fmin=fmin,
                                     fmax=fmax, pad_length=pad_length,
