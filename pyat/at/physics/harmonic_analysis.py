@@ -266,6 +266,8 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
 
        * The tune is defined as the harmonic with the maximum amplitude within
          the search range ``(fmin, fmax)``.
+       * In case a ``Nan`` is present in the input vector or the tune cannot
+         be found within the range, the function returns ``NaN``.
        * For the method ``'interp_fft'``, harmonics are calculated iteratively
          starting from the maximum peak of the raw FFT. ``num_harmonics=1``
          is the default, only the first harmonic is calculated.
@@ -339,6 +341,8 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
 
        * The tune is defined as the harmonic with the maximum amplitude within
          the search range ``(fmin, fmax)``.
+       * In case a ``Nan`` is present in the input vector or the tune cannot
+         be found within the range, the function returns ``NaN``.
        * For the method ``'interp_fft'``, harmonics are calculated iteratively
          starting from the maximum peak of the raw FFT. ``num_harmonics=1``
          is the default, only the first harmonic is calculated.
