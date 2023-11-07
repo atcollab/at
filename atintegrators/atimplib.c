@@ -1,3 +1,4 @@
+#include "atconstants.h"
 #include "atelem.c"
 #include <math.h>
 #include <float.h>
@@ -6,11 +7,6 @@
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
 #endif
-
-
-#define TWOPI  6.28318530717959
-#define C0     2.99792458e8 
-
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;

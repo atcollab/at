@@ -1,7 +1,6 @@
+#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-
-#define TWOPI		6.28318530717959
 
 struct elem 
 {
