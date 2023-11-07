@@ -3,7 +3,6 @@
 
 #include <math.h>
 
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -12,7 +11,8 @@ const double TWOPI = 2.0*M_PI;
 
 // Symplectic integrator constants (4th order)
 
-const double DRIFT1 = 1.0 / (2.0 * (2.0 - pow(2.0,1.0/3.0)));
+const double THIRDROOT2 = 1.25992104989487316477;
+const double DRIFT1 = 1.0 / (2.0 * (2.0 - THIRDROOT2));
 const double DRIFT2 = 0.5 - DRIFT1;
 const double KICK1 = 2.0 * DRIFT1;
 const double KICK2 = 1.0 - 2.0 * KICK1;
@@ -23,6 +23,6 @@ const double C0 = 2.99792458e8;
 // Radiation damping, Physics of Electron Storage Ring, M. Sands (4.2)
 #define __RE 2.8179403262e-15 // Classical electron radius [m]
 #define __E0 510.998e-6       // Electron rest energy [GeV]
-const double CGAMMA = 4.0*M_PI*__RE / (3.0*pow(__E0,3.0));
+const double CGAMMA = 4.0*M_PI*__RE / (3.0*__E0*__E0*__E0);
 
 #endif //AT_CONSTANTS_H
