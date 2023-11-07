@@ -11,8 +11,8 @@ const double TWOPI = 2.0*M_PI;
 
 // Symplectic integrator constants (4th order)
 
-const double THIRDROOT2 = 1.25992104989487316477;
-const double DRIFT1 = 1.0 / (2.0 * (2.0 - THIRDROOT2));
+#define THIRD_ROOT_2 1.25992104989487316477
+const double DRIFT1 = 1.0 / (2.0 * (2.0 - THIRD_ROOT_2));
 const double DRIFT2 = 0.5 - DRIFT1;
 const double KICK1 = 2.0 * DRIFT1;
 const double KICK2 = 1.0 - 2.0 * KICK1;
