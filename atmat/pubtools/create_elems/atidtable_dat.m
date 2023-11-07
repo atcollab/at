@@ -49,6 +49,29 @@ factor1 = -1 / ((Energy / lightspeed));
 % energy scaling for 2st order kick-map
 factor2 = (factor1) ^ 2;
 
+% check the data separator
+fid = fopen(filename);
+line_ex = fgetl(fid);
+while ischar(line_ex)
+line_ex = fgetl(fid);
+if line_ex(1) == '#'
+    continue
+end
+flagistab = (line_ex==9);
+istab = (sum(flagistab));
+if istab
+    break
+end
+end
+fclose(fid);
+% define data separator
+if istab
+    datasep = '\t';
+else
+    datasep = ' ';
+end
+
+
 % Read the file
 D = importdata(filename);
 
@@ -66,23 +89,23 @@ if isfield(D, 'Kick1x')
     %     ElemData.MultiKick= 1;
     %     ElemData.nkicks= nn(3);
 else
-    A = importdata(filename, ' ', 3);
+    A = importdata(filename, datasep, 3);
     L = A.data;
-    A = importdata(filename, ' ', 5);
+    A = importdata(filename, datasep, 5);
     Nx = A.data;
-    A = importdata(filename, ' ', 7);
+    A = importdata(filename, datasep, 7);
     Ny = A.data;
-    A = importdata(filename, ' ', 10);
+    A = importdata(filename, datasep, 10);
     x = A.data;
     x = x(1, 1:Nx);
-    A = importdata(filename, ' ', 11);
+    A = importdata(filename, datasep, 11);
     txkick = A.data;
     y = txkick(1:Ny, 1);
     txkick = txkick(:, 2:end);
-    A = importdata(filename, ' ', 11 + Ny + 3);
+    A = importdata(filename, datasep, 11 + Ny + 3);
     tykick = A.data;
     tykick = tykick(:, 2:end);
-    A = importdata(filename, ' ', 11 + 2 * Ny + 2 * 3);
+    A = importdata(filename, datasep, 11 + 2 * Ny + 2 * 3);
 
     if isstruct(A)
         txkick1 = A.data;
@@ -91,7 +114,7 @@ else
         txkick1 = 0 * txkick;
     end
 
-    A = importdata(filename, ' ', 11 + 3 * Ny + 3 * 3);
+    A = importdata(filename, datasep, 11 + 3 * Ny + 3 * 3);
 
     if isstruct(A)
         tykick1 = A.data;
