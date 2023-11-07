@@ -8,7 +8,6 @@ function z=sbend(fname,L,A,A1,A2,K,method)
 %		BendingAngle		total bending angle [rad]
 %		EntranceAngle		[rad] (0 - for sector bends)
 %		ExitAngle			[rad] (0 - for sector bends)
-%		ByError				error in the dipole field relative to the design value 
 %		K						quadrupole K-value for combined funtion bends
 %		PassMethod        name of the function to use for tracking
 % returns assigned address in the FAMLIST that is uniquely identifies
