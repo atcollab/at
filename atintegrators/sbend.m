@@ -1,6 +1,6 @@
 function z=sbend(fname,L,A,A1,A2,K,method)
 %SBEND Creates a sector bend element in old AT versions (Obsolete)
-%BEND('FAMILYNAME',  Length[m], BendingAngle[rad], EntranceAngle[rad],
+%SBEND('FAMILYNAME',  Length[m], BendingAngle[rad], EntranceAngle[rad],
 %	ExitAngle[rad], K, 'METHOD')
 %	creates a new family in the FAMLIST - a structure with fields
 %		FamName        	family name
