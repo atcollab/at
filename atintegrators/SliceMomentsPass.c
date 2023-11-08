@@ -167,7 +167,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-MODULE_DEF(BeamMomentsPass)        /* Dummy module initialisation */
+MODULE_DEF(SliceMomentsPass)        /* Dummy module initialisation */
 #endif
 
 #ifdef MATLAB_MEX_FILE
