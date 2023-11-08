@@ -181,13 +181,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int num_particles = mxGetN(prhs[1]);
         struct elem El, *Elem=&El;
         
-        double *means, *stds, weights;
+        double *means, *stds, weights, *zcuts;
         int startturn = atGetLong(ElemData,"startturn"); check_error();
         int endturn = atGetLong(ElemData,"endturn"); check_error();
         int nslice = atGetLong(ElemData,"nslice"); check_error();    
         means = atGetDoubleArray(ElemData,"_means"); check_error();
         stds = atGetDoubleArray(ElemData,"_stds"); check_error();
         weights = atGetDoubleArray(ElemData,"_weights"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds = stds;
         Elem->means = means;
@@ -196,6 +197,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->startturn = startturn;
         Elem->endturn = endturn;
         Elem->nslice = nslice;
+        Elem->z_cuts = z_cuts;
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
