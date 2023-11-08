@@ -506,7 +506,7 @@ class SliceMoments(Element):
         super(SliceMoments, self).__init__(family_name, **kwargs)
         self.startturn = self._startturn
         self.endturn = self._endturn
-        self.set_buffers(1, 1)
+        self.set_buffers(self._endturn, 1)
 
     def set_buffers(self, nturns, nbunch):
         self.endturn = min(self.endturn, nturns)
