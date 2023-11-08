@@ -503,9 +503,10 @@ class SliceMoments(Element):
         self.nslice = nslice
         self._startturn = kwargs.pop('startturn', 0)
         self._endturn = kwargs.pop('endturn', 1)
+        super(SliceMoments, self).__init__(family_name, **kwargs)
         self.startturn = self._startturn
         self.endturn = self._endturn
-        super(SliceMoments, self).__init__(family_name, **kwargs)
+        self.set_buffers(1, 1)
 
     def set_buffers(self, nturns, nbunch):
         self.endturn = min(self.endturn, nturns)
@@ -534,8 +535,8 @@ class SliceMoments(Element):
     def startturn(self, value):
         if value < 0:
            raise ValueError('startturn must be greater or equal to 0')
-        if value <= self._endturn:
-           raise ValueError('startturn must be greater than endturn')
+        if value >= self._endturn:
+           raise ValueError('startturn must be smaller than endturn')
         self._startturn = value
 
     @property
@@ -546,8 +547,8 @@ class SliceMoments(Element):
     def endturn(self, value):
         if value <= 0:
            raise ValueError('endturn must be greater than 0')
-        if value >= self._startturn:
-           raise ValueError('endturn must be smaller than startturn')
+        if value <= self._startturn:
+           raise ValueError('endturn must be greater than startturn')
         self._endturn = value        
 
 

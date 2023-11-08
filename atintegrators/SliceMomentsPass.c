@@ -27,7 +27,7 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                        double *stds, double *z_cuts, double *bunch_currents,
                        double *bunch_spos){
 
-    int i,ii,ib;
+    int i,ii,iii,ib;
     double *rtmp;
 
     double *smin = atMalloc(nbunch*sizeof(double));
@@ -40,21 +40,14 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
         hz[i] = (smax[i]-smin[i])/(nslice);
         np_bunch[i] = 0.0;
     }
-
-    double *xpos = means + turn*nslice*nbunch;
-    double *ypos = means + (2*nturns + turn)*nslice*nbunch;
-    double *dppos = means + (4*nturns + turn)*nslice*nbunch;
-    double *zpos = means + (5*nturns + turn)*nslice*nbunch;
     
-    double *xstd = stds + turn*nslice*nbunch;
-    double *ystd = stds + (2*nturns + turn)*nslice*nbunch;
-    double *dpstd = stds + (4*nturns + turn)*nslice*nbunch;
-    double *zstd = stds + (5*nturns + turn)*nslice*nbunch;
+    void *buffer = atCalloc(9*nbunch*nslice, sizeof(double));
+    double *dptr = (double *) buffer;
+    int idx[] = {0, 2, 4, 5};    
+    double *pos = dptr; dptr += 4*nbunch*nslice;
+    double *std = dptr; dptr += 4*nbunch*nslice;
+    double *weight = dptr;
     
-    double *weight = weights + turn*nslice*nbunch;
-    
-
-    /*slices sorted from head to tail (increasing ct)*/
     for (i=0;i<num_particles;i++) {
         rtmp = r_in+i*6;
         ib = i%nbunch;
@@ -67,58 +60,45 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                 ii = (int)(floor((rtmp[5]-smin[ib])/hz[ib])) + ib*nslice;
             }
             weight[ii] += 1.0;
-            xpos[ii] += rtmp[0];
-            ypos[ii] += rtmp[2];
-            dppos[ii] += rtmp[4];
-            zpos[ii] += rtmp[5];
-            xstd[ii] += rtmp[0]*rtmp[0];
-            ystd[ii] += rtmp[2]*rtmp[2];
-            dpstd[ii] += rtmp[4]*rtmp[4];
-            zstd[ii] += rtmp[5]*rtmp[5];
+            for(iii=0; iii<4; iii++) {
+                pos[iii+ii*4] += rtmp[idx[iii]];
+                std[iii+ii*4] += rtmp[idx[iii]]*rtmp[idx[iii]];
+            }
         }
     }
 
     #ifdef MPI
     MPI_Allreduce(MPI_IN_PLACE,np_bunch,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,xpos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,ypos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,dppos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,zpos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    
-    MPI_Allreduce(MPI_IN_PLACE,xstd,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,ystd,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,dpstd,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,zstd,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    
+    MPI_Allreduce(MPI_IN_PLACE,pos,4*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);   
+    MPI_Allreduce(MPI_IN_PLACE,std,4*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);   
     MPI_Allreduce(MPI_IN_PLACE,weight,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
-    /*Compute average x/y position and weight of each slice */
     for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
-        if (weight[i] > 0){
-            xpos[i] = xpos[i]/weight[i];
-            ypos[i] = ypos[i]/weight[i];
-            dppos[i] = dppos[i]/weight[i];
-            zpos[i] = zpos[i]/weight[i];
-            xstd[i] = sqrt(xstd[i]/weight[i]-xpos[i]*xpos[i]);
-            ystd[i] = sqrt(ystd[i]/weight[i]-ypos[i]*ypos[i]);
-            dpstd[i] = sqrt(dpstd[i]/weight[i]-dppos[i]*dppos[i]);
-            zstd[i] = sqrt(zstd[i]/weight[i]-zpos[i]*zpos[i]);    
-        }else{
-            xpos[i] = 0.0;
-            ypos[i] = 0.0;
-            dppos[i] = 0.0;
-            zpos[i] = 0.0;
-            xstd[i] = 0.0;
-            ystd[i] = 0.0;
-            dpstd[i] = 0.0;
-            zstd[i] = smin[ib]+(i%nslice+0.5)*hz[ib];
+        for(ii=0; ii<4; ii++){
+            if (weight[i] > 0){
+                pos[4*i+ii] = pos[4*i+ii]/weight[i];
+                std[4*i+ii] = sqrt(std[4*i+ii]/weight[i]-pos[4*i+ii]*pos[4*i+ii]);
+            }   
+            else{
+                pos[4*i+ii] = (ii==4) ? smin[ib]+(i%nslice+0.5)*hz[ib] : 0.0;
+                std[4*i+ii] = 0.0;
+            }                 
         }
-        zpos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
+        pos[i+4] += bunch_spos[ib]-bunch_spos[nbunch-1];
         weight[i] *= bunch_currents[ib]/np_bunch[ib];
     }
+    
+    means += 4*nbunch*nslice*turn;
+    stds += 4*nbunch*nslice*turn;
+    weights += nbunch*nslice*turn;
+    memcpy(means, pos, 4*nbunch*nslice*sizeof(double));
+    memcpy(stds, std, 4*nbunch*nslice*sizeof(double));
+    memcpy(weights, weight, nbunch*nslice*sizeof(double));
+    
+    atFree(buffer);
     atFree(np_bunch);
     atFree(smin);
     atFree(smax);
@@ -139,7 +119,7 @@ void SliceMomentsPass(double *r_in, int nbunch, double *bunch_spos, double *bunc
     double *weights = Elem->weights;
     double *z_cuts = Elem->z_cuts;
     
-    if((turn>=startturn) && (turn<=endturn)){
+    if((turn>=startturn) && (turn<endturn)){
         slice_beam(r_in, num_particles, nslice, turn-startturn, nturns, nbunch,
                    weights, means, stds, z_cuts, bunch_currents, bunch_spos);
     }; 
@@ -151,7 +131,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                                       double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double *means, *stds, *weights;
+        double *means, *stds, *weights, *z_cuts;
         int nslice = atGetLong(ElemData,"nslice"); check_error();
         int startturn = atGetLong(ElemData,"_startturn"); check_error();
         int endturn = atGetLong(ElemData,"_endturn"); check_error();
@@ -167,6 +147,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         means = atGetDoubleArray(ElemData,"_means"); check_error();
         stds = atGetDoubleArray(ElemData,"_stds"); check_error();
         weights = atGetDoubleArray(ElemData,"_weights"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         atCheckArrayDims(ElemData,"_means", 3, dims); check_error();
         atCheckArrayDims(ElemData,"_stds", 3, dims); check_error();
         atCheckArrayDims(ElemData,"_weights", 2, dimsw); check_error();
@@ -178,6 +159,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->startturn = startturn;
         Elem->endturn = endturn;
         Elem->nslice = nslice;
+        Elem->z_cuts = z_cuts;
     }   
     SliceMomentsPass(r_in, Param->nbunch, Param->bunch_spos,
                      Param->bunch_currents, num_particles, Elem);

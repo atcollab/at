@@ -28,9 +28,9 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     """Function to initialize the beam monitors"""
     monitors = list(refpts_iterator(ring, elements.BeamMoments))
     monitors += list(refpts_iterator(ring, elements.SliceMoments))
-    for m in monitor:
+    for m in monitors:
         m.set_buffers(nturns, nbunch)  
-    return len(monitor) == 0
+    return len(monitors) == 0
 
 
 def variable_refs(ring):
