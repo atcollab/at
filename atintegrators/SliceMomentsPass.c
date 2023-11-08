@@ -153,10 +153,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double *means, *stds, *weights;
         int nslice = atGetLong(ElemData,"nslice"); check_error();
-        int startturn = atGetOptionalLong(ElemData,"startturn", 0); check_error();
-        int endturn = atGetOptionalLong(ElemData,"endturn", Param->num_turns); check_error();
-        int dims[] = {4, Param->nbunch*nslice, Param->num_turns};
-        int dimsw[] = {Param->nbunch*nslice, Param->num_turns};        
+        int startturn = atGetLong(ElemData,"startturn"); check_error();
+        int endturn = atGetLong(ElemData,"endturn"); check_error();
+        int dims[] = {4, Param->nbunch*nslice, endturn-startturn};
+        int dimsw[] = {Param->nbunch*nslice,  endturn-startturn};        
         means = atGetDoubleArray(ElemData,"_means"); check_error();
         stds = atGetDoubleArray(ElemData,"_stds"); check_error();
         weights = atGetDoubleArray(ElemData,"_weights"); check_error();
