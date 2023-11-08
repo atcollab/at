@@ -497,18 +497,22 @@ class SliceMoments(Element):
 
     def __init__(self, family_name: str, nslice: int, **kwargs):
         kwargs.setdefault('PassMethod', 'SliceMomentsPass')
-        self._stds = numpy.zeros((6, nslice, 1), order='F')
-        self._means = numpy.zeros((6, nslice, 1), order='F')
+        self._stds = numpy.zeros((4, nslice, 1), order='F')
+        self._means = numpy.zeros((4, nslice, 1), order='F')
         self._weights = numpy.zeros((nslice, 1), order='F')
         self.nslice = nslice
-        self.startturn = kwargs.pop('startturn', 0)
-        self.endturn = kwargs.pop('endturn', 1)
+        self._startturn = kwargs.pop('startturn', 0)
+        self._endturn = kwargs.pop('endturn', 1)
+        self.startturn = self._startturn
+        self.endturn = self._endturn
         super(SliceMoments, self).__init__(family_name, **kwargs)
 
-    def set_buffers(self, nbunch):
+    def set_buffers(self, nturns, nbunch):
+        self.endturn = min(self.endturn, nturns)
         dturns = self.endturn - self.startturn
-        self._stds = numpy.zeros((6, nbunch*self.nslice, dturns), order='F')
-        self._means = numpy.zeros((6, nbunch*self.nslice, dturns), order='F')
+        self._stds = numpy.zeros((4, nbunch*self.nslice, dturns), order='F')
+        self._means = numpy.zeros((4, nbunch*self.nslice, dturns), order='F')
+        self._weights = numpy.zeros((nbunch*self.nslice, dturns), order='F')
 
     @property
     def stds(self):
@@ -520,7 +524,31 @@ class SliceMoments(Element):
         
     @property
     def weights(self):
-        return self._weights    
+        return self._weights
+    
+    @property
+    def startturn(self):
+        return self._startturn  
+  
+    @startturn.setter
+    def startturn(self, value):
+        if value < 0:
+           raise ValueError('startturn must be greater or equal to 0')
+        if value <= self._endturn:
+           raise ValueError('startturn must be greater than endturn')
+        self._startturn = value
+
+    @property
+    def endturn(self):
+        return self._endturn  
+  
+    @endturn.setter
+    def endturn(self, value):
+        if value <= 0:
+           raise ValueError('endturn must be greater than 0')
+        if value >= self._startturn:
+           raise ValueError('endturn must be smaller than startturn')
+        self._endturn = value        
 
 
 class Aperture(Element):

@@ -27,9 +27,10 @@ _DISABLE_ELEMS = _COLLECTIVE_ELEMS + _VAR_ELEMS
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     """Function to initialize the beam monitors"""
     monitors = list(refpts_iterator(ring, elements.BeamMoments))
-    for m in monitors:
-        m.set_buffers(nturns, nbunch)
-    return len(monitors) == 0
+    monitors += list(refpts_iterator(ring, elements.SliceMoments))
+    for m in monitor:
+        m.set_buffers(nturns, nbunch)  
+    return len(monitor) == 0
 
 
 def variable_refs(ring):

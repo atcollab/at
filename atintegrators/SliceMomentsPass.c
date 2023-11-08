@@ -153,8 +153,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double *means, *stds, *weights;
         int nslice = atGetLong(ElemData,"nslice"); check_error();
-        int startturn = atGetLong(ElemData,"startturn"); check_error();
-        int endturn = atGetLong(ElemData,"endturn"); check_error();
+        int startturn = atGetLong(ElemData,"_startturn"); check_error();
+        int endturn = atGetLong(ElemData,"_endturn"); check_error();
+        if (endturn<0 || startturn<0){
+            atError("starturn and endturn have to be greater than 0");
+        } else if (endturn<0 || startturn<0){
+            atError("starturn has to be smaller than endturn.");
+        } else if (endturn > Param->num_turns){
+            atWarning("endturn exceed the total number of turns");
+        };
         int dims[] = {4, Param->nbunch*nslice, endturn-startturn};
         int dimsw[] = {Param->nbunch*nslice,  endturn-startturn};        
         means = atGetDoubleArray(ElemData,"_means"); check_error();
@@ -171,7 +178,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->startturn = startturn;
         Elem->endturn = endturn;
         Elem->nslice = nslice;
-    }
+    }   
     SliceMomentsPass(r_in, Param->nbunch, Param->bunch_spos,
                      Param->bunch_currents, num_particles, Elem);
     Elem->turn++;
