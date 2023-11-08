@@ -191,7 +191,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds = stds;
         Elem->means = means;
-        Elem->weights = weigts;
+        Elem->weights = weights;
         Elem->turn = 0;
         Elem->startturn = startturn;
         Elem->endturn = endturn;
