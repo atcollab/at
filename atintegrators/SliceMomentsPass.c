@@ -181,7 +181,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int num_particles = mxGetN(prhs[1]);
         struct elem El, *Elem=&El;
         
-        double *means, *stds, *weights, *zcuts;
+        double *means, *stds, *weights, *z_cuts;
         int startturn = atGetLong(ElemData,"startturn"); check_error();
         int endturn = atGetLong(ElemData,"endturn"); check_error();
         int nslice = atGetLong(ElemData,"nslice"); check_error();    
