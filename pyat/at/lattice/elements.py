@@ -490,6 +490,29 @@ class BeamMoments(Element):
     @property
     def means(self):
         return self._means
+        
+        
+class SliceMoments(Element):
+    """Element to compute bunches mean and std"""
+
+    def __init__(self, family_name: str, **kwargs):
+        kwargs.setdefault('PassMethod', 'SliceMomentsPass')
+        self._stds = numpy.zeros((6, 1, 1), order='F')
+        self._means = numpy.zeros((6, 1, 1), order='F')
+        self._weights = numpy.zeros((1, 1), order='F')
+        super(SliceMoments, self).__init__(family_name, **kwargs)
+
+    def set_buffers(self, nturns, nbunch):
+        self._stds = numpy.zeros((6, nbunch, nturns), order='F')
+        self._means = numpy.zeros((6, nbunch, nturns), order='F')
+
+    @property
+    def stds(self):
+        return self._stds
+
+    @property
+    def means(self):
+        return self._means
 
 
 class Aperture(Element):
