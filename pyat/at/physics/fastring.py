@@ -24,8 +24,10 @@ def _rearrange(ring: Lattice, split_inds=[]):
         ring_slice.insert(0, Marker('xbeg'))
         ring_slice.append(Marker('xend'))
         cavs = [e for e in ring_slice if isinstance(e, RFCavity)]
+        cavInds = [i for i, e in enumerate(ring_slice) if isinstance(e, RFCavity)]
         newpass = ['IdentityPass' if c.Length == 0
                    else 'DriftPass' for c in cavs]
+
         for c, pm in zip(cavs, newpass):
             c.PassMethod = pm
         uni_freq = numpy.unique([e.Frequency for e in cavs])
@@ -35,7 +37,12 @@ def _rearrange(ring: Lattice, split_inds=[]):
             cavl = RFCavity('CAVL', 0, vol, fr,
                             cavf[0].HarmNumber, cavf[0].Energy)
             cavl.TimeLag = cavf[0].TimeLag
+            to_pop = [ind for ind in cavInds if ring_slice[ind].Frequency==fr]
+            for tp in to_pop[::-1]:
+                ring_slice.pop(to_pop)
+                
             ring_slice.append(cavl)
+        
         ringm = ringm + ring_slice
     return all_rings, Lattice(ringm, energy=ring.energy)
 
@@ -44,7 +51,9 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     all_rings, merged_ring = _rearrange(ring, split_inds=split_inds)
     ibegs = get_cells(merged_ring, checkname('xbeg'))
     iends = get_cells(merged_ring, checkname('xend'))
+
     _, orbit = merged_ring.find_orbit(refpts=ibegs | iends)
+
     if detuning_elem is None:
         detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
     else:
