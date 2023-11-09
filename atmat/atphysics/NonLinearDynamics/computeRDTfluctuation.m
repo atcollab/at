@@ -35,7 +35,11 @@ function [RDT,buildup_fluctuation,natural_fluctuation] = computeRDTfluctuation(r
 
 % Validates the input arguements.
 [nslices,varargs]=getoption(varargin,'nslices',4);
-[nperiods,~]=getoption(varargs,'nperiods',1);
+[nperiods,varargs]=getoption(varargs,'nperiods',1);
+if ~ isempty(varargs)
+    throw(MException('RDTFluctuation:parameterError', ...
+        ['Unsupported parameter: ' varargs{1}]))
+end
 
 if ~(isnumeric(nslices) && isreal(nslices) && isfinite(nslices) ...
         && (nslices > 0) && round(nslices) == nslices)
