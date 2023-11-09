@@ -37,9 +37,10 @@ def _rearrange(ring: Lattice, split_inds=[]):
             cavl = RFCavity('CAVL', 0, vol, fr,
                             cavf[0].HarmNumber, cavf[0].Energy)
             cavl.TimeLag = cavf[0].TimeLag
+            
             to_pop = [ind for ind in cavInds if ring_slice[ind].Frequency==fr]
             for tp in to_pop[::-1]:
-                ring_slice.pop(to_pop)
+                ring_slice.pop(tp)
                 
             ring_slice.append(cavl)
         
