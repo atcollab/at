@@ -136,6 +136,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
+        use_mp (bool): Flag to activate multiprocessing (default: False)
         pool_size:              number of processes used when
           *use_mp* is :py:obj:`True`. If None, ``min(npart,nproc)``
           is used. It can be globally set using the variable
