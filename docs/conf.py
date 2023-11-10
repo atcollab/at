@@ -40,7 +40,7 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.intersphinx',
               'sphinx.ext.githubpages',
               'sphinx.ext.viewcode',
-              'myst_parser',
+              'myst_nb',
               'sphinx_copybutton',
               ]
 
@@ -56,7 +56,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["README.rst", "**/*.so"]
+exclude_patterns = ["README.rst", "**/*.so", "_build/*"]
 rst_prolog = """
 .. role:: pycode(code)
    :language: python
@@ -92,6 +92,8 @@ myst_enable_extensions = [
     "deflist"
 ]
 myst_heading_anchors = 3
+nb_execution_mode = "auto"
+nb_execution_allow_errors = True
 
 # -- Options for HTML output -------------------------------------------------
 
