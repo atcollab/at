@@ -103,11 +103,11 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
         fringrad (Lattice): Fast ring with radiation
     """
     ringi = ring.deepcopy()
-    fastringnorad = _fring(ringi.radiation_off(copy=True),
+    fastringnorad = _fring(ringi.disable_6d(copy=True),
                            split_inds=split_inds)
     detuning_elem = copy.deepcopy(get_elements(fastringnorad,
                                                'NonLinear')[0])
-    fastringrad = _fring(ringi.radiation_on(copy=True),
+    fastringrad = _fring(ringi.enable_6d(copy=True),
                          split_inds=split_inds,
                          detuning_elem=detuning_elem)
     return fastringnorad, fastringrad
