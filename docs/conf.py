@@ -42,6 +42,7 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.viewcode',
               'myst_nb',
               'sphinx_copybutton',
+              'sphinx_design',
               ]
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),

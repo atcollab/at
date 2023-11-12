@@ -82,7 +82,7 @@ class ElementVariable(Variable):
 
     of one or several :py:class:`.Element`\ s of a lattice.
 
-    an :py:class:`ElementVariable` is associated to an element object, and acts on all
+    An :py:class:`ElementVariable` is associated to an element object, and acts on all
     occurrences of this object. But it will not affect any copy, neither shallow nor
     deep, of the original object.
     """

@@ -26,8 +26,8 @@ Sub-packages
 
    howto/Installation
    howto/Primer
-   notebooks/test_parameters
-   notebooks/test_observables
+   variables_parameters
+   notebooks/observables
    examples
 
 .. toctree::
