@@ -519,21 +519,16 @@ class _PArray(np.ndarray):
     """Subclass of ndarray which reports to its parent ParamArray"""
 
     def __new__(cls, value, buildfun):
-        # print(f"PArray step 1 {type(value)}")
         a = buildfun(value)
-        # print(f"PArray step 2 {type(a)}")
         obj = a.view(cls)
-        # print(f"PArray step 3")
         obj._parent = value
         return obj
 
     def __array_finalize__(self, obj):
-        # print(f"PArray finalize {type(obj)}")
         if obj is not None:
             self._parent = getattr(obj, "_parent", None)
 
     def __setitem__(self, key, value):
-        # print(f"PArray setitem({key})")
         super().__setitem__(key, value)
         if self._parent is not None:
             self._parent[key] = value

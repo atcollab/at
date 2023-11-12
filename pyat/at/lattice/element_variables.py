@@ -2,7 +2,7 @@
 kinds of element variables:
 
 - an :py:class:`ElementVariable` is associated to an element object, and acts on all
-  occurences of this object. But it will not affect any copy, neither shallow or deep,
+  occurences of this object. But it will not affect any copy, neither shallow nor deep,
   of the original object,
 - a :py:class:`RefptsVariable` is not associated to an element object, but to an element
   location in a :py:class:`.Lattice`. It acts on any copy of the initial lattice. A

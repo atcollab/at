@@ -469,12 +469,17 @@ class Element(object):
             setattr(self, attrname, value)
         else:
             attr = self.__dict__[attrname]
-            if isinstance(value, ParamBase)\
-                    and not isinstance(attr, ParamArray):
+            if isinstance(value, ParamBase) and not isinstance(attr, ParamArray):
                 # replace the numpy array with a ParamArray
                 attr = ParamArray(attr)
                 setattr(self, attrname, attr)
             attr[index] = value
+
+    def _get_parameter(self, attrname: str, index: Optional[int] = None):
+        attr = self.__dict__[attrname]
+        if index is not None:
+            attr = attr[index]
+        return attr
 
     def get_parameter(self, attrname: str, index: Optional[int] = None):
         """Extract a parameter of an element
@@ -489,11 +494,12 @@ class Element(object):
             index:      Index in an array attribute. If :py:obj:`None`, the
               whole attribute is set
         """
-        attr = self.__dict__[attrname]
-        if index is None:
-            return attr
-        else:
-            return attr[index]
+        attr = self._get_parameter(attrname, index=index)
+        if not isinstance(attr, (ParamBase, ParamArray)):
+            message = f"\n\n{self.FamName}.{attrname} is not a parameter.\n"
+            # warn(AtWarning(message))
+            raise TypeError(message)
+        return attr
 
     def is_parametrised(self, attrname: Optional[str] = None,
                         index: Optional[int] = None) -> bool:
@@ -511,7 +517,7 @@ class Element(object):
                     return True
             return False
         else:
-            attr = self.get_parameter(attrname, index=index)
+            attr = self._get_parameter(attrname, index=index)
             return isinstance(attr, (ParamBase, ParamArray))
 
     def parametrise(self, attrname: str, index: Optional[int] = None,
@@ -533,7 +539,8 @@ class Element(object):
               array attribute
 
         """
-        vini = self.get_parameter(attrname, index=index)
+        vini = self._get_parameter(attrname, index=index)
+
         if isinstance(vini, (ParamBase, ParamArray)):
             return vini
 
@@ -564,13 +571,12 @@ class Element(object):
                 if isinstance(attr, (ParamBase, ParamArray)):
                     setattr(self, key, attr.value)
         else:
-            attr = self.get_parameter(attrname, index=index)
+            attr = self._get_parameter(attrname, index=index)
             if isinstance(attr, (ParamBase, ParamArray)):
                 if index is None:
                     setattr(self, attrname, attr.value)
                 else:
-                    arr = self.get_parameter(attrname)
-                    arr[index] = attr.value
+                    self._get_parameter(attrname)[index] = attr.value
 
 
 class LongElement(Element):

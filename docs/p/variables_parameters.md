@@ -11,7 +11,7 @@ lattice. They may be used in parameter scans, matching, response matrices…
 variable classes referring to scalar attributes of lattice elements:
 - an {py:class}`~.element_variables.ElementVariable` is associated to an element object, and acts on
   all occurences of this object. But it will not affect any copy, neither shallow
-  or deep, of the original object,
+  nor deep, of the original object,
 - a {py:class}`.RefptsVariable` is not associated to an element object, but to an
   element location in a {py:class}`.Lattice`. It acts on any copy of the initial
   lattice. A *ring* argument must be provided to the *set* and *get* methods to
