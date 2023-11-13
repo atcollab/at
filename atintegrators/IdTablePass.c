@@ -3,11 +3,15 @@
  * Created: 13/11/08
  * Zeus Marti
  *
+ *
  * Based in the matlab routine:
  * WigTablePass.m - The tracking table is described in
  * P. Elleaume, "A new approach to the electron beam dynamics in undulators
  * and wigglers", EPAC92.
  *
+ * History:
+ * 2023nov13  change in variable names according to Pull Request
+ *            https://github.com/atcollab/at/pull/683
  */
 
 #include "atelem.c"
@@ -16,8 +20,8 @@
 
 struct elem {
     double Length;
-    double *xkick;
-    double *ykick;
+    double *xkick2;
+    double *ykick2;
     double *x_map;
     double *y_map;
     int nx_map;
@@ -38,17 +42,18 @@ int GLOBAL_nx_map,GLOBAL_ny_map;
 static double get_kick(double *r6, double *ktable)
 {
     double f;
+    /*2023nov13 blanco-garcia. Warning: Variables not updated*/
     /*cubic interpolation*/
     /*splin2(GLOBAL_y_map,GLOBAL_x_map,GLOBAL_xkick,GLOBAL_xkick2,GLOBAL_n,GLOBAL_nx,y,x,&f);*/
     
-    /*biliniar interpolation*/
+    /*bilinear interpolation*/
     /* Transpose coordinates because the kick-table is FORTRAN-ordered */
     linint(GLOBAL_y_map, GLOBAL_x_map, ktable, GLOBAL_ny_map, GLOBAL_nx_map, r6[2], r6[0], &f);
     return f;
  }
 
 void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
-        double *xkick, double *ykick, double *x_map, double *y_map,int nx_map,int ny_map, int Nslice,
+        double *xkick2, double *ykick2, double *x_map, double *y_map,int nx_map,int ny_map, int Nslice,
         double *T1, double *T2, double *R1, double *R2, int num_particles)
 {
     double *r6, deltaxp, deltayp, limitsptr[4];
@@ -80,8 +85,8 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
                 ATdrift6(r6,L1);
                 if (!atIsNaN(r6[0])&&!atIsNaN(r6[2])) {
                     /*The kick from IDs varies quadratically, not linearly, with energy.   */
-                    deltaxp = get_kick(r6, xkick)/(1.0+r6[4]);
-                    deltayp = get_kick(r6, ykick)/(1.0+r6[4]);
+                    deltaxp = get_kick(r6, xkick2)/(1.0+r6[4]);
+                    deltayp = get_kick(r6, ykick2)/(1.0+r6[4]);
                     if (xkick1)  deltaxp += get_kick(r6, xkick1);
                     if (ykick1)  deltayp += get_kick(r6, ykick1);
                     r6[1] = r6[1] + deltaxp / Nslice;
@@ -102,16 +107,16 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         int Nslice, ny_map,nx_map;
-        double Length, *xkick, *ykick, *x_map, *y_map;
+        double Length, *xkick2, *ykick2, *x_map, *y_map;
         double *xkick1, *ykick1;
         double *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        xkick=atGetDoubleArraySz(ElemData,"xkick", &ny_map, &nx_map); check_error();
+        xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
         /* the third input of atGetDoubleArraySz is a pointer for the 
          * number of rows in the 2-D array, the fourth input is a pointer 
          * for the number of columns
          */
-        ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
+        ykick2=atGetDoubleArray(ElemData,"ykick2"); check_error();
         x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
         y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
         Nslice=atGetLong(ElemData,"Nslice"); check_error();
@@ -124,8 +129,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
-        Elem->xkick=xkick;
-        Elem->ykick=ykick;
+        Elem->xkick2=xkick2;
+        Elem->ykick2=ykick2;
         Elem->x_map=x_map;
         Elem->y_map=y_map;
         Elem->nx_map=nx_map;
@@ -139,7 +144,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
     }
     IdKickMapModelPass(r_in, Elem->Length, Elem->xkick1, Elem->ykick1,
-            Elem->xkick, Elem->ykick, Elem->x_map, Elem->y_map, Elem->nx_map, Elem->ny_map,Elem->Nslice,
+            Elem->xkick2, Elem->ykick2, Elem->x_map, Elem->y_map, Elem->nx_map, Elem->ny_map,Elem->Nslice,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2, num_particles);
     return Elem;
 }
@@ -155,16 +160,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         int Nslice, ny_map, nx_map;
-        double Length, *xkick, *ykick, *x_map, *y_map;
+        double Length, *xkick2, *ykick2, *x_map, *y_map;
         double *xkick1, *ykick1;
         double *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        xkick=atGetDoubleArraySz(ElemData,"xkick", &ny_map, &nx_map); check_error();
+        xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
         /* the third input of atGetDoubleArraySz is a pointer for the 
          * number of rows in the 2-D array, the fourth input is a pointer 
          * for the number of columns
          */
-        ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
+        ykick2=atGetDoubleArray(ElemData,"ykick2"); check_error();
         x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
         y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
         Nslice=atGetLong(ElemData,"Nslice"); check_error();
@@ -178,15 +183,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        IdKickMapModelPass(r_in, Length, xkick1, ykick1, xkick, ykick, x_map, y_map,
+        IdKickMapModelPass(r_in, Length, xkick1, ykick1, xkick2, ykick2, x_map, y_map,
                 nx_map, ny_map, Nslice, T1, T2, R1, R2, num_particles);
     }
     else if (nrhs == 0) {
         /* return list of required fields */
         plhs[0] = mxCreateCellMatrix(6,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
-        mxSetCell(plhs[0],1,mxCreateString("xkick"));
-        mxSetCell(plhs[0],2,mxCreateString("ykick"));
+        mxSetCell(plhs[0],1,mxCreateString("xkick2"));
+        mxSetCell(plhs[0],2,mxCreateString("ykick2"));
         mxSetCell(plhs[0],3,mxCreateString("xtable"));
         mxSetCell(plhs[0],4,mxCreateString("ytable"));
         mxSetCell(plhs[0],5,mxCreateString("Nslice"));
