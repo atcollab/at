@@ -258,7 +258,7 @@ class InsertionDeviceKickMap(Element):
         _deprecated_argnames = ['xkick','ykick']
         for depname in _deprecated_argnames:
             if depname in kwargs:
-                warn(AtWarning(depname+' argument is deprecated; they will be renamed'))
+                warn(depname+' argument is deprecated; they will be renamed')
                 kwargs[depname+'2'] = kwargs.pop(depname)
         if len(args) < 11:
             # get data from text file
