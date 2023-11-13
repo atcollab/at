@@ -32,8 +32,8 @@ class InsertionDeviceKickMap(Element):
 
     _conversions = dict(Element._conversions,
                         Nslice=int,
-                        xkick=_anyarray,
-                        ykick=_anyarray,
+                        xkick2=_anyarray,
+                        ykick2=_anyarray,
                         xkick1=_anyarray,
                         ykick1=_anyarray
                         )
