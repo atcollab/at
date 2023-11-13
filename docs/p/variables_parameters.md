@@ -1,6 +1,6 @@
 # Variables and Parameters
-Variables and parameters provide a unified way of varying any quantity affecting a
-lattice. They may be used in parameter scans, matching, response matrices…
+Variables and parameters provide a unified way of varying any scalar quantity affecting
+a lattice. They may be used in parameter scans, matching, response matrices…
 
 ````{grid} 1 1 1 1
 :gutter: 2
@@ -32,6 +32,15 @@ Arithmetic combinations of parameters create new read-only parameters of class
 introduce correlation between attributes of different elements.
 ```
 ````
+
+Variables and parameters share a common interface inherited from the
+{py:class}`~.variables.Variable` abstract base class. This includes the
+{py:meth}`~.variables.Variable.get` and {py:meth}`~.variables.Variable.set` methods
+and the {py:attr}`~.variables.Variable.value` property.
+
+Variables and parameters can be grouped in {py:class}`~.variables.VariableList`
+containers providing the vectorised equivalent {py:meth}`~.variables.VariableList.get`
+and {py:meth}`~.variables.VariableList.set` methods.
 
 ```{toctree}
 :maxdepth: 2
