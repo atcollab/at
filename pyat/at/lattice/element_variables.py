@@ -110,11 +110,11 @@ class ElementVariable(Variable):
         """
         # Ensure the uniqueness of elements
         if isinstance(elements, Element):
-            self.elements = {elements}
+            self._elements = {elements}
         else:
-            self.elements = set(elements)
+            self._elements = set(elements)
         # Check that the attribute is not already a parameter
-        if any(el.is_parametrised(attrname, index=index) for el in self.elements):
+        if any(el.is_parametrised(attrname, index=index) for el in self._elements):
             raise TypeError(f"{attrname} attribute is a Variable")
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
@@ -122,9 +122,14 @@ class ElementVariable(Variable):
         self._history.append(self._getfun())
 
     def _setfun(self, value: float, **kwargs):
-        for elem in self.elements:
+        for elem in self._elements:
             self._setf(elem, value)
 
     def _getfun(self, **kwargs) -> float:
-        values = np.array([self._getf(elem) for elem in self.elements])
+        values = np.array([self._getf(elem) for elem in self._elements])
         return np.average(values)
+
+    @property
+    def elements(self):
+        """Return the set of elements acted upon by the variable"""
+        return self._elements
