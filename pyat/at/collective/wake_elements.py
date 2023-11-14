@@ -45,7 +45,7 @@ class WakeElement(Collective, Element):
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
         self._turnhistory = None    # Defined here to avoid warning
-        self.clear_history()
+        self.clear_history(ring=ring)
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
         self._build(wake)
         if zcuts is not None:
@@ -70,14 +70,13 @@ class WakeElement(Collective, Element):
         self._build(wake)
 
     def clear_history(self, ring=None):
-        if ring is None:
-            tl = self._nturns*self._nslice
-        else:
-            tl = self._nturns*self._nslice*ring.nbunch
+        if ring is not None:
+            self._nbunch = ring.nbunch
+        tl = self._nturns*self._nslice*self._nbunch
         self._turnhistory = numpy.zeros((tl, 4), order='F')
 
     def set_normfactxy(self, ring):
-        l0, _, _ = ring.get_optics(ring)
+        l0, _, _ = ring.get_optics()
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
 

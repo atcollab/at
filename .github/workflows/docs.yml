@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_and_run_tests:
+  build_and_publish_doc:
 
     runs-on: ubuntu-latest
 
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         # Necessary to fetch tags and allow setuptools_scm
         # see: https://github.com/pypa/setuptools_scm/issues/480
@@ -32,7 +32,7 @@ jobs:
       working-directory: docs
 
     - name: Publish Docs to gh-pages
-      uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305
+      uses: peaceiris/actions-gh-pages@373f7f263a76c20808c831209c920827a82a2847
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/_build/html

@@ -86,7 +86,7 @@ Npart = Nbunches
 # Now we give the fring and convert it
 # into a beam loaded cavity.
 add_beamloading(fring, qfactor, rshunt, Nslice=1,
-                Nturns=50, mode=blm,
+                Nturns=50, blmode=blm,
                 VoltGain=0.1, PhaseGain=0.1)
 
 bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
@@ -113,7 +113,7 @@ for i in numpy.arange(Nturns):
     if i == kickTurn:
         part[4, :] += 3e-3
 
-    at.track_function(fring, part, nturns=1)
+    fring.track(part, nturns=1, refpts=None, in_place=True)
 
     # Gather particles over all cores (compatible with MPI on or off)
     allPartsg = comm.gather(part)
@@ -132,7 +132,8 @@ for i in numpy.arange(Nturns):
 if rank == 0:
     qscoh = numpy.zeros(Nbunches)
     for ib in numpy.arange(Nbunches):
-        qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
+        dp_dat = dp_all[kickTurn:, ib] - numpy.mean(dp_all[kickTurn:, ib])
+        qs = harmonic_analysis.get_tunes_harmonic(dp_dat,
                                                   num_harmonics=20,
                                                   fmin=1e-5, fmax=0.1)
         qscoh[ib] = qs
