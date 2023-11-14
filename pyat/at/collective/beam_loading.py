@@ -47,6 +47,8 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
         cavitymode (CavityMode):     Define PASSIVE or ACTIVE cavity
+        store_cavity_data:  If True, stores the generator and beam induced
+            voltage and phase to a buffer.
     """
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
@@ -123,13 +125,14 @@ class BeamLoadingElement(RFCavity, Collective):
                         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
                         _vbeam=lambda v: _array(v, shape=(2,)),
                         _vcav=lambda v: _array(v, shape=(2,)),
-                        _vgen=lambda v: _array(v, shape=(2,)),
+                        _vgen=lambda v: _array(v, shape=(2,))
                         )
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
                  rshunt: float, blmode: Optional[BLMode] = BLMode.PHASOR,
                  cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
+                 store_cavity_data: Optional[bool] = False,
                  **kwargs):
         r"""
         Parameters:
@@ -150,6 +153,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 function. For high Q resonator, the phasor method should be
                 used
             cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
+            store_cavity_data:  Save cavity data to a buffer?
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -179,6 +183,8 @@ class BeamLoadingElement(RFCavity, Collective):
         self._nbunch = ring.nbunch
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
+
+        self._store_cavity_data = store_cavity_data
         if zcuts is not None:
             self.ZCuts = zcuts
         super(BeamLoadingElement, self).__init__(family_name, length,
@@ -193,7 +199,13 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vcav = numpy.array([self.Voltage,
                                   numpy.pi/2-self._phis-phil])
         self.clear_history(ring=ring)
-
+        self.set_buffers(1, 1)
+        
+    def set_buffers(self, nturns, nbunch):
+        self._vgen_buffer = numpy.zeros((2, nturns), order='F')
+        self._vbeam_buffer = numpy.zeros((2, nturns), order='F')
+        self._vbunch_buffer = numpy.zeros((nbunch, nturns, 2), order='F')
+        
     def is_compatible(self, other):
         return False
 
@@ -226,6 +238,22 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
         self._vgen = numpy.array([vgen, psi])
+
+    @property
+    def Vgen_buffer(self):
+        """Stored generator voltage data"""
+        return self._vgen_buffer
+
+    @property
+    def Vbeam_buffer(self):
+        """Stored beam induced voltage data"""
+        return self._vbeam_buffer
+
+    @property
+    def Vbunch_buffer(self):
+        """Stored bunch induced voltage data"""
+        return self._vbunch_buffer
+        
 
     @property
     def Nslice(self):
@@ -286,6 +314,7 @@ class BeamLoadingElement(RFCavity, Collective):
                        qfactor: float, rshunt: float,
                        blmode: Optional[BLMode] = BLMode.PHASOR,
                        cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
+                       store_cavity_data: Optional[bool] = False,
                        **kwargs):
         r"""Function to build the BeamLoadingElement from a cavity
         the FamName, Length, Voltage, Frequency and HarmNumber are
@@ -325,6 +354,7 @@ class BeamLoadingElement(RFCavity, Collective):
         return BeamLoadingElement(family_name, *cav_args, ring,
                                   qfactor, rshunt, blmode=blmode,
                                   cavitymode=cavitymode,
+                                  store_cavity_data=store_cavity_data,
                                   **cav_attrs, **kwargs)
 
     def __repr__(self):
