@@ -217,7 +217,8 @@ class InsertionDeviceKickMap(Element):
         vkickmap1 = sorted_table(vkickmap1_a, rows2sorted_index, 'row')
 
         # Field to kick factors
-        Brho = 1e9 * (Energy**2 - e_mass**2)/clight
+        e_massGeV = e_mass * 1e-9
+        Brho = 1e9 * numpy.sqrt(Energy**2 - e_massGeV**2)/clight
         factor = 1.0/(Brho**2)
         xkick2 = factor * hkickmap2
         ykick2 = factor * vkickmap2
