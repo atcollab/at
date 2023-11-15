@@ -255,11 +255,18 @@ class InsertionDeviceKickMap(Element):
                      'ytable']
         # change of variable names since Pull Request
         # https://github.com/atcollab/at/pull/683#issuecomment-1805667215
-        _deprecated_argnames = ['xkick','ykick']
-        for depname in _deprecated_argnames:
-            if depname in kwargs:
-                warn(depname+' argument is deprecated; they will be renamed')
-                kwargs[depname+'2'] = kwargs.pop(depname)
+        _args_change = {'xkick':'xkick2','ykick':'ykick2'}
+        for _old_name in _args_change:
+            if _old_name in kwargs:
+                # insert in args while keeping order before zipping
+                _inda = _argnames.index(_args_change[_old_name])
+                _argslist = list(args)
+                _argslist.insert(_inda,kwargs.pop(_old_name))
+                args = tuple(_argslist)
+                _deprecat_msg = (f' argument {_old_name} is deprecated; '
+                                 f'it is changed to {_args_change[_old_name]}'
+                                 )
+                warn(_deprecat_msg)
         if len(args) < 11:
             # get data from text file
             elemargs = self.from_text_file(*args)
