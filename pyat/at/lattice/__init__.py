@@ -10,13 +10,13 @@ from .axisdef import *
 from .options import DConstant, random
 from .particle_object import Particle
 # from .variables import *
-from .variables import VariableList
+from .variables import ParamBase, Param, ParamArray, VariableList
 from .elements import *
 from .rectangular_bend import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .lattice_object import *
-# from .lattice_variables import *
+# from .element_variables import *
 from .cavity_access import *
 from .variable_elements import *
 from .deprecated import *

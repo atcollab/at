@@ -26,7 +26,9 @@ Sub-packages
 
    howto/Installation
    howto/Primer
-   notebooks/variables
+   variables_parameters
+   notebooks/observables
+   examples
 
 .. toctree::
    :maxdepth: 2
@@ -43,6 +45,7 @@ Sub-packages
    :recursive:
 
    at.lattice
+   at.latticetools
    at.tracking
    at.physics
    at.load
