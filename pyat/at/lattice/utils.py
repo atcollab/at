@@ -37,6 +37,7 @@ from typing import Callable, Optional, Sequence, Iterator
 from typing import Union, Tuple, List, Type
 from enum import Enum
 from itertools import compress
+from operator import attrgetter
 from fnmatch import fnmatch
 from .elements import Element, Dipole
 
@@ -58,7 +59,7 @@ __all__ = ['All', 'End', 'AtError', 'AtWarning', 'axis_descr',
            'set_shift', 'set_tilt', 'set_rotation',
            'tilt_elem', 'shift_elem', 'rotate_elem',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
-           'get_geometry']
+           'get_geometry', 'setval', 'getval']
 
 _axis_def = dict(
     x=dict(index=0, label="x", unit=" [m]"),
@@ -111,6 +112,72 @@ def _type_error(refpts, types):
         tp = type(refpts)
     return TypeError(
         "Invalid refpts type {0}. Allowed types: {1}".format(tp, types))
+
+
+# setval and getval return pickleable functions: no inner, nested function
+# are allowed. So nested functions are replaced be module-level callable
+# class instances
+class _AttrItemGetter(object):
+    __slots__ = ["attrname", "index"]
+
+    def __init__(self, attrname: str, index: int):
+        self.attrname = attrname
+        self.index = index
+
+    def __call__(self, elem):
+        return getattr(elem, self.attrname)[self.index]
+
+
+def getval(attrname: str, index: Optional[int] = None) -> Callable:
+    """Return a callable object which fetches item *index* of
+    attribute *attrname* of its operand. Examples:
+
+    - After ``f = getval('Length')``, ``f(elem)`` returns ``elem.Length``
+    - After ``f = getval('PolynomB, index=1)``, ``f(elem)`` returns
+      ``elem.PolynomB[1]``
+
+    """
+    if index is None:
+        return attrgetter(attrname)
+    else:
+        return _AttrItemGetter(attrname, index)
+
+
+class _AttrSetter(object):
+    __slots__ = ["attrname"]
+
+    def __init__(self, attrname: str):
+        self.attrname = attrname
+
+    def __call__(self, elem, value):
+        setattr(elem, self.attrname, value)
+
+
+class _AttrItemSetter(object):
+    __slots__ = ["attrname", "index"]
+
+    def __init__(self, attrname: str, index: int):
+        self.attrname = attrname
+        self.index = index
+
+    def __call__(self, elem, value):
+        getattr(elem, self.attrname)[self.index] = value
+
+
+def setval(attrname: str, index: Optional[int] = None) -> Callable:
+    """Return a callable object which sets the value of  item *index* of
+    attribute *attrname* of its 1st argument to it 2nd orgument.
+
+    - After ``f = setval('Length')``, ``f(elem, value)`` is equivalent to
+      ``elem.Length = value``
+    - After ``f = setval('PolynomB, index=1)``, ``f(elem, value)`` is
+      equivalent to ``elem.PolynomB[1] = value``
+
+    """
+    if index is None:
+        return _AttrSetter(attrname)
+    else:
+        return _AttrItemSetter(attrname, index)
 
 
 # noinspection PyIncorrectDocstring
@@ -774,13 +841,7 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
     Returns:
         attrvalues: numpy Array of attribute values.
     """
-    if index is None:
-        def getf(elem):
-            return getattr(elem, attrname)
-    else:
-        def getf(elem):
-            return getattr(elem, attrname)[index]
-
+    getf = getval(attrname, index=index)
     return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts,
                                                                regex=regex)])
 
@@ -817,13 +878,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
              elements are shared with the original lattice.
              Any further modification will affect both lattices.
     """
-    if index is None:
-        def setf(elem, value):
-            setattr(elem, attrname, value)
-    else:
-        def setf(elem, value):
-            getattr(elem, attrname)[index] = value
-
+    setf = setval(attrname, index=index)
     if increment:
         attrvalues += get_value_refpts(ring, refpts,
                                        attrname, index=index,
