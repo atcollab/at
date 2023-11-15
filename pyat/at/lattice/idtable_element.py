@@ -147,15 +147,16 @@ class InsertionDeviceKickMap(Element):
                                 kick_vaxes_list.append(vaxis)
                             block_lines += 1
             # checking how many kick blocks were added
-            if len(kick_block_list) < 2:
+            lenkick_block_list = len(kick_block_list)
+            if lenkick_block_list < 2 or lenkick_block_list == 3:
                 _minimumBlocknumberErrormsg = ('Input file contains only '
                                                f'{len(kick_block_list)} block')
                 raise ValueError(_minimumBlocknumberErrormsg)
-            if len(kick_block_list) == 2:
+            if lenkick_block_list == 2:
                 # first order kick not in file
                 kick_block_list.append(0.0 * numpy.copy(kick_block))
                 kick_block_list.append(0.0 * numpy.copy(kick_block))
-            elif len(kick_block_list) > 4:
+            elif lenkick_block_list > 4:
                 # file contains more blocks that required
                 _warn4kickblocks = ('Input file contains more than 4 blocks. '
                     'Additional blocks ignored')
