@@ -204,7 +204,7 @@ class BeamLoadingElement(RFCavity, Collective):
     def set_buffers(self, nturns, nbunch):
         self._vgen_buffer = numpy.zeros((2, nturns), order='F')
         self._vbeam_buffer = numpy.zeros((2, nturns), order='F')
-        self._vbunch_buffer = numpy.zeros((nbunch, nturns, 2), order='F')
+        self._vbunch_buffer = numpy.zeros((2, nbunch, nturns), order='F')
         
     def is_compatible(self, other):
         return False
