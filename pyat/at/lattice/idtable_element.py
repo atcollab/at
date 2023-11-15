@@ -1,7 +1,7 @@
 from .elements import Element
 import numpy
 import io
-from ..constants import clight
+from ..constants import clight, e_mass
 from warnings import warn
 
 def _anyarray(value):
@@ -217,7 +217,7 @@ class InsertionDeviceKickMap(Element):
         vkickmap1 = sorted_table(vkickmap1_a, rows2sorted_index, 'row')
 
         # Field to kick factors
-        Brho = 1e9 * Energy/clight
+        Brho = 1e9 * (Energy**2 - e_mass**2)/clight
         factor = 1.0/(Brho**2)
         xkick2 = factor * hkickmap2
         ykick2 = factor * vkickmap2
