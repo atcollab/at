@@ -58,40 +58,37 @@ if any(long)
     if any(foc)
         qp=false(size(lg));
         qp(lg)=foc;
-        K=zeros(size(L)); %long
-        q=1e-12+atgetfieldvalues(ring(refpts(qp)),'PolynomB',{2});
-        m=atgetfieldvalues(ring(refpts(qp)),'PolynomB',{3});
-        R11=atgetfieldvalues(ring(refpts(qp)),'R2',{1,1});
-        dx=(atgetfieldvalues(ring(refpts(qp)),'T2',{1})-atgetfieldvalues(ring(refpts(qp)),'T1',{1}))/2;
-        ba=atgetfieldvalues(ring(refpts(qp)),'BendingAngle');
-        ba(isnan(ba))=0;
-        irho=ba./L(foc);
-        e1=atgetfieldvalues(ring(refpts(qp)),'EntranceAngle');
-        Fint=atgetfieldvalues(ring(refpts(qp)),'Fint');
-        gap=atgetfieldvalues(ring(refpts(qp)),'gap');
-        e1(isnan(e1))=0;
-        Fint(isnan(Fint))=0;
-        gap(isnan(gap))=0;
-        d_csi=ba.*gap.*Fint.*(1+sin(e1).^2)./cos(e1)./L(foc);
-        Cp=[ba.*tan(e1)./L(foc) -ba.*tan(e1-d_csi)./L(foc)];
+
+        %Extract element parameters
+        L=atgetfieldvalues(ring(refpts(qp)),'Length','Default',0);
+        q=1e-12+atgetfieldvalues(ring(refpts(qp)),'PolynomB',{2},'Default',0);
+        m=atgetfieldvalues(ring(refpts(qp)),'PolynomB',{3},'Default',0);
+        R11=atgetfieldvalues(ring(refpts(qp)),'R2',{1,1},'Default',1);
+        dx=(atgetfieldvalues(ring(refpts(qp)),'T2',{1},'Default',0)-atgetfieldvalues(ring(refpts(qp)),'T1',{1},'Default',0))/2;
+        ba=atgetfieldvalues(ring(refpts(qp)),'BendingAngle','Default',0);
+        irho=ba./L;
+        e1=atgetfieldvalues(ring(refpts(qp)),'EntranceAngle','Default',0);
+        Fint=atgetfieldvalues(ring(refpts(qp)),'Fint','Default',0);
+        gap=atgetfieldvalues(ring(refpts(qp)),'gap','Default',0);
+        
+        %Hard edge model on dipoles
+        d_csi=ba.*gap.*Fint.*(1+sin(e1).^2)./cos(e1)./L;
+        Cp=[ba.*tan(e1)./L -ba.*tan(e1-d_csi)./L];
         for ii=1:2
             alpha0(foc,ii)=alpha0(foc,ii)-beta0(foc,ii).*Cp(:,ii);
             disp0(foc,2+(ii-1)*2)=disp0(foc,2+(ii-1)*2)-disp0(foc,1+(ii-1)*2).*Cp(:,ii);
         end
-        R11(isnan(R11))=1;
-        irho(isnan(irho))=0;
-        m(isnan(m))=0;
-        dx(isnan(dx))=0;
-
+        
+        % Additional components
         dx0=(ClosedOrbit0(foc,1)+ClosedOrbit1(foc,1))/2;
-        K(foc)=q.*R11+2*m.*(dx0-dx);
+        K=q.*R11+2*m.*(dx0-dx);
         K2=[K -K]; %long
-        K2(foc,1)=K2(foc,1)+irho.^2;
+        K2(:,1)=K2(:,1)+irho.^2;
         irho2=[irho 0*irho];
-        sel=false(size(avebeta,1),1); %refpts
-        sel(lg)=foc;
-        avebeta(sel,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2(foc,:),L2(foc,:));
-        avedisp(sel,:)=dispfoc(disp0(foc,:),irho2(foc,:),K2(foc,:),L2(foc,:));
+
+        % Apply formulas
+        avebeta(qp,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2,L2(foc,:));
+        avedisp(qp,:)=dispfoc(disp0(foc,:),irho2,K2,L2(foc,:));
     end
     
 end
@@ -103,7 +100,8 @@ end
 
     function avebeta=betafoc(beta0,alpha0,K,L)
         gamma0=(alpha0.*alpha0+1)./beta0;
-        avebeta=((beta0+gamma0./K).*L+(beta0-gamma0./K).*sin(2.0*sqrt(K).*L)./sqrt(K)/2.0+(cos(2.0*sqrt(K).*L)-1.0).*alpha0./K)./L/2.0;
+        avebeta=((beta0+gamma0./K).*L+(beta0-gamma0./K).*sin(2.0*sqrt(K).*L)./sqrt(K)/2.0+...
+            (cos(2.0*sqrt(K).*L)-1.0).*alpha0./K)./L/2.0;
     end
 
     function avedisp=dispfoc(disp0,ir,K,L)
