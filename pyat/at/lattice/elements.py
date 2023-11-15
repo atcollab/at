@@ -12,21 +12,52 @@ import numpy
 from copy import copy, deepcopy
 from abc import ABC
 from collections.abc import Generator, Iterable
-from typing import Optional
+from typing import Union, Optional
+from warnings import warn
+from .variables import Param, ParamBase, ParamArray
+# noinspection PyProtectedMember
+from .variables import _nop
+
+
+class WarningArray(numpy.ndarray):
+    """subclass of ndarray which warns when setting a Param item"""
+    def __setitem__(self, key, value):
+        if isinstance(value, ParamBase):
+            message = f"\n\nThe Parameter '{value.name}' is ignored, instead " \
+                      f"its value '{value.value}' is used." \
+                      "\nTo set a parameter in an array, you must first " \
+                      "parametrise the array itself.\n"
+            warn(UserWarning(message))
+        super().__setitem__(key, value)
+
+    def __repr__(self):
+        # Simulate a standard ndarray
+        return repr(self.view(numpy.ndarray))
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
-        shape, order='F')
+        shape, order='F').view(WarningArray)
 
 
 def _array66(value):
     return _array(value, shape=(6, 6))
 
 
-def _nop(value):
-    return value
+def _float(value):
+    return float(value)
+
+
+def _int(value):
+    return int(value)
+
+
+def _array_type(value):
+    if isinstance(value, ParamBase):
+        return ParamArray
+    else:
+        return numpy.array
 
 
 class LongtMotion(ABC):
@@ -240,7 +271,7 @@ class Element(object):
     """Base class for AT elements"""
 
     _BUILD_ATTRIBUTES = ['FamName']
-    _conversions = dict(FamName=str, PassMethod=str, Length=float,
+    _conversions = dict(FamName=str, PassMethod=str, Length=_float,
                         R1=_array66, R2=_array66,
                         T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
@@ -248,9 +279,9 @@ class Element(object):
                         EApertures=lambda v: _array(v, (2,)),
                         KickAngle=lambda v: _array(v, (2,)),
                         PolynomB=_array, PolynomA=_array,
-                        BendingAngle=float,
-                        MaxOrder=int, NumIntSteps=int,
-                        Energy=float,
+                        BendingAngle=_float,
+                        MaxOrder=_int, NumIntSteps=_int,
+                        Energy=_float,
                         )
 
     _entrance_fields = ['T1', 'R1']
@@ -272,27 +303,38 @@ class Element(object):
 
     def __setattr__(self, key, value):
         try:
-            super(Element, self).__setattr__(
-                key, self._conversions.get(key, _nop)(value))
+            if isinstance(value, (ParamBase, ParamArray)):
+                value.set_dtype(self._conversions.get(key, _nop))
+            else:
+                value = self._conversions.get(key, _nop)(value)
+            super(Element, self).__setattr__(key, value)
         except Exception as exc:
             exc.args = ('In element {0}, parameter {1}: {2}'.format(
                 self.FamName, key, exc),)
             raise
+            
+    def __getattribute__(self, key):
+        attr = super(Element, self).__getattribute__(key)
+        if isinstance(attr, (ParamBase, ParamArray)):
+            return attr.value
+        else:
+            return attr
 
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
+        # Get values and parameter objects
         attrs = dict(self.items())
-        keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
-        keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
+        keywords = [f"\t{k} : {attrs.pop(k)!s}" for k in first3]
+        keywords += [f"\t{k} : {v!s}" for k, v in attrs.items()]
         return '\n'.join((type(self).__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
-        attrs = dict(self.items())
-        arguments = [attrs.pop(k, getattr(self, k)) for k in
-                     self._BUILD_ATTRIBUTES]
+        # Get values only, even for parameters
+        attrs = dict((k, getattr(self, k)) for k, v in self.items())
+        arguments = [attrs.pop(k) for k in self._BUILD_ATTRIBUTES]
         defelem = self.__class__(*arguments)
-        keywords = ['{0!r}'.format(arg) for arg in arguments]
-        keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
+        keywords = [f"{v!r}" for v in arguments]
+        keywords += [f"{k}={v!r}" for k, v in sorted(attrs.items())
                      if not numpy.array_equal(v, getattr(defelem, k, None))]
         args = re.sub(r'\n\s*', ' ', ', '.join(keywords))
         return '{0}({1})'.format(self.__class__.__name__, args)
@@ -373,8 +415,8 @@ class Element(object):
 
     def items(self) -> Generator[tuple, None, None]:
         """Iterates through the data members"""
-        for k, v in vars(self).items():
-            yield k, v
+        # Properties may be added by overloading this method
+        yield from vars(self).items()
 
     def is_compatible(self, other: Element) -> bool:
         """Checks if another :py:class:`Element` can be merged"""
@@ -404,6 +446,137 @@ class Element(object):
     def is_collective(self) -> bool:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
+
+    def evaluate(self):
+        attrs = dict(self.items())
+        for k, v in attrs.items():
+            if isinstance(v, (ParamBase, ParamArray)):
+                setattr(self, k, v.value)
+
+    def set_parameter(self, attrname: str, value, index: int = None) -> None:
+        """Set an element's parameter
+
+        This allows setting a parameter into an item of an array attribute.
+
+        Args:
+            attrname:   Attribute name
+            value:      Parameter or value to be set
+            index:      Index into an array attribute. If *value* is a
+              parameter, the attribute is converted to a
+              :py:class:`.ParamArray`.
+        """
+        if index is None:
+            setattr(self, attrname, value)
+        else:
+            attr = self.__dict__[attrname]
+            if isinstance(value, ParamBase) and not isinstance(attr, ParamArray):
+                # replace the numpy array with a ParamArray
+                attr = ParamArray(attr)
+                setattr(self, attrname, attr)
+            attr[index] = value
+
+    def _get_parameter(self, attrname: str, index: Optional[int] = None):
+        attr = self.__dict__[attrname]
+        if index is not None:
+            attr = attr[index]
+        return attr
+
+    def get_parameter(self, attrname: str, index: Optional[int] = None):
+        """Extract a parameter of an element
+
+        Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
+        parameter itself instead of its value. It the item is not a parameter,
+        both functions are equivalent, the value is returned. Properties cannot
+        be accessed, one must use the associated array item.
+
+        Args:
+            attrname:   Attribute name
+            index:      Index in an array attribute. If :py:obj:`None`, the
+              whole attribute is set
+        """
+        attr = self._get_parameter(attrname, index=index)
+        if not isinstance(attr, (ParamBase, ParamArray)):
+            message = f"\n\n{self.FamName}.{attrname} is not a parameter.\n"
+            # warn(AtWarning(message))
+            raise TypeError(message)
+        return attr
+
+    def is_parametrised(self, attrname: Optional[str] = None,
+                        index: Optional[int] = None) -> bool:
+        """Check for the parametrisation of an element
+
+        Args:
+            attrname:   Attribute name. If :py:obj:`None`, return :py:obj:`True`
+              if any attribute is parametrized
+            index:      Index in an array attribute. If :py:obj:`None`, the
+              whole attribute is tested for parametrisation
+        """
+        if attrname is None:
+            for attr in self.__dict__.values():
+                if isinstance(attr, (ParamBase, ParamArray)):
+                    return True
+            return False
+        else:
+            attr = self._get_parameter(attrname, index=index)
+            return isinstance(attr, (ParamBase, ParamArray))
+
+    def parametrise(self, attrname: str, index: Optional[int] = None,
+                    name: str = '') -> Union[Param, ParamArray]:
+        """Convert an attribute into a parameter
+
+        The value of the attribute is kept unchanged. If the attribute is
+        already parametrised, the existing parameter is returned.
+
+        Args:
+            attrname:   Attribute name
+            index:      Index in an array. If :py:obj:`None`, the
+              whole attribute is parametrised
+            name:       Name of the created parameter
+
+        Returns:
+            param:      A :py:class:`.ParamArray` for an array attribute,
+              a :py:class:`.Param` for a scalar attribute or an item in an
+              array attribute
+
+        """
+        vini = self._get_parameter(attrname, index=index)
+
+        if isinstance(vini, (ParamBase, ParamArray)):
+            return vini
+
+        if isinstance(vini, numpy.ndarray):
+            attr = ParamArray(vini)
+        else:
+            attr = Param(vini, name=name)
+
+        if index is None:
+            setattr(self, attrname, attr)
+        else:
+            varr = self.parametrise(attrname)
+            varr[index] = attr
+        return attr
+
+    def unparametrise(self, attrname: Optional[str] = None,
+                      index: Optional[int] = None) -> None:
+        """Freeze the parameter values
+
+        Args:
+            attrname:   Attribute name. If :py:obj:`None`, all the attributes
+              are frozen
+            index:      Index in an array. If :py:obj:`None`, the whole
+              attribute is frozen
+        """
+        if attrname is None:
+            for key, attr in self.__dict__.items():
+                if isinstance(attr, (ParamBase, ParamArray)):
+                    setattr(self, key, attr.value)
+        else:
+            attr = self._get_parameter(attrname, index=index)
+            if isinstance(attr, (ParamBase, ParamArray)):
+                if index is None:
+                    setattr(self, attrname, attr.value)
+                else:
+                    self._get_parameter(attrname)[index] = attr.value
 
 
 class LongElement(Element):
@@ -620,8 +793,10 @@ class ThinMultipole(Element):
                 return poly
 
         # Remove MaxOrder, PolynomA and PolynomB
-        poly_a, len_a, ord_a = getpol(_array(kwargs.pop('PolynomA', poly_a)))
-        poly_b, len_b, ord_b = getpol(_array(kwargs.pop('PolynomB', poly_b)))
+        ipola = kwargs.pop("PolynomA", poly_a)
+        ipolb = kwargs.pop("PolynomB", poly_b)
+        poly_a, len_a, ord_a = getpol(_array(ipola))
+        poly_b, len_b, ord_b = getpol(_array(ipolb))
         deforder = max(getattr(self, 'DefaultOrder', 0), ord_a, ord_b)
         maxorder = kwargs.pop('MaxOrder', deforder)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
@@ -632,23 +807,27 @@ class ThinMultipole(Element):
         len_ab = max(self.MaxOrder + 1, len_a, len_b)
         self.PolynomA = lengthen(poly_a, len_ab - len_a)
         self.PolynomB = lengthen(poly_b, len_ab - len_b)
+        if isinstance(ipola, ParamArray):
+            lista = ipola[:] + list(self.PolynomA)[len(ipola):]
+            self.PolynomA = ParamArray(lista)
+        if isinstance(ipolb, ParamArray):
+            listb = ipolb[:] + list(self.PolynomB)[len(ipolb):]
+            self.PolynomB = ParamArray(listb)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
         polys = ('PolynomA', 'PolynomB')
         if key in polys:
-            value = _array(value)
             lmin = getattr(self, 'MaxOrder')
             if not len(value) > lmin:
                 raise ValueError(
                     'Length of {0} must be larger than {1}'.format(key, lmin))
         elif key == 'MaxOrder':
-            value = int(value)
+            intval = int(value)
             lmax = min(len(getattr(self, k)) for k in polys)
-            if not value < lmax:
+            if not intval < lmax:
                 raise ValueError(
                     'MaxOrder must be smaller than {0}'.format(lmax))
-
         super(ThinMultipole, self).__setattr__(key, value)
 
 
@@ -698,23 +877,25 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     @property
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
-        return 0.0 if len(self.PolynomB) < 2 else self.PolynomB[1]
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 2 else arr[1]
 
     # noinspection PyPep8Naming
     @K.setter
     def K(self, strength: float):
-        self.PolynomB[1] = strength
+        self.set_parameter('PolynomB', strength, index=1)
 
     # noinspection PyPep8Naming
     @property
     def H(self) -> float:
         """Sextupolar strength [mˆ-3]"""
-        return 0.0 if len(self.PolynomB) < 3 else self.PolynomB[2]
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 3 else arr[2]
 
     # noinspection PyPep8Naming
     @H.setter
     def H(self, strength):
-        self.PolynomB[2] = strength
+        self.set_parameter('PolynomB', strength, index=2)
 
 
 class Dipole(Radiative, Multipole):
@@ -792,7 +973,7 @@ class Dipole(Radiative, Multipole):
 
     def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
-        yield 'K', self.K
+        yield 'K', vars(self)["PolynomB"][1]
 
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
@@ -859,14 +1040,15 @@ class Quadrupole(Radiative, Multipole):
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
-        poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
-        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
+        poly_type = _array_type(k)
+        poly_b = kwargs.pop("PolynomB", poly_type([0.0, k]))
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
 
     def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
-        yield 'K', self.K
+        yield 'K', vars(self)["PolynomB"][1]
 
 
 class Sextupole(Multipole):
@@ -894,10 +1076,15 @@ class Sextupole(Multipole):
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
-        poly_b = kwargs.pop('PolynomB', [0, 0, h])
-        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
+        poly_type = _array_type(h)
+        poly_b = kwargs.pop("PolynomB", poly_type([0.0, 0.0, h]))
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
+
+    def items(self) -> Generator[tuple, None, None]:
+        yield from super().items()
+        yield 'H', vars(self)["PolynomB"][2]
 
 
 class Octupole(Multipole):
@@ -1004,7 +1191,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         """
         Args:
             family_name:    Name of the element
-            
+
         Optional Args:
             betax:         Horizontal beta function at element [m]
             betay:         Vertical beta function at element [m]
@@ -1015,14 +1202,14 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
             U0:             Energy Loss [eV]
-            
+
         Default PassMethod: ``SimpleQuantDiffPass``
        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
-       
+
         assert taux >= 0.0, 'taux must be greater than or equal to 0'
         self.taux = taux
-            
+
         assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
         self.tauy = tauy
 
@@ -1033,22 +1220,21 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         self.emitx = emitx
         if emitx > 0.0:
             assert taux > 0.0, 'if emitx is given, taux must be non zero'
-            
+
         assert emity >= 0.0, 'emity must be greater than or equal to 0'
         self.emity = emity
         if emity > 0.0:
             assert tauy > 0.0, 'if emity is given, tauy must be non zero'
-            
+
         assert espread >= 0.0, 'espread must be greater than or equal to 0'
         self.espread = espread
         if espread > 0.0:
             assert tauz > 0.0, 'if espread is given, tauz must be non zero'
-            
+
         self.U0 = U0
         self.betax = betax
         self.betay = betay
         super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
-
 
 
 class Corrector(LongElement):
@@ -1167,6 +1353,7 @@ class EnergyLoss(_DictLongtMotion, Element):
         """
         kwargs.setdefault('PassMethod', self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
+
 
 Radiative.register(EnergyLoss)
 
