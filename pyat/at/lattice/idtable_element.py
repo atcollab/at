@@ -219,9 +219,9 @@ class InsertionDeviceKickMap(Element):
         # Field to kick factors
         e_massGeV = e_mass * 1e-9
         Brho = 1e9 * numpy.sqrt(Energy**2 - e_massGeV**2)/clight
-        factor = 1.0/(Brho**2)
-        xkick2 = factor * hkickmap2
-        ykick2 = factor * vkickmap2
+        factor2 = 1.0/(Brho**2)
+        xkick2 = factor2 * hkickmap2
+        ykick2 = factor2 * vkickmap2
         # kick1 vars set to zero, not yet implemented
         factor1 = -1.0/(Brho)
         xkick1 = factor1 * hkickmap1
