@@ -11,7 +11,7 @@ from ..lattice import BeamMoments, Collective, QuantumDiffusion
 from ..lattice import SimpleQuantDiff, VariableMultipole
 from ..lattice import elements, refpts_iterator, set_value_refpts
 from ..lattice import DConstant, checktype, get_bool_index
-
+#from ..collective import BeamLoadingElement
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
            'get_bunches_std_mean', 'unfold_beam', 'has_collective',
@@ -27,9 +27,17 @@ _DISABLE_ELEMS = _COLLECTIVE_ELEMS + _VAR_ELEMS
 def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
     """Function to initialize the beam monitors"""
     monitors = list(refpts_iterator(ring, elements.BeamMoments))
+    monitors += list(refpts_iterator(ring, elements.SliceMoments))
+    #blmonitors = list(refpts_iterator(ring, BeamLoadingElement))
     for m in monitors:
-        m.set_buffers(nturns, nbunch)
-    return len(monitors) == 0
+        m.set_buffers(nturns, nbunch)  
+    blmon = 0
+    for elem in ring:
+        if hasattr(elem, '_store_cavity_data'):
+            if elem._store_cavity_data:
+                elem.set_buffers(nturns, nbunch)  
+                blmon += 1
+    return len(monitors) + blmon == 0
 
 
 def variable_refs(ring):
