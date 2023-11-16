@@ -83,8 +83,8 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                 std[4*i+ii] = sqrt(std[4*i+ii]/weight[i]-pos[4*i+ii]*pos[4*i+ii]);
             }   
             else{
-                pos[4*i+ii] = (ii==4) ? smin[ib]+(i%nslice+0.5)*hz[ib] : 0.0;
-                std[4*i+ii] = 0.0;
+                pos[4*i+ii] = (ii==4) ? smin[ib]+(i%nslice+0.5)*hz[ib] : NAN;
+                std[4*i+ii] = NAN;
             }                 
         }
         pos[i+4] += bunch_spos[ib]-bunch_spos[nbunch-1];
@@ -210,7 +210,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(2,1);
+        plhs[0] = mxCreateCellMatrix(6,1);
         mxSetCell(plhs[0],0,mxCreateString("_means"));
         mxSetCell(plhs[0],1,mxCreateString("_stds"));
         mxSetCell(plhs[0],2,mxCreateString("_weights"));
