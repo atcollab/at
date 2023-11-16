@@ -2,14 +2,14 @@
 r=atradoff(esrf);
 
 %create element from kick map and plot kick map
-U35elem=atidtable('U35',1,'U35.mat',6.04,'IdTablePass');
+U35elem=atidtable_dat('U35',1,'U35.mat',6.04,'IdTablePass');
 xtable=U35elem.xtable;
 ytable=U35elem.ytable;
-xkick=U35elem.xkick;
-ykick=U35elem.ykick;
-surf(xtable,ytable,xkick)
+xkick2=U35elem.xkick2;
+ykick2=U35elem.ykick2;
+surf(xtable,ytable,xkick2)
 figure
-surf(xtable,ytable,ykick)
+surf(xtable,ytable,ykick2)
 
 %add kick map to lattice
 esrf_U35 = add_ID(r,U35elem);
