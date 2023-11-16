@@ -527,7 +527,7 @@ class SliceMoments(Element):
         
     @property
     def spos(self):
-        return self._weights
+        return self._spos
 
     @property
     def weights(self):
