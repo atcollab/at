@@ -162,7 +162,6 @@ class InsertionDeviceKickMap(Element):
                     'Additional blocks ignored')
                 warn(_warn4kickblocks)
 
-            print(len(kick_block_list))
             return el_length, \
                 kick_block_list[0], kick_block_list[1], \
                 kick_haxes_list[0], kick_vaxes_list[0], \
