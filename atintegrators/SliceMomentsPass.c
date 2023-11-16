@@ -17,15 +17,16 @@ struct elem
   int nslice;
   double *stds;
   double *means;
+  double *sposs;
   double *weights;
   double *z_cuts;
 };
 
 
 static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
-                       int nturns, int nbunch, double *weights, double *means,
-                       double *stds, double *z_cuts, double *bunch_currents,
-                       double *bunch_spos){
+                       int nturns, int nbunch, double *weights, double *sposs,
+                       double *means, double *stds, double *z_cuts,
+                       double *bunch_currents, double *bunch_spos){
 
     int i,ii,iii,ib;
     double *rtmp;
@@ -41,11 +42,12 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
         np_bunch[i] = 0.0;
     }
     
-    void *buffer = atCalloc(9*nbunch*nslice, sizeof(double));
+    void *buffer = atCalloc(8*nbunch*nslice, sizeof(double));
     double *dptr = (double *) buffer;
-    int idx[] = {0, 2, 4, 5};    
-    double *pos = dptr; dptr += 4*nbunch*nslice;
-    double *std = dptr; dptr += 4*nbunch*nslice;
+    int idx[] = {0, 2, 4};
+    double *pos = dptr; dptr += 3*nbunch*nslice;
+    double *std = dptr; dptr += 3*nbunch*nslice;
+    double *spos = dptr; dptr += nbunch*nslice;
     double *weight = dptr;
     
     for (i=0;i<num_particles;i++) {
@@ -60,42 +62,47 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                 ii = (int)(floor((rtmp[5]-smin[ib])/hz[ib])) + ib*nslice;
             }
             weight[ii] += 1.0;
-            for(iii=0; iii<4; iii++) {
-                pos[iii+ii*4] += rtmp[idx[iii]];
-                std[iii+ii*4] += rtmp[idx[iii]]*rtmp[idx[iii]];
+            spos[ii] += rtmp[5];
+            for(iii=0; iii<3; iii++) {
+                pos[iii+ii*3] += rtmp[idx[iii]];
+                std[iii+ii*3] += rtmp[idx[iii]]*rtmp[idx[iii]];
             }
         }
     }
 
     #ifdef MPI
     MPI_Allreduce(MPI_IN_PLACE,np_bunch,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,pos,4*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);   
-    MPI_Allreduce(MPI_IN_PLACE,std,4*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);   
+    MPI_Allreduce(MPI_IN_PLACE,pos,3*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,std,3*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,spos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,weight,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
     for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
-        for(ii=0; ii<4; ii++){
+        for(ii=0; ii<3; ii++){
             if (weight[i] > 0){
-                pos[4*i+ii] = pos[4*i+ii]/weight[i];
-                std[4*i+ii] = sqrt(std[4*i+ii]/weight[i]-pos[4*i+ii]*pos[4*i+ii]);
+                pos[3*i+ii] = pos[3*i+ii]/weight[i];
+                std[3*i+ii] = sqrt(std[3*i+ii]/weight[i]-pos[3*i+ii]*pos[3*i+ii]);
             }   
             else{
-                pos[4*i+ii] = (ii==3) ? smin[ib]+(i%nslice+0.5)*hz[ib] : NAN;
-                std[4*i+ii] = NAN;
+                pos[3*i+ii] = NAN;
+                std[3*i+ii] = NAN;
             }                 
         }
-        pos[i+4] += bunch_spos[ib]-bunch_spos[nbunch-1];
+        spos[i] = (weight>0) ? spos[i]/weight[i] : smin[ib]+(i%nslice+0.5)*hz[ib];
+        spos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         weight[i] *= bunch_currents[ib]/np_bunch[ib];
     }
     
-    means += 4*nbunch*nslice*turn;
-    stds += 4*nbunch*nslice*turn;
+    means += 3*nbunch*nslice*turn;
+    stds += 3*nbunch*nslice*turn;
+    sposs += nbunch*nslice*turn;
     weights += nbunch*nslice*turn;
-    memcpy(means, pos, 4*nbunch*nslice*sizeof(double));
-    memcpy(stds, std, 4*nbunch*nslice*sizeof(double));
+    memcpy(means, pos, 3*nbunch*nslice*sizeof(double));
+    memcpy(stds, std, 3*nbunch*nslice*sizeof(double));
+    memcpy(sposs, spos, nbunch*nslice*sizeof(double));
     memcpy(weights, weight, nbunch*nslice*sizeof(double));
     
     atFree(buffer);
@@ -116,12 +123,13 @@ void SliceMomentsPass(double *r_in, int nbunch, double *bunch_spos, double *bunc
     int nslice = Elem->nslice;
     double *stds = Elem->stds;
     double *means = Elem->means;
+    double *sposs = Elem->sposs;
     double *weights = Elem->weights;
     double *z_cuts = Elem->z_cuts;
     
     if((turn>=startturn) && (turn<endturn)){
         slice_beam(r_in, num_particles, nslice, turn-startturn, nturns, nbunch,
-                   weights, means, stds, z_cuts, bunch_currents, bunch_spos);
+                   weights, sposs, means, stds, z_cuts, bunch_currents, bunch_spos);
     }; 
 };
 
@@ -131,7 +139,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                                       double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double *means, *stds, *weights, *z_cuts;
+        double *means, *stds, *sposs, *weights, *z_cuts;
         int nslice = atGetLong(ElemData,"nslice"); check_error();
         int startturn = atGetLong(ElemData,"_startturn"); check_error();
         int endturn = atGetLong(ElemData,"_endturn"); check_error();
@@ -142,18 +150,21 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         } else if (endturn > Param->num_turns){
             atWarning("endturn exceed the total number of turns");
         };
-        int dims[] = {4, Param->nbunch, nslice, endturn-startturn};
+        int dims[] = {3, Param->nbunch, nslice, endturn-startturn};
         int dimsw[] = {Param->nbunch, nslice,  endturn-startturn};
         means = atGetDoubleArray(ElemData,"_means"); check_error();
         stds = atGetDoubleArray(ElemData,"_stds"); check_error();
+        sposs = atGetDoubleArray(ElemData,"_spos"); check_error();
         weights = atGetDoubleArray(ElemData,"_weights"); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         atCheckArrayDims(ElemData,"_means", 4, dims); check_error();
         atCheckArrayDims(ElemData,"_stds", 4, dims); check_error();
+        atCheckArrayDims(ElemData,"_spos", 3, dimsw); check_error();
         atCheckArrayDims(ElemData,"_weights", 3, dimsw); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds = stds;
         Elem->means = means;
+        Elem->sposs = sposs;
         Elem->weights = weights;
         Elem->turn = 0;
         Elem->startturn = startturn;

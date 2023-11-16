@@ -497,8 +497,9 @@ class SliceMoments(Element):
 
     def __init__(self, family_name: str, nslice: int, **kwargs):
         kwargs.setdefault('PassMethod', 'SliceMomentsPass')
-        self._stds = numpy.zeros((4, 1, nslice, 1), order='F')
-        self._means = numpy.zeros((4, 1, nslice, 1), order='F')
+        self._stds = numpy.zeros((3, 1, nslice, 1), order='F')
+        self._means = numpy.zeros((3, 1, nslice, 1), order='F')
+        self._spos = numpy.zeros((1, nslice, 1), order='F')
         self._weights = numpy.zeros((1, nslice, 1), order='F')
         self.nslice = nslice
         self._startturn = kwargs.pop('startturn', 0)
@@ -511,8 +512,9 @@ class SliceMoments(Element):
     def set_buffers(self, nturns, nbunch):
         self.endturn = min(self.endturn, nturns)
         dturns = self.endturn - self.startturn
-        self._stds = numpy.zeros((4, nbunch, self.nslice, dturns), order='F')
-        self._means = numpy.zeros((4, nbunch ,self.nslice, dturns), order='F')
+        self._stds = numpy.zeros((3, nbunch, self.nslice, dturns), order='F')
+        self._means = numpy.zeros((3, nbunch ,self.nslice, dturns), order='F')
+        self._spos = numpy.zeros((nbunch, self.nslice, dturns), order='F')
         self._weights = numpy.zeros((nbunch, self.nslice, dturns), order='F')
 
     @property
@@ -523,6 +525,10 @@ class SliceMoments(Element):
     def means(self):
         return self._means
         
+    @property
+    def spos(self):
+        return self._weights
+
     @property
     def weights(self):
         return self._weights
