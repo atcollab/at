@@ -20,7 +20,7 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 % P. Elleaume, "A new approach to the electron beam dynamics in undulators
 % and wigglers", EPAC92.
 
-%---------------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % Modification Log:
 % -----------------
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
@@ -31,7 +31,7 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 %                             Adds InsertionDeviceKickMap class
 % 13-11-2023:  blanco-garcia. Renaming variables due to Pull Request
 %                             https://github.com/atcollab/at/pull/683
-%---------------------------------------------------------------------------
+%--------------------------------------------------------------------------
 
 % constants
 lightspeed = PhysConstant.speed_of_light_in_vacuum.value;
