@@ -494,6 +494,8 @@ class BeamMoments(Element):
         
 class SliceMoments(Element):
     """Element to compute bunches mean and std"""
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['nslice']
+    _conversions = dict(Element._conversions, nslice=int)
 
     def __init__(self, family_name: str, nslice: int, **kwargs):
         kwargs.setdefault('PassMethod', 'SliceMomentsPass')
@@ -501,10 +503,10 @@ class SliceMoments(Element):
         self._means = numpy.zeros((3, 1, nslice, 1), order='F')
         self._spos = numpy.zeros((1, nslice, 1), order='F')
         self._weights = numpy.zeros((1, nslice, 1), order='F')
-        self.nslice = nslice
         self._startturn = kwargs.pop('startturn', 0)
         self._endturn = kwargs.pop('endturn', 1)
-        super(SliceMoments, self).__init__(family_name, **kwargs)
+        super(SliceMoments, self).__init__(family_name, nslice=nslice,
+                                           **kwargs)
         self.startturn = self._startturn
         self.endturn = self._endturn
         self.set_buffers(self._endturn, 1)
