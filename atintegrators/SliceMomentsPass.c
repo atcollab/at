@@ -83,7 +83,7 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                 std[4*i+ii] = sqrt(std[4*i+ii]/weight[i]-pos[4*i+ii]*pos[4*i+ii]);
             }   
             else{
-                pos[4*i+ii] = (ii==4) ? smin[ib]+(i%nslice+0.5)*hz[ib] : NAN;
+                pos[4*i+ii] = (ii==3) ? smin[ib]+(i%nslice+0.5)*hz[ib] : NAN;
                 std[4*i+ii] = NAN;
             }                 
         }
