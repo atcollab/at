@@ -101,7 +101,7 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
     }
 }
 
-#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+#if defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
@@ -111,11 +111,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *xkick1, *ykick1;
         double *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
-        /* the third input of atGetDoubleArraySz is a pointer for the 
+        /* read kick tables.
+         * The third input of atGetDoubleArraySz is a pointer for the
          * number of rows in the 2-D array, the fourth input is a pointer 
          * for the number of columns
          */
+        xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
         ykick2=atGetDoubleArray(ElemData,"ykick2"); check_error();
         x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
         y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
@@ -150,9 +151,85 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 }
 
 MODULE_DEF(IdTablePass)        /* Dummy module initialisation */
-#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+#endif /*defined(PYAT)*/
 
 #ifdef MATLAB_MEX_FILE
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+        double *r_in, int num_particles, struct parameters *Param)
+{
+    if (!Elem) {
+        int Nslice, ny_map,nx_map;
+        double Length, *xkick2, *ykick2, *x_map, *y_map;
+        double *xkick1, *ykick1;
+        double *R1, *R2, *T1, *T2;
+        mxArray *fieldtest;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+
+        /* read kick tables.
+         * The third input of atGetDoubleArraySz is a pointer for the
+         * number of rows in the 2-D array, the fourth input is a pointer
+         * for the number of columns
+         */
+        //xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
+        //ykick2=atGetDoubleArray(ElemData,"ykick2"); check_error();
+
+        /* Backwards compatibility check. Renaming xkick to xkick2 and ykick to ykick2
+         * https://github.com/atcollab/at/issues/682
+         */
+        fieldtest = get_field(ElemData,"xkick2");
+        if (!fieldtest){
+            fieldtest = get_field(ElemData,"xkick");
+            if(!fieldtest) mexErrMsgIdAndTxt("AT:PassError","horizontal kick map not found.\n");
+            else{
+                mexWarnMsgIdAndTxt("AT:PassWarning", "xkick in Insertion Device is deprecated;"
+                        " please, save .mat file again.\n");
+                xkick2=atGetDoubleArraySz(ElemData,"xkick", &ny_map, &nx_map); check_error();
+            }
+        }else xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
+        fieldtest = get_field(ElemData,"ykick2");
+        if (!fieldtest){
+            fieldtest = get_field(ElemData,"ykick");
+            if(!fieldtest) mexErrMsgIdAndTxt("AT:PassError","vertical kick map not found.\n");
+            else{
+                mexWarnMsgIdAndTxt("AT:PassWarning", "ykick in Insertion Device is deprecated;"
+                        " please, save .mat file again.\n");
+                ykick2=atGetDoubleArraySz(ElemData,"ykick", &ny_map, &nx_map); check_error();
+            }
+        }else ykick2=atGetDoubleArraySz(ElemData,"ykick2", &ny_map, &nx_map); check_error();
+        x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
+        y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
+        Nslice=atGetLong(ElemData,"Nslice"); check_error();
+        /*optional fields*/
+        xkick1=atGetOptionalDoubleArray(ElemData,"xkick1"); check_error();
+        ykick1=atGetOptionalDoubleArray(ElemData,"ykick1"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=Length;
+        Elem->xkick2=xkick2;
+        Elem->ykick2=ykick2;
+        Elem->x_map=x_map;
+        Elem->y_map=y_map;
+        Elem->nx_map=nx_map;
+        Elem->ny_map=ny_map;
+        Elem->Nslice=Nslice;
+        Elem->xkick1=xkick1;
+        Elem->ykick1=ykick1;
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+    }
+    IdKickMapModelPass(r_in, Elem->Length, Elem->xkick1, Elem->ykick1,
+            Elem->xkick2, Elem->ykick2, Elem->x_map, Elem->y_map, Elem->nx_map, Elem->ny_map,Elem->Nslice,
+            Elem->T1, Elem->T2, Elem->R1, Elem->R2, num_particles);
+    return Elem;
+}
+
+MODULE_DEF(IdTablePass)        /* Dummy module initialisation */
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
@@ -164,11 +241,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *xkick1, *ykick1;
         double *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
-        /* the third input of atGetDoubleArraySz is a pointer for the 
-         * number of rows in the 2-D array, the fourth input is a pointer 
+        /* the third input of atGetDoubleArraySz is a pointer for the
+         * number of rows in the 2-D array, the fourth input is a pointer
          * for the number of columns
          */
+        xkick2=atGetDoubleArraySz(ElemData,"xkick2", &ny_map, &nx_map); check_error();
         ykick2=atGetDoubleArray(ElemData,"ykick2"); check_error();
         x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
         y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
