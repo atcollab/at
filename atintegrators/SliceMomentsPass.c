@@ -142,15 +142,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         } else if (endturn > Param->num_turns){
             atWarning("endturn exceed the total number of turns");
         };
-        int dims[] = {4, Param->nbunch*nslice, endturn-startturn};
-        int dimsw[] = {Param->nbunch*nslice,  endturn-startturn};        
+        int dims[] = {4, Param->nbunch, nslice, endturn-startturn};
+        int dimsw[] = {Param->nbunch, nslice,  endturn-startturn};
         means = atGetDoubleArray(ElemData,"_means"); check_error();
         stds = atGetDoubleArray(ElemData,"_stds"); check_error();
         weights = atGetDoubleArray(ElemData,"_weights"); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
-        atCheckArrayDims(ElemData,"_means", 3, dims); check_error();
-        atCheckArrayDims(ElemData,"_stds", 3, dims); check_error();
-        atCheckArrayDims(ElemData,"_weights", 2, dimsw); check_error();
+        atCheckArrayDims(ElemData,"_means", 4, dims); check_error();
+        atCheckArrayDims(ElemData,"_stds", 4, dims); check_error();
+        atCheckArrayDims(ElemData,"_weights", 3, dimsw); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds = stds;
         Elem->means = means;
