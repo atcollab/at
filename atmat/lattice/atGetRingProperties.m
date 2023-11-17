@@ -74,9 +74,9 @@ function varargout = atGetRingProperties(ring,varargin)
 [show_all, varargin]=getflag(varargin, 'all');
 idx=atlocateparam(ring);
 if isempty(idx)
-%   t1='Slow access to properties because there is no RingParam element.';
-%   t2='Consider adding it with the command: ">> ring=atSetRingProperties(ring)".';
-%   warning('AT:NoRingParam', '%s\n%s', t1, t2);
+    t1='Slow access to properties because there is no RingParam element.';
+    t2='Consider adding it with the command: ">> ring=atSetRingProperties(ring)".';
+    warning('AT:NoRingParam', '%s\n%s', t1, t2);
     props=struct();
 else
     props=rmfield(ring{idx},{'Length','Class','PassMethod'});
