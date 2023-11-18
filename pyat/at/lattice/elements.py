@@ -12,7 +12,7 @@ import numpy
 from copy import copy, deepcopy
 from abc import ABC
 from collections.abc import Generator, Iterable
-from typing import Union, Optional
+from typing import Optional
 from .variables import Param, ParamBase, ParamArray
 # noinspection PyProtectedMember
 from .variables import _nop
@@ -33,13 +33,6 @@ def _float(value):
 
 def _int(value):
     return int(value)
-
-
-def _array_type(value):
-    if isinstance(value, ParamBase):
-        return ParamArray
-    else:
-        return numpy.array
 
 
 class LongtMotion(ABC):
@@ -285,7 +278,7 @@ class Element(object):
 
     def __setattr__(self, key, value):
         if isinstance(value, ParamBase):
-            value.set_dtype(self._conversions.get(key, _nop))
+            value.set_conversion(self._conversions.get(key, _nop))
         else:
             value = self._conversions.get(key, _nop)(value)
         super(Element, self).__setattr__(key, value)
@@ -452,7 +445,7 @@ class Element(object):
                 setattr(self, attrname, attr)
             attr[index] = value
 
-    def _get_parameter(self, attrname: str, index: Optional[int] = None):
+    def _get_attribute(self, attrname: str, index: Optional[int] = None):
         attr = self.__dict__[attrname]
         if index is not None:
             attr = attr[index]
@@ -471,8 +464,8 @@ class Element(object):
             index:      Index in an array attribute. If :py:obj:`None`, the
               whole attribute is set
         """
-        attr = self._get_parameter(attrname, index=index)
-        if not isinstance(attr, (ParamBase, ParamArray)):
+        attr = self._get_attribute(attrname, index=index)
+        if not isinstance(attr, ParamBase):
             message = f"\n\n{self.FamName}.{attrname} is not a parameter.\n"
             # warn(AtWarning(message))
             raise TypeError(message)
@@ -489,16 +482,24 @@ class Element(object):
               whole attribute is tested for parametrisation
         """
         if attrname is None:
-            for attr in self.__dict__.values():
-                if isinstance(attr, (ParamBase, ParamArray)):
+            for attr in self.__dict__:
+                if self.is_parametrised(attr):
                     return True
             return False
         else:
-            attr = self._get_parameter(attrname, index=index)
-            return isinstance(attr, (ParamBase, ParamArray))
+            attr = self._get_attribute(attrname, index=index)
+            if isinstance(attr, ParamBase):
+                return True
+            elif isinstance(attr, numpy.ndarray):
+                for item in attr.flat:
+                    if isinstance(item, ParamBase):
+                        return True
+                return False
+            else:
+                return False
 
     def parametrise(self, attrname: str, index: Optional[int] = None,
-                    name: str = '') -> Union[Param, ParamArray]:
+                    name: str = '') -> ParamBase:
         """Convert an attribute into a parameter
 
         The value of the attribute is kept unchanged. If the attribute is
@@ -516,21 +517,18 @@ class Element(object):
               array attribute
 
         """
-        vini = self._get_parameter(attrname, index=index)
+        vini = self._get_attribute(attrname, index=index)
 
-        if isinstance(vini, (ParamBase, ParamArray)):
+        if isinstance(vini, ParamBase):
             return vini
 
-        if isinstance(vini, numpy.ndarray):
-            attr = ParamArray(vini)
-        else:
-            attr = Param(vini, name=name)
+        attr = Param(vini, name=name)   # raises TypeError if vini is not a Number
 
         if index is None:
             setattr(self, attrname, attr)
         else:
-            varr = self.parametrise(attrname)
-            varr[index] = attr
+            varr = self._get_attribute(attrname)
+            varr[index] = attr          # raises IndexError it the attr is not an array
         return attr
 
     def unparametrise(self, attrname: Optional[str] = None,
@@ -547,19 +545,20 @@ class Element(object):
         def unparam_attr(attrname, attr):
             if isinstance(attr, ParamBase):
                 setattr(self, attrname, attr.value)
-            elif isinstance(attr, ParamArray):
-                for it, item in enumerate(attr):
+            elif isinstance(attr, numpy.ndarray):
+                for i, item in enumerate(attr.flat):
                     if isinstance(item, ParamBase):
-                        attr[it] = item.value
+                        ij = numpy.unravel_index(i, attr.shape)
+                        attr[ij] = item.value
 
         if attrname is None:
             for key, attr in self.__dict__.items():
                 unparam_attr(key, attr)
         else:
             if index is None:
-                unparam_attr(attrname, self.get_parameter(attrname))
+                unparam_attr(attrname, self._get_attribute(attrname))
             else:
-                attr = self._get_parameter(attrname)
+                attr = self._get_attribute(attrname)
                 attr[index] = attr[index].value
 
 

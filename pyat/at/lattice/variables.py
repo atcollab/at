@@ -89,6 +89,7 @@ import abc
 from numbers import Number
 from operator import add, sub, mul, truediv, pos, neg
 from collections.abc import Iterable, Sequence, Callable
+from typing import Any
 
 __all__ = [
     "Variable",
@@ -119,7 +120,7 @@ class _Scalar(_Evaluate):
 
     def __init__(self, value):
         if not isinstance(value, Number):
-            raise TypeError("'value' must be a Number")
+            raise TypeError("The parameter value must be a scalar")
         self.value = value
 
     def __call__(self):
@@ -448,7 +449,7 @@ class ParamBase(Variable):
         evaluate: _Evaluate,
         *,
         name: str = "",
-        dtype: Callable[[Number], Number] = _nop,
+        conversion: Callable[[Any], Number] = _nop,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         delta: float = 1.0,
     ):
@@ -457,7 +458,7 @@ class ParamBase(Variable):
         Args:
             evaluate:   Evaluator function
             name:       Name of the parameter
-            dtype:      data type of the parameter
+            conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
@@ -465,17 +466,17 @@ class ParamBase(Variable):
         if not isinstance(evaluate, _Evaluate):
             raise TypeError("'Evaluate' must be an _Evaluate object")
         self._evaluate = evaluate
-        self.dtype = dtype
+        self._conversion = conversion
 
     def _getfun(self, **kwargs):
-        return self.dtype(self._evaluate())
+        return self._conversion(self._evaluate())
 
-    def set_dtype(self, dtype: Callable[[Number], Number]):
+    def set_conversion(self, conversion: Callable[[Number], Number]):
         """Set the data type. Called when a parameter is assigned to an
         :py:class:`.Element` attribute"""
-        if dtype is not self.dtype:
-            if self.dtype is _nop:
-                self.dtype = dtype
+        if conversion is not self._conversion:
+            if self._conversion is _nop:
+                self._conversion = conversion
             else:
                 raise ValueError("Cannot change the data type of the parameter")
 
@@ -494,7 +495,7 @@ class Param(ParamBase):
         value: Number,
         *,
         name: str = "",
-        dtype: Callable[[Number], Number] = _nop,
+        conversion: Callable[[Number], Number] = _nop,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         delta: float = 1.0,
     ):
@@ -502,12 +503,13 @@ class Param(ParamBase):
         Args:
             value:      Initial value of the parameter
             name:       Name of the parameter
-            dtype:      data type of the parameter
+            conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
         super(Param, self).__init__(
-            _Scalar(value), name=name, dtype=dtype, bounds=bounds, delta=delta
+            _Scalar(value), name=name, conversion=conversion,
+            bounds=bounds, delta=delta
         )
         self._history.append(self._evaluate())
 
@@ -515,12 +517,12 @@ class Param(ParamBase):
         return self._evaluate()
 
     def _setfun(self, value, ring=None):
-        self._evaluate = _Scalar(self.dtype(value))
+        self._evaluate = _Scalar(self._conversion(value))
 
-    def set_dtype(self, dtype: Callable[[Number], Number]):
+    def set_conversion(self, conversion: Callable[[Number], Number]):
         oldv = self._evaluate()
-        super(Param, self).set_dtype(dtype)
-        self._evaluate = _Scalar(dtype(oldv))
+        super(Param, self).set_conversion(conversion)
+        self._evaluate = _Scalar(conversion(oldv))
 
 
 class _PArray(np.ndarray):
@@ -572,7 +574,6 @@ class ParamArray(np.ndarray):
         it = np.nditer(self, flags=["refs_ok"], order="C")
         contents = " ".join([str(el) for el in it])
         return f"[{contents}]"
-
 
 
 class VariableList(list):
