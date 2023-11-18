@@ -508,8 +508,7 @@ class Param(ParamBase):
             delta:      Initial variation step
         """
         super(Param, self).__init__(
-            _Scalar(value), name=name, conversion=conversion,
-            bounds=bounds, delta=delta
+            _Scalar(value), name=name, conversion=conversion, bounds=bounds, delta=delta
         )
         self._history.append(self._evaluate())
 
