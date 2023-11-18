@@ -90,8 +90,14 @@ from numbers import Number
 from operator import add, sub, mul, truediv, pos, neg
 from collections.abc import Iterable, Sequence, Callable
 
-__all__ = ["Variable", "CustomVariable", "ParamBase", "Param", "ParamArray",
-           "VariableList"]
+__all__ = [
+    "Variable",
+    "CustomVariable",
+    "ParamBase",
+    "Param",
+    "ParamArray",
+    "VariableList",
+]
 
 
 def _nop(value):
@@ -104,7 +110,8 @@ def _default_array(value):
 
 class _Evaluate(abc.ABC):
     @abc.abstractmethod
-    def __call__(self): ...
+    def __call__(self):
+        ...
 
 
 class _Scalar(_Evaluate):
@@ -194,7 +201,8 @@ class Variable(abc.ABC):
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, **kwargs) -> Number: ...
+    def _getfun(self, **kwargs) -> Number:
+        ...
 
     @property
     def history(self) -> list[Number]:
@@ -518,15 +526,16 @@ class Param(ParamBase):
 class _PArray(np.ndarray):
     """Subclass of ndarray which reports to its parent ParamArray"""
 
-    def __new__(cls, value, buildfun):
-        a = buildfun(value)
-        obj = a.view(cls)
+    # This is the array obtained with an element get_attribute.
+    # It is also the one used when setting an item of an array attribute.
+
+    def __new__(cls, value, dtype=np.float64):
+        obj = np.array(value, dtype=dtype, order="F").view(cls)
         obj._parent = value
         return obj
 
     def __array_finalize__(self, obj):
-        if obj is not None:
-            self._parent = getattr(obj, "_parent", None)
+        self._parent = getattr(obj, "_parent", None)
 
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
@@ -541,20 +550,15 @@ class _PArray(np.ndarray):
 class ParamArray(np.ndarray):
     """Simulate a numpy array where items may be parametrised"""
 
-    def __new__(cls, value, buildfun=lambda v: np.array(v, dtype=float, order="F")):
-        obj = np.array(value, dtype=object, order="F").view(cls)
-        obj._value = _PArray(obj.view(np.ndarray), buildfun)
+    def __new__(cls, value, shape=(-1,), dtype=np.float64):
+        obj = np.asfortranarray(value, dtype=object).reshape(shape).view(cls)
+        obj._value = _PArray(obj, dtype=dtype)
         return obj
 
-    # noinspection PyUnusedLocal
     def __array_finalize__(self, obj):
-        self._value = None
-
-    def set_dtype(self, buildfun):
-        """Set the data type. Called when a parameter is assigned to an
-        :py:class:`.Element` attribute"""
-        # noinspection PyAttributeOutsideInit
-        self._value = _PArray(self.view(np.ndarray), buildfun)
+        val = getattr(obj, "_value", None)
+        if val is not None:
+            self._value = _PArray(self, dtype=val.dtype)
 
     @property
     def value(self):
@@ -566,8 +570,9 @@ class ParamArray(np.ndarray):
 
     def __str__(self):
         it = np.nditer(self, flags=["refs_ok"], order="C")
-        contents = ", ".join([str(el) for el in it])
-        return f"{self.__class__.__name__}([{contents}])"
+        contents = " ".join([str(el) for el in it])
+        return f"[{contents}]"
+
 
 
 class VariableList(list):
