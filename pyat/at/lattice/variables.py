@@ -89,9 +89,16 @@ import abc
 from numbers import Number
 from operator import add, sub, mul, truediv, pos, neg
 from collections.abc import Iterable, Sequence, Callable
+from typing import Any
 
-__all__ = ["Variable", "CustomVariable", "ParamBase", "Param", "ParamArray",
-           "VariableList"]
+__all__ = [
+    "Variable",
+    "CustomVariable",
+    "ParamBase",
+    "Param",
+    "ParamArray",
+    "VariableList",
+]
 
 
 def _nop(value):
@@ -104,7 +111,8 @@ def _default_array(value):
 
 class _Evaluate(abc.ABC):
     @abc.abstractmethod
-    def __call__(self): ...
+    def __call__(self):
+        ...
 
 
 class _Scalar(_Evaluate):
@@ -112,7 +120,7 @@ class _Scalar(_Evaluate):
 
     def __init__(self, value):
         if not isinstance(value, Number):
-            raise TypeError("'value' must be a Number")
+            raise TypeError("The parameter value must be a scalar")
         self.value = value
 
     def __call__(self):
@@ -194,7 +202,8 @@ class Variable(abc.ABC):
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, **kwargs) -> Number: ...
+    def _getfun(self, **kwargs) -> Number:
+        ...
 
     @property
     def history(self) -> list[Number]:
@@ -440,7 +449,7 @@ class ParamBase(Variable):
         evaluate: _Evaluate,
         *,
         name: str = "",
-        dtype: Callable[[Number], Number] = _nop,
+        conversion: Callable[[Any], Number] = _nop,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         delta: float = 1.0,
     ):
@@ -449,7 +458,7 @@ class ParamBase(Variable):
         Args:
             evaluate:   Evaluator function
             name:       Name of the parameter
-            dtype:      data type of the parameter
+            conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
@@ -457,17 +466,17 @@ class ParamBase(Variable):
         if not isinstance(evaluate, _Evaluate):
             raise TypeError("'Evaluate' must be an _Evaluate object")
         self._evaluate = evaluate
-        self.dtype = dtype
+        self._conversion = conversion
 
     def _getfun(self, **kwargs):
-        return self.dtype(self._evaluate())
+        return self._conversion(self._evaluate())
 
-    def set_dtype(self, dtype: Callable[[Number], Number]):
+    def set_conversion(self, conversion: Callable[[Number], Number]):
         """Set the data type. Called when a parameter is assigned to an
         :py:class:`.Element` attribute"""
-        if dtype is not self.dtype:
-            if self.dtype is _nop:
-                self.dtype = dtype
+        if conversion is not self._conversion:
+            if self._conversion is _nop:
+                self._conversion = conversion
             else:
                 raise ValueError("Cannot change the data type of the parameter")
 
@@ -486,7 +495,7 @@ class Param(ParamBase):
         value: Number,
         *,
         name: str = "",
-        dtype: Callable[[Number], Number] = _nop,
+        conversion: Callable[[Number], Number] = _nop,
         bounds: tuple[float, float] = (-np.inf, np.inf),
         delta: float = 1.0,
     ):
@@ -494,12 +503,12 @@ class Param(ParamBase):
         Args:
             value:      Initial value of the parameter
             name:       Name of the parameter
-            dtype:      data type of the parameter
+            conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
         super(Param, self).__init__(
-            _Scalar(value), name=name, dtype=dtype, bounds=bounds, delta=delta
+            _Scalar(value), name=name, conversion=conversion, bounds=bounds, delta=delta
         )
         self._history.append(self._evaluate())
 
@@ -507,26 +516,27 @@ class Param(ParamBase):
         return self._evaluate()
 
     def _setfun(self, value, ring=None):
-        self._evaluate = _Scalar(self.dtype(value))
+        self._evaluate = _Scalar(self._conversion(value))
 
-    def set_dtype(self, dtype: Callable[[Number], Number]):
+    def set_conversion(self, conversion: Callable[[Number], Number]):
         oldv = self._evaluate()
-        super(Param, self).set_dtype(dtype)
-        self._evaluate = _Scalar(dtype(oldv))
+        super(Param, self).set_conversion(conversion)
+        self._evaluate = _Scalar(conversion(oldv))
 
 
 class _PArray(np.ndarray):
     """Subclass of ndarray which reports to its parent ParamArray"""
 
-    def __new__(cls, value, buildfun):
-        a = buildfun(value)
-        obj = a.view(cls)
+    # This is the array obtained with an element get_attribute.
+    # It is also the one used when setting an item of an array attribute.
+
+    def __new__(cls, value, dtype=np.float64):
+        obj = np.array(value, dtype=dtype, order="F").view(cls)
         obj._parent = value
         return obj
 
     def __array_finalize__(self, obj):
-        if obj is not None:
-            self._parent = getattr(obj, "_parent", None)
+        self._parent = getattr(obj, "_parent", None)
 
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
@@ -541,20 +551,15 @@ class _PArray(np.ndarray):
 class ParamArray(np.ndarray):
     """Simulate a numpy array where items may be parametrised"""
 
-    def __new__(cls, value, buildfun=lambda v: np.array(v, dtype=float, order="F")):
-        obj = np.array(value, dtype=object, order="F").view(cls)
-        obj._value = _PArray(obj.view(np.ndarray), buildfun)
+    def __new__(cls, value, shape=(-1,), dtype=np.float64):
+        obj = np.asfortranarray(value, dtype=object).reshape(shape).view(cls)
+        obj._value = _PArray(obj, dtype=dtype)
         return obj
 
-    # noinspection PyUnusedLocal
     def __array_finalize__(self, obj):
-        self._value = None
-
-    def set_dtype(self, buildfun):
-        """Set the data type. Called when a parameter is assigned to an
-        :py:class:`.Element` attribute"""
-        # noinspection PyAttributeOutsideInit
-        self._value = _PArray(self.view(np.ndarray), buildfun)
+        val = getattr(obj, "_value", None)
+        if val is not None:
+            self._value = _PArray(self, dtype=val.dtype)
 
     @property
     def value(self):
@@ -566,8 +571,8 @@ class ParamArray(np.ndarray):
 
     def __str__(self):
         it = np.nditer(self, flags=["refs_ok"], order="C")
-        contents = ", ".join([str(el) for el in it])
-        return f"{self.__class__.__name__}([{contents}])"
+        contents = " ".join([str(el) for el in it])
+        return f"[{contents}]"
 
 
 class VariableList(list):
