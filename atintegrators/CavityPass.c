@@ -4,11 +4,8 @@
  * Revision 3/10/04
  * A.Terebilo
  */
-
+#include "atconstants.h"
 #include "atelem.c"
-
-#define TWOPI  6.28318530717959
-#define C0  	2.99792458e8
 
 struct elem
 {

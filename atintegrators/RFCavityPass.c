@@ -5,6 +5,7 @@
  *  Nicola Carmignani
  */
 
+#include "atconstants.h"
 #include "attrackfunc.c"
 
 

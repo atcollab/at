@@ -23,10 +23,6 @@
 #include <math.h>
 #include <stdint.h>
 
-#ifndef TWOPI
-#define TWOPI  6.28318530717959
-#endif /*TWOPI*/
-
 /* initial RNG definitions */
 #define AT_RNG_STATE 0x853c49e6748fea9bULL
 #define AT_RNG_INC 0xda3e39cb94b95bdbULL
