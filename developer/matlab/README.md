@@ -53,8 +53,8 @@ Generates _atroot_/at.m ("help at")
 gen_toc();
 ```
 - Generates _atroot_/developer/matlab/m/*.m files*
-- Publishes these files in _atroot_/../docs/matlab/*.html
-- Publishes _atroot_/developer/matlab/mlx/*.mlx in _atroot_/../docs/matlab/*.html
+- Publishes these files in _atroot_/../docs/atdocs/matlab/*.html
+- Publishes _atroot_/developer/matlab/mlx/*.mlx in _atroot_/../docs/atdocs/matlab/*.html
 - Generates the User's guide files for the help browser
 
 **Warning:**
