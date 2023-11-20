@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,IE=9,chrome=1"><meta name="generator" content="MATLAB 2023b"><title>2.5</title><style type="text/css">.rtcContent { padding: 30px; } .S0 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 28.8px; min-height: 0px; white-space: pre-wrap; color: rgb(192, 76, 11); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 24px; font-weight: 400; text-align: left;  }
+.S1 { margin: 15px 10px 5px 4px; padding: 0px; line-height: 18px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 17px; font-weight: 700; text-align: left;  }
+.S2 { margin: 10px 0px 20px; padding-left: 0px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;  }
+.S3 { margin-left: 56px; line-height: 21px; min-height: 0px; text-align: left; white-space: pre-wrap;  }
+.S4 { margin: 2px 10px 9px 4px; padding: 0px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: left;  }</style></head><body><div class = rtcContent><h1  class = 'S0'><span style=' font-weight: bold;'>2.5</span></h1><h3  class = 'S1'><span style=' font-weight: bold;'>Main changes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>A new keyword </span><span style=' font-family: monospace;'>df</span><span> is introduced to specify to specify off-momentum computation, in addition to </span><span style=' font-family: monospace;'>dp</span><span> and </span><span style=' font-family: monospace;'>dct</span><span>. It is available in atsetcavity, findorbit*, findm44, atlinopt*, tunechrom,</span></li><li  class = 'S3'><span>Dipole radiation tapering  can be set using attapering.</span></li><li  class = 'S3'><span>A set of new "exact" integrators is introduced: `ExactDriftPass`, `ExactMultipolePass`, `ExactSectorBendPass`, `ExactRectangularBendPass`.</span></li></ul><h3  class = 'S1'><span>New features</span></h3><ul  class = 'S2'><li  class = 'S3'><span>"atsummary", "ringpara" and "atx" use "atlinopt6" for optics by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/500"><span>#500</span></a><span>,</span></li><li  class = 'S3'><span>Introduce an RF frequency shift input `df` to specify off-momentum computation by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/501"><span>#501</span></a><span>,</span></li><li  class = 'S3'><span>Variable multipole by </span><a href = "https://github.com/swhite2401"><span>@swhite2401</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/510"><span>#510</span></a><span>,</span></li><li  class = 'S3'><span>Set a dipole radiation tapering by </span><a href = "https://github.com/swhite2401"><span>@swhite2401</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/623"><span>#623</span></a><span>,</span></li><li  class = 'S3'><span>Matlab frequency control by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/560"><span>#560</span></a><span>,</span></li><li  class = 'S3'><span>Introduction of an "energy loss" element by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/632"><span>#632</span></a><span>,</span></li><li  class = 'S3'><span>New Matlab function atsimplering by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/657"><span>#657</span></a><span>,</span></li><li  class = 'S3'><span>Create BndStrMPoleSymplectic4RadPass by </span><a href = "https://github.com/catohxb"><span>@catohxb</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/665"><span>#665</span></a><span>.</span></li><li  class = 'S3'><span>New integrators: ExactDriftPass, ExactMultipolePass by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/581"><span>#581</span></a></li></ul><h3  class = 'S1'><span>Bug fixes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>quantpass bugfixes by </span><a href = "https://github.com/swhite2401"><span>@swhite2401</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/504"><span>#504</span></a><span>,</span></li><li  class = 'S3'><span>Take "QuantPass" into account when checking 6D motion by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/507"><span>#507</span></a><span>,</span></li><li  class = 'S3'><span>Remove spurious printout by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/509"><span>#509</span></a><span>,</span></li><li  class = 'S3'><span>Secure the emittance computation in atsummary and ringpara by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/511"><span>#511</span></a><span>,</span></li><li  class = 'S3'><span>Failure of GitHub action for Matlab compilation error by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/535"><span>#535</span></a><span>,</span></li><li  class = 'S3'><span>Use the ct coordinate in the variable multipole pass method by </span><a href = "https://github.com/carmignani"><span>@carmignani</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/532"><span>#532</span></a><span>,</span></li><li  class = 'S3'><span>Update quantum diffusion pass methods by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/534"><span>#534</span></a><span>,</span></li><li  class = 'S3'><span>Do not split elements with IdTablePass method by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/563"><span>#563</span></a><span>,</span></li><li  class = 'S3'><span>Bug fix on atrotatelattice by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/569"><span>#569</span></a><span>,</span></li><li  class = 'S3'><span>ringparam always returns an emittance by </span><a href = "https://github.com/swhite2401"><span>@swhite2401</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/583"><span>#583</span></a><span>,</span></li><li  class = 'S3'><span>Fixes bug producing infrequent NaN from calcnaff by </span><a href = "https://github.com/pcsch"><span>@pcsch</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/587"><span>#587</span></a><span>,</span></li><li  class = 'S3'><span>Correct return type of wakefunc_long_resonator by</span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/591"><span>#591</span></a><span>,</span></li><li  class = 'S3'><span>Fix compilation with OPENMP=1 by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/607"><span>#607</span></a><span>,</span></li><li  class = 'S3'><span>atreduce: check entrance and exit angles in bends by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/604"><span>#604</span></a><span>,</span></li><li  class = 'S3'><span>Process aperture limitation and misalignment in </span><span style=' font-family: monospace;'>CorrectorPass</span><span> by </span><a href = "https://github.com/swhite2401"><span>@swhite2401</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/623"><span>#623</span></a><span>,</span></li><li  class = 'S3'><span>Fix at disable_6d by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/625"><span>#625</span></a><span>,</span></li><li  class = 'S3'><span>Don't automatically cache the location of RF cavities by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/640"><span>#640</span></a><span>,</span></li><li  class = 'S3'><span>fix: ring phase advances in computeRDT.m by </span><a href = "https://github.com/wei0852"><span>@wei0852</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/652"><span>#652</span></a><span>,</span></li><li  class = 'S3'><span>Bug fix in atdisable_6d: keep the Energy field in cavities. by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/654"><span>#654</span></a><span>,</span></li><li  class = 'S3'><span>Fix atmaincavities by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/656"><span>#656</span></a><span>,</span></li><li  class = 'S3'><span>Correct the attribute name of solenoids in Matlab by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/663"><span>#663</span></a><span>,</span></li><li  class = 'S3'><span>Bug fix in atgeometry by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/667"><span>#667</span></a><span>,</span></li><li  class = 'S3'><span>Improve the performance of atsummary by </span><a href = "https://github.com/lnadolski"><span>@lnadolski</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/688"><span>#688</span></a></li></ul><h3  class = 'S1'><span>New Contributors</span></h3><ul  class = 'S2'><li  class = 'S3'><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> made their first contribution in </span><a href = "https://github.com/atcollab/at/pull/563"><span>#563</span></a><span>,</span></li><li  class = 'S3'><a href = "https://github.com/pcsch"><span>@pcsch</span></a><span> made their first contribution in </span><a href = "https://github.com/atcollab/at/pull/587"><span>#587</span></a><span>,</span></li><li  class = 'S3'><a href = "https://github.com/wei0852"><span>@wei0852</span></a><span> made their first contribution in </span><a href = "https://github.com/atcollab/at/pull/652"><span>#652</span></a><span>,</span></li><li  class = 'S3'><a href = "https://github.com/catohxb"><span>@catohxb</span></a><span> made their first contribution in </span><a href = "https://github.com/atcollab/at/pull/665"><span>#665</span></a><span>.</span></li></ul><div  class = 'S4'><span></span></div><div  class = 'S4'><span> Full change log: </span><a href = "https://github.com/atcollab/at/compare/2.4...2.5"><span>https://github.com/atcollab/at/compare/2.4...2.5</span></a></div>
+<br>
+<!-- 
+##### SOURCE BEGIN #####
+%% *2.5*
+% *Main changes*
+%% 
+% * A new keyword |df| is introduced to specify to specify off-momentum computation, 
+% in addition to |dp| and |dct|. It is available in atsetcavity, findorbit*, findm44, 
+% atlinopt*, tunechrom,
+% * Dipole radiation tapering  can be set using attapering.
+% * A set of new "exact" integrators is introduced: `ExactDriftPass`, `ExactMultipolePass`, 
+% `ExactSectorBendPass`, `ExactRectangularBendPass`.
+% New features
+%% 
+% * "atsummary", "ringpara" and "atx" use "atlinopt6" for optics by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/500 #500>,
+% * Introduce an RF frequency shift input `df` to specify off-momentum computation 
+% by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/501 
+% #501>,
+% * Variable multipole by <https://github.com/swhite2401 @swhite2401> in <https://github.com/atcollab/at/pull/510 
+% #510>,
+% * Set a dipole radiation tapering by <https://github.com/swhite2401 @swhite2401> 
+% in <https://github.com/atcollab/at/pull/623 #623>,
+% * Matlab frequency control by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/560 
+% #560>,
+% * Introduction of an "energy loss" element by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/632 #632>,
+% * New Matlab function atsimplering by <https://github.com/lfarv @lfarv> in 
+% <https://github.com/atcollab/at/pull/657 #657>,
+% * Create BndStrMPoleSymplectic4RadPass by <https://github.com/catohxb @catohxb> 
+% in <https://github.com/atcollab/at/pull/665 #665>.
+% * New integrators: ExactDriftPass, ExactMultipolePass by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/581 #581>
+% Bug fixes
+%% 
+% * quantpass bugfixes by <https://github.com/swhite2401 @swhite2401> in <https://github.com/atcollab/at/pull/504 
+% #504>,
+% * Take "QuantPass" into account when checking 6D motion by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/507 #507>,
+% * Remove spurious printout by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/509 
+% #509>,
+% * Secure the emittance computation in atsummary and ringpara by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/511 #511>,
+% * Failure of GitHub action for Matlab compilation error by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/535 #535>,
+% * Use the ct coordinate in the variable multipole pass method by <https://github.com/carmignani 
+% @carmignani> in <https://github.com/atcollab/at/pull/532 #532>,
+% * Update quantum diffusion pass methods by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/534 #534>,
+% * Do not split elements with IdTablePass method by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/563 #563>,
+% * Bug fix on atrotatelattice by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/569 
+% #569>,
+% * ringparam always returns an emittance by <https://github.com/swhite2401 
+% @swhite2401> in <https://github.com/atcollab/at/pull/583 #583>,
+% * Fixes bug producing infrequent NaN from calcnaff by <https://github.com/pcsch 
+% @pcsch> in <https://github.com/atcollab/at/pull/587 #587>,
+% * Correct return type of wakefunc_long_resonator by<https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/591 #591>,
+% * Fix compilation with OPENMP=1 by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/607 
+% #607>,
+% * atreduce: check entrance and exit angles in bends by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/604 #604>,
+% * Process aperture limitation and misalignment in |CorrectorPass| by <https://github.com/swhite2401 
+% @swhite2401> in <https://github.com/atcollab/at/pull/623 #623>,
+% * Fix at disable_6d by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/625 
+% #625>,
+% * Don't automatically cache the location of RF cavities by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/640 #640>,
+% * fix: ring phase advances in computeRDT.m by <https://github.com/wei0852 
+% @wei0852> in <https://github.com/atcollab/at/pull/652 #652>,
+% * Bug fix in atdisable_6d: keep the Energy field in cavities. by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/654 #654>,
+% * Fix atmaincavities by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/656 
+% #656>,
+% * Correct the attribute name of solenoids in Matlab by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/663 #663>,
+% * Bug fix in atgeometry by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/667 
+% #667>,
+% * Improve the performance of atsummary by <https://github.com/lnadolski @lnadolski> 
+% in <https://github.com/atcollab/at/pull/688 #688>
+% New Contributors
+%% 
+% * <https://github.com/oscarxblanco @oscarxblanco> made their first contribution 
+% in <https://github.com/atcollab/at/pull/563 #563>,
+% * <https://github.com/pcsch @pcsch> made their first contribution in <https://github.com/atcollab/at/pull/587 
+% #587>,
+% * <https://github.com/wei0852 @wei0852> made their first contribution in <https://github.com/atcollab/at/pull/652 
+% #652>,
+% * <https://github.com/catohxb @catohxb> made their first contribution in <https://github.com/atcollab/at/pull/665 
+% #665>.
+%% 
+% 
+% 
+% Full change log: <https://github.com/atcollab/at/compare/2.4...2.5 https://github.com/atcollab/at/compare/2.4...2.5>
+##### SOURCE END #####
+-->
+</div></body></html>
