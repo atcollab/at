@@ -61,7 +61,7 @@ doc = ["Sphinx ~= 7.2", "myst-parser", "myst-nb", "pydata-sphinx-theme ~= 0.14",
 # Pypy does not have Scipy so we cannot support it.
 # build = ["cp3{7,8,9,10,11,12}*"]
 build = ["cp312*"]
-#skip = ["*-musllinux*", "*_i686", "*win32"]
+skip = ["cp312-win32", "cp312-*_i686"]
 build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"
