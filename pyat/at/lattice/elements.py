@@ -31,8 +31,13 @@ def _float(value):
     return float(value)
 
 
-def _int(value):
-    return int(value)
+def _int(value, min:Optional[int] = None, max: Optional[int]=None):
+    intv = int(value)
+    if min is not None and intv < min:
+        raise ValueError(f"Value must be greater of equal to {min}")
+    if max is not None and intv > max:
+        raise ValueError(f"Value must be smaller of equal to {max}")
+    return intv
 
 
 class LongtMotion(ABC):
@@ -255,7 +260,7 @@ class Element(object):
                         KickAngle=lambda v: _array(v, (2,)),
                         PolynomB=_array, PolynomA=_array,
                         BendingAngle=_float,
-                        MaxOrder=_int, NumIntSteps=_int,
+                        MaxOrder=_int, NumIntSteps=lambda v: _int(v, min=0),
                         Energy=_float,
                         )
 
