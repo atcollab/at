@@ -7,19 +7,19 @@ a lattice. They may be used in parameter scans, matching, response matrices…
 ```{grid-item-card} Variables
 :shadow: md
 
-{py:doc}`notebooks/variables` are **references** to any scalar quantity. AT includes two predefined
-variable classes referring to scalar attributes of lattice elements:
-- an {py:class}`~.element_variables.ElementVariable` is associated to an element object, and acts on
-  all occurences of this object. But it will not affect any copy, neither shallow
-  nor deep, of the original object,
-- a {py:class}`.RefptsVariable` is not associated to an element object, but to an
-  element location in a {py:class}`.Lattice`. It acts on any copy of the initial
+{py:doc}`notebooks/variables` are **references** to any scalar quantity. AT includes
+two predefined variable classes referring to scalar attributes of lattice elements:
+- an {py:class}`~.element_variables.ElementVariable` is associated with one or several
+  {py:class}`.Element` objects, and acts on all occurences of these objects. But it
+  will not affect any copy, neither shallow nor deep, of the original objects,
+- a {py:class}`.RefptsVariable` is not associated with with element objects, but to
+  their location in a {py:class}`.Lattice`. It acts on any copy of the initial
   lattice. A *ring* argument must be provided to the *set* and *get* methods to
   identify the lattice.
 
 Variable referring to other quantities may be created by:
 - deriving the {py:class}`~.variables.Variable` base class. Usually this consist in
-  overloading the abstract methods *_setfun* and *_getfun*
+  simply implementing the *_setfun* and *_getfun* abstract methods,
 - Using the {py:class}`.CustomVariable` class.
 ```
 ```{grid-item-card} Parameters
@@ -30,6 +30,9 @@ values as {py:class}`.Element` attributes.
 Arithmetic combinations of parameters create new read-only parameters of class
 {py:class}`.ParamBase`, whose value is permanently kept up-to-date. This is useful to
 introduce correlation between attributes of different elements.
+
+The use of parameters is restricted to {py:class}`.Element` attributes, while
+variables can vary any quantity.
 ```
 ````
 
