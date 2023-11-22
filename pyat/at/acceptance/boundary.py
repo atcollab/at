@@ -168,6 +168,9 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     return numpy.invert(td['loss_map'].islost)
 
 
+grid0 = grid(numpy.array([[0.0], [0.0]]), numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+
+
 def get_grid_boundary(mask, grid, config):
     """
     Compute the boundary of survided particles array
@@ -259,14 +262,22 @@ def get_grid_boundary(mask, grid, config):
             bnd[:, i] = search_bnd(ma, sa)
         return bnd
 
+    some_survived = True
     if not numpy.any(mask):
-        raise AtError("No particle survived, please check your grid "
-                      "or lattice.")
+        print("No particle survived, please check your grid "
+                      "or lattice. ZERO acceptance.")
+        some_survived = False
 
     if config.mode is GridMode.RADIAL:
-        return radial_boundary(mask, grid)
+        if some_survived:
+            return radial_boundary(mask, grid)
+        else:
+            return radial_boundary(numpy.atleast_2d(numpy.array(True)), grid0)
     elif config.mode is GridMode.CARTESIAN:
-        return grid_boundary(mask, grid, config)
+        if some_survived:
+            return grid_boundary(mask, grid, config)
+        else:
+            return grid_boundary(numpy.atleast_2d(numpy.array(True)), grid0, config)
     else:
         raise AtError('GridMode {0} undefined.'.format(grid.mode))
 
