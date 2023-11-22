@@ -110,12 +110,12 @@ switch isIDfileformat
         x = A.data;
         x = x(1, 1:Nx);
         A = importdata(filename, datasep, 11);
-        txkick = A.data;
-        y = txkick(1:Ny, 1);
-        txkick = txkick(:, 2:end);
+        txkick2 = A.data;
+        y = txkick2(1:Ny, 1);
+        txkick2 = txkick2(:, 2:end);
         A = importdata(filename, datasep, 11 + Ny + 3);
-        tykick = A.data;
-        tykick = tykick(:, 2:end);
+        tykick2 = A.data;
+        tykick2 = tykick2(:, 2:end);
 
         % check if first orders kicks are defined, otherwise set them to zero
         A = importdata(filename, datasep, 11 + 2 * Ny + 2 * 3);
@@ -123,19 +123,19 @@ switch isIDfileformat
             txkick1 = A.data;
             txkick1 = txkick1(:, 2:end);
         else
-            txkick1 = 0 * txkick;
+            txkick1 = 0 * txkick2;
         end
         A = importdata(filename, datasep, 11 + 3 * Ny + 3 * 3);
         if isstruct(A)
             tykick1 = A.data;
             tykick1 = tykick1(:, 2:end);
         else
-            tykick1 = 0 * tykick;
+            tykick1 = 0 * tykick2;
         end
 
         % scale kick tables
-        xkick2 = factor2 * txkick;
-        ykick2 = factor2 * tykick;
+        xkick2 = factor2 * txkick2;
+        ykick2 = factor2 * tykick2;
         xkick1 = factor1 * txkick1;
         ykick1 = factor1 * tykick1;
 
