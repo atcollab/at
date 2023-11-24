@@ -59,11 +59,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->U0=U0;
             Elem->EnergyLossFactor=U0/Param->energy;
         }
-        SimpleQuantDiffPass(r_in, Elem->taux, Elem->tauy, Elem->tauz, Elem->EnergyLossFactor, num_particles);
+        SimpleRadPass(r_in, Elem->taux, Elem->tauy, Elem->tauz, Elem->EnergyLossFactor, num_particles);
     return Elem;
 }
 
-MODULE_DEF(SimpleQuantDiffPass)        /* Dummy module initialisation */
+MODULE_DEF(SimpleRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -85,7 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        SimpleQuantDiffPass(r_in, taux, tauy, tauz, EnergyLossFactor, num_particles);
+        SimpleRadPass(r_in, taux, tauy, tauz, EnergyLossFactor, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
