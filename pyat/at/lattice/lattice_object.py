@@ -50,8 +50,8 @@ _DEFAULT_PASS = {
         ('collective_pass', elt.Collective, 'auto'),
         ('diffusion_pass', elt.QuantumDiffusion, 'auto'),
         ('energyloss_pass', elt.EnergyLoss, 'auto'),
-        ('simplequantdiff_pass', elt.SimpleQuantDiff, 'auto')
-        ('simplerad_pass', elt.SimpleRadiation, 'auto')
+        ('simplequantdiff_pass', elt.SimpleQuantDiff, 'auto'),
+        ('simpleradiation_pass', elt.SimpleRadiation, 'auto')
     ),
     True: (
         ('cavity_pass', elt.RFCavity, 'auto'),
@@ -64,7 +64,7 @@ _DEFAULT_PASS = {
         ('collective_pass', elt.Collective, 'auto'),
         ('diffusion_pass', elt.QuantumDiffusion, 'auto'),
         ('energyloss_pass', elt.EnergyLoss, 'auto'),
-        ('simplequantdiff_pass', elt.SimpleQuantDiff, 'auto')
+        ('simplequantdiff_pass', elt.SimpleQuantDiff, 'auto'),
         ('simpleradiation_pass', elt.SimpleRadiation, 'auto')
     )
 }

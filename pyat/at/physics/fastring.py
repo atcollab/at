@@ -5,7 +5,7 @@ from functools import reduce
 import numpy
 from typing import Tuple, Optional
 from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
-from at.lattice import get_elements, M66, SimpleQuantDiff, AtError
+from at.lattice import get_elements, M66, SimpleQuantDiff, AtError, SimpleRadiation
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from at.constants import clight, e_mass
 import copy
@@ -121,10 +121,11 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     A simple ring consists of:
 
     * an RF cavity,
-    * a 6x6 linear transfer map,
+    * a 6x6 linear transfer map with no radiation damping,
+    * a simple radiation damping element
     * a detuning and chromaticity element,
     * a simplified quantum diffusion element
-        which contains equilibrium emittance and radiation damping
+        which contains equilibrium emittance
 
     Positional Arguments:
         * energy [eV]
@@ -225,14 +226,18 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
 
     # generate the linear tracking element, we set a length
     # which is needed to give the lattice object the correct length
-    # (although it is not used)
+    # (although it is not used for anything else)
     lin_elem = M66('Linear', m66=Mat66, Length=circumference)
 
+    # Generate the simple radiation element
+    simplerad = SimpleRadiation('SR', taux=taux, tauy=tauy, 
+                                tauz=tauz, U0=U0)
+                                
     # Generate the simple quantum diffusion element
     quantdiff = SimpleQuantDiff('SQD', betax=betax, betay=betay,
                                 emitx=emitx, emity=emity,
                                 espread=espread, taux=taux,
-                                tauy=tauy, tauz=tauz, U0=U0)
+                                tauy=tauy, tauz=tauz)
 
     # Generate the detuning element
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
@@ -242,7 +247,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                           A1=A1, A2=A2, A3=A3)
 
     # Assemble all elements into the lattice object
-    ring = Lattice(all_cavities + [lin_elem, nonlin_elem, quantdiff],
+    ring = Lattice(all_cavities + [lin_elem, nonlin_elem, simplerad, quantdiff],
                    energy=energy, periodicity=1)
 
     return ring

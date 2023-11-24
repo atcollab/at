@@ -11,7 +11,7 @@ struct elem
   double EnergyLossFactor;
 };
 
-void SimpleRadPass(double *r_in,
+void SimpleRadiationPass(double *r_in,
            double taux, double tauy, double tauz,
            double EnergyLossFactor, int num_particles)
 
@@ -59,11 +59,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->U0=U0;
             Elem->EnergyLossFactor=U0/Param->energy;
         }
-        SimpleRadPass(r_in, Elem->taux, Elem->tauy, Elem->tauz, Elem->EnergyLossFactor, num_particles);
+        SimpleRadiationPass(r_in, Elem->taux, Elem->tauy, Elem->tauz, Elem->EnergyLossFactor, num_particles);
     return Elem;
 }
 
-MODULE_DEF(SimpleRadPass)        /* Dummy module initialisation */
+MODULE_DEF(SimpleRadiationPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -85,7 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        SimpleRadPass(r_in, taux, tauy, tauz, EnergyLossFactor, num_particles);
+        SimpleRadiationPass(r_in, taux, tauy, tauz, EnergyLossFactor, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
