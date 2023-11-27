@@ -499,41 +499,56 @@ class SliceMoments(Element):
 
     def __init__(self, family_name: str, nslice: int, **kwargs):
         kwargs.setdefault('PassMethod', 'SliceMomentsPass')
-        self._stds = numpy.zeros((3, 1, nslice, 1), order='F')
-        self._means = numpy.zeros((3, 1, nslice, 1), order='F')
-        self._spos = numpy.zeros((1, nslice, 1), order='F')
-        self._weights = numpy.zeros((1, nslice, 1), order='F')
         self._startturn = kwargs.pop('startturn', 0)
         self._endturn = kwargs.pop('endturn', 1)
         super(SliceMoments, self).__init__(family_name, nslice=nslice,
                                            **kwargs)
+        self._nbunch = 1
         self.startturn = self._startturn
         self.endturn = self._endturn
+        self._dturns = self.endturn - self.startturn
+        self._stds = numpy.zeros((3, nslice, self._dturns), order='F')
+        self._means = numpy.zeros((3, nslice, self._dturns), order='F')
+        self._spos = numpy.zeros((nslice, self._dturns), order='F')
+        self._weights = numpy.zeros((nslice, self._dturns), order='F')
         self.set_buffers(self._endturn, 1)
 
     def set_buffers(self, nturns, nbunch):
         self.endturn = min(self.endturn, nturns)
-        dturns = self.endturn - self.startturn
-        self._stds = numpy.zeros((3, nbunch, self.nslice, dturns), order='F')
-        self._means = numpy.zeros((3, nbunch ,self.nslice, dturns), order='F')
-        self._spos = numpy.zeros((nbunch, self.nslice, dturns), order='F')
-        self._weights = numpy.zeros((nbunch, self.nslice, dturns), order='F')
+        self._dturns = self.endturn - self.startturn
+        self._nbunch = nbunch
+        self._stds = numpy.zeros((3, nbunch*self.nslice, self._dturns),
+                                 order='F')
+        self._means = numpy.zeros((3, nbunch*self.nslice, self._dturns),
+                                  order='F')
+        self._spos = numpy.zeros((nbunch*self.nslice, self._dturns),
+                                 order='F')
+        self._weights = numpy.zeros((nbunch*self.nslice, self._dturns),
+                                    order='F')
 
     @property
     def stds(self):
-        return self._stds
+        return self._stds.reshape((3, self._nbunch,
+                                   self.nslice,
+                                   self._dturns))
 
     @property
     def means(self):
-        return self._means
+        return self._means.reshape((3, self._nbunch,
+                                    self.nslice,
+                                    self._dturns))
         
     @property
     def spos(self):
-        return self._spos
+        return self._spos.reshape((self._nbunch,
+                                   self.nslice,
+                                   self._dturns))
 
     @property
     def weights(self):
-        return self._weights
+        return self._weights.reshape((self._nbunch,
+                                      self.nslice,
+                                      self._dturns))
     
     @property
     def startturn(self):

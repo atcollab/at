@@ -85,11 +85,11 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
             if (weight[i] > 0){
                 pos[3*i+ii] = pos[3*i+ii]/weight[i];
                 std[3*i+ii] = sqrt(std[3*i+ii]/weight[i]-pos[3*i+ii]*pos[3*i+ii]);
-            }   
+            }
             else{
                 pos[3*i+ii] = NAN;
                 std[3*i+ii] = NAN;
-            }                 
+            }
         }
         spos[i] = (weight>0) ? spos[i]/weight[i] : smin[ib]+(i%nslice+0.5)*hz[ib];
         spos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
@@ -150,17 +150,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         } else if (endturn > Param->num_turns){
             atWarning("endturn exceed the total number of turns");
         };
-        int dims[] = {3, Param->nbunch, nslice, endturn-startturn};
-        int dimsw[] = {Param->nbunch, nslice,  endturn-startturn};
+        int dims[] = {3, Param->nbunch*nslice, endturn-startturn};
+        int dimsw[] = {Param->nbunch*nslice,  endturn-startturn};
         means = atGetDoubleArray(ElemData,"_means"); check_error();
         stds = atGetDoubleArray(ElemData,"_stds"); check_error();
         sposs = atGetDoubleArray(ElemData,"_spos"); check_error();
         weights = atGetDoubleArray(ElemData,"_weights"); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
-        atCheckArrayDims(ElemData,"_means", 4, dims); check_error();
-        atCheckArrayDims(ElemData,"_stds", 4, dims); check_error();
-        atCheckArrayDims(ElemData,"_spos", 3, dimsw); check_error();
-        atCheckArrayDims(ElemData,"_weights", 3, dimsw); check_error();
+        atCheckArrayDims(ElemData,"_means", 3, dims); check_error();
+        atCheckArrayDims(ElemData,"_stds", 3, dims); check_error();
+        atCheckArrayDims(ElemData,"_spos", 2, dimsw); check_error();
+        atCheckArrayDims(ElemData,"_weights", 2, dimsw); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->stds = stds;
         Elem->means = means;
