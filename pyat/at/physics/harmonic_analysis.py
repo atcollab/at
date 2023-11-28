@@ -10,6 +10,8 @@ from warnings import warn
 from scipy.fft import fft, fftfreq
 from at.lattice import AtWarning
 from at.lattice import AtError
+import multiprocessing
+from functools import partial
 
 
 __all__ = ['get_spectrum_harmonic', 'get_main_harmonic',
@@ -49,7 +51,7 @@ def _compute_coef(samples, freq):
     """
     n = len(samples)
     exponents = numpy.exp(-2j*numpy.pi * freq * numpy.arange(n))
-    coef = numpy.sum(exponents * samples)
+    coef = numpy.sum(exponents * samples)/n
     return coef
 
 
@@ -62,30 +64,30 @@ def _interpolated_fft(samples, num_harmonics, fmin, fmax,
 
     nfound = 0
     niter = 0
-    nmax = num_harmonics*maxiter
+    nmax = num_harmonics * maxiter
 
     while (nfound < num_harmonics) and (niter < nmax):
         fft_data = fft(samples)
         frequency = _interpolate_peak(fft_data)
         coefficient = _compute_coef(samples, frequency)
-        if frequency >= fmin and frequency <= fmax:
+        if (frequency >= fmin) and (frequency <= fmax):
             frequencies[nfound] = frequency
             coefficients[nfound] = coefficient
             nfound += 1
         samples = samples - coefficient * numpy.exp(2j*numpy.pi*frequency*rn)
         niter += 1
 
-    if nfound < num_harmonics:
-        msg = ('{0}/{1} harmonics found in '
-               'requested range'.format(nfound, num_harmonics))
-        warn(AtWarning(msg))
     if nfound == 0:
         msg = ('No harmonic found within range, '
                'consider extending it or increase maxiter')
         raise AtError(msg)
+    elif nfound < num_harmonics:
+        msg = ('{0}/{1} harmonics found in '
+               'requested range'.format(nfound, num_harmonics))
+        warn(AtWarning(msg))
 
     coefficients, frequencies = zip(*sorted(zip(coefficients, frequencies),
-                                    key=lambda tuple: numpy.abs(tuple[0]),
+                                    key=lambda tp: numpy.abs(tp[0]),
                                     reverse=True))
     return frequencies, coefficients
 
@@ -95,8 +97,10 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
                           hann: bool = False,
                           fmin: float = 0, fmax: float = 1,
                           maxiter: float = 10,
-                          pad_length=None) -> tuple[numpy.ndarray,
-                                                    numpy.ndarray]:
+                          pad_length: float = None,
+                          remove_mean: bool = True) -> tuple[numpy.ndarray,
+                                                             numpy.ndarray,
+                                                             numpy.ndarray]:
     """Frequency analysis of beam motion
 
     Parameters:
@@ -113,6 +117,8 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
         pad_length      Zero pad the input signal.
                         Rounded to the higher power of 2
                         Ignored for interpolated FFT
+        remove_mean:    Remove the mean of the input signal.
+                        Default: :py:obj:`True`.
 
     Returns:
         frequency (ndarray): (num_harmonics,) array of frequencies
@@ -121,6 +127,8 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     """
     lc = len(cent)
     # laskar kept for backward compatibility
+    if remove_mean:
+        cent -= numpy.mean(cent)
     if method == 'interp_fft' or method == 'laskar':
         if hann:
             warn(AtWarning('Windowing not efficient for'
@@ -145,12 +153,81 @@ def get_spectrum_harmonic(cent: numpy.ndarray, method: str = 'interp_fft',
     return ha_tune, ha_amp, ha_phase
 
 
+def _get_max_spectrum(freq, amp, phase, fmin, fmax):
+    msk = (freq >= fmin) & (freq <= fmax)
+    amp = amp[msk]
+    freq = freq[msk]
+    phase = phase[msk]
+    tune = freq[numpy.argmax(amp)]
+    phase = phase[numpy.argmax(amp)]
+    amp = numpy.amax(amp)
+    return tune, amp, phase
+
+
+def _get_main_single(cents, **kwargs):
+
+    def get_hmain(cents):
+        fmin = kwargs.get('fmin', 0)
+        fmax = kwargs.get('fmax', 1)
+        try:
+            out = get_spectrum_harmonic(cents, **kwargs)
+            freq, amp, phase = out
+            tunes, amps, phases = _get_max_spectrum(freq, amp,
+                                                    phase, fmin,
+                                                    fmax)
+        except AtError:
+            msg = ('No harmonic found within range, '
+                   'consider extending it or increase maxiter')
+            warn(AtWarning(msg))
+            tunes = numpy.nan
+            amps = numpy.nan
+            phases = numpy.nan
+        except ValueError:
+            msg = ('Invalid input vector provided')
+            warn(AtWarning(msg))
+            tunes = numpy.nan
+            amps = numpy.nan
+            phases = numpy.nan
+        return tunes, amps, phases
+
+    cents = numpy.atleast_2d(cents)
+    results = [get_hmain(c) for c in cents]
+    return numpy.transpose(results)
+
+
+def _get_main_multi(cents, **kwargs):
+    cents = numpy.array(cents)
+    start_method = kwargs.pop('start_method', None)
+    pool_size = kwargs.pop('pool_size', None)
+    if cents.ndim > 1:
+        npart = cents.shape[0]
+    else:
+        return _get_main_single(cents, **kwargs)
+    if pool_size is None:
+        pool_size = min(npart, multiprocessing.cpu_count())
+    ctx = multiprocessing.get_context(start_method)
+    fun = partial(_get_main_single, **kwargs)
+    with ctx.Pool(pool_size) as pool:
+        results = pool.map(fun, cents)
+    results = numpy.concatenate(results, axis=1)
+    return results
+
+
 def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                       hann: bool = False,
                       fmin: float = 0, fmax: float = 1,
+                      num_harmonics: int = 1,
                       maxiter: float = 10,
-                      pad_length=None) -> numpy.ndarray:
-    """Computes tunes, amplitudes and pahses from harmonic analysis
+                      pad_length=None,
+                      use_mp: bool = False,
+                      pool_size: int = None,
+                      start_method: str = None,
+                      remove_mean: bool = True) -> tuple[numpy.ndarray,
+                                                         numpy.ndarray,
+                                                         numpy.ndarray]:
+    """Computes tunes, amplitudes and phases from harmonic analysis
+    The tune is defined as the harmonic with the maximum amplitude
+    within the search range.
 
     Parameters:
         cents:          Centroid motions of the particle
@@ -158,12 +235,23 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                         Default: ``'interp_fft'``
         fmin:           Lower bound for tune search
         fmax:           Upper bound for tune search
+        num_harmonics:  Number of harmonics to search for.
+                        Default=1.
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
                         Ignored for interpolated FFT
         pad_length:     Zero pad the input signal.
                         Rounded to the higher power of 2
                         Ignored for interpolated FFT
+        use_mp (bool): Flag to activate multiprocessing (default: False)
+        pool_size:     number of processes used when
+          *use_mp* is :py:obj:`True`. If None, ``min(npart,nproc)``
+          is used. It can be globally set using the variable
+          *at.lattice.DConstant.patpass_poolsize*
+        start_method:  Python multiprocessing start method. Default None
+                       uses the OS default method.
+        remove_mean:    Remove the mean of the input signal.
+                        Default: :py:obj:`True`.
 
     Returns:
         tunes (ndarray):    numpy array of length len(cents), max of the
@@ -172,52 +260,54 @@ def get_main_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                              corresponding to the tune
         phase (ndarray): (len(cents), ) array of phases
                          corresponding to the tune
+
+
+    .. note::
+
+       * The tune is defined as the harmonic with the maximum amplitude within
+         the search range ``(fmin, fmax)``.
+       * In case a ``Nan`` is present in the input vector or the tune cannot
+         be found within the range, the function returns ``NaN``.
+       * For the method ``'interp_fft'``, harmonics are calculated iteratively
+         starting from the maximum peak of the raw FFT. ``num_harmonics=1``
+         is the default, only the first harmonic is calculated.
+         However, it is possible that the maximum of the interpolated
+         FFT does not correspond to the maximum of the raw FFT, in which case
+         ``num_harmonics`` has to be increased to get the correct peak.
     """
-    def get_max_spectrum(freq, amp, phase, fmin, fmax, method):
-        if method == 'interp_fft':
-            return freq[0], amp[0], phase[0]
-        msk = numpy.logical_and(freq >= fmin, freq <= fmax)
-        amp = amp[msk]
-        freq = freq[msk]
-        phase = phase[msk]
-        freq = freq[numpy.argmax(amp)]
-        phase = phase[numpy.argmax(amp)]
-        amp = numpy.amax(amp)
-        return freq, amp, phase
-
-    cents = numpy.array(cents)
-    if cents.ndim > 1:
-        npart = cents.shape[0]
+    if use_mp:
+        tunes, amps, phases = _get_main_multi(cents,
+                                              num_harmonics=num_harmonics,
+                                              method=method, hann=hann,
+                                              pad_length=pad_length,
+                                              fmin=fmin, fmax=fmax,
+                                              maxiter=maxiter,
+                                              pool_size=pool_size,
+                                              start_method=start_method,
+                                              remove_mean=remove_mean)
     else:
-        cents = [cents]
-        npart = 1
-
-    tunes = numpy.zeros(npart)
-    amps = numpy.zeros(npart)
-    phases = numpy.zeros(npart)
-
-    for i in range(npart):
-        out = get_spectrum_harmonic(cents[i], num_harmonics=1, method=method,
-                                    hann=hann, pad_length=pad_length,
-                                    fmin=fmin, fmax=fmax, maxiter=maxiter)
-        freq, amp, phase = out
-        try:
-            tunes[i], amps[i], phases[i] = get_max_spectrum(freq, amp, phase,
-                                                            fmin, fmax,
-                                                            method)
-        except ValueError:
-            tunes[i] = numpy.nan
-            amps[i] = numpy.nan
-            phases[i] = numpy.nan
+        tunes, amps, phases = _get_main_single(cents,
+                                               num_harmonics=num_harmonics,
+                                               method=method, hann=hann,
+                                               pad_length=pad_length,
+                                               fmin=fmin, fmax=fmax,
+                                               maxiter=maxiter,
+                                               remove_mean=remove_mean)
     return tunes, amps, phases
 
 
 def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                        hann: bool = False,
                        fmin: float = 0, fmax: float = 1,
+                       num_harmonics: int = 1,
                        maxiter: float = 10,
-                       pad_length=None, **kwargs) -> numpy.ndarray:
-    """Computes tunes from harmonic analysis
+                       pad_length=None,
+                       use_mp: bool = False,
+                       pool_size: int = None,
+                       start_method: str = None,
+                       remove_mean: bool = True,
+                       **kwargs) -> numpy.ndarray:
+    """Computes tunes from harmonic analysis.
 
     Parameters:
         cents:          Centroid motions of the particle
@@ -225,21 +315,45 @@ def get_tunes_harmonic(cents: numpy.ndarray, method: str = 'interp_fft',
                         Default: ``'interp_fft'``
         fmin:           Lower bound for tune search
         fmax:           Upper bound for tune search
+        num_harmonics:  Number of harmonics to search for.
+                        Default=1.
         maxiter:        Maximum number of iterations for the search
         hann:           Turn on Hanning window. Default: :py:obj:`False`.
-                        Ignored for interpolated FFT
+                        Ignored for interpolated FFT.
         pad_length:     Zero pad the input signal.
                         Rounded to the higher power of 2
                         Ignored for interpolated FFT
+        use_mp (bool): Flag to activate multiprocessing (default: False)
+        pool_size:     number of processes used when
+          *use_mp* is :py:obj:`True`. If None, ``min(npart,nproc)``
+          is used. It can be globally set using the variable
+          *at.lattice.DConstant.patpass_poolsize*
+        start_method:  Python multiprocessing start method. Default None
+                       uses the OS default method.
+        remove_mean:    Remove the mean of the input signal.
+                        Default: :py:obj:`True`.
 
     Returns:
         tunes (ndarray):    numpy array of length len(cents), max of the
         spectrum within [fmin fmax]
+
+    .. note::
+
+       * The tune is defined as the harmonic with the maximum amplitude within
+         the search range ``(fmin, fmax)``.
+       * In case a ``Nan`` is present in the input vector or the tune cannot
+         be found within the range, the function returns ``NaN``.
+       * For the method ``'interp_fft'``, harmonics are calculated iteratively
+         starting from the maximum peak of the raw FFT. ``num_harmonics=1``
+         is the default, only the first harmonic is calculated.
+         However, it is possible that the maximum of the interpolated
+         FFT does not correspond to the maximum of the raw FFT, in which case
+         ``num_harmonics`` has to be increased to get the correct peak.
     """
-    num_harmonics = kwargs.pop('num_harmonics', 1)  # Backward compatibility
-    if num_harmonics != 1:
-        msg = "num_harmonics is deprecated and ignored for tune calculation"
-        warn(AtWarning(msg))
     tunes, _, _ = get_main_harmonic(cents, method=method, hann=hann, fmin=fmin,
-                                    fmax=fmax, pad_length=pad_length)
+                                    fmax=fmax, pad_length=pad_length,
+                                    use_mp=use_mp, pool_size=pool_size,
+                                    start_method=start_method, maxiter=maxiter,
+                                    remove_mean=remove_mean,
+                                    num_harmonics=num_harmonics)
     return tunes

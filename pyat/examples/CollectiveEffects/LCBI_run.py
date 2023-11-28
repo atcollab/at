@@ -82,7 +82,7 @@ def launch():
     part[4, :] = 0
     part[5, :] = 0
 
-    at.track_function(fring, part, nturns=nturns)
+    fring.track(part, nturns=nturns, refpts=None, in_place=True)
 
     dp_all = bmon.means[4, :, :]
     z_all = bmon.means[5, :, :]

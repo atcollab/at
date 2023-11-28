@@ -50,7 +50,7 @@ void ExactHamiltonianPass(double *r_in, double le,
 
     element e = {0};
 
-    for(n = 0; n < max_order; n++)
+    for(n = 0; n < max_order+1; n++)
     {
         e.F[2 * n]     = B[n];
         e.F[2 * n + 1] = A[n];
@@ -59,7 +59,7 @@ void ExactHamiltonianPass(double *r_in, double le,
     e.L = le;
     e.phi = phi;
     e.gK = gK;
-    e.nF = max_order;
+    e.nF = max_order+1;
     e.slices = num_int_steps;
     e.type = type;
     e.do_multipole_fringe = multipole_fringe;

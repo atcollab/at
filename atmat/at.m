@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.4.1 (#656) 18-Sep-2023
+% Version 2.5.0 (atcollab) 06-Nov-2023
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, <a href="matlab:web('https://github.com/atcollab')">atcollab</a>
@@ -140,4 +140,4 @@
 %
 %       <a href="matlab:help symplectify">symplectify</a>              - Makes a matrix more symplectic
 %
-%<a href="matlab:web('/Applications/MATLAB_R2023a.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>
+%<a href="matlab:web('/Applications/MATLAB_R2023b.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>

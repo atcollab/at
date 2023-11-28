@@ -1,11 +1,7 @@
+#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "atphyslib.c"
-
-#define DRIFT1    0.6756035959798286638
-#define DRIFT2   -0.1756035959798286639
-#define KICK1     1.351207191959657328
-#define KICK2    -1.702414383919314656
 
 #define SQR(X) ((X)*(X))
 
@@ -43,10 +39,6 @@ struct elem
  New version created by Xiaobiao Huang on 08/13/2009.
  Last modified on 8/26/2009
  */
-
-
-#define TWOPI     6.28318530717959
-#define CGAMMA    8.846056192e-05
 
 static double B2perp(double bx, double by, double irho, 
                             double x, double xpr, double y, double ypr)

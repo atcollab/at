@@ -16,7 +16,7 @@ AT is based on a 6-D modular tracking engine written in C/C++ for efficiency. La
 
 View on GitHub</param.description>
     <param.screenshot>${PROJECT_ROOT}/developer/matlab/AT.png</param.screenshot>
-    <param.version>2.4</param.version>
+    <param.version>2.5</param.version>
     <param.output>${PROJECT_ROOT}/Accelerator Toolbox.mltbx</param.output>
     <param.products.name />
     <param.products.id />
@@ -43,6 +43,9 @@ View on GitHub</param.description>
 % **/*.bak
 .*
 **/.*
+_custom_build
+build
+dist
 atoctave
 developer
 doc
@@ -50,6 +53,7 @@ jupyter
 pyat
 resources
 utils
+wheelhouse
 *.md
 **/*.md
 **/*.rst
@@ -57,11 +61,15 @@ utils
 **/*.mex*
 **/*.py
 docs/_*
+docs/common
 docs/m
 docs/p
 docs/images
 docs/make.bat
-docs/Makefile</param.exclude.filters>
+docs/Makefile
+MANIFEST.in
+pyproject.toml
+setup.cfg</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;examples&gt;
@@ -81,6 +89,7 @@ docs/Makefile</param.exclude.filters>
     <param.matlabpath.excludes>
       <item>/</item>
       <item>/developer/matlab</item>
+      <item>/machine_data/__pycache__</item>
     </param.matlabpath.excludes>
     <param.javaclasspath.excludes>
       <item>/docs/vendor/bundle/ruby/2.6.0/gems/concurrent-ruby-1.1.9/lib/concurrent-ruby/concurrent/concurrent_ruby.jar</item>
@@ -149,7 +158,7 @@ docs/Makefile</param.exclude.filters>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/Applications/MATLAB_R2022a.app</root>
+      <root>/Applications/MATLAB_R2023b.app</root>
       <toolboxes>
         <toolbox name="matlabcoder" />
       </toolboxes>
@@ -168,7 +177,7 @@ docs/Makefile</param.exclude.filters>
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>12.5.1</osver>
+      <osver>13.6.1</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>maci64</arch>
