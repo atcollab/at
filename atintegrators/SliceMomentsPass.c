@@ -26,7 +26,8 @@ struct elem
 static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                        int nturns, int nbunch, double *weights, double *sposs,
                        double *means, double *stds, double *z_cuts,
-                       double *bunch_currents, double *bunch_spos){
+                       double *bunch_currents, double *bunch_spos,
+                       double beam_current){
 
     int i,ii,iii,ib;
     double *rtmp;
@@ -91,7 +92,11 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
         }
         spos[i] = smin[ib]+(i%nslice+0.5)*hz[ib];
         spos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
-        weight[i] *= bunch_currents[ib]/np_bunch[ib];
+        if(beam_current>0.0){
+            weight[i] *= bunch_currents[ib]/np_bunch[ib];
+        }else{
+            weight[i] *= 1.0/np_bunch[ib]; 
+        }    
     }
     
     means += 3*nbunch*nslice*turn;
@@ -112,7 +117,7 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
 
 
 void SliceMomentsPass(double *r_in, int nbunch, double *bunch_spos, double *bunch_currents,
-                      int num_particles, struct elem *Elem) {
+                      double beam_current, int num_particles, struct elem *Elem) {
 
     int startturn = Elem->startturn;
     int endturn = Elem->endturn;
@@ -127,7 +132,8 @@ void SliceMomentsPass(double *r_in, int nbunch, double *bunch_spos, double *bunc
     
     if((turn>=startturn) && (turn<endturn)){
         slice_beam(r_in, num_particles, nslice, turn-startturn, nturns, nbunch,
-                   weights, sposs, means, stds, z_cuts, bunch_currents, bunch_spos);
+                   weights, sposs, means, stds, z_cuts, bunch_currents, bunch_spos,
+                   beam_current);
     }; 
 };
 
@@ -171,7 +177,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->z_cuts = z_cuts;
     }   
     SliceMomentsPass(r_in, Param->nbunch, Param->bunch_spos,
-                     Param->bunch_currents, num_particles, Elem);
+                     Param->bunch_currents, Param->beam_current,
+                     num_particles, Elem);
     Elem->turn++;
     return Elem;
 }
@@ -215,7 +222,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *bcurr = malloc(sizeof(double));
         bspos[0] = 0.0;
         bcurr[0] = 0.0;
-        SliceMomentsPass(r_in,1,bspos,bcurr,num_particles,Elem);
+        SliceMomentsPass(r_in,1,bspos,bcurr, 1.0,num_particles,Elem);
     }
     else if (nrhs == 0) {
         /* list of required fields */

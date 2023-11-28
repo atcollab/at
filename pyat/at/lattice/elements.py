@@ -569,7 +569,8 @@ class SliceMoments(Element):
     @property
     def weights(self):
         """Slices weights in mA if beam current >0,
-           otherwise number of macro-particles per slice
+           otherwise fraction of total number of
+           particles in the bunch
         """
         return self._weights.reshape((self._nbunch,
                                       self.nslice,
