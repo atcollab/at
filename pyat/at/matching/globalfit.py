@@ -107,7 +107,7 @@ def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
 def fit_chrom(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
               tol: Optional[float] = 1.0e-12,
               dp: Optional[float] = 0, niter: Optional[int] = 3, regex=False,
-              dk_multiplier_exp = 2,
+              deltaK = 1.0e-6,
               **kwargs) -> None:
     """Fit the chromaticities using 2 families
 
