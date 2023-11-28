@@ -86,6 +86,8 @@ def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
                             DConstant.patpass_poolsize)
+        if start_method is None:
+            start_method = DConstant.patpass_startmethod
         return _pass(lattice, r_in, pool_size, start_method, nturns=nturns,
                      refpts=refpts, **kwargs)
     else:
@@ -134,6 +136,19 @@ def lattice_track(lattice: Iterable[Element], r_in,
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
+        use_mp (bool): Flag to activate multiprocessing (default: False)
+        pool_size:              number of processes used when
+          *use_mp* is :py:obj:`True`. If None, ``min(npart,nproc)``
+          is used. It can be globally set using the variable
+          *at.lattice.DConstant.patpass_poolsize*
+        start_method:           python multiprocessing start method.
+          :py:obj:`None` uses the python default that is considered safe.
+          Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          Default for linux is ``'fork'``, default for macOS and  Windows is
+          ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
+          calculation or to solve Runtime Errors, however it is considered
+          unsafe. Used only when *use_mp* is :py:obj:`True`. It can be globally
+          set using the variable *at.lattice.DConstant.patpass_startmethod*
 
     The following keyword arguments overload the lattice values
 
@@ -164,22 +179,25 @@ def lattice_track(lattice: Iterable[Element], r_in,
           **refpts**        array of index where particle coordinate are saved
                             (only for lattice tracking)
           **nturns**        number of turn
+          ==============    ===================================================
 
-        trackdata: A dictionary containinf tracking data with the following
+        trackdata: A dictionary containing tracking data with the following
           keys:
 
           ==============    ===================================================
-          **loss_map**: recarray containing the loss_map (only for lattice
-                        tracking)
+          **loss_map**:     recarray containing the loss_map (only for lattice
+                            tracking)
+          ==============    ===================================================
 
 
-        The **loss_map** is filled only if *losses* is :py:obj:`True`,
+          The **loss_map** is filled only if *losses* is :py:obj:`True`,
           it contains the following keys:
+
           ==============    ===================================================
           **islost**        (npart,) bool array indicating lost particles
           **turn**          (npart,) int array indicating the turn at
                             which the particle is lost
-          **element**       ((npart,) int array indicating the element at
+          **element**       (npart,) int array indicating the element at
                             which the particle is lost
           **coord**         (npart, 6) float array giving the coordinates at
                             which the particle is lost (zero for surviving
@@ -236,7 +254,11 @@ def lattice_track(lattice: Iterable[Element], r_in,
                        'nturns': nturns})
 
     use_mp = kwargs.pop('use_mp', False)
+    start_method = kwargs.pop('start_method', None)
+    pool_size = kwargs.pop('pool_size', None)
     if use_mp:
+        kwargs.update({'pool_size': pool_size,
+                       'start_method': start_method})
         rout = _plattice_pass(lattice, r_in, nturns=nturns,
                               refpts=refpts, **kwargs)
     else:

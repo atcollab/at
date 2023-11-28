@@ -90,7 +90,7 @@ def launch():
     part[0, :] = 1e-6
     part[1, :] = 0
 
-    at.track_function(fring, part, nturns=nturns)
+    fring.track(part, nturns=nturns, refpts=None, in_place=True)
 
     x_all = bmon.means[0, :, :]
     xp_all = bmon.means[1, :, :]

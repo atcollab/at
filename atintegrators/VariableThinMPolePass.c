@@ -3,13 +3,11 @@
    S.White
 */
 
+#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "atrandom.c"
 #include "driftkick.c"
-
-#define TWOPI 6.28318530717959
-#define C0 2.99792458e8
 
 struct elemab {
     double* Amplitude;

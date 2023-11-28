@@ -120,7 +120,7 @@ def test_track_beamloading(hmba_lattice, func):
     ring = hmba_lattice.radiation_on(copy=True)
     rin0 = numpy.zeros(6)
     func(ring, rin0, refpts=[])
-    add_beamloading(ring, 44e3, 400, mode=BLMode.WAKE)
+    add_beamloading(ring, 44e3, 400, blmode=BLMode.WAKE)
     rin1 = numpy.zeros(6)
     func(ring, rin1, refpts=[])
     assert_close(rin0, rin1, atol=1e-21)

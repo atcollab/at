@@ -95,7 +95,7 @@ end
         delete(sumname);
         function res=lst()
             vals=reshape(dir(fullfile(dirname,'*.mlx')),1,[]);
-            [~,nms,~]=arrayfun(@fileparts,{vals.name},'UniformOutput',false);
+            [~,nms,~]=cellfun(@fileparts,{vals.name},'UniformOutput',false);
             nms=cellfun(@string,sort(nms),'UniformOutput',false);
             res=struct('id',nms,'title',nms);
         end

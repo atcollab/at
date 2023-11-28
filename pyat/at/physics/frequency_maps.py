@@ -205,28 +205,28 @@ def fmap_parallel_track(ring,
             # get the first turn in x
             xfirst = z1[0, 0:tns]
             xfirst = xfirst - numpy.mean(xfirst)
-            pxfirst = z1[1, 0:tns]
-            pxfirst = pxfirst - numpy.mean(pxfirst)
-            xfirstpart = xfirst + 1j*pxfirst
+            # pxfirst = z1[1, 0:tns]
+            # pxfirst = pxfirst - numpy.mean(pxfirst)
+            # xfirstpart = xfirst + 1j*pxfirst
             # get the last turns in x
             xlast = z1[0, tns:2*tns]
             xlast = xlast - numpy.mean(xlast)
-            pxlast = z1[1, tns:2*tns]
-            pxlast = pxlast - numpy.mean(pxlast)
-            xlastpart = xlast + 1j*pxlast
+            # pxlast = z1[1, tns:2*tns]
+            # pxlast = pxlast - numpy.mean(pxlast)
+            # xlastpart = xlast + 1j*pxlast
 
             # get the first turn in y
             yfirst = z1[2, 0:tns]
             yfirst = yfirst - numpy.mean(yfirst)
-            pyfirst = z1[3, 0:tns]
-            pyfirst = pyfirst - numpy.mean(pyfirst)
-            yfirstpart = yfirst + 1j*pyfirst
+            # pyfirst = z1[3, 0:tns]
+            # pyfirst = pyfirst - numpy.mean(pyfirst)
+            # yfirstpart = yfirst + 1j*pyfirst
             # get the last turns in y
             ylast = z1[2, tns:2*tns]
             ylast = ylast - numpy.mean(ylast)
-            pylast = z1[3, tns:2*tns]
-            pylast = pylast - numpy.mean(pylast)
-            ylastpart = ylast + 1j*pylast
+            # pylast = z1[3, tns:2*tns]
+            # pylast = pylast - numpy.mean(pylast)
+            # ylastpart = ylast + 1j*pylast
 
             # calc frequency from array,
             # jump the cycle is no frequency is found

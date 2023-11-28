@@ -68,7 +68,7 @@ def initialize_lpass(lattice: Iterable[Element], nturns: int,
     """Function to initialize keyword arguments for lattice tracking"""
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    unfoldbeam = kwargs.pop('unfold_beam', False)
+    unfoldbeam = kwargs.pop('unfold_beam', True)
     nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
     kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
     no_bm = _set_beam_monitors(lattice, nbunch, nturns)

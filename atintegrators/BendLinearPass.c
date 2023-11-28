@@ -10,7 +10,7 @@
 #include "atphyslib.c"
 
 
-#define SQR(X) X*X
+#define SQR(X) ((X)*(X))
 struct elem
 {
     double Length;

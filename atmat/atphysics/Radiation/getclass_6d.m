@@ -24,7 +24,7 @@ elseif isfield(elem,'PolynomB') && elem.Length > 0
     end
 elseif isfield(elem,'Frequency')
     atclass='RFCavity';
-elseif isfield(elem,'Lmatp')
+elseif isfield(elem,'Lmatp') || isfield(elem,'espread')
     atclass='QuantDiff';
 elseif isfield(elem,'EnergyLoss')
     atclass='EnergyLoss';
