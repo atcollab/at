@@ -951,7 +951,7 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
-        super(Dipole, self).__init__(family_name, length, [], [0, k], **kwargs)
+        super(Dipole, self).__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple, None, None]:
         yield from super().items()
