@@ -4,13 +4,14 @@ calculate the loss boundary for different
 grid definitions
 """
 
-from at.lattice import Lattice, AtError
+from at.lattice import Lattice, AtError, AtWarning
 from typing import Optional, Sequence
 from enum import Enum
 import numpy
 from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
+import warnings
 
 __all__ = ['GridMode']
 
@@ -168,9 +169,6 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     return numpy.invert(td['loss_map'].islost)
 
 
-grid0 = grid(numpy.array([[0.0], [0.0]]), numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-
-
 def get_grid_boundary(mask, grid, config):
     """
     Compute the boundary of survided particles array
@@ -262,22 +260,16 @@ def get_grid_boundary(mask, grid, config):
             bnd[:, i] = search_bnd(ma, sa)
         return bnd
 
-    some_survived = True
     if not numpy.any(mask):
-        print("No particle survived, please check your grid "
-                      "or lattice. ZERO acceptance.")
-        some_survived = False
+        msg = ("No particle survived, please check your grid "
+               "or lattice. Acceptance set to [0.0, 0.0].")
+        warnings.warn(AtWarning(msg))
+        return numpy.zeros(2)
 
     if config.mode is GridMode.RADIAL:
-        if some_survived:
-            return radial_boundary(mask, grid)
-        else:
-            return radial_boundary(numpy.atleast_2d(numpy.array(True)), grid0)
+        return radial_boundary(mask, grid)
     elif config.mode is GridMode.CARTESIAN:
-        if some_survived:
-            return grid_boundary(mask, grid, config)
-        else:
-            return grid_boundary(numpy.atleast_2d(numpy.array(True)), grid0, config)
+        return grid_boundary(mask, grid, config)
     else:
         raise AtError('GridMode {0} undefined.'.format(grid.mode))
 
