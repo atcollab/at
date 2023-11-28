@@ -474,6 +474,12 @@ class BeamMoments(Element):
     """Element to compute bunches mean and std"""
 
     def __init__(self, family_name: str, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+
+        Default PassMethod: ``BeamMomentsPass``
+        """
         kwargs.setdefault('PassMethod', 'BeamMomentsPass')
         self._stds = numpy.zeros((6, 1, 1), order='F')
         self._means = numpy.zeros((6, 1, 1), order='F')
@@ -485,19 +491,32 @@ class BeamMoments(Element):
 
     @property
     def stds(self):
+        """Beam 6d standard deviation"""
         return self._stds
 
     @property
     def means(self):
+        """Beam 6d center of mass"""
         return self._means
-        
-        
+
+
 class SliceMoments(Element):
-    """Element to compute bunches mean and std"""
+    """Element to compute slices mean and std"""
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['nslice']
     _conversions = dict(Element._conversions, nslice=int)
 
     def __init__(self, family_name: str, nslice: int, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            nslice:         Number of slices
+
+        Keyword arguments:
+            startturn:      Start turn of the acquisition (Default 0)
+            endturn:        End turn of the acquisition (Default 1)
+
+        Default PassMethod: ``SliceMomentsPass``
+        """
         kwargs.setdefault('PassMethod', 'SliceMomentsPass')
         self._startturn = kwargs.pop('startturn', 0)
         self._endturn = kwargs.pop('endturn', 1)
@@ -528,51 +547,59 @@ class SliceMoments(Element):
 
     @property
     def stds(self):
+        """Slices x,y,dp standard deviation"""
         return self._stds.reshape((3, self._nbunch,
                                    self.nslice,
                                    self._dturns))
 
     @property
     def means(self):
+        """Slices x,y,dp center of mass"""
         return self._means.reshape((3, self._nbunch,
                                     self.nslice,
                                     self._dturns))
-        
+
     @property
     def spos(self):
+        """Slices s position"""
         return self._spos.reshape((self._nbunch,
                                    self.nslice,
                                    self._dturns))
 
     @property
     def weights(self):
+        """Slices weights in mA if beam current >0,
+           otherwise number of macro-particles per slice
+        """
         return self._weights.reshape((self._nbunch,
                                       self.nslice,
                                       self._dturns))
-    
+
     @property
     def startturn(self):
-        return self._startturn  
-  
+        """Start turn of the acquisition"""
+        return self._startturn
+
     @startturn.setter
     def startturn(self, value):
         if value < 0:
-           raise ValueError('startturn must be greater or equal to 0')
+            raise ValueError('startturn must be greater or equal to 0')
         if value >= self._endturn:
-           raise ValueError('startturn must be smaller than endturn')
+            raise ValueError('startturn must be smaller than endturn')
         self._startturn = value
 
     @property
     def endturn(self):
-        return self._endturn  
-  
+        """End turn of the acquisition"""
+        return self._endturn
+
     @endturn.setter
     def endturn(self, value):
         if value <= 0:
-           raise ValueError('endturn must be greater than 0')
+            raise ValueError('endturn must be greater than 0')
         if value <= self._startturn:
-           raise ValueError('endturn must be greater than startturn')
-        self._endturn = value        
+            raise ValueError('endturn must be greater than startturn')
+        self._endturn = value
 
 
 class Aperture(Element):
@@ -1083,7 +1110,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         """
         Args:
             family_name:    Name of the element
-            
+
         Optional Args:
             betax:         Horizontal beta function at element [m]
             betay:         Vertical beta function at element [m]
@@ -1094,14 +1121,14 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
             U0:             Energy Loss [eV]
-            
+
         Default PassMethod: ``SimpleQuantDiffPass``
        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
-       
+
         assert taux >= 0.0, 'taux must be greater than or equal to 0'
         self.taux = taux
-            
+
         assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
         self.tauy = tauy
 
@@ -1112,22 +1139,21 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         self.emitx = emitx
         if emitx > 0.0:
             assert taux > 0.0, 'if emitx is given, taux must be non zero'
-            
+
         assert emity >= 0.0, 'emity must be greater than or equal to 0'
         self.emity = emity
         if emity > 0.0:
             assert tauy > 0.0, 'if emity is given, tauy must be non zero'
-            
+
         assert espread >= 0.0, 'espread must be greater than or equal to 0'
         self.espread = espread
         if espread > 0.0:
             assert tauz > 0.0, 'if espread is given, tauz must be non zero'
-            
+
         self.U0 = U0
         self.betax = betax
         self.betay = betay
         super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
-
 
 
 class Corrector(LongElement):
@@ -1246,6 +1272,7 @@ class EnergyLoss(_DictLongtMotion, Element):
         """
         kwargs.setdefault('PassMethod', self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
+
 
 Radiative.register(EnergyLoss)
 
