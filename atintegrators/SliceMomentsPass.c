@@ -62,7 +62,6 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                 ii = (int)(floor((rtmp[5]-smin[ib])/hz[ib])) + ib*nslice;
             }
             weight[ii] += 1.0;
-            spos[ii] += rtmp[5];
             for(iii=0; iii<3; iii++) {
                 pos[iii+ii*3] += rtmp[idx[iii]];
                 std[iii+ii*3] += rtmp[idx[iii]]*rtmp[idx[iii]];
@@ -74,7 +73,6 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
     MPI_Allreduce(MPI_IN_PLACE,np_bunch,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,pos,3*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,std,3*nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,spos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,weight,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
@@ -91,7 +89,7 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
                 std[3*i+ii] = NAN;
             }
         }
-        spos[i] = (weight>0) ? spos[i]/weight[i] : smin[ib]+(i%nslice+0.5)*hz[ib];
+        spos[i] = smin[ib]+(i%nslice+0.5)*hz[ib];
         spos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         weight[i] *= bunch_currents[ib]/np_bunch[ib];
     }
