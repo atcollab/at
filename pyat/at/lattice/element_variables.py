@@ -113,9 +113,6 @@ class ElementVariable(Variable):
             self._elements = {elements}
         else:
             self._elements = set(elements)
-        # Check that the attribute is not already a parameter
-        if any(el.is_parametrised(attrname, index=index) for el in self._elements):
-            raise TypeError(f"{attrname} attribute is a Variable")
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
