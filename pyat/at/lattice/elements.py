@@ -887,7 +887,8 @@ class Dipole(Radiative, Multipole):
             KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
 
-        Available PassMethods: :ref:`BndMPoleSymplectic4Pass`, :ref:`BendLinearPass`,
+        Available PassMethods: :ref:`BndMPoleSymplectic4Pass`,
+                               :ref:`BendLinearPass`,
         :ref:`ExactSectorBendPass`, :ref:`ExactRectangularBendPass`,
         :ref:`ExactRectBendPass`, BndStrMPoleSymplectic4Pass
 
