@@ -1,7 +1,6 @@
 """Helper functions for axis and plane descriptions"""
 from __future__ import annotations
 from typing import Optional, Union
-
 # For sys.version_info.minor < 9:
 from typing import Tuple
 
@@ -17,31 +16,31 @@ _axis_def = dict(
     ct=dict(index=5, label=r"$\beta c \tau$", unit=" [m]"),
 )
 for xk, xv in [it for it in _axis_def.items()]:
-    xv["code"] = xk
-    _axis_def[xv["index"]] = xv
+    xv['code'] = xk
+    _axis_def[xv['index']] = xv
     _axis_def[xk.upper()] = xv
-_axis_def["delta"] = _axis_def["dp"]
-_axis_def["xp"] = _axis_def["px"]  # For backward compatibility
-_axis_def["yp"] = _axis_def["py"]  # For backward compatibility
-_axis_def["s"] = _axis_def["ct"]
-_axis_def["S"] = _axis_def["ct"]
-_axis_def[None] = dict(index=None, label="", unit="", code=":")
+_axis_def['delta'] = _axis_def['dp']
+_axis_def['xp'] = _axis_def['px']   # For backward compatibility
+_axis_def['yp'] = _axis_def['py']   # For backward compatibility
+_axis_def['s'] = _axis_def['ct']
+_axis_def['S'] = _axis_def['ct']
+_axis_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _axis_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
 _plane_def = dict(
     x=dict(index=0, label="x", unit=" [m]"),
     y=dict(index=1, label="y", unit=" [m]"),
-    z=dict(index=2, label="z", unit=""),
+    z=dict(index=2, label="z", unit="")
 )
 for xk, xv in [it for it in _plane_def.items()]:
-    xv["code"] = xk
-    _plane_def[xv["index"]] = xv
+    xv['code'] = xk
+    _plane_def[xv['index']] = xv
     _plane_def[xk.upper()] = xv
-_plane_def["h"] = _plane_def["x"]
-_plane_def["v"] = _plane_def["y"]
-_plane_def["H"] = _plane_def["x"]
-_plane_def["V"] = _plane_def["y"]
-_plane_def[None] = dict(index=None, label="", unit="", code=":")
+_plane_def['h'] = _plane_def['x']
+_plane_def['v'] = _plane_def['y']
+_plane_def['H'] = _plane_def['x']
+_plane_def['V'] = _plane_def['y']
+_plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
 

@@ -28,12 +28,11 @@ from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
-from .utils import refpts_iterator, checktype, getval
+from .utils import refpts_iterator, checktype
 from .utils import get_s_pos, get_elements
 from .utils import get_value_refpts, set_value_refpts
 from .utils import set_shift, set_tilt, get_geometry
 from . import elements as elt
-from .variables import Param
 from .elements import Element
 
 _TWO_PI_ERROR = 1.E-4
@@ -1331,18 +1330,13 @@ class Lattice(list):
 
     def replace(self, refpts: Refpts, **kwargs) -> Lattice:
         """Return a shallow copy of the lattice replacing the selected
-        elements by an unparametrised deep copy
+        elements by a deep copy
 
         Parameters:
             refpts: element selector
         """
-        def newelem(elem):
-            newelem = elem.deepcopy()
-            newelem.unparametrise()
-            return newelem
-
         check = get_bool_index(self, refpts)
-        elems = (newelem(el) if ok else el for el, ok in zip(self, check))
+        elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
         return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, **kwargs)
 
@@ -1396,61 +1390,6 @@ class Lattice(list):
             # noinspection PyAttributeOutsideInit
             self._radiation = radiate
             return radiate
-
-    def set_parameter(self, refpts: Refpts, attrname: str, value,
-                      index: Optional[int] = None) -> None:
-        """Set a parameter as an attribute of the selected elements
-
-        Args:
-            refpts:     Element selector
-            attrname:   Attribute name
-            value:      Parameter or value to be set
-            index:      Index into an array attribute. If *value* is a
-              parameter, the attribute is converted to a
-              :py:class:`.ParamArray`.
-        """
-        for elem in self.select(refpts):
-            elem.set_parameter(attrname, value, index=index)
-
-    def parametrise(self, refpts: Refpts, attrname: str,
-                    index: Optional[int] = None, name: str = '') -> Param:
-        """Convert an attribute of the selected elements into a parameter
-
-        A single parameter is created and assigned to all the selected
-        elements. Its initial value is the mean of the original values.
-
-        Args:
-            refpts:     Element selector
-            attrname:   Attribute name
-            index:      Index into an array attribute. If *value* is a
-              parameter, the attribute is converted to a
-              :py:class:`.ParamArray`.
-            name:       Name of the created parameter
-
-        Returns:
-            param:      The created parameter
-        """
-        elems = self[refpts]
-        getf = getval(attrname, index=index)
-        vals = numpy.array([getf(elem) for elem in elems])
-        attr = Param(numpy.mean(vals), name=name)
-        for elem in elems:
-            elem.set_parameter(attrname, attr, index=index)
-        return attr
-
-    def unparametrise(self, refpts, attrname: Optional[str] = None,
-                      index: Optional[int] = None) -> None:
-        """Freeze the value of attributes of the selected elements
-
-        Args:
-            refpts:     Element selector
-            attrname:   Attribute name. If :py:obj:`None`, all the attributes
-              are frozen
-            index:      Index in an array. If :py:obj:`None`, the whole
-              attribute is frozen
-        """
-        for elem in self.select(refpts):
-            elem.unparametrise(attrname=attrname, index=index)
 
 
 def lattice_filter(params, lattice):

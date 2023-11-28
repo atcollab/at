@@ -841,7 +841,13 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
     Returns:
         attrvalues: numpy Array of attribute values.
     """
-    getf = getval(attrname, index=index)
+    if index is None:
+        def getf(elem):
+            return getattr(elem, attrname)
+    else:
+        def getf(elem):
+            return getattr(elem, attrname)[index]
+
     return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts,
                                                                regex=regex)])
 
@@ -878,7 +884,13 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
              elements are shared with the original lattice.
              Any further modification will affect both lattices.
     """
-    setf = setval(attrname, index=index)
+    if index is None:
+        def setf(elem, value):
+            setattr(elem, attrname, value)
+    else:
+        def setf(elem, value):
+            getattr(elem, attrname)[index] = value
+
     if increment:
         attrvalues += get_value_refpts(ring, refpts,
                                        attrname, index=index,
