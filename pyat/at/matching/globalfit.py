@@ -110,7 +110,7 @@ def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
 def fit_chrom(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
               tol: Optional[float] = 1.0e-12,
               dp: Optional[float] = 0, niter: Optional[int] = 3, regex=False,
-              KStep: Optional[float] = None,
+              HStep: Optional[float] = None,
               **kwargs) -> None:
     """Fit the chromaticities using 2 families
 
@@ -126,11 +126,11 @@ def fit_chrom(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         niter:      Maximum number of iterations. Default 3
         regex:      Using regular expressions for refpt string matching;
                     Default: False
-        KStep: gradient variation applied to magnets. Default 1e-4
+        HStep: gradient variation applied to magnets. Default 1e-4
 
     Typical usage:
     at.fit_chrom(ring, refpts1, refpts2, [10,5])
     """
     print('\nFitting Chromaticity...')
     _fit_tune_chrom(ring, 2, _get_chrom, refpts1, refpts2, newval, tol=tol,
-                    dp=dp, niter=niter, regex=regex, delta=KStep, **kwargs)
+                    dp=dp, niter=niter, regex=regex, delta=HStep, **kwargs)
