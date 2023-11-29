@@ -50,6 +50,7 @@
         Release notes
             <tocitem target="release_notes/r2.3.html">r2.3</tocitem>
             <tocitem target="release_notes/r2.4.html">r2.4</tocitem>
+            <tocitem target="release_notes/r2.5.html">r2.5</tocitem>
         </tocitem>
         <tocitem target="https://atcollab.github.io/at/" 
                  image="$toolbox/matlab/icons/webicon.gif">

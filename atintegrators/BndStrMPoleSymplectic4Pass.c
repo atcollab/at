@@ -1,12 +1,8 @@
+#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "atphyslib.c"
 #include "driftkick.c"  /* strthinkick.c */
-
-#define DRIFT1    0.6756035959798286638
-#define DRIFT2   -0.1756035959798286639
-#define KICK1     1.351207191959657328
-#define KICK2    -1.702414383919314656
 
 /* Straight dipole w/ multipole using Symplectic Integration and rotation at
  * dipole faces.

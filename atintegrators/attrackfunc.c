@@ -2,9 +2,6 @@
 #include "atelem.c"
 #include "driftkickrad.c"
 
-#define TWOPI  6.28318530717959
-#define C0  	2.99792458e8 
-
 void trackRFCavity(double *r_in, double le, double nv, double freq, double h, double lag, double philag,
                   int nturn, double T0, int num_particles)
 /* le - physical length

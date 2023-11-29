@@ -44,11 +44,6 @@ static void drift6(double* r, double L)
 	r[5]+= NormL*p_norm*(r[1]*r[1]+r[3]*r[3])/2;
 }
 
-/* Physical constants used in the calculations */
-
-#define TWOPI     6.28318530717959
-#define CGAMMA 	  8.846056192e-05 			/* [m]/[GeV^3] Ref[1] (4.1)      */
-
 #define SQR(X) ((X)*(X))
 
 double StrB2perp(double bx, double by, 

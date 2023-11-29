@@ -1,3 +1,4 @@
+#include "atconstants.h"
 #include "atelem.c"
 #include "atimplib.c"
 #include "attrackfunc.c"
@@ -6,8 +7,6 @@
  * BeamLoadingCavity pass method by Simon White.  
  *
  */
- 
-#define C0     2.99792458e8 
 
 struct elem
 {
