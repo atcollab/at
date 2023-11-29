@@ -895,7 +895,7 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     The transformations are applied by changing the particle coordinates
     at the entrance of the element and restoring them at the end. Following
     the small angles approximation the longitudinal shift of the particle
-    coordiantes is neglected and the lement length is unchanged.
+    coordinates is neglected and the element length is unchanged.
 
     Parameters:
         elem:           Element to be tilted
