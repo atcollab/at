@@ -47,8 +47,8 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
         cavitymode (CavityMode):     Define PASSIVE or ACTIVE cavity
-        store_cavity_data:  If True, stores the generator and beam induced
-            voltage and phase to a buffer.
+        buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
+                (default 0)
     """
     @make_copy(copy)
     def apply(ring, cavpts, newelems):

@@ -196,9 +196,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         vcav=atGetDoubleArray(ElemData,"_vcav"); check_error();
         vgen=atGetDoubleArray(ElemData,"_vgen"); check_error();
         vbeam_phasor=atGetDoubleArray(ElemData,"_vbeam_phasor"); check_error(); 
-        vgen_buffer=atGetDoubleArray(ElemData,"_vgen_buffer"); check_error();
-        vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
-        vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
+        vgen_buffer=atGetOptionalDoubleArray(ElemData,"_vgen_buffer"); check_error();
+        vbeam_buffer=atGetOptionalDoubleArray(ElemData,"_vbeam_buffer"); check_error();
+        vbunch_buffer=atGetOptionalDoubleArray(ElemData,"_vbunch_buffer"); check_error();
         /*optional attributes*/
 
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
@@ -313,9 +313,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vcav=atGetDoubleArray(ElemData,"_vcav"); check_error();
       vgen=atGetDoubleArray(ElemData,"_vgen"); check_error();
       vbeam_phasor=atGetDoubleArray(ElemData,"_vbeam_phasor"); check_error(); 
-      vgen_buffer=atGetDoubleArray(ElemData,"_vgen_buffer"); check_error();
-      vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
-      vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
+      vgen_buffer=atGetOptionalDoubleArray(ElemData,"_vgen_buffer"); check_error();
+      vbeam_buffer=atGetOptionalDoubleArray(ElemData,"_vbeam_buffer"); check_error();
+      vbunch_buffer=atGetOptionalDoubleArray(ElemData,"_vbunch_buffer"); check_error();
       /*optional attributes*/
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
 
