@@ -242,11 +242,11 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
         self._vgen = numpy.array([vgen, psi])
-        
+
     @property
     def Buffersize(self):
         return self._buffersize
-        
+
     @Buffersize.setter
     def Buffersize(self, value):
         self._buffersize = value
@@ -265,8 +265,7 @@ class BeamLoadingElement(RFCavity, Collective):
     @property
     def Vbunch_buffer(self):
         """Stored bunch induced voltage data"""
-        return self._vbunch_buffer
-        
+        return self._vbunch_buffer    
 
     @property
     def Nslice(self):

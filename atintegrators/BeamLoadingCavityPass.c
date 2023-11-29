@@ -14,7 +14,7 @@ struct elem
   int nturnsw;
   int blmode;
   int cavitymode;
-  int store_cavity_data;
+  int buffersize;
   double normfact;
   double phasegain;
   double voltgain;
@@ -39,6 +39,12 @@ struct elem
   double *vbeam_buffer;
   double *vbunch_buffer;
 }; 
+
+
+void write_buffer(double *data, double *buffer, int datasize, int buffersize){
+    memmove(buffer, buffer + datasize, datasize*buffersize*sizeof(double));
+    memcpy(buffer + datasize*(buffersize-1), data, datasize*sizeof(double));
+}
    
 
 void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
@@ -52,7 +58,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw;
     long blmode = Elem->blmode;
-    long store_cavity_data = Elem->store_cavity_data;
+    long buffersize = Elem->buffersize;
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double energy = Elem->Energy;
@@ -133,18 +139,12 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         if(cavitymode==1){
             update_vgen(vbeamk,vcavk,vgenk,phasegain,voltgain); 
         }
-        atFree(buffer);
-        if(store_cavity_data){
-            vgen_buffer[2*nturn] = vgenk[0];
-            vgen_buffer[2*nturn+1] = vgenk[1]; 
-            vbeam_buffer[2*nturn] = vbeamk[0];
-            vbeam_buffer[2*nturn+1] = vbeamk[1];  
-            for(i=0;i<nbunch;i++){
-                vbunch_buffer[i+nbunch*nturn] = vbunch[i]; 
-                /*vbunch_buffer[i+nbunch*nturn] = vbunch[i + nbunch]; */
-            }
+        if(buffersize>0){
+            write_buffer(vbeamk, vbeam_buffer, 2, buffersize);
+            write_buffer(vgenk, vgen_buffer, 2, buffersize);
+            write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }
-
+        atFree(buffer);
     }
 }
 
@@ -156,7 +156,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double rl = Param->RingLength;
     int nturn=Param->nturn;
     if (!Elem) {
-        long nslice,nturns,blmode,cavitymode,store_cavity_data;
+        long nslice,nturns,blmode,cavitymode, buffersize;
         double wakefact;
         double normfact, phasegain, voltgain;
         double *turnhistory;
@@ -181,7 +181,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
         blmode=atGetLong(ElemData,"_blmode"); check_error();
-        store_cavity_data=atGetLong(ElemData,"_store_cavity_data"); check_error();
+        buffersize=atGetLong(ElemData,"_buffersize"); check_error();
         cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
@@ -212,7 +212,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         
         Elem->Length=Length;
         Elem->blmode=blmode;
-        Elem->store_cavity_data=store_cavity_data;
         Elem->Frequency=Frequency;
         Elem->HarmNumber=round(Frequency*rl/C0);
         Elem->Energy = Energy;
@@ -233,6 +232,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->voltgain = voltgain;
         Elem->vbeam_phasor = vbeam_phasor;
         Elem->cavitymode = cavitymode;
+        Elem->buffersize = buffersize;
         Elem->vgen_buffer = vgen_buffer;
         Elem->vbeam_buffer = vbeam_buffer;
         Elem->vbunch_buffer = vbunch_buffer;
@@ -274,7 +274,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
       
-      long nslice,nturns,blmode,cavitymode,store_cavity_data;
+      long nslice,nturns,blmode,cavitymode, buffersize;
       double wakefact;
       double normfact, phasegain, voltgain;
       double *turnhistory;
@@ -298,8 +298,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       nslice=atGetLong(ElemData,"_nslice"); check_error();
       nturns=atGetLong(ElemData,"_nturns"); check_error();
       blmode=atGetLong(ElemData,"_blmode"); check_error();
+      buffersize=atGetLong(ElemData,"_buffersize"); check_error();
       cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
-      store_cavity_data=atGetLong(ElemData,"_store_cavity_data"); check_error();
       wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
       qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
       rshunt=atGetDouble(ElemData,"Rshunt"); check_error();
@@ -323,7 +323,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->Length=Length;
       Elem->blmode=blmode;
       Elem->cavitymode=cavitymode;
-      Elem->store_cavity_data=store_cavity_data;
       Elem->Frequency=Frequency;
       Elem->HarmNumber=1;
       Elem->Energy = Energy;
@@ -343,6 +342,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->phasegain = phasegain;
       Elem->voltgain = voltgain;
       Elem->vbeam_phasor = vbeam_phasor;
+      Elem->buffersize = buffersize;
       Elem->vgen_buffer = vgen_buffer;
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
@@ -366,23 +366,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],4,mxCreateString("_nturns"));
       mxSetCell(plhs[0],5,mxCreateString("_blmode"));
       mxSetCell(plhs[0],6,mxCreateString("_cavitymode"));
-      mxSetCell(plhs[0],7,mxCreateString("_store_cavity_data"));
-      mxSetCell(plhs[0],8,mxCreateString("_wakefact"));
-      mxSetCell(plhs[0],9,mxCreateString("Qfactor"));
-      mxSetCell(plhs[0],10,mxCreateString("Rshunt"));
-      mxSetCell(plhs[0],11,mxCreateString("_beta"));
-      mxSetCell(plhs[0],12,mxCreateString("NormFact"));
-      mxSetCell(plhs[0],13,mxCreateString("PhaseGain"));
-      mxSetCell(plhs[0],14,mxCreateString("VoltGain"));
-      mxSetCell(plhs[0],15,mxCreateString("_turnhistory"));
-      mxSetCell(plhs[0],16,mxCreateString("_vbunch"));
-      mxSetCell(plhs[0],17,mxCreateString("_vbeam"));
-      mxSetCell(plhs[0],18,mxCreateString("_vcav"));
-      mxSetCell(plhs[0],19,mxCreateString("_vgen"));
-      mxSetCell(plhs[0],20,mxCreateString("_vbeam_phasor"));
-      mxSetCell(plhs[0],21,mxCreateString("_vgen_buffer"));
-      mxSetCell(plhs[0],22,mxCreateString("_vbeam_buffer"));
-      mxSetCell(plhs[0],23,mxCreateString("_vbunch_buffer"));
+      mxSetCell(plhs[0],7,mxCreateString("_wakefact"));
+      mxSetCell(plhs[0],8,mxCreateString("Qfactor"));
+      mxSetCell(plhs[0],9,mxCreateString("Rshunt"));
+      mxSetCell(plhs[0],10,mxCreateString("_beta"));
+      mxSetCell(plhs[0],11,mxCreateString("NormFact"));
+      mxSetCell(plhs[0],12,mxCreateString("PhaseGain"));
+      mxSetCell(plhs[0],13,mxCreateString("VoltGain"));
+      mxSetCell(plhs[0],14,mxCreateString("_turnhistory"));
+      mxSetCell(plhs[0],15,mxCreateString("_vbunch"));
+      mxSetCell(plhs[0],16,mxCreateString("_vbeam"));
+      mxSetCell(plhs[0],17,mxCreateString("_vcav"));
+      mxSetCell(plhs[0],18,mxCreateString("_vgen"));
+      mxSetCell(plhs[0],19,mxCreateString("_vbeam_phasor"));
+      mxSetCell(plhs[0],20,mxCreateString("_vgen_buffer"));
+      mxSetCell(plhs[0],21,mxCreateString("_vbeam_buffer"));
+      mxSetCell(plhs[0],22,mxCreateString("_vbunch_buffer"));
+      mxSetCell(plhs[0],23,mxCreateString("_buffersize"));
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(2,1);
