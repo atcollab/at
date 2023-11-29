@@ -872,16 +872,25 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     The tilt is a rotation around the *s*-axis, the pitch is a
     rotation around the *x*-axis and the yaw is a rotation around
     the *y*-axis.
-    A positive angle represent a clockwise rotation when looking in
-    the direction of the rotation axis.
 
-    The transformations are not all commmutative, the tilt is always the
-    last transformation applied.
+    A positive angle represents a counter-clockwise rotation when
+    looking in the direction of the rotation axis.
 
-    If *relative* is :py:obj:`True`, the previous angle and shifts are
-    rebuilt form the *R* and *T* matrix and incremented by the input arguments.
+    The transformations are not all commmutative, the pitch and yaw
+    are applied first and the tilt is always the last transformation
+    applied.
+
+    If *relative* is :py:obj:`True`, the previous angle and shifts
+    are rebuilt form the *R* and *T* matrix and incremented by the
+    input arguments.
 
     The shift is always conserved regardless of the value of *relative*.
+    
+    The transformations are applied by changing the particle coordinates
+    at the entrance of the element and restoring them at the end. The change
+    of effective length of the element seen by the particle is not accounted
+    for: it is over estimated in this approximation. This effect is however
+    negligible for small angles.
 
     Parameters:
         elem:           Element to be tilted
@@ -904,8 +913,8 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rr1[2, 0] = -st
         rr1[3, 1] = -st
         rr2 = rr1.T
-        t1 = numpy.array([ay, -yaw, ap, -pitch, 0, 0])
-        t2 = numpy.array([ay, yaw, ap, pitch, 0, 0])
+        t1 = numpy.array([ay, numpy.tan(-yaw), ap, numpy.tan(-pitch), 0, 0])
+        t2 = numpy.array([ay, numpy.tan(yaw), ap, numpy.tan(pitch), 0, 0])
         rt1 = numpy.eye(6, order='F')
         rt1[1, 4] = ct*t1[1]
         rt1[3, 4] = ct*t1[3]
@@ -924,8 +933,8 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rr10[:4, :4] = elem.R1[:4, :4]
         rt10 = rr10.T @ elem.R1
         tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
-        yaw0 = -rt10[1, 4]/rr10[0, 0]
-        pitch0 = -rt10[3, 4]/rr10[0, 0]
+        yaw0 = numpy.arctan2(-rt10[1, 4], rr10[0, 0])
+        pitch0 = numpy.arctan2(-rt10[3, 4], rr10[0, 0])
         _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)
     if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
         t10 = elem.T1-t10
