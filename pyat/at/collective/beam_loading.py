@@ -184,9 +184,9 @@ class BeamLoadingElement(RFCavity, Collective):
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
         self._buffersize = buffersize
-        self._vgen_buffer = numpy.zeros(2, buffersize)
-        self._vbeam_buffer = numpy.zeros(2, buffersize)
-        self._vbunch_buffer = numpy.zeros(2, buffersize)
+        self._vgen_buffer = numpy.zeros(2)
+        self._vbeam_buffer = numpy.zeros(2)
+        self._vbunch_buffer = numpy.zeros(2)
         if zcuts is not None:
             self.ZCuts = zcuts
         super(BeamLoadingElement, self).__init__(family_name, length,
