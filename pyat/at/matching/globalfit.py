@@ -54,7 +54,7 @@ def _fit_tune_chrom(ring: Lattice, index: int, func,
         return sumsq
 
     if delta is None:
-        delta = 1.e6 * 10 ** index
+        delta = 1.e-6 * 10 ** index
         
     dq1 = _get_resp(ring, index, func, refpts1, 'PolynomB',
                     delta, dp, regex=regex, **kwargs)
