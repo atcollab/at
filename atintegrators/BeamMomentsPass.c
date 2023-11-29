@@ -122,8 +122,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(2,1);
-        mxSetCell(plhs[0],0,mxCreateString("_positions"));
-        mxSetCell(plhs[0],1,mxCreateString("_sizes"));
+        mxSetCell(plhs[0],0,mxCreateString("_means"));
+        mxSetCell(plhs[0],1,mxCreateString("_stds"));
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");
