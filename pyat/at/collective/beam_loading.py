@@ -265,7 +265,8 @@ class BeamLoadingElement(RFCavity, Collective):
     @property
     def Vbunch_buffer(self):
         """Stored bunch induced voltage data"""
-        return self._vbunch_buffer    
+        return self._vbunch_buffer.reshape(2, self._buffersize, 
+                                           self._nbunch)    
 
     @property
     def Nslice(self):
