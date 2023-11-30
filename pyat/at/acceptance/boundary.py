@@ -4,13 +4,14 @@ calculate the loss boundary for different
 grid definitions
 """
 
-from at.lattice import Lattice, AtError
+from at.lattice import Lattice, AtError, AtWarning
 from typing import Optional, Sequence
 from enum import Enum
 import numpy
 from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
+import warnings
 
 __all__ = ['GridMode']
 
@@ -260,8 +261,10 @@ def get_grid_boundary(mask, grid, config):
         return bnd
 
     if not numpy.any(mask):
-        raise AtError("No particle survived, please check your grid "
-                      "or lattice.")
+        msg = ("No particle survived, please check your grid "
+               "or lattice. Acceptance set to [0.0, 0.0].")
+        warnings.warn(AtWarning(msg))
+        return numpy.zeros(2)
 
     if config.mode is GridMode.RADIAL:
         return radial_boundary(mask, grid)
