@@ -264,7 +264,7 @@ def get_grid_boundary(mask, grid, config):
         msg = ("No particle survived, please check your grid "
                "or lattice. Acceptance set to [0.0, 0.0].")
         warnings.warn(AtWarning(msg))
-        return numpy.zeros(2)
+        return numpy.zeros((2, 1))
 
     if config.mode is GridMode.RADIAL:
         return radial_boundary(mask, grid)
