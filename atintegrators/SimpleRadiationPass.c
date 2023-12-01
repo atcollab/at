@@ -32,7 +32,8 @@ void SimpleRadiationPass(double *r_in,
   double *dmatdp = damp_mat + 4*6;
   double *dmatz = damp_mat + 5*6;
   double x,xp,y,yp,z,dpp;
-      
+  double X,XP,Y,YP;
+  
   #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,r6)
   for (c = 0; c<num_particles; c++) { /*Loop over particles  */
     r6 = r_in+c*6;
@@ -40,26 +41,33 @@ void SimpleRadiationPass(double *r_in,
     if(!atIsNaN(r6[0])) {
 
       dpp = r6[4];
-      x = r6[0]/sqrt(betax) - dispx*dpp;
-      xp = r6[1]*sqrt(betax) + r6[0]*alphax/sqrt(betax) - dispxp*dpp;
-      y = r6[2]/sqrt(betay) - dispy*dpp;
-      yp = r6[3]*sqrt(betay) + r6[2]*alphay/sqrt(betay) - dispyp*dpp;
+      x = r6[0] - dispx*dpp;
+      xp = r6[1] - dispxp*dpp;
+      
+      y = r6[2] - dispy*dpp;
+      yp = r6[3] - dispyp*dpp;
+      
+      X = x/sqrt(betax);
+      XP = xp*sqrt(betax) + x*alphax/sqrt(betax);
+      Y = y/sqrt(betay);
+      YP = yp*sqrt(betay) + y*alphay/sqrt(betay);
+
       z = r6[5];        
     
       if(dmatx[0]!=1.0) {
-        x *= dmatx[0];
+        X *= dmatx[0];
       }
 
       if(dmatxp[1]!=1.0) {
-        xp *= dmatxp[1];
+        XP *= dmatxp[1];
       }
       
       if(dmaty[2]!=1.0) {
-        y *= dmaty[2];
+        Y *= dmaty[2];
       }
 
       if(dmatyp[3]!=1.0) {
-        yp *= dmatyp[3];
+        YP *= dmatyp[3];
       }
       
       if(dmatdp[4]!=1.0) {
@@ -71,10 +79,19 @@ void SimpleRadiationPass(double *r_in,
       }
 
       r6[4] = dpp;
-      r6[0] = x*sqrt(betax) + dispx*dpp;
-      r6[1] = (xp - r6[0]*alphax/sqrt(betax) + dispxp*dpp)/sqrt(betax);
-      r6[2] = y*sqrt(betay) + dispy*dpp;
-      r6[3] = (yp - r6[2]*alphay/sqrt(betay) + dispyp*dpp)/sqrt(betay);
+
+      x = X*sqrt(betax);
+      r6[0] = x + dispx*dpp;
+      
+      xp = (XP - r6[0]*alphax/sqrt(betax))/sqrt(betax);
+      r6[1] = xp + dispxp*dpp;
+      
+      y = Y*sqrt(betay);
+      r6[2] = y + dispy*dpp;
+
+      yp = (YP - r6[2]*alphay/sqrt(betay))/sqrt(betay);
+      r6[3] = yp + dispyp*dpp;
+      
       r6[5] = z;
       r6[4] -= EnergyLossFactor;      
     }
