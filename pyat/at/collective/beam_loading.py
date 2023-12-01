@@ -219,8 +219,7 @@ class BeamLoadingElement(RFCavity, Collective):
                                             order='F')
             self._vbeam_buffer = numpy.zeros((2, self._buffersize),
                                              order='F')
-            self._vbunch_buffer = numpy.zeros((2,
-                                               self._buffersize*self._nbunch),
+            self._vbunch_buffer = numpy.zeros((self._nbunch, 2, self._buffersize),
                                               order='F')
 
     def _init_bl_params(self, current):
@@ -265,8 +264,7 @@ class BeamLoadingElement(RFCavity, Collective):
     @property
     def Vbunch_buffer(self):
         """Stored bunch induced voltage data"""
-        return self._vbunch_buffer.reshape(2, self._buffersize, 
-                                           self._nbunch)    
+        return numpy.moveaxis(self._vbunch_buffer, 0, -1)    
 
     @property
     def Nslice(self):
