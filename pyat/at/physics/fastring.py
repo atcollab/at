@@ -107,7 +107,8 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 Qx: float, Qy: float, Vrf: float, alpha: float,
                 betax: float = 1.0, betay: float = 1.0,
                 alphax: float = 0.0, alphay: float = 0.0,
-                dispx: float = 0.0, dispy: float = 0.0,
+                dispx: float = 0.0, dispxp: float = 0.0,
+                dispy: float = 0.0, dispyp: float = 0.0,
                 Qpx: float = 0.0, Qpy: float = 0.0,
                 A1: float = 0.0, A2: float = 0.0,
                 A3: float = 0.0, emitx: float = 0.0,
@@ -144,7 +145,9 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         * alphax: horizontal alpha function, Default=0
         * alphay: vertical alpha function, Default=0
         * dispx: horizontal dispersion [m], Default=0
+        * dispxp: horizontal dispersion prime, Default=0
         * dispy: vertical dispersion [m], Default=0
+        * dispyp: vertical dispersion prime, Default=0
         * Qpx: horizontal linear chromaticity, Default=0
         * Qpy: vertical linear chromaticity, Default=0
         * A1: horizontal amplitude detuning coefficient, Default=0
@@ -237,7 +240,8 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                                 tauz=tauz, U0=U0, betax=betax,
                                 betay=betay, alphax=alphax,
                                 alphay=alphay, dispx=dispx,
-                                dispy=dispy)
+                                dispy=dispy, dispxp=dispxp, 
+                                dispyp=dispyp)
                                 
     # Generate the simple quantum diffusion element
     quantdiff = SimpleQuantDiff('SQD', betax=betax, betay=betay,
