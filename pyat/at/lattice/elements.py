@@ -1050,7 +1050,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         self.betay = betay
         super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
 
-class SimpleRadiation(_DictLongtMotion, Element):
+class SimpleRadiation(_DictLongtMotion, Radiative, Element):
     """Simple radiation damping and energy loss"""
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'SimpleRadiationPass'}
