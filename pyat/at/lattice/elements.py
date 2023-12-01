@@ -1074,15 +1074,34 @@ class SimpleRadiation(_DictLongtMotion, Element):
         kwargs.setdefault('PassMethod', self.default_pass[True])
        
         assert taux >= 0.0, 'taux must be greater than or equal to 0'
-        self.taux = taux
+        if taux == 0.0:
+            dampx = 1
+        else:
+            dampx = 1 - 1/taux
             
         assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
-        self.tauy = tauy
+        if tauy == 0.0:
+            dampy = 1
+        else:
+            dampy = 1 - 1/tauy
 
         assert tauz >= 0.0, 'tauz must be greater than or equal to 0'
-        self.tauz = tauz
+        if tauz == 0.0:
+            dampz = 1
+        else:
+            dampz = 1 - 1/tauz
 
-        self.U0 = U0            
+        self.U0 = U0
+        
+        self.damp_mat = numpy.zeros((6,6), order='F')
+        self.damp_mat[0,0] = dampx
+        self.damp_mat[1,1] = dampx
+        self.damp_mat[2,2] = dampy
+        self.damp_mat[3,3] = dampy
+        self.damp_mat[4,4] = dampz
+        self.damp_mat[5,5] = dampz
+
+        
         super(SimpleRadiation, self).__init__(family_name, **kwargs)
 
 
