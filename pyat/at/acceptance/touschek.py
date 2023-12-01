@@ -54,7 +54,7 @@ def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
         nus = ep.f_s/ring.revolution_frequency
         cst = (-0.5 * numpy.sqrt(numpy.pi) * bunch_curr * zn /
                (vrf * h * cs * (abs(etac) * espread / nus)**3))
-        bl = numpy.float(bl0*fsolve(haissinski, (1,), args=cst))
+        bl = bl0*fsolve(haissinski, numpy.array([1.0]), args=cst)[0]
     return bl, espread
 
 
