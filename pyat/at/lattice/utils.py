@@ -911,15 +911,15 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         pitch = numpy.around(pitch, decimals=15)
         yaw = numpy.around(yaw, decimals=15)
         ct, st = numpy.cos(tilt), numpy.sin(tilt)
-        ap, ay = 0.5*le*numpy.sin(pitch), 0.5*le*numpy.sin(yaw)
+        ap, ay = 0.5*le*numpy.tan(pitch), 0.5*le*numpy.tan(yaw)
         rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
         rr1[0, 2] = st
         rr1[1, 3] = st
         rr1[2, 0] = -st
         rr1[3, 1] = -st
         rr2 = rr1.T
-        t1 = numpy.array([ay, numpy.tan(-yaw), -ap, numpy.tan(pitch), 0, 0])
-        t2 = numpy.array([ay, numpy.tan(yaw), -ap, numpy.tan(-pitch), 0, 0])
+        t1 = numpy.array([ay, numpy.sin(-yaw), -ap, numpy.sin(pitch), 0, 0])
+        t2 = numpy.array([ay, numpy.sin(yaw), -ap, numpy.sin(-pitch), 0, 0])
         rt1 = numpy.eye(6, order='F')
         rt1[1, 4] = t1[1]
         rt1[3, 4] = t1[3]
@@ -938,8 +938,8 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rr10[:4, :4] = elem.R1[:4, :4]
         rt10 = rr10.T @ elem.R1
         tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
-        yaw0 = numpy.arctan(-rt10[1, 4])
-        pitch0 = numpy.arctan(rt10[3, 4])
+        yaw0 = numpy.arcsin(-rt10[1, 4])
+        pitch0 = numpy.arcsin(rt10[3, 4])
         _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)
     if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
         t10 = elem.T1-t10
