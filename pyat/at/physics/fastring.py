@@ -213,20 +213,27 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     M10 = -(1. + alphax**2) / betax * s_dphi_x
     M11 = c_dphi_x - alphax * s_dphi_x
 
+    M04 = (1 - M00) * dispx - M01 * dispxp
+    M14 = -M10 * dispx + (1 - M11) * dispxp
+    
     M22 = c_dphi_y + alphay * s_dphi_y
     M23 = betay * s_dphi_y
     M32 = -(1. + alphay**2) / betay * s_dphi_y
     M33 = c_dphi_y - alphay * s_dphi_y
 
+    M24 = (1 - M22) * dispy - M23 * dispyp
+    M34 = -M32 * dispy + (1 - M33) * dispyp
+    
+    
     M44 = 1.
     M45 = 0.
     M54 = eta*circumference
     M55 = 1
 
-    Mat66 = numpy.array([[M00, M01, 0., 0., 0., 0.],
-                         [M10, M11, 0., 0., 0., 0.],
-                         [0., 0., M22, M23, 0., 0.],
-                         [0., 0., M32, M33, 0., 0.],
+    Mat66 = numpy.array([[M00, M01, 0., 0., M04, 0.],
+                         [M10, M11, 0., 0., M14, 0.],
+                         [0., 0., M22, M23, M24, 0.],
+                         [0., 0., M32, M33, M34, 0.],
                          [0., 0., 0., 0., M44, M45],
                          [0., 0., 0., 0., M54, M55]], order='F')
 
