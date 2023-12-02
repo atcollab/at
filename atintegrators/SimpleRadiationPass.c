@@ -5,10 +5,6 @@
 struct elem 
 {
   double *damp_mat_diag;
-  double betax;
-  double betay;
-  double alphax;
-  double alphay;
   double dispx;
   double dispxp;
   double dispy;
@@ -18,8 +14,7 @@ struct elem
 };
 
 void SimpleRadiationPass(double *r_in,
-           double *damp_mat_diag, double betax, double alphax,
-           double betay, double alphay, double dispx, double dispxp,
+           double *damp_mat_diag, double dispx, double dispxp,
            double dispy, double dispyp, double EnergyLossFactor, int num_particles)
 
 {
@@ -84,26 +79,18 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
 /*  if (ElemData) {*/
         if (!Elem) {
-            double U0, EnergyLossFactor, betax, betay, alphax, alphay;
+            double U0, EnergyLossFactor;
             double dispx, dispxp, dispy, dispyp;
             double *damp_mat_diag;
             
             damp_mat_diag=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
             U0=atGetDouble(ElemData,"U0"); check_error();
-            alphax=atGetDouble(ElemData,"alphax"); check_error();
-            alphay=atGetDouble(ElemData,"alphay"); check_error();
-            betax=atGetDouble(ElemData,"betax"); check_error();
-            betay=atGetDouble(ElemData,"betay"); check_error();
             dispx=atGetDouble(ElemData,"dispx"); check_error();
             dispxp=atGetDouble(ElemData,"dispxp"); check_error();
             dispy=atGetDouble(ElemData,"dispy"); check_error();
             dispyp=atGetDouble(ElemData,"dispyp"); check_error();
                         
             Elem = (struct elem*)atMalloc(sizeof(struct elem));
-            Elem->alphax=alphax;
-            Elem->alphay=alphay;
-            Elem->betax=betax;
-            Elem->betay=betay;
             Elem->U0=U0;
             Elem->dispx=dispx;
             Elem->dispxp=dispxp;
@@ -112,7 +99,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->EnergyLossFactor=U0/Param->energy;
             Elem->damp_mat_diag=damp_mat_diag;
         }
-        SimpleRadiationPass(r_in, Elem->damp_mat_diag, Elem->betax, Elem->alphax, Elem->betay, Elem->alphay, Elem->dispx, Elem->dispxp, Elem->dispy, Elem->dispyp, Elem->EnergyLossFactor, num_particles);
+        SimpleRadiationPass(r_in, Elem->damp_mat_diag, Elem->dispx, Elem->dispxp, Elem->dispy, Elem->dispyp, Elem->EnergyLossFactor, num_particles);
     return Elem;
 }
 
@@ -127,15 +114,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double alphax, alphay, betax, betay, U0, EnergyLossFactor;
+        double U0, EnergyLossFactor;
         double dispx, dispxp, dispy, dispyp;
         double *damp_mat_diag;
 
         damdamp_mat_diagp_mat=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
-        alphax=atGetDouble(ElemData,"alphax"); check_error();
-        alphay=atGetDouble(ElemData,"alphay"); check_error();
-        betax=atGetDouble(ElemData,"betax"); check_error();
-        betay=atGetDouble(ElemData,"betay"); check_error();
         dispx=atGetDouble(ElemData,"dispx"); check_error();
         dispy=atGetDouble(ElemData,"dispy"); check_error();
         dispxp=atGetDouble(ElemData,"dispxp"); check_error();
@@ -146,21 +129,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        SimpleRadiationPass(r_in, damp_mat_diag, betax, alphax, betay, alphay, dispx, dispxp, dispy, dispyp, EnergyLossFactor, num_particles);
+        SimpleRadiationPass(r_in, damp_mat_diag, dispx, dispxp, dispy, dispyp, EnergyLossFactor, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(11,1);
+        plhs[0] = mxCreateCellMatrix(6,1);
         mxSetCell(plhs[0],0,mxCreateString("damp_mat_diag"));
-        mxSetCell(plhs[0],1,mxCreateString("alphax"));
-        mxSetCell(plhs[0],3,mxCreateString("alphay"));
-        mxSetCell(plhs[0],4,mxCreateString("betax"));
-        mxSetCell(plhs[0],5,mxCreateString("betay"));
-        mxSetCell(plhs[0],6,mxCreateString("dispx"));
-        mxSetCell(plhs[0],7,mxCreateString("dispy"));
-        mxSetCell(plhs[0],8,mxCreateString("dispxp"));
-        mxSetCell(plhs[0],9,mxCreateString("dispyp"));
-        mxSetCell(plhs[0],10,mxCreateString("U0"));        
+        mxSetCell(plhs[0],1,mxCreateString("dispx"));
+        mxSetCell(plhs[0],2,mxCreateString("dispy"));
+        mxSetCell(plhs[0],3,mxCreateString("dispxp"));
+        mxSetCell(plhs[0],4,mxCreateString("dispyp"));
+        mxSetCell(plhs[0],5,mxCreateString("U0"));        
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");

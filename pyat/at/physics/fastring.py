@@ -237,9 +237,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
 
     # Generate the simple radiation element
     simplerad = SimpleRadiation('SR', taux=taux, tauy=tauy, 
-                                tauz=tauz, U0=U0, betax=betax,
-                                betay=betay, alphax=alphax,
-                                alphay=alphay, dispx=dispx,
+                                tauz=tauz, U0=U0, dispx=dispx,
                                 dispy=dispy, dispxp=dispxp, 
                                 dispyp=dispyp)
                                 
