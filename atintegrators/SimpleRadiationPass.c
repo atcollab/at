@@ -146,7 +146,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        SimpleRadiationPass(r_in, damp_mat, betax, alphax, betay, alphay, dispx, dispxp, dispy, dispyp, EnergyLossFactor, num_particles);
+        SimpleRadiationPass(r_in, damp_mat_diag, betax, alphax, betay, alphay, dispx, dispxp, dispy, dispyp, EnergyLossFactor, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
