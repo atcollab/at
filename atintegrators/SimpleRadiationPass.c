@@ -4,7 +4,7 @@
 
 struct elem 
 {
-  double *damp_mat;
+  double *damp_mat_diag;
   double betax;
   double betay;
   double alphax;
@@ -18,21 +18,14 @@ struct elem
 };
 
 void SimpleRadiationPass(double *r_in,
-           double *damp_mat, double betax, double alphax,
+           double *damp_mat_diag, double betax, double alphax,
            double betay, double alphay, double dispx, double dispxp,
            double dispy, double dispyp, double EnergyLossFactor, int num_particles)
 
 {
   double *r6;
   int c, i;
-  double *dmatx = damp_mat;
-  double *dmatxp = damp_mat + 6;
-  double *dmaty = damp_mat + 2*6;
-  double *dmatyp = damp_mat + 3*6;
-  double *dmatdp = damp_mat + 4*6;
-  double *dmatz = damp_mat + 5*6;
   double x,xp,y,yp,z,dpp;
-  double X,XP,Y,YP;
   
   #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,r6)
   for (c = 0; c<num_particles; c++) { /*Loop over particles  */
@@ -47,52 +40,39 @@ void SimpleRadiationPass(double *r_in,
       y = r6[2] - dispy*dpp;
       yp = r6[3] - dispyp*dpp;
       
-      X = x/sqrt(betax);
-      XP = xp*sqrt(betax) + x*alphax/sqrt(betax);
-      Y = y/sqrt(betay);
-      YP = yp*sqrt(betay) + y*alphay/sqrt(betay);
-
       z = r6[5];        
     
-      if(dmatx[0]!=1.0) {
-        X *= dmatx[0];
+      if(damp_mat_diag[0]!=1.0) {
+        x *= damp_mat_diag[0];
       }
 
-      if(dmatxp[1]!=1.0) {
-        XP *= dmatxp[1];
+      if(damp_mat_diag[1]!=1.0) {
+        xp *= damp_mat_diag[1];
       }
       
-      if(dmaty[2]!=1.0) {
-        Y *= dmaty[2];
+      if(damp_mat_diag[2]!=1.0) {
+        y *= damp_mat_diag[2];
       }
 
-      if(dmatyp[3]!=1.0) {
-        YP *= dmatyp[3];
+      if(damp_mat_diag[3]!=1.0) {
+        yp *= damp_mat_diag[3];
       }
       
-      if(dmatdp[4]!=1.0) {
-        dpp *= dmatdp[4];
+      if(damp_mat_diag[4]!=1.0) {
+        dpp *= damp_mat_diag[4];
       }
 
-      if(dmatz[5]!=1.0) {
-        z *= dmatz[5];
+      if(damp_mat_diag[5]!=1.0) {
+        z *= damp_mat_diag[5];
       }
 
       r6[4] = dpp;
-
-      x = X*sqrt(betax);
-      r6[0] = x + dispx*dpp;
-      
-      xp = (XP - r6[0]*alphax/sqrt(betax))/sqrt(betax);
-      r6[1] = xp + dispxp*dpp;
-      
-      y = Y*sqrt(betay);
-      r6[2] = y + dispy*dpp;
-
-      yp = (YP - r6[2]*alphay/sqrt(betay))/sqrt(betay);
-      r6[3] = yp + dispyp*dpp;
-      
       r6[5] = z;
+      r6[0] = x + dispx*dpp;
+      r6[1] = xp + dispxp*dpp;
+      r6[2] = y + dispy*dpp;
+      r6[3] = yp + dispyp*dpp;      
+      
       r6[4] -= EnergyLossFactor;      
     }
   }
@@ -106,9 +86,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         if (!Elem) {
             double U0, EnergyLossFactor, betax, betay, alphax, alphay;
             double dispx, dispxp, dispy, dispyp;
-            double *damp_mat;
+            double *damp_mat_diag;
             
-            damp_mat=atGetDoubleArray(ElemData,"damp_mat"); check_error();
+            damp_mat_diag=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
             U0=atGetDouble(ElemData,"U0"); check_error();
             alphax=atGetDouble(ElemData,"alphax"); check_error();
             alphay=atGetDouble(ElemData,"alphay"); check_error();
@@ -130,9 +110,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->dispy=dispy;
             Elem->dispyp=dispyp;
             Elem->EnergyLossFactor=U0/Param->energy;
-            Elem->damp_mat=damp_mat;
+            Elem->damp_mat_diag=damp_mat_diag;
         }
-        SimpleRadiationPass(r_in, Elem->damp_mat, Elem->betax, Elem->alphax, Elem->betay, Elem->alphay, Elem->dispx, Elem->dispxp, Elem->dispy, Elem->dispyp, Elem->EnergyLossFactor, num_particles);
+        SimpleRadiationPass(r_in, Elem->damp_mat_diag, Elem->betax, Elem->alphax, Elem->betay, Elem->alphay, Elem->dispx, Elem->dispxp, Elem->dispy, Elem->dispyp, Elem->EnergyLossFactor, num_particles);
     return Elem;
 }
 
@@ -149,9 +129,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int num_particles = mxGetN(prhs[1]);
         double alphax, alphay, betax, betay, U0, EnergyLossFactor;
         double dispx, dispxp, dispy, dispyp;
-        double *damp_mat;
+        double *damp_mat_diag;
 
-        damp_mat=atGetDoubleArray(ElemData,"damp_mat"); check_error();
+        damdamp_mat_diagp_mat=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
         alphax=atGetDouble(ElemData,"alphax"); check_error();
         alphay=atGetDouble(ElemData,"alphay"); check_error();
         betax=atGetDouble(ElemData,"betax"); check_error();
@@ -171,7 +151,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(11,1);
-        mxSetCell(plhs[0],0,mxCreateString("damp_mat"));
+        mxSetCell(plhs[0],0,mxCreateString("damp_mat_diag"));
         mxSetCell(plhs[0],1,mxCreateString("alphax"));
         mxSetCell(plhs[0],3,mxCreateString("alphay"));
         mxSetCell(plhs[0],4,mxCreateString("betax"));

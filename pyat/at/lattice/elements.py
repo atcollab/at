@@ -1103,7 +1103,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
     """
     Linear tracking element for a simplified quantum diffusion,
     radiation damping and energy loss.
-    
+
     Note: The damping times are needed to compute the correct
     kick for the emittance. Radiation damping is NOT applied.
     """
@@ -1162,59 +1162,56 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         self.betay = betay
         super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
 
+
 class SimpleRadiation(_DictLongtMotion, Radiative, Element):
     """Simple radiation damping and energy loss"""
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['taux', 'tauy', 'tauz']
     default_pass = {False: 'IdentityPass', True: 'SimpleRadiationPass'}
 
-    def __init__(self, family_name: str, 
+    def __init__(self, family_name: str,
                  taux: float = 0.0, tauy: float = 0.0,
                  tauz: float = 0.0, U0: float = 0.0,
                  **kwargs):
         """
         Args:
             family_name:    Name of the element
-            
+
         Optional Args:
             taux:          Horizontal damping time [turns]
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
             U0:            Energy loss per turn [eV]
-            
+
         Default PassMethod: ``SimpleRadiationPass``
        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
-       
+
         assert taux >= 0.0, 'taux must be greater than or equal to 0'
         if taux == 0.0:
             dampx = 1
         else:
-            dampx = 1 - 1/taux
-            
+            dampx = numpy.exp(-1/taux)
+
         assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
         if tauy == 0.0:
             dampy = 1
         else:
-            dampy = 1 - 1/tauy
+            dampy = numpy.exp(-1/tauy)
 
         assert tauz >= 0.0, 'tauz must be greater than or equal to 0'
         if tauz == 0.0:
             dampz = 1
         else:
-            dampz = 1 - 1/tauz
+            dampz = numpy.exp(-1/tauz)
 
         self.U0 = U0
-        
-        self.damp_mat = numpy.zeros((6,6), order='F')
-        self.damp_mat[0,0] = dampx
-        self.damp_mat[1,1] = dampx
-        self.damp_mat[2,2] = dampy
-        self.damp_mat[3,3] = dampy
-        self.damp_mat[4,4] = dampz
-        self.damp_mat[5,5] = dampz
 
-        
+        self.damp_mat_diag = numpy.array([dampx, dampx,
+                                          dampy, dampy,
+                                          dampz, dampz])
+
         super(SimpleRadiation, self).__init__(family_name, **kwargs)
+
 
 class Corrector(LongElement):
     """Corrector element"""
