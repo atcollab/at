@@ -118,7 +118,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double dispx, dispxp, dispy, dispyp;
         double *damp_mat_diag;
 
-        damdamp_mat_diagp_mat=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
+        damp_mat_diag=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
         dispx=atGetDouble(ElemData,"dispx"); check_error();
         dispy=atGetDouble(ElemData,"dispy"); check_error();
         dispxp=atGetDouble(ElemData,"dispxp"); check_error();
