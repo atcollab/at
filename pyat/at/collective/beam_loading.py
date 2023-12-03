@@ -47,6 +47,8 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
         cavitymode (CavityMode):     Define PASSIVE or ACTIVE cavity
+        buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
+                (default 0)
     """
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
@@ -119,18 +121,18 @@ class BeamLoadingElement(RFCavity, Collective):
                         PhaseGain=float, VoltGain=float, _blmode=int,
                         _beta=float, _wakefact=float, _nslice=int,
                         ZCuts=lambda v: _array(v), _cavitymode=int,
-                        _nturns=int, _phis=float,
+                        _nturns=int, _phis=float, _buffersize=int,
                         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
                         _vbeam=lambda v: _array(v, shape=(2,)),
                         _vcav=lambda v: _array(v, shape=(2,)),
-                        _vgen=lambda v: _array(v, shape=(2,)),
+                        _vgen=lambda v: _array(v, shape=(2,))
                         )
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
                  rshunt: float, blmode: Optional[BLMode] = BLMode.PHASOR,
                  cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
-                 **kwargs):
+                 buffersize: Optional[int] = 0, **kwargs):
         r"""
         Parameters:
             ring:            Lattice object
@@ -150,6 +152,8 @@ class BeamLoadingElement(RFCavity, Collective):
                 function. For high Q resonator, the phasor method should be
                 used
             cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
+            buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
+                (default 0)
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -179,6 +183,10 @@ class BeamLoadingElement(RFCavity, Collective):
         self._nbunch = ring.nbunch
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
+        self._buffersize = buffersize
+        self._vgen_buffer = numpy.zeros(1)
+        self._vbeam_buffer = numpy.zeros(1)
+        self._vbunch_buffer = numpy.zeros(1)
         if zcuts is not None:
             self.ZCuts = zcuts
         super(BeamLoadingElement, self).__init__(family_name, length,
@@ -193,7 +201,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vcav = numpy.array([self.Voltage,
                                   numpy.pi/2-self._phis-phil])
         self.clear_history(ring=ring)
-
+        
     def is_compatible(self, other):
         return False
 
@@ -206,6 +214,13 @@ class BeamLoadingElement(RFCavity, Collective):
             self._init_bl_params(current)
         tl = self._nturns * self._nslice * self._nbunch
         self._turnhistory = numpy.zeros((tl, 4), order='F')
+        if self._buffersize > 0:
+            self._vgen_buffer = numpy.zeros((2, self._buffersize),
+                                            order='F')
+            self._vbeam_buffer = numpy.zeros((2, self._buffersize),
+                                             order='F')
+            self._vbunch_buffer = numpy.zeros((self._nbunch, 2, self._buffersize),
+                                              order='F')
 
     def _init_bl_params(self, current):
         if (self._cavitymode == 1) and (current > 0.0):
@@ -226,6 +241,30 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
                                    numpy.pi-psi])
         self._vgen = numpy.array([vgen, psi])
+
+    @property
+    def Buffersize(self):
+        return self._buffersize
+
+    @Buffersize.setter
+    def Buffersize(self, value):
+        self._buffersize = value
+        self.clear_history()    
+
+    @property
+    def Vgen_buffer(self):
+        """Stored generator voltage data"""
+        return self._vgen_buffer
+
+    @property
+    def Vbeam_buffer(self):
+        """Stored beam induced voltage data"""
+        return self._vbeam_buffer
+
+    @property
+    def Vbunch_buffer(self):
+        """Stored bunch induced voltage data"""
+        return numpy.moveaxis(self._vbunch_buffer, 0, -1)    
 
     @property
     def Nslice(self):
@@ -286,7 +325,7 @@ class BeamLoadingElement(RFCavity, Collective):
                        qfactor: float, rshunt: float,
                        blmode: Optional[BLMode] = BLMode.PHASOR,
                        cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
-                       **kwargs):
+                       buffersize: Optional[int] = 0, **kwargs):
         r"""Function to build the BeamLoadingElement from a cavity
         the FamName, Length, Voltage, Frequency and HarmNumber are
         taken from the cavity element
@@ -308,6 +347,9 @@ class BeamLoadingElement(RFCavity, Collective):
             cavitymode (CavityMode):  type of beam loaded cavity ACTIVE
                 (default) for a cavity with active compensation, or
                 PASSIVE to only include the beam induced voltage
+            buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
+                (default 0)
+                
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -325,6 +367,7 @@ class BeamLoadingElement(RFCavity, Collective):
         return BeamLoadingElement(family_name, *cav_args, ring,
                                   qfactor, rshunt, blmode=blmode,
                                   cavitymode=cavitymode,
+                                  buffersize=buffersize,
                                   **cav_attrs, **kwargs)
 
     def __repr__(self):
