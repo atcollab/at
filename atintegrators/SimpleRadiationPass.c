@@ -85,10 +85,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             
             damp_mat_diag=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
             U0=atGetDouble(ElemData,"U0"); check_error();
-            dispx=atGetDouble(ElemData,"dispx"); check_error();
-            dispxp=atGetDouble(ElemData,"dispxp"); check_error();
-            dispy=atGetDouble(ElemData,"dispy"); check_error();
-            dispyp=atGetDouble(ElemData,"dispyp"); check_error();
+            dispx=atGetOptionalDouble(ElemData,"dispx",0.0); check_error();
+            dispxp=atGetOptionalDouble(ElemData,"dispxp",0.0); check_error();
+            dispy=atGetOptionalDouble(ElemData,"dispy",0.0); check_error();
+            dispyp=atGetOptionalDouble(ElemData,"dispyp",0.0); check_error();
                         
             Elem = (struct elem*)atMalloc(sizeof(struct elem));
             Elem->U0=U0;
@@ -119,10 +119,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *damp_mat_diag;
 
         damp_mat_diag=atGetDoubleArray(ElemData,"damp_mat_diag"); check_error();
-        dispx=atGetDouble(ElemData,"dispx"); check_error();
-        dispy=atGetDouble(ElemData,"dispy"); check_error();
-        dispxp=atGetDouble(ElemData,"dispxp"); check_error();
-        dispyp=atGetDouble(ElemData,"dispyp"); check_error();
+        dispx=atGetOptionalDouble(ElemData,"dispx",0.0); check_error();
+        dispy=atGetOptionalDouble(ElemData,"dispy",0.0); check_error();
+        dispxp=atGetOptionalDouble(ElemData,"dispxp",0.0); check_error();
+        dispyp=atGetOptionalDouble(ElemData,"dispyp",0.0); check_error();
         U0=atGetDouble(ElemData,"U0"); check_error();
         EnergyLossFactor=U0/6e9;
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
@@ -133,13 +133,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(6,1);
+        plhs[0] = mxCreateCellMatrix(2,1);
         mxSetCell(plhs[0],0,mxCreateString("damp_mat_diag"));
-        mxSetCell(plhs[0],1,mxCreateString("dispx"));
-        mxSetCell(plhs[0],2,mxCreateString("dispy"));
-        mxSetCell(plhs[0],3,mxCreateString("dispxp"));
-        mxSetCell(plhs[0],4,mxCreateString("dispyp"));
-        mxSetCell(plhs[0],5,mxCreateString("U0"));        
+        mxSetCell(plhs[0],1,mxCreateString("U0"));
+        
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(4,1); /* No optional fields */
+            mxSetCell(plhs[1],0,mxCreateString("dispx"));
+            mxSetCell(plhs[1],1,mxCreateString("dispxp"));
+            mxSetCell(plhs[1],2,mxCreateString("dispy"));
+            mxSetCell(plhs[1],3,mxCreateString("dispyp"));
+        }
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
