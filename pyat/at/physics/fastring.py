@@ -5,7 +5,7 @@ from functools import reduce
 import numpy
 from typing import Tuple, Optional
 from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
-from at.lattice import get_elements, M66, SimpleQuantDiff, AtError
+from at.lattice import get_elements, M66, SimpleQuantDiff, AtError, SimpleRadiation
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from at.constants import clight, e_mass
 import copy
@@ -107,6 +107,8 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 Qx: float, Qy: float, Vrf: float, alpha: float,
                 betax: float = 1.0, betay: float = 1.0,
                 alphax: float = 0.0, alphay: float = 0.0,
+                dispx: float = 0.0, dispxp: float = 0.0,
+                dispy: float = 0.0, dispyp: float = 0.0,
                 Qpx: float = 0.0, Qpy: float = 0.0,
                 A1: float = 0.0, A2: float = 0.0,
                 A3: float = 0.0, emitx: float = 0.0,
@@ -121,10 +123,11 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     A simple ring consists of:
 
     * an RF cavity,
-    * a 6x6 linear transfer map,
+    * a 6x6 linear transfer map with no radiation damping,
+    * a simple radiation damping element
     * a detuning and chromaticity element,
     * a simplified quantum diffusion element
-        which contains equilibrium emittance and radiation damping
+        which contains equilibrium emittance
 
     Positional Arguments:
         * energy [eV]
@@ -141,6 +144,10 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         * betay: vertical beta function [m], Default=1
         * alphax: horizontal alpha function, Default=0
         * alphay: vertical alpha function, Default=0
+        * dispx: horizontal dispersion [m], Default=0
+        * dispxp: horizontal dispersion prime, Default=0
+        * dispy: vertical dispersion [m], Default=0
+        * dispyp: vertical dispersion prime, Default=0
         * Qpx: horizontal linear chromaticity, Default=0
         * Qpy: vertical linear chromaticity, Default=0
         * A1: horizontal amplitude detuning coefficient, Default=0
@@ -206,33 +213,46 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     M10 = -(1. + alphax**2) / betax * s_dphi_x
     M11 = c_dphi_x - alphax * s_dphi_x
 
+    M04 = (1 - M00) * dispx - M01 * dispxp
+    M14 = -M10 * dispx + (1 - M11) * dispxp
+    
     M22 = c_dphi_y + alphay * s_dphi_y
     M23 = betay * s_dphi_y
     M32 = -(1. + alphay**2) / betay * s_dphi_y
     M33 = c_dphi_y - alphay * s_dphi_y
 
+    M24 = (1 - M22) * dispy - M23 * dispyp
+    M34 = -M32 * dispy + (1 - M33) * dispyp
+    
+    
     M44 = 1.
     M45 = 0.
     M54 = eta*circumference
     M55 = 1
 
-    Mat66 = numpy.array([[M00, M01, 0., 0., 0., 0.],
-                         [M10, M11, 0., 0., 0., 0.],
-                         [0., 0., M22, M23, 0., 0.],
-                         [0., 0., M32, M33, 0., 0.],
+    Mat66 = numpy.array([[M00, M01, 0., 0., M04, 0.],
+                         [M10, M11, 0., 0., M14, 0.],
+                         [0., 0., M22, M23, M24, 0.],
+                         [0., 0., M32, M33, M34, 0.],
                          [0., 0., 0., 0., M44, M45],
                          [0., 0., 0., 0., M54, M55]], order='F')
 
     # generate the linear tracking element, we set a length
     # which is needed to give the lattice object the correct length
-    # (although it is not used)
+    # (although it is not used for anything else)
     lin_elem = M66('Linear', m66=Mat66, Length=circumference)
 
+    # Generate the simple radiation element
+    simplerad = SimpleRadiation('SR', taux=taux, tauy=tauy, 
+                                tauz=tauz, U0=U0, dispx=dispx,
+                                dispy=dispy, dispxp=dispxp, 
+                                dispyp=dispyp)
+                                
     # Generate the simple quantum diffusion element
     quantdiff = SimpleQuantDiff('SQD', betax=betax, betay=betay,
                                 emitx=emitx, emity=emity,
                                 espread=espread, taux=taux,
-                                tauy=tauy, tauz=tauz, U0=U0)
+                                tauy=tauy, tauz=tauz)
 
     # Generate the detuning element
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
@@ -242,7 +262,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                           A1=A1, A2=A2, A3=A3)
 
     # Assemble all elements into the lattice object
-    ring = Lattice(all_cavities + [lin_elem, nonlin_elem, quantdiff],
+    ring = Lattice(all_cavities + [lin_elem, nonlin_elem, simplerad, quantdiff],
                    energy=energy, periodicity=1)
 
     return ring
