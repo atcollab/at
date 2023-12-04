@@ -487,6 +487,12 @@ class BeamMoments(Element):
     """Element to compute bunches mean and std"""
 
     def __init__(self, family_name: str, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+
+        Default PassMethod: ``BeamMomentsPass``
+        """
         kwargs.setdefault('PassMethod', 'BeamMomentsPass')
         self._stds = numpy.zeros((6, 1, 1), order='F')
         self._means = numpy.zeros((6, 1, 1), order='F')
@@ -498,11 +504,116 @@ class BeamMoments(Element):
 
     @property
     def stds(self):
+        """Beam 6d standard deviation"""
         return self._stds
 
     @property
     def means(self):
+        """Beam 6d center of mass"""
         return self._means
+
+
+class SliceMoments(Element):
+    """Element to compute slices mean and std"""
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['nslice']
+    _conversions = dict(Element._conversions, nslice=int)
+
+    def __init__(self, family_name: str, nslice: int, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            nslice:         Number of slices
+
+        Keyword arguments:
+            startturn:      Start turn of the acquisition (Default 0)
+            endturn:        End turn of the acquisition (Default 1)
+
+        Default PassMethod: ``SliceMomentsPass``
+        """
+        kwargs.setdefault('PassMethod', 'SliceMomentsPass')
+        self._startturn = kwargs.pop('startturn', 0)
+        self._endturn = kwargs.pop('endturn', 1)
+        super(SliceMoments, self).__init__(family_name, nslice=nslice,
+                                           **kwargs)
+        self._nbunch = 1
+        self.startturn = self._startturn
+        self.endturn = self._endturn
+        self._dturns = self.endturn - self.startturn
+        self._stds = numpy.zeros((3, nslice, self._dturns), order='F')
+        self._means = numpy.zeros((3, nslice, self._dturns), order='F')
+        self._spos = numpy.zeros((nslice, self._dturns), order='F')
+        self._weights = numpy.zeros((nslice, self._dturns), order='F')
+        self.set_buffers(self._endturn, 1)
+
+    def set_buffers(self, nturns, nbunch):
+        self.endturn = min(self.endturn, nturns)
+        self._dturns = self.endturn - self.startturn
+        self._nbunch = nbunch
+        self._stds = numpy.zeros((3, nbunch*self.nslice, self._dturns),
+                                 order='F')
+        self._means = numpy.zeros((3, nbunch*self.nslice, self._dturns),
+                                  order='F')
+        self._spos = numpy.zeros((nbunch*self.nslice, self._dturns),
+                                 order='F')
+        self._weights = numpy.zeros((nbunch*self.nslice, self._dturns),
+                                    order='F')
+
+    @property
+    def stds(self):
+        """Slices x,y,dp standard deviation"""
+        return self._stds.reshape((3, self._nbunch,
+                                   self.nslice,
+                                   self._dturns))
+
+    @property
+    def means(self):
+        """Slices x,y,dp center of mass"""
+        return self._means.reshape((3, self._nbunch,
+                                    self.nslice,
+                                    self._dturns))
+
+    @property
+    def spos(self):
+        """Slices s position"""
+        return self._spos.reshape((self._nbunch,
+                                   self.nslice,
+                                   self._dturns))
+
+    @property
+    def weights(self):
+        """Slices weights in mA if beam current >0,
+           otherwise fraction of total number of
+           particles in the bunch
+        """
+        return self._weights.reshape((self._nbunch,
+                                      self.nslice,
+                                      self._dturns))
+
+    @property
+    def startturn(self):
+        """Start turn of the acquisition"""
+        return self._startturn
+
+    @startturn.setter
+    def startturn(self, value):
+        if value < 0:
+            raise ValueError('startturn must be greater or equal to 0')
+        if value >= self._endturn:
+            raise ValueError('startturn must be smaller than endturn')
+        self._startturn = value
+
+    @property
+    def endturn(self):
+        """End turn of the acquisition"""
+        return self._endturn
+
+    @endturn.setter
+    def endturn(self, value):
+        if value <= 0:
+            raise ValueError('endturn must be greater than 0')
+        if value <= self._startturn:
+            raise ValueError('endturn must be greater than startturn')
+        self._endturn = value
 
 
 class Aperture(Element):
@@ -793,7 +904,8 @@ class Dipole(Radiative, Multipole):
             KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
 
-        Available PassMethods: :ref:`BndMPoleSymplectic4Pass`, :ref:`BendLinearPass`,
+        Available PassMethods: :ref:`BndMPoleSymplectic4Pass`,
+                               :ref:`BendLinearPass`,
         :ref:`ExactSectorBendPass`, :ref:`ExactRectangularBendPass`,
         :ref:`ExactRectBendPass`, BndStrMPoleSymplectic4Pass
 
@@ -1007,7 +1119,10 @@ class M66(Element):
 class SimpleQuantDiff(_DictLongtMotion, Element):
     """
     Linear tracking element for a simplified quantum diffusion,
-    radiation damping and energy loss
+    radiation damping and energy loss.
+
+    Note: The damping times are needed to compute the correct
+    kick for the emittance. Radiation damping is NOT applied.
     """
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
@@ -1016,7 +1131,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
                  betay: float = 1.0, emitx: float = 0.0,
                  emity: float = 0.0, espread: float = 0.0,
                  taux: float = 0.0, tauy: float = 0.0,
-                 tauz: float = 0.0, U0: float = 0.0,
+                 tauz: float = 0.0,
                  **kwargs):
         """
         Args:
@@ -1031,7 +1146,6 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             taux:          Horizontal damping time [turns]
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
-            U0:             Energy Loss [eV]
 
         Default PassMethod: ``SimpleQuantDiffPass``
        """
@@ -1061,11 +1175,59 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         if espread > 0.0:
             assert tauz > 0.0, 'if espread is given, tauz must be non zero'
 
-        self.U0 = U0
         self.betax = betax
         self.betay = betay
         super(SimpleQuantDiff, self).__init__(family_name, **kwargs)
 
+
+class SimpleRadiation(_DictLongtMotion, Radiative, Element):
+    """Simple radiation damping and energy loss"""
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['taux', 'tauy', 'tauz']
+    default_pass = {False: 'IdentityPass', True: 'SimpleRadiationPass'}
+
+    def __init__(self, family_name: str,
+                 taux: float = 0.0, tauy: float = 0.0,
+                 tauz: float = 0.0, U0: float = 0.0,
+                 **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+
+        Optional Args:
+            taux:          Horizontal damping time [turns]
+            tauy:          Vertical damping time [turns]
+            tauz:          Longitudinal damping time [turns]
+            U0:            Energy loss per turn [eV]
+
+        Default PassMethod: ``SimpleRadiationPass``
+       """
+        kwargs.setdefault('PassMethod', self.default_pass[True])
+
+        assert taux >= 0.0, 'taux must be greater than or equal to 0'
+        if taux == 0.0:
+            dampx = 1
+        else:
+            dampx = numpy.exp(-1/taux)
+
+        assert tauy >= 0.0, 'tauy must be greater than or equal to 0'
+        if tauy == 0.0:
+            dampy = 1
+        else:
+            dampy = numpy.exp(-1/tauy)
+
+        assert tauz >= 0.0, 'tauz must be greater than or equal to 0'
+        if tauz == 0.0:
+            dampz = 1
+        else:
+            dampz = numpy.exp(-1/tauz)
+
+        self.U0 = U0
+
+        self.damp_mat_diag = numpy.array([dampx, dampx,
+                                          dampy, dampy,
+                                          dampz, dampz])
+
+        super(SimpleRadiation, self).__init__(family_name, **kwargs)
 
 
 class Corrector(LongElement):
