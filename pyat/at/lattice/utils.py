@@ -355,7 +355,8 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
 
 # noinspection PyIncorrectDocstring
 def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
-                     endpoint: bool = True, regex: bool = False) -> Uint32Refpts:
+                     endpoint: bool = True,
+                     regex: bool = False) -> Uint32Refpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns an integer array of element indices, selecting ring elements.
 
@@ -607,8 +608,8 @@ def checkname(pattern: str, regex: bool = False) -> ElementFilter:
         return lambda el: fnmatch(el.FamName, pattern)
 
 
-def refpts_iterator(ring: Sequence[Element], refpts: Refpts, regex: bool = False) \
-        -> Iterator[Element]:
+def refpts_iterator(ring: Sequence[Element], refpts: Refpts,
+                    regex: bool = False) -> Iterator[Element]:
     r"""Return an iterator over selected elements in a lattice
 
     Parameters:
@@ -735,8 +736,8 @@ def _refcount(ring: Sequence[Element], refpts: Refpts,
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
-def get_elements(ring: Sequence[Element], refpts: Refpts, regex: bool = False) \
-        -> list:
+def get_elements(ring: Sequence[Element], refpts: Refpts,
+                 regex: bool = False) -> list:
     r"""Returns a list of elements selected by *key*.
 
     Deprecated: :pycode:`get_elements(ring, refpts)` is :pycode:`ring[refpts]`
@@ -755,7 +756,8 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, regex: bool = False) \
 
 
 def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
-                     attrname: str, index: Optional[int] = None, regex: bool = False):
+                     attrname: str, index: Optional[int] = None,
+                     regex: bool = False):
     r"""Extracts attribute values from selected
         lattice :py:class:`.Element`\ s.
 
@@ -800,9 +802,10 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
         index:      index of the value to set if *attrname* is
           an array. if :py:obj:`None`, the full array is replaced by
           *attrvalue*
-        increment:  If :py:obj:`True`, *attrvalues* are added to the initial values.
-        regex: Use regular expression for *refpts* string matching instead of
-          Unix shell-style wildcards.
+        increment:  If :py:obj:`True`, *attrvalues* are added to the
+          initial values.
+        regex: Use regular expression for *refpts* string matching
+          instead of Unix shell-style wildcards.
         copy:       If :py:obj:`False`, the modification is done in-place,
 
           If :py:obj:`True`, return a shallow copy of the lattice. Only the
@@ -823,22 +826,25 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
     if increment:
         attrvalues += get_value_refpts(ring, refpts,
-                                       attrname, index=index, regex=regex)
+                                       attrname, index=index,
+                                       regex=regex)
     else:
         attrvalues = numpy.broadcast_to(attrvalues,
-                                        (_refcount(ring, refpts, regex=regex),))
+                                        (_refcount(ring, refpts,
+                                                   regex=regex),))
 
     # noinspection PyShadowingNames
     @make_copy(copy)
     def apply(ring, refpts, values, regex):
-        for elm, val in zip(refpts_iterator(ring, refpts, regex=regex), values):
+        for elm, val in zip(refpts_iterator(ring, refpts,
+                                            regex=regex), values):
             setf(elm, val)
 
     return apply(ring, refpts, attrvalues, regex)
 
 
-def get_s_pos(ring: Sequence[Element], refpts: Refpts = All, regex: bool = False) \
-        -> Sequence[float]:
+def get_s_pos(ring: Sequence[Element], refpts: Refpts = All,
+              regex: bool = False) -> Sequence[float]:
     # noinspection PyUnresolvedReferences
     r"""Returns the locations of selected elements
 
@@ -872,16 +878,24 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     The tilt is a rotation around the *s*-axis, the pitch is a
     rotation around the *x*-axis and the yaw is a rotation around
     the *y*-axis.
-    A positive angle represent a clockwise rotation when looking in
-    the direction of the rotation axis.
 
-    The transformations are not all commmutative, the tilt is always the
-    last transformation applied.
+    A positive angle represents a clockwise rotation when
+    looking in the direction of the rotation axis.
 
-    If *relative* is :py:obj:`True`, the previous angle and shifts are
-    rebuilt form the *R* and *T* matrix and incremented by the input arguments.
+    The transformations are not all commmutative, the pitch and yaw
+    are applied first and the tilt is always the last transformation
+    applied. The element is rotated around its mid-point.
+
+    If *relative* is :py:obj:`True`, the previous angle and shifts
+    are rebuilt form the *R* and *T* matrix and incremented by the
+    input arguments.
 
     The shift is always conserved regardless of the value of *relative*.
+
+    The transformations are applied by changing the particle coordinates
+    at the entrance of the element and restoring them at the end. Following
+    the small angles approximation the longitudinal shift of the particle
+    coordinates is neglected and the element length is unchanged.
 
     Parameters:
         elem:           Element to be tilted
@@ -897,21 +911,21 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         pitch = numpy.around(pitch, decimals=15)
         yaw = numpy.around(yaw, decimals=15)
         ct, st = numpy.cos(tilt), numpy.sin(tilt)
-        ap, ay = -0.5*le*numpy.sin(pitch), -0.5*le*numpy.sin(yaw)
+        ap, ay = 0.5*le*numpy.tan(pitch), 0.5*le*numpy.tan(yaw)
         rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
         rr1[0, 2] = st
         rr1[1, 3] = st
         rr1[2, 0] = -st
         rr1[3, 1] = -st
         rr2 = rr1.T
-        t1 = numpy.array([ay, -yaw, ap, -pitch, 0, 0])
-        t2 = numpy.array([ay, yaw, ap, pitch, 0, 0])
+        t1 = numpy.array([ay, numpy.sin(-yaw), -ap, numpy.sin(pitch), 0, 0])
+        t2 = numpy.array([ay, numpy.sin(yaw), -ap, numpy.sin(-pitch), 0, 0])
         rt1 = numpy.eye(6, order='F')
-        rt1[1, 4] = ct*t1[1]
-        rt1[3, 4] = ct*t1[3]
+        rt1[1, 4] = t1[1]
+        rt1[3, 4] = t1[3]
         rt2 = numpy.eye(6, order='F')
-        rt2[1, 4] = ct*t2[1]
-        rt2[3, 4] = ct*t2[3]
+        rt2[1, 4] = t2[1]
+        rt2[3, 4] = t2[3]
         return rr1 @ rt1, rt2 @ rr2, t1, t2
 
     tilt0 = 0.0
@@ -924,8 +938,8 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rr10[:4, :4] = elem.R1[:4, :4]
         rt10 = rr10.T @ elem.R1
         tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
-        yaw0 = -rt10[1, 4]/rr10[0, 0]
-        pitch0 = -rt10[3, 4]/rr10[0, 0]
+        yaw0 = numpy.arcsin(-rt10[1, 4])
+        pitch0 = numpy.arcsin(rt10[3, 4])
         _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)
     if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
         t10 = elem.T1-t10
@@ -1055,8 +1069,8 @@ def get_geometry(ring: List[Element],
         ring:               Lattice description.
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        start_coordinates:  *x*, *y*, *angle* at starting point. *x* and *y* are
-          ignored if *centered* is :py:obj:`True`.
+        start_coordinates:  *x*, *y*, *angle* at starting point. *x*
+          and *y* are ignored if *centered* is :py:obj:`True`.
         centered:           if :py:obj:`True` the coordinates origin is the
           center of the ring.
         regex: Use regular expression for *refpts* string matching instead of

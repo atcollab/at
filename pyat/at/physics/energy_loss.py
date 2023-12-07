@@ -6,7 +6,7 @@ import numpy
 from scipy.optimize import least_squares
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
 from at.lattice import check_radiation, AtError, AtWarning
-from at.lattice import QuantumDiffusion, Collective
+from at.lattice import QuantumDiffusion, Collective, SimpleQuantDiff
 from at.lattice import get_bool_index, set_value_refpts
 from at.constants import clight, Cgamma
 from at.tracking import internal_lpass
@@ -76,7 +76,7 @@ def get_energy_loss(ring: Lattice,
         """Losses from tracking
         """
         ringtmp = ring.disable_6d(RFCavity, QuantumDiffusion, Collective,
-                                  copy=True)
+                                  SimpleQuantDiff, copy=True)
         o6 = numpy.squeeze(internal_lpass(ringtmp, numpy.zeros(6),
                                           refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
