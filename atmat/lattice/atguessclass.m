@@ -54,6 +54,10 @@ elseif isfield(elem,'M66')
     else
         atclass='Matrix66';
     end
+elseif isfield(elem,'damp_mat_diag')
+    atclass='SimpleRadiation';
+elseif isfield(elem,'espread')
+    atclass='SimpleQuantDiff';
 elseif isfield(elem,'xtable')
     atclass='InsertionDeviceKickMap';
 elseif isfield(elem,'Length') && elem.Length~=0

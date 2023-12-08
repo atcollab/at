@@ -4,32 +4,29 @@ function elem = atSimpleQuantDiff(fname,varargin)
 %ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...)
 %   FAMNAME:   family name
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Betax',BETAX,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'betax',BETAX,...)
 %   BETAX:   Horizontal beta function. Default: 1.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Betay',BETAY,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'betay',BETAY,...)
 %   BETAY:   Vertical beta function. Default: 1.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Emitx',EMITX,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'emitx',EMITX,...)
 %   EMITX:   Horizontal equilibrium emittance. Default: 0.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Emity',EMITY,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'emity',EMITY,...)
 %   EMITY:   Vertical equilibrium emittance. Default: 0.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Espread',ESPREAD,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'espread',ESPREAD,...)
 %   ESPREAD: Equilibrium momentum spread. Default: 0.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Taux',TAU_X,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'taux',TAU_X,...)
 %   TAU_X: Horizontal damping time. Default: 0.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Tauy',TAU_Y,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'tauy',TAU_Y,...)
 %   TAU_Y: Vertical damping time. Default: 0.0
 %
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'Tauz',TAU_Z,...)
+%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'tauz',TAU_Z,...)
 %   TAU_Z: Longitudinal damping time. Default: 0.0
-%
-%ELEM=ATSIMPLEQUANTDIFF(FAMNAME,...,'U0',U0,...)
-%   U0:     Energy loss [eV]. Default: 0.0
 
 [rsrc,method]=decodeatargs({'SimpleQuantDiffPass'},varargin);
 [method,rsrc]=getoption(rsrc,'PassMethod',method);
@@ -42,9 +39,8 @@ function elem = atSimpleQuantDiff(fname,varargin)
 [taux,rsrc]       = getoption(rsrc,'taux',0.0);
 [tauy,rsrc]       = getoption(rsrc,'tauy',0.0);
 [tauz,rsrc]       = getoption(rsrc,'tauz',0.0);
-[U0,rsrc]         = getoption(rsrc,'U0',0.0);
 elem=atbaselem(fname,method,'Class',cl,'betax',betax,'betay',betay,...
     'emitx',emitx,'emity',emity,'espread',espread,...
     'taux',taux,'tauy',tauy,'tauz',tauz,...
-    'U0',U0,rsrc{:});
+    rsrc{:});
 end
