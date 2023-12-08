@@ -1,13 +1,10 @@
 #include "IdentityPass.h"
+#include <string.h>
+
 using namespace std;
 
 IdentityPass::IdentityPass() noexcept {
-  R1 = nullptr;
-  R2 = nullptr;
-  T1 = nullptr;
-  T2 = nullptr;
-  EApertures = nullptr;
-  RApertures = nullptr;
+  memset(&elemData,0,sizeof(elemData));
 }
 
 static const vector<int64_t> SHAPE6x6 = {6,6};
@@ -18,13 +15,19 @@ static const vector<int64_t> SHAPE2 = {2};
 // Retrieve parameters from upper layer (Python, Matlab)
 void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
 
+  AT_FLOAT *R1;    // Enter 6x6 transformation matrix
+  AT_FLOAT *R2;    // Exit 6x6 transformation matrix
+  AT_FLOAT *T1;    // Enter 6D vector translation
+  AT_FLOAT *T2;    // Exit 6D vector translation
+  AT_FLOAT *EApertures; // Elliptical transverse aperture check (xradius,yradius)
+  AT_FLOAT *RApertures; // Rectangular transverse aperture check (xmin,xmax,ymin,ymax)
+
   R1 = param->getOptionalDoubleArray("R1",SHAPE6x6);
   R2 = param->getOptionalDoubleArray("R2",SHAPE6x6);
   T1 = param->getOptionalDoubleArray("T1",SHAPE6);
   T2 = param->getOptionalDoubleArray("T2",SHAPE6);
   EApertures = param->getOptionalDoubleArray("EApertures",SHAPE2);
   RApertures = param->getOptionalDoubleArray("RApertures",SHAPE4);
-  Length = 0;
 
   info->used = true;
   info->doR1 |= (R1 != nullptr);
@@ -33,6 +36,14 @@ void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info
   info->doT2 |= (T2 != nullptr);
   info->doEAperture |= (EApertures != nullptr);
   info->doRAperture |= (RApertures != nullptr);
+
+  elemData.Type = IDENTITY;
+  if(R1) memcpy(elemData.R1,R1,6*6*sizeof(AT_FLOAT));
+  if(R2) memcpy(elemData.R2,R2,6*6*sizeof(AT_FLOAT));
+  if(T1) memcpy(elemData.T1,T1,6*sizeof(AT_FLOAT));
+  if(T2) memcpy(elemData.T2,T2,6*sizeof(AT_FLOAT));
+  if(EApertures) memcpy(elemData.EApertures,EApertures,2*sizeof(AT_FLOAT));
+  if(RApertures) memcpy(elemData.RApertures,RApertures,4*sizeof(AT_FLOAT));
 
 }
 

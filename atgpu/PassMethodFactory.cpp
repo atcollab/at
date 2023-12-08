@@ -46,7 +46,7 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
     DriftPass::generateGPUKernel(code,&passMethodInfos[DRIFT]);
     DriftPass::generateCall(callCode);
   }
-  
+
 }
 
 void PassMethodFactory::generatePassMethodsCalls(std::string& code) {

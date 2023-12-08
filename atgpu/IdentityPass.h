@@ -26,13 +26,7 @@ public:
 
 protected:
 
-  AT_FLOAT Length; // Length
-  AT_FLOAT *R1;    // Enter 6x6 transformation matrix
-  AT_FLOAT *R2;    // Exit 6x6 transformation matrix
-  AT_FLOAT *T1;    // Enter 6D vector translation
-  AT_FLOAT *T2;    // Exit 6D vector translation
-  AT_FLOAT *EApertures; // Elliptical transverse aperture check (xradius,yradius)
-  AT_FLOAT *RApertures; // Rectangular transverse aperture check (xmin,xmax,ymin,ymax)
+  ELEMENT elemData;
 
 };
 

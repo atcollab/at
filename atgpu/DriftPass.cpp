@@ -8,7 +8,9 @@ void DriftPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
 
   // Retrieve param from super class
   IdentityPass::getParameters(param,info);
-  Length = param->getOptionalDouble("Length",0);
+
+  elemData.Type = DRIFT;
+  elemData.Length = param->getDouble("Length");
 
 }
 

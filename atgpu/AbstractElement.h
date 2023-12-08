@@ -12,6 +12,8 @@ typedef struct {
   bool doT2;          // Pass method use T2
   bool doEAperture;   // Pass method use elliptical aperture check
   bool doRAperture;   // Pass method use rectangular aperture check
+  bool doQuadEnter;   // Pass method use Quad fringe at entrance
+  bool doQuadExit;    // Pass method use Quad fringe at exit
 } PASSMETHOD_INFO;
 
 class AbstractInterface;
