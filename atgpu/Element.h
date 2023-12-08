@@ -12,6 +12,7 @@ typedef double AT_FLOAT;
 
 // Type of lattice element
 #define NB_PASSMETHOD_TYPE 4
+
 #define IDENTITY  0
 #define DRIFT     1
 #define BEND      2
@@ -53,10 +54,10 @@ typedef struct {
 
   AT_FLOAT  FullGap;
 
-  uint32_t   FringeQuadEntrance;
-  uint32_t   FringeQuadExit;
-  AT_FLOAT   FringeIntM0[5]; /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
-  AT_FLOAT   FringeIntP0[5]; /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
+  uint32_t  FringeQuadEntrance;
+  uint32_t  FringeQuadExit;
+  AT_FLOAT  FringeIntM0[5]; // I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1
+  AT_FLOAT  FringeIntP0[5]; // I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1
 
 } ELEMENT;
 

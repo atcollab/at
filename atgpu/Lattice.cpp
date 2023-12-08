@@ -32,6 +32,7 @@ void Lattice::generateGPUKernel(std::string& code) {
   AbstractGPU::getInstance()->addMathFunctions(code);
   PassMethodFactory::getInstance()->generatePassMethods(code);
 
+  // GPU entering method
   code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,AT_FLOAT* rin,AT_FLOAT* rout,"
               "                      uint32_t* lost,uint32_t turn,uint32_t nbPart,int32_t takeTurn) {\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
