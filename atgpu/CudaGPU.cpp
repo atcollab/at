@@ -125,6 +125,11 @@ void CudaGPU::addMathFunctions(std::string &code) {
      "  for(i=0;i<6;i++)\n"
      "    r[i]=sum[i];\n"
      "}\n"
+     "__device__ void fastdrift(AT_FLOAT* r,AT_FLOAT NormL,AT_FLOAT p_norm) {\n"
+     "  r[0] += NormL * r[1];\n"
+     "  r[2] += NormL * r[3];\n"
+     "  r[5] += p_norm * NormL * (r[1] * r[1] + r[3] * r[3]) * 0.5;\n"
+     "}\n"
    );
 
 }

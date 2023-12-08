@@ -184,6 +184,7 @@ cudaext = Extension(
              join('atgpu', 'Lattice.cpp'),
              join('atgpu', 'PassMethodFactory.cpp'),
              join('atgpu', 'IdentityPass.cpp'),
+             join('atgpu', 'DriftPass.cpp'),
              ],
     define_macros=macros + mpi_macros,
     extra_compile_args=cppflags + cuda_cppflags,

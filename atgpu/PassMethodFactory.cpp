@@ -1,5 +1,6 @@
 #include "PassMethodFactory.h"
 #include "IdentityPass.h"
+#include "DriftPass.h"
 #include <string.h>
 using namespace std;
 
@@ -22,8 +23,11 @@ AbstractElement *PassMethodFactory::createElement(std::string& passMethod) {
   if(passMethod=="IdentityPass") {
     elem = new IdentityPass();
     elem->getParameters(I,&passMethodInfos[IDENTITY]);
+  } else if (passMethod=="DriftPass") {
+    elem = new DriftPass();
+    elem->getParameters(I,&passMethodInfos[DRIFT]);
   } else {
-    throw string("not implemented PassMethod: \" + passMethod");
+    throw string("Not implemented PassMethod: " + passMethod);
   }
 
   return elem;
@@ -34,14 +38,15 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
 
   callCode.clear();
 
-  for(auto & i : passMethodInfos) {
-    if( i.used ) {
-      // IdentyPass is the super class
-      IdentityPass::generateGPUKernel(code,&i);
-      IdentityPass::generateCall(callCode);
-    }
+  if( passMethodInfos[IDENTITY].used ) {
+    IdentityPass::generateGPUKernel(code,&passMethodInfos[IDENTITY]);
+    IdentityPass::generateCall(callCode);
   }
-
+  if( passMethodInfos[DRIFT].used ) {
+    DriftPass::generateGPUKernel(code,&passMethodInfos[DRIFT]);
+    DriftPass::generateCall(callCode);
+  }
+  
 }
 
 void PassMethodFactory::generatePassMethodsCalls(std::string& code) {

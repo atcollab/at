@@ -1,18 +1,17 @@
 #ifndef AT_GPU_ABSTRACTELEMENT_H
 #define AT_GPU_ABSTRACTELEMENT_H
 #include <string>
-#define READER(x) x
 #include "Element.h"
 #include "AbstractInterface.h"
 
 typedef struct {
   bool used;          // Is pass method used ?
-  bool doR1;          // Pass method use R1 flags
-  bool doR2;          // Pass method use R2 flags
-  bool doT1;          // Pass method use T1 flags
-  bool doT2;          // Pass method use T2 flags
-  bool doEAperture;   // Pass method use Elliptical Aperture
-  bool doRAperture;   // Pass method use Rectangular Aperture
+  bool doR1;          // Pass method use R1
+  bool doR2;          // Pass method use R2
+  bool doT1;          // Pass method use T1
+  bool doT2;          // Pass method use T2
+  bool doEAperture;   // Pass method use elliptical aperture check
+  bool doRAperture;   // Pass method use rectangular aperture check
 } PASSMETHOD_INFO;
 
 class AbstractInterface;
