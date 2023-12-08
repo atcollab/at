@@ -38,6 +38,9 @@ atintegrators/passmethodlist.m
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
+CMakeLists.txt
+cmake-build-debug
+.idea/
 
 # Vim
 *.swp
@@ -52,3 +55,6 @@ athelp.mat
 
 # octave files
 octave-workspace
+
+# Test dir
+test/
