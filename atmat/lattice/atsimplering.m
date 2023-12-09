@@ -61,8 +61,7 @@ function ring = atsimplering(energy,circumference,hnum,...
 
 clight=PhysConstant.speed_of_light_in_vacuum.value;
 
-[particle,varargs]=getoption(varargin,'Particle',atparticle('relativistic'));
-[qpx,varargs]=getoption(varargs,'Qpx',0.0);
+[qpx,varargs]=getoption(varargin,'Qpx',0.0);
 [qpy,varargs]=getoption(varargs,'Qpy',0.0);
 [A1,varargs]=getoption(varargs,'A1',0.0);
 [A2,varargs]=getoption(varargs,'A2',0.0);
@@ -94,8 +93,6 @@ else
     emity=real(-1i*lambda(2));
 end
 
-gammainv=particle.rest_energy/energy;
-eta = alpha - gammainv*gammainv;
 [vrf,hnum]=broadcast(vrf(:),hnum(:));
 frf = hnum * clight / circumference;
 
@@ -111,7 +108,7 @@ m66(1,5)=(1.0-m66(1,1))*dispx - m66(1,2)*dispxp;
 m66(2,5)=-m66(2,1)*dispx + (1.0-m66(2,2))*dispxp;
 m66(3,5)=(1.0-m66(3,3))*dispy - m66(3,4)*dispyp;
 m66(4,5)=-m66(4,3)*dispy + (1.0-m66(4,4))*dispyp;
-m66(6,5)=eta*circumference;
+m66(6,5)=alpha*circumference;
 
 rf_cavity=cellfun(@makerf,num2cell(vrf),num2cell(frf),num2cell(hnum),'UniformOutput',false);
 lin_elem=atM66('Linear',m66,'Length',circumference);
@@ -127,7 +124,7 @@ quantdiff=atSimpleQuantDiff('SQD','betax',betax,'betay',betay,...
     'emitx',emitx,'emity',emity,'espread',espread,...
     'taux',taux,'tauy',tauy,'tauz',tauz);
 ring=atSetRingProperties([rf_cavity;{lin_elem; nonlin_elem; simple_rad; quantdiff}],...
-    'Energy',energy,'Periodicity',1,'Particle',particle,varargs{:});
+    'Energy',energy,'Periodicity',1,varargs{:});
 
     function rot=rotmat(q)
         cs=cos(2*pi*q);
