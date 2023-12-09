@@ -117,6 +117,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 emity: float = 0.0, espread: float = 0.0,
                 taux: float = 0.0, tauy: float = 0.0,
                 tauz: float = 0.0, U0: float = 0.0,
+                name: str = "",
                 particle: Union[str, Particle] = 'relativistic',
                 TimeLag: bool = False
                 ) -> Lattice:
@@ -166,6 +167,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
         tauz: longitudinal radiation damping time [turns], Default=0
           ignored if tauz=0
         U0: energy loss [eV] (positive number), Default=0
+        name: Name of the lattice
         particle: circulating particle. May be
           'relativistic', 'electron', 'positron', 'proton'
           or a Particle object
@@ -179,12 +181,6 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     Returns:
         ring:    Simple ring
     """
-    if not isinstance(particle, Particle):
-        particle = Particle(particle)
-    # compute slip factor
-    gammainv = particle.rest_energy / energy
-    eta = alpha - gammainv*gammainv
-
     harmonic_number = numpy.atleast_1d(harmonic_number)
     Vrf = numpy.atleast_1d(Vrf)
     try:
@@ -231,7 +227,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     
     M44 = 1.
     M45 = 0.
-    M54 = eta*circumference
+    M54 = alpha*circumference
     M55 = 1
 
     Mat66 = numpy.array([[M00, M01, 0., 0., M04, 0.],
@@ -267,6 +263,6 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
 
     # Assemble all elements into the lattice object
     ring = Lattice(all_cavities + [lin_elem, nonlin_elem, simplerad, quantdiff],
-                   energy=energy, particle=particle, periodicity=1)
+                   name=name, energy=energy, particle=particle, periodicity=1)
 
     return ring
