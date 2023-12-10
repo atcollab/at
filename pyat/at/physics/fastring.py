@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import reduce
 import numpy
 from typing import Union
+from collections.abc import Sequence
 from at.lattice import Lattice, Particle
 from at.lattice import RFCavity, Element, Marker, get_cells, checkname
 from at.lattice import get_elements, M66, SimpleQuantDiff, AtError, SimpleRadiation
@@ -105,8 +106,11 @@ def fast_ring(ring: Lattice, split_inds=[]) -> tuple[Lattice, Lattice]:
     return fastringnorad, fastringrad
 
 
-def simple_ring(energy: float, circumference: float, harmonic_number: int,
-                Qx: float, Qy: float, Vrf: float, alpha: float,
+def simple_ring(energy: float, circumference: float,
+                harmonic_number: Union[float, Sequence[float]],
+                Qx: float, Qy: float,
+                Vrf: Union[float, Sequence[float]],
+                alpha: float,
                 betax: float = 1.0, betay: float = 1.0,
                 alphax: float = 0.0, alphay: float = 0.0,
                 dispx: float = 0.0, dispxp: float = 0.0,
@@ -119,7 +123,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 tauz: float = 0.0, U0: float = 0.0,
                 name: str = "",
                 particle: Union[str, Particle] = 'relativistic',
-                TimeLag: bool = False
+                TimeLag: Union[float, Sequence[float]] = 0.0,
                 ) -> Lattice:
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -181,25 +185,16 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     Returns:
         ring:    Simple ring
     """
-    harmonic_number = numpy.atleast_1d(harmonic_number)
-    Vrf = numpy.atleast_1d(Vrf)
     try:
-        TimeLag = numpy.broadcast_to(TimeLag, Vrf.shape)
+        rfp = numpy.broadcast(Vrf, harmonic_number, TimeLag)
     except ValueError:
-        raise AtError('TimeLag needs to be broadcastable to Vrf (same shape)')
+        raise AtError('Vrf, harmonic_number and TimeLag must be broadcastable')
 
-    if len(harmonic_number) != len(Vrf):
-        raise AtError('harmonic_number input must match length of Vrf input')
+    # revolution frequency
+    f0 = clight / circumference
 
-    # compute rf frequency
-    frf = harmonic_number * clight / circumference
-
-    all_cavities = []
-    for icav in numpy.arange(len(harmonic_number)):
-        # generate rf cavity element
-        rfcav = RFCavity('RFC', 0, Vrf[icav], frf[icav], harmonic_number[icav],
-                         energy, TimeLag=TimeLag[icav])
-        all_cavities.append(rfcav)
+    all_cavities = [RFCavity(f"RFC{i+1}", 0.0, v, h*f0, h, energy, TimeLag=t)
+                    for i, (v, h, t) in enumerate(rfp)]
 
     # Now we will use the optics parameters to compute the uncoupled M66 matrix
 
