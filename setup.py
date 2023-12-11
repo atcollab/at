@@ -183,6 +183,7 @@ cudaext = Extension(
              join('atgpu', 'PyInterface.cpp'),
              join('atgpu', 'Lattice.cpp'),
              join('atgpu', 'PassMethodFactory.cpp'),
+             join('atgpu', 'SymplecticIntegrator.cpp'),
              join('atgpu', 'IdentityPass.cpp'),
              join('atgpu', 'DriftPass.cpp'),
              join('atgpu', 'StrMPoleSymplectic4Pass.cpp'),

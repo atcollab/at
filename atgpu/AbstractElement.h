@@ -12,6 +12,7 @@ typedef struct {
   bool doT2;          // Pass method use T2
   bool doEAperture;   // Pass method use elliptical aperture check
   bool doRAperture;   // Pass method use rectangular aperture check
+  bool doKickAngle;   // Pass method use KickAngle
   bool doQuadEnter;   // Pass method use Quad fringe at entrance
   bool doQuadExit;    // Pass method use Quad fringe at exit
 } PASSMETHOD_INFO;
@@ -25,6 +26,12 @@ public:
 
   // Retrieve parameters from upper layer (Python, Matlab)
   virtual void getParameters(AbstractInterface *param,PASSMETHOD_INFO *info) = 0;
+
+  // Get needed memory
+  virtual uint64_t getMemorySize() = 0;
+
+  // Fill device memory
+  virtual void fillGPUMemory(void *deviceMem) = 0;
 
 };
 

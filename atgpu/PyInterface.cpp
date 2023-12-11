@@ -17,16 +17,6 @@ int PyInterface::getInt(const std::string& name) {
 
 }
 
-int PyInterface::getOptionalInt(const std::string& name,int defaultValue) {
-
-  try {
-    return getInt(name);
-  } catch (string&) {
-    return defaultValue;
-  }
-
-}
-
 std::string PyInterface::getString(const std::string& name) {
 
   PyObject *attr = PyObject_GetAttrString(self, name.c_str());
@@ -48,15 +38,6 @@ AT_FLOAT PyInterface::getDouble(const std::string& name) {
 
 }
 
-AT_FLOAT PyInterface::getOptionalDouble(const std::string& name, AT_FLOAT defaultValue) {
-
-  try {
-    return getDouble(name);
-  } catch (string&) {
-    return defaultValue;
-  }
-
-}
 
 AT_FLOAT *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) {
 
@@ -81,43 +62,10 @@ AT_FLOAT *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<
   for(int i=0;i<nDim;i++)
     shape[i] = dims[i];
 
-  return (AT_FLOAT *) PyArray_DATA(array);
+  AT_FLOAT *ptr = (AT_FLOAT *)PyArray_DATA(array);
+  Py_DECREF(array);
+  return ptr;
 
 }
 
-AT_FLOAT *PyInterface::getDoubleArray(const std::string& name, std::vector<int64_t> expectedShape) {
 
-  std::vector<int64_t> shape;
-  AT_FLOAT *array = getNativeDoubleArray(name,shape);
-
-  if(shape.size()!=expectedShape.size()) {
-    Py_DECREF(array);
-    throw string(name + " array attribute has shape "+ getShapeStr(shape) +" but " +
-           getShapeStr(expectedShape) + " expected");
-  }
-
-  bool ok=true;
-  size_t d = 0;
-  while(ok && d<expectedShape.size()) {
-    ok = shape[d] == expectedShape[d];
-    d++;
-  }
-  if( !ok ) {
-    Py_DECREF(array);
-    throw string(name + " array attribute has shape "+ getShapeStr(shape) +" but " +
-           getShapeStr(expectedShape) + " expected");
-  }
-
-  return array;
-
-}
-
-AT_FLOAT *PyInterface::getOptionalDoubleArray(const std::string &name, std::vector<int64_t> expectedShape) {
-
-  try {
-    return getDoubleArray(name,expectedShape);
-  } catch (string&) {
-    return nullptr;
-  }
-
-}

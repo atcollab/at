@@ -11,6 +11,8 @@ public:
 
   // Retrieve parameters from upper layer (Python, Matlab)
   virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);
+  virtual uint64_t getMemorySize();
+  virtual void fillGPUMemory(void *deviceMem);
 
   // GPU code generation
   static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info) noexcept;
@@ -27,6 +29,15 @@ public:
 protected:
 
   ELEMENT elemData;
+
+private:
+
+  AT_FLOAT *R1;    // Enter 6x6 transformation matrix
+  AT_FLOAT *R2;    // Exit 6x6 transformation matrix
+  AT_FLOAT *T1;    // Enter 6D vector translation
+  AT_FLOAT *T2;    // Exit 6D vector translation
+  AT_FLOAT *EApertures; // Elliptical transverse aperture check (xradius,yradius)
+  AT_FLOAT *RApertures; // Rectangular transverse aperture check (xmin,xmax,ymin,ymax)
 
 };
 

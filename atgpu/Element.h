@@ -18,30 +18,43 @@ typedef double AT_FLOAT;
 #define BEND      2
 #define MPOLE     3
 
-#define MAX_POLYNOMIAL_ORDER 32
+#if defined(__CUDACC__) // NVCC
+#define STRUCT_ALIGN(n) __align__(n)
+#elif defined(__GNUC__) // GCC
+#define STRUCT_ALIGN(n) __attribute__((aligned(n)))
+#elif defined(_MSC_VER) // MSVC
+#define STRUCT_ALIGN(n) __declspec(align(n))
+#else
+  #error "Please provide a definition for structure alligmenent for your host compiler!"
+#endif
 
 // Lattice element
-typedef struct {
+typedef struct STRUCT_ALIGN(16) {
 
   uint32_t  Type;
   uint32_t  NumIntSteps;
-  uint32_t  MaxOrder;
-  uint32_t  doFringe;
+  AT_FLOAT  SL;
   AT_FLOAT  Length;
-  AT_FLOAT  PolynomA[MAX_POLYNOMIAL_ORDER];
-  AT_FLOAT  PolynomB[MAX_POLYNOMIAL_ORDER];
-  AT_FLOAT  irho;
-  AT_FLOAT  L1;
-  AT_FLOAT  L2;
-  AT_FLOAT  K1;
-  AT_FLOAT  K2;
-  AT_FLOAT  T1[6];
-  AT_FLOAT  T2[6];
-  AT_FLOAT  R1[6];
-  AT_FLOAT  R2[6];
-  AT_FLOAT  EApertures[2];
-  AT_FLOAT  RApertures[4];
+  AT_FLOAT  *T1;
+  AT_FLOAT  *T2;
+  AT_FLOAT  *R1;
+  AT_FLOAT  *R2;
+  AT_FLOAT  *EApertures;
+  AT_FLOAT  *RApertures;
 
+  uint32_t  MaxOrder;
+  AT_FLOAT  *PolynomA;
+  AT_FLOAT  *PolynomB;
+  AT_FLOAT  *NormD;
+  AT_FLOAT  *NormK;
+  AT_FLOAT  *KickAngle;
+
+  uint32_t  FringeQuadEntrance;
+  uint32_t  FringeQuadExit;
+
+  /*
+  AT_FLOAT  irho;
+  uint32_t  doFringe;
   uint32_t  FringeBendEntrance; // Method: 1 legacy 2 Soleil 3 ThomX
   AT_FLOAT  EntranceAngle;      // Geometrical edge entrance angle
   AT_FLOAT  FringeInt1;
@@ -53,11 +66,9 @@ typedef struct {
   AT_FLOAT  tgExitAngle;
 
   AT_FLOAT  FullGap;
-
-  uint32_t  FringeQuadEntrance;
-  uint32_t  FringeQuadExit;
   AT_FLOAT  FringeIntM0[5]; // I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1
   AT_FLOAT  FringeIntP0[5]; // I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1
+  */
 
 } ELEMENT;
 

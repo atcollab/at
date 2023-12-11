@@ -1,6 +1,7 @@
 #include "Lattice.h"
 #include "AbstractGPU.h"
 #include "PassMethodFactory.h"
+#include <iostream>
 
 using namespace std;
 
@@ -10,17 +11,14 @@ const string header = {
 #include "element.gpuh"
 };
 
-Lattice::Lattice(size_t nElements) {
-  // Reserve memory
-  elements.reserve(nElements);
-  PassMethodFactory::getInstance()->reset();
+Lattice::Lattice(SymplecticIntegrator& integrator) : factory(PassMethodFactory(integrator)) {
+
 }
 
 void Lattice::addElement() {
 
-  PassMethodFactory *factory = PassMethodFactory::getInstance();
   string passMethod = AbstractInterface::getInstance()->getString("PassMethod");
-  AbstractElement *elem = factory->createElement(passMethod);
+  AbstractElement *elem = factory.createElement(passMethod);
   elements.push_back(elem);
 
 }
@@ -29,11 +27,11 @@ void Lattice::addElement() {
 void Lattice::generateGPUKernel(std::string& code) {
 
   code.append(header);
-  AbstractGPU::getInstance()->addMathFunctions(code);
-  PassMethodFactory::getInstance()->generatePassMethods(code);
+  AbstractGPU::getInstance()->addUtilsFunctions(code);
+  factory.generatePassMethods(code);
 
   // GPU entering method
-  code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,AT_FLOAT* rin,AT_FLOAT* rout,"
+  code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,AT_FLOAT* rin,AT_FLOAT* rout,\n"
               "                      uint32_t* lost,uint32_t turn,uint32_t nbPart,int32_t takeTurn) {\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
   code.append("  AT_FLOAT* _r6 = rin + (6 * threadId);\n");
@@ -53,7 +51,7 @@ void Lattice::generateGPUKernel(std::string& code) {
   code.append("  ELEMENT* elemPtr = gpuRing;\n");
   code.append("  for(uint32_t elem = 0; elem < nbElement; elem++) {\n");
   code.append("    switch(elemPtr->Type) {\n");
-  PassMethodFactory::getInstance()->generatePassMethodsCalls(code);
+  factory.generatePassMethodsCalls(code);
   code.append("    }\n");
   code.append("    elemPtr++;\n");
   code.append("  }\n");

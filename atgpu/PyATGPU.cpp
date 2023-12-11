@@ -3,6 +3,7 @@
 #include <Python.h>
 #include "AbstractGPU.h"
 #include "PyInterface.h"
+#include "Lattice.h"
 #include "iostream"
 
 using namespace std;
@@ -151,19 +152,20 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   size_t i;
   string code;
+  // Default symplectic integrator 4th order (Forest/Ruth)
+  SymplecticIntegrator integrator(4);
 
   try {
 
     PyInterface *pyI = (PyInterface *) AbstractInterface::getInstance();
     size_t nElements = PyList_Size(lattice);
-    Lattice *l = new Lattice(nElements);
+    Lattice *l = new Lattice(integrator);
     for (i = 0; i < nElements; i++) {
       PyObject *elem = PyList_GET_ITEM(lattice, i);
       pyI->setObject(elem);
       l->addElement();
     }
     l->generateGPUKernel(code);
-    cout << code << endl;
     AbstractGPU::getInstance()->run(code);
 
   } catch (string& errStr) {
