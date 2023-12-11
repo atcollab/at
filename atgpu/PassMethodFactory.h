@@ -1,14 +1,17 @@
 #ifndef AT_GPU_PASSMETHODFACTORY_H
 #define AT_GPU_PASSMETHODFACTORY_H
+#include "SymplecticIntegrator.h"
 #include "AbstractElement.h"
 
-// Singleton class to handle pass method code generation
+class AbstractElement;
+
+// Class to handle pass method code generation
 class PassMethodFactory {
 
 public:
 
-  // Reset the factory
-  void reset();
+  // Construct a factory
+  explicit PassMethodFactory(SymplecticIntegrator& integrator) noexcept;
 
   // Create an element with the specified pass method
   AbstractElement *createElement(std::string& passMethod);
@@ -19,13 +22,11 @@ public:
   // Generate pass method call code
   void generatePassMethodsCalls(std::string& code);
 
-  // Return instance of the PassMethodFactory
-  static PassMethodFactory *getInstance();
-
 private:
+
+  SymplecticIntegrator& integrator;
   PASSMETHOD_INFO passMethodInfos[NB_PASSMETHOD_TYPE];   // Flags for pass method code generation
-  std::string callCode;                              // Switch/case code for pass methods
-  static PassMethodFactory *handler;
+  std::string callCode;                                  // Switch/case code for pass methods
 
 };
 

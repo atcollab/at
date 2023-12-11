@@ -12,6 +12,20 @@ CudaGPU::CudaGPU() {
 
 }
 
+// Copy from host to device
+void CudaGPU::hostToDevice(void *dest,void *src,size_t size) {
+  cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyHostToDevice);
+}
+
+void CudaGPU::getDeviceFunctionQualifier(std::string& ftype) {
+  ftype.assign("__device__");
+}
+
+// Allocate device memory
+void CudaGPU::allocDevice(void **dest,size_t size) {
+  cudaCall(cudaMalloc,dest,size);
+}
+
 // Return number of stream processors
 static int _ConvertSMVer2Cores(int major,int minor) {
 
@@ -100,37 +114,6 @@ std::vector<GPU_INFO> CudaGPU::getDeviceList() {
     gpuList.push_back(info);
   }
   return gpuList;
-
-}
-
-// Add math function
-void CudaGPU::addMathFunctions(std::string &code) {
-
-  code.append(
-     "#define INF   __longlong_as_double(0x7ff0000000000000ULL)\n"
-     "#define NAN   __longlong_as_double(0xfff8000000000000ULL)\n"
-     "__device__ void translate6(AT_FLOAT* r,AT_FLOAT *t) {\n"
-     "  r[0] += t[0];  r[1] += t[1];  r[2] += t[2];\n"
-     "  r[3] += t[3];  r[4] += t[4];  r[5] += t[5];\n"
-     "}\n"
-     "__device__ void transform66(AT_FLOAT* r,AT_FLOAT *M) {\n"
-     "  int i,j;\n"
-     "  AT_FLOAT sum[6];\n"
-     "  for(i=0;i<6;i++)\n"
-     "  {\n"
-     "    sum[i]=0;\n"
-     "    for(j=0;j<6;j++)\n"
-     "      sum[i]+=M[i+j*6]*r[j];\n"
-     "  }\n"
-     "  for(i=0;i<6;i++)\n"
-     "    r[i]=sum[i];\n"
-     "}\n"
-     "__device__ void fastdrift(AT_FLOAT* r,AT_FLOAT NormL,AT_FLOAT p_norm) {\n"
-     "  r[0] += NormL * r[1];\n"
-     "  r[2] += NormL * r[3];\n"
-     "  r[5] += p_norm * NormL * (r[1] * r[1] + r[3] * r[3]) * 0.5;\n"
-     "}\n"
-   );
 
 }
 

@@ -1,4 +1,5 @@
 #include "IdentityPass.h"
+#include "AbstractGPU.h"
 #include <string.h>
 
 using namespace std;
@@ -15,20 +16,14 @@ static const vector<int64_t> SHAPE2 = {2};
 // Retrieve parameters from upper layer (Python, Matlab)
 void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
 
-  AT_FLOAT *R1;    // Enter 6x6 transformation matrix
-  AT_FLOAT *R2;    // Exit 6x6 transformation matrix
-  AT_FLOAT *T1;    // Enter 6D vector translation
-  AT_FLOAT *T2;    // Exit 6D vector translation
-  AT_FLOAT *EApertures; // Elliptical transverse aperture check (xradius,yradius)
-  AT_FLOAT *RApertures; // Rectangular transverse aperture check (xmin,xmax,ymin,ymax)
+  R1 = param->getOptionalDoubleArray("R1", SHAPE6x6);
+  R2 = param->getOptionalDoubleArray("R2", SHAPE6x6);
+  T1 = param->getOptionalDoubleArray("T1", SHAPE6);
+  T2 = param->getOptionalDoubleArray("T2", SHAPE6);
+  EApertures = param->getOptionalDoubleArray("EApertures", SHAPE2);
+  RApertures = param->getOptionalDoubleArray("RApertures", SHAPE4);
 
-  R1 = param->getOptionalDoubleArray("R1",SHAPE6x6);
-  R2 = param->getOptionalDoubleArray("R2",SHAPE6x6);
-  T1 = param->getOptionalDoubleArray("T1",SHAPE6);
-  T2 = param->getOptionalDoubleArray("T2",SHAPE6);
-  EApertures = param->getOptionalDoubleArray("EApertures",SHAPE2);
-  RApertures = param->getOptionalDoubleArray("RApertures",SHAPE4);
-
+  elemData.Type = IDENTITY;
   info->used = true;
   info->doR1 |= (R1 != nullptr);
   info->doR2 |= (R2 != nullptr);
@@ -37,13 +32,57 @@ void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info
   info->doEAperture |= (EApertures != nullptr);
   info->doRAperture |= (RApertures != nullptr);
 
-  elemData.Type = IDENTITY;
-  if(R1) memcpy(elemData.R1,R1,6*6*sizeof(AT_FLOAT));
-  if(R2) memcpy(elemData.R2,R2,6*6*sizeof(AT_FLOAT));
-  if(T1) memcpy(elemData.T1,T1,6*sizeof(AT_FLOAT));
-  if(T2) memcpy(elemData.T2,T2,6*sizeof(AT_FLOAT));
-  if(EApertures) memcpy(elemData.EApertures,EApertures,2*sizeof(AT_FLOAT));
-  if(RApertures) memcpy(elemData.RApertures,RApertures,4*sizeof(AT_FLOAT));
+}
+
+uint64_t IdentityPass::getMemorySize() {
+
+  uint64_t sum = 0;
+  if(R1) sum += 6*6 * sizeof(AT_FLOAT);
+  if(R2) sum += 6*6 * sizeof(AT_FLOAT);
+  if(T1) sum += 6 * sizeof(AT_FLOAT);
+  if(T2) sum += 6 * sizeof(AT_FLOAT);
+  if(EApertures) sum += 2 * sizeof(AT_FLOAT);
+  if(RApertures) sum += 4 * sizeof(AT_FLOAT);
+  return sum;
+
+}
+
+// Fill device memory
+void IdentityPass::fillGPUMemory(void *deviceMem) {
+
+  AbstractGPU *gpu = AbstractGPU::getInstance();
+  AT_FLOAT *dest = (AT_FLOAT *)deviceMem;
+
+  if(R1) {
+    elemData.R1 = dest;
+    gpu->hostToDevice(dest,R1,6*6*sizeof(AT_FLOAT));
+    dest += 6*6;
+  }
+  if(R2) {
+    elemData.R2 = (AT_FLOAT *)dest;
+    gpu->hostToDevice(dest,R2,6*6*sizeof(AT_FLOAT));
+    dest += 6*6;
+  }
+  if(T1) {
+    elemData.T1 = (AT_FLOAT *)dest;
+    gpu->hostToDevice(dest,T1,6*sizeof(AT_FLOAT));
+    dest += 6;
+  }
+  if(T2) {
+    elemData.T2 = (AT_FLOAT *)dest;
+    gpu->hostToDevice(dest,T2,6*sizeof(AT_FLOAT));
+    dest += 6;
+  }
+  if(EApertures) {
+    elemData.EApertures = (AT_FLOAT *)dest;
+    gpu->hostToDevice(dest,EApertures,2*sizeof(AT_FLOAT));
+    dest += 2;
+  }
+  if(RApertures) {
+    elemData.RApertures = (AT_FLOAT *)dest;
+    gpu->hostToDevice(dest,EApertures,4*sizeof(AT_FLOAT));
+    dest += 4;
+  }
 
 }
 

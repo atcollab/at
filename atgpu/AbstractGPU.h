@@ -19,11 +19,20 @@ public:
   // Return list of GPU device present on the system
   virtual std::vector<GPU_INFO> getDeviceList() = 0;
 
-  // Add math function to the code
-  virtual void addMathFunctions(std::string& code) = 0;
+  // Return device function qualifier
+  virtual void getDeviceFunctionQualifier(std::string& ftype) = 0;
+
+  // Copy from host to device
+  virtual void hostToDevice(void *dest,void *src,size_t size) = 0;
+
+  // Allocate device memory
+  virtual void allocDevice(void **dest,size_t size) = 0;
 
   // Compile and run the kernel
   virtual void run(std::string& code) = 0;
+
+  // Add math function to the code
+  void addUtilsFunctions(std::string& code);
 
   // Return handle to singleton class
   static AbstractGPU *getInstance();

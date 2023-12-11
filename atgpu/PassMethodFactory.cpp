@@ -1,12 +1,12 @@
 #include "PassMethodFactory.h"
 #include "IdentityPass.h"
 #include "DriftPass.h"
+#include "StrMPoleSymplectic4Pass.h"
 #include <string.h>
+
 using namespace std;
 
-PassMethodFactory *PassMethodFactory::handler = nullptr;
-
-void PassMethodFactory::reset() {
+PassMethodFactory::PassMethodFactory(SymplecticIntegrator& integrator) noexcept:integrator(integrator) {
 
   // Flags for pass methods
   memset(passMethodInfos, 0, sizeof(passMethodInfos));
@@ -26,6 +26,9 @@ AbstractElement *PassMethodFactory::createElement(std::string& passMethod) {
   } else if (passMethod=="DriftPass") {
     elem = new DriftPass();
     elem->getParameters(I,&passMethodInfos[DRIFT]);
+  } else if (passMethod=="StrMPoleSymplectic4Pass") {
+    elem = new StrMPoleSymplectic4Pass(integrator);
+    elem->getParameters(I,&passMethodInfos[MPOLE]);
   } else {
     throw string("Not implemented PassMethod: " + passMethod);
   }
@@ -46,16 +49,14 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
     DriftPass::generateGPUKernel(code,&passMethodInfos[DRIFT]);
     DriftPass::generateCall(callCode);
   }
+  if( passMethodInfos[MPOLE].used ) {
+    StrMPoleSymplectic4Pass::generateGPUKernel(code,&passMethodInfos[MPOLE],integrator);
+    StrMPoleSymplectic4Pass::generateCall(callCode);
+  }
 
 }
 
 void PassMethodFactory::generatePassMethodsCalls(std::string& code) {
   code.append(callCode);
-}
-
-PassMethodFactory *PassMethodFactory::getInstance() {
-  if( handler== nullptr )
-    handler = new PassMethodFactory();
-  return handler;
 }
 

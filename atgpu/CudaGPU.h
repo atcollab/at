@@ -10,11 +10,17 @@ public:
   // Return list of GPU device present on the system
   std::vector<GPU_INFO> getDeviceList();
 
-  // Add math function to the code
-  void addMathFunctions(std::string& code);
+  // Return device function qualifier
+  void getDeviceFunctionQualifier(std::string& ftype);
 
   // Compile and run the kernel
   void run(std::string& code);
+
+  // Copy from host to device
+  void hostToDevice(void *dest,void *src,size_t size);
+
+  // Allocate device memory
+  void allocDevice(void **dest,size_t size);
 
 private:
 
