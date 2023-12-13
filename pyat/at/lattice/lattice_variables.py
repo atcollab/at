@@ -116,7 +116,9 @@ class ElementVariable(Variable):
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
-        self._history.append(self._getfun())
+        iniv = self._getfun()
+        self._initial = iniv
+        self._history.append(iniv)
 
     def _setfun(self, value: float, **kwargs):
         for elem in self._elements:

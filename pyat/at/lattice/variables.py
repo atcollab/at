@@ -21,7 +21,7 @@ Each :py:class:`Variable` has a scalar value.
 - :py:meth:`~Variable.get`
 - :py:meth:`~Variable.set`
 - :py:meth:`~Variable.set_previous`
-- :py:meth:`~Variable.set_initial`
+- :py:meth:`~Variable.reset`
 - :py:meth:`~Variable.increment`
 - :py:meth:`~Variable.step_up`
 - :py:meth:`~Variable.step_down`
@@ -84,6 +84,7 @@ from __future__ import annotations
 import numpy as np
 import abc
 from numbers import Number
+from collections import deque
 from collections.abc import Iterable, Sequence, Callable
 
 __all__ = [
@@ -113,17 +114,23 @@ class Variable(abc.ABC):
         name: str = "",
         bounds: tuple[Number, Number] = (-np.inf, np.inf),
         delta: Number = 1.0,
+        history_length: int = None,
     ):
         """
         Parameters:
             name:       Name of the Variable
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite
         """
-        self.name = self._setname(name)
-        self.bounds = bounds
-        self.delta = delta
-        self._history = []
+        self.name = self._setname(name)  #: Variable name
+        self.bounds = bounds             #: Variable bounds
+        self.delta = delta               #: Increment step
+        #: Maximum length of the history buffer. :py:obj:`None` means infinite
+        self.history_length = history_length
+        self._initial = None
+        self._history = deque([], self.history_length)
 
     @classmethod
     def _setname(cls, name):
@@ -134,66 +141,78 @@ class Variable(abc.ABC):
             return f"{cls._prefix}{cls._counter}"
 
     # noinspection PyUnusedLocal
-    def _setfun(self, value: Number, **kwargs):
+    def _setfun(self, value: Number, ring=None, **kwargs):
         classname = self.__class__.__name__
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, **kwargs) -> Number:
+    def _getfun(self, ring=None, **kwargs) -> Number:
         ...
 
     @property
     def history(self) -> list[Number]:
         """History of the values of the variable"""
-        return self._history
+        return list(self._history)
 
     @property
     def initial_value(self) -> Number:
         """Initial value of the variable"""
-        if len(self._history) > 0:
-            return self._history[0]
+        if self._initial is not None:
+            return self._initial
         else:
             raise IndexError(f"{self.name}: No value has been set yet")
 
     @property
     def last_value(self) -> Number:
         """Last value of the variable"""
-        if len(self._history) > 0:
+        try:
             return self._history[-1]
-        else:
-            raise IndexError(f"{self.name}: No value has been set yet")
+        except IndexError as exc:
+            exc.args = (f"{self.name}: No value has been set yet",)
+            raise
 
     @property
     def previous_value(self) -> Number:
         """Value before the last one"""
-        if len(self._history) > 1:
+        try:
             return self._history[-2]
-        else:
-            raise IndexError(f"{self.name}: history too short")
+        except IndexError as exc:
+            exc.args = (f"{self.name}: history too short",)
+            raise
 
-    def set(self, value: Number, **kwargs) -> None:
+    def set(self, value: Number, ring=None, **kwargs) -> None:
         """Set the variable value
 
         Args:
             value:  New value to be applied on the variable
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
         """
         if value < self.bounds[0] or value > self.bounds[1]:
             raise ValueError(f"set value must be in {self.bounds}")
-        self._setfun(value, **kwargs)
+        self._setfun(value, ring=ring, **kwargs)
+        if self._initial is None:
+            self._initial = value
         self._history.append(value)
 
-    def get(self, initial=False, **kwargs) -> Number:
+    def get(self, initial=False, ring=None, **kwargs) -> Number:
         """Get the actual variable value
 
         Args:
-            initial:    If :py:obj:`True`, set the variable initial value
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to get the variable value.
 
         Returns:
             value:      Value of the variable
         """
-        value = self._getfun(**kwargs)
+        value = self._getfun(ring=ring, **kwargs)
         if initial:
-            self._history = [value]
+            self._initial = value
+            self._history = deque([value], self.history_length)
+        elif self._initial is None:
+            self._initial = value
         return value
 
     @property
@@ -204,44 +223,70 @@ class Variable(abc.ABC):
     def value(self, value: Number):
         self.set(value)
 
-    def set_previous(self, **kwargs) -> None:
-        """Reset to the value before the last one"""
-        if len(self._history) > 1:
+    def set_previous(self, ring=None, **kwargs) -> None:
+        """Reset to the value before the last one
+
+        Keyword Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
+        try:
             self._history.pop()  # Remove the last value
             prev = self._history.pop()  # retrieve the previous value
-            self.set(prev, **kwargs)
+        except IndexError as exc:
+            exc.args = (f"{self.name}: history too short",)
+            raise
         else:
-            raise IndexError(f"{self.name}: history too short")
+            self.set(prev, ring=ring, **kwargs)
 
-    def set_initial(self, **kwargs) -> None:
-        """Reset to the initial value"""
-        if len(self._history) > 0:
-            iniv = self._history[0]
-            self._history = []
-            self.set(iniv, **kwargs)
+    def reset(self, ring=None, **kwargs) -> None:
+        """Reset to the initial value
+
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to reset the variable.
+        """
+        iniv = self._initial
+        if iniv is not None:
+            self._history = deque([], self.history_length)
+            self.set(iniv, ring=ring, **kwargs)
         else:
-            raise IndexError(f"{self.name}: No value has been set yet")
+            raise IndexError(f"reset {self.name}: No value has been set yet")
 
-    def increment(self, incr: Number, **kwargs) -> None:
+    def increment(self, incr: Number, ring=None, **kwargs) -> None:
         """Increment the variable value
 
         Args:
             incr:   Increment value
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to increment the variable.
         """
         if len(self._history) == 0:
             self.get(initial=True, **kwargs)
-        self.set(self.last_value + incr, **kwargs)
+        self.set(self.last_value + incr, ring=ring, **kwargs)
 
-    def _step(self, step: Number, **kwargs) -> None:
-        self.set(self.initial_value + step, **kwargs)
+    def _step(self, step: Number, ring=None, **kwargs) -> None:
+        if self._initial is None:
+            self.get(initial=True, **kwargs)
+        self.set(self._initial + step, ring=ring, **kwargs)
 
-    def step_up(self, **kwargs) -> None:
-        """Set to initial_value + delta"""
-        self._step(self.delta, **kwargs)
+    def step_up(self, ring=None, **kwargs) -> None:
+        """Set to initial_value + delta
 
-    def step_down(self, **kwargs) -> None:
-        """Set to initial_value - delta"""
-        self._step(-self.delta, **kwargs)
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
+        self._step(self.delta, ring=ring, **kwargs)
+
+    def step_down(self, ring=None, **kwargs) -> None:
+        """Set to initial_value - delta
+
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
+        self._step(-self.delta, ring=ring, **kwargs)
 
     @staticmethod
     def _header():
@@ -252,10 +297,10 @@ class Variable(abc.ABC):
     def _line(self, ring=None):
         if ring is not None:
             vnow = self.get(ring)
-            vini = self._history[0]
+            vini = self._initial
         elif len(self._history) > 0:
             vnow = self._history[-1]
-            vini = self._history[0]
+            vini = self._initial
         else:
             vnow = vini = np.nan
 
@@ -327,11 +372,11 @@ class CustomVariable(Variable):
         self.args = args
         self.kwargs = kwargs
 
-    def _getfun(self, ring=None) -> Number:
-        return self.getfun(*self.args, ring=ring, **self.kwargs)
+    def _getfun(self, **kwargs) -> Number:
+        return self.getfun(*self.args, **self.kwargs)
 
-    def _setfun(self, value: Number, ring=None):
-        self.setfun(value, *self.args, ring=ring, **self.kwargs)
+    def _setfun(self, value: Number, **kwargs):
+        self.setfun(value, *self.args, **self.kwargs)
 
 
 class VariableList(list):
