@@ -94,7 +94,7 @@ else:
         raise RuntimeError('CUDA_PATH environement variable not defined')
     if sys.platform.startswith('win'):
         cuda_cppflags = ['-I' + cuda_path + '\\include']
-        cuda_lflags = ['/LIBPATH:'+cuda_path+'\\lib\\x64', "cudart.lib", "nvrtc.lib"]
+        cuda_lflags = ['/LIBPATH:'+cuda_path+'\\lib\\x64', "cuda.lib", "cudart.lib", "nvrtc.lib"]
     else:
         cuda_cppflags = ['-I' + cuda_path + '/include' + ' -DPYAT']
         cuda_lflags = ['-L' + cuda_path + '/lib64', '-Wl,-rpath,' + cuda_path + '/lib64', '-lcudart', '-lnvrtc']
@@ -187,6 +187,7 @@ cudaext = Extension(
              join('atgpu', 'IdentityPass.cpp'),
              join('atgpu', 'DriftPass.cpp'),
              join('atgpu', 'StrMPoleSymplectic4Pass.cpp'),
+             join('atgpu', 'BndMPoleSymplectic4Pass.cpp'),
              ],
     define_macros=macros + mpi_macros,
     extra_compile_args=cppflags + cuda_cppflags,
@@ -195,7 +196,7 @@ cudaext = Extension(
 
 setup(
     ext_modules=[at, cconfig, diffmatrix] +
-                [cudaext] if cuda else [] +
+                ([cudaext] if cuda else []) +
                 [c_integrator_ext(pm) for pm in c_pass_methods] +
                 [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )

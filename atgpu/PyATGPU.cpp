@@ -150,6 +150,34 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     return nullptr;
   }
 
+  if (PyArray_DIM(rin,0) != 6) {
+    return PyErr_Format(PyExc_ValueError, "rin is not 6D");
+  }
+  if (PyArray_TYPE(rin) != NPY_DOUBLE) {
+    return PyErr_Format(PyExc_ValueError, "rin is not a double array");
+  }
+  if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+    return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
+  }
+
+  /*
+  num_particles = (PyArray_SIZE(rin)/6);
+  np6 = num_particles*6;
+  drin = PyArray_DATA(rin);
+
+  if (refs) {
+    if (PyArray_TYPE(refs) != NPY_UINT32) {
+      return PyErr_Format(PyExc_ValueError, "refpts is not a uint32 array");
+    }
+    refpts = PyArray_DATA(refs);
+    num_refpts = PyArray_SIZE(refs);
+  }
+  else {
+    refpts = NULL;
+    num_refpts = 0;
+  }
+  */
+
   size_t i;
   string code;
   // Default symplectic integrator 4th order (Forest/Ruth)
@@ -159,14 +187,14 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     PyInterface *pyI = (PyInterface *) AbstractInterface::getInstance();
     size_t nElements = PyList_Size(lattice);
-    Lattice *l = new Lattice(integrator);
+    Lattice *l = new Lattice(integrator,0);
     for (i = 0; i < nElements; i++) {
       PyObject *elem = PyList_GET_ITEM(lattice, i);
       pyI->setObject(elem);
       l->addElement();
     }
-    l->generateGPUKernel(code);
-    AbstractGPU::getInstance()->run(code);
+    //TODO
+    //l->run();
 
   } catch (string& errStr) {
     string err =  "at_gpupass() failed: " + errStr;

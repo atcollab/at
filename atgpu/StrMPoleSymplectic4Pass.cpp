@@ -64,7 +64,7 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
 
 uint64_t StrMPoleSymplectic4Pass::getMemorySize() {
 
-  uint64_t sum = 0;
+  uint64_t sum = IdentityPass::getMemorySize();
   if(PolynomA) sum += (elemData.MaxOrder + 1) * sizeof(AT_FLOAT);
   if(PolynomB) sum += (elemData.MaxOrder + 1) * sizeof(AT_FLOAT);
   if(KickAngle) sum += 2 * sizeof(AT_FLOAT);
@@ -73,19 +73,20 @@ uint64_t StrMPoleSymplectic4Pass::getMemorySize() {
 
 }
 
-void StrMPoleSymplectic4Pass::fillGPUMemory(void *deviceMem) {
+void StrMPoleSymplectic4Pass::fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) {
 
-  AbstractGPU *gpu = AbstractGPU::getInstance();
-  AT_FLOAT *dest = (AT_FLOAT *)deviceMem;
+  uint64_t privSize = IdentityPass::getMemorySize();
+  unsigned char *privPtr = (unsigned char *)privateMem;
+  AT_FLOAT *dest = (AT_FLOAT *)(privPtr + privSize);
 
   if(PolynomA) {
     elemData.PolynomA = dest;
-    gpu->hostToDevice(dest,PolynomA,6*6*sizeof(AT_FLOAT));
+    gpu->hostToDevice(dest,PolynomA,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
     dest += (elemData.MaxOrder + 1);
   }
   if(PolynomB) {
     elemData.PolynomB = dest;
-    gpu->hostToDevice(dest,PolynomB,6*6*sizeof(AT_FLOAT));
+    gpu->hostToDevice(dest,PolynomB,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
     dest += (elemData.MaxOrder + 1);
   }
   if(KickAngle) {
@@ -98,6 +99,8 @@ void StrMPoleSymplectic4Pass::fillGPUMemory(void *deviceMem) {
   gpu->hostToDevice(dest,NormD,integrator.nbCoefficients * sizeof(AT_FLOAT));
   elemData.NormK = dest + integrator.nbCoefficients;
   gpu->hostToDevice(dest,NormK,integrator.nbCoefficients * sizeof(AT_FLOAT));
+
+  IdentityPass::fillGPUMemory(gpu,elemMem,privateMem);
 
 }
 

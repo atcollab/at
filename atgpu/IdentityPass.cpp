@@ -6,7 +6,7 @@
 using namespace std;
 
 IdentityPass::IdentityPass() noexcept {
-  memset(&elemData,0,sizeof(elemData));
+  memset(&elemData,0,sizeof(ELEMENT));
 }
 
 IdentityPass::~IdentityPass() noexcept {
@@ -53,10 +53,9 @@ uint64_t IdentityPass::getMemorySize() {
 }
 
 // Fill device memory
-void IdentityPass::fillGPUMemory(void *deviceMem) {
+void IdentityPass::fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) {
 
-  AbstractGPU *gpu = AbstractGPU::getInstance();
-  AT_FLOAT *dest = (AT_FLOAT *)deviceMem;
+  AT_FLOAT *dest = (AT_FLOAT *)privateMem;
 
   if(R1) {
     elemData.R1 = dest;
@@ -85,9 +84,11 @@ void IdentityPass::fillGPUMemory(void *deviceMem) {
   }
   if(RApertures) {
     elemData.RApertures = (AT_FLOAT *)dest;
-    gpu->hostToDevice(dest,EApertures,4*sizeof(AT_FLOAT));
+    gpu->hostToDevice(dest,RApertures,4*sizeof(AT_FLOAT));
     dest += 4;
   }
+
+  gpu->hostToDevice(elemMem,&elemData,sizeof(ELEMENT));
 
 }
 

@@ -8,12 +8,12 @@ public:
 
   // Construct an identity pass
   IdentityPass() noexcept;
-  virtual ~IdentityPass() noexcept;
+  ~IdentityPass() noexcept override;
 
   // Retrieve parameters from upper layer (Python, Matlab)
-  virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);
-  virtual uint64_t getMemorySize();
-  virtual void fillGPUMemory(void *deviceMem);
+  void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
+  uint64_t getMemorySize() override;
+  void fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) override;
 
   // GPU code generation
   static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info) noexcept;

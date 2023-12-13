@@ -1,7 +1,6 @@
 #include "Lattice.h"
-#include "AbstractGPU.h"
-#include "PassMethodFactory.h"
 #include <iostream>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -11,13 +10,17 @@ const string header = {
 #include "element.gpuh"
 };
 
-Lattice::Lattice(SymplecticIntegrator& integrator) : factory(PassMethodFactory(integrator)) {
-
+Lattice::Lattice(SymplecticIntegrator& integrator,int gpuId) : factory(PassMethodFactory(integrator)) {
+  lost = nullptr;
+  gpu = AbstractGPU::getInstance()->createContext(gpuId);
 }
 
 Lattice::~Lattice() {
-  for(size_t i=0;i<elements.size();i++)
-    delete elements[i];
+  for(auto & element : elements)
+    delete element;
+  gpu->freeDevice(gpuRing);
+  delete gpu;
+  delete[] lost;
 }
 
 void Lattice::addElement() {
@@ -29,13 +32,29 @@ void Lattice::addElement() {
 }
 
 
-void Lattice::generateGPUKernel(std::string& code) {
+void Lattice::generateGPUKernel(std::string& code,bool doRout) {
+
+  time_t t0,t1;
+  t0=get_ticks();
 
   code.append(header);
   AbstractGPU::getInstance()->addUtilsFunctions(code);
+  factory.generateUtilsFunctions(code);
   factory.generatePassMethods(code);
 
-  // GPU entering method
+  // Store particle coordinates in rout
+  string routCode;
+  routCode.append("    refIdx = refpts[elem];\n");
+  routCode.append("    if(refIdx>=0) {\n");
+  routCode.append("      _rout[6 * (refIdx*nbPart) +  0] = r6[0];\n");
+  routCode.append("      _rout[6 * (refIdx*nbPart) +  1] = r6[1];\n");
+  routCode.append("      _rout[6 * (refIdx*nbPart) +  2] = r6[2];\n");
+  routCode.append("      _rout[6 * (refIdx*nbPart) +  3] = r6[3];\n");
+  routCode.append("      _rout[6 * (refIdx*nbPart) +  4] = r6[4];\n");
+  routCode.append("      _rout[6 * (refIdx*nbPart) +  5] = r6[5];\n");
+  routCode.append("    }\n");
+
+  // GPU main track function
   code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,AT_FLOAT* rin,AT_FLOAT* rout,\n"
               "                      uint32_t* lost,uint32_t turn,uint32_t nbPart,uint32_t *refpts,uint32_t nbRef) {\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
@@ -55,22 +74,24 @@ void Lattice::generateGPUKernel(std::string& code) {
   // Loop over elements
   code.append("  ELEMENT* elemPtr = gpuRing;\n");
   code.append("  uint32_t rCount = 0;\n");
-  code.append("  for(uint32_t elem = 0; elem < nbElement; elem++) {\n");
-  code.append("    int32_t ref = refpts[elem];\n");
-  code.append("    if(ref>=0) {\n");
-  code.append("      _rout[6 * (rCount*nbPart) +  0] = r6[0];\n");
-  code.append("      _rout[6 * (rCount*nbPart) +  1] = r6[1];\n");
-  code.append("      _rout[6 * (rCount*nbPart) +  2] = r6[2];\n");
-  code.append("      _rout[6 * (rCount*nbPart) +  3] = r6[3];\n");
-  code.append("      _rout[6 * (rCount*nbPart) +  4] = r6[4];\n");
-  code.append("      _rout[6 * (rCount*nbPart) +  5] = r6[5];\n");
-  code.append("      rCount++;\n");
-  code.append("    }\n");
+  code.append("  uint32_t refIdx = 0;\n");
+  code.append("  uint32_t elem = 0;\n");
+  code.append("  for(elem = 0; elem < nbElement; elem++) {\n");
+  if(doRout) code.append(routCode);
   code.append("    switch(elemPtr->Type) {\n");
   factory.generatePassMethodsCalls(code);
   code.append("    }\n");
   code.append("    elemPtr++;\n");
   code.append("  }\n");
+  if(doRout) code.append(routCode);
+
+  // Copy back particle coordinate to global mem
+  code.append("  _r6[0] = sr6[0 + threadIdx.x * 6];\n");
+  code.append("  _r6[1] = sr6[1 + threadIdx.x * 6];\n");
+  code.append("  _r6[2] = sr6[2 + threadIdx.x * 6];\n");
+  code.append("  _r6[3] = sr6[3 + threadIdx.x * 6];\n");
+  code.append("  _r6[4] = sr6[4 + threadIdx.x * 6];\n");
+  code.append("  _r6[5] = sr6[5 + threadIdx.x * 6];\n");
 
   // Particle lost check
   code.append("  bool pLost = !isfinite(_r6[0]) ||\n");
@@ -93,5 +114,71 @@ void Lattice::generateGPUKernel(std::string& code) {
   code.append("  }\n");
 
   code.append("}\n");
+
+  gpu->compile(code);
+
+  t1=get_ticks();
+  cout << "Code generation: " << (t1-t0) << "ms" << endl;
+
+}
+
+void Lattice::fillGPUMemory() {
+
+  // Get total memory size
+  uint64_t elemSize = elements.size() * sizeof( ELEMENT );
+  uint64_t size = elemSize;
+  for(auto & element : elements)
+    size += element->getMemorySize();
+
+  // Allocate
+  gpu->allocDevice(&gpuRing, size, false);
+
+  // Copy element data
+  unsigned char *memPtr = (unsigned char *)gpuRing;
+  unsigned char *privPtr = (unsigned char *)gpuRing + elemSize;
+  for(auto & element : elements) {
+    element->fillGPUMemory(gpu, memPtr, privPtr);
+    memPtr += sizeof( ELEMENT );
+    privPtr += element->getMemorySize();
+  }
+
+}
+
+time_t Lattice::get_ticks() {
+
+  static time_t tickStart = -1;
+  if (tickStart < 0)
+    tickStart = time(NULL);
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return ((tv.tv_sec - tickStart) * 1000 + tv.tv_usec / 1000);
+
+}
+
+void Lattice::run(uint32_t nTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts) {
+
+
+  // Copy rin to gpu mem
+  void *gpuRin;
+  gpu->allocDevice(&gpuRin, nbParticles * 6 * sizeof(AT_FLOAT), false);
+  gpu->hostToDevice(gpuRin, rin, nbParticles * 6 * sizeof(AT_FLOAT));
+
+  // Expanded ref index
+  int32_t expandedRefPts[elements.size()+1];
+  for(int i=0;i<elements.size();i++)
+    expandedRefPts[i] = -1;
+  for(int i=0;i<nbRef;i++)
+    expandedRefPts[refPts[i]] = (int32_t)refPts[i];
+  void *gpuRefs;
+  gpu->allocDevice(&gpuRefs, (elements.size() + 1) * sizeof(int32_t),false);
+  gpu->hostToDevice(gpuRefs, expandedRefPts, (elements.size() + 1) * sizeof(int32_t));
+
+  // Lost flags
+  delete[] lost;
+  lost = new uint32_t[nbParticles];
+  void *gpuLost;
+  gpu->allocDevice(&gpuLost, (elements.size() + 1) * sizeof(int32_t), true);
+
 
 }

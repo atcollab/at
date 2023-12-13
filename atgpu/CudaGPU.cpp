@@ -4,26 +4,113 @@
 #include <iostream>
 
 using namespace std;
+// -----------------------------------------------------------------------------------------------------------------
 
-#define cudaCall(funcName,...) funcName(__VA_ARGS__);cudaCheckCall(#funcName);
-#define nvrtcCall(funcName,...) funcName(__VA_ARGS__);nvrtcCheckCall(#funcName);
+#define cudaCall(funcName,...) funcName(__VA_ARGS__);CudaGPU::cudaCheckCall(#funcName);
+#define nvrtcCall(funcName,...) funcName(__VA_ARGS__);CudaGPU::nvrtcCheckCall(#funcName);
 
-CudaGPU::CudaGPU() {
+CudaContext::CudaContext(int devId) noexcept: devId(devId)  {
+  context = nullptr;
+  module = nullptr;
+  kernel = nullptr;
+}
+
+CudaContext::~CudaContext() {
+  cudaCall(cudaSetDevice,devId);
+  if(module) cuModuleUnload(module);
+  if(context) cuCtxDestroy(context);
+}
+
+void CudaContext::hostToDevice(void *dest,void *src,size_t size) {
+  cudaCall(cudaSetDevice,devId);
+  cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyHostToDevice);
+}
+
+void CudaContext::allocDevice(void **dest,size_t size,bool initZero) {
+  cudaCall(cudaSetDevice,devId);
+  cudaCall(cudaMalloc,dest,size);
+  if(initZero) {
+    cudaCall(cudaMemset,*dest,0,size);
+  }
+}
+
+void CudaContext::freeDevice(void *dest) {
+  cudaCall(cudaSetDevice,devId);
+  cudaCall(cudaFree,dest);
+}
+
+void CudaContext::compile(string& code) {
+
+  // Create the program
+  nvrtcProgram prog;
+  nvrtcCall(nvrtcCreateProgram,
+            &prog,         // prog
+            code.c_str(),  // buffer
+            "track.cu",    // name
+            0,             // numHeaders
+            nullptr,       // headers
+            nullptr);      // includeNames
+
+  // Compile the program with fmad disabled.
+  // Note: Can specify GPU target architecture explicitly with '-arch' flag.
+  const char *opts[] = {"--gpu-architecture=compute_61"};
+  nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
+                                                  1,     // numOptions
+                                                  opts); // options
+  if (compileResult != NVRTC_SUCCESS) {
+
+    AbstractGPU::outputCode(code);
+
+    // Obtain compilation log from the program.
+    size_t logSize;
+    nvrtcCall(nvrtcGetProgramLogSize,prog, &logSize);
+    char *log = new char[logSize];
+    nvrtcCall(nvrtcGetProgramLog,prog, log);
+    std::cout << log << '\n';
+    delete[] log;
+
+    nvrtcDestroyProgram(&prog);
+    string errStr = "nvrtcCompileProgram failed: " + string(nvrtcGetErrorString(compileResult));
+    throw(errStr);
+
+  }
+
+  // Obtain PTX from the program.
+  size_t ptxSize;
+  nvrtcCall(nvrtcGetPTXSize,prog, &ptxSize);
+  char *ptx = new char[ptxSize];
+  nvrtcCall(nvrtcGetPTX,prog, ptx);
+  // Destroy the program.
+  nvrtcCall(nvrtcDestroyProgram,&prog);
+
+  // Load the generated PTX and get a handle to the SAXPY kernel.
+  CUdevice cuDevice;
+  cudaCall(cuInit,0);
+  cudaCall(cuDeviceGet,&cuDevice, 0);
+  cudaCall(cuCtxCreate,&context, 0, cuDevice);
+  cudaCall(cuModuleLoadDataEx,&module, ptx, 0, nullptr, nullptr);
+  cudaCall(cuModuleGetFunction,&kernel, module, "track");
 
 }
 
-// Copy from host to device
-void CudaGPU::hostToDevice(void *dest,void *src,size_t size) {
-  cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyHostToDevice);
+void CudaContext::addArg(size_t argSize,void *value) {
+
+}
+
+void CudaContext::run() {
+
+}
+
+// -----------------------------------------------------------------------------------------------------------------
+
+CudaGPU::CudaGPU() = default;
+
+GPUContext *CudaGPU::createContext(int devId) {
+  return new CudaContext(devId);
 }
 
 void CudaGPU::getDeviceFunctionQualifier(std::string& ftype) {
   ftype.assign("__device__");
-}
-
-// Allocate device memory
-void CudaGPU::allocDevice(void **dest,size_t size) {
-  cudaCall(cudaMalloc,dest,size);
 }
 
 // Return number of stream processors
@@ -74,6 +161,7 @@ static int _ConvertSMVer2Cores(int major,int minor) {
 
 }
 
+
 // Check error and throw exception in case of failure
 void CudaGPU::cudaCheckCall(const char *funcName) {
 
@@ -103,7 +191,6 @@ std::vector<GPU_INFO> CudaGPU::getDeviceList() {
   cudaCall(cudaGetDeviceCount,&deviceCount);
 
   for(int i=0;i< deviceCount;i++) {
-
     cudaDeviceProp deviceProp;
     cudaCall(cudaGetDeviceProperties,&deviceProp,i);
     GPU_INFO info;
@@ -117,62 +204,4 @@ std::vector<GPU_INFO> CudaGPU::getDeviceList() {
 
 }
 
-void CudaGPU::run(string& code) {
-
-  // Create the program
-  nvrtcProgram prog;
-  nvrtcCall(nvrtcCreateProgram,
-                     &prog,         // prog
-                     code.c_str(),  // buffer
-                     "track.cu",    // name
-                     0,             // numHeaders
-                     nullptr,       // headers
-                     nullptr);      // includeNames
-
-  // Compile the program with fmad disabled.
-  // Note: Can specify GPU target architecture explicitly with '-arch' flag.
-  const char *opts[] = {"--gpu-architecture=compute_61"};
-  nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
-                                                  1,     // numOptions
-                                                  opts); // options
-  if (compileResult != NVRTC_SUCCESS) {
-
-    outputCode(code);
-
-    // Obtain compilation log from the program.
-    size_t logSize;
-    nvrtcCall(nvrtcGetProgramLogSize,prog, &logSize);
-    char *log = new char[logSize];
-    nvrtcCall(nvrtcGetProgramLog,prog, log);
-    std::cout << log << '\n';
-    delete[] log;
-
-    nvrtcDestroyProgram(&prog);
-    string errStr = "nvrtcCompileProgram failed: " + string(nvrtcGetErrorString(compileResult));
-    throw(errStr);
-
-  }
-
-  /*
-
-  // Obtain PTX from the program.
-  size_t ptxSize;
-  NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize));
-  char *ptx = new char[ptxSize];
-  NVRTC_SAFE_CALL(nvrtcGetPTX(prog, ptx));
-  // Destroy the program.
-  NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog));
-  // Load the generated PTX and get a handle to the SAXPY kernel.
-  CUdevice cuDevice;
-  CUcontext context;
-  CUmodule module;
-  CUfunction kernel;
-  CUDA_SAFE_CALL(cuInit(0));
-  CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
-  CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice));
-  CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
-  CUDA_SAFE_CALL(cuModuleGetFunction(&kernel, module, "track"));
-  */
-
-}
 
