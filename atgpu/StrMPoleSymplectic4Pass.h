@@ -6,9 +6,9 @@
 class StrMPoleSymplectic4Pass: public IdentityPass {
 
 public:
-  // Construct a drift pass
+  // Construct a MPole pass
   StrMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept;
-  ~StrMPoleSymplectic4Pass() noexcept;
+  virtual ~StrMPoleSymplectic4Pass() noexcept;
 
   // Retrieve parameters from upper layer (Python, Matlab)
   virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);
@@ -31,6 +31,11 @@ private:
   AT_FLOAT *PolynomA;  // PolynomA
   AT_FLOAT *PolynomB;  // PolynomB
   AT_FLOAT *KickAngle; // KickAngle
+
+  bool isQuadrupole();
+  bool isSextupole();
+  bool isOctupole();
+  static void generateIntegrator(std::string& code, int subType, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept;
 
 };
 

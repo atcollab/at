@@ -32,6 +32,7 @@ typedef double AT_FLOAT;
 typedef struct STRUCT_ALIGN(16) {
 
   uint32_t  Type;
+  uint32_t  SubType;
   uint32_t  NumIntSteps;
   AT_FLOAT  SL;
   AT_FLOAT  Length;
@@ -42,33 +43,26 @@ typedef struct STRUCT_ALIGN(16) {
   AT_FLOAT  *EApertures;
   AT_FLOAT  *RApertures;
 
+  // StrMPole
   uint32_t  MaxOrder;
   AT_FLOAT  *PolynomA;
   AT_FLOAT  *PolynomB;
   AT_FLOAT  *NormD;
   AT_FLOAT  *NormK;
   AT_FLOAT  *KickAngle;
-
   uint32_t  FringeQuadEntrance;
   uint32_t  FringeQuadExit;
 
-  /*
+  // BndMPole
   AT_FLOAT  irho;
-  uint32_t  doFringe;
   uint32_t  FringeBendEntrance; // Method: 1 legacy 2 Soleil 3 ThomX
-  AT_FLOAT  EntranceAngle;      // Geometrical edge entrance angle
-  AT_FLOAT  FringeInt1;
-  AT_FLOAT  tgEntranceAngle;
-
-  uint32_t  FringeBendExit;     // Method: 1 legacy 2 Soleil 3 ThomX
-  AT_FLOAT  ExitAngle;          // Geometrical edge exit angle
-  AT_FLOAT  FringeInt2;
-  AT_FLOAT  tgExitAngle;
-
-  AT_FLOAT  FullGap;
-  AT_FLOAT  FringeIntM0[5]; // I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1
-  AT_FLOAT  FringeIntP0[5]; // I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1
-  */
+  AT_FLOAT  EntranceAngle;
+  AT_FLOAT  FringeCorrEntranceX;
+  AT_FLOAT  FringeCorrEntranceY;
+  uint32_t  FringeBendExit; // Method: 1 legacy 2 Soleil 3 ThomX
+  AT_FLOAT  ExitAngle;
+  AT_FLOAT  FringeCorrExitX;
+  AT_FLOAT  FringeCorrExitY;
 
 } ELEMENT;
 

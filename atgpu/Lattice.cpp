@@ -15,6 +15,11 @@ Lattice::Lattice(SymplecticIntegrator& integrator) : factory(PassMethodFactory(i
 
 }
 
+Lattice::~Lattice() {
+  for(size_t i=0;i<elements.size();i++)
+    delete elements[i];
+}
+
 void Lattice::addElement() {
 
   string passMethod = AbstractInterface::getInstance()->getString("PassMethod");
@@ -32,10 +37,10 @@ void Lattice::generateGPUKernel(std::string& code) {
 
   // GPU entering method
   code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,AT_FLOAT* rin,AT_FLOAT* rout,\n"
-              "                      uint32_t* lost,uint32_t turn,uint32_t nbPart,int32_t takeTurn) {\n");
+              "                      uint32_t* lost,uint32_t turn,uint32_t nbPart,uint32_t *refpts,uint32_t nbRef) {\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
   code.append("  AT_FLOAT* _r6 = rin + (6 * threadId);\n");
-  code.append("  AT_FLOAT* _rout = rout + ((uint64_t)turn * (uint64_t)nbPart * 2) + (uint64_t)(2 * threadId);\n");
+  code.append("  AT_FLOAT* _rout = rout + 6 * ((uint64_t)turn * (uint64_t)nbPart * (uint64_t)nbRef + (uint64_t)(threadId));\n");
 
   // Copy particle coordinates into fast shared mem
   code.append("  __shared__ AT_FLOAT sr6[GPU_GRID * 6];\n");
@@ -47,9 +52,20 @@ void Lattice::generateGPUKernel(std::string& code) {
   code.append("  sr6[5 + threadIdx.x * 6] = _r6[5];\n"); // c.tau (time lag)
   code.append("  AT_FLOAT* r6 = &sr6[0 + threadIdx.x * 6];\n");
 
-  // Loop over turns
+  // Loop over elements
   code.append("  ELEMENT* elemPtr = gpuRing;\n");
+  code.append("  uint32_t rCount = 0;\n");
   code.append("  for(uint32_t elem = 0; elem < nbElement; elem++) {\n");
+  code.append("    int32_t ref = refpts[elem];\n");
+  code.append("    if(ref>=0) {\n");
+  code.append("      _rout[6 * (rCount*nbPart) +  0] = r6[0];\n");
+  code.append("      _rout[6 * (rCount*nbPart) +  1] = r6[1];\n");
+  code.append("      _rout[6 * (rCount*nbPart) +  2] = r6[2];\n");
+  code.append("      _rout[6 * (rCount*nbPart) +  3] = r6[3];\n");
+  code.append("      _rout[6 * (rCount*nbPart) +  4] = r6[4];\n");
+  code.append("      _rout[6 * (rCount*nbPart) +  5] = r6[5];\n");
+  code.append("      rCount++;\n");
+  code.append("    }\n");
   code.append("    switch(elemPtr->Type) {\n");
   factory.generatePassMethodsCalls(code);
   code.append("    }\n");

@@ -10,6 +10,7 @@ class Lattice {
 public:
 
   explicit Lattice(SymplecticIntegrator& integrator);
+  ~Lattice();
 
   // Add an element in the lattice
   // (The new element comes from the current loaded object in the AbstractInterface)

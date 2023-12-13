@@ -8,6 +8,7 @@ public:
 
   // Construct an identity pass
   IdentityPass() noexcept;
+  virtual ~IdentityPass() noexcept;
 
   // Retrieve parameters from upper layer (Python, Matlab)
   virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);

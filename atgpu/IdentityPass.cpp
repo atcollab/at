@@ -1,6 +1,7 @@
 #include "IdentityPass.h"
 #include "AbstractGPU.h"
 #include <string.h>
+#include <iostream>
 
 using namespace std;
 
@@ -8,20 +9,24 @@ IdentityPass::IdentityPass() noexcept {
   memset(&elemData,0,sizeof(elemData));
 }
 
-static const vector<int64_t> SHAPE6x6 = {6,6};
-static const vector<int64_t> SHAPE6 = {6};
-static const vector<int64_t> SHAPE4 = {4};
-static const vector<int64_t> SHAPE2 = {2};
+IdentityPass::~IdentityPass() noexcept {
+  delete[] R1;
+  delete[] R2;
+  delete[] T1;
+  delete[] T2;
+  delete[] EApertures;
+  delete[] RApertures;
+}
 
 // Retrieve parameters from upper layer (Python, Matlab)
 void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
 
-  R1 = param->getOptionalDoubleArray("R1", SHAPE6x6);
-  R2 = param->getOptionalDoubleArray("R2", SHAPE6x6);
-  T1 = param->getOptionalDoubleArray("T1", SHAPE6);
-  T2 = param->getOptionalDoubleArray("T2", SHAPE6);
-  EApertures = param->getOptionalDoubleArray("EApertures", SHAPE2);
-  RApertures = param->getOptionalDoubleArray("RApertures", SHAPE4);
+  param->getOptional1DArray(&R1,"R1", 36);
+  param->getOptional1DArray(&R2,"R2", 36);
+  param->getOptional1DArray(&T1,"T1", 6);
+  param->getOptional1DArray(&T2,"T2", 6);
+  param->getOptional1DArray(&EApertures,"EApertures", 2);
+  param->getOptional1DArray(&RApertures,"RApertures", 4);
 
   elemData.Type = IDENTITY;
   info->used = true;
@@ -37,8 +42,8 @@ void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info
 uint64_t IdentityPass::getMemorySize() {
 
   uint64_t sum = 0;
-  if(R1) sum += 6*6 * sizeof(AT_FLOAT);
-  if(R2) sum += 6*6 * sizeof(AT_FLOAT);
+  if(R1) sum += 36 * sizeof(AT_FLOAT);
+  if(R2) sum += 36 * sizeof(AT_FLOAT);
   if(T1) sum += 6 * sizeof(AT_FLOAT);
   if(T2) sum += 6 * sizeof(AT_FLOAT);
   if(EApertures) sum += 2 * sizeof(AT_FLOAT);
@@ -119,7 +124,7 @@ void IdentityPass::generateExit(std::string& code, PASSMETHOD_INFO *info) noexce
   if(info->doT2) generateT(code,"T2");
 
   if( info->doEAperture || info->doRAperture )
-    code.append("  if(isLost) r6[4] = INF;\n");
+    code.append("  if(isLost) r6[5] = INF;\n");
 
 }
 

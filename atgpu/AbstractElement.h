@@ -24,6 +24,8 @@ class AbstractElement {
 
 public:
 
+  virtual ~AbstractElement() noexcept {};
+
   // Retrieve parameters from upper layer (Python, Matlab)
   virtual void getParameters(AbstractInterface *param,PASSMETHOD_INFO *info) = 0;
 

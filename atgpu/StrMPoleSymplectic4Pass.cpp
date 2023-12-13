@@ -1,5 +1,6 @@
 #include "StrMPoleSymplectic4Pass.h"
 #include "AbstractGPU.h"
+#include <iostream>
 
 using namespace std;
 
@@ -40,18 +41,6 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
   param->get1DArray(&PolynomB,"PolynomB",elemData.MaxOrder+1);
   param->getOptional1DArray(&KickAngle,"KickAngle",2);
 
-  /*
-  elemData.FringeBendEntrance = param->getOptionalInt("FringeBendEntrance",0);
-  if(elemData.FringeBendEntrance) {
-    elemData.EntranceAngle = param->getOptionalDouble("EntranceAngle", 0);
-    elemData.tgEntranceAngle = tan(elemData.EntranceAngle);
-  }
-  if(elemData.FringeBendExit) {
-    elemData.ExitAngle = param->getOptionalDouble("EntranceAngle", 0);
-    elemData.tgEntranceAngle = tan(elemData.EntranceAngle);
-  }
-  */
-
   elemData.FringeQuadEntrance = param->getOptionalInt("FringeQuadEntrance", 0);
   elemData.FringeQuadExit = param->getOptionalInt("FringeQuadExit", 0);
   if( elemData.MaxOrder>=1 && PolynomB[1]==0.0 ) {
@@ -59,6 +48,13 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
     elemData.FringeQuadEntrance = false;
     elemData.FringeQuadExit = false;
   }
+
+  if( isQuadrupole() )
+    elemData.SubType = 1;
+  else if ( isSextupole() )
+    elemData.SubType = 2;
+  else if ( isOctupole() )
+    elemData.SubType = 3;
 
   info->doQuadEnter |= (elemData.FringeQuadEntrance!=0);
   info->doQuadExit |= (elemData.FringeQuadExit!=0);
@@ -105,6 +101,21 @@ void StrMPoleSymplectic4Pass::fillGPUMemory(void *deviceMem) {
 
 }
 
+bool StrMPoleSymplectic4Pass::isQuadrupole() {
+  return elemData.MaxOrder==1 && PolynomA[1]==0.0;
+}
+
+bool StrMPoleSymplectic4Pass::isSextupole() {
+  return elemData.MaxOrder==2 && PolynomA[2]==0.0 &&
+         PolynomA[1]==0.0 && PolynomB[1]==0.0;
+}
+
+bool StrMPoleSymplectic4Pass::isOctupole() {
+  return elemData.MaxOrder==3 && PolynomA[3]==0.0 &&
+         PolynomA[2]==0.0 && PolynomB[2]==0.0 &&
+         PolynomA[1]==0.0 && PolynomB[1]==0.0;
+}
+
 void StrMPoleSymplectic4Pass::generateGPUKernel(std::string& code, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept {
 
   AbstractGPU *gpu = AbstractGPU::getInstance();
@@ -113,38 +124,36 @@ void StrMPoleSymplectic4Pass::generateGPUKernel(std::string& code, PASSMETHOD_IN
   if(!ftype.empty()) ftype.append(" ");
 
   code.append( ftype + "void StrMPoleSymplectic4Pass(AT_FLOAT* r6,ELEMENT* elem) {\n");
-  generateEnter(code,info);
-  generateApertures(code,info);
-
   code.append(
           "  AT_FLOAT p_norm = 1.0 / (1.0 + r6[4]);\n"
   );
 
-  if(info->doKickAngle) generateKickAngle(code,info);
-  if(info->doQuadEnter) generateQuadFringeEnter(code,info);
+  generateEnter(code,info);
+  generateApertures(code,info);
+  generateKickAngle(code,info);
+  generateQuadFringeEnter(code,info);
 
-
-  // Integrator loop
-  code.append(
-          "  for(int m = 0; m < elem->NumIntSteps; m++) {\n"
-  );
-
-  for(int i=0;i<integrator.nbCoefficients;i++) {
-
-    if( integrator.c[i]!=0.0 )
-      code.append("    fastdrift(r6,elem->NormD["+to_string(i)+"] * p_norm,p_norm);\n");
-    if( integrator.d[i]!=0.0 )
-      code.append("    strthinkick(r6,elem->PolynomA,elem->PolynomB,elem->NormK["+to_string(i)+"],elem->MaxOrder);\n");
-
-  }
-
+  // Generate switch/case for subtype (pure Quad,Sextu,Octu)
+  code.append("  switch(elem->SubType) {\n");
+  for(int subType=0;subType<4;subType++)
+    generateIntegrator(code,subType,info,integrator);
   code.append("  }\n");
 
-   generateQuadFringeExit(code,info);
-   generateKickAngleRestore(code,info);
+  generateQuadFringeExit(code,info);
+  generateKickAngleRestore(code,info);
   generateApertures(code,info);
   generateExit(code,info);
   code.append("}\n");
+
+}
+
+void StrMPoleSymplectic4Pass::generateIntegrator(std::string& code, int subType, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept {
+
+  // Integrator loop
+  string sTStr = to_string(subType);
+  code.append("  case " + sTStr + ":\n");
+  integrator.generateCode(code,"elem->NumIntSteps","fastdrift","strthinkick" + ((subType>0)?to_string(subType):""),"");
+  code.append("    break;\n");
 
 }
 
