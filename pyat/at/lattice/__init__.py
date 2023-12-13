@@ -16,7 +16,7 @@ from .rectangular_bend import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .lattice_object import *
-# from .element_variables import *
+# from .lattice_variables import *
 from .cavity_access import *
 from .variable_elements import *
 from .deprecated import *
