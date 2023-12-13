@@ -2,6 +2,7 @@
 #include "IdentityPass.h"
 #include "DriftPass.h"
 #include "StrMPoleSymplectic4Pass.h"
+#include "BndMPoleSymplectic4Pass.h"
 #include <string.h>
 
 using namespace std;
@@ -29,6 +30,9 @@ AbstractElement *PassMethodFactory::createElement(std::string& passMethod) {
   } else if (passMethod=="StrMPoleSymplectic4Pass") {
     elem = new StrMPoleSymplectic4Pass(integrator);
     elem->getParameters(I,&passMethodInfos[MPOLE]);
+  } else if (passMethod=="BndMPoleSymplectic4Pass") {
+    elem = new BndMPoleSymplectic4Pass(integrator);
+    elem->getParameters(I,&passMethodInfos[BEND]);
   } else {
     throw string("Not implemented PassMethod: " + passMethod);
   }
@@ -52,6 +56,10 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
   if( passMethodInfos[MPOLE].used ) {
     StrMPoleSymplectic4Pass::generateGPUKernel(code,&passMethodInfos[MPOLE],integrator);
     StrMPoleSymplectic4Pass::generateCall(callCode);
+  }
+  if( passMethodInfos[BEND].used ) {
+    BndMPoleSymplectic4Pass::generateGPUKernel(code,&passMethodInfos[BEND],integrator);
+    BndMPoleSymplectic4Pass::generateCall(callCode);
   }
 
 }

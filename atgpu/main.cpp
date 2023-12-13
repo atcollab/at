@@ -119,15 +119,10 @@ int main(int argc,char **arv) {
   I->addField("EApertures","0,0");
   elements.push_back(I);
 
-  CppElement *D1 = new CppElement();
-  D1->addField("PassMethod","DriftPass");
-  D1->addField("Length","5");
-  elements.push_back(D1);
-
-  CppElement *D2 = new CppElement();
-  D2->addField("PassMethod","DriftPass");
-  D2->addField("Length","5");
-  elements.push_back(D2);
+  CppElement *Dr1 = new CppElement();
+  Dr1->addField("PassMethod","DriftPass");
+  Dr1->addField("Length","5");
+  elements.push_back(Dr1);
 
   CppElement *Q1 = new CppElement();
   Q1->addField("PassMethod","StrMPoleSymplectic4Pass");
@@ -138,6 +133,17 @@ int main(int argc,char **arv) {
   Q1->addField("FringeQuadEntrance","1");
   Q1->addField("FringeQuadExit","1");
   elements.push_back(Q1);
+
+  CppElement *D1 = new CppElement();
+  D1->addField("PassMethod","BndMPoleSymplectic4Pass");
+  D1->addField("Length","5");
+  D1->addField("PolynomA","1,0");
+  D1->addField("PolynomB","1,0");
+  D1->addField("MaxOrder","0");
+  D1->addField("EntranceAngle","1");
+  D1->addField("ExitAngle","1");
+  D1->addField("BendingAngle","0.35");
+  elements.push_back(D1);
 
   string code;
 
@@ -151,11 +157,13 @@ int main(int argc,char **arv) {
     l->generateGPUKernel(code);
     cout << code << endl;
     AbstractGPU::getInstance()->run(code);
+    delete l;
 
   } catch (string& errStr) {
     string err =  "at_gpupass() failed: " + errStr;
     cout << "Error: " << err << endl;
   }
+
 
   return 0;
 

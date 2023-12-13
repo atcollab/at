@@ -16,6 +16,9 @@ public:
   AT_FLOAT *c; // Drift
   AT_FLOAT *d; // Kick
 
+  void generateCode(std::string& code,const std::string& count,const std::string& driftMethod,
+                    const std::string& kickMethod, const std::string& exKickParam);
+
 private:
   void allocate(int nb);
 
