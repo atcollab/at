@@ -1,52 +1,52 @@
 r"""
-Definition of :py:class:`.Variable` objects used in matching and
+Definition of :py:class:`Variable <.VariableBase>` objects used in matching and
 response matrices.
 
 See :ref:`example-notebooks` for examples of matching and response matrices.
 
-Each :py:class:`Variable` has a scalar value.
+Each :py:class:`Variable <.VariableBase>` has a scalar value.
 
 .. rubric:: Class hierarchy
 
-:py:class:`Variable`\ (name, bounds, delta)
+:py:class:`VariableBase`\ (name, bounds, delta)
 
-- :py:class:`~.element_variables.ElementVariable`\ (elements, attrname, index, ...)
-- :py:class:`~.element_variables.RefptsVariable`\ (refpts, attrname, index, ...)
+- :py:class:`~.lattice_variables.ElementVariable`\ (elements, attrname, index, ...)
+- :py:class:`~.lattice_variables.RefptsVariable`\ (refpts, attrname, index, ...)
 - :py:class:`CustomVariable`\ (setfun, getfun, ...)
 
-.. rubric:: Variable methods
+.. rubric:: VariableBase methods
 
-:py:class:`Variable` provides the following methods:
+:py:class:`VariableBase` provides the following methods:
 
-- :py:meth:`~Variable.get`
-- :py:meth:`~Variable.set`
-- :py:meth:`~Variable.set_previous`
-- :py:meth:`~Variable.reset`
-- :py:meth:`~Variable.increment`
-- :py:meth:`~Variable.step_up`
-- :py:meth:`~Variable.step_down`
+- :py:meth:`~VariableBase.get`
+- :py:meth:`~VariableBase.set`
+- :py:meth:`~VariableBase.set_previous`
+- :py:meth:`~VariableBase.reset`
+- :py:meth:`~VariableBase.increment`
+- :py:meth:`~VariableBase.step_up`
+- :py:meth:`~VariableBase.step_down`
 
-.. rubric:: Variable properties
+.. rubric:: VariableBase properties
 
-:py:class:`.Variable` provides the following properties:
+:py:class:`.VariableBase` provides the following properties:
 
-- :py:attr:`~Variable.initial_value`
-- :py:attr:`~Variable.last_value`
-- :py:attr:`~Variable.previous_value`
-- :py:attr:`~Variable.history`
+- :py:attr:`~VariableBase.initial_value`
+- :py:attr:`~VariableBase.last_value`
+- :py:attr:`~VariableBase.previous_value`
+- :py:attr:`~VariableBase.history`
 
-The :py:class:`Variable` abstract class may be used as a base class to define
+The :py:class:`VariableBase` abstract class may be used as a base class to define
 custom variables (see examples). Typically, this consist in overloading the abstract
 methods *_setfun* and *_getfun*
 
 .. rubric:: Examples
 
-Write a subclass of :py:class:`Variable` which varies two drift lengths so
+Write a subclass of :py:class:`VariableBase` which varies two drift lengths so
 that their sum is constant:
 
 .. code-block:: python
 
-    class ElementShifter(at.Variable):
+    class ElementShifter(at.VariableBase):
         '''Varies the length of the elements identified by *ref1* and *ref2*
         keeping the sum of their lengths equal to *total_length*.
 
@@ -88,7 +88,7 @@ from collections import deque
 from collections.abc import Iterable, Sequence, Callable
 
 __all__ = [
-    "Variable",
+    "VariableBase",
     "CustomVariable",
     "VariableList",
 ]
@@ -98,11 +98,11 @@ def _nop(value):
     return value
 
 
-class Variable(abc.ABC):
-    """A :py:class:`Variable` abstract base class
+class VariableBase(abc.ABC):
+    """A Variable abstract base class
 
-    Derived classes must implement the :py:meth:`_getfun` and
-    :py:meth:`_getfun` methods
+    Derived classes must implement the :py:meth:`~VariableBase._getfun` and
+    :py:meth:`~VariableBase._getfun` methods
     """
 
     _counter = 0
@@ -329,8 +329,8 @@ class Variable(abc.ABC):
         return repr(self.value)
 
 
-class CustomVariable(Variable):
-    r"""A :py:class:`.Variable` with user-defined get and set functions
+class CustomVariable(VariableBase):
+    r"""A Variable with user-defined get and set functions
 
     This is a convenience function allowing user-defined *get* and *set*
     functions. But subclassing :py:class:`.Variable` should always be preferred
@@ -380,17 +380,17 @@ class CustomVariable(Variable):
 
 
 class VariableList(list):
-    """Container for :py:class:`Variable` objects
+    """Container for Variable objects
 
     :py:class:`VariableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
     """
 
     def get(self, initial=False, **kwargs) -> Sequence[float]:
-        r"""Get the current :py:class:`Variable`\ s' values
+        r"""Get the current values of Variables
 
         Args:
-            initial:    If :py:obj:`True`, set the :py:class:`Variable`\ s'
+            initial:    If :py:obj:`True`, set the Variables'
               initial value
 
         Returns:
@@ -399,7 +399,7 @@ class VariableList(list):
         return np.array([var.get(initial=initial, **kwargs) for var in self])
 
     def set(self, values: Iterable[float], **kwargs) -> None:
-        r"""Set the :py:class:`Variable`\ s' values
+        r"""Set the values of Variables
 
         Args:
             values:     Iterable of values
@@ -408,7 +408,7 @@ class VariableList(list):
             var.set(val, **kwargs)
 
     def increment(self, increment: Iterable[float], **kwargs) -> None:
-        r"""Increment the :py:class:`Variable`\ s' values
+        r"""Increment the values of Variables
 
         Args:
             increment:  Iterable of values
@@ -420,7 +420,7 @@ class VariableList(list):
     def status(self, **kwargs) -> str:
         """String description of the variables"""
         values = "\n".join(var._line(**kwargs) for var in self)
-        return "\n".join((Variable._header(), values))
+        return "\n".join((VariableBase._header(), values))
 
     def __str__(self) -> str:
         return self.status()

@@ -16,12 +16,12 @@ import numpy as np
 from .utils import Refpts, getval, setval
 from .elements import Element
 from .lattice_object import Lattice
-from .variables import Variable
+from .variables import VariableBase
 
 __all__ = ["RefptsVariable", "ElementVariable"]
 
 
-class RefptsVariable(Variable):
+class RefptsVariable(VariableBase):
     r"""A reference to a scalar attribute of :py:class:`.Lattice` elements.
 
     It can refer to:
@@ -72,7 +72,7 @@ class RefptsVariable(Variable):
         return np.average(values)
 
 
-class ElementVariable(Variable):
+class ElementVariable(VariableBase):
     r"""A reference to a scalar attribute of :py:class:`.Lattice` elements.
 
     It can refer to:
