@@ -6,11 +6,11 @@ class BndMPoleSymplectic4Pass: public StrMPoleSymplectic4Pass {
 
 public:
   // Construct a BendMPole pass
-  BndMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept;
-  ~BndMPoleSymplectic4Pass() noexcept;
+  explicit BndMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept;
+  ~BndMPoleSymplectic4Pass() noexcept override;
 
   // Retrieve parameters from upper layer (Python, Matlab)
-  virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);
+  void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
 
   // GPU code generation
   static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept;

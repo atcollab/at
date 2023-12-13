@@ -3,6 +3,7 @@
 #include <string>
 #include "Element.h"
 #include "AbstractInterface.h"
+#include "AbstractGPU.h"
 
 typedef struct {
   bool used;          // Is pass method used ?
@@ -24,16 +25,16 @@ class AbstractElement {
 
 public:
 
-  virtual ~AbstractElement() noexcept {};
+  virtual ~AbstractElement() noexcept = default;
 
   // Retrieve parameters from upper layer (Python, Matlab)
   virtual void getParameters(AbstractInterface *param,PASSMETHOD_INFO *info) = 0;
 
-  // Get needed memory
+  // Get needed memory (ELEMENT not included)
   virtual uint64_t getMemorySize() = 0;
 
   // Fill device memory
-  virtual void fillGPUMemory(void *deviceMem) = 0;
+  virtual void fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) = 0;
 
 };
 

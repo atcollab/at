@@ -147,22 +147,22 @@ int main(int argc,char **arv) {
 
   string code;
 
-  try {
+  //try {
 
-    Lattice *l = new Lattice(integrator);
+    Lattice *l = new Lattice(integrator,0);
     for(auto & element : elements) {
       dI->setObject(element);
       l->addElement();
     }
-    l->generateGPUKernel(code);
+    l->generateGPUKernel(code,true);
     cout << code << endl;
-    AbstractGPU::getInstance()->run(code);
+    l->fillGPUMemory();
     delete l;
 
-  } catch (string& errStr) {
-    string err =  "at_gpupass() failed: " + errStr;
-    cout << "Error: " << err << endl;
-  }
+  //} catch (string& errStr) {
+  //  string err =  "at_gpupass() failed: " + errStr;
+  //  cout << "Error: " << err << endl;
+  //}
 
 
   return 0;

@@ -7,13 +7,13 @@ class StrMPoleSymplectic4Pass: public IdentityPass {
 
 public:
   // Construct a MPole pass
-  StrMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept;
-  virtual ~StrMPoleSymplectic4Pass() noexcept;
+  explicit StrMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept;
+  ~StrMPoleSymplectic4Pass() noexcept override;
 
   // Retrieve parameters from upper layer (Python, Matlab)
-  virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);
-  virtual uint64_t getMemorySize();
-  virtual void fillGPUMemory(void *deviceMem);
+  void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
+  uint64_t getMemorySize() override;
+  void fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) override;
 
   // GPU code generation
   static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept;

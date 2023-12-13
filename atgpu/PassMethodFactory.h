@@ -22,6 +22,9 @@ public:
   // Generate pass method call code
   void generatePassMethodsCalls(std::string& code);
 
+  // Generate utils code
+  void generateUtilsFunctions(std::string& code);
+
 private:
 
   SymplecticIntegrator& integrator;

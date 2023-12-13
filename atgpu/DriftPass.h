@@ -9,7 +9,7 @@ public:
   DriftPass() noexcept;
 
   // Retrieve parameters from upper layer (Python, Matlab)
-  virtual void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info);
+  void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
 
   // GPU code generation
   static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info) noexcept;
