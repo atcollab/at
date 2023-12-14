@@ -125,8 +125,8 @@ class VariableBase(abc.ABC):
               means infinite
         """
         self.name = self._setname(name)  #: Variable name
-        self.bounds = bounds             #: Variable bounds
-        self.delta = delta               #: Increment step
+        self.bounds = bounds  #: Variable bounds
+        self.delta = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = None
@@ -146,8 +146,7 @@ class VariableBase(abc.ABC):
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, ring=None, **kwargs) -> Number:
-        ...
+    def _getfun(self, ring=None, **kwargs) -> Number: ...
 
     @property
     def history(self) -> list[Number]:
@@ -367,8 +366,9 @@ class CustomVariable(VariableBase):
               and *setfun* functions. Such arguments can always be avoided by
               using :py:func:`~functools.partial` or callable class objects.
         """
-        super().__init__(name=name, bounds=bounds, delta=delta,
-                         history_length=history_length)
+        super().__init__(
+            name=name, bounds=bounds, delta=delta, history_length=history_length
+        )
         self.getfun = getfun
         self.setfun = setfun
         self.args = args
