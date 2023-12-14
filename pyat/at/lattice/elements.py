@@ -708,8 +708,8 @@ class ThinMultipole(Element):
         """
         Args:
             family_name:    Name of the element
-            poly_a:         Array of normal multipole components
-            poly_b:         Array of skew multipole components
+            poly_a:         Array of skew multipole components
+            poly_b:         Array of normal multipole components
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
@@ -775,8 +775,8 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Args:
             family_name:    Name of the element
             length:         Element length [m]
-            poly_a:         Array of normal multipole components
-            poly_b:         Array of skew multipole components
+            poly_a:         Array of skew multipole components
+            poly_b:         Array of normal multipole components
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
@@ -857,16 +857,14 @@ class Dipole(Radiative, Multipole):
             family_name:    Name of the element
             length:         Element length [m]
             bending_angle:  Bending angle [rd]
-            poly_a:         Array of normal multipole components
-            poly_b:         Array of skew multipole components
-            k=0:            Field index
+            k:              Focusing strength [m^-2]
 
         Keyword arguments:
             EntranceAngle=0.0:  entrance angle
             ExitAngle=0.0:      exit angle
             PolynomB:           straight multipoles
             PolynomA:           skew multipoles
-            MaxOrder:           Number of desired multipoles
+            MaxOrder=0:         Number of desired multipoles
             NumIntSt=10:        Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
@@ -889,9 +887,9 @@ class Dipole(Radiative, Multipole):
             FieldScaling:       Scaling factor applied to the magnetic field
 
         Available PassMethods: :ref:`BndMPoleSymplectic4Pass`,
-                               :ref:`BendLinearPass`,
-        :ref:`ExactSectorBendPass`, :ref:`ExactRectangularBendPass`,
-        :ref:`ExactRectBendPass`, BndStrMPoleSymplectic4Pass
+        :ref:`BendLinearPass`, :ref:`ExactSectorBendPass`,
+        :ref:`ExactRectangularBendPass`, :ref:`ExactRectBendPass`,
+        BndStrMPoleSymplectic4Pass
 
         Default PassMethod: :ref:`BndMPoleSymplectic4Pass`
         """
@@ -950,12 +948,12 @@ class Quadrupole(Radiative, Multipole):
         Args:
             family_name:    Name of the element
             length:         Element length [m]
-            k:              strength [mˆ-2]
+            k:              Focusing strength [mˆ-2]
 
         Keyword Arguments:
             PolynomB:           straight multipoles
             PolynomA:           skew multipoles
-            MaxOrder:           Number of desired multipoles
+            MaxOrder=1:         Number of desired multipoles
             NumIntSteps=10:     Number of integration steps
             FringeQuadEntrance: 0: no fringe field effect (default)
 
