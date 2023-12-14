@@ -346,6 +346,7 @@ class CustomVariable(VariableBase):
         name: str = "",
         bounds: tuple[Number, Number] = (-np.inf, np.inf),
         delta: Number = 1.0,
+        history_length: int = None,
         **kwargs,
     ):
         """
@@ -366,17 +367,18 @@ class CustomVariable(VariableBase):
               and *setfun* functions. Such arguments can always be avoided by
               using :py:func:`~functools.partial` or callable class objects.
         """
-        super().__init__(name=name, bounds=bounds, delta=delta)
+        super().__init__(name=name, bounds=bounds, delta=delta,
+                         history_length=history_length)
         self.getfun = getfun
         self.setfun = setfun
         self.args = args
         self.kwargs = kwargs
 
     def _getfun(self, **kwargs) -> Number:
-        return self.getfun(*self.args, **self.kwargs)
+        return self.getfun(*self.args, **kwargs, **self.kwargs)
 
     def _setfun(self, value: Number, **kwargs):
-        self.setfun(value, *self.args, **self.kwargs)
+        self.setfun(value, *self.args, **kwargs, **self.kwargs)
 
 
 class VariableList(list):
