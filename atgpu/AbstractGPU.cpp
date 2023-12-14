@@ -1,15 +1,43 @@
 #include "CudaGPU.h"
 #include "iostream"
 
+#ifdef WIN64
+
+LARGE_INTEGER perfTickStart;
+double perfTicksPerSec;
+LARGE_INTEGER qwTicksPerSec;
+
+#else
+
+#include <sys/time.h>
+time_t tickStart;
+
+#endif
+
 using namespace std;
 
 AbstractGPU *AbstractGPU::gpuHandler = nullptr;
 
 AbstractGPU *AbstractGPU::getInstance() {
-  if( gpuHandler== nullptr )
+  if( gpuHandler== nullptr ) {
+    initTimer();
     gpuHandler = new CudaGPU();
+  }
   return gpuHandler;
 }
+
+void AbstractGPU::initTimer() {
+
+#ifdef WIN64
+  QueryPerformanceFrequency(&qwTicksPerSec);
+  QueryPerformanceCounter(&perfTickStart);
+  perfTicksPerSec = (double)qwTicksPerSec.QuadPart;
+#else
+  tickStart = time(NULL);
+#endif
+
+}
+
 
 void AbstractGPU::outputCode(std::string& code) {
 
@@ -23,6 +51,20 @@ void AbstractGPU::outputCode(std::string& code) {
 
 }
 
+double AbstractGPU::get_ticks() {
+
+#ifdef WIN64
+  LARGE_INTEGER t,dt;
+  QueryPerformanceCounter(&t);
+  dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;
+  return (double)(dt.QuadPart) / perfTicksPerSec;
+#else
+  struct timeval tv;
+  gettimeofday(&tv,NULL);
+  return (double)(tv.tv_sec - tickStart) + (double)tv.tv_usec / 1e6;
+#endif
+
+}
 
 void AbstractGPU::split(vector<string> &tokens, const string &text, char sep) {
 

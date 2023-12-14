@@ -72,7 +72,7 @@ std::string AbstractInterface::getShapeStr(std::vector<int64_t>& shape) {
   std::string ret = "(";
   for(size_t i=0;i<shape.size();i++) {
     ret.append(std::to_string(shape[i]));
-    if(i<shape.size()-1) ret.append(",");
+    if(i<shape.size()-1) ret.append("x");
   }
   ret.append(")");
   return ret;
