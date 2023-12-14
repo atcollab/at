@@ -9,6 +9,7 @@ kinds of element variables:
   *ring* argument must be provided to the *set* and *get* methods to identify the
   lattice, which may be a possibly modified copy of the original lattice
 """
+
 from __future__ import annotations
 from collections.abc import Sequence
 from typing import Union, Optional
