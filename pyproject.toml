@@ -23,7 +23,8 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11"
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">=3.7"
 dependencies = [
@@ -40,7 +41,8 @@ Home="https://atcollab.github.io/at/"
 mpi = ["mpi4py"]
 plot = ["matplotlib"]
 dev = ["pytest >= 2.9", "pytest-lazy-fixture", "pytest-cov", "flake8"]
-doc = ["Sphinx ~= 5.3", "myst-parser", "pydata-sphinx-theme ~= 0.11.0", "sphinx-copybutton"]
+doc = ["Sphinx ~= 7.2", "myst-parser", "myst-nb", "pydata-sphinx-theme ~= 0.14",
+    "sphinx_design", "sphinx-copybutton"]
 
 # tool.setuptools is still in BETA, so we keep temporarily setup.cfg
 
@@ -57,8 +59,9 @@ doc = ["Sphinx ~= 5.3", "myst-parser", "pydata-sphinx-theme ~= 0.11.0", "sphinx-
 
 [tool.cibuildwheel]
 # Pypy does not have Scipy so we cannot support it.
-build = ["cp3{7,8,9,10,11}*"]
-#skip = ["*-musllinux*", "*_i686", "*win32"]
+build = ["cp3{7,8,9,10,11,12}*"]
+# Skip 32-bit builds starting with python 3.12
+skip = ["cp312-win32", "cp312-*_i686"]
 build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"
