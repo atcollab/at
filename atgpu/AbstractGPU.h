@@ -19,17 +19,23 @@ public:
 
   virtual ~GPUContext() = default;
 
+  // Empty kernel parameter
+  virtual void resetArg() = 0;
+
   // Set kernel parameter
   virtual void addArg(size_t argSize,void *value) = 0;
 
   // Run the kernel
-  virtual void run() = 0;
+  virtual void run(uint32_t gridSize,uint64_t nbThread) = 0;
 
   // Compile and load the kernel
   virtual void compile(std::string& code) = 0;
 
   // Copy from host to device
   virtual void hostToDevice(void *dest,void *src,size_t size) = 0;
+
+  // Copy from device to host
+  virtual void deviceToHost(void *dest,void *src,size_t size) = 0;
 
   // Allocate device memory
   virtual void allocDevice(void **dest,size_t size,bool initZero) = 0;
@@ -62,8 +68,13 @@ public:
   // Output code with line number
   static void outputCode(std::string& code);
 
+  // Get number of sec since instantiation of this singleton class
+  static double get_ticks();
+
 private:
+
   static void split(std::vector<std::string> &tokens, const std::string &text, char sep);
+  static void initTimer();
 
   static AbstractGPU *gpuHandler;
 

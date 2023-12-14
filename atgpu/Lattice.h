@@ -21,12 +21,10 @@ public:
   // Fill GPU memory
   void fillGPUMemory();
   // Run the simulation
-  void run(uint32_t nTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts);
+  void run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts);
 
 
 private:
-
-  time_t get_ticks();
 
   PassMethodFactory factory;                // Pass method code generation
   std::vector<AbstractElement *> elements;  // All elements

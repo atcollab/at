@@ -1,6 +1,5 @@
 #include "Lattice.h"
 #include <iostream>
-#include <sys/time.h>
 
 using namespace std;
 
@@ -34,8 +33,8 @@ void Lattice::addElement() {
 
 void Lattice::generateGPUKernel(std::string& code,bool doRout) {
 
-  time_t t0,t1;
-  t0=get_ticks();
+  double t0,t1;
+  t0=AbstractGPU::get_ticks();
 
   code.append(header);
   AbstractGPU::getInstance()->addUtilsFunctions(code);
@@ -55,8 +54,8 @@ void Lattice::generateGPUKernel(std::string& code,bool doRout) {
   routCode.append("    }\n");
 
   // GPU main track function
-  code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,AT_FLOAT* rin,AT_FLOAT* rout,\n"
-              "                      uint32_t* lost,uint32_t turn,uint32_t nbPart,uint32_t *refpts,uint32_t nbRef) {\n");
+  code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,uint64_t nbPart,AT_FLOAT* rin,AT_FLOAT* rout,\n"
+              "                      uint32_t* lost,uint64_t turn,uint32_t *refpts,uint32_t nbRef) {\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
   code.append("  AT_FLOAT* _r6 = rin + (6 * threadId);\n");
   code.append("  AT_FLOAT* _rout = rout + 6 * ((uint64_t)turn * (uint64_t)nbPart * (uint64_t)nbRef + (uint64_t)(threadId));\n");
@@ -115,10 +114,19 @@ void Lattice::generateGPUKernel(std::string& code,bool doRout) {
 
   code.append("}\n");
 
-  gpu->compile(code);
+  t1=AbstractGPU::get_ticks();
 
-  t1=get_ticks();
-  cout << "Code generation: " << (t1-t0) << "ms" << endl;
+  cout << "Code generation: " << (t1-t0)*1000.0 << "ms" << endl;
+
+  t0=AbstractGPU::get_ticks();
+  gpu->compile(code);
+  t1=AbstractGPU::get_ticks();
+  cout << "Code compilation: " << (t1-t0)*1000.0 << "ms" << endl;
+
+  t0=AbstractGPU::get_ticks();
+  fillGPUMemory();
+  t1=AbstractGPU::get_ticks();
+  cout << "GPU lattive loading: " << (t1-t0)*1000.0 << "ms" << endl;
 
 }
 
@@ -144,20 +152,7 @@ void Lattice::fillGPUMemory() {
 
 }
 
-time_t Lattice::get_ticks() {
-
-  static time_t tickStart = -1;
-  if (tickStart < 0)
-    tickStart = time(NULL);
-
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return ((tv.tv_sec - tickStart) * 1000 + tv.tv_usec / 1000);
-
-}
-
-void Lattice::run(uint32_t nTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts) {
-
+void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts) {
 
   // Copy rin to gpu mem
   void *gpuRin;
@@ -176,9 +171,43 @@ void Lattice::run(uint32_t nTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *ro
 
   // Lost flags
   delete[] lost;
+  uint32_t lostSize = nbParticles * sizeof(uint32_t);
   lost = new uint32_t[nbParticles];
   void *gpuLost;
-  gpu->allocDevice(&gpuLost, (elements.size() + 1) * sizeof(int32_t), true);
+  gpu->allocDevice(&gpuLost, lostSize, true);
 
+  // rout
+  uint64_t routSize = nbParticles * nbRef * nbTurn * 6;
+  void *gpuRout;
+  gpu->allocDevice(&gpuRout, routSize, false);
+
+  // Call GPU
+  gpu->resetArg();
+  uint32_t nbElement = elements.size();
+  uint64_t turn;
+  gpu->addArg(sizeof(void *),&gpuRing);
+  gpu->addArg(sizeof(uint32_t),&nbElement);
+  gpu->addArg(sizeof(uint64_t),&nbParticles);
+  gpu->addArg(sizeof(void *),&gpuRin);
+  gpu->addArg(sizeof(void *),&gpuRout);
+  gpu->addArg(sizeof(void *),&gpuLost);
+  gpu->addArg(sizeof(uint64_t),&turn);
+  gpu->addArg(sizeof(void *),&gpuRefs);
+  gpu->addArg(sizeof(uint32_t),&nbRef);
+
+  // Turn loop
+  for(turn=0;turn<nbTurn;turn++)
+    // One particle per thread
+    gpu->run(GPU_GRID,nbParticles);
+
+  // Get back data
+  gpu->deviceToHost(rout,gpuRout,routSize);
+  gpu->deviceToHost(lost,gpuLost,lostSize);
+
+  // Free
+  gpu->freeDevice(gpuRin);
+  gpu->freeDevice(gpuRout);
+  gpu->freeDevice(gpuRefs);
+  gpu->freeDevice(gpuLost);
 
 }

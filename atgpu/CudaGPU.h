@@ -10,17 +10,23 @@ public:
   explicit CudaContext(int devId) noexcept;
   ~CudaContext() final;
 
+  // Empty kernel parameter
+  void resetArg() final;
+
   // Set kernel parameter
   void addArg(size_t argSize,void *value) final;
 
   // Run the kernel
-  void run() final;
+  void run(uint32_t gridSize,uint64_t nbThread) final;
 
   // Compile and load the kernel
   void compile(std::string& code) final;
 
   // Copy from host to device
   void hostToDevice(void *dest,void *src,size_t size) final;
+
+  // Copy from device to host
+  void deviceToHost(void *dest,void *src,size_t size) final;
 
   // Allocate device memory
   void allocDevice(void **dest,size_t size,bool initZero) final;
@@ -34,6 +40,7 @@ private:
   CUmodule module;
   CUfunction kernel;
   int devId;
+  std::vector<void *> args;
 
 };
 

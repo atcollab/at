@@ -26,6 +26,11 @@ void CudaContext::hostToDevice(void *dest,void *src,size_t size) {
   cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyHostToDevice);
 }
 
+void CudaContext::deviceToHost(void *dest,void *src,size_t size) {
+  cudaCall(cudaSetDevice,devId);
+  cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyDeviceToHost);
+}
+
 void CudaContext::allocDevice(void **dest,size_t size,bool initZero) {
   cudaCall(cudaSetDevice,devId);
   cudaCall(cudaMalloc,dest,size);
@@ -93,11 +98,41 @@ void CudaContext::compile(string& code) {
 
 }
 
-void CudaContext::addArg(size_t argSize,void *value) {
-
+void CudaContext::resetArg() {
+  args.clear();
 }
 
-void CudaContext::run() {
+void CudaContext::addArg(size_t argSize,void *value) {
+  args.push_back(value);
+}
+
+void CudaContext::run(uint32_t gridSize,uint64_t nbThread) {
+
+  if( nbThread<gridSize ) {
+
+    cudaCall(cuLaunchKernel, kernel,
+             nbThread, 1, 1,        // grid dim
+             1, 1, 1,               // block dim
+             0, nullptr,            // shared mem and stream
+             args.data(), nullptr); // arguments
+
+  } else {
+
+    if( nbThread%gridSize != 0  ) {
+      // TODO: Handle this
+      throw string("nbThread (" + to_string(nbThread) + ") must be a multiple of gridSize (" + to_string(gridSize) + ")");
+    }
+
+    cudaCall(cuLaunchKernel, kernel,
+             gridSize, 1, 1,           // grid dim
+             nbThread/gridSize, 1, 1,  // block dim
+             0, nullptr,               // shared mem and stream
+             args.data(), nullptr);    // arguments
+
+  }
+
+  // Wait end of execution
+  cudaCall(cuCtxSynchronize);
 
 }
 

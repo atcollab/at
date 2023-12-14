@@ -1,0 +1,87 @@
+#ifndef AT_GPU_REPRLOADER_H
+#define AT_GPU_REPRLOADER_H
+#include <string>
+#include <vector>
+#include "AbstractInterface.h"
+
+// CppObject (debugging purpose)
+class CppObject {
+public:
+  CppObject();
+  void addField(const std::string& name,const std::string& value);
+  std::string getField(const std::string& name);
+private:
+  std::vector<std::string> fieldNames;
+  std::vector<std::string> fieldValues;
+};
+
+// Abstract interface implementation for CppObject (debugging purpose)
+class CppInterface: public AbstractInterface {
+
+public:
+
+  CppInterface();
+  std::string getString(const std::string& name);
+  int getInt(const std::string& name);
+  AT_FLOAT getDouble(const std::string& name);
+  AT_FLOAT *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape);
+  void setObject(CppObject *obj);
+
+private:
+
+  CppObject *elem;
+  void split(std::vector<std::string> &tokens, const std::string &text, char sep);
+
+};
+
+// Load a lattice in repr format (debugging purpose)
+class REPRLoader {
+
+public:
+
+  // Construct a .repr file loader
+  REPRLoader(const std::string& fileName);
+  // Parse a REPR file
+  void parseREPR(std::vector<CppObject> &elems);
+
+  // Global item
+  CppObject globals;
+
+private:
+
+  size_t currentPos;
+  char nextNextChar;
+  char nextChar;
+  char currentChar;
+  bool backSlashed;
+  std::string fileName;
+  FILE *f;
+  std::string fileBuffer;
+
+  void parseExtraParams(CppObject& obj);
+  void parseDrift(CppObject& obj);
+  void parseDipole(CppObject& obj);
+  void parseQuadrupole(CppObject& obj);
+  void parseSextupole(CppObject& obj);
+  void parseMultipole(CppObject& obj);
+  void jumpSpace();
+  void readWord(std::string& word);
+  void jumpSep(const std::string& sep);
+  void jumpSep(char sep);
+  void parseParamValue(std::string& value);
+  void parseArray(std::vector<std::string> &ret,std::vector<int64_t>& shape,int level);
+  int getPosMarker() const;
+  std::string getErrorLocation(int pos);
+  char current();
+  bool endOf(char c);
+  bool eof();
+  bool isSpecialChar(char c);
+  char read();
+  void readChar();
+  void toNextChar();
+  std::string getCoord(int pos);
+
+};
+
+
+#endif //AT_GPU_REPRLOADER_H
