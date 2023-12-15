@@ -1,13 +1,16 @@
 """
 Functions relating to fast_ring
 """
+from __future__ import annotations
 from functools import reduce
 import numpy
-from typing import Tuple, Optional
-from at.lattice import RFCavity, Element, Marker, Lattice, get_cells, checkname
+from typing import Union
+from collections.abc import Sequence
+from at.lattice import Lattice, Particle
+from at.lattice import RFCavity, Element, Marker, get_cells, checkname
 from at.lattice import get_elements, M66, SimpleQuantDiff, AtError, SimpleRadiation
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
-from at.constants import clight, e_mass
+from at.constants import clight
 import copy
 
 
@@ -70,7 +73,7 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     return fastring
 
 
-def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
+def fast_ring(ring: Lattice, split_inds=[]) -> tuple[Lattice, Lattice]:
     """Generates a "fast ring"
 
     A fast ring consisting in:
@@ -103,8 +106,11 @@ def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
     return fastringnorad, fastringrad
 
 
-def simple_ring(energy: float, circumference: float, harmonic_number: int,
-                Qx: float, Qy: float, Vrf: float, alpha: float,
+def simple_ring(energy: float, circumference: float,
+                harmonic_number: Union[float, Sequence[float]],
+                Qx: float, Qy: float,
+                Vrf: Union[float, Sequence[float]],
+                alpha: float,
                 betax: float = 1.0, betay: float = 1.0,
                 alphax: float = 0.0, alphay: float = 0.0,
                 dispx: float = 0.0, dispxp: float = 0.0,
@@ -115,8 +121,10 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
                 emity: float = 0.0, espread: float = 0.0,
                 taux: float = 0.0, tauy: float = 0.0,
                 tauz: float = 0.0, U0: float = 0.0,
-                TimeLag: bool = False
-                ):
+                name: str = "",
+                particle: Union[str, Particle] = 'relativistic',
+                TimeLag: Union[float, Sequence[float]] = 0.0,
+                ) -> Lattice:
     """Generates a "simple ring" based on a given dictionary
        of global parameters
 
@@ -124,82 +132,69 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
 
     * an RF cavity,
     * a 6x6 linear transfer map with no radiation damping,
-    * a simple radiation damping element
     * a detuning and chromaticity element,
-    * a simplified quantum diffusion element
-        which contains equilibrium emittance
+    * a simple radiation damping element
+    * a simplified quantum diffusion element which contains equilibrium emittance
 
-    Positional Arguments:
-        * energy [eV]
-        * circumference [m]
-        * harmonic_number - can be scalar or sequence of scalars. The RF 
-            frequency is derived from this and the ring circumference
-        * Qx - horizontal tune
-        * Qy - vertical tune
-        * Vrf - RF Voltage set point [V] - can be scalar or sequence of scalars
-        * alpha (momentum compaction factor)
-
-    Optional Arguments:
-        * betax: horizontal beta function [m], Default=1
-        * betay: vertical beta function [m], Default=1
-        * alphax: horizontal alpha function, Default=0
-        * alphay: vertical alpha function, Default=0
-        * dispx: horizontal dispersion [m], Default=0
-        * dispxp: horizontal dispersion prime, Default=0
-        * dispy: vertical dispersion [m], Default=0
-        * dispyp: vertical dispersion prime, Default=0
-        * Qpx: horizontal linear chromaticity, Default=0
-        * Qpy: vertical linear chromaticity, Default=0
-        * A1: horizontal amplitude detuning coefficient, Default=0
-        * A2: cross term for amplitude detuning coefficient, Default=0
-        * A3: vertical amplitude detuning coefficient, Default=0
-        * emitx: horizontal equilibrium emittance [m.rad], Default=0
-            ignored if emitx=0
-        * emity: vertical equilibrium emittance [m.rad], Default=0
-            ignored if emity=0
-        * espread: equilibrium momentum spread, Default=0
-            ignored if espread=0
-        * taux: horizontal radiation damping time [turns], Default=0
-            ignored if taux=0
-        * tauy: vertical radiation damping time [turns], Default=0
-            ignored if tauy=0
-        * tauz: longitudinal radiation damping time [turns], Default=0
-            ignored if tauz=0
-        * U0: - energy loss [eV] (positive number), Default=0
-        * TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
-            or sequence of scalars (as with harmonic_number and Vrf).
+    Parameters:
+        energy: [eV]
+        circumference: [m]
+        harmonic_number: can be scalar or sequence of scalars. The RF
+          frequency is derived from this and the ring circumference
+        Qx: horizontal tune
+        Qy: vertical tune
+        Vrf: RF Voltage set point [V] - can be scalar or sequence of scalars
+        alpha: momentum compaction factor
+        betax: horizontal beta function [m], Default=1
+        betay: vertical beta function [m], Default=1
+        alphax: horizontal alpha function, Default=0
+        alphay: vertical alpha function, Default=0
+        dispx: horizontal dispersion [m], Default=0
+        dispxp: horizontal dispersion prime, Default=0
+        dispy: vertical dispersion [m], Default=0
+        dispyp: vertical dispersion prime, Default=0
+        Qpx: horizontal linear chromaticity, Default=0
+        Qpy: vertical linear chromaticity, Default=0
+        A1: horizontal amplitude detuning coefficient, Default=0
+        A2: cross term for amplitude detuning coefficient, Default=0
+        A3: vertical amplitude detuning coefficient, Default=0
+        emitx: horizontal equilibrium emittance [m.rad], Default=0
+          ignored if emitx=0
+        emity: vertical equilibrium emittance [m.rad], Default=0
+          ignored if emity=0
+        espread: equilibrium momentum spread, Default=0
+          ignored if espread=0
+        taux: horizontal radiation damping time [turns], Default=0
+          ignored if taux=0
+        tauy: vertical radiation damping time [turns], Default=0
+          ignored if tauy=0
+        tauz: longitudinal radiation damping time [turns], Default=0
+          ignored if tauz=0
+        U0: energy loss [eV] (positive number), Default=0
+        name: Name of the lattice
+        particle: circulating particle. May be
+          'relativistic', 'electron', 'positron', 'proton'
+          or a Particle object
+        TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
+          or sequence of scalars (as with harmonic_number and Vrf).
 
     If the given emitx, emity or espread is 0, then no equlibrium emittance
     is applied in this plane.
     If the given tau is 0, then no radiation damping is applied for this plane.
 
-
     Returns:
-        ring (Lattice):    Simple ring
+        ring:    Simple ring
     """
-    # compute slip factor
-    gamma = energy / e_mass
-    eta = alpha - 1/gamma**2
-
-    harmonic_number = numpy.atleast_1d(harmonic_number)
-    Vrf = numpy.atleast_1d(Vrf)
     try:
-        TimeLag = numpy.broadcast_to(TimeLag, Vrf.shape)
+        rfp = numpy.broadcast(Vrf, harmonic_number, TimeLag)
     except ValueError:
-        raise AtError('TimeLag needs to be broadcastable to Vrf (same shape)')
+        raise AtError('Vrf, harmonic_number and TimeLag must be broadcastable')
 
-    if (len(harmonic_number) != len(Vrf)):
-        raise AtError('harmonic_number input must match length of Vrf input')
+    # revolution frequency
+    f0 = clight / circumference
 
-    # compute rf frequency
-    frf = harmonic_number * clight / circumference
-
-    all_cavities = []
-    for icav in numpy.arange(len(harmonic_number)):
-        # generate rf cavity element
-        rfcav = RFCavity('RFC', 0, Vrf[icav], frf[icav], harmonic_number[icav],
-                         energy, TimeLag=TimeLag[icav])
-        all_cavities.append(rfcav)
+    all_cavities = [RFCavity(f"RFC{i+1}", 0.0, v, h*f0, h, energy, TimeLag=t)
+                    for i, (v, h, t) in enumerate(rfp)]
 
     # Now we will use the optics parameters to compute the uncoupled M66 matrix
 
@@ -227,7 +222,7 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
     
     M44 = 1.
     M45 = 0.
-    M54 = eta*circumference
+    M54 = alpha*circumference
     M55 = 1
 
     Mat66 = numpy.array([[M00, M01, 0., 0., M04, 0.],
@@ -263,6 +258,6 @@ def simple_ring(energy: float, circumference: float, harmonic_number: int,
 
     # Assemble all elements into the lattice object
     ring = Lattice(all_cavities + [lin_elem, nonlin_elem, simplerad, quantdiff],
-                   energy=energy, periodicity=1)
+                   name=name, energy=energy, particle=particle, periodicity=1)
 
     return ring

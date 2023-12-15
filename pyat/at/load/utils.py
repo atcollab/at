@@ -57,7 +57,8 @@ _alias_map = {'rbend': elt.Dipole,
               'ap': elt.Aperture,
               'ringparam': RingParam,
               'wig': elt.Wiggler,
-              'insertiondevicekickmap': idtable_element.InsertionDeviceKickMap
+              'insertiondevicekickmap': idtable_element.InsertionDeviceKickMap,
+              'matrix66': elt.M66,
               }
 
 
@@ -86,7 +87,8 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
 # Python to Matlab class translation
 _matclass_map = {
         'Dipole': 'Bend',
-        'InsertionDeviceKickMap': 'InsertionDeviceKickMap'
+        'InsertionDeviceKickMap': 'InsertionDeviceKickMap',
+        'M66': 'Matrix66',
         }
 
 # Python to Matlab type translation
