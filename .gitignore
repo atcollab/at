@@ -40,6 +40,7 @@ CMakeFiles
 cmake_install.cmake
 CMakeLists.txt
 cmake-build-debug
+cmake-build-release
 .idea/
 
 # Vim

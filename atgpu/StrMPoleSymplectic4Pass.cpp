@@ -28,6 +28,7 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
 
   elemData.Type = MPOLE;
   elemData.Length = param->getDouble("Length");
+  elemData.NumIntSteps = param->getInt("NumIntSteps");
   elemData.SL = elemData.Length / (AT_FLOAT)elemData.NumIntSteps;
   elemData.MaxOrder = param->getInt("MaxOrder");
 
@@ -97,7 +98,8 @@ void StrMPoleSymplectic4Pass::fillGPUMemory(GPUContext *gpu,void *elemMem,void *
 
   elemData.NormD = dest;
   gpu->hostToDevice(dest,NormD,integrator.nbCoefficients * sizeof(AT_FLOAT));
-  elemData.NormK = dest + integrator.nbCoefficients;
+  dest += integrator.nbCoefficients;
+  elemData.NormK = dest;
   gpu->hostToDevice(dest,NormK,integrator.nbCoefficients * sizeof(AT_FLOAT));
 
   IdentityPass::fillGPUMemory(gpu,elemMem,privateMem);

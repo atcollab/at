@@ -9,7 +9,7 @@ class CppObject {
 public:
   CppObject();
   void addField(const std::string& name,const std::string& value);
-  std::string getField(const std::string& name);
+  std::string& getField(const std::string& name);
 private:
   std::vector<std::string> fieldNames;
   std::vector<std::string> fieldValues;
@@ -30,7 +30,6 @@ public:
 private:
 
   CppObject *elem;
-  void split(std::vector<std::string> &tokens, const std::string &text, char sep);
 
 };
 
@@ -59,16 +58,18 @@ private:
   std::string fileBuffer;
 
   void parseExtraParams(CppObject& obj);
+  void parseParam(const std::string& name,CppObject& obj);
   void parseDrift(CppObject& obj);
   void parseDipole(CppObject& obj);
   void parseQuadrupole(CppObject& obj);
   void parseSextupole(CppObject& obj);
   void parseMultipole(CppObject& obj);
+  void parseRFCavity(CppObject& obj);
   void jumpSpace();
   void readWord(std::string& word);
   void jumpSep(const std::string& sep);
   void jumpSep(char sep);
-  void parseParamValue(std::string& value);
+  void parseParamValue(std::string& value,std::vector<int64_t> *shapePtr= nullptr);
   void parseArray(std::vector<std::string> &ret,std::vector<int64_t>& shape,int level);
   int getPosMarker() const;
   std::string getErrorLocation(int pos);
