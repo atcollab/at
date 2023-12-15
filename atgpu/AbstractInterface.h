@@ -30,6 +30,8 @@ public:
 
   // Get shape as string
   static std::string getShapeStr(std::vector<int64_t>& shape);
+  static void getShapeFromStr(std::vector<int64_t>& shape,std::string& str);
+  static void split(std::vector<std::string> &tokens, const std::string &text, char sep);
 
 private:
   static AbstractInterface *handler;

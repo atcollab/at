@@ -16,12 +16,16 @@ public:
   // Add an element in the lattice
   // (The new element comes from the current loaded object in the AbstractInterface)
   void addElement();
+  // Return number of element
+  uint32_t getNbElement();
   // Generate device code
   void generateGPUKernel(std::string& code,bool doRout);
   // Fill GPU memory
   void fillGPUMemory();
   // Run the simulation
   void run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts);
+  // Return handle to the GPU context
+  GPUContext *getGPUContext();
 
 
 private:

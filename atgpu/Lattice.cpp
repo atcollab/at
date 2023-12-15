@@ -30,6 +30,13 @@ void Lattice::addElement() {
 
 }
 
+uint32_t Lattice::getNbElement() {
+  return elements.size();
+}
+
+GPUContext *Lattice::getGPUContext() {
+  return gpu;
+}
 
 void Lattice::generateGPUKernel(std::string& code,bool doRout) {
 
@@ -54,9 +61,14 @@ void Lattice::generateGPUKernel(std::string& code,bool doRout) {
   routCode.append("    }\n");
 
   // GPU main track function
-  code.append("__global__ void track(ELEMENT* gpuRing,uint32_t nbElement,uint64_t nbPart,AT_FLOAT* rin,AT_FLOAT* rout,\n"
-              "                      uint32_t* lost,uint64_t turn,uint32_t *refpts,uint32_t nbRef) {\n");
+  // extern C to prevent from mangled name
+  code.append("extern \"C\" __global__ void track(ELEMENT* gpuRing,uint32_t nbElement,uint64_t nbPart,AT_FLOAT* rin,AT_FLOAT* rout,\n"
+              "                                   uint32_t* lost,uint64_t turn,int32_t *refpts,uint32_t nbRef) {\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
+
+  //code.append("  printf(\"NbElem: %d,nbPart: %d,Turn %d,Ref %d, threadId = %d, X[0]=%f\\n\","
+  //                       "nbElement,(int32_t)nbPart,(int32_t)turn,nbRef,threadId,rin[0]);\n");
+
   code.append("  AT_FLOAT* _r6 = rin + (6 * threadId);\n");
   code.append("  AT_FLOAT* _rout = rout + 6 * ((uint64_t)turn * (uint64_t)nbPart * (uint64_t)nbRef + (uint64_t)(threadId));\n");
 
@@ -73,7 +85,7 @@ void Lattice::generateGPUKernel(std::string& code,bool doRout) {
   // Loop over elements
   code.append("  ELEMENT* elemPtr = gpuRing;\n");
   code.append("  uint32_t rCount = 0;\n");
-  code.append("  uint32_t refIdx = 0;\n");
+  code.append("  int32_t refIdx = 0;\n");
   code.append("  uint32_t elem = 0;\n");
   code.append("  for(elem = 0; elem < nbElement; elem++) {\n");
   if(doRout) code.append(routCode);
@@ -126,7 +138,7 @@ void Lattice::generateGPUKernel(std::string& code,bool doRout) {
   t0=AbstractGPU::get_ticks();
   fillGPUMemory();
   t1=AbstractGPU::get_ticks();
-  cout << "GPU lattive loading: " << (t1-t0)*1000.0 << "ms" << endl;
+  cout << "GPU lattice loading: " << (t1-t0)*1000.0 << "ms" << endl;
 
 }
 
@@ -139,7 +151,7 @@ void Lattice::fillGPUMemory() {
     size += element->getMemorySize();
 
   // Allocate
-  gpu->allocDevice(&gpuRing, size, false);
+  gpu->allocDevice(&gpuRing, size);
 
   // Copy element data
   unsigned char *memPtr = (unsigned char *)gpuRing;
@@ -154,19 +166,21 @@ void Lattice::fillGPUMemory() {
 
 void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts) {
 
+  double t0 = AbstractGPU::get_ticks();
+
   // Copy rin to gpu mem
   void *gpuRin;
-  gpu->allocDevice(&gpuRin, nbParticles * 6 * sizeof(AT_FLOAT), false);
+  gpu->allocDevice(&gpuRin, nbParticles * 6 * sizeof(AT_FLOAT));
   gpu->hostToDevice(gpuRin, rin, nbParticles * 6 * sizeof(AT_FLOAT));
 
   // Expanded ref index
   int32_t expandedRefPts[elements.size()+1];
-  for(int i=0;i<elements.size();i++)
+  for(int i=0;i<=elements.size();i++)
     expandedRefPts[i] = -1;
   for(int i=0;i<nbRef;i++)
-    expandedRefPts[refPts[i]] = (int32_t)refPts[i];
+    expandedRefPts[refPts[i]] = (int32_t)i;
   void *gpuRefs;
-  gpu->allocDevice(&gpuRefs, (elements.size() + 1) * sizeof(int32_t),false);
+  gpu->allocDevice(&gpuRefs, (elements.size() + 1) * sizeof(int32_t));
   gpu->hostToDevice(gpuRefs, expandedRefPts, (elements.size() + 1) * sizeof(int32_t));
 
   // Lost flags
@@ -174,12 +188,13 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   uint32_t lostSize = nbParticles * sizeof(uint32_t);
   lost = new uint32_t[nbParticles];
   void *gpuLost;
-  gpu->allocDevice(&gpuLost, lostSize, true);
+  gpu->allocDevice(&gpuLost, lostSize);
+  gpu->hostToDevice(gpuLost, lost, lostSize);
 
   // rout
-  uint64_t routSize = nbParticles * nbRef * nbTurn * 6;
+  uint64_t routSize = nbParticles * nbRef * nbTurn * 6 * sizeof(AT_FLOAT);
   void *gpuRout;
-  gpu->allocDevice(&gpuRout, routSize, false);
+  gpu->allocDevice(&gpuRout, routSize);
 
   // Call GPU
   gpu->resetArg();
@@ -209,5 +224,8 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->freeDevice(gpuRout);
   gpu->freeDevice(gpuRefs);
   gpu->freeDevice(gpuLost);
+
+  double t1 = AbstractGPU::get_ticks();
+  cout << "GPU tracking: " << (t1-t0)*1000.0 << "ms" << endl;
 
 }

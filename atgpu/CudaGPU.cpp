@@ -1,47 +1,53 @@
 #include "CudaGPU.h"
-#include <cuda_runtime.h>
-#include <nvrtc.h>
 #include <iostream>
 
 using namespace std;
 // -----------------------------------------------------------------------------------------------------------------
 
-#define cudaCall(funcName,...) funcName(__VA_ARGS__);CudaGPU::cudaCheckCall(#funcName);
-#define nvrtcCall(funcName,...) funcName(__VA_ARGS__);CudaGPU::nvrtcCheckCall(#funcName);
+#define nvrtcCall(funcName,...) { nvrtcResult r = funcName(__VA_ARGS__);nvrtcCheckCall(#funcName,r); }
+#define cudaCall(funcName,...) { CUresult r = funcName(__VA_ARGS__);cudaCheckCall(#funcName,r); }
 
 CudaContext::CudaContext(int devId) noexcept: devId(devId)  {
-  context = nullptr;
+
+  char name[256];
   module = nullptr;
   kernel = nullptr;
+
+  cudaCall(cuDeviceGet,&cuDevice, devId);
+  int min,maj,nbMP;
+  cudaCall(cuDeviceGetAttribute,&min,CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR,cuDevice);
+  cudaCall(cuDeviceGetAttribute,&maj,CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR,cuDevice);
+  cudaCall(cuDeviceGetAttribute,&nbMP,CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT,cuDevice);
+  cudaCall(cuDeviceGetName, name, 256, cuDevice );
+  info.name = name;
+  info.version = to_string(maj) + "." + to_string(min);
+  info.mpNumber = nbMP;
+  info.smNumber = CudaGPU::_ConvertSMVer2Cores(maj,min);
+  arch = "sm_" + to_string(maj) + to_string(min);
+
+  cudaCall(cuCtxCreate,&context, 0, cuDevice);
+
 }
 
 CudaContext::~CudaContext() {
-  cudaCall(cudaSetDevice,devId);
   if(module) cuModuleUnload(module);
-  if(context) cuCtxDestroy(context);
+  cuCtxDestroy(context);
 }
 
 void CudaContext::hostToDevice(void *dest,void *src,size_t size) {
-  cudaCall(cudaSetDevice,devId);
-  cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyHostToDevice);
+  cudaCall(cuMemcpyHtoD,(CUdeviceptr)dest,src,size);
 }
 
 void CudaContext::deviceToHost(void *dest,void *src,size_t size) {
-  cudaCall(cudaSetDevice,devId);
-  cudaCall(cudaMemcpy,dest,src,size,cudaMemcpyDeviceToHost);
+  cudaCall(cuMemcpyDtoH,dest,(CUdeviceptr)src,size);
 }
 
-void CudaContext::allocDevice(void **dest,size_t size,bool initZero) {
-  cudaCall(cudaSetDevice,devId);
-  cudaCall(cudaMalloc,dest,size);
-  if(initZero) {
-    cudaCall(cudaMemset,*dest,0,size);
-  }
+void CudaContext::allocDevice(void **dest,size_t size) {
+  cudaCall(cuMemAlloc,(CUdeviceptr *)dest,size);
 }
 
 void CudaContext::freeDevice(void *dest) {
-  cudaCall(cudaSetDevice,devId);
-  cudaCall(cudaFree,dest);
+  cudaCall(cuMemFree,(CUdeviceptr)dest);
 }
 
 void CudaContext::compile(string& code) {
@@ -56,9 +62,9 @@ void CudaContext::compile(string& code) {
             nullptr,       // headers
             nullptr);      // includeNames
 
-  // Compile the program with fmad disabled.
-  // Note: Can specify GPU target architecture explicitly with '-arch' flag.
-  const char *opts[] = {"--gpu-architecture=compute_61"};
+  // Compile the program
+  string archOpt = "--gpu-architecture=" + arch;
+  const char *opts[] = {archOpt.c_str(),"--dopt=on","--fmad=true","--extra-device-vectorization"};
   nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
                                                   1,     // numOptions
                                                   opts); // options
@@ -80,22 +86,32 @@ void CudaContext::compile(string& code) {
 
   }
 
+#if 0
   // Obtain PTX from the program.
   size_t ptxSize;
   nvrtcCall(nvrtcGetPTXSize,prog, &ptxSize);
-  char *ptx = new char[ptxSize];
-  nvrtcCall(nvrtcGetPTX,prog, ptx);
+  char *compiledCode = new char[ptxSize];
+  nvrtcCall(nvrtcGetPTX,prog,compiledCode);
+#endif
+
+#if 1
+  // Obtain BIN from the program.
+  size_t binSize;
+  nvrtcCall(nvrtcGetCUBINSize,prog, &binSize);
+  char *compiledCode = new char[binSize];
+  nvrtcCall(nvrtcGetCUBIN,prog, compiledCode);
+#endif
+
   // Destroy the program.
   nvrtcCall(nvrtcDestroyProgram,&prog);
 
-  // Load the generated PTX and get a handle to the SAXPY kernel.
-  CUdevice cuDevice;
-  cudaCall(cuInit,0);
-  cudaCall(cuDeviceGet,&cuDevice, 0);
-  cudaCall(cuCtxCreate,&context, 0, cuDevice);
-  cudaCall(cuModuleLoadDataEx,&module, ptx, 0, nullptr, nullptr);
-  cudaCall(cuModuleGetFunction,&kernel, module, "track");
+  // Load the generated code and get a handle to the kernel.
+  cudaCall(cuModuleLoadDataEx,&module, compiledCode, 0, nullptr, nullptr);
 
+}
+
+std::string& CudaContext::name() {
+  return info.name;
 }
 
 void CudaContext::resetArg() {
@@ -107,6 +123,8 @@ void CudaContext::addArg(size_t argSize,void *value) {
 }
 
 void CudaContext::run(uint32_t gridSize,uint64_t nbThread) {
+
+  cudaCall(cuModuleGetFunction,&kernel, module, "track");
 
   if( nbThread<gridSize ) {
 
@@ -136,9 +154,51 @@ void CudaContext::run(uint32_t gridSize,uint64_t nbThread) {
 
 }
 
+// Check error and throw exception in case of failure
+void CudaContext::cudaCheckCall(const char *funcName,CUresult r) {
+
+  if (r != CUDA_SUCCESS) {
+    const char *msg;
+    cuGetErrorName(r, &msg);
+    string errStr = info.name + "[" + info.version + "] " + string(funcName) + ": " + msg;
+    throw errStr;
+  }
+
+}
+
+void CudaContext::nvrtcCheckCall(const char *funcName,nvrtcResult r) {
+
+  if(r != NVRTC_SUCCESS) {
+    string errStr = info.name + "[" + info.version + "] " + string(funcName) + ": " + nvrtcGetErrorString(r);
+    throw errStr;
+  }
+
+}
+
 // -----------------------------------------------------------------------------------------------------------------
 
-CudaGPU::CudaGPU() = default;
+CudaGPU::CudaGPU() {
+
+  CUresult r = cuInit(0);
+  if( r != CUDA_SUCCESS) {
+    const char *msg;
+    cuGetErrorName(r, &msg);
+    string errStr = "Cannot initialise CUDA:" + string(msg);
+    throw errStr;
+  }
+
+};
+
+void CudaGPU::cudaCheckCall(const char *funcName,CUresult r) {
+
+  if (r != CUDA_SUCCESS) {
+    const char *msg;
+    cuGetErrorName(r, &msg);
+    string errStr = string(funcName) + ": " + msg;
+    throw errStr;
+  }
+
+}
 
 GPUContext *CudaGPU::createContext(int devId) {
   return new CudaContext(devId);
@@ -149,7 +209,7 @@ void CudaGPU::getDeviceFunctionQualifier(std::string& ftype) {
 }
 
 // Return number of stream processors
-static int _ConvertSMVer2Cores(int major,int minor) {
+int CudaGPU::_ConvertSMVer2Cores(int major,int minor) {
 
   // Defines for GPU Architecture types (using the SM version to determine
   // the # of cores per SM
@@ -197,42 +257,27 @@ static int _ConvertSMVer2Cores(int major,int minor) {
 }
 
 
-// Check error and throw exception in case of failure
-void CudaGPU::cudaCheckCall(const char *funcName) {
-
-  cudaError_t errCode=cudaGetLastError();
-  if(errCode != cudaSuccess) {
-    string errStr = string(funcName) + ": " + cudaGetErrorString(errCode);
-    throw errStr;
-  }
-
-}
-
-void CudaGPU::nvrtcCheckCall(const char *funcName) {
-
-  cudaError_t errCode=cudaGetLastError();
-  if(errCode != cudaSuccess) {
-    string errStr = string(funcName) + ": " + cudaGetErrorString(errCode);
-    throw errStr;
-  }
-
-}
-
 // Return list of GPU device present on the system
 std::vector<GPU_INFO> CudaGPU::getDeviceList() {
 
+  char name[256];
   vector<GPU_INFO> gpuList;
   int deviceCount = 0;
-  cudaCall(cudaGetDeviceCount,&deviceCount);
+  cudaCall(cuDeviceGetCount,&deviceCount);
 
   for(int i=0;i< deviceCount;i++) {
-    cudaDeviceProp deviceProp;
-    cudaCall(cudaGetDeviceProperties,&deviceProp,i);
+    CUdevice cuDevice;
+    cudaCall(cuDeviceGet,&cuDevice, i);
+    int min,maj,nbMP;
+    cudaCall(cuDeviceGetAttribute,&min,CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR,cuDevice);
+    cudaCall(cuDeviceGetAttribute,&maj,CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR,cuDevice);
+    cudaCall(cuDeviceGetAttribute,&nbMP,CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT,cuDevice);
+    cudaCall(cuDeviceGetName, name, 256, cuDevice );
     GPU_INFO info;
-    info.name = deviceProp.name;
-    info.version = to_string(deviceProp.major)+ "." + to_string(deviceProp.minor);
-    info.smNumber = _ConvertSMVer2Cores(deviceProp.major,deviceProp.minor);
-    info.mpNumber = deviceProp.multiProcessorCount;
+    info.name = name;
+    info.version = to_string(maj)+ "." + to_string(min);
+    info.smNumber = _ConvertSMVer2Cores(maj,min);
+    info.mpNumber = nbMP;
     gpuList.push_back(info);
   }
   return gpuList;

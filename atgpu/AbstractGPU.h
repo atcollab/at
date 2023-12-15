@@ -38,10 +38,13 @@ public:
   virtual void deviceToHost(void *dest,void *src,size_t size) = 0;
 
   // Allocate device memory
-  virtual void allocDevice(void **dest,size_t size,bool initZero) = 0;
+  virtual void allocDevice(void **dest,size_t size) = 0;
 
   // Free device memory
   virtual void freeDevice(void *dest) = 0;
+
+  // Return device name
+  virtual std::string& name() = 0;
 
 };
 

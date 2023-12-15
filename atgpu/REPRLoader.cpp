@@ -14,7 +14,7 @@ void CppObject::addField(const string &name, const string &value) {
   fieldValues.push_back(value);
 }
 
-string CppObject::getField(const string &name) {
+string& CppObject::getField(const string &name) {
   // Search from this end
   // overloaded param may appear several times
   bool found = false;
@@ -56,11 +56,7 @@ AT_FLOAT *CppInterface::getNativeDoubleArray(const std::string &name, std::vecto
   size_t elIdx = 0;
 
   if (tokens.size() > 1) {
-    string shapeStr = tokens[0];
-    vector<string> stokens;
-    split(stokens, shapeStr, 'x');
-    for (const auto &stoken: stokens)
-      shape.push_back(stoi(stoken));
+    getShapeFromStr(shape,tokens[0]);
     elIdx++;
   } else {
     shape.push_back(1);
@@ -77,19 +73,6 @@ void CppInterface::setObject(CppObject *obj) {
   elem = obj;
 }
 
-void CppInterface::split(vector<string> &tokens, const string &text, char sep) {
-
-  size_t start = 0, end = 0;
-  tokens.clear();
-
-  while ((end = text.find(sep, start)) != string::npos) {
-    tokens.push_back(text.substr(start, end - start));
-    start = end + 1;
-  }
-
-  tokens.push_back(text.substr(start));
-
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -135,146 +118,144 @@ REPRLoader::REPRLoader(const std::string &fileName) {
 
 void REPRLoader::parseExtraParams(CppObject& obj) {
 
-  while (!endOf(')')) {
-    string pName;
-    string pValue;
-    readWord(pName);
-    jumpSep('=');
-    parseParamValue(pValue);
-    obj.addField(pName,pValue);
-    if(current() == ',') jumpSep(',');
+  if (current() == ',') {
+    jumpSep(',');
+    while (!endOf(')')) {
+      string pName;
+      string pValue;
+      readWord(pName);
+      jumpSep('=');
+      parseParamValue(pValue);
+      obj.addField(pName, pValue);
+      if (current() == ',') jumpSep(',');
+    }
   }
 
 }
 
+void REPRLoader::parseParam(const std::string& name,CppObject& obj) {
+  string value;
+  parseParamValue(value);
+  obj.addField(name,value);
+}
+
 void REPRLoader::parseDrift(CppObject& obj) {
 
-  string name;
-  string length;
   jumpSep('(');
-  readWord(name);
+  parseParam("Name",obj);
   jumpSep(',');
-  readWord(length);
-  obj.addField("Name",name);
-  obj.addField("Length",length);
+  parseParam("Length",obj);
   obj.addField("PassMethod","DriftPass");
-  if( current()==',' ) {
-    jumpSep(',');
-    parseExtraParams(obj);
-  }
+  parseExtraParams(obj);
   jumpSep(')');
 
 }
 
 void REPRLoader::parseDipole(CppObject& obj) {
 
-  string name;
-  string length;
-  string bendingAngle;
   string K;
 
   jumpSep('(');
-  readWord(name);
+  parseParam("Name",obj);
   jumpSep(',');
-  readWord(length);
+  parseParam("Length",obj);
   jumpSep(',');
-  readWord(bendingAngle);
+  parseParam("BendingAngle",obj);
   jumpSep(',');
   readWord(K);
-  obj.addField("Name",name);
-  obj.addField("Length",length);
-  obj.addField("BendingAngle",bendingAngle);
-  obj.addField("PolynomA","2,0.0,0.0");
-  obj.addField("PolynomB","2,0.0," + K);
+  obj.addField("PolynomA","(2),0.0,0.0");
+  obj.addField("PolynomB","(2),0.0," + K);
+  obj.addField("MaxOrder","1");
   obj.addField("PassMethod","BndMPoleSymplectic4Pass");
-
-  if( current()==',' ) {
-    jumpSep(',');
-    parseExtraParams(obj);
-  }
+  parseExtraParams(obj);
   jumpSep(')');
 
 }
 
 void REPRLoader::parseQuadrupole(CppObject& obj) {
 
-  string name;
-  string length;
   string K;
 
   jumpSep('(');
-  readWord(name);
+  parseParam("Name",obj);
   jumpSep(',');
-  readWord(length);
+  parseParam("Length",obj);
   jumpSep(',');
   readWord(K);
-  obj.addField("Name",name);
-  obj.addField("Length",length);
-  obj.addField("PolynomA","2,0.0,0.0");
-  obj.addField("PolynomB","2,0.0," + K);
-  obj.addField("PassMethod","MPoleSymplectic4Pass");
-
-  if( current()==',' ) {
-    jumpSep(',');
-    parseExtraParams(obj);
-  }
+  obj.addField("PolynomA","(2),0.0,0.0");
+  obj.addField("PolynomB","(2),0.0," + K);
+  obj.addField("MaxOrder","1");
+  obj.addField("PassMethod","StrMPoleSymplectic4Pass");
+  parseExtraParams(obj);
   jumpSep(')');
 
 }
 
 void REPRLoader::parseSextupole(CppObject& obj) {
 
-  string name;
-  string length;
   string K;
 
   jumpSep('(');
-  readWord(name);
+  parseParam("Name",obj);
   jumpSep(',');
-  readWord(length);
+  parseParam("Length",obj);
   jumpSep(',');
   readWord(K);
-  obj.addField("Name",name);
-  obj.addField("Length",length);
-  obj.addField("PolynomA","3,0.0,0.0,0.0");
-  obj.addField("PolynomB","3,0.0,0.0," + K);
-  obj.addField("PassMethod","MPoleSymplectic4Pass");
-
-  if( current()==',' ) {
-    jumpSep(',');
-    parseExtraParams(obj);
-  }
+  obj.addField("PolynomA","(3),0.0,0.0,0.0");
+  obj.addField("PolynomB","(3),0.0,0.0," + K);
+  obj.addField("MaxOrder","2");
+  obj.addField("PassMethod","StrMPoleSymplectic4Pass");
+  parseExtraParams(obj);
   jumpSep(')');
 
 }
 
 void REPRLoader::parseMultipole(CppObject& obj) {
 
-  string name;
-  string length;
-  string polyA;
-  string polyB;
-
   jumpSep('(');
-  readWord(name);
+  parseParam("Name",obj);
   jumpSep(',');
-  readWord(length);
+  parseParam("Length",obj);
   jumpSep(',');
-  parseParamValue(polyA);
+
+  vector<int64_t> shapeA;
+  string polyA;
+  parseParamValue(polyA,&shapeA);
   jumpSep(',');
-  parseParamValue(polyB);
-  obj.addField("Name",name);
-  obj.addField("Length",length);
+  vector<int64_t> shapeB;
+  string polyB;
+  parseParamValue(polyB,&shapeB);
+
+  if(shapeA.size()!=1 || shapeA.size() != shapeB.size() || shapeA[0]!=shapeB[0])
+    throw string("Unexpected PolynomA " + AbstractInterface::getShapeStr(shapeA) +
+                  "or PolynomB shape " + AbstractInterface::getShapeStr(shapeB) );
+
   obj.addField("PolynomA",polyA);
   obj.addField("PolynomB",polyB);
-  obj.addField("PassMethod","MPoleSymplectic4Pass");
-
-  if( current()==',' ) {
-    jumpSep(',');
-    parseExtraParams(obj);
-  }
+  obj.addField("MaxOrder", to_string(shapeA[0]-1));
+  obj.addField("PassMethod","StrMPoleSymplectic4Pass");
+  parseExtraParams(obj);
   jumpSep(')');
 
+}
+
+void REPRLoader::parseRFCavity(CppObject& obj) {
+
+  jumpSep('(');
+  parseParam("Name",obj);
+  jumpSep(',');
+  parseParam("Length",obj);
+  jumpSep(',');
+  parseParam("Voltage",obj);
+  jumpSep(',');
+  parseParam("Frequency",obj);
+  jumpSep(',');
+  parseParam("HarmonicNumber",obj);
+  jumpSep(',');
+  parseParam("Energy",obj);
+  obj.addField("PassMethod","RFCavityPass");
+  parseExtraParams(obj);
+  jumpSep(')');
 
 }
 
@@ -313,6 +294,8 @@ void REPRLoader::parseREPR(std::vector<CppObject> &elems) {
       parseSextupole(obj);
     } else if( elemType=="Multipole" ) {
       parseMultipole(obj);
+    } else if( elemType=="RFCavity" ) {
+      parseRFCavity(obj);
     } else {
       throw(fileName + ": Unsupported element " + elemType + " at " + getCoord(pos));
     }
@@ -322,7 +305,7 @@ void REPRLoader::parseREPR(std::vector<CppObject> &elems) {
 
 }
 
-void REPRLoader::parseParamValue(std::string& value) {
+void REPRLoader::parseParamValue(std::string& value,std::vector<int64_t> *shapePtr) {
 
   readWord(value);
 
@@ -339,6 +322,7 @@ void REPRLoader::parseParamValue(std::string& value) {
     } catch (string& errStr) {
       throw string(fileName + ": " + errStr + " at " + getErrorLocation(pos));
     }
+    if(shapePtr) *shapePtr = shape;
     value.clear();
     value.append(AbstractInterface::getShapeStr(shape));
     value.append(",");
@@ -454,9 +438,9 @@ void REPRLoader::readWord(std::string& word) {
   }
 
   /* Treat string */
-  if (currentChar == '"' && !backSlashed) {
+  if ((currentChar == '\'' || currentChar == '"') && !backSlashed) {
     readChar();
-    while ((currentChar != '"' || backSlashed) && currentChar != 0) {
+    while (((currentChar != '\'' && currentChar != '"') || backSlashed) && currentChar != 0) {
       word.push_back(currentChar);
       readChar();
     }

@@ -78,6 +78,34 @@ std::string AbstractInterface::getShapeStr(std::vector<int64_t>& shape) {
   return ret;
 }
 
+void AbstractInterface::getShapeFromStr(std::vector<int64_t>& shape,std::string& str) {
+
+  if(str.size()<3 || str[0]!='(' || str[str.size()-1]!=')')
+    throw string("Invalid shape definition, got " + str + " expected (N[xMx...])");
+
+  vector<string> stokens;
+  split(stokens, str, 'x');
+  stokens[0].erase(stokens[0].begin());
+  stokens[stokens.size()-1].pop_back();
+  for (const auto &stoken: stokens)
+    shape.push_back(stoi(stoken));
+
+}
+
+void AbstractInterface::split(vector<string> &tokens, const string &text, char sep) {
+
+  size_t start = 0, end = 0;
+  tokens.clear();
+
+  while ((end = text.find(sep, start)) != string::npos) {
+    tokens.push_back(text.substr(start, end - start));
+    start = end + 1;
+  }
+
+  tokens.push_back(text.substr(start));
+
+}
+
 int AbstractInterface::getOptionalInt(const std::string& name,int defaultValue) {
 
   try {
