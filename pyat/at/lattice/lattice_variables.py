@@ -54,6 +54,8 @@ class RefptsVariable(VariableBase):
             bounds (tuple[float, float]):   Lower and upper bounds of the
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
+            ring (Lattice): If specified, it is used to get and store the initial
+              value of the variable. Otherwise, the initial value is set to None
         """
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
@@ -117,9 +119,6 @@ class ElementVariable(VariableBase):
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
-        iniv = self._getfun()
-        self._initial = iniv
-        self._history.append(iniv)
 
     def _setfun(self, value: float, **kwargs):
         for elem in self._elements:
