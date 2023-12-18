@@ -60,16 +60,17 @@ if any(long)
         qp(lg)=foc;
 
         %Extract element parameters
-        L=atgetfieldvalues(ring(refpts(qp)),'Length','Default',0);
-        q=1e-12+atgetfieldvalues(ring(refpts(qp)),'PolynomB',{2},'Default',0);
-        m=atgetfieldvalues(ring(refpts(qp)),'PolynomB',{3},'Default',0);
-        R11=atgetfieldvalues(ring(refpts(qp)),'R2',{1,1},'Default',1);
-        dx=(atgetfieldvalues(ring(refpts(qp)),'T2',{1},'Default',0)-atgetfieldvalues(ring(refpts(qp)),'T1',{1},'Default',0))/2;
-        ba=atgetfieldvalues(ring(refpts(qp)),'BendingAngle','Default',0);
+        reng_selection=ring(refpts(qp));
+        L=atgetfieldvalues(reng_selection,'Length','Default',0);
+        q=1e-12+atgetfieldvalues(reng_selection,'PolynomB',{2},'Default',0);
+        m=atgetfieldvalues(reng_selection,'PolynomB',{3},'Default',0);
+        R11=atgetfieldvalues(reng_selection,'R2',{1,1},'Default',1);
+        dx=(atgetfieldvalues(reng_selection,'T2',{1},'Default',0)-atgetfieldvalues(reng_selection,'T1',{1},'Default',0))/2;
+        ba=atgetfieldvalues(reng_selection,'BendingAngle','Default',0);
         irho=ba./L;
-        e1=atgetfieldvalues(ring(refpts(qp)),'EntranceAngle','Default',0);
-        Fint=atgetfieldvalues(ring(refpts(qp)),'Fint','Default',0);
-        gap=atgetfieldvalues(ring(refpts(qp)),'gap','Default',0);
+        e1=atgetfieldvalues(reng_selection,'EntranceAngle','Default',0);
+        Fint=atgetfieldvalues(reng_selection,'Fint','Default',0);
+        gap=atgetfieldvalues(reng_selection,'gap','Default',0);
         
         %Hard edge model on dipoles
         d_csi=ba.*gap.*Fint.*(1+sin(e1).^2)./cos(e1)./L;

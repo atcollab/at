@@ -1229,15 +1229,16 @@ def avlinopt(ring, dp, refpts, **kwargs):
 
     # selected list
     boolrefs = get_bool_index(ring, refpts)
-    L = numpy.array([el.Length for el in ring[boolrefs]])
-    K = numpy.array([get_strength(el) for el in ring[boolrefs]])
-    sext_strength = numpy.array([get_sext_strength(el) for el in ring[boolrefs]])
-    roll = numpy.array([get_roll(el) for el in ring[boolrefs]])
-    ba = numpy.array([get_bendingangle(el) for el in ring[boolrefs]])
-    e1 = numpy.array([get_e1(el) for el in ring[boolrefs]])
-    Fint = numpy.array([get_fint(el) for el in ring[boolrefs]])
-    gap = numpy.array([get_gap(el) for el in ring[boolrefs]])
-    dx = numpy.array([get_dx(el) for el in ring[boolrefs]])
+    ring_selected = ring[refpts]
+    L = numpy.array([el.Length for el in ring_selected])
+    K = numpy.array([get_strength(el) for el in ring_selected])
+    sext_strength = numpy.array([get_sext_strength(el) for el in ring_selected])
+    roll = numpy.array([get_roll(el) for el in ring_selected])
+    ba = numpy.array([get_bendingangle(el) for el in ring_selected])
+    e1 = numpy.array([get_e1(el) for el in ring_selected])
+    Fint = numpy.array([get_fint(el) for el in ring_selected])
+    gap = numpy.array([get_gap(el) for el in ring_selected])
+    dx = numpy.array([get_dx(el) for el in ring_selected])
     irho=ba.copy()
     d_csi=ba.copy()
 
