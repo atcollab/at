@@ -9,6 +9,7 @@ kinds of element variables:
   *ring* argument must be provided to the *set* and *get* methods to identify the
   lattice, which may be a possibly modified copy of the original lattice
 """
+
 from __future__ import annotations
 from collections.abc import Sequence
 from typing import Union, Optional
@@ -16,12 +17,12 @@ import numpy as np
 from .utils import Refpts, getval, setval
 from .elements import Element
 from .lattice_object import Lattice
-from .variables import Variable
+from .variables import VariableBase
 
 __all__ = ["RefptsVariable", "ElementVariable"]
 
 
-class RefptsVariable(Variable):
+class RefptsVariable(VariableBase):
     r"""A reference to a scalar attribute of :py:class:`.Lattice` elements.
 
     It can refer to:
@@ -53,6 +54,8 @@ class RefptsVariable(Variable):
             bounds (tuple[float, float]):   Lower and upper bounds of the
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
+            ring (Lattice): If specified, it is used to get and store the initial
+              value of the variable. Otherwise, the initial value is set to None
         """
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
@@ -72,7 +75,7 @@ class RefptsVariable(Variable):
         return np.average(values)
 
 
-class ElementVariable(Variable):
+class ElementVariable(VariableBase):
     r"""A reference to a scalar attribute of :py:class:`.Lattice` elements.
 
     It can refer to:
@@ -113,13 +116,9 @@ class ElementVariable(Variable):
             self._elements = {elements}
         else:
             self._elements = set(elements)
-        # Check that the attribute is not already a parameter
-        if any(el.is_parametrised(attrname, index=index) for el in self._elements):
-            raise TypeError(f"{attrname} attribute is a Variable")
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
-        self._history.append(self._getfun())
 
     def _setfun(self, value: float, **kwargs):
         for elem in self._elements:
