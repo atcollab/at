@@ -186,14 +186,6 @@ class VariableBase(abc.ABC):
             exc.args = (f"{self.name}: history too short",)
             raise
 
-    @property
-    def _safe_value(self):
-        try:
-            v = self._history[-1]
-        except IndexError:
-            v = np.nan
-        return v
-
     def set(self, value: Number, ring=None) -> None:
         """Set the variable value
 
@@ -209,27 +201,40 @@ class VariableBase(abc.ABC):
             self._initial = value
         self._history.append(value)
 
-    def get(self, ring=None, *, initial=False) -> Number:
+    def get(
+        self, ring=None, *, initial: bool = False, check_bounds: bool = False
+    ) -> Number:
         """Get the actual variable value
 
         Args:
-            initial:    If :py:obj:`True`, clear the history and set the variable
-              initial value
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to get the variable value.
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
+            check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
+              of bounds
 
         Returns:
             value:      Value of the variable
         """
         value = self._getfun(ring=ring)
-        if initial:
+        if initial or np.isnan(self._initial):
             self._initial = value
             self._history = deque([value], self.history_length)
-        elif np.isnan(self._initial):
-            self._initial = value
+        if check_bounds:
+            if value < self.bounds[0] or value > self.bounds[1]:
+                raise ValueError(f"value out of {self.bounds}")
         return value
 
     value = property(get, set, doc="Actual value")
+
+    @property
+    def _safe_value(self):
+        try:
+            v = self._history[-1]
+        except IndexError:
+            v = np.nan
+        return v
 
     def set_previous(self, ring=None) -> None:
         """Reset to the value before the last one
@@ -240,8 +245,8 @@ class VariableBase(abc.ABC):
         """
         if len(self._history) >= 2:
             self._history.pop()  # Remove the last value
-            prev = self._history.pop()  # retrieve the previous value
-            self.set(prev, ring=ring)
+            value = self._history.pop()  # retrieve the previous value
+            self.set(value, ring=ring)
         else:
             raise IndexError(f"{self.name}: history too short",)
 
@@ -267,13 +272,13 @@ class VariableBase(abc.ABC):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to increment the variable.
         """
-        if len(self._history) == 0:
-            self.get(initial=True)
+        if self._initial is None:
+            self.get(ring=ring, initial=True)
         self.set(self.last_value + incr, ring=ring)
 
     def _step(self, step: Number, ring=None) -> None:
         if self._initial is None:
-            self.get(initial=True)
+            self.get(ring=ring, initial=True)
         self.set(self._initial + step, ring=ring)
 
     def step_up(self, ring=None) -> None:
@@ -300,7 +305,7 @@ class VariableBase(abc.ABC):
             "Name", "Initial", "Final ", "Variation"
         )
 
-    def _line(self, ring=None):
+    def _line(self):
         vnow = self._safe_value
         vini = self._initial
 
@@ -308,13 +313,13 @@ class VariableBase(abc.ABC):
             self.name, vini, vnow, (vnow - vini)
         )
 
-    def status(self, ring=None):
+    def status(self):
         """Return a string describing the current status of the variable
 
         Returns:
             status: Variable description
         """
-        return "\n".join((self._header(), self._line(ring=ring)))
+        return "\n".join((self._header(), self._line()))
 
     def __float__(self):
         return float(self._safe_value)
@@ -373,8 +378,11 @@ class CustomVariable(VariableBase):
         self.args = args
         self.kwargs = kwargs
         super().__init__(
-            name=name, bounds=bounds, delta=delta, history_length=history_length,
-            ring=ring
+            name=name,
+            bounds=bounds,
+            delta=delta,
+            history_length=history_length,
+            ring=ring,
         )
 
     def _getfun(self, ring=None) -> Number:
@@ -391,35 +399,45 @@ class VariableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
-    def get(self, initial=False, **kwargs) -> Sequence[float]:
+    def get(self, ring=None, **kwargs) -> Sequence[float]:
         r"""Get the current values of Variables
 
         Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+
+        Keyword Args:
             initial:    If :py:obj:`True`, set the Variables'
               initial value
+            check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
+              of bounds
 
         Returns:
             values:     1D array of values of all variables
         """
-        return np.array([var.get(initial=initial, **kwargs) for var in self])
+        return np.array([var.get(ring=ring, **kwargs) for var in self])
 
-    def set(self, values: Iterable[float], **kwargs) -> None:
+    def set(self, values: Iterable[float], ring=None) -> None:
         r"""Set the values of Variables
 
         Args:
             values:     Iterable of values
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
         """
         for var, val in zip(self, values):
-            var.set(val, **kwargs)
+            var.set(val, ring=ring)
 
-    def increment(self, increment: Iterable[float], **kwargs) -> None:
+    def increment(self, increment: Iterable[float], ring=None) -> None:
         r"""Increment the values of Variables
 
         Args:
             increment:  Iterable of values
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to increment the variable.
         """
         for var, incr in zip(self, increment):
-            var.increment(incr, **kwargs)
+            var.increment(incr, ring=ring)
 
     # noinspection PyProtectedMember
     def status(self, **kwargs) -> str:
