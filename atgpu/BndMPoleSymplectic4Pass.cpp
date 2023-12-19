@@ -22,6 +22,15 @@ void BndMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
   StrMPoleSymplectic4Pass::getParameters(param,info);
 
   elemData.Type = BEND;
+  if( elemData.MaxOrder==0 || (elemData.MaxOrder==1 && PolynomA[1]==0.0) ) {
+    if( elemData.MaxOrder==1 && PolynomB[1]!=0.0) {
+      elemData.SubType = 2; // DQ
+      elemData.K = PolynomB[1];
+    } else
+      elemData.SubType = 1; // Pure bending
+  } else {
+    elemData.SubType = 0;
+  }
   elemData.irho = param->getDouble("BendingAngle") / elemData.Length;
   AT_FLOAT gap = param->getOptionalDouble("FullGap", 0);
 
@@ -61,13 +70,25 @@ void BndMPoleSymplectic4Pass::generateGPUKernel(std::string& code, PASSMETHOD_IN
 
   generateEnter(code,info);
   generateApertures(code,info);
-  generateKickAngle(code,info);
   generateBendFringeEnter(code,info);
   generateQuadFringeEnter(code,info);
-  integrator.generateCode(code,"elem->NumIntSteps","fastdrift","bndthinkick","elem->irho");
+
+  // Kick/Drift methods are defined in PassMethodFactory
+  integrator.resetMethods();
+  // Default bend
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("bndthinkick(r6,elem->PolynomA,elem->PolynomB,%STEP%,elem->MaxOrder,elem->irho)");
+  // Pure bend
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("bndthinkick0(r6,elem->PolynomA[0],elem->PolynomB[0],%STEP%,elem->irho)");
+  // Pure DQ
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("dqthinkick(r6,elem->PolynomA[0],elem->PolynomB[0],elem->K,%STEP%,elem->irho)");
+
+  integrator.generateCode(code);
+
   generateQuadFringeExit(code,info);
   generateBendFringeExit(code,info);
-  generateKickAngleRestore(code,info);
   generateApertures(code,info);
   generateExit(code,info);
   code.append("}\n");

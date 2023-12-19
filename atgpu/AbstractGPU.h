@@ -46,6 +46,10 @@ public:
   // Return device name
   virtual std::string& name() = 0;
 
+  // Return number fo core
+  virtual int coreNumber() = 0;
+
+
 };
 
 // Abstract class to handle GPU access

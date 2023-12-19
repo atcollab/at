@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string.h>
 #include "npy.hpp"
+#include <inttypes.h>
+#include "Element.h"
 
 using namespace std;
 
@@ -46,6 +48,19 @@ AT_FLOAT *createGrid(AT_FLOAT x1,AT_FLOAT y1,AT_FLOAT x2,AT_FLOAT y2,uint64_t nb
 
 int main(int argc,char **arv) {
 
+  /*
+  ELEMENT e;
+  cout << sizeof(ELEMENT) <<endl;
+  cout << sizeof(e) <<endl;
+  printf("0x%" PRIx64 "\n", &e.Type);
+  printf("0x%" PRIx64 "\n", &e.SubType);
+  printf("0x%" PRIx64 "\n", &e.NumIntSteps);
+  printf("0x%" PRIx64 "\n", &e.SL);
+  printf("0x%" PRIx64 "\n", &e.MaxOrder);
+  printf("0x%" PRIx64 "\n", &e.Length);
+  exit(0);
+  */
+
   SymplecticIntegrator integrator(4);
   CppInterface *dI = new CppInterface();
   AbstractInterface::setHandler(dI);
@@ -63,14 +78,14 @@ int main(int argc,char **arv) {
 
   try {
 
-    Lattice *l = new Lattice(integrator,0);
+    Lattice *l = new Lattice(integrator,1);
     for(auto & element : elements) {
       dI->setObject(&element);
       l->addElement();
     }
-    l->generateGPUKernel(code,true);
+    l->generateGPUKernel(code);
 
-    uint64_t nbTurn = 10;
+    uint64_t nbTurn = 1;
     uint64_t nbX = 1;
     uint64_t nbY = 1;
     uint64_t nbPart = nbX * nbY;
@@ -82,8 +97,8 @@ int main(int argc,char **arv) {
 
     AT_FLOAT *rin = createGrid(-0.001,-0.001,0.001,0.001,nbX,nbY);
 
-    string gpuName = l->getGPUContext()->name();
-    cout << "Running " << to_string(nbTurn) << " turn(s) on " << gpuName << endl;
+    string gpuName = l->getGPUContext()->name() + "(" + to_string(l->getGPUContext()->coreNumber()) + " cores)";
+    cout << "Running " << to_string(nbPart) << " particles, " << to_string(nbTurn) << " turn(s) on " << gpuName << endl;
     l->run(nbTurn,nbPart,rin,rout,nbRef,refs);
 
     npy::npy_data_ptr<double> d;

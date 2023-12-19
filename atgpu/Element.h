@@ -8,7 +8,7 @@
 typedef double AT_FLOAT;
 
 // GPU thread block size
-#define GPU_GRID 128
+#define GPU_BLOCK_SIZE 128
 
 // Type of lattice element
 #define NB_PASSMETHOD_TYPE 4
@@ -45,11 +45,9 @@ typedef struct STRUCT_ALIGN(16) {
 
   // StrMPole
   uint32_t  MaxOrder;
+  AT_FLOAT  K;
   AT_FLOAT  *PolynomA;
   AT_FLOAT  *PolynomB;
-  AT_FLOAT  *NormD;
-  AT_FLOAT  *NormK;
-  AT_FLOAT  *KickAngle;
   uint32_t  FringeQuadEntrance;
   uint32_t  FringeQuadExit;
 

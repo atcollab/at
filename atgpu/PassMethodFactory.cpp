@@ -50,7 +50,7 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
     IdentityPass::generateGPUKernel(code,&passMethodInfos[IDENTITY]);
     IdentityPass::generateCall(callCode);
   }
-  if( passMethodInfos[DRIFT].used ) {
+  if( passMethodInfos[DRIFT].used || passMethodInfos[MPOLE].used ) {
     DriftPass::generateGPUKernel(code,&passMethodInfos[DRIFT]);
     DriftPass::generateCall(callCode);
   }
@@ -139,29 +139,29 @@ void PassMethodFactory::generateUtilsFunctions(std::string& code) {
   // Quad
   code.append(
           ftype +
-          "void strthinkick1(AT_FLOAT* r,const AT_FLOAT* A,const AT_FLOAT* B,AT_FLOAT L,int max_order) {\n"
-          "  r[1] -= B[1] * L * r[0] + B[0];\n"
-          "  r[3] += B[1] * L * r[2] + A[0];\n"
+          "void quadthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L) {\n"
+          "  r[1] -= L * (K * r[0] + B0);\n"
+          "  r[3] += L * (K * r[2] + A0);\n"
           "}\n"
   );
 
   // Sextu
   code.append(
           ftype +
-          "void strthinkick2(AT_FLOAT* r,const AT_FLOAT* A,const AT_FLOAT* B,AT_FLOAT L,int max_order) {\n"
-          "  r[1] -= B[2] * L * (r[0]*r[0]-r[2]*r[2]) + B[0];\n"
-          "  r[3] += B[2] * L * (2.0* r[0] * r[2]) + A[0];\n"
+          "void sextuthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L) {\n"
+          "  r[1] -= L * (K * (r[0]*r[0]-r[2]*r[2]) + B0);\n"
+          "  r[3] += L * (K * (2.0* r[0] * r[2]) + A0);\n"
           "}\n"
   );
 
   // Octu
   code.append(
           ftype +
-          "void strthinkick3(AT_FLOAT* r,const AT_FLOAT* A,const AT_FLOAT* B,AT_FLOAT L,int max_order) {\n"
+          "void octuthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L) {\n"
           "  AT_FLOAT x2 = r[0]*r[0];\n"
           "  AT_FLOAT y2 = r[2]*r[2];\n"
-          "  r[1] -= B[3] * L * r[0] * (x2 - 3.0*y2) + B[0];\n"
-          "  r[3] += B[3] * L * r[2] * (3.0*x2 - y2) + A[0];\n"
+          "  r[1] -= L * ((K * r[0] * (x2 - 3.0*y2)) + B0);\n"
+          "  r[3] += L * ((K * r[2] * (3.0*x2 - y2)) + A0);\n"
           "}\n"
   );
 
@@ -196,21 +196,30 @@ void PassMethodFactory::generateUtilsFunctions(std::string& code) {
           "}\n"
   );
 
-  /*
+  // Pure bending
   code.append(
           ftype +
-          "void bndthinkick0(AT_FLOAT* r,const AT_FLOAT* A,const AT_FLOAT* B,AT_FLOAT L,AT_FLOAT irho) {\n"
-          "  r[1] -= L * (B[0] - (r[4] - r[0] * irho) * irho);\n"
-          "  r[3] += L * A[0];\n"
+          "void bndthinkick0(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT L,AT_FLOAT irho) {\n"
+          "  r[1] -= L * (B0 - (r[4] - r[0] * irho) * irho);\n"
+          "  r[3] += L * A0;\n"
           "  r[5] += L * irho * r[0];\n"
           "}\n"
   );
-  */
+
+  // Pure DQ
+  code.append(
+          ftype +
+          "void dqthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L,AT_FLOAT irho) {\n"
+          "  r[1] -= L * ((K * r[0] + B0) - (r[4] - r[0] * irho) * irho);\n"
+          "  r[3] += L * (K * r[2] + A0);\n"
+          "  r[5] += L * irho * r[0];\n"
+          "}\n"
+  );
 
   //Lee-Whiting's thin lens limit formula as given in p. 390 of "Beam Dynamics..." by E. Forest
   code.append(
           ftype +
-          "void quad_fringe(AT_FLOAT* r, AT_FLOAT b2, AT_FLOAT sign, AT_FLOAT p_norm) {\n"
+          "__inline__ void quad_fringe(AT_FLOAT* r, AT_FLOAT b2, AT_FLOAT sign, AT_FLOAT p_norm) {\n"
           "  AT_FLOAT u = p_norm * b2 / 12.0;\n"
           "  AT_FLOAT x2 = r[0] * r[0];\n"
           "  AT_FLOAT z2 = r[2] * r[2];\n"

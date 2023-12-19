@@ -1,7 +1,5 @@
 #include "IdentityPass.h"
-#include "AbstractGPU.h"
 #include <string.h>
-#include <iostream>
 
 using namespace std;
 
@@ -53,42 +51,47 @@ uint64_t IdentityPass::getMemorySize() {
 }
 
 // Fill device memory
-void IdentityPass::fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) {
+void IdentityPass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
 
   AT_FLOAT *dest = (AT_FLOAT *)privateMem;
+  AT_FLOAT *destGPU = (AT_FLOAT *)privateMem;
 
   if(R1) {
-    elemData.R1 = dest;
-    gpu->hostToDevice(dest,R1,6*6*sizeof(AT_FLOAT));
+    elemData.R1 = destGPU;
+    memcpy(dest,R1,6*6*sizeof(AT_FLOAT));
     dest += 6*6;
+    destGPU += 6*6;
   }
   if(R2) {
-    elemData.R2 = (AT_FLOAT *)dest;
-    gpu->hostToDevice(dest,R2,6*6*sizeof(AT_FLOAT));
+    elemData.R2 = destGPU;
+    memcpy(dest,R2,6*6*sizeof(AT_FLOAT));
     dest += 6*6;
+    destGPU += 6*6;
   }
   if(T1) {
-    elemData.T1 = (AT_FLOAT *)dest;
-    gpu->hostToDevice(dest,T1,6*sizeof(AT_FLOAT));
+    elemData.T1 = destGPU;
+    memcpy(dest,T1,6*sizeof(AT_FLOAT));
     dest += 6;
+    destGPU += 6;
   }
   if(T2) {
-    elemData.T2 = (AT_FLOAT *)dest;
-    gpu->hostToDevice(dest,T2,6*sizeof(AT_FLOAT));
+    elemData.T2 = destGPU;
+    memcpy(dest,T2,6*sizeof(AT_FLOAT));
     dest += 6;
+    destGPU += 6;
   }
   if(EApertures) {
-    elemData.EApertures = (AT_FLOAT *)dest;
-    gpu->hostToDevice(dest,EApertures,2*sizeof(AT_FLOAT));
+    elemData.EApertures = destGPU;
+    memcpy(dest,EApertures,2*sizeof(AT_FLOAT));
     dest += 2;
+    destGPU += 2;
   }
   if(RApertures) {
-    elemData.RApertures = (AT_FLOAT *)dest;
-    gpu->hostToDevice(dest,RApertures,4*sizeof(AT_FLOAT));
-    dest += 4;
+    elemData.RApertures = destGPU;
+    memcpy(dest,RApertures,4*sizeof(AT_FLOAT));
   }
 
-  gpu->hostToDevice(elemMem,&elemData,sizeof(ELEMENT));
+  memcpy(elemMem,&elemData,sizeof(ELEMENT));
 
 }
 
