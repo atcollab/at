@@ -527,7 +527,7 @@ class ParamBase(VariableBase):
 
     @property
     def _safe_value(self):
-        return self.get()
+        return self._getfun()
 
     def set_conversion(self, conversion: Callable[[Number], Number]):
         """Set the data type. Called when a parameter is assigned to an
