@@ -1,21 +1,19 @@
 #include "StrMPoleSymplectic4Pass.h"
 #include "AbstractGPU.h"
 #include <iostream>
+#include <string.h>
+#include <math.h>
 
 using namespace std;
 
 StrMPoleSymplectic4Pass::StrMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept : IdentityPass(),
 integrator(integrator) {
-  NormD = new AT_FLOAT[integrator.nbCoefficients];
-  NormK = new AT_FLOAT[integrator.nbCoefficients];
   PolynomA = nullptr;
   PolynomB = nullptr;
   KickAngle = nullptr;
 }
 
 StrMPoleSymplectic4Pass::~StrMPoleSymplectic4Pass() noexcept {
-  delete[] NormD;
-  delete[] NormK;
   delete[] PolynomA;
   delete[] PolynomB;
   delete[] KickAngle;
@@ -32,15 +30,13 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
   elemData.SL = elemData.Length / (AT_FLOAT)elemData.NumIntSteps;
   elemData.MaxOrder = param->getInt("MaxOrder");
 
-  int nbCoef = integrator.nbCoefficients;
-  for(int i=0;i<nbCoef;i++) {
-    NormD[i] = elemData.SL * integrator.c[i];
-    NormK[i] = elemData.SL * integrator.d[i];
-  }
-
   param->get1DArray(&PolynomA,"PolynomA",elemData.MaxOrder+1);
   param->get1DArray(&PolynomB,"PolynomB",elemData.MaxOrder+1);
   param->getOptional1DArray(&KickAngle,"KickAngle",2);
+  if( KickAngle ) {
+    PolynomB[0] -= sin(KickAngle[0]) / elemData.Length;
+    PolynomA[0] += sin(KickAngle[1]) / elemData.Length;
+  }
 
   elemData.FringeQuadEntrance = param->getOptionalInt("FringeQuadEntrance", 0);
   elemData.FringeQuadExit = param->getOptionalInt("FringeQuadExit", 0);
@@ -50,16 +46,22 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
     elemData.FringeQuadExit = false;
   }
 
-  if( isQuadrupole() )
+  if ( isDrift() ) {
+    // All polynom coefficients are null
+    elemData.Type = DRIFT;
+  } else if( isQuadrupole() ) {
     elemData.SubType = 1;
-  else if ( isSextupole() )
+    elemData.K = PolynomB[1];
+  } else if ( isSextupole() ) {
     elemData.SubType = 2;
-  else if ( isOctupole() )
+    elemData.K = PolynomB[2];
+  } else if ( isOctupole() ) {
     elemData.SubType = 3;
+    elemData.K = PolynomB[3];
+  }
 
   info->doQuadEnter |= (elemData.FringeQuadEntrance!=0);
   info->doQuadExit |= (elemData.FringeQuadExit!=0);
-  info->doKickAngle |= (elemData.KickAngle != nullptr);
 
 }
 
@@ -68,42 +70,39 @@ uint64_t StrMPoleSymplectic4Pass::getMemorySize() {
   uint64_t sum = IdentityPass::getMemorySize();
   if(PolynomA) sum += (elemData.MaxOrder + 1) * sizeof(AT_FLOAT);
   if(PolynomB) sum += (elemData.MaxOrder + 1) * sizeof(AT_FLOAT);
-  if(KickAngle) sum += 2 * sizeof(AT_FLOAT);
-  sum += integrator.nbCoefficients * 2 * sizeof(AT_FLOAT);
   return sum;
 
 }
 
-void StrMPoleSymplectic4Pass::fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) {
+void StrMPoleSymplectic4Pass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
 
   uint64_t privSize = IdentityPass::getMemorySize();
   unsigned char *privPtr = (unsigned char *)privateMem;
   AT_FLOAT *dest = (AT_FLOAT *)(privPtr + privSize);
+  AT_FLOAT *destGPU = (AT_FLOAT *)((unsigned char *)gpuMem + privSize);
 
   if(PolynomA) {
-    elemData.PolynomA = dest;
-    gpu->hostToDevice(dest,PolynomA,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
+    elemData.PolynomA = destGPU;
+    memcpy(dest,PolynomA,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
     dest += (elemData.MaxOrder + 1);
+    destGPU += (elemData.MaxOrder + 1);
   }
   if(PolynomB) {
-    elemData.PolynomB = dest;
-    gpu->hostToDevice(dest,PolynomB,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
+    elemData.PolynomB = destGPU;
+    memcpy(dest,PolynomB,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
     dest += (elemData.MaxOrder + 1);
-  }
-  if(KickAngle) {
-    elemData.KickAngle = dest;
-    gpu->hostToDevice(dest,KickAngle,2*sizeof(AT_FLOAT));
-    dest += 2;
+    destGPU += (elemData.MaxOrder + 1);
   }
 
-  elemData.NormD = dest;
-  gpu->hostToDevice(dest,NormD,integrator.nbCoefficients * sizeof(AT_FLOAT));
-  dest += integrator.nbCoefficients;
-  elemData.NormK = dest;
-  gpu->hostToDevice(dest,NormK,integrator.nbCoefficients * sizeof(AT_FLOAT));
+  IdentityPass::fillGPUMemory(elemMem,privateMem,gpuMem);
 
-  IdentityPass::fillGPUMemory(gpu,elemMem,privateMem);
+}
 
+bool StrMPoleSymplectic4Pass::isDrift() {
+  bool isDr = true;
+  for(int i=0;i<=elemData.MaxOrder;i++)
+    isDr &= PolynomA[i]==0.0 && PolynomB[i]==0.0;
+  return isDr;
 }
 
 bool StrMPoleSymplectic4Pass::isQuadrupole() {
@@ -135,32 +134,32 @@ void StrMPoleSymplectic4Pass::generateGPUKernel(std::string& code, PASSMETHOD_IN
 
   generateEnter(code,info);
   generateApertures(code,info);
-  generateKickAngle(code,info);
   generateQuadFringeEnter(code,info);
 
-  // Generate switch/case for subtype (pure Quad,Sextu,Octu)
-  code.append("  switch(elem->SubType) {\n");
-  for(int subType=0;subType<4;subType++)
-    generateIntegrator(code,subType,info,integrator);
-  code.append("  }\n");
+  // Kick/Drift methods are defined in PassMethodFactory
+  integrator.resetMethods();
+  // Default straight magnet
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("strthinkick(r6,elem->PolynomA,elem->PolynomB,%STEP%,elem->MaxOrder)");
+  // Pure quad
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("quadthinkick(r6,elem->PolynomA[0],elem->PolynomB[0],elem->K,%STEP%)");
+  // Pure sextu
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("sextuthinkick(r6,elem->PolynomA[0],elem->PolynomB[0],elem->K,%STEP%)");
+  // Pure octu
+  integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("octuthinkick(r6,elem->PolynomA[0],elem->PolynomB[0],elem->K,%STEP%)");
+
+  integrator.generateCode(code);
 
   generateQuadFringeExit(code,info);
-  generateKickAngleRestore(code,info);
   generateApertures(code,info);
   generateExit(code,info);
   code.append("}\n");
 
 }
 
-void StrMPoleSymplectic4Pass::generateIntegrator(std::string& code, int subType, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept {
-
-  // Integrator loop
-  string sTStr = to_string(subType);
-  code.append("  case " + sTStr + ":\n");
-  integrator.generateCode(code,"elem->NumIntSteps","fastdrift","strthinkick" + ((subType>0)?to_string(subType):""),"");
-  code.append("    break;\n");
-
-}
 
 void StrMPoleSymplectic4Pass::generateCall(std::string& code) noexcept {
 
@@ -168,31 +167,6 @@ void StrMPoleSymplectic4Pass::generateCall(std::string& code) noexcept {
           "      case MPOLE:\n"
           "        StrMPoleSymplectic4Pass(r6,elemPtr);\n"
           "        break;\n"
-  );
-
-}
-
-void StrMPoleSymplectic4Pass::generateKickAngle(std::string& code, PASSMETHOD_INFO *info) noexcept {
-
-  if(info->doKickAngle)
-  code.append(
-          "  AT_FLOAT A0 = elem->PolynomA[0];\n"
-          "  AT_FLOAT B0 = elem->PolynomB[0];\n"
-          "  if (elem->doKickAngle) {\n"
-          "    elem->PolynomB[0] -= sin(elem->KickAngle[0])/elemData.SL;\n"
-          "    elem->PolynomA[0] += sin(elem->KickAngle[1])/elemData.SL;\n"
-          "  }\n"
-  );
-
-}
-
-void StrMPoleSymplectic4Pass::generateKickAngleRestore(std::string& code, PASSMETHOD_INFO *info) noexcept {
-
-  if(info->doKickAngle)
-  code.append(
-          "  if (elem->doKickAngle) {\n"
-          "    elem->PolynomB[0] = B0;\n"
-          "  }\n"
   );
 
 }

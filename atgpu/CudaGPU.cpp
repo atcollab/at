@@ -25,13 +25,21 @@ CudaContext::CudaContext(int devId) noexcept: devId(devId)  {
   info.smNumber = CudaGPU::_ConvertSMVer2Cores(maj,min);
   arch = "sm_" + to_string(maj) + to_string(min);
 
-  cudaCall(cuCtxCreate,&context, 0, cuDevice);
+  //cudaCall(cuDevicePrimaryCtxRetain, &context, cuDevice);
+  cudaCall(cuCtxCreate,&context, CU_CTX_SCHED_SPIN, cuDevice);
+  cudaCall(cuCtxSetSharedMemConfig, CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE);
+  cudaCall(cuCtxSetCacheConfig , CU_FUNC_CACHE_PREFER_L1);
 
+}
+
+int CudaContext::coreNumber() {
+  return info.mpNumber * info.smNumber;
 }
 
 CudaContext::~CudaContext() {
   if(module) cuModuleUnload(module);
   cuCtxDestroy(context);
+  //cudaCall(cuDevicePrimaryCtxRelease, cuDevice);
 }
 
 void CudaContext::hostToDevice(void *dest,void *src,size_t size) {
@@ -63,22 +71,24 @@ void CudaContext::compile(string& code) {
             nullptr);      // includeNames
 
   // Compile the program
-  string archOpt = "--gpu-architecture=" + arch;
-  const char *opts[] = {archOpt.c_str(),"--dopt=on","--fmad=true","--extra-device-vectorization"};
+  string archOpt = "-arch=" + arch;
+  const char *opts[] = {archOpt.c_str()};
   nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
                                                   1,     // numOptions
                                                   opts); // options
+
   if (compileResult != NVRTC_SUCCESS) {
 
     AbstractGPU::outputCode(code);
 
-    // Obtain compilation log from the program.
     size_t logSize;
     nvrtcCall(nvrtcGetProgramLogSize,prog, &logSize);
     char *log = new char[logSize];
     nvrtcCall(nvrtcGetProgramLog,prog, log);
     std::cout << log << '\n';
     delete[] log;
+
+    // Obtain compilation log from the program.
 
     nvrtcDestroyProgram(&prog);
     string errStr = "nvrtcCompileProgram failed: " + string(nvrtcGetErrorString(compileResult));
@@ -87,11 +97,22 @@ void CudaContext::compile(string& code) {
   }
 
 #if 0
+  // nvcc --cubin --ptxas-options="-m64 -arch=sm_86 --verbose -O3" code.ptx
+  char *compiledCode = new char[36656];
+  FILE *f = fopen("code.cubin","r");
+  fread(compiledCode,1,36656,f);
+  fclose(f);
+#endif
+
+#if 0
   // Obtain PTX from the program.
   size_t ptxSize;
   nvrtcCall(nvrtcGetPTXSize,prog, &ptxSize);
   char *compiledCode = new char[ptxSize];
   nvrtcCall(nvrtcGetPTX,prog,compiledCode);
+  FILE *f = fopen("code.ptx","w");
+  fwrite(compiledCode,1,ptxSize,f);
+  fclose(f);
 #endif
 
 #if 1
@@ -122,28 +143,28 @@ void CudaContext::addArg(size_t argSize,void *value) {
   args.push_back(value);
 }
 
-void CudaContext::run(uint32_t gridSize,uint64_t nbThread) {
+void CudaContext::run(uint32_t blockSize, uint64_t nbThread) {
 
   cudaCall(cuModuleGetFunction,&kernel, module, "track");
 
-  if( nbThread<gridSize ) {
+  if(nbThread < blockSize ) {
 
     cudaCall(cuLaunchKernel, kernel,
-             nbThread, 1, 1,        // grid dim
-             1, 1, 1,               // block dim
+             1, 1, 1,               // grid dim
+             blockSize, 1, 1,       // block dim
              0, nullptr,            // shared mem and stream
              args.data(), nullptr); // arguments
 
   } else {
 
-    if( nbThread%gridSize != 0  ) {
+    if(nbThread % blockSize != 0  ) {
       // TODO: Handle this
-      throw string("nbThread (" + to_string(nbThread) + ") must be a multiple of gridSize (" + to_string(gridSize) + ")");
+      throw string("nbThread (" + to_string(nbThread) + ") must be a multiple of GPU_BLOCK_SIZE (" + to_string(blockSize) + ")");
     }
 
     cudaCall(cuLaunchKernel, kernel,
-             gridSize, 1, 1,           // grid dim
-             nbThread/gridSize, 1, 1,  // block dim
+             nbThread / blockSize, 1, 1,  // grid dim
+             blockSize, 1, 1,           // block dim
              0, nullptr,               // shared mem and stream
              args.data(), nullptr);    // arguments
 

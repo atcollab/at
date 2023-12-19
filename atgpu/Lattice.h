@@ -19,7 +19,7 @@ public:
   // Return number of element
   uint32_t getNbElement();
   // Generate device code
-  void generateGPUKernel(std::string& code,bool doRout);
+  void generateGPUKernel(std::string& code);
   // Fill GPU memory
   void fillGPUMemory();
   // Run the simulation
@@ -29,6 +29,8 @@ public:
 
 
 private:
+
+  void Transpose64(int32_t w,int32_t hm,void *mem);
 
   PassMethodFactory factory;                // Pass method code generation
   std::vector<AbstractElement *> elements;  // All elements

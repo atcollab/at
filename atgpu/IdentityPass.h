@@ -13,7 +13,7 @@ public:
   // Retrieve parameters from upper layer (Python, Matlab)
   void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
   uint64_t getMemorySize() override;
-  void fillGPUMemory(GPUContext *gpu,void *elemMem,void *privateMem) override;
+  void fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) override;
 
   // GPU code generation
   static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info) noexcept;

@@ -18,7 +18,7 @@ public:
   void addArg(size_t argSize,void *value) final;
 
   // Run the kernel
-  void run(uint32_t gridSize,uint64_t nbThread) final;
+  void run(uint32_t blockSize, uint64_t nbThread) final;
 
   // Compile and load the kernel
   void compile(std::string& code) final;
@@ -37,6 +37,9 @@ public:
 
   // Return device name
   std::string& name();
+
+  // Return number fo core
+  int coreNumber();
 
 private:
 
