@@ -8,7 +8,7 @@ class CudaContext final: public GPUContext {
 
 public:
 
-  explicit CudaContext(int devId) noexcept;
+  explicit CudaContext(int devId);
   ~CudaContext() final;
 
   // Empty kernel parameter

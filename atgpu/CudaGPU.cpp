@@ -7,11 +7,13 @@ using namespace std;
 #define nvrtcCall(funcName,...) { nvrtcResult r = funcName(__VA_ARGS__);nvrtcCheckCall(#funcName,r); }
 #define cudaCall(funcName,...) { CUresult r = funcName(__VA_ARGS__);cudaCheckCall(#funcName,r); }
 
-CudaContext::CudaContext(int devId) noexcept: devId(devId)  {
+CudaContext::CudaContext(int devId): devId(devId)  {
 
   char name[256];
   module = nullptr;
   kernel = nullptr;
+  info.name = "unknown";
+  arch = "";
 
   cudaCall(cuDeviceGet,&cuDevice, devId);
   int min,maj,nbMP;
@@ -92,7 +94,7 @@ void CudaContext::compile(string& code) {
 
     nvrtcDestroyProgram(&prog);
     string errStr = "nvrtcCompileProgram failed: " + string(nvrtcGetErrorString(compileResult));
-    throw(errStr);
+    throw errStr;
 
   }
 
@@ -158,7 +160,6 @@ void CudaContext::run(uint32_t blockSize, uint64_t nbThread) {
   } else {
 
     if(nbThread % blockSize != 0  ) {
-      // TODO: Handle this
       throw string("nbThread (" + to_string(nbThread) + ") must be a multiple of GPU_BLOCK_SIZE (" + to_string(blockSize) + ")");
     }
 
@@ -181,7 +182,7 @@ void CudaContext::cudaCheckCall(const char *funcName,CUresult r) {
   if (r != CUDA_SUCCESS) {
     const char *msg;
     cuGetErrorName(r, &msg);
-    string errStr = info.name + "[" + info.version + "] " + string(funcName) + ": " + msg;
+    string errStr = string(funcName) + ": " + msg + " (on " + info.name + " [" + arch + "]"+ ")";
     throw errStr;
   }
 
@@ -190,7 +191,7 @@ void CudaContext::cudaCheckCall(const char *funcName,CUresult r) {
 void CudaContext::nvrtcCheckCall(const char *funcName,nvrtcResult r) {
 
   if(r != NVRTC_SUCCESS) {
-    string errStr = info.name + "[" + info.version + "] " + string(funcName) + ": " + nvrtcGetErrorString(r);
+    string errStr = string(funcName) + ": " + nvrtcGetErrorString(r) + " (on " + info.name + " [" + arch + "]"+ ")";
     throw errStr;
   }
 

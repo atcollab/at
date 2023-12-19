@@ -67,14 +67,12 @@ int main(int argc,char **arv) {
   vector<CppObject> elements;
 
   try {
-    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/simple_ebs.repr");
+    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/betamodel.repr");
     loader->parseREPR(elements);
   } catch (string& errStr) {
     cout << "Parse failed: " << errStr << endl;
     exit(0);
   }
-
-  string code;
 
   try {
 
@@ -83,7 +81,6 @@ int main(int argc,char **arv) {
       dI->setObject(&element);
       l->addElement();
     }
-    l->generateGPUKernel(code);
 
     uint64_t nbTurn = 1;
     uint64_t nbX = 1;

@@ -59,6 +59,7 @@ private:
 
   void parseExtraParams(CppObject& obj);
   void parseParam(const std::string& name,CppObject& obj);
+  void parseIdentity(CppObject& obj);
   void parseDrift(CppObject& obj);
   void parseDipole(CppObject& obj);
   void parseQuadrupole(CppObject& obj);
@@ -70,8 +71,10 @@ private:
   void jumpSep(const std::string& sep);
   void jumpSep(char sep);
   void parseParamValue(std::string& value,std::vector<int64_t> *shapePtr= nullptr);
-  void parseArray(std::vector<std::string> &ret,std::vector<int64_t>& shape,int level);
   int getPosMarker() const;
+  void parseArray(std::vector<std::string> &ret,std::vector<int64_t>& shape,int level);
+  void parseArrayType(std::string& typeStr);
+  void getArrayValue(std::string& str,std::vector<int64_t>& shape,std::vector<std::string>& values);
   std::string getErrorLocation(int pos);
   char current();
   bool endOf(char c);

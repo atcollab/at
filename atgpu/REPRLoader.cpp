@@ -118,11 +118,11 @@ REPRLoader::REPRLoader(const std::string &fileName) {
 
 void REPRLoader::parseExtraParams(CppObject& obj) {
 
+  string pName;
+  string pValue;
   if (current() == ',') {
     jumpSep(',');
     while (!endOf(')')) {
-      string pName;
-      string pValue;
       readWord(pName);
       jumpSep('=');
       parseParamValue(pValue);
@@ -137,6 +137,16 @@ void REPRLoader::parseParam(const std::string& name,CppObject& obj) {
   string value;
   parseParamValue(value);
   obj.addField(name,value);
+}
+
+void REPRLoader::parseIdentity(CppObject& obj) {
+
+  jumpSep('(');
+  parseParam("Name",obj);
+  obj.addField("PassMethod","IdentityPass");
+  parseExtraParams(obj);
+  jumpSep(')');
+
 }
 
 void REPRLoader::parseDrift(CppObject& obj) {
@@ -284,7 +294,11 @@ void REPRLoader::parseREPR(std::vector<CppObject> &elems) {
     readWord(elemType);
     CppObject obj;
 
-    if( elemType=="Drift" ) {
+    if( elemType=="Marker" ) {
+      parseIdentity(obj);
+    } else if( elemType=="Monitor" ) {
+      parseIdentity(obj);
+    }else if( elemType=="Drift" ) {
       parseDrift(obj);
     } else if( elemType=="Dipole" ) {
       parseDipole(obj);
@@ -305,6 +319,28 @@ void REPRLoader::parseREPR(std::vector<CppObject> &elems) {
 
 }
 
+void REPRLoader::getArrayValue(std::string& str,std::vector<int64_t>& shape,std::vector<std::string>& values) {
+
+  str.clear();
+  str.append(AbstractInterface::getShapeStr(shape));
+  str.append(",");
+  for(size_t i=0;i<values.size();i++) {
+    str.append(values[i]);
+    if(i<values.size()-1) str.append(",");
+  }
+
+}
+
+void REPRLoader::parseArrayType(std::string& typeStr) {
+  if(current()==',') {
+    // Jump dtype
+    jumpSep(',');
+    jumpSep("dtype");
+    jumpSep('=');
+    readWord(typeStr);
+  }
+}
+
 void REPRLoader::parseParamValue(std::string& value,std::vector<int64_t> *shapePtr) {
 
   readWord(value);
@@ -323,13 +359,9 @@ void REPRLoader::parseParamValue(std::string& value,std::vector<int64_t> *shapeP
       throw string(fileName + ": " + errStr + " at " + getErrorLocation(pos));
     }
     if(shapePtr) *shapePtr = shape;
-    value.clear();
-    value.append(AbstractInterface::getShapeStr(shape));
-    value.append(",");
-    for(size_t i=0;i<values.size();i++) {
-      value.append(values[i]);
-      if(i<values.size()-1) value.append(",");
-    }
+    getArrayValue(value,shape,values);
+    string typeStr;
+    parseArrayType(typeStr);
     jumpSep(')');
 
   // Particle type
@@ -500,7 +532,20 @@ void REPRLoader::parseArray(vector<string> &ret,vector<int64_t>& shape,int level
     } else {
       string w;
       readWord(w);
-      ret.push_back(w);
+      if(w=="array" && current()=='(') {
+        jumpSep('(');
+        vector<int64_t> inShape;
+        vector<string> inValues;
+        parseArray(inValues,inShape,0);
+        string typeStr;
+        parseArrayType(typeStr);
+        jumpSep(')');
+        string inValue;
+        getArrayValue(inValue,inShape,inValues);
+        ret.push_back(inValue);
+      } else {
+        ret.push_back(w);
+      }
     }
     if (current() == ',') jumpSep(',');
     count++;

@@ -1,8 +1,9 @@
 #include "CudaGPU.h"
 #include "iostream"
 
-#ifdef WIN64
+#if defined(_MSC_VER)
 
+#include <windows.h>
 LARGE_INTEGER perfTickStart;
 double perfTicksPerSec;
 LARGE_INTEGER qwTicksPerSec;
@@ -28,7 +29,7 @@ AbstractGPU *AbstractGPU::getInstance() {
 
 void AbstractGPU::initTimer() {
 
-#ifdef WIN64
+#if defined(_MSC_VER)
   QueryPerformanceFrequency(&qwTicksPerSec);
   QueryPerformanceCounter(&perfTickStart);
   perfTicksPerSec = (double)qwTicksPerSec.QuadPart;
@@ -53,7 +54,7 @@ void AbstractGPU::outputCode(std::string& code) {
 
 double AbstractGPU::get_ticks() {
 
-#ifdef WIN64
+#if defined(_MSC_VER)
   LARGE_INTEGER t,dt;
   QueryPerformanceCounter(&t);
   dt.QuadPart = t.QuadPart - perfTickStart.QuadPart;

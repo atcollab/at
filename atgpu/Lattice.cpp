@@ -41,10 +41,12 @@ GPUContext *Lattice::getGPUContext() {
   return gpu;
 }
 
-void Lattice::generateGPUKernel(std::string& code) {
+void Lattice::generateGPUKernel() {
 
   double t0,t1;
   t0=AbstractGPU::get_ticks();
+
+  std::string code;
 
   code.append(header);
   AbstractGPU::getInstance()->addUtilsFunctions(code);
@@ -222,6 +224,8 @@ void Lattice::Transpose64(int32_t X,int32_t Y,void *mem) {
 
 void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts) {
 
+  generateGPUKernel();
+
   double t0 = AbstractGPU::get_ticks();
 
   // Copy rin to gpu mem
@@ -233,7 +237,7 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->hostToDevice(gpuRin, rin, nbParticles * 6 * sizeof(AT_FLOAT));
 
   // Expand ref indexes
-  int32_t expandedRefPts[elements.size()+1];
+  int32_t *expandedRefPts = new int32_t[elements.size()+1];
   for(int i=0;i<=elements.size();i++)
     expandedRefPts[i] = -1;
   for(int i=0;i<nbRef;i++)
@@ -313,6 +317,7 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->freeDevice(gpuRout);
   gpu->freeDevice(gpuRefs);
   gpu->freeDevice(gpuLost);
+  delete[] expandedRefPts;
 
   double t1 = AbstractGPU::get_ticks();
   cout << "GPU tracking: " << (t1-t0)*1000.0 << "ms" << endl;
