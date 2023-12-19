@@ -245,14 +245,6 @@ class VariableBase(abc.ABC):
             exc.args = (f"{self.name}: history too short",)
             raise
 
-    @property
-    def _safe_value(self):
-        try:
-            v = self._history[-1]
-        except IndexError:
-            v = np.nan
-        return v
-
     def set(self, value: Number, ring=None) -> None:
         """Set the variable value
 
@@ -274,10 +266,10 @@ class VariableBase(abc.ABC):
         """Get the actual variable value
 
         Args:
-            initial:    If :py:obj:`True`, clear the history and set the variable
-              initial value
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to get the variable value.
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
             check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
               of bounds
 
@@ -295,6 +287,14 @@ class VariableBase(abc.ABC):
 
     value = property(get, set, doc="Actual value")
 
+    @property
+    def _safe_value(self):
+        try:
+            v = self._history[-1]
+        except IndexError:
+            v = np.nan
+        return v
+
     def set_previous(self, ring=None) -> None:
         """Reset to the value before the last one
 
@@ -307,9 +307,7 @@ class VariableBase(abc.ABC):
             value = self._history.pop()  # retrieve the previous value
             self.set(value, ring=ring)
         else:
-            raise IndexError(
-                f"{self.name}: history too short",
-            )
+            raise IndexError(f"{self.name}: history too short",)
 
     def reset(self, ring=None) -> None:
         """Reset to the initial value and clear the history buffer
@@ -333,13 +331,13 @@ class VariableBase(abc.ABC):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to increment the variable.
         """
-        if len(self._history) == 0:
-            self.get(initial=True)
+        if self._initial is None:
+            self.get(ring=ring, initial=True)
         self.set(self.last_value + incr, ring=ring)
 
     def _step(self, step: Number, ring=None) -> None:
         if self._initial is None:
-            self.get(initial=True)
+            self.get(ring=ring, initial=True)
         self.set(self._initial + step, ring=ring)
 
     def step_up(self, ring=None) -> None:
