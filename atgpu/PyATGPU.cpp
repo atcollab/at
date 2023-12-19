@@ -154,54 +154,54 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     return PyErr_Format(PyExc_ValueError, "rin is not 6D");
   }
   if (PyArray_TYPE(rin) != NPY_DOUBLE) {
-    return PyErr_Format(PyExc_ValueError, "rin is not a double array");
+    return PyErr_Format(PyExc_ValueError, "rin is not a numpy double array");
   }
   if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
     return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
   }
 
-  /*
-  num_particles = (PyArray_SIZE(rin)/6);
-  np6 = num_particles*6;
-  drin = PyArray_DATA(rin);
+  uint64_t num_particles = (PyArray_SIZE(rin)/6);
+  AT_FLOAT *drin = (AT_FLOAT *)PyArray_DATA(rin);
+  uint32_t *ref_pts;
+  uint32_t num_refs;
 
   if (refs) {
     if (PyArray_TYPE(refs) != NPY_UINT32) {
-      return PyErr_Format(PyExc_ValueError, "refpts is not a uint32 array");
+      return PyErr_Format(PyExc_ValueError, "refpts is not a numpy uint32 array");
     }
-    refpts = PyArray_DATA(refs);
-    num_refpts = PyArray_SIZE(refs);
+    ref_pts = (uint32_t *)PyArray_DATA(refs);
+    num_refs = PyArray_SIZE(refs);
+  } else {
+    ref_pts = nullptr;
+    num_refs = 0;
   }
-  else {
-    refpts = NULL;
-    num_refpts = 0;
-  }
-  */
 
-  size_t i;
-  string code;
-  // Default symplectic integrator 4th order (Forest/Ruth)
-  SymplecticIntegrator integrator(4);
-
+  // Create and run lattice on GPU
   try {
 
+    // Default symplectic integrator 4th order (Forest/Ruth)
+    SymplecticIntegrator integrator(4);
+
+    // Create the GPU lattice and run it
     PyInterface *pyI = (PyInterface *) AbstractInterface::getInstance();
     size_t nElements = PyList_Size(lattice);
     Lattice *l = new Lattice(integrator,0);
-    for (i = 0; i < nElements; i++) {
+    for (size_t i = 0; i < nElements; i++) {
       PyObject *elem = PyList_GET_ITEM(lattice, i);
       pyI->setObject(elem);
       l->addElement();
     }
-    //TODO
-    //l->run();
+
+    npy_intp outdims[4] = {6,(npy_intp)(num_particles),num_refs,num_turns};
+    PyObject *rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
+    AT_FLOAT *drout = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)rout);
+    l->run(num_turns,num_particles,drin,drout,num_refs,ref_pts);
+    return rout;
 
   } catch (string& errStr) {
     string err =  "at_gpupass() failed: " + errStr;
     return PyErr_Format(PyExc_RuntimeError,err.c_str());
   }
-
-  return PyErr_Format(PyExc_RuntimeError, "Not yet implemented");
 
 }
 

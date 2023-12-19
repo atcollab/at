@@ -94,10 +94,10 @@ else:
         raise RuntimeError('CUDA_PATH environement variable not defined')
     if sys.platform.startswith('win'):
         cuda_cppflags = ['-I' + cuda_path + '\\include']
-        cuda_lflags = ['/LIBPATH:'+cuda_path+'\\lib\\x64', "cuda.lib", "cudart.lib", "nvrtc.lib"]
+        cuda_lflags = ['/LIBPATH:'+cuda_path+'\\lib\\x64', "cuda.lib", "nvrtc.lib"]
     else:
         cuda_cppflags = ['-I' + cuda_path + '/include' + ' -DPYAT']
-        cuda_lflags = ['-L' + cuda_path + '/lib64', '-Wl,-rpath,' + cuda_path + '/lib64', '-lcudart', '-lnvrtc']
+        cuda_lflags = ['-L' + cuda_path + '/lib64', '-Wl,-rpath,' + cuda_path + '/lib64', '-lcuda', '-lnvrtc']
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
