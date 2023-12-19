@@ -246,6 +246,14 @@ class VariableBase(abc.ABC):
             exc.args = (f"{self.name}: history too short",)
             raise
 
+    @property
+    def _safe_value(self):
+        try:
+            v = self._history[-1]
+        except IndexError:
+            v = np.nan
+        return v
+
     def set(self, value: Number, ring=None) -> None:
         """Set the variable value
 
@@ -282,16 +290,6 @@ class VariableBase(abc.ABC):
         return value
 
     value = property(get, set, doc="Actual value")
-
-    def _safe_value(self, ring=None):
-        try:
-            v = self.get(ring=ring)
-        except ValueError:
-            try:
-                v = self._history[-1]
-            except IndexError:
-                v = np.nan
-        return v
 
     def set_previous(self, ring=None) -> None:
         """Reset to the value before the last one
@@ -363,7 +361,7 @@ class VariableBase(abc.ABC):
         )
 
     def _line(self, ring=None):
-        vnow = self._safe_value(ring=ring)
+        vnow = self._safe_value
         vini = self._initial
 
         return "{:>12s}{: 16e}{: 16e}{: 16e}".format(
@@ -415,16 +413,16 @@ class VariableBase(abc.ABC):
         return ParamBase(fun)
 
     def __float__(self):
-        return float(self._safe_value())
+        return float(self._safe_value)
 
     def __int__(self):
-        return int(self._safe_value())
+        return int(self._safe_value)
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self._safe_value()}, name={self.name!r})"
+        return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
-        return repr(self._safe_value())
+        return repr(self._safe_value)
 
 
 class CustomVariable(VariableBase):
@@ -519,6 +517,10 @@ class ParamBase(VariableBase):
 
     def _getfun(self, **kwargs):
         return self._conversion(self._evaluate())
+
+    @property
+    def _safe_value(self):
+        return self.get()
 
     def set_conversion(self, conversion: Callable[[Number], Number]):
         """Set the data type. Called when a parameter is assigned to an
