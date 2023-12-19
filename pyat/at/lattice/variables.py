@@ -509,11 +509,11 @@ class ParamBase(VariableBase):
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
-        super(ParamBase, self).__init__(name=name, bounds=bounds, delta=delta)
         if not isinstance(evaluate, _Evaluate):
             raise TypeError("'Evaluate' must be an _Evaluate object")
         self._evaluate = evaluate
         self._conversion = conversion
+        super(ParamBase, self).__init__(name=name, bounds=bounds, delta=delta)
 
     def _getfun(self, **kwargs):
         return self._conversion(self._evaluate())
