@@ -1,2 +1,2 @@
 from .lattice.variables import *
-from .lattice.element_variables import *
+from .lattice.lattice_variables import *
