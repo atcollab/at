@@ -1156,7 +1156,7 @@ def avlinopt(ring, dp, refpts, **kwargs):
         try:
             k = elem.R2[0][0]
         except (AttributeError, IndexError):
-            k = 0.0
+            k = 1.0
         return k
 
     def get_dx(elem):
@@ -1269,6 +1269,11 @@ def avlinopt(ring, dp, refpts, **kwargs):
     b_foc = (K != 0.0)
     b_foc_long = b_long & b_foc
     b_drf = b_long & (~b_foc)
+
+    dx0 = ClosedOrbit[:, 0]
+    dx0[b_long] = (di.closed_orbit[:, 0]+df.closed_orbit[:, 0])/2
+    K = K*roll + 2*sext_strength*(dx0-dx)
+
     K2 = numpy.stack((K[b_foc_long], -K[b_foc_long]), axis=1)
     fff = b_foc_long[b_long]
     irho[b_long] = ba[b_long]/L[b_long]
