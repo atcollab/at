@@ -62,7 +62,7 @@ if any(long)
         %Extract element parameters
         reng_selection=ring(refpts(qp));
         L=atgetfieldvalues(reng_selection,'Length','Default',0);
-        q=1e-12+atgetfieldvalues(reng_selection,'PolynomB',{2},'Default',0);
+        q=eps()+atgetfieldvalues(reng_selection,'PolynomB',{2},'Default',0);
         m=atgetfieldvalues(reng_selection,'PolynomB',{3},'Default',0);
         R11=atgetfieldvalues(reng_selection,'R2',{1,1},'Default',1);
         dx=(atgetfieldvalues(reng_selection,'T2',{1},'Default',0)-atgetfieldvalues(reng_selection,'T1',{1},'Default',0))/2;
