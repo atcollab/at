@@ -4,6 +4,7 @@ import io
 from ..constants import clight, e_mass
 from warnings import warn
 
+
 def _anyarray(value):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=numpy.float64, requirements=['F', 'A'])
@@ -159,7 +160,7 @@ class InsertionDeviceKickMap(Element):
             elif lenkick_block_list > 4:
                 # file contains more blocks that required
                 _warn4kickblocks = ('Input file contains more than 4 blocks. '
-                    'Additional blocks ignored')
+                                    'Additional blocks ignored')
                 warn(_warn4kickblocks)
 
             return el_length, \
@@ -218,13 +219,15 @@ class InsertionDeviceKickMap(Element):
         # Field to kick factors
         e_massGeV = e_mass * 1e-9
         Brho = 1e9 * numpy.sqrt(Energy**2 - e_massGeV**2)/clight
+        # kick2 vars
         factor2 = 1.0/(Brho**2)
         xkick2 = factor2 * hkickmap2
         ykick2 = factor2 * vkickmap2
-        # kick1 vars set to zero, not yet implemented
+        # kick1 vars
         factor1 = -1.0/(Brho)
         xkick1 = factor1 * hkickmap1
         ykick1 = factor1 * vkickmap1
+        # axes
         xtable = table_colshkickarray.T
         ytable = table_rowshkickarray.T
 
@@ -256,13 +259,13 @@ class InsertionDeviceKickMap(Element):
                      'ytable']
         # change of variable names since Pull Request
         # https://github.com/atcollab/at/pull/683#issuecomment-1805667215
-        _args_change = {'xkick':'xkick2','ykick':'ykick2'}
+        _args_change = {'xkick': 'xkick2', 'ykick': 'ykick2'}
         for _old_name in _args_change:
             if _old_name in kwargs:
                 # insert in args while keeping order before zipping
                 _inda = _argnames.index(_args_change[_old_name])
                 _argslist = list(args)
-                _argslist.insert(_inda,kwargs.pop(_old_name))
+                _argslist.insert(_inda, kwargs.pop(_old_name))
                 args = tuple(_argslist)
                 _deprecat_msg = (f' argument {_old_name} is deprecated; '
                                  f'it is changed to {_args_change[_old_name]}'
