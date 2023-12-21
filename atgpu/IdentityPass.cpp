@@ -1,10 +1,17 @@
 #include "IdentityPass.h"
+#include "PassMethodFactory.h"
 #include <string.h>
 
 using namespace std;
 
 IdentityPass::IdentityPass() noexcept {
   memset(&elemData,0,sizeof(ELEMENT));
+  R1 = nullptr;
+  R2 = nullptr;
+  T1 = nullptr;
+  T2 = nullptr;
+  EApertures = nullptr;
+  RApertures = nullptr;
 }
 
 IdentityPass::~IdentityPass() noexcept {
@@ -17,7 +24,7 @@ IdentityPass::~IdentityPass() noexcept {
 }
 
 // Retrieve parameters from upper layer (Python, Matlab)
-void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
+void IdentityPass::getParameters(AbstractInterface *param, PassMethodInfo *info) {
 
   param->getOptional1DArray(&R1,"R1", 36);
   param->getOptional1DArray(&R2,"R2", 36);
@@ -26,7 +33,7 @@ void IdentityPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info
   param->getOptional1DArray(&EApertures,"EApertures", 2);
   param->getOptional1DArray(&RApertures,"RApertures", 4);
 
-  elemData.Type = IDENTITY;
+  elemData.Type = IDENTITYPASS;
   info->used = true;
   info->doR1 |= (R1 != nullptr);
   info->doR2 |= (R2 != nullptr);
@@ -50,11 +57,19 @@ uint64_t IdentityPass::getMemorySize() {
 
 }
 
+AT_FLOAT IdentityPass::getLength() {
+  return elemData.Length;
+}
+
+uint32_t IdentityPass::getType() {
+  return elemData.Type;
+}
+
 // Fill device memory
 void IdentityPass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
 
   AT_FLOAT *dest = (AT_FLOAT *)privateMem;
-  AT_FLOAT *destGPU = (AT_FLOAT *)privateMem;
+  AT_FLOAT *destGPU = (AT_FLOAT *)gpuMem;
 
   if(R1) {
     elemData.R1 = destGPU;
@@ -95,24 +110,16 @@ void IdentityPass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
 
 }
 
-void IdentityPass::generateCall(std::string& code) noexcept {
-  code.append("      case IDENTITY:\n");
-  code.append("        IdentityPass(r6,elemPtr);\n");
-  code.append("        break;\n");
-}
-
 // Generates GPU code
-void IdentityPass::generateGPUKernel(std::string& code,PASSMETHOD_INFO *info) noexcept {
+void IdentityPass::generateCode(std::string& code,PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept {
 
-  code.append("__device__ void IdentityPass(AT_FLOAT* r6,ELEMENT* elem) {\n");
   generateEnter(code,info);
   generateApertures(code,info);
   generateExit(code,info);
-  code.append("}\n");
 
 }
 
-void IdentityPass::generateEnter(std::string& code, PASSMETHOD_INFO *info) noexcept {
+void IdentityPass::generateEnter(std::string& code, PassMethodInfo *info) noexcept {
 
   if( info->doEAperture || info->doRAperture )
     code.append("  bool isLost = false;\n");
@@ -122,7 +129,7 @@ void IdentityPass::generateEnter(std::string& code, PASSMETHOD_INFO *info) noexc
 
 }
 
-void IdentityPass::generateExit(std::string& code, PASSMETHOD_INFO *info) noexcept {
+void IdentityPass::generateExit(std::string& code, PassMethodInfo *info) noexcept {
 
   if(info->doR2) generateR(code,"R2");
   if(info->doT2) generateT(code,"T2");
@@ -132,7 +139,7 @@ void IdentityPass::generateExit(std::string& code, PASSMETHOD_INFO *info) noexce
 
 }
 
-void IdentityPass::generateApertures(std::string& code, PASSMETHOD_INFO *info) noexcept {
+void IdentityPass::generateApertures(std::string& code, PassMethodInfo *info) noexcept {
 
   if(info->doEAperture) generateEAperture(code);
   if(info->doRAperture) generateRAperture(code);
@@ -151,7 +158,7 @@ void IdentityPass::generateRAperture(std::string& code) noexcept {
   code.append("  if(elem->RApertures) {\n"
               "    isLost |= r6[0]<elem->RApertures[0] || r6[0]>elem->RApertures[1] ||\n"
               "              r6[2]<elem->RApertures[2] || r6[2]>elem->RApertures[3];\n"
-              "  }");
+              "  }\n");
 }
 
 void IdentityPass::generateR(std::string& code,const string& pname) noexcept {
@@ -160,4 +167,40 @@ void IdentityPass::generateR(std::string& code,const string& pname) noexcept {
 
 void IdentityPass::generateT(std::string& code,const string& pname) noexcept {
   code.append("  if(elem->" + pname + ") translate6(r6,elem->" + pname + ");\n");
+}
+
+void IdentityPass::getGPUFunctionQualifier(std::string& fType) {
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(fType);
+  if(!fType.empty()) fType.append(" ");
+}
+
+void IdentityPass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
+
+  string ftype;
+  getGPUFunctionQualifier(ftype);
+
+  // 6D transfrom
+  code.append(
+          ftype +
+          "void translate6(AT_FLOAT* r,AT_FLOAT *t) {\n"
+          "  r[0] += t[0];  r[1] += t[1];  r[2] += t[2];\n"
+          "  r[3] += t[3];  r[4] += t[4];  r[5] += t[5];\n"
+          "}\n"
+  );
+  code.append(
+          ftype +
+          "void transform66(AT_FLOAT* r,AT_FLOAT *M) {\n"
+          "  int i,j;\n"
+          "  AT_FLOAT sum[6];\n"
+          "  for(i=0;i<6;i++)\n"
+          "  {\n"
+          "    sum[i]=0;\n"
+          "    for(j=0;j<6;j++)\n"
+          "      sum[i]+=M[i+j*6]*r[j];\n"
+          "  }\n"
+          "  for(i=0;i<6;i++)\n"
+          "    r[i]=sum[i];\n"
+          "}\n"
+  );
+
 }

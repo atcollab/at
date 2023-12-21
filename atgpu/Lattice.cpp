@@ -12,8 +12,10 @@ const string header = {
 #include "element.gpuh"
 };
 
-Lattice::Lattice(SymplecticIntegrator& integrator,int gpuId) : factory(PassMethodFactory(integrator)) {
+Lattice::Lattice(SymplecticIntegrator& integrator,AT_FLOAT energy,int gpuId) : factory(PassMethodFactory(integrator)) {
   lost = nullptr;
+  memset(&ringParams,0,sizeof(ringParams));
+  ringParams.Energy = energy;
   gpu = AbstractGPU::getInstance()->createContext(gpuId);
 }
 
@@ -27,10 +29,30 @@ Lattice::~Lattice() {
 
 void Lattice::addElement() {
 
-  string passMethod = AbstractInterface::getInstance()->getString("PassMethod");
-  AbstractElement *elem = factory.createElement(passMethod);
-  elements.push_back(elem);
+  try {
 
+    string passMethod = AbstractInterface::getInstance()->getString("PassMethod");
+    AbstractElement *elem = factory.createElement(passMethod);
+    elements.push_back(elem);
+
+  } catch (string& err) {
+    // Try to retrieve name of element (if any)
+    string idxStr = "#" + to_string(elements.size());
+    string name = "";
+    try {
+      name = " (" + AbstractInterface::getInstance()->getString("Name") + ")";
+    } catch (string&) {}
+    string errStr = err + " in element " + idxStr + name;
+    throw errStr;
+  }
+
+}
+
+AT_FLOAT Lattice::getLength() {
+  AT_FLOAT L = 0.0;
+  for(auto & element : elements)
+    L += element->getLength();
+  return L;
 }
 
 uint32_t Lattice::getNbElement() {
@@ -46,6 +68,12 @@ void Lattice::generateGPUKernel() {
   double t0,t1;
   t0=AbstractGPU::get_ticks();
 
+  // Perform post initialisation
+  ringParams.Length = getLength();
+  for(auto & element : elements)
+    element->postInit(&ringParams);
+
+  // Generate code
   std::string code;
 
   code.append(header);
@@ -67,7 +95,7 @@ void Lattice::generateGPUKernel() {
 
   // GPU main track function
   // extern C to prevent from mangled name
-  code.append("extern \"C\" __global__ void track(ELEMENT* gpuRing,uint32_t startElem,uint32_t nbElement,uint32_t nbTotalElement,\n"
+  code.append("extern \"C\" __global__ void track(RING_PARAM *ringParam,ELEMENT* gpuRing,uint32_t startElem,uint32_t nbElement,uint32_t nbTotalElement,\n"
               "                                   uint64_t nbPart,AT_FLOAT* rin,AT_FLOAT* rout,\n"
               "                                   uint32_t* lost,uint64_t turn,\n"
               "                                   int32_t *refpts,uint32_t nbRef\n"
@@ -111,11 +139,13 @@ void Lattice::generateGPUKernel() {
   code.append("  sr6[4] = _r6[4*r6Stride];\n"); // d = (pz-p0)/p0
   code.append("  sr6[5] = _r6[5*r6Stride];\n"); // c.tau (time lag)
   code.append("  AT_FLOAT* r6 = sr6;\n");
+  code.append("  AT_FLOAT fTurn = (AT_FLOAT)(ringParam->turnCounter + turn);\n");
 
   // Loop over elements
   code.append("  int32_t refIdx = 0;\n");
   code.append("  int elem = startElem;\n");
   code.append("  for(; elem < startElem+nbElement; elem++) {\n");
+  //code.append("    printf(\"Elem %d:\\n\",elem);\n");
   code.append(routCode);
   code.append("    switch(elemPtr->Type) {\n");
   factory.generatePassMethodsCalls(code);
@@ -222,7 +252,8 @@ void Lattice::Transpose64(int32_t X,int32_t Y,void *mem) {
 
 }
 
-void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts) {
+void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,
+                  uint32_t *refPts,uint64_t turnCounter) {
 
   generateGPUKernel();
 
@@ -263,12 +294,18 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   void *gpuRout;
   gpu->allocDevice(&gpuRout, routSize);
 
+  // Global ring param
+  void *gpuRingParams;
+  gpu->allocDevice(&gpuRingParams, sizeof(ringParams));
+  gpu->hostToDevice(gpuRingParams,&ringParams,sizeof(ringParams));
+
   // Call GPU
   gpu->resetArg();
   uint32_t nbElement = elements.size();
   uint32_t startElem;
   uint32_t nbElemToProcess;
   uint64_t turn;
+  gpu->addArg(sizeof(void *),&gpuRingParams);
   gpu->addArg(sizeof(void *),&gpuRing);
   gpu->addArg(sizeof(uint32_t),&startElem);
   gpu->addArg(sizeof(uint32_t),&nbElemToProcess);
@@ -317,6 +354,7 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->freeDevice(gpuRout);
   gpu->freeDevice(gpuRefs);
   gpu->freeDevice(gpuLost);
+  gpu->freeDevice(gpuRingParams);
   delete[] expandedRefPts;
 
   double t1 = AbstractGPU::get_ticks();

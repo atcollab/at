@@ -89,7 +89,7 @@ void SymplecticIntegrator::generateLoopCode(std::string& code,size_t subType) {
   for(int i=0;i<nbCoefficients;i++) {
 
     string drMthod = driftMethods[subType];
-    if( !replace(drMthod,"%STEP%","SL*p_norm*"+formatFloat(&c[i]) ) )
+    if( !replace(drMthod,"%STEP%","SL*"+formatFloat(&c[i]) ) )
       throw string("SymplecticIntegrator::generateLoopCode(), wrong drift method");
     string kickMthod = kickMethods[subType];
     if( !replace(kickMthod,"%STEP%","SL*"+formatFloat(&d[i]) ) )
