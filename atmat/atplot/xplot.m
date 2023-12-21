@@ -65,6 +65,7 @@ end
 set(ax,'XLim',[smin smax],'XGrid','on','YGrid','on',leftargs{:});
 xlabel(ax,'s [m]');
 if synopt
+    if ax.YLim(1) > 0, ax.YLim(1) = 0; end % change YLim to see synopt
     curve.lattice=atplotsyn(ax,ring,varargs{:});  % Plot lattice elements
 end
 lines=[curve.left;curve.right];
