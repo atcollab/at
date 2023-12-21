@@ -1,6 +1,7 @@
 #ifndef AT_GPU_IDENTITYPASS_H
 #define AT_GPU_IDENTITYPASS_H
 #include "AbstractElement.h"
+#include "SymplecticIntegrator.h"
 
 class IdentityPass: public AbstractElement {
 
@@ -11,21 +12,25 @@ public:
   ~IdentityPass() noexcept override;
 
   // Retrieve parameters from upper layer (Python, Matlab)
-  void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
+  void getParameters(AbstractInterface *param, PassMethodInfo *info) override;
   uint64_t getMemorySize() override;
   void fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) override;
+  AT_FLOAT getLength() override;
+  uint32_t getType();
 
-  // GPU code generation
-  static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info) noexcept;
-  static void generateEnter(std::string& code, PASSMETHOD_INFO *info) noexcept;
-  static void generateExit(std::string& code, PASSMETHOD_INFO *info) noexcept;
-  static void generateApertures(std::string& code, PASSMETHOD_INFO *info) noexcept;
+  // Generic code generation
+  static void generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept;
+  static void generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept;
 
+  // Code generation
+  static void getGPUFunctionQualifier(std::string& fType);
+  static void generateEnter(std::string& code, PassMethodInfo *info) noexcept;
+  static void generateExit(std::string& code, PassMethodInfo *info) noexcept;
+  static void generateApertures(std::string& code, PassMethodInfo *info) noexcept;
   static void generateEAperture(std::string& code) noexcept;
   static void generateRAperture(std::string& code) noexcept;
   static void generateR(std::string& code,const std::string& pname) noexcept;
   static void generateT(std::string& code,const std::string& pname) noexcept;
-  static void generateCall(std::string& code) noexcept;
 
 protected:
 

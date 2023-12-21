@@ -181,11 +181,10 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     // Default symplectic integrator 4th order (Forest/Ruth)
     SymplecticIntegrator integrator(4);
-
     // Create the GPU lattice and run it
     PyInterface *pyI = (PyInterface *) AbstractInterface::getInstance();
     size_t nElements = PyList_Size(lattice);
-    Lattice *l = new Lattice(integrator,0);
+    Lattice *l = new Lattice(integrator, 0.0, 0);
     for (size_t i = 0; i < nElements; i++) {
       PyObject *elem = PyList_GET_ITEM(lattice, i);
       pyI->setObject(elem);
@@ -195,7 +194,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_intp outdims[4] = {6,(npy_intp)(num_particles),num_refs,num_turns};
     PyObject *rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     AT_FLOAT *drout = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)rout);
-    l->run(num_turns,num_particles,drin,drout,num_refs,ref_pts);
+
+    l->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,(uint64_t )counter);
     return rout;
 
   } catch (string& errStr) {

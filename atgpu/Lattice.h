@@ -10,7 +10,7 @@ class Lattice {
 
 public:
 
-  explicit Lattice(SymplecticIntegrator& integrator,int gpuId);
+  explicit Lattice(SymplecticIntegrator& integrator,double energy,int gpuId);
   ~Lattice();
 
   // Add an element in the lattice
@@ -21,9 +21,11 @@ public:
   // Fill GPU memory
   void fillGPUMemory();
   // Run the simulation
-  void run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts);
+  void run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts,uint64_t turnCounter);
   // Return handle to the GPU context
   GPUContext *getGPUContext();
+  // Get ring legnth
+  AT_FLOAT getLength();
 
 
 private:
@@ -37,6 +39,7 @@ private:
   GPUContext *gpu;                          // GPU context
   void *gpuRing;                            // Ring in GPU memory
   uint32_t* lost;                           // Particle lost flag
+  RING_PARAM ringParams;                    // General ring parameters
 
 };
 

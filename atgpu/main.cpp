@@ -48,26 +48,14 @@ AT_FLOAT *createGrid(AT_FLOAT x1,AT_FLOAT y1,AT_FLOAT x2,AT_FLOAT y2,uint64_t nb
 
 int main(int argc,char **arv) {
 
-  /*
-  ELEMENT e;
-  cout << sizeof(ELEMENT) <<endl;
-  cout << sizeof(e) <<endl;
-  printf("0x%" PRIx64 "\n", &e.Type);
-  printf("0x%" PRIx64 "\n", &e.SubType);
-  printf("0x%" PRIx64 "\n", &e.NumIntSteps);
-  printf("0x%" PRIx64 "\n", &e.SL);
-  printf("0x%" PRIx64 "\n", &e.MaxOrder);
-  printf("0x%" PRIx64 "\n", &e.Length);
-  exit(0);
-  */
-
   SymplecticIntegrator integrator(4);
   CppInterface *dI = new CppInterface();
   AbstractInterface::setHandler(dI);
   vector<CppObject> elements;
 
   try {
-    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/betamodel.repr");
+    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/betamodel_radon.repr");
+    //REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/simple_ebs.repr");
     loader->parseREPR(elements);
   } catch (string& errStr) {
     cout << "Parse failed: " << errStr << endl;
@@ -76,15 +64,18 @@ int main(int argc,char **arv) {
 
   try {
 
-    Lattice *l = new Lattice(integrator,1);
+    Lattice *l = new Lattice(integrator,6e9,1);
+    double t0 = AbstractGPU::get_ticks();
     for(auto & element : elements) {
       dI->setObject(&element);
       l->addElement();
     }
+    double t1 = AbstractGPU::get_ticks();
+    cout << "Ring build: " << (t1-t0)*1000.0 << "ms" << endl;
 
-    uint64_t nbTurn = 1;
-    uint64_t nbX = 1;
-    uint64_t nbY = 1;
+    uint64_t nbTurn = 100;
+    uint64_t nbX = 57;
+    uint64_t nbY = 57;
     uint64_t nbPart = nbX * nbY;
     uint32_t refs[] = {l->getNbElement()};
     uint32_t nbRef = sizeof(refs)/sizeof(uint32_t);
@@ -96,7 +87,7 @@ int main(int argc,char **arv) {
 
     string gpuName = l->getGPUContext()->name() + "(" + to_string(l->getGPUContext()->coreNumber()) + " cores)";
     cout << "Running " << to_string(nbPart) << " particles, " << to_string(nbTurn) << " turn(s) on " << gpuName << endl;
-    l->run(nbTurn,nbPart,rin,rout,nbRef,refs);
+    l->run(nbTurn,nbPart,rin,rout,nbRef,refs,0);
 
     npy::npy_data_ptr<double> d;
     d.data_ptr = (double*)rout;

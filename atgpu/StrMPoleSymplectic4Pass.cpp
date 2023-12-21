@@ -1,13 +1,13 @@
 #include "StrMPoleSymplectic4Pass.h"
+#include "PassMethodFactory.h"
 #include "AbstractGPU.h"
-#include <iostream>
+#include "PassMethodFactory.h"
 #include <string.h>
 #include <math.h>
 
 using namespace std;
 
-StrMPoleSymplectic4Pass::StrMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept : IdentityPass(),
-integrator(integrator) {
+StrMPoleSymplectic4Pass::StrMPoleSymplectic4Pass() noexcept : IdentityPass() {
   PolynomA = nullptr;
   PolynomB = nullptr;
   KickAngle = nullptr;
@@ -19,14 +19,14 @@ StrMPoleSymplectic4Pass::~StrMPoleSymplectic4Pass() noexcept {
   delete[] KickAngle;
 }
 
-void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
+void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PassMethodInfo *info) {
 
   // Retrieve param from super class
   IdentityPass::getParameters(param,info);
 
-  elemData.Type = MPOLE;
+  elemData.Type = STRMPOLESYMPLECTIC4PASS;
   elemData.Length = param->getDouble("Length");
-  elemData.NumIntSteps = param->getInt("NumIntSteps");
+  elemData.NumIntSteps = param->getOptionalInt("NumIntSteps",10);
   elemData.SL = elemData.Length / (AT_FLOAT)elemData.NumIntSteps;
   elemData.MaxOrder = param->getInt("MaxOrder");
 
@@ -48,7 +48,7 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PASSMETHOD
 
   if ( isDrift() ) {
     // All polynom coefficients are null
-    elemData.Type = DRIFT;
+    elemData.Type = DRIFTPASS;
   } else if( isQuadrupole() ) {
     elemData.SubType = 1;
     elemData.K = PolynomB[1];
@@ -120,14 +120,8 @@ bool StrMPoleSymplectic4Pass::isOctupole() {
          PolynomA[1]==0.0 && PolynomB[1]==0.0;
 }
 
-void StrMPoleSymplectic4Pass::generateGPUKernel(std::string& code, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept {
+void StrMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept {
 
-  AbstractGPU *gpu = AbstractGPU::getInstance();
-  string ftype;
-  gpu->getDeviceFunctionQualifier(ftype);
-  if(!ftype.empty()) ftype.append(" ");
-
-  code.append( ftype + "void StrMPoleSymplectic4Pass(AT_FLOAT* r6,ELEMENT* elem) {\n");
   code.append(
           "  AT_FLOAT p_norm = 1.0 / (1.0 + r6[4]);\n"
   );
@@ -156,22 +150,10 @@ void StrMPoleSymplectic4Pass::generateGPUKernel(std::string& code, PASSMETHOD_IN
   generateQuadFringeExit(code,info);
   generateApertures(code,info);
   generateExit(code,info);
-  code.append("}\n");
 
 }
 
-
-void StrMPoleSymplectic4Pass::generateCall(std::string& code) noexcept {
-
-  code.append(
-          "      case MPOLE:\n"
-          "        StrMPoleSymplectic4Pass(r6,elemPtr);\n"
-          "        break;\n"
-  );
-
-}
-
-void StrMPoleSymplectic4Pass::generateQuadFringeEnter(std::string& code, PASSMETHOD_INFO *info) noexcept {
+void StrMPoleSymplectic4Pass::generateQuadFringeEnter(std::string& code, PassMethodInfo *info) noexcept {
 
   if(info->doQuadEnter)
     code.append(
@@ -182,13 +164,82 @@ void StrMPoleSymplectic4Pass::generateQuadFringeEnter(std::string& code, PASSMET
 
 }
 
-void StrMPoleSymplectic4Pass::generateQuadFringeExit(std::string& code, PASSMETHOD_INFO *info) noexcept {
+void StrMPoleSymplectic4Pass::generateQuadFringeExit(std::string& code, PassMethodInfo *info) noexcept {
 
   if(info->doQuadExit)
     code.append(
           "  if(elem->FringeQuadExit) {\n"
           "    quad_fringe(r6,elem->PolynomB[1],-1.0,p_norm);\n"
           "  }\n"
+  );
+
+}
+
+void StrMPoleSymplectic4Pass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
+
+  string ftype;
+  getGPUFunctionQualifier(ftype);
+
+  // Quad
+  code.append(
+          ftype +
+          "void quadthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L) {\n"
+          "  r[1] -= L * (K * r[0] + B0);\n"
+          "  r[3] += L * (K * r[2] + A0);\n"
+          "}\n"
+  );
+
+  // Sextu (no SQ component)
+  code.append(
+          ftype +
+          "void sextuthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L) {\n"
+          "  r[1] -= L * (K * (r[0]*r[0]-r[2]*r[2]) + B0);\n"
+          "  r[3] += L * (K * (2.0* r[0] * r[2]) + A0);\n"
+          "}\n"
+  );
+
+  // Octu
+  code.append(
+          ftype +
+          "void octuthinkick(AT_FLOAT* r,AT_FLOAT A0,AT_FLOAT B0,AT_FLOAT K,AT_FLOAT L) {\n"
+          "  AT_FLOAT x2 = r[0]*r[0];\n"
+          "  AT_FLOAT y2 = r[2]*r[2];\n"
+          "  r[1] -= L * ((K * r[0] * (x2 - 3.0*y2)) + B0);\n"
+          "  r[3] += L * ((K * r[2] * (3.0*x2 - y2)) + A0);\n"
+          "}\n"
+  );
+
+
+  // Generic kick in straight element
+  code.append(
+          ftype +
+          "void strthinkick(AT_FLOAT* r,const AT_FLOAT* A,const AT_FLOAT* B,AT_FLOAT L,int max_order) {\n"
+          + PassMethodFactory::polyLoop +
+          "  r[1] -= L * ReSum;\n"
+          "  r[3] += L * ImSum;\n"
+          "}\n"
+  );
+
+  //Lee-Whiting's thin lens limit formula as given in p. 390 of "Beam Dynamics..." by E. Forest
+  code.append(
+          ftype +
+          "void quad_fringe(AT_FLOAT* r, AT_FLOAT b2, AT_FLOAT sign, AT_FLOAT p_norm) {\n"
+          "  AT_FLOAT u = p_norm * b2 / 12.0;\n"
+          "  AT_FLOAT x2 = r[0] * r[0];\n"
+          "  AT_FLOAT z2 = r[2] * r[2];\n"
+          "  AT_FLOAT xz = r[0] * r[2];\n"
+          "  AT_FLOAT gx = u * (x2 + 3 * z2) * r[0];\n"
+          "  AT_FLOAT gz = u * (z2 + 3 * x2) * r[2];\n"
+          "  AT_FLOAT r1tmp = 0;\n"
+          "  AT_FLOAT r3tmp = 0;\n"
+          "  r[0] += sign*gx;\n"
+          "  r1tmp = 3 * u * (2 * xz * r[3] - (x2 + z2) * r[1]);\n"
+          "  r[2] -= sign*gz;\n"
+          "  r3tmp = 3 * u * (2 * xz * r[1] - (x2 + z2) * r[3]);\n"
+          "  r[5] -= sign * (gz * r[3] - gx * r[1]) * p_norm;\n"
+          "  r[1] += sign*r1tmp;\n"
+          "  r[3] -= sign*r3tmp;\n"
+          "}\n"
   );
 
 }

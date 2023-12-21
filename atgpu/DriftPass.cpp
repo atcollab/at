@@ -1,34 +1,43 @@
 #include "DriftPass.h"
 
-DriftPass::DriftPass() noexcept : IdentityPass() {
+using namespace std;
 
-}
+DriftPass::DriftPass() noexcept : IdentityPass() {}
 
-void DriftPass::getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) {
+void DriftPass::getParameters(AbstractInterface *param, PassMethodInfo *info) {
 
   // Retrieve param from super class
   IdentityPass::getParameters(param,info);
 
-  elemData.Type = DRIFT;
+  elemData.Type = DRIFTPASS;
   elemData.Length = param->getDouble("Length");
 
 }
 
-void DriftPass::generateGPUKernel(std::string& code, PASSMETHOD_INFO *info) noexcept {
+void DriftPass::generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept {
 
-  code.append("__device__ void DriftPass(AT_FLOAT* r6,ELEMENT* elem) {\n");
   generateEnter(code,info);
+  generateApertures(code,info);
   code.append("  AT_FLOAT p_norm = 1.0 / (1.0 + r6[4]);\n");
   code.append("  fastdrift(r6,elem->Length,p_norm);\n");
+  generateApertures(code,info);
   generateExit(code,info);
-  code.append("}\n");
 
 }
 
-void DriftPass::generateCall(std::string& code) noexcept {
+void DriftPass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
 
-  code.append("      case DRIFT:\n");
-  code.append("        DriftPass(r6,elemPtr);\n");
-  code.append("        break;\n");
+  string ftype;
+  getGPUFunctionQualifier(ftype);
+
+  //Drift (small angle)
+  code.append(
+          ftype +
+          "void fastdrift(AT_FLOAT* r,AT_FLOAT L,AT_FLOAT p_norm) {\n"
+          "  r[0] += p_norm * L * r[1];\n"
+          "  r[2] += p_norm * L * r[3];\n"
+          "  r[5] += p_norm * p_norm * L * (r[1] * r[1] + r[3] * r[3]) * 0.5;\n"
+          "}\n"
+  );
 
 }

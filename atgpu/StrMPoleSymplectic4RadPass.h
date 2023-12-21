@@ -1,12 +1,14 @@
-#ifndef AT_GPU_DRIFTPASS_H
-#define AT_GPU_DRIFTPASS_H
-#include "IdentityPass.h"
+#ifndef AT_GPU_STRMPOLESYMPLECTIC4RADPASS_H
+#define AT_GPU_STRMPOLESYMPLECTIC4RADPASS_H
 
-class DriftPass: public IdentityPass {
+#include "StrMPoleSymplectic4Pass.h"
+
+class StrMPoleSymplectic4RadPass: public StrMPoleSymplectic4Pass {
 
 public:
-  // Construct a drift pass
-  DriftPass() noexcept;
+  // Construct a BendMPole pass
+  explicit StrMPoleSymplectic4RadPass() noexcept;
+  ~StrMPoleSymplectic4RadPass() noexcept override;
 
   // Retrieve parameters from upper layer (Python, Matlab)
   void getParameters(AbstractInterface *param, PassMethodInfo *info) override;
@@ -17,4 +19,4 @@ public:
 
 };
 
-#endif //AT_GPU_DRIFTPASS_H
+#endif //AT_GPU_STRMPOLESYMPLECTIC4RADPASS_H

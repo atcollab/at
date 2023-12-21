@@ -7,23 +7,23 @@ class StrMPoleSymplectic4Pass: public IdentityPass {
 
 public:
   // Construct a MPole pass
-  explicit StrMPoleSymplectic4Pass(SymplecticIntegrator& integrator) noexcept;
+  explicit StrMPoleSymplectic4Pass() noexcept;
   ~StrMPoleSymplectic4Pass() noexcept override;
 
   // Retrieve parameters from upper layer (Python, Matlab)
-  void getParameters(AbstractInterface *param, PASSMETHOD_INFO *info) override;
+  void getParameters(AbstractInterface *param, PassMethodInfo *info) override;
   uint64_t getMemorySize() override;
   void fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) override;
 
-  // GPU code generation
-  static void generateGPUKernel(std::string& code, PASSMETHOD_INFO *info,SymplecticIntegrator& integrator) noexcept;
-  static void generateCall(std::string& code) noexcept;
-  static void generateQuadFringeEnter(std::string& code, PASSMETHOD_INFO *info) noexcept;
-  static void generateQuadFringeExit(std::string& code, PASSMETHOD_INFO *info) noexcept;
+  // Generic code generation
+  static void generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept;
+  static void generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept;
+
+  static void generateQuadFringeEnter(std::string& code, PassMethodInfo *info) noexcept;
+  static void generateQuadFringeExit(std::string& code, PassMethodInfo *info) noexcept;
 
 protected:
 
-  SymplecticIntegrator& integrator;
   AT_FLOAT *PolynomA;  // PolynomA
   AT_FLOAT *PolynomB;  // PolynomB
   AT_FLOAT *KickAngle; // KickAngle
