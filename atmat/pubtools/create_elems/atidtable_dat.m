@@ -38,7 +38,7 @@ lightspeed = PhysConstant.speed_of_light_in_vacuum.value;
 emassGeV = PhysConstant.electron_mass_energy_equivalent_in_MeV.value/1e3;
 
 % energy scaling for 1st order kick-map
-factor1 = -1 / (1e9*sqrt(Energy ^2 - emassGeV^2 )/ lightspeed);
+factor1 = 1 / (1e9*sqrt(Energy ^2 - emassGeV^2 )/ lightspeed);
 % energy scaling for 2st order kick-map
 factor2 = (factor1) ^ 2;
 

@@ -224,7 +224,7 @@ class InsertionDeviceKickMap(Element):
         xkick2 = factor2 * hkickmap2
         ykick2 = factor2 * vkickmap2
         # kick1 vars
-        factor1 = -1.0/(Brho)
+        factor1 = 1.0/(Brho)
         xkick1 = factor1 * hkickmap1
         ykick1 = factor1 * vkickmap1
         # axes
