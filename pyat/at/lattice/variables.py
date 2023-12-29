@@ -83,15 +83,17 @@ keeping their sum constant:
 from __future__ import annotations
 import numpy as np
 import abc
-from numbers import Number
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
+from typing import Union
 
 __all__ = [
     "VariableBase",
     "CustomVariable",
     "VariableList",
 ]
+
+Number = Union[int, float]
 
 
 def _nop(value):
