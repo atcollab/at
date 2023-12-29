@@ -83,11 +83,10 @@ keeping their sum constant:
 from __future__ import annotations
 import numpy as np
 import abc
-from numbers import Number
 from operator import add, sub, mul, truediv, pos, neg
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
-from typing import Any
+from typing import Any, Union
 
 __all__ = [
     "VariableBase",
@@ -97,6 +96,8 @@ __all__ = [
     "ParamArray",
     "VariableList",
 ]
+
+Number = Union[int, float]
 
 
 def _nop(value):
@@ -116,7 +117,7 @@ class _Scalar(_Evaluate):
     __slots__ = "value"
 
     def __init__(self, value):
-        if not isinstance(value, Number):
+        if not isinstance(value, (int, float)):
             raise TypeError("The parameter value must be a scalar")
         self.value = value
 
@@ -129,7 +130,7 @@ class _BinaryOp(_Evaluate):
 
     @staticmethod
     def _set_type(value):
-        if isinstance(value, Number):
+        if isinstance(value, (int, float)):
             return _Scalar(value)
         elif isinstance(value, VariableBase):
             return value
@@ -504,8 +505,8 @@ class ParamBase(VariableBase):
         *,
         name: str = "",
         conversion: Callable[[Any], Number] = _nop,
-        bounds: tuple[float, float] = (-np.inf, np.inf),
-        delta: float = 1.0,
+        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        delta: Number = 1.0,
     ):
         """
 
