@@ -326,7 +326,6 @@ class Lattice(list):
         super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element], copy_elements=False):
-        # noinspection PyUnresolvedReferences
         r"""This method adds all the elements of `elems` to the end of the
         lattice. The behavior is the same as for a :py:obj:`list`
 
@@ -348,25 +347,24 @@ class Lattice(list):
         super().extend(elems)
 
     def append(self, elem: Element, copy_elements=False):
-        # noinspection PyUnresolvedReferences
-        r"""This method overwrites the inherited method :py:meth:`list.append()`,
-        its behavior is changed, it accepts only AT lattice elements
-        :py:obj:`Element` as input argument.
+        r"""This method overwrites the inherited method
+            :py:meth:`list.append()`,
+            it behavior is changed, it accepts only AT lattice elements
+            :py:obj:`Element` as input argument.
 
-        Equivalents syntaxes:
-        >>> ring.append(elem)
-        >>> ring += [elem]
+            Equivalents syntaxes:
+            >>> ring.append(elem)
+            >>> ring += [elem]
 
-        Parameters:
-            elem (Element): AT element to be appended to the lattice
-            copy_elements(bool): Default :py:obj:`True`.
-                                 If :py:obj:`True` a deep copy of elem
-                                 is used
+            Parameters:
+                elem (Element): AT element to be appended to the lattice
+                copy_elements(bool): Default :py:obj:`True`.
+                                     If :py:obj:`True` a deep copy of elem
+                                     is used
         """
         self.extend([elem], copy_elements=copy_elements)
 
     def repeat(self, n: int, copy_elements=True):
-        # noinspection SpellCheckingInspection,PyUnresolvedReferences,PyRedeclaration
         r"""This method allows to repeat the lattice `n` times.
         If `n` does not divide `ring.periodicity`, the new ring
         periodicity is set to 1, otherwise  it is et to
@@ -411,7 +409,6 @@ class Lattice(list):
 
     def concatenate(self, *lattices: Iterable[Element],
                     copy_elements=False, copy=False):
-        # noinspection PyUnresolvedReferences,SpellCheckingInspection,PyRedeclaration
         """Concatenate several `Iterable[Element]` with the lattice
 
         Equivalents syntaxes:
@@ -445,7 +442,6 @@ class Lattice(list):
         return lattice if copy else None
 
     def reverse(self, copy=False):
-        # noinspection PyUnresolvedReferences
         r"""Reverse the order of the lattice and swapt the faces
         of elements. Alignment errors are not swapped
 
