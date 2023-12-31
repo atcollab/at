@@ -81,17 +81,19 @@ keeping their sum constant:
 """
 
 from __future__ import annotations
-import numpy as np
-import abc
-from collections import deque
-from collections.abc import Iterable, Sequence, Callable
-from typing import Union
 
 __all__ = [
     "VariableBase",
     "CustomVariable",
     "VariableList",
 ]
+
+import abc
+from collections import deque
+from collections.abc import Iterable, Sequence, Callable
+from typing import Union
+
+import numpy as np
 
 Number = Union[int, float]
 
