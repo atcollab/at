@@ -76,7 +76,8 @@ end
         % Ensure 6d is enabled
         check_6d(ring,true);
         % Turn cavities off
-        ringtmp=atdisable_6d(ring,'allpass','','cavipass','auto');
+        ringtmp=atdisable_6d(ring,'allpass','','cavipass','auto',...
+            'quantdiffpass','auto','simplequantdiffpass','auto');
         o0=zeros(6,1);
         o6=ringpass(ringtmp,o0);
         U0=-o6(5)*energy;
