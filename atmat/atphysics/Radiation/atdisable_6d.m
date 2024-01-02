@@ -36,6 +36,8 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 %   'wigglerpass'	 pass method for wigglers. Default 'auto'
 %   'quantdiffpass'  pass method for quantum diffusion. Default 'auto'
 %   'energylosspass' pass method for atenergyloss element. Default 'auto'
+%   'simplequantdiffpass' pass method for SimpleQuantDiff element. Default 'auto'
+%   'simpleradiationpass' pass method for SimpleRadiation element. Default 'auto'
 %
 %   OUPUTS:
 %   1. NEWRING   Output ring
@@ -65,6 +67,8 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 [cavipass,varargs]=getoption(varargs,'cavipass',default_pass('auto'));
 [quantdiffpass,varargs]=getoption(varargs,'quantdiffpass',default_pass('auto'));
 [energylosspass,varargs]=getoption(varargs,'energylosspass',default_pass('auto'));
+[simplequantdiffpass,varargs]=getoption(varargs,'simplequantdiffpass',default_pass('auto'));
+[simpleradiationpass,varargs]=getoption(varargs,'simpleradiationpass',default_pass('auto'));
 % Process the positional arguments
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
@@ -77,6 +81,8 @@ modfun.Octupole=autoMultipolePass(octupass);
 modfun.Wiggler=autoMultipolePass(wigglerpass);
 modfun.QuantDiff=autoIdentityPass(quantdiffpass);
 modfun.EnergyLoss=autoIdentityPass(energylosspass);
+modfun.SimpleQuantDiff=autoIdentityPass(simplequantdiffpass);
+modfun.SimpleRadiation=autoIdentityPass(simpleradiationpass);
 modfun.Other=@(elem) elem;
 
 % Generate the new lattice
