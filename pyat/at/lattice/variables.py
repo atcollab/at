@@ -131,9 +131,9 @@ class VariableBase(abc.ABC):
             ring:       provided to an attempt to get the initial value of the
               variable
         """
-        self.name = self._setname(name)  #: Variable name
-        self.bounds = bounds  #: Variable bounds
-        self.delta = delta  #: Increment step
+        self.name: str = self._setname(name)  #: Variable name
+        self.bounds: tuple[Number, Number] = bounds  #: Variable bounds
+        self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
