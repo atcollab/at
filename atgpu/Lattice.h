@@ -10,7 +10,7 @@ class Lattice {
 
 public:
 
-  explicit Lattice(SymplecticIntegrator& integrator,double energy,int gpuId);
+  explicit Lattice(int32_t nbElements,SymplecticIntegrator& integrator,double energy,int gpuId);
   ~Lattice();
 
   // Add an element in the lattice
@@ -31,7 +31,6 @@ public:
 private:
 
   void generateGPUKernel();
-  void Transpose64(int32_t w,int32_t hm,void *mem);
 
   PassMethodFactory factory;                // Pass method code generation
   std::vector<AbstractElement *> elements;  // All elements

@@ -130,7 +130,6 @@ void StrMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *in
   generateApertures(code,info);
   generateQuadFringeEnter(code,info);
 
-  // Kick/Drift methods are defined in PassMethodFactory
   integrator.resetMethods();
   // Default straight magnet
   integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
