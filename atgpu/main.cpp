@@ -64,7 +64,7 @@ int main(int argc,char **arv) {
 
   try {
 
-    Lattice *l = new Lattice(integrator,6e9,1);
+    Lattice *l = new Lattice(0,integrator,6e9,1);
     double t0 = AbstractGPU::get_ticks();
     for(auto & element : elements) {
       dI->setObject(&element);

@@ -16,7 +16,6 @@ void RFCavityPass::getParameters(AbstractInterface *param, PassMethodInfo *info)
   CavityPass::getParameters(param,info);
 
   elemData.Type = RFCAVITYPASS;
-  elemData.Length = param->getDouble("Length");
 
 }
 

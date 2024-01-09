@@ -25,6 +25,9 @@ public:
   void addDriftMethod(const std::string& driftMethod);
   void addKickMethod(const std::string& kickMethod);
 
+  // Get last kick weight
+  double getLastKickWeight();
+
 private:
 
   void allocate(int nb);

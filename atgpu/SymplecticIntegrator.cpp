@@ -51,6 +51,10 @@ void SymplecticIntegrator::addKickMethod(const std::string& kickMethod) {
   kickMethods.push_back(kickMethod);
 }
 
+double SymplecticIntegrator::getLastKickWeight() {
+  return d[nbCoefficients-1];
+}
+
 void SymplecticIntegrator::generateCode(std::string& code) {
 
   if( driftMethods.empty() || (driftMethods.size() != kickMethods.size()) )

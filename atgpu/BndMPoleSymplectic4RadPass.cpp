@@ -31,13 +31,15 @@ void BndMPoleSymplectic4RadPass::generateCode(std::string& code, PassMethodInfo 
   generateBendFringeEnter(code,info);
   generateQuadFringeEnter(code,info);
 
-  // Kick/Drift methods are defined in PassMethodFactory
   integrator.resetMethods();
   // Default bend
   integrator.addDriftMethod("p_norm=1.0/(1.0 + r6[4]);fastdrift(r6,%STEP%,p_norm)");
   integrator.addKickMethod("bndthinkickrad(r6,elem->PolynomA,elem->PolynomB,%STEP%,elem->MaxOrder,elem->irho,elem->CRAD,p_norm)");
 
   integrator.generateCode(code);
+
+  if(integrator.getLastKickWeight()!=0.0)
+    code.append("  p_norm = 1.0 / (1.0 + r6[4]);\n");
 
   generateQuadFringeExit(code,info);
   generateBendFringeExit(code,info);

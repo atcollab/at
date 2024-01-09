@@ -35,13 +35,15 @@ void StrMPoleSymplectic4RadPass::generateCode(std::string& code, PassMethodInfo 
   generateApertures(code,info);
   generateQuadFringeEnter(code,info);
 
-  // Kick/Drift methods are defined in PassMethodFactory
   integrator.resetMethods();
-  // Default bend
+  // Default straight element
   integrator.addDriftMethod("p_norm=1.0/(1.0 + r6[4]);fastdrift(r6,%STEP%,p_norm)");
   integrator.addKickMethod("strthinkickrad(r6,elem->PolynomA,elem->PolynomB,%STEP%,elem->MaxOrder,elem->CRAD,p_norm)");
 
   integrator.generateCode(code);
+
+  if(integrator.getLastKickWeight()!=0.0)
+    code.append("  p_norm = 1.0 / (1.0 + r6[4]);\n");
 
   generateQuadFringeExit(code,info);
   generateApertures(code,info);
