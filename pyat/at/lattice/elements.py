@@ -1076,9 +1076,9 @@ class RFCavity(LongtMotion, LongElement):
         return pp
 
     def is_compatible(self, other) -> bool:
-        return (super().is_compatible(other) and
-                self.Frequency == other.Frequency and
-                self.TimeLag == other.TimeLag)
+        return (super().is_compatible(other)
+                and self.Frequency == other.Frequency
+                and self.TimeLag == other.TimeLag)
 
     def merge(self, other) -> None:
         super().merge(other)
