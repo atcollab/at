@@ -86,17 +86,19 @@ cuda = eval(os.environ.get('CUDA', 'None'))
 if not cuda:
     cuda_cppflags = []
     cuda_lflags = []
+    cuda_macros = []
 else:
     # Generate the shared include file for the GPU kernel
     exec(open('atgpu/genheader.py').read())
     cuda_path = os.environ.get('CUDA_PATH', None)
+    cuda_macros = [('CUDA', None)]
     if cuda_path is None:
         raise RuntimeError('CUDA_PATH environement variable not defined')
     if sys.platform.startswith('win'):
         cuda_cppflags = ['-I' + cuda_path + '\\include']
         cuda_lflags = ['/LIBPATH:'+cuda_path+'\\lib\\x64', "cuda.lib", "nvrtc.lib"]
     else:
-        cuda_cppflags = ['-I' + cuda_path + '/include' + ' -DPYAT']
+        cuda_cppflags = ['-I' + cuda_path + '/include']
         cuda_lflags = ['-L' + cuda_path + '/lib64', '-Wl,-rpath,' + cuda_path + '/lib64', '-lcuda', '-lnvrtc']
 
 if not sys.platform.startswith('win32'):
@@ -162,7 +164,7 @@ cconfig = Extension(
 cconfig = Extension(
     'at.cconfig',
     sources=[join('pyat', 'at', 'cconfig.c')],
-    define_macros=macros + omp_macros + mpi_macros,
+    define_macros=macros + omp_macros + mpi_macros + cuda_macros,
     extra_compile_args=cflags + omp_cflags,
 )
 
@@ -176,8 +178,7 @@ diffmatrix = Extension(
 
 cudaext = Extension(
     'at.tracking.gpu',
-    sources=[join('atgpu', 'PyATGPU.cpp'),
-             join('atgpu', 'CudaGPU.cpp'),
+    sources=[join('atgpu', 'CudaGPU.cpp'),
              join('atgpu', 'AbstractGPU.cpp'),
              join('atgpu', 'AbstractInterface.cpp'),
              join('atgpu', 'PyInterface.cpp'),
@@ -193,7 +194,7 @@ cudaext = Extension(
              join('atgpu', 'CavityPass.cpp'),
              join('atgpu', 'RFCavityPass.cpp'),
              ],
-    define_macros=macros + mpi_macros,
+    define_macros=macros + cuda_macros,
     extra_compile_args=cppflags + cuda_cppflags,
     extra_link_args=cuda_lflags
 )
