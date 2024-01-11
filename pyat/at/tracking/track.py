@@ -5,17 +5,21 @@ from .utils import fortran_align, has_collective, format_results
 from .utils import initialize_lpass, disable_varelem, variable_refs
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
-from ..lattice import AtWarning, DConstant, random
+from ..lattice import AtError, AtWarning, DConstant, random
 from collections.abc import Iterable
 from typing import Optional
 from functools import partial
 import multiprocessing
 from warnings import warn
 from .atpass import reset_rng
+from ..cconfig import iscuda
 
+if iscuda():
+    from .gpu import gpupass as _gpupass
+    from .gpu import gpuinfo as _gpuinfo
 
 __all__ = ['lattice_track', 'element_track', 'internal_lpass',
-           'internal_epass', 'internal_plpass']
+           'internal_epass', 'internal_plpass', 'gpu_info']
 
 _imax = numpy.iinfo(int).max
 _globring: Optional[list[Element]] = None
@@ -71,7 +75,14 @@ def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
         if sum(variable_refs(lattice)) > 0:
             kwargs['reuse'] = False
     refs = get_uint32_index(lattice, refpts)
-    return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+    use_gpu = kwargs.pop('use_gpu', False)
+    if use_gpu:
+        if not iscuda():
+            raise AtError("No GPU support enabled")
+        else:
+            return _gpupass(lattice, r_in, nturns, refpts=refs, **kwargs)
+    else:
+        return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
 
 
 @fortran_align
@@ -141,6 +152,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
           *use_mp* is :py:obj:`True`. If None, ``min(npart,nproc)``
           is used. It can be globally set using the variable
           *at.lattice.DConstant.patpass_poolsize*
+        use_gpu (bool): Flag to activate GPU processing (default: False)
         start_method:           python multiprocessing start method.
           :py:obj:`None` uses the python default that is considered safe.
           Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -314,7 +326,20 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
     rout = _element_pass(element, r_in, **kwargs)
     return rout
-    
+
+def gpu_info():
+    """
+    :py:func:`gpu_info` returns list of GPU present on the system and their corresponding informations. If GPU
+    support is not enabled or if no capable device are present on the system, an empty list is returned.
+
+    Returns:
+        gpu: (gpu name,hardware version,stream processor number,multi processor number). The number of cores is equal
+          to the product of the number of multi processors by the number of stream processors.
+    """
+    if iscuda():
+        return _gpuinfo()
+    else:
+        return []
 
 internal_lpass = _lattice_pass
 internal_epass = _element_pass

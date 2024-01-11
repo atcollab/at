@@ -24,6 +24,15 @@ static PyObject *ismpi(PyObject *self)
 #endif /*MPI)*/
 }
 
+static PyObject *iscuda(PyObject *self)
+{
+#ifdef CUDA
+  Py_RETURN_TRUE;
+#else
+  Py_RETURN_FALSE;
+#endif /*CUDA)*/
+}
+
 static PyMethodDef methods[] = {
     {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
     PyDoc_STR("isopenmp()\n\n"
@@ -33,6 +42,10 @@ static PyMethodDef methods[] = {
     PyDoc_STR("ismpi()\n\n"
               "Return whether MPI is active.\n"
              )},
+    {"iscuda",  (PyCFunction)iscuda, METH_NOARGS,
+            PyDoc_STR("iscuda()\n\n"
+                      "Return whether CUDA is active.\n"
+            )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
