@@ -62,9 +62,7 @@ void AbstractInterface::get1DArray(AT_FLOAT **dest,const std::string& name,int l
                  AbstractInterface::getShapeStr(shape));
   }
 
-  AT_FLOAT *tmp = new AT_FLOAT[length];
-  memcpy(tmp, P, length*sizeof(AT_FLOAT));
-  *dest = tmp;
+  *dest = P;
 
 }
 

@@ -15,12 +15,6 @@ IdentityPass::IdentityPass() noexcept {
 }
 
 IdentityPass::~IdentityPass() noexcept {
-  delete[] R1;
-  delete[] R2;
-  delete[] T1;
-  delete[] T2;
-  delete[] EApertures;
-  delete[] RApertures;
 }
 
 // Retrieve parameters from upper layer (Python, Matlab)

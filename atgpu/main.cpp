@@ -14,6 +14,7 @@
 using namespace std;
 
 #define RINPTR(p) (((AT_FLOAT *)rin) + (p * 6))
+#define ROUTPTR(p,r,t) (rout + ((t)* (6 * nbRef * nbPart) + (r)* (6 * nbPart) + (p) * 6))
 
 AT_FLOAT *createGrid(AT_FLOAT x1,AT_FLOAT y1,AT_FLOAT x2,AT_FLOAT y2,uint64_t nbX,uint64_t nbY) {
 
@@ -45,8 +46,18 @@ AT_FLOAT *createGrid(AT_FLOAT x1,AT_FLOAT y1,AT_FLOAT x2,AT_FLOAT y2,uint64_t nb
 
 }
 
+void printGPUInfo() {
+
+    vector<GPU_INFO> infos = AbstractGPU::getInstance()->getDeviceList();
+    for(auto & info : infos) {
+        cout << info.name << " [" << info.version << "] " << info.mpNumber*info.smNumber << " cores" << endl;
+    }
+
+}
 
 int main(int argc,char **arv) {
+
+  //printGPUInfo();
 
   SymplecticIntegrator integrator(4);
   CppInterface *dI = new CppInterface();
@@ -54,7 +65,7 @@ int main(int argc,char **arv) {
   vector<CppObject> elements;
 
   try {
-    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/betamodel_radon.repr");
+    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
     //REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/simple_ebs.repr");
     loader->parseREPR(elements);
   } catch (string& errStr) {
@@ -70,12 +81,18 @@ int main(int argc,char **arv) {
       dI->setObject(&element);
       l->addElement();
     }
+    l->generateGPUKernel();
     double t1 = AbstractGPU::get_ticks();
     cout << "Ring build: " << (t1-t0)*1000.0 << "ms" << endl;
 
+    t0=AbstractGPU::get_ticks();
+    l->fillGPUMemory();
+    t1=AbstractGPU::get_ticks();
+    cout << "GPU lattice loading: " << (t1-t0)*1000.0 << "ms" << endl;
+
     uint64_t nbTurn = 100;
-    uint64_t nbX = 57;
-    uint64_t nbY = 57;
+    uint64_t nbX = 16;
+    uint64_t nbY = 16;
     uint64_t nbPart = nbX * nbY;
     uint32_t refs[] = {l->getNbElement()};
     uint32_t nbRef = sizeof(refs)/sizeof(uint32_t);
@@ -87,14 +104,19 @@ int main(int argc,char **arv) {
 
     string gpuName = l->getGPUContext()->name() + "(" + to_string(l->getGPUContext()->coreNumber()) + " cores)";
     cout << "Running " << to_string(nbPart) << " particles, " << to_string(nbTurn) << " turn(s) on " << gpuName << endl;
-    l->run(nbTurn,nbPart,rin,rout,nbRef,refs,0);
+    l->run(nbTurn,nbPart,rin,rout,nbRef,refs,nullptr,nullptr,nullptr);
 
+    AT_FLOAT *P = ROUTPTR(236,0,nbTurn-1);
+    cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+
+    /*
     npy::npy_data_ptr<double> d;
     d.data_ptr = (double*)rout;
     d.shape = { 6,nbPart,nbRef,nbTurn };
     d.fortran_order = true;
     std::replace(gpuName.begin(),gpuName.end(),' ','_');
-    npy::write_npy("/home/esrf/pons/at/test/data/part_" + gpuName + ".npy",d);
+    npy::write_npy("/segfs/tmp/pons/at/test/part_" + gpuName + ".npy",d);
+    */
 
     free(rout);
     free(rin);

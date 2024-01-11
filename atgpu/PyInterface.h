@@ -9,17 +9,16 @@ class PyInterface: public AbstractInterface {
 
 public:
 
-  std::string getString(const std::string& name);
-  int getInt(const std::string& name);
-  AT_FLOAT getDouble(const std::string& name);
-  AT_FLOAT *getDoubleArray(const std::string& name,std::vector<int64_t> expectedShape);
-  AT_FLOAT *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape);
+  std::string getString(const std::string& name) override;
+  int getInt(const std::string& name) override;
+  AT_FLOAT getDouble(const std::string& name) override;
+  AT_FLOAT *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) override;
 
   void setObject(PyObject *obj);
 
 private:
 
-  PyObject *self;
+  PyObject *self = nullptr;
 
 };
 

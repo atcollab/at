@@ -12,7 +12,6 @@ class PassMethodInfo {
 public:
   PassMethodInfo();
   PassMethodInfo(const std::string& name,Constructor c,Generator g,UGenerator ug);
-  void Merge(PassMethodInfo *pi);
   std::string name;       // Pass method name
   Constructor create;     // Pass method constructor
   Generator generate;     // Pass method code generator

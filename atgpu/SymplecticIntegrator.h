@@ -12,11 +12,6 @@ public:
   SymplecticIntegrator(int type);
   ~SymplecticIntegrator();
 
-  // Coefficients
-  int nbCoefficients;
-  AT_FLOAT *c; // Drift
-  AT_FLOAT *d; // Kick
-
   // Generate integrator code
   void generateCode(std::string& code);
 
@@ -29,6 +24,11 @@ public:
   double getLastKickWeight();
 
 private:
+
+  // Coefficients
+  int nbCoefficients;
+  AT_FLOAT *c; // Drift
+  AT_FLOAT *d; // Kick
 
   void allocate(int nb);
   void generateLoopCode(std::string& code,size_t subType);

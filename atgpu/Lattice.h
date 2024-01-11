@@ -18,26 +18,28 @@ public:
   void addElement();
   // Return number of element
   uint32_t getNbElement();
-  // Fill GPU memory
+  // Load (or reload) lattice in GPU. Lattice structure (polynomial orders, kick angles, misalignment configuration) must remain the same.
   void fillGPUMemory();
+  // Generate and compile GPU code
+  void generateGPUKernel();
   // Run the simulation
-  void run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts,uint64_t turnCounter);
+  void run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts,
+           uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord);
   // Return handle to the GPU context
   GPUContext *getGPUContext();
-  // Get ring legnth
+  // Get ring length
   AT_FLOAT getLength();
-
+  // Set turn counter
+  void setTurnCounter(uint64_t count);
 
 private:
 
-  void generateGPUKernel();
 
   PassMethodFactory factory;                // Pass method code generation
   std::vector<AbstractElement *> elements;  // All elements
 
   GPUContext *gpu;                          // GPU context
   void *gpuRing;                            // Ring in GPU memory
-  uint32_t* lost;                           // Particle lost flag
   RING_PARAM ringParams;                    // General ring parameters
 
 };
