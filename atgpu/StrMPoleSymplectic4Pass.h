@@ -30,7 +30,6 @@ protected:
 
 private:
 
-  bool isDrift();
   bool isQuadrupole();
   bool isSextupole();
   bool isOctupole();

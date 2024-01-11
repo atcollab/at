@@ -22,15 +22,6 @@ void BndMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PassMethod
   StrMPoleSymplectic4Pass::getParameters(param,info);
 
   elemData.Type = BNDMPOLESYMPLECTIC4PASS;
-  if( elemData.MaxOrder==0 || (elemData.MaxOrder==1 && PolynomA[1]==0.0) ) {
-    if( elemData.MaxOrder==1 && PolynomB[1]!=0.0) {
-      elemData.SubType = 2; // DQ
-      elemData.K = PolynomB[1];
-    } else
-      elemData.SubType = 1; // Pure bending
-  } else {
-    elemData.SubType = 0;
-  }
   elemData.irho = param->getDouble("BendingAngle") / elemData.Length;
   AT_FLOAT gap = param->getOptionalDouble("FullGap", 0);
 
@@ -81,6 +72,22 @@ void BndMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *in
   generateBendFringeExit(code,info);
   generateApertures(code,info);
   generateExit(code,info);
+
+}
+
+void BndMPoleSymplectic4Pass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
+
+  StrMPoleSymplectic4Pass::fillGPUMemory(elemMem,privateMem,gpuMem);
+
+  // Update Subtype for bending
+  if (isBending()) {
+    elemData.SubType = 1;
+  } else if (isDQ()) {
+    elemData.SubType = 2;
+  } else {
+    elemData.SubType = 0;
+  }
+  ((ELEMENT *)elemMem)->SubType = elemData.SubType;
 
 }
 
@@ -154,4 +161,11 @@ void BndMPoleSymplectic4Pass::generateBendFringeExit(std::string& code, PassMeth
   code.append("  edge_fringe(r6,p_norm,elem->ExitAngle,elem->irho,elem->FringeCorrExitX,elem->FringeCorrExitY,elem->FringeBendExit);\n");
 }
 
+bool BndMPoleSymplectic4Pass::isBending() {
+  return elemData.MaxOrder==0 ||
+        (elemData.MaxOrder==1 && PolynomA[1]==0.0 && PolynomB[1]==0.0);
+}
 
+bool BndMPoleSymplectic4Pass::isDQ() {
+  return elemData.MaxOrder==1 && PolynomA[1]==0.0;
+}

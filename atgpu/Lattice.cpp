@@ -12,7 +12,7 @@ const string header = {
 
 Lattice::Lattice(int32_t nbElements,SymplecticIntegrator& integrator,AT_FLOAT energy,int gpuId) : factory(PassMethodFactory(integrator)) {
   elements.reserve(nbElements);
-  lost = nullptr;
+  gpuRing = nullptr;
   memset(&ringParams,0,sizeof(ringParams));
   ringParams.Energy = energy;
   gpu = AbstractGPU::getInstance()->createContext(gpuId);
@@ -21,9 +21,8 @@ Lattice::Lattice(int32_t nbElements,SymplecticIntegrator& integrator,AT_FLOAT en
 Lattice::~Lattice() {
   for(auto & element : elements)
     delete element;
-  gpu->freeDevice(gpuRing);
+  if(gpuRing) gpu->freeDevice(gpuRing);
   delete gpu;
-  delete[] lost;
 }
 
 void Lattice::addElement() {
@@ -52,6 +51,10 @@ AT_FLOAT Lattice::getLength() {
   for(auto & element : elements)
     L += element->getLength();
   return L;
+}
+
+void Lattice::setTurnCounter(uint64_t count) {
+  ringParams.turnCounter = count;
 }
 
 uint32_t Lattice::getNbElement() {
@@ -92,84 +95,93 @@ void Lattice::generateGPUKernel() {
   routCode.append("      _rout[6 * (refIdx*nbPart) +  5] = r6[5];\n");
   routCode.append("    }\n");
 
+  // Lost particle
+  string lostCode;
+  lostCode.append("    pLost = !isfinite(r6[4]) || !isfinite(r6[5]) ||\n");
+  lostCode.append("            (fabs(r6[0]) > 1.0 || fabs(r6[1]) > 1.0) ||\n");
+  lostCode.append("            (fabs(r6[2]) > 1.0 || fabs(r6[3]) > 1.0);\n");
+
+  lostCode.append("    if(!lost[threadId] & pLost) {\n");
+  lostCode.append("      if( lostAtElem ) {\n");
+  lostCode.append("        lostAtElem[threadId] = elem;\n");
+  lostCode.append("      }\n");
+  lostCode.append("      if( lostAtCoord ) {\n");
+  lostCode.append("        lostAtCoord[0 + 6*threadId] = r6[0];\n");
+  lostCode.append("        lostAtCoord[1 + 6*threadId] = r6[1];\n");
+  lostCode.append("        lostAtCoord[2 + 6*threadId] = r6[2];\n");
+  lostCode.append("        lostAtCoord[3 + 6*threadId] = r6[3];\n");
+  lostCode.append("        lostAtCoord[4 + 6*threadId] = r6[4];\n");
+  lostCode.append("        lostAtCoord[5 + 6*threadId] = r6[5];\n");
+  lostCode.append("      }\n");
+  lostCode.append("      r6[0] = NAN;\n");
+  lostCode.append("      r6[1] = 0;\n");
+  lostCode.append("      r6[2] = 0;\n");
+  lostCode.append("      r6[3] = 0;\n");
+  lostCode.append("      r6[4] = 0;\n");
+  lostCode.append("      r6[5] = 0;\n");
+  lostCode.append("      lost[threadId] = turn + 1;\n");
+  lostCode.append("    }\n");
+
+
   // GPU main track function
   // extern C to prevent from mangled name
   code.append("extern \"C\" __global__ void track(RING_PARAM *ringParam,ELEMENT* gpuRing,\n"
               "                                   uint32_t startElem,uint32_t nbElement,uint32_t nbTotalElement,\n"
               "                                   uint64_t nbPart,AT_FLOAT* rin,AT_FLOAT* rout,\n"
               "                                   uint32_t* lost,uint64_t turn,\n"
-              "                                   int32_t *refpts,uint32_t nbRef\n"
+              "                                   int32_t *refpts,uint32_t nbRef,\n"
+              "                                   uint32_t *lostAtElem,AT_FLOAT *lostAtCoord\n"
               "                                   ) {\n");
 
+  code.append("  AT_FLOAT sr6[6];\n");
+  code.append("  AT_FLOAT* r6 = sr6;\n");
   code.append("  int threadId = blockIdx.x * blockDim.x + threadIdx.x;\n");
   code.append("  ELEMENT* elemPtr = &gpuRing[startElem];\n");
-  code.append("  AT_FLOAT* _r6 = rin + (6 * threadId);\n");
-
-  // Exit if particle lost
-  code.append("  if(lost[threadId]) return;\n");
-
   code.append("  AT_FLOAT* _rout = rout + 6 * ((uint64_t)turn * (uint64_t)nbPart * (uint64_t)nbRef + (uint64_t)(threadId));\n");
-
-  // Copy particle coordinates into registers
-  code.append("  AT_FLOAT sr6[6];\n");
-  code.append("  sr6[0] = _r6[0];\n"); // x
-  code.append("  sr6[1] = _r6[1];\n"); // px/p0 = x'(1+d)
-  code.append("  sr6[2] = _r6[2];\n"); // y
-  code.append("  sr6[3] = _r6[3];\n"); // py/p0 = y'(1+d)
-  code.append("  sr6[4] = _r6[4];\n"); // d = (pz-p0)/p0
-  code.append("  sr6[5] = _r6[5];\n"); // c.tau (time lag)
-  code.append("  AT_FLOAT* r6 = sr6;\n");
   code.append("  AT_FLOAT fTurn = (AT_FLOAT)(ringParam->turnCounter + turn);\n");
-
-  // Loop over elements
+  code.append("  bool pLost;\n");
   code.append("  int32_t refIdx = 0;\n");
   code.append("  int elem = startElem;\n");
+
+  // Copy particle coordinates into registers
+  code.append("  sr6[0] = rin[0 + 6*threadId];\n"); // x
+  code.append("  sr6[1] = rin[1 + 6*threadId];\n"); // px/p0 = x'(1+d)
+  code.append("  sr6[2] = rin[2 + 6*threadId];\n"); // y
+  code.append("  sr6[3] = rin[3 + 6*threadId];\n"); // py/p0 = y'(1+d)
+  code.append("  sr6[4] = rin[4 + 6*threadId];\n"); // d = (pz-p0)/p0
+  code.append("  sr6[5] = rin[5 + 6*threadId];\n"); // c.tau (time lag)
+
+  // Exit if particle lost
+  code.append("  if(lost[threadId]) {\n");
+  code.append("    for(; nbRef > 0 && elem <= startElem+nbElement; elem++) {\n"); // don't forget last ref
+  code.append(routCode);
+  code.append("    }\n");
+  code.append("    return;\n");
+  code.append("  }\n");
+
+  // Loop over elements
   code.append("  for(; elem < startElem+nbElement; elem++) {\n");
-  //code.append("    printf(\"Elem %d:\\n\",elem);\n");
   code.append(routCode);
   code.append("    switch(elemPtr->Type) {\n");
   factory.generatePassMethodsCalls(code);
   code.append("    }\n");
-  code.append("    bool pLost = !isfinite(_r6[0]) || !isfinite(_r6[1]) ||\n");
-  code.append("                 !isfinite(_r6[2]) || !isfinite(_r6[3]) ||\n");
-  code.append("                 !isfinite(_r6[4]) || !isfinite(_r6[5]) ||\n");
-  code.append("                 (fabs(_r6[0]) > 1.0 || fabs(_r6[1]) > 1.0) ||\n");
-  code.append("                 (fabs(_r6[2]) > 1.0 || fabs(_r6[3]) > 1.0);\n");
-  code.append("    if(!lost[threadId] & pLost) {\n");
-  code.append("      _r6[0] = NAN;\n");
-  code.append("    }\n");
+  code.append(lostCode);
   code.append("    elemPtr++;\n");
   code.append("  }\n");
 
-  // Copy back particle coordinates to global mem
-  code.append("  _r6[0] = sr6[0];\n");
-  code.append("  _r6[1] = sr6[1];\n");
-  code.append("  _r6[2] = sr6[2];\n");
-  code.append("  _r6[3] = sr6[3];\n");
-  code.append("  _r6[4] = sr6[4];\n");
-  code.append("  _r6[5] = sr6[5];\n");
-
   code.append("  if( elem==nbTotalElement ) {\n");
-
+  code.append(lostCode);
   code.append(routCode);
-
-  // Particle lost check
-  code.append("    bool pLost = !isfinite(_r6[0]) || !isfinite(_r6[1]) ||\n");
-  code.append("                 !isfinite(_r6[2]) || !isfinite(_r6[3]) ||\n");
-  code.append("                 !isfinite(_r6[4]) || !isfinite(_r6[5]) ||\n");
-  code.append("                 (fabs(_r6[0]) > 1.0 || fabs(_r6[1]) > 1.0) ||\n");
-  code.append("                 (fabs(_r6[2]) > 1.0 || fabs(_r6[3]) > 1.0);\n");
-
-  code.append("    if(!lost[threadId] & pLost) {\n");
-  code.append("      _r6[0] = NAN;\n");
-  code.append("      _r6[1] = 0;\n");
-  code.append("      _r6[2] = 0;\n");
-  code.append("      _r6[3] = 0;\n");
-  code.append("      _r6[4] = 0;\n");
-  code.append("      _r6[5] = 0;\n");
-  code.append("      lost[threadId] = turn + 1;\n");
-  code.append("    }\n");
   code.append("  }\n");
+
+  // Copy back particle coordinates to global mem
+  code.append("  rin[0 + 6*threadId] = sr6[0];\n");
+  code.append("  rin[1 + 6*threadId] = sr6[1];\n");
+  code.append("  rin[2 + 6*threadId] = sr6[2];\n");
+  code.append("  rin[3 + 6*threadId] = sr6[3];\n");
+  code.append("  rin[4 + 6*threadId] = sr6[4];\n");
+  code.append("  rin[5 + 6*threadId] = sr6[5];\n");
+
   code.append("}\n");
 
   t1=AbstractGPU::get_ticks();
@@ -180,11 +192,6 @@ void Lattice::generateGPUKernel() {
   gpu->compile(code);
   t1=AbstractGPU::get_ticks();
   cout << "Code compilation: " << (t1-t0)*1000.0 << "ms" << endl;
-
-  t0=AbstractGPU::get_ticks();
-  fillGPUMemory();
-  t1=AbstractGPU::get_ticks();
-  cout << "GPU lattice loading: " << (t1-t0)*1000.0 << "ms" << endl;
 
 }
 
@@ -203,7 +210,7 @@ void Lattice::fillGPUMemory() {
   size += privSize;
 
   // Allocate GPU Memory
-  gpu->allocDevice(&gpuRing, size);
+  if(!gpuRing) gpu->allocDevice(&gpuRing, size);
 
   // Copy element data
   ELEMENT *memPtr = (ELEMENT *)malloc(size);
@@ -223,9 +230,7 @@ void Lattice::fillGPUMemory() {
 }
 
 void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,
-                  uint32_t *refPts,uint64_t turnCounter) {
-
-  generateGPUKernel();
+                  uint32_t *refPts,uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord) {
 
   double t0 = AbstractGPU::get_ticks();
 
@@ -236,9 +241,9 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
 
   // Expand ref indexes
   int32_t *expandedRefPts = new int32_t[elements.size()+1];
-  for(int i=0;i<=elements.size();i++)
+  for(size_t i=0;i<=elements.size();i++)
     expandedRefPts[i] = -1;
-  for(int i=0;i<nbRef;i++)
+  for(size_t i=0;i<nbRef;i++)
     expandedRefPts[refPts[i]] = (int32_t)i;
   void *gpuRefs;
   gpu->allocDevice(&gpuRefs, (elements.size() + 1) * sizeof(int32_t));
@@ -246,10 +251,9 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
 
   // Lost flags
   // Lost dummy particles are created to fill the thread block
-  delete[] lost;
   uint32_t dummyParticles = (GPU_BLOCK_SIZE - nbParticles%GPU_BLOCK_SIZE) % GPU_BLOCK_SIZE;
   uint32_t lostSize = (nbParticles + dummyParticles) * sizeof(uint32_t);
-  lost = new uint32_t[nbParticles + dummyParticles];
+  uint32_t *lost = new uint32_t[nbParticles + dummyParticles];
   for(uint32_t i=0;i<nbParticles;i++) lost[i] = 0;
   for(uint32_t i=nbParticles;i<nbParticles+dummyParticles;i++) lost[i] = 1;
   void *gpuLost;
@@ -257,14 +261,20 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->hostToDevice(gpuLost, lost, lostSize);
 
   // rout
+  void *gpuRout = nullptr;
   uint64_t routSize = nbParticles * nbRef * nbTurn * 6 * sizeof(AT_FLOAT);
-  void *gpuRout;
-  gpu->allocDevice(&gpuRout, routSize);
+  if( rout ) gpu->allocDevice(&gpuRout, routSize);
 
   // Global ring param
   void *gpuRingParams;
   gpu->allocDevice(&gpuRingParams, sizeof(ringParams));
   gpu->hostToDevice(gpuRingParams,&ringParams,sizeof(ringParams));
+
+  // Lost infos
+  void *gpuLostAtElem = nullptr;
+  void *gpuLostAtCoord = nullptr;
+  if(lostAtElem) gpu->allocDevice(&gpuLostAtElem, nbParticles * sizeof(uint32_t));
+  if(lostAtCoord) gpu->allocDevice(&gpuLostAtCoord, nbParticles * 6 * sizeof(AT_FLOAT));
 
   // Call GPU
   gpu->resetArg();
@@ -284,7 +294,8 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->addArg(sizeof(uint64_t),&turn);
   gpu->addArg(sizeof(void *),&gpuRefs);
   gpu->addArg(sizeof(uint32_t),&nbRef);
-
+  gpu->addArg(sizeof(void *),&gpuLostAtElem);
+  gpu->addArg(sizeof(void *),&gpuLostAtCoord);
 
   // Turn loop
   for(turn=0;turn<nbTurn;turn++) {
@@ -294,21 +305,38 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   }
 
   // Get back data
-  gpu->deviceToHost(rout,gpuRout,routSize);
   gpu->deviceToHost(lost,gpuLost,lostSize);
+  if( rout ) gpu->deviceToHost(rout,gpuRout,routSize);
+  if( lostAtElem ) gpu->deviceToHost(lostAtElem,gpuLostAtElem, nbParticles * sizeof(uint32_t));
+  if( lostAtCoord ) gpu->deviceToHost(lostAtCoord,gpuLostAtCoord, nbParticles * 6 * sizeof(AT_FLOAT));
 
-  int nbLost = 0;
-  for(int i=0;i<nbParticles;i++)
-    if(lost[i]) nbLost++;
-  cout << "Lost: " << nbLost << endl;
+  for(int i=0;i<nbParticles;i++) {
+    if( lostAtTurn ) lostAtTurn[i] = lost[i];
+    if( !lost[i] ) {
+      // Alive particle
+      if( lostAtCoord ) {
+        lostAtCoord[0 + 6 * i] = 0.0;
+        lostAtCoord[1 + 6 * i] = 0.0;
+        lostAtCoord[2 + 6 * i] = 0.0;
+        lostAtCoord[3 + 6 * i] = 0.0;
+        lostAtCoord[4 + 6 * i] = 0.0;
+        lostAtCoord[5 + 6 * i] = 0.0;
+      }
+      if( lostAtElem )
+        lostAtElem[i] = 0;
+    }
+  }
 
   // Free
   gpu->freeDevice(gpuRin);
-  gpu->freeDevice(gpuRout);
+  if( gpuRout ) gpu->freeDevice(gpuRout);
   gpu->freeDevice(gpuRefs);
   gpu->freeDevice(gpuLost);
   gpu->freeDevice(gpuRingParams);
+  if( gpuLostAtElem ) gpu->freeDevice(gpuLostAtElem);
+  if( gpuLostAtCoord ) gpu->freeDevice(gpuLostAtCoord);
   delete[] expandedRefPts;
+  delete[] lost;
 
   double t1 = AbstractGPU::get_ticks();
   cout << "GPU tracking: " << (t1-t0)*1000.0 << "ms" << endl;

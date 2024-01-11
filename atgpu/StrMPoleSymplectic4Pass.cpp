@@ -1,9 +1,8 @@
 #include "StrMPoleSymplectic4Pass.h"
 #include "PassMethodFactory.h"
 #include "AbstractGPU.h"
-#include "PassMethodFactory.h"
-#include <string.h>
-#include <math.h>
+#include <cstring>
+#include <cmath>
 
 using namespace std;
 
@@ -14,9 +13,6 @@ StrMPoleSymplectic4Pass::StrMPoleSymplectic4Pass() noexcept : IdentityPass() {
 }
 
 StrMPoleSymplectic4Pass::~StrMPoleSymplectic4Pass() noexcept {
-  delete[] PolynomA;
-  delete[] PolynomB;
-  delete[] KickAngle;
 }
 
 void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PassMethodInfo *info) {
@@ -33,32 +29,9 @@ void StrMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PassMethod
   param->get1DArray(&PolynomA,"PolynomA",elemData.MaxOrder+1);
   param->get1DArray(&PolynomB,"PolynomB",elemData.MaxOrder+1);
   param->getOptional1DArray(&KickAngle,"KickAngle",2);
-  if( KickAngle ) {
-    PolynomB[0] -= sin(KickAngle[0]) / elemData.Length;
-    PolynomA[0] += sin(KickAngle[1]) / elemData.Length;
-  }
 
   elemData.FringeQuadEntrance = param->getOptionalInt("FringeQuadEntrance", 0);
   elemData.FringeQuadExit = param->getOptionalInt("FringeQuadExit", 0);
-  if( elemData.MaxOrder>=1 && PolynomB[1]==0.0 ) {
-    // No quad strength
-    elemData.FringeQuadEntrance = false;
-    elemData.FringeQuadExit = false;
-  }
-
-  if ( isDrift() ) {
-    // All polynom coefficients are null
-    elemData.Type = DRIFTPASS;
-  } else if( isQuadrupole() ) {
-    elemData.SubType = 1;
-    elemData.K = PolynomB[1];
-  } else if ( isSextupole() ) {
-    elemData.SubType = 2;
-    elemData.K = PolynomB[2];
-  } else if ( isOctupole() ) {
-    elemData.SubType = 3;
-    elemData.K = PolynomB[3];
-  }
 
   info->doQuadEnter |= (elemData.FringeQuadEntrance!=0);
   info->doQuadExit |= (elemData.FringeQuadExit!=0);
@@ -81,28 +54,38 @@ void StrMPoleSymplectic4Pass::fillGPUMemory(void *elemMem,void *privateMem,void 
   AT_FLOAT *dest = (AT_FLOAT *)(privPtr + privSize);
   AT_FLOAT *destGPU = (AT_FLOAT *)((unsigned char *)gpuMem + privSize);
 
+  if( isQuadrupole() ) {
+    elemData.SubType = 1;
+    elemData.K = PolynomB[1];
+  } else if ( isSextupole() ) {
+    elemData.SubType = 2;
+    elemData.K = PolynomB[2];
+  } else if ( isOctupole() ) {
+    elemData.SubType = 3;
+    elemData.K = PolynomB[3];
+  } else {
+    elemData.SubType = 0;
+  }
+
   if(PolynomA) {
     elemData.PolynomA = destGPU;
     memcpy(dest,PolynomA,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
+    if( KickAngle )
+      dest[0] += sin(KickAngle[1]) / elemData.Length;
     dest += (elemData.MaxOrder + 1);
     destGPU += (elemData.MaxOrder + 1);
   }
   if(PolynomB) {
     elemData.PolynomB = destGPU;
     memcpy(dest,PolynomB,(elemData.MaxOrder + 1)*sizeof(AT_FLOAT));
+    if( KickAngle )
+      dest[0] -= sin(KickAngle[0]) / elemData.Length;
     dest += (elemData.MaxOrder + 1);
     destGPU += (elemData.MaxOrder + 1);
   }
 
   IdentityPass::fillGPUMemory(elemMem,privateMem,gpuMem);
 
-}
-
-bool StrMPoleSymplectic4Pass::isDrift() {
-  bool isDr = true;
-  for(int i=0;i<=elemData.MaxOrder;i++)
-    isDr &= PolynomA[i]==0.0 && PolynomB[i]==0.0;
-  return isDr;
 }
 
 bool StrMPoleSymplectic4Pass::isQuadrupole() {

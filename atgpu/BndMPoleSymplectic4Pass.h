@@ -11,6 +11,7 @@ public:
 
   // Retrieve parameters from upper layer (Python, Matlab)
   void getParameters(AbstractInterface *param, PassMethodInfo *info) override;
+  void fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) override;
 
   // Generic code generation
   static void generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept;
@@ -18,6 +19,11 @@ public:
 
   static void generateBendFringeEnter(std::string& code, PassMethodInfo *info) noexcept;
   static void generateBendFringeExit(std::string& code, PassMethodInfo *info) noexcept;
+
+private:
+
+  bool isBending();
+  bool isDQ();
 
 };
 

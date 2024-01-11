@@ -61,20 +61,6 @@ PassMethodInfo::PassMethodInfo(const string& name,Constructor c,Generator g,UGen
   ugenerate = ug;
 }
 
-void PassMethodInfo::Merge(PassMethodInfo *pi) {
-
-  used |= pi->used;
-  doR1 |= pi->doR1;
-  doR2 |= pi->doR2;
-  doT1 |= pi->doT1;
-  doT2 |= pi->doT2;
-  doEAperture |= pi->doEAperture;
-  doRAperture |= pi->doRAperture;
-  doQuadEnter |= pi->doQuadEnter;
-  doQuadExit |= pi->doQuadExit;
-
-}
-
 AbstractElement *PassMethodFactory::createElement(std::string& passMethod) {
 
   AbstractElement *elem;
@@ -90,9 +76,6 @@ AbstractElement *PassMethodFactory::createElement(std::string& passMethod) {
   if( found  ) {
     elem = passMethodInfos[i].create();
     elem->getParameters(I,&passMethodInfos[i]);
-    if( elem->getType() != i )
-      // An element has been changed from one pass method to an other
-      passMethodInfos[elem->getType()].Merge(passMethodInfos+i);
   } else {
     throw string("Not implemented PassMethod: " + passMethod);
   }
