@@ -21,6 +21,7 @@ def get_acceptance(
         offset: Sequence[float] = None, bounds=None,
         grid_mode: Optional[GridMode] = GridMode.RADIAL,
         use_mp: Optional[bool] = False,
+        use_gpu: Optional[bool] = False,
         verbose: Optional[bool] = True,
         divider: Optional[int] = 2,
         shift_zero: Optional[float] = 1.0e-6,
@@ -58,6 +59,7 @@ def get_acceptance(
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
           default use :py:func:`.lattice_pass`).
+        use_gpu:        Use GPU
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -104,6 +106,10 @@ def get_acceptance(
             print('Multi-process acceptance calculation selected...')
             if nproc == 1:
                 print('Consider use_mp=False for single core computations')
+        elif use_gpu:
+            nprocu = 1
+            print('GPU acceptance calculation selected...')
+            kwargs['use_gpu'] = True
         else:
             nprocu = 1
             print('Single process acceptance calculation selected...')
