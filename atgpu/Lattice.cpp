@@ -67,8 +67,10 @@ GPUContext *Lattice::getGPUContext() {
 
 void Lattice::generateGPUKernel() {
 
+#ifdef _PROFILE
   double t0,t1;
   t0=AbstractGPU::get_ticks();
+#endif
 
   // Perform post initialisation
   ringParams.Length = getLength();
@@ -153,8 +155,10 @@ void Lattice::generateGPUKernel() {
 
   // Exit if particle lost
   code.append("  if(lost[threadId]) {\n");
-  code.append("    for(; nbRef > 0 && elem <= startElem+nbElement; elem++) {\n"); // don't forget last ref
+  code.append("    if( nbRef > 0 && threadId<nbPart ) {\n"); // don't forget last ref
+  code.append("      for(; nbRef > 0 && elem <= startElem+nbElement; elem++) {\n"); // don't forget last ref
   code.append(routCode);
+  code.append("      }\n");
   code.append("    }\n");
   code.append("    return;\n");
   code.append("  }\n");
@@ -184,14 +188,18 @@ void Lattice::generateGPUKernel() {
 
   code.append("}\n");
 
+#ifdef _PROFILE
   t1=AbstractGPU::get_ticks();
-
   cout << "Code generation: " << (t1-t0)*1000.0 << "ms" << endl;
-
   t0=AbstractGPU::get_ticks();
+#endif
+
   gpu->compile(code);
+
+#ifdef _PROFILE
   t1=AbstractGPU::get_ticks();
   cout << "Code compilation: " << (t1-t0)*1000.0 << "ms" << endl;
+#endif
 
 }
 
@@ -232,7 +240,9 @@ void Lattice::fillGPUMemory() {
 void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,
                   uint32_t *refPts,uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord) {
 
+#ifdef _PROFILE
   double t0 = AbstractGPU::get_ticks();
+#endif
 
   // Copy rin to gpu mem
   void *gpuRin;
@@ -263,7 +273,7 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   // rout
   void *gpuRout = nullptr;
   uint64_t routSize = nbParticles * nbRef * nbTurn * 6 * sizeof(AT_FLOAT);
-  if( rout ) gpu->allocDevice(&gpuRout, routSize);
+  if( routSize ) gpu->allocDevice(&gpuRout, routSize);
 
   // Global ring param
   void *gpuRingParams;
@@ -306,24 +316,24 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
 
   // Get back data
   gpu->deviceToHost(lost,gpuLost,lostSize);
-  if( rout ) gpu->deviceToHost(rout,gpuRout,routSize);
+  if( routSize ) gpu->deviceToHost(rout,gpuRout,routSize);
   if( lostAtElem ) gpu->deviceToHost(lostAtElem,gpuLostAtElem, nbParticles * sizeof(uint32_t));
   if( lostAtCoord ) gpu->deviceToHost(lostAtCoord,gpuLostAtCoord, nbParticles * 6 * sizeof(AT_FLOAT));
 
+  // format data to AT format
   for(int i=0;i<nbParticles;i++) {
-    if( lostAtTurn ) lostAtTurn[i] = lost[i];
     if( !lost[i] ) {
       // Alive particle
-      if( lostAtCoord ) {
-        lostAtCoord[0 + 6 * i] = 0.0;
-        lostAtCoord[1 + 6 * i] = 0.0;
-        lostAtCoord[2 + 6 * i] = 0.0;
-        lostAtCoord[3 + 6 * i] = 0.0;
-        lostAtCoord[4 + 6 * i] = 0.0;
-        lostAtCoord[5 + 6 * i] = 0.0;
-      }
+      if( lostAtCoord )
+        memset(lostAtCoord+6*i,0,6 * sizeof(AT_FLOAT));
       if( lostAtElem )
         lostAtElem[i] = 0;
+      if( lostAtTurn )
+        lostAtTurn[i] = nbTurn;
+    } else {
+      // Dead particle
+      if( lostAtTurn )
+        lostAtTurn[i] = lost[i] - 1;
     }
   }
 
@@ -338,7 +348,9 @@ void Lattice::run(uint64_t nbTurn,uint64_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   delete[] expandedRefPts;
   delete[] lost;
 
+#ifdef _PROFILE
   double t1 = AbstractGPU::get_ticks();
   cout << "GPU tracking: " << (t1-t0)*1000.0 << "ms" << endl;
+#endif
 
 }

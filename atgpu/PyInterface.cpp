@@ -193,8 +193,6 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     // Create the GPU lattice
     try {
 
-      t0 = AbstractGPU::get_ticks();
-      // Default symplectic integrator 4th order (Forest/Ruth)
       PyInterface *pyI = (PyInterface *) AbstractInterface::getInstance();
       size_t nElements = PyList_Size(lattice);
       gpuLattice = new Lattice(nElements,integrator, 0.0, 0);
@@ -204,9 +202,6 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
         gpuLattice->addElement();
       }
       gpuLattice->generateGPUKernel();
-
-      t1 = AbstractGPU::get_ticks();
-      cout << "Ring build: " << (t1-t0)*1000.0 << "ms" << endl;
 
     } catch (string& errStr) {
       delete gpuLattice;
@@ -219,10 +214,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   // Load lattice on the GPU
   try {
-    t0=AbstractGPU::get_ticks();
     gpuLattice->fillGPUMemory();
-    t1=AbstractGPU::get_ticks();
-    cout << "GPU lattice loading: " << (t1-t0)*1000.0 << "ms" << endl;
   } catch (string& errStr) {
     string err =  "at_gpupass() fill GPU memory failed: " + errStr;
     return PyErr_Format(PyExc_RuntimeError,err.c_str());
@@ -251,10 +243,16 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
       bool *xlostPtr = (bool *)PyArray_DATA((PyArrayObject *)xlost);
       AT_FLOAT *xlostcoordPtr = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)xlostcoord);
 
+      int nbCore = gpuLattice->getGPUContext()->coreNumber();
+      cout << "Tracking " << num_particles << " particles on " << gpuLattice->getGPUContext()->name()
+           << "(" << nbCore <<  " cores)" << endl;
       gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,xnturnPtr,xnelemPtr,xlostcoordPtr);
 
-      for(uint64_t i=0;i<num_particles;i++)
-        xlostPtr[i] = (xnturnPtr[i] != 0);
+      // Format result for AT
+      for(uint64_t i=0;i<num_particles;i++) {
+        xlostPtr[i] = (xnturnPtr[i] != num_turns);
+        if(!xlostPtr[i]) xnturnPtr[i] = 0;
+      }
 
       PyObject *tout = PyTuple_New(2);
       PyObject *dict = PyDict_New();

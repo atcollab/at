@@ -27,7 +27,7 @@ public:
   // Get element length
   virtual AT_FLOAT getLength() = 0;
 
-  // Geet element type
+  // Get element type
   virtual uint32_t getType() = 0;
 
   // Post initialisation

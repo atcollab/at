@@ -91,8 +91,8 @@ int main(int argc,char **arv) {
     cout << "GPU lattice loading: " << (t1-t0)*1000.0 << "ms" << endl;
 
     uint64_t nbTurn = 100;
-    uint64_t nbX = 16;
-    uint64_t nbY = 16;
+    uint64_t nbX = 1;
+    uint64_t nbY = 1;
     uint64_t nbPart = nbX * nbY;
     uint32_t refs[] = {l->getNbElement()};
     uint32_t nbRef = sizeof(refs)/sizeof(uint32_t);
@@ -100,14 +100,22 @@ int main(int argc,char **arv) {
     uint64_t routSize = nbTurn * nbPart * nbRef * 6 * sizeof(AT_FLOAT);
     AT_FLOAT* rout = (AT_FLOAT*)malloc(routSize);
 
-    AT_FLOAT *rin = createGrid(-0.001,-0.001,0.001,0.001,nbX,nbY);
+    AT_FLOAT *rin = createGrid(-0.02,-0.02,0.001,0.001,nbX,nbY);
+    uint32_t *lostAtTurn = new uint32_t[nbPart];
+    uint32_t *lostAtElem = new uint32_t[nbPart];
+    AT_FLOAT *lostAtCoord = new AT_FLOAT[nbPart*6];
 
     string gpuName = l->getGPUContext()->name() + "(" + to_string(l->getGPUContext()->coreNumber()) + " cores)";
     cout << "Running " << to_string(nbPart) << " particles, " << to_string(nbTurn) << " turn(s) on " << gpuName << endl;
-    l->run(nbTurn,nbPart,rin,rout,nbRef,refs,nullptr,nullptr,nullptr);
+    l->run(nbTurn,nbPart,rin,rout,nbRef,refs,lostAtTurn,lostAtElem,lostAtCoord);
 
-    AT_FLOAT *P = ROUTPTR(236,0,nbTurn-1);
-    cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+    int pIdx = 0;
+    cout << "lostAtTurn[" << pIdx << "]" << lostAtTurn[pIdx] << endl;
+    cout << "lostAtElem[" << pIdx << "]" << lostAtElem[pIdx] << endl;
+    cout << "lostAtCoord[" << pIdx << "]" << lostAtCoord[pIdx*6+0] << "," << lostAtCoord[pIdx*6+1] << endl;
+
+    //AT_FLOAT *P = ROUTPTR(236,0,nbTurn-1);
+    //cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
 
     /*
     npy::npy_data_ptr<double> d;
