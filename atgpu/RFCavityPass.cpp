@@ -32,7 +32,6 @@ void RFCavityPass::generateCode(std::string& code, PassMethodInfo *info,Symplect
   generateEnter(code,info);
   generateApertures(code,info);
 
-  // Kick/Drift methods are defined in PassMethodFactory
   code.append(
           "  if(elem->Length == 0.0) {\n"
           "    r6[4] += -elem->NV*sin(elem->FC*(r6[5] - elem->TimeLag - elem->HC*turn) - elem->PhaseLag);\n"
