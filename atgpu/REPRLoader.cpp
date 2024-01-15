@@ -28,6 +28,21 @@ string& CppObject::getField(const string &name) {
   return fieldValues[i];
 }
 
+void CppObject::removeField(const string &name) {
+    bool found = false;
+    int i = (int)fieldNames.size() - 1;
+    while (!found && i >= 0) {
+        found = fieldNames[i] == name;
+        if (!found) i--;
+    }
+    if (found) {
+        fieldNames.erase(fieldNames.begin()+i);
+        fieldValues.erase(fieldValues.begin()+i);
+    } else {
+        throw string(name + " not found");
+    }
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 
 CppInterface::CppInterface() {

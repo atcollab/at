@@ -163,15 +163,10 @@ void IdentityPass::generateT(std::string& code,const string& pname) noexcept {
   code.append("  if(elem->" + pname + ") translate6(r6,elem->" + pname + ");\n");
 }
 
-void IdentityPass::getGPUFunctionQualifier(std::string& fType) {
-  AbstractGPU::getInstance()->getDeviceFunctionQualifier(fType);
-  if(!fType.empty()) fType.append(" ");
-}
-
 void IdentityPass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
 
   string ftype;
-  getGPUFunctionQualifier(ftype);
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(ftype);
 
   // 6D transfrom
   code.append(

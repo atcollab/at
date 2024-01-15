@@ -28,7 +28,7 @@ void DriftPass::generateCode(std::string& code, PassMethodInfo *info,SymplecticI
 void DriftPass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
 
   string ftype;
-  getGPUFunctionQualifier(ftype);
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(ftype);
 
   //Drift (small angle)
   code.append(

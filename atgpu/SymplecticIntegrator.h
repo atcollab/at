@@ -27,13 +27,12 @@ private:
 
   // Coefficients
   int nbCoefficients;
-  AT_FLOAT *c; // Drift
-  AT_FLOAT *d; // Kick
+  double *c; // Drift
+  double *d; // Kick
 
   void allocate(int nb);
   void generateLoopCode(std::string& code,size_t subType);
   bool replace(std::string& str, const std::string& from, const std::string& to);
-  std::string formatFloat(AT_FLOAT *f);
 
   std::vector<std::string> driftMethods;
   std::vector<std::string> kickMethods;

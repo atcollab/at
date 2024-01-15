@@ -1,6 +1,6 @@
 #include "SymplecticIntegrator.h"
+#include "AbstractGPU.h"
 #include "../atintegrators/atconstants.h"
-#include <inttypes.h>
 using namespace std;
 
 SymplecticIntegrator::SymplecticIntegrator(int type) {
@@ -93,10 +93,10 @@ void SymplecticIntegrator::generateLoopCode(std::string& code,size_t subType) {
   for(int i=0;i<nbCoefficients;i++) {
 
     string drMthod = driftMethods[subType];
-    if( !replace(drMthod,"%STEP%","SL*"+formatFloat(&c[i]) ) )
+    if( !replace(drMthod,"%STEP%","SL*"+AbstractGPU::getInstance()->formatFloat(&c[i]) ) )
       throw string("SymplecticIntegrator::generateLoopCode(), wrong drift method");
     string kickMthod = kickMethods[subType];
-    if( !replace(kickMthod,"%STEP%","SL*"+formatFloat(&d[i]) ) )
+    if( !replace(kickMthod,"%STEP%","SL*"+AbstractGPU::getInstance()->formatFloat(&d[i]) ) )
       throw string("SymplecticIntegrator::generateLoopCode(), wrong kick method");
 
     // Drift
@@ -126,8 +126,8 @@ SymplecticIntegrator::~SymplecticIntegrator() {
 
 void SymplecticIntegrator::allocate(int nb) {
   nbCoefficients = nb;
-  c = new AT_FLOAT[nbCoefficients];
-  d = new AT_FLOAT[nbCoefficients];
+  c = new double[nbCoefficients];
+  d = new double[nbCoefficients];
 }
 
 bool SymplecticIntegrator::replace(std::string& str, const std::string& from, const std::string& to) {
@@ -140,12 +140,3 @@ bool SymplecticIntegrator::replace(std::string& str, const std::string& from, co
 
 }
 
-std::string SymplecticIntegrator::formatFloat(AT_FLOAT *f) {
-  char bStr[128];
-#ifdef WIN64
-  sprintf(bStr, "__longlong_as_double(0x%016I64XULL)", *((uint64_t *)f));
-#else
-  sprintf(bStr, "__longlong_as_double(0x%" PRIx64  "ULL)", *((uint64_t *)f));
-#endif
-  return string(bStr);
-}
