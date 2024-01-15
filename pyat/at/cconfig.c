@@ -33,6 +33,15 @@ static PyObject *iscuda(PyObject *self)
 #endif /*CUDA)*/
 }
 
+static PyObject *isopencl(PyObject *self)
+{
+#ifdef OPENCL
+  Py_RETURN_TRUE;
+#else
+  Py_RETURN_FALSE;
+#endif /*OPENCL)*/
+}
+
 static PyMethodDef methods[] = {
     {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
     PyDoc_STR("isopenmp()\n\n"
@@ -45,6 +54,10 @@ static PyMethodDef methods[] = {
     {"iscuda",  (PyCFunction)iscuda, METH_NOARGS,
             PyDoc_STR("iscuda()\n\n"
                       "Return whether CUDA is active.\n"
+            )},
+    {"isopencl",  (PyCFunction)isopencl, METH_NOARGS,
+            PyDoc_STR("isopencl()\n\n"
+                      "Return whether OpenCL is active.\n"
             )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };

@@ -28,6 +28,7 @@ print("** Entering setup.py:", str(sys.argv))
 print("** MPI:", os.environ.get('MPI', None))
 print("** OPENMP:", os.environ.get('OPENMP', None))
 print("** CUDA:", os.environ.get('CUDA', None))
+print("** OPENCL:", os.environ.get('OPENCL', None))
 macros = [('PYAT', None)]
 with_openMP = False
 
@@ -93,13 +94,35 @@ else:
     cuda_path = os.environ.get('CUDA_PATH', None)
     cuda_macros = [('CUDA', None)]
     if cuda_path is None:
-        raise RuntimeError('CUDA_PATH environement variable not defined')
+        raise RuntimeError('CUDA_PATH environment variable not defined')
     if sys.platform.startswith('win'):
         cuda_cppflags = ['-I' + cuda_path + '\\include']
         cuda_lflags = ['/LIBPATH:'+cuda_path+'\\lib\\x64', "cuda.lib", "nvrtc.lib"]
     else:
         cuda_cppflags = ['-I' + cuda_path + '/include']
         cuda_lflags = ['-L' + cuda_path + '/lib64', '-Wl,-rpath,' + cuda_path + '/lib64', '-lcuda', '-lnvrtc']
+
+opencl = eval(os.environ.get('OPENCL', 'None'))
+if not opencl:
+    opencl_cppflags = []
+    opencl_lflags = []
+    opencl_macros = []
+else:
+    # Generate the shared include file for the GPU kernel
+    exec(open('atgpu/genheader.py').read())
+    opencl_ocl_path = os.environ.get('OCL_PATH', None)
+    opencl_sdk_path = os.environ.get('OPENCL_SDK_PATH', None)
+    opencl_macros = [('OPENCL', None)]
+    if opencl_ocl_path is None:
+        raise RuntimeError('OCL_PATH environment variable not defined')
+    if opencl_sdk_path is None:
+        raise RuntimeError('OPENCL_SDK_PATH environment variable not defined')
+    if sys.platform.startswith('win'):
+        opencl_cppflags = ['-I' + opencl_sdk_path + '\\include','-I' + opencl_ocl_path + '\\include']
+        opencl_lflags = ['/LIBPATH:'+opencl_ocl_path+'\\lib\\x64', "OpenCL.lib"]
+    else:
+        opencl_cppflags = ['-I' + opencl_ocl_path + '/include','-I' + opencl_sdk_path + '/include']
+        opencl_lflags = ['-L' + opencl_ocl_path + '/lib64', '-Wl,-rpath,' + opencl_ocl_path + '/lib64', '-lOpenCL']
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
@@ -157,14 +180,7 @@ at = Extension(
 cconfig = Extension(
     'at.cconfig',
     sources=[join('pyat', 'at', 'cconfig.c')],
-    define_macros=macros + omp_macros + mpi_macros,
-    extra_compile_args=cflags + omp_cflags,
-)
-
-cconfig = Extension(
-    'at.cconfig',
-    sources=[join('pyat', 'at', 'cconfig.c')],
-    define_macros=macros + omp_macros + mpi_macros + cuda_macros,
+    define_macros=macros + omp_macros + mpi_macros + cuda_macros + opencl_macros,
     extra_compile_args=cflags + omp_cflags,
 )
 
@@ -176,10 +192,7 @@ diffmatrix = Extension(
     extra_compile_args=cflags
 )
 
-cudaext = Extension(
-    'at.tracking.gpu',
-    sources=[join('atgpu', 'CudaGPU.cpp'),
-             join('atgpu', 'AbstractGPU.cpp'),
+gpusource = [join('atgpu', 'AbstractGPU.cpp'),
              join('atgpu', 'AbstractInterface.cpp'),
              join('atgpu', 'PyInterface.cpp'),
              join('atgpu', 'Lattice.cpp'),
@@ -192,16 +205,28 @@ cudaext = Extension(
              join('atgpu', 'StrMPoleSymplectic4RadPass.cpp'),
              join('atgpu', 'BndMPoleSymplectic4RadPass.cpp'),
              join('atgpu', 'CavityPass.cpp'),
-             join('atgpu', 'RFCavityPass.cpp'),
-             ],
+             join('atgpu', 'RFCavityPass.cpp')]
+
+cudaext = Extension(
+    name='at.tracking.gpu',
+    sources=gpusource + [join('atgpu', 'CudaGPU.cpp')],
     define_macros=macros + cuda_macros,
     extra_compile_args=cppflags + cuda_cppflags,
     extra_link_args=cuda_lflags
 )
 
+openclext = Extension(
+    name='at.tracking.gpu',
+    sources=gpusource + [join('atgpu', 'OpenCLGPU.cpp')],
+    define_macros=macros + opencl_macros,
+    extra_compile_args=cppflags + opencl_cppflags,
+    extra_link_args=opencl_lflags
+)
+
 setup(
     ext_modules=[at, cconfig, diffmatrix] +
                 ([cudaext] if cuda else []) +
+                ([openclext] if opencl else []) +
                 [c_integrator_ext(pm) for pm in c_pass_methods] +
                 [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )

@@ -1,5 +1,5 @@
 """Global set of constants"""
-from ..cconfig import ismpi, isopenmp, iscuda
+from ..cconfig import ismpi, isopenmp, iscuda, isopencl
 from numpy.random import Generator, PCG64, SeedSequence
 import os
 import multiprocessing
@@ -49,6 +49,9 @@ class _Dst(object):
     @property
     def cuda(self):
         return iscuda()
+    @property
+    def opencl(self):
+        return isopencl()
 
     @property
     def rank(self):
@@ -80,6 +83,7 @@ Attributes:
     mpi:                 :py:obj:`True` if MPI is active
     openmp:              :py:obj:`True` if OpenMP is active
     cuda:                :py:obj:`True` if CUDA is active
+    opencl:              :py:obj:`True` if OpenCL is active
 
 Methods:
     reset(attrname):    Reset the attribute to its default value
