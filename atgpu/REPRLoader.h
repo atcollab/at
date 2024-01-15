@@ -3,12 +3,14 @@
 #include <string>
 #include <vector>
 #include "AbstractInterface.h"
+#include "inttypes.h"
 
 // CppObject (debugging purpose)
 class CppObject {
 public:
   CppObject();
   void addField(const std::string& name,const std::string& value);
+  void removeField(const std::string &name);
   std::string& getField(const std::string& name);
 private:
   std::vector<std::string> fieldNames;

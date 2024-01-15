@@ -23,7 +23,6 @@ public:
   static void generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept;
 
   // Code generation
-  static void getGPUFunctionQualifier(std::string& fType);
   static void generateEnter(std::string& code, PassMethodInfo *info) noexcept;
   static void generateExit(std::string& code, PassMethodInfo *info) noexcept;
   static void generateApertures(std::string& code, PassMethodInfo *info) noexcept;
@@ -31,7 +30,7 @@ public:
   static void generateRAperture(std::string& code) noexcept;
   static void generateR(std::string& code,const std::string& pname) noexcept;
   static void generateT(std::string& code,const std::string& pname) noexcept;
-
+  
 protected:
 
   ELEMENT elemData;

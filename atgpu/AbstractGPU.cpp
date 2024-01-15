@@ -1,6 +1,17 @@
+// Abstract class for GPU context
+// Abstract OpenCL or CUDA API
+
+#if defined(CUDA)
 #include "CudaGPU.h"
+#elif defined(OPENCL)
+#include "OpenCLGPU.h"
+#else
+#error "Please provide a definition for GPU implementation (CUDA or OPENCL) !"
+#endif
+
 #include "iostream"
 
+// Timing definition for profiling
 #if defined(_MSC_VER)
 
 #include <windows.h>
@@ -15,18 +26,25 @@ time_t tickStart;
 
 #endif
 
+#include "AbstractInterface.h"
+
 using namespace std;
 
+// Create GPU implementation object
 AbstractGPU *AbstractGPU::gpuHandler = nullptr;
-
 AbstractGPU *AbstractGPU::getInstance() {
   if( gpuHandler== nullptr ) {
     initTimer();
+#if defined(CUDA)
     gpuHandler = new CudaGPU();
+#elif defined(OPENCL)
+    gpuHandler = new OpenCLGPU();
+#endif
   }
   return gpuHandler;
 }
 
+// Initialise timer
 void AbstractGPU::initTimer() {
 
 #if defined(_MSC_VER)
@@ -39,19 +57,7 @@ void AbstractGPU::initTimer() {
 
 }
 
-
-void AbstractGPU::outputCode(std::string& code) {
-
-  vector<string> lines;
-  split(lines,code,'\n');
-  for(size_t i=0;i<lines.size();i++) {
-    char tmp[256];
-    sprintf(tmp,"%04d: ",(int)(i+1));
-    cout << tmp << lines[i] << endl;
-  }
-
-}
-
+// Return number of seconds
 double AbstractGPU::get_ticks() {
 
 #if defined(_MSC_VER)
@@ -67,31 +73,23 @@ double AbstractGPU::get_ticks() {
 
 }
 
-void AbstractGPU::split(vector<string> &tokens, const string &text, char sep) {
+// Output code with line number
+void AbstractGPU::outputCode(std::string& code) {
 
-  size_t start = 0, end = 0;
-  tokens.clear();
-
-  while ((end = text.find(sep, start)) != string::npos) {
-    tokens.push_back(text.substr(start, end - start));
-    start = end + 1;
+  vector<string> lines;
+  AbstractInterface::split(lines,code,'\n');
+  for(size_t i=0;i<lines.size();i++) {
+    char tmp[256];
+    sprintf(tmp,"%04d: ",(int)(i+1));
+    cout << tmp << lines[i] << endl;
   }
-
-  tokens.push_back(text.substr(start));
 
 }
 
-// Add math function
 void AbstractGPU::addUtilsFunctions(std::string &code) {
 
-  string ftype;
-  getDeviceFunctionQualifier(ftype);
-  if(!ftype.empty()) ftype.append(" ");
-
-  // Math constants
-  code.append(
-          "#define INF   __longlong_as_double(0x7ff0000000000000ULL)\n"
-          "#define NAN   __longlong_as_double(0xfff8000000000000ULL)\n"
-  );
+  code.append("#define MAP_FLOAT_BUFFER(addr,base) if(addr) {addr = (AT_FLOAT *)((int64_t)addr + (int64_t)base);}\n");
+  // Add implementation specific function to the code
+  addSpecificFunctions(code);
 
 }

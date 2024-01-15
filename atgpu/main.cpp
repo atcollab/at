@@ -8,8 +8,6 @@
 #include <iostream>
 #include <string.h>
 #include "npy.hpp"
-#include <inttypes.h>
-#include "Element.h"
 
 using namespace std;
 
@@ -48,16 +46,19 @@ AT_FLOAT *createGrid(AT_FLOAT x1,AT_FLOAT y1,AT_FLOAT x2,AT_FLOAT y2,uint64_t nb
 
 void printGPUInfo() {
 
+  try {
     vector<GPU_INFO> infos = AbstractGPU::getInstance()->getDeviceList();
-    for(auto & info : infos) {
-        cout << info.name << " [" << info.version << "] " << info.mpNumber*info.smNumber << " cores" << endl;
-    }
+    for(auto & info : infos)
+      cout << info.name << " [" << info.version << "] " << info.mpNumber*info.smNumber << " cores, " << info.platform << endl;
+  } catch (string& errStr) {
+    cout << errStr << endl;
+  }
 
 }
 
 int main(int argc,char **arv) {
 
-  //printGPUInfo();
+  printGPUInfo();
 
   SymplecticIntegrator integrator(4);
   CppInterface *dI = new CppInterface();
@@ -65,6 +66,7 @@ int main(int argc,char **arv) {
   vector<CppObject> elements;
 
   try {
+    //REPRLoader *loader = new REPRLoader("Z:/tmp/pons/at/test/lattice/betamodel_radon.repr");
     REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
     //REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/simple_ebs.repr");
     loader->parseREPR(elements);
@@ -75,7 +77,7 @@ int main(int argc,char **arv) {
 
   try {
 
-    Lattice *l = new Lattice(0,integrator,6e9,1);
+    Lattice *l = new Lattice(0,integrator,6e9,0);
     double t0 = AbstractGPU::get_ticks();
     for(auto & element : elements) {
       dI->setObject(&element);
@@ -91,8 +93,8 @@ int main(int argc,char **arv) {
     cout << "GPU lattice loading: " << (t1-t0)*1000.0 << "ms" << endl;
 
     uint64_t nbTurn = 100;
-    uint64_t nbX = 1;
-    uint64_t nbY = 1;
+    uint64_t nbX = 16;
+    uint64_t nbY = 16;
     uint64_t nbPart = nbX * nbY;
     uint32_t refs[] = {l->getNbElement()};
     uint32_t nbRef = sizeof(refs)/sizeof(uint32_t);
@@ -100,7 +102,7 @@ int main(int argc,char **arv) {
     uint64_t routSize = nbTurn * nbPart * nbRef * 6 * sizeof(AT_FLOAT);
     AT_FLOAT* rout = (AT_FLOAT*)malloc(routSize);
 
-    AT_FLOAT *rin = createGrid(-0.02,-0.02,0.001,0.001,nbX,nbY);
+    AT_FLOAT *rin = createGrid(-0.001,-0.001,0.001,0.001,nbX,nbY);
     uint32_t *lostAtTurn = new uint32_t[nbPart];
     uint32_t *lostAtElem = new uint32_t[nbPart];
     AT_FLOAT *lostAtCoord = new AT_FLOAT[nbPart*6];
@@ -109,13 +111,18 @@ int main(int argc,char **arv) {
     cout << "Running " << to_string(nbPart) << " particles, " << to_string(nbTurn) << " turn(s) on " << gpuName << endl;
     l->run(nbTurn,nbPart,rin,rout,nbRef,refs,lostAtTurn,lostAtElem,lostAtCoord);
 
-    int pIdx = 0;
-    cout << "lostAtTurn[" << pIdx << "]" << lostAtTurn[pIdx] << endl;
-    cout << "lostAtElem[" << pIdx << "]" << lostAtElem[pIdx] << endl;
-    cout << "lostAtCoord[" << pIdx << "]" << lostAtCoord[pIdx*6+0] << "," << lostAtCoord[pIdx*6+1] << endl;
+    //int pIdx = 0;
+    //cout << "lostAtTurn[" << pIdx << "]" << lostAtTurn[pIdx] << endl;
+    //cout << "lostAtElem[" << pIdx << "]" << lostAtElem[pIdx] << endl;
+    //cout << "lostAtCoord[" << pIdx << "]" << lostAtCoord[pIdx*6+0] << "," << lostAtCoord[pIdx*6+1] << endl;
 
-    //AT_FLOAT *P = ROUTPTR(236,0,nbTurn-1);
-    //cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+    AT_FLOAT *P = ROUTPTR(0,0,nbTurn-1);
+    cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+    int nbLost = 0;
+    for(int i=0;i<nbPart;i++)
+      if(lostAtTurn[i]!=nbTurn)
+        nbLost++;
+    cout << "Lost: " << nbLost << endl;
 
     /*
     npy::npy_data_ptr<double> d;

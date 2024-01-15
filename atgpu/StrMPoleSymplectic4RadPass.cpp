@@ -52,7 +52,7 @@ void StrMPoleSymplectic4RadPass::generateCode(std::string& code, PassMethodInfo 
 void StrMPoleSymplectic4RadPass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
 
   string ftype;
-  getGPUFunctionQualifier(ftype);
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(ftype);
 
   string radCode;
   radCode.append(

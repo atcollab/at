@@ -9,9 +9,11 @@ typedef struct {
   std::string version;     // Compute capabilities
   uint32_t    smNumber;    // Stream processor number
   uint32_t    mpNumber;    // Multi processor number
+  std::string platform;    // Platform name
 } GPU_INFO;
 
 // Abstract class for GPU context
+// Abstract OpenCL or CUDA API
 
 class GPUContext {
 
@@ -31,6 +33,9 @@ public:
   // Compile and load the kernel
   virtual void compile(std::string& code) = 0;
 
+  // Map memory buffer
+  virtual void mapBuffer(void **ring,uint32_t nbElement) = 0;
+
   // Copy from host to device
   virtual void hostToDevice(void *dest,void *src,size_t size) = 0;
 
@@ -47,8 +52,8 @@ public:
   virtual std::string& name() = 0;
 
   // Return number fo core
+  // Return either number of CUDA core for CUDA API or number of processing unit for OpenCL API
   virtual int coreNumber() = 0;
-
 
 };
 
@@ -66,8 +71,23 @@ public:
   // Return device function qualifier
   virtual void getDeviceFunctionQualifier(std::string& ftype) = 0;
 
-  // Add utils function to the code
-  void addUtilsFunctions(std::string& code);
+  // Return kernel function qualifier
+  virtual void getKernelFunctionQualifier(std::string& ftype) = 0;
+
+  // Return kernel function qualifier
+  virtual void getGlobalQualifier(std::string& ftype) = 0;
+
+  // Return command to compute the thread id
+  virtual void getThreadId(std::string& command) = 0;
+
+  // Format a double
+  virtual std::string formatFloat(double *f) = 0;
+
+  // Add implementation specific function to the code
+  virtual void addSpecificFunctions(std::string& code) = 0;
+
+  // Add util functions to the code
+  void addUtilsFunctions(std::string &code);
 
   // Return handle to singleton class
   static AbstractGPU *getInstance();
@@ -78,11 +98,14 @@ public:
   // Get number of sec since instantiation of this singleton class
   static double get_ticks();
 
+protected:
+
+  // Initialisation error
+  std::string initErrorStr;
+
 private:
 
-  static void split(std::vector<std::string> &tokens, const std::string &text, char sep);
   static void initTimer();
-
   static AbstractGPU *gpuHandler;
 
 };

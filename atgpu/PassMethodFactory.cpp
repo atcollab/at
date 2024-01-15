@@ -86,15 +86,19 @@ AbstractElement *PassMethodFactory::createElement(std::string& passMethod) {
 
 void PassMethodFactory::generatePassMethods(std::string& code) {
 
+  string mType;
+  string ftype;
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(ftype);
+  AbstractGPU::getInstance()->getGlobalQualifier(mType);
+
   callCode.clear();
 
   for(size_t i=0;i<NB_PASSMETHOD_TYPE;i++) {
     if (passMethodInfos[i].used) {
 
       // Pass method code
-      string ftype;
-      IdentityPass::getGPUFunctionQualifier(ftype);
-      code.append(ftype + "void " + passMethodInfos[i].name + "(AT_FLOAT* r6,ELEMENT* elem,AT_FLOAT turn) {\n");
+      code.append(ftype);
+      code.append("void " + passMethodInfos[i].name + "(AT_FLOAT* r6," + mType + " ELEMENT* elem,AT_FLOAT turn) {\n");
       passMethodInfos[i].generate(code, passMethodInfos + i, integrator);
       code.append("}\n");
 
@@ -103,7 +107,7 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
       transform(classDefine.begin(), classDefine.end(), classDefine.begin(),
                 [](unsigned char c) { return std::toupper(c); });
       callCode.append("      case " + classDefine + ":\n");
-      callCode.append("        " + passMethodInfos[i].name + "(r6,elemPtr,fTurn);\n");
+      callCode.append("        " + passMethodInfos[i].name + "(r6,gpuRing+elem,fTurn);\n");
       callCode.append("        break;\n");
     }
   }

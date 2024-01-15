@@ -160,7 +160,7 @@ void StrMPoleSymplectic4Pass::generateQuadFringeExit(std::string& code, PassMeth
 void StrMPoleSymplectic4Pass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
 
   string ftype;
-  getGPUFunctionQualifier(ftype);
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(ftype);
 
   // Quad
   code.append(

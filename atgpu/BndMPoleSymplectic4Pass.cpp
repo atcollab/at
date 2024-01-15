@@ -94,7 +94,7 @@ void BndMPoleSymplectic4Pass::fillGPUMemory(void *elemMem,void *privateMem,void 
 void BndMPoleSymplectic4Pass::generateUtilsFunction(std::string& code, PassMethodInfo *info) noexcept {
 
   string ftype;
-  getGPUFunctionQualifier(ftype);
+  AbstractGPU::getInstance()->getDeviceFunctionQualifier(ftype);
 
   // Bending fringe field correction (edge angle focusing)
   code.append(
