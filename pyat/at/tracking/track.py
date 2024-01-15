@@ -13,8 +13,9 @@ import multiprocessing
 from warnings import warn
 from .atpass import reset_rng
 from ..cconfig import iscuda
+from ..cconfig import isopencl
 
-if iscuda():
+if iscuda() or isopencl():
     from .gpu import gpupass as _gpupass
     from .gpu import gpuinfo as _gpuinfo
 
@@ -77,7 +78,7 @@ def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
     refs = get_uint32_index(lattice, refpts)
     use_gpu = kwargs.pop('use_gpu', False)
     if use_gpu:
-        if not iscuda():
+        if not (iscuda() or isopencl()):
             raise AtError("No GPU support enabled")
         else:
             return _gpupass(lattice, r_in, nturns, refpts=refs, **kwargs)
@@ -333,10 +334,11 @@ def gpu_info():
     support is not enabled or if no capable device are present on the system, an empty list is returned.
 
     Returns:
-        gpu: (gpu name,hardware version,stream processor number,multi processor number). The number of cores is equal
-          to the product of the number of multi processors by the number of stream processors.
+        gpu: (gpu name,hardware version,stream processor number,multi processor number,platform). The number of CUDA
+        cores is equal to the product of the number of multi processors by the number of stream processors. For OpenCL
+        only the number of multi processor is returned. The SIMT width cannot be deternimed using OpenCL.
     """
-    if iscuda():
+    if iscuda() or isopencl():
         return _gpuinfo()
     else:
         return []
