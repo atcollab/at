@@ -107,7 +107,7 @@ void PassMethodFactory::generatePassMethods(std::string& code) {
       transform(classDefine.begin(), classDefine.end(), classDefine.begin(),
                 [](unsigned char c) { return std::toupper(c); });
       callCode.append("      case " + classDefine + ":\n");
-      callCode.append("        " + passMethodInfos[i].name + "(r6,gpuRing+elem,fTurn);\n");
+      callCode.append("        " + passMethodInfos[i].name + "(r6,elemPtr,fTurn);\n");
       callCode.append("        break;\n");
     }
   }
@@ -120,12 +120,10 @@ void PassMethodFactory::generatePassMethodsCalls(std::string& code) {
 
 // Recursively calculate the local transverse magnetic field
 string PassMethodFactory::polyLoop =
-"  int i;\n"
 "  AT_FLOAT ReSum = B[max_order];\n"
 "  AT_FLOAT ImSum = A[max_order];\n"
-"  AT_FLOAT ReSumTemp;\n"
-"  for(i = max_order - 1; i >= 0; i--) {\n"
-"    ReSumTemp = ReSum * r[0] - ImSum * r[2] + B[i];\n"
+"  for(int i = max_order - 1; i >= 0; i--) {\n"
+"    AT_FLOAT ReSumTemp = ReSum * r[0] - ImSum * r[2] + B[i];\n"
 "    ImSum = ImSum * r[0] + ReSum * r[2] + A[i];\n"
 "    ReSum = ReSumTemp;\n"
 "  }\n";

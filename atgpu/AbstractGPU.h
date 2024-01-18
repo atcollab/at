@@ -1,60 +1,80 @@
 #ifndef AT_GPU_GPUWRAPPER_H
 #define AT_GPU_GPUWRAPPER_H
-
 #include <string>
 #include <vector>
-
-typedef struct {
-  std::string name;        // GPU Name
-  std::string version;     // Compute capabilities
-  uint32_t    smNumber;    // Stream processor number
-  uint32_t    mpNumber;    // Multi processor number
-  std::string platform;    // Platform name
-} GPU_INFO;
 
 // Abstract class for GPU context
 // Abstract OpenCL or CUDA API
 
+// GPU device information
+
+typedef struct {
+  std::string name;        // GPU Name
+  std::string version;     // Compute capabilities (CUDA)
+  uint32_t    mpNumber;    // Multi processor number
+  std::string platform;    // Platform name
+} GPU_INFO;
+
+// MACRO to define GPU Context interface
+
+#define GPU_CONTEXT_DECL(_funcQualifier,funcInit)                                  \
+/* Empty kernel parameter */                                                       \
+_funcQualifier void resetArg()funcInit;                                            \
+/* Set kernel parameter */                                                         \
+_funcQualifier void addArg(size_t argSize,void *value)funcInit;                    \
+/* Run the kernel */                                                               \
+_funcQualifier void run(uint64_t nbThread)funcInit;                                \
+/* Compile and load the kernel */                                                  \
+_funcQualifier void compile(std::string& code)funcInit;                            \
+/* Map memory buffer */                                                            \
+_funcQualifier void mapBuffer(void **ring,uint32_t nbElement)funcInit;             \
+/* Copy from host to device */                                                     \
+_funcQualifier void hostToDevice(void *dest,void *src,size_t size)funcInit;        \
+/* Copy from device to host */                                                     \
+_funcQualifier void deviceToHost(void *dest,void *src,size_t size)funcInit;        \
+/* Allocate device memory */                                                       \
+_funcQualifier void allocDevice(void **dest,size_t size)funcInit;                  \
+/* Free device memory */                                                           \
+_funcQualifier void freeDevice(void *dest)funcInit;                                \
+/* Return device name */                                                           \
+_funcQualifier std::string& name()funcInit;                                        \
+/* Return number fo core */                                                        \
+_funcQualifier int coreNumber()funcInit;
+
+// MACRO to define GPU Context implementation
+
+#define GPU_CONTEXT_IMPL() GPU_CONTEXT_DECL(,override)
+
+// MACRO to define GPU singleton class interface (for context creation)
+
+#define GPU_DECL(_funcQualifier,_funcInit)                                         \
+/* Return list of GPU device present on the system */                              \
+_funcQualifier std::vector<GPU_INFO> getDeviceList()_funcInit;                     \
+/* Create a context for the given GPU */                                           \
+_funcQualifier GPUContext *createContext(int devId)_funcInit;                      \
+/* Return device function qualifier */                                             \
+_funcQualifier void getDeviceFunctionQualifier(std::string& ftype)_funcInit;       \
+/* Return kernel function qualifier */                                             \
+_funcQualifier void getKernelFunctionQualifier(std::string& ftype)_funcInit;       \
+/* Return kernel function qualifier */                                             \
+_funcQualifier void getGlobalQualifier(std::string& ftype)_funcInit;               \
+/* Return command to compute the thread id */                                      \
+_funcQualifier void getThreadId(std::string& command)_funcInit;                    \
+/* Format a double */                                                              \
+_funcQualifier std::string formatFloat(double *f)_funcInit;                        \
+/* Add implementation specific function to the code */                             \
+_funcQualifier void addSpecificFunctions(std::string& code)_funcInit;
+
+// MACRO to define GPU singleton class implementation
+
+#define GPU_IMPL() GPU_DECL(,override)
+
+
 class GPUContext {
-
 public:
-
   virtual ~GPUContext() = default;
-
-  // Empty kernel parameter
-  virtual void resetArg() = 0;
-
-  // Set kernel parameter
-  virtual void addArg(size_t argSize,void *value) = 0;
-
-  // Run the kernel
-  virtual void run(uint32_t gridSize,uint64_t nbThread) = 0;
-
-  // Compile and load the kernel
-  virtual void compile(std::string& code) = 0;
-
-  // Map memory buffer
-  virtual void mapBuffer(void **ring,uint32_t nbElement) = 0;
-
-  // Copy from host to device
-  virtual void hostToDevice(void *dest,void *src,size_t size) = 0;
-
-  // Copy from device to host
-  virtual void deviceToHost(void *dest,void *src,size_t size) = 0;
-
-  // Allocate device memory
-  virtual void allocDevice(void **dest,size_t size) = 0;
-
-  // Free device memory
-  virtual void freeDevice(void *dest) = 0;
-
-  // Return device name
-  virtual std::string& name() = 0;
-
-  // Return number fo core
-  // Return either number of CUDA core for CUDA API or number of processing unit for OpenCL API
-  virtual int coreNumber() = 0;
-
+  // Declare GPU context interface as pure virtual function
+  GPU_CONTEXT_DECL(virtual,=0)
 };
 
 // Abstract class to handle GPU access
@@ -62,32 +82,13 @@ class AbstractGPU {
 
 public:
 
-  // Return list of GPU device present on the system
-  virtual std::vector<GPU_INFO> getDeviceList() = 0;
-
-  // Create a context for the given GPU
-  virtual GPUContext *createContext(int devId) = 0;
-
-  // Return device function qualifier
-  virtual void getDeviceFunctionQualifier(std::string& ftype) = 0;
-
-  // Return kernel function qualifier
-  virtual void getKernelFunctionQualifier(std::string& ftype) = 0;
-
-  // Return kernel function qualifier
-  virtual void getGlobalQualifier(std::string& ftype) = 0;
-
-  // Return command to compute the thread id
-  virtual void getThreadId(std::string& command) = 0;
-
-  // Format a double
-  virtual std::string formatFloat(double *f) = 0;
-
-  // Add implementation specific function to the code
-  virtual void addSpecificFunctions(std::string& code) = 0;
+  GPU_DECL(virtual,=0)
 
   // Add util functions to the code
   void addUtilsFunctions(std::string &code);
+
+  // Return implementation name
+  std::string& implName();
 
   // Return handle to singleton class
   static AbstractGPU *getInstance();
@@ -102,6 +103,7 @@ protected:
 
   // Initialisation error
   std::string initErrorStr;
+  std::string implementationStr;
 
 private:
 

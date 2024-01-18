@@ -19,29 +19,31 @@ void StrMPoleSymplectic4RadPass::getParameters(AbstractInterface *param, PassMet
 
   elemData.Type = STRMPOLESYMPLECTIC4RADPASS;
   AT_FLOAT E0 = param->getDouble("Energy");
-  elemData.CRAD =  CGAMMA*E0*E0*E0/(TWOPI*1e27);
+  elemData.mpole.CRAD =  CGAMMA*E0*E0*E0/(TWOPI*1e27);
 
 }
 
 void StrMPoleSymplectic4RadPass::generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept {
 
-  code.append("  AT_FLOAT p_norm = 1.0 / (1.0 + r6[4]);\n");
+  code.append("  AT_FLOAT p_norm = PNORM(r6[4]);\n");
   generateEnter(code,info);
   generateApertures(code,info);
   generateQuadFringeEnter(code,info);
 
   integrator.resetMethods();
   // Default straight element
-  integrator.addDriftMethod("p_norm=1.0/(1.0 + r6[4]);fastdrift(r6,%STEP%,p_norm)");
-  integrator.addKickMethod("strthinkickrad(r6,elem->PolynomA,elem->PolynomB,%STEP%,elem->MaxOrder,elem->CRAD,p_norm)");
+  integrator.addDriftMethod("p_norm=PNORM(r6[4]);fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("strthinkickrad(r6,elem->mpole.PolynomA,elem->mpole.PolynomB,%STEP%,elem->mpole.MaxOrder,"
+                           "elem->mpole.CRAD,p_norm)");
   // Pure quad
-  integrator.addDriftMethod("p_norm=1.0/(1.0 + r6[4]);fastdrift(r6,%STEP%,p_norm)");
-  integrator.addKickMethod("quadthinkickrad(r6,elem->PolynomA[0],elem->PolynomB[0],elem->K,%STEP%,elem->CRAD,p_norm)");
+  integrator.addDriftMethod("p_norm=PNORM(r6[4]);fastdrift(r6,%STEP%,p_norm)");
+  integrator.addKickMethod("quadthinkickrad(r6,elem->mpole.PolynomA[0],elem->mpole.PolynomB[0],elem->mpole.K,%STEP%,"
+                           "elem->mpole.CRAD,p_norm)");
 
   integrator.generateCode(code);
 
   if(integrator.getLastKickWeight()!=0.0)
-    code.append("  p_norm = 1.0 / (1.0 + r6[4]);\n");
+    code.append("  p_norm = PNORM(r6[4]);\n");
 
   generateQuadFringeExit(code,info);
   generateApertures(code,info);
@@ -61,13 +63,13 @@ void StrMPoleSymplectic4RadPass::generateUtilsFunction(std::string& code, PassMe
           "  AT_FLOAT ypr = r[3]*p_norm;\n"
           "  AT_FLOAT xpr2 = SQR(xpr);\n"
           "  AT_FLOAT ypr2 = SQR(ypr);\n"
-          "  AT_FLOAT v_norm2 = 1.0/(1.0 + xpr2 + ypr2);\n"
+          "  AT_FLOAT v_norm2 = PNORM(xpr2 + ypr2);\n"
           // Compute normalized transverse field ( |B x v|^2 ) in straight element
           "  AT_FLOAT bx = ImSum;\n"
           "  AT_FLOAT by = ReSum;\n"
           "  AT_FLOAT B2P = ( SQR(by) + SQR(bx) + SQR(bx*ypr - by*xpr) )*v_norm2;\n"
           // Energy loss
-          "  r[4] = r[4] - CRAD*SQR(1.0+r[4])*B2P*(1.0 + (xpr2+ypr2)*0.5) * L;\n"
+          "  r[4] = r[4] - CRAD*SQR((AT_FLOAT)1.0+r[4])*B2P*((AT_FLOAT)1.0 + (xpr2+ypr2)*(AT_FLOAT)0.5) * L;\n"
           // recalculate momentums from angles after losing energy for radiation
           "  r[1] = xpr + xpr * r[4];\n"
           "  r[3] = ypr + ypr * r[4];\n"

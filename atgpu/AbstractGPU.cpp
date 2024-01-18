@@ -86,8 +86,14 @@ void AbstractGPU::outputCode(std::string& code) {
 
 }
 
+// Return implementation name
+std::string& AbstractGPU::implName() {
+  return implementationStr;
+}
+
 void AbstractGPU::addUtilsFunctions(std::string &code) {
 
+  // Macro used for mapping buffer in GPU memory space (see Lattice::mapBuffers)
   code.append("#define MAP_FLOAT_BUFFER(addr,base) if(addr) {addr = (AT_FLOAT *)((int64_t)addr + (int64_t)base);}\n");
   // Add implementation specific function to the code
   addSpecificFunctions(code);

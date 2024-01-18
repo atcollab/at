@@ -20,13 +20,14 @@ public:
   void resize(int32_t nbElements);
   // Return number of element
   uint32_t getNbElement();
-  // Load (or reload) lattice in GPU. Lattice structure (polynomial orders, kick angles, misalignment configuration) must remain the same.
+  // Load (or reload) lattice in GPU. Lattice structure (element number, polynomial orders, kick angles and misalignment
+  // configuration) must remain the same.
   void fillGPUMemory();
   // Generate and compile GPU code
   void generateGPUKernel();
   // Run the simulation
   void run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts,
-           uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord);
+           uint32_t nbElemOffset,uint32_t *elemOffsets,uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord);
   // Return handle to the GPU context
   GPUContext *getGPUContext();
   // Get ring length

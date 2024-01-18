@@ -1,3 +1,5 @@
+// Load a lattice in REPR format (debugging purpose)
+
 #include "REPRLoader.h"
 #include <errno.h>
 #include <string.h>
@@ -57,12 +59,12 @@ int CppInterface::getInt(const std::string &name) {
   return stoi(val);
 }
 
-AT_FLOAT CppInterface::getDouble(const std::string &name) {
+double CppInterface::getDouble(const std::string &name) {
   string val = elem->getField(name);
   return stod(val);
 }
 
-AT_FLOAT *CppInterface::getNativeDoubleArray(const std::string &name, std::vector<int64_t> &shape) {
+double *CppInterface::getNativeDoubleArray(const std::string &name, std::vector<int64_t> &shape) {
 
   shape.clear();
   string val = elem->getField(name);
@@ -77,9 +79,31 @@ AT_FLOAT *CppInterface::getNativeDoubleArray(const std::string &name, std::vecto
     shape.push_back(1);
   }
 
-  AT_FLOAT *d = new AT_FLOAT[tokens.size()];
+  double *d = new double[tokens.size()];
   for (int i = 0; elIdx < tokens.size(); elIdx++, i++)
     d[i] = stod(tokens[elIdx]);
+  return d;
+
+}
+
+float *CppInterface::getNativeFloatArray(const std::string &name, std::vector<int64_t> &shape) {
+
+  shape.clear();
+  string val = elem->getField(name);
+  vector<string> tokens;
+  split(tokens, val, ',');
+  size_t elIdx = 0;
+
+  if (tokens.size() > 1) {
+    getShapeFromStr(shape,tokens[0]);
+    elIdx++;
+  } else {
+    shape.push_back(1);
+  }
+
+  float *d = new float[tokens.size()];
+  for (int i = 0; elIdx < tokens.size(); elIdx++, i++)
+    d[i] = stof(tokens[elIdx]);
   return d;
 
 }
@@ -107,13 +131,14 @@ REPRLoader::REPRLoader(const std::string &fileName) {
   }
 
   // Read buffer
-  char *buff = new char[fSize];
+  char *buff = new char[fSize+1];
   rewind(f);
   size_t nbRead = fread(buff, 1, fSize, f);
   if( nbRead != fSize ) {
     fclose(f);
     throw string(fileName + ": " + strerror(errno));
   }
+  buff[fSize]=0;
   fileBuffer.assign(buff);
   delete[] buff;
 
@@ -307,28 +332,32 @@ void REPRLoader::parseREPR(std::vector<CppObject> &elems) {
     string elemType;
     size_t pos = getPosMarker();
     readWord(elemType);
-    CppObject obj;
+    if( !elemType.empty() ) {
 
-    if( elemType=="Marker" ) {
-      parseIdentity(obj);
-    } else if( elemType=="Monitor" ) {
-      parseIdentity(obj);
-    }else if( elemType=="Drift" ) {
-      parseDrift(obj);
-    } else if( elemType=="Dipole" ) {
-      parseDipole(obj);
-    } else if( elemType=="Quadrupole" ) {
-      parseQuadrupole(obj);
-    } else if( elemType=="Sextupole" ) {
-      parseSextupole(obj);
-    } else if( elemType=="Multipole" ) {
-      parseMultipole(obj);
-    } else if( elemType=="RFCavity" ) {
-      parseRFCavity(obj);
-    } else {
-      throw(fileName + ": Unsupported element " + elemType + " at " + getCoord(pos));
+        CppObject obj;
+
+        if (elemType == "Marker") {
+            parseIdentity(obj);
+        } else if (elemType == "Monitor") {
+            parseIdentity(obj);
+        } else if (elemType == "Drift") {
+            parseDrift(obj);
+        } else if (elemType == "Dipole") {
+            parseDipole(obj);
+        } else if (elemType == "Quadrupole") {
+            parseQuadrupole(obj);
+        } else if (elemType == "Sextupole") {
+            parseSextupole(obj);
+        } else if (elemType == "Multipole") {
+            parseMultipole(obj);
+        } else if (elemType == "RFCavity") {
+            parseRFCavity(obj);
+        } else {
+            throw (fileName + ": Unsupported element " + elemType + " at " + getCoord((int) pos));
+        }
+        elems.push_back(obj);
+
     }
-    elems.push_back(obj);
 
   }
 
@@ -521,7 +550,7 @@ void REPRLoader::jumpSep(const string& sep) {
   string w;
   readWord(w);
   if (w!=sep)
-    throw string("'" + sep + "' expected but got '" + w + "' " + getErrorLocation(pos));
+    throw string("'" + sep + "' expected but got '" + w + "' " + getErrorLocation((int)pos));
 }
 
 void REPRLoader::jumpSep(const char sep) {
@@ -532,7 +561,7 @@ void REPRLoader::jumpSep(const char sep) {
   if (!(w.length()==1 && sep==w[0])) {
     string sepAsStr;
     sepAsStr.push_back(sep);
-    throw string("'" + sepAsStr + "' expected but got '" + w + "' " + getErrorLocation(pos));
+    throw string("'" + sepAsStr + "' expected but got '" + w + "' " + getErrorLocation((int)pos));
   }
 }
 

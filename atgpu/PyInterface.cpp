@@ -21,7 +21,7 @@ static PyMethodDef AtGPUMethods[] = {
         {"gpuinfo",  (PyCFunction)at_gpuinfo, METH_VARARGS | METH_KEYWORDS,
                 PyDoc_STR("gpuinfo()\n\n"
                           "Return lists of GPU present on the system.\n"
-                          "[name,compute capability,stream processor number,multi processor number,platform]\n"
+                          "[name,compute capability,multi processor number,platform]\n"
                 )},
         {"gpupass",  (PyCFunction)at_gpupass, METH_VARARGS | METH_KEYWORDS,
                 PyDoc_STR("gpupass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
@@ -41,6 +41,10 @@ static PyMethodDef AtGPUMethods[] = {
                           "    reuse:   if True, use previously cached description of the lattice.\n"
                           "    losses:  if True, process losses\n"
                           "    gpu_pool:  List of GPU id to use\n\n"
+                          "    tracking_starts: numpy array of indices of elements where tracking should start."
+                          "       len(tracking_start) must divide the number of particle and give the stride size,\n"
+                          "       The i-th particle of rin starts at elem tracking_start[i/stride]\n"
+                          "       The stride size should be multiple of 64\n"
                           "Returns:\n"
                           "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
                           "         of particle coordinates\n\n"
@@ -100,12 +104,11 @@ static PyObject *at_gpuinfo(PyObject *self, PyObject *args, PyObject *kwargs) {
     gpuInfos = AbstractGPU::getInstance()->getDeviceList();
     PyObject *infos = PyList_New(gpuInfos.size());
     for(int i=0;i<gpuInfos.size();i++) {
-      PyObject *info = PyList_New(5);
+      PyObject *info = PyList_New(4);
       PyList_SetItem(info, 0, PyUnicode_FromString(gpuInfos[i].name.c_str()));
       PyList_SetItem(info, 1, PyUnicode_FromString(gpuInfos[i].version.c_str()));
-      PyList_SetItem(info, 2, PyLong_FromLong(gpuInfos[i].smNumber));
-      PyList_SetItem(info, 3, PyLong_FromLong(gpuInfos[i].mpNumber));
-      PyList_SetItem(info, 4, PyUnicode_FromString(gpuInfos[i].platform.c_str()));
+      PyList_SetItem(info, 2, PyLong_FromLong(gpuInfos[i].mpNumber));
+      PyList_SetItem(info, 3, PyUnicode_FromString(gpuInfos[i].platform.c_str()));
       PyList_SetItem(infos, i, info);
     }
     return infos;
@@ -126,7 +129,9 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   static const char *kwlist[] = {"line","rin","nturns","refpts","turn",
                                  "energy", "particle", "keep_counter",
                                  "reuse","losses",
-                                 "bunch_spos", "bunch_currents", "gpu_pool", nullptr};
+                                 "bunch_spos", "bunch_currents", "gpu_pool",
+                                 "tracking_starts",
+                                 nullptr};
 
   NPY_TYPES floatType;
   string floatTypeStr;
@@ -143,7 +148,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   PyObject *particle;
   PyObject *energy;
   PyArrayObject *rin;
-  PyArrayObject *refs;
+  PyArrayObject *refs = nullptr;
+  PyArrayObject *trackstarts = nullptr;
   PyArrayObject *bcurrents;
   PyArrayObject *bspos;
   PyObject *gpupool = nullptr;
@@ -155,7 +161,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   double t0,t1;
 
   // Get input args
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!", const_cast<char **>(kwlist),
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!O!", const_cast<char **>(kwlist),
                                    &PyList_Type, &lattice,
                                    &PyArray_Type, &rin,
                                    &num_turns,
@@ -168,7 +174,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                    &losses,
                                    &PyArray_Type, &bspos,
                                    &PyArray_Type, &bcurrents,
-                                   &PyList_Type, &gpupool)) {
+                                   &PyList_Type, &gpupool,
+                                   &PyArray_Type, &trackstarts)) {
     return nullptr;
   }
 
@@ -182,7 +189,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
   }
 
-  uint64_t num_particles = (PyArray_SIZE(rin)/6);
+  uint32_t num_particles = (PyArray_SIZE(rin)/6);
   AT_FLOAT *drin = (AT_FLOAT *)PyArray_DATA(rin);
   uint32_t *ref_pts;
   uint32_t num_refs;
@@ -196,6 +203,24 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   } else {
     ref_pts = nullptr;
     num_refs = 0;
+  }
+
+  uint32_t *track_starts;
+  uint32_t num_starts;
+
+  if (trackstarts) {
+    if (PyArray_TYPE(refs) != NPY_UINT32) {
+      return PyErr_Format(PyExc_ValueError, "tracking_starts is not a numpy uint32 array");
+    }
+    track_starts = (uint32_t *)PyArray_DATA(trackstarts);
+    num_starts = PyArray_SIZE(refs);
+
+    if( num_particles % num_starts != 0 ) {
+      return PyErr_Format(PyExc_ValueError, "len(tracking_starts) does not divide number of particle");
+    }
+  } else {
+    trackstarts = nullptr;
+    num_starts = 0;
   }
 
   int gpuId = 0;
@@ -273,10 +298,10 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
       bool *xlostPtr = (bool *)PyArray_DATA((PyArrayObject *)xlost);
       AT_FLOAT *xlostcoordPtr = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)xlostcoord);
 
-      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,xnturnPtr,xnelemPtr,xlostcoordPtr);
+      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,xnturnPtr,xnelemPtr,xlostcoordPtr);
 
       // Format result for AT
-      for(uint64_t i=0;i<num_particles;i++) {
+      for(uint32_t i=0;i<num_particles;i++) {
         xlostPtr[i] = (xnturnPtr[i] != num_turns);
         if(!xlostPtr[i]) xnturnPtr[i] = 0;
       }
@@ -297,7 +322,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     } else {
 
-      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,nullptr,nullptr,nullptr);
+      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,nullptr,nullptr,nullptr);
       return rout;
 
     }
@@ -336,7 +361,7 @@ std::string PyInterface::getString(const std::string& name) {
 }
 
 
-AT_FLOAT PyInterface::getDouble(const std::string& name) {
+double PyInterface::getDouble(const std::string& name) {
 
   PyObject *attr = PyObject_GetAttrString(self, name.c_str());
   if (!attr)
@@ -346,8 +371,7 @@ AT_FLOAT PyInterface::getDouble(const std::string& name) {
 
 }
 
-
-AT_FLOAT *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) {
+double *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) {
 
   PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString(self, name.c_str());
   if (array == nullptr)
@@ -373,22 +397,43 @@ AT_FLOAT *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<
     nbItem *= dims[i];
   }
 
+  // Map python memory
   double *pyPtr = (double *) PyArray_DATA(array);
   Py_DECREF(array);
-
-  if( sizeof(AT_FLOAT)==4 ) {
-
-    // We need to cast
-    AT_FLOAT *ptr = new AT_FLOAT[nbItem];
-    for(int i=0;i<nbItem;i++)
-      ptr[i] = (AT_FLOAT)pyPtr[i];
-    return ptr;
-
-  } else {
-    // Simply map python memory
-    return (AT_FLOAT *)pyPtr;
-  }
+  return (double *)pyPtr;
 
 }
 
+float *PyInterface::getNativeFloatArray(const std::string& name,std::vector<int64_t>& shape) {
+
+  PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString(self, name.c_str());
+  if (array == nullptr)
+    throw string(name + " array attribute not found");
+
+  if ((PyArray_FLAGS(array) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+    Py_DECREF(array);
+    throw string(name + " array attribute is not Fortran-aligned");
+  }
+
+  if (PyArray_TYPE(array) != NPY_FLOAT) {
+    Py_DECREF(array);
+    throw string(name + " array attribute is not a float array");
+  }
+
+  size_t nDim = PyArray_NDIM(array);
+  int64_t *dims = PyArray_SHAPE(array);
+
+  shape.resize(nDim);
+  uint32_t nbItem = 1;
+  for(int i=0;i<nDim;i++) {
+    shape[i] = dims[i];
+    nbItem *= dims[i];
+  }
+
+  // Map python memory
+  float *pyPtr = (float *) PyArray_DATA(array);
+  Py_DECREF(array);
+  return (float *)pyPtr;
+
+}
 

@@ -22,7 +22,7 @@ public:
   virtual uint64_t getMemorySize() = 0;
 
   // Fill device memory
-  virtual void fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) = 0;
+  virtual void fillGPUMemory(uint8_t *startAdd,ELEMENT *elemMem,uint64_t* offset) = 0;
 
   // Get element length
   virtual AT_FLOAT getLength() = 0;

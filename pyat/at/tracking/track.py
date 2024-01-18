@@ -330,13 +330,14 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
 def gpu_info():
     """
-    :py:func:`gpu_info` returns list of GPU present on the system and their corresponding informations. If GPU
+    :py:func:`gpu_info` returns list of GPU present on the system and their corresponding information. If GPU
     support is not enabled or if no capable device are present on the system, an empty list is returned.
 
     Returns:
-        gpu: (gpu name,hardware version,stream processor number,multi processor number,platform). The number of CUDA
-        cores is equal to the product of the number of multi processors by the number of stream processors. For OpenCL
-        only the number of multi processor is returned. The SIMT width cannot be deternimed using OpenCL.
+        gpu: [gpu name,hardware version (CUDA device),processing units number,platform]. The number of processing
+        units is not the so-called number of "CUDA cores". The number of threads that can be executed simultaneously
+        depends on the hardware and on the type of used instructions. For best performance, it is recommended to
+        track a number of particles which is multiple of 64 (or 128) times the number of processing units.
     """
     if iscuda() or isopencl():
         return _gpuinfo()

@@ -6,7 +6,6 @@
 using namespace std;
 
 BndMPoleSymplectic4Pass::BndMPoleSymplectic4Pass() noexcept : StrMPoleSymplectic4Pass() {
-
 }
 
 BndMPoleSymplectic4Pass::~BndMPoleSymplectic4Pass() noexcept {
@@ -22,34 +21,33 @@ void BndMPoleSymplectic4Pass::getParameters(AbstractInterface *param, PassMethod
   StrMPoleSymplectic4Pass::getParameters(param,info);
 
   elemData.Type = BNDMPOLESYMPLECTIC4PASS;
-  elemData.irho = param->getDouble("BendingAngle") / elemData.Length;
+  elemData.mpole.irho = param->getDouble("BendingAngle") / elemData.Length;
   AT_FLOAT gap = param->getOptionalDouble("FullGap", 0);
 
-  elemData.FringeBendEntrance = param->getOptionalInt("FringeBendEntrance",1);
+  elemData.mpole.FringeBendEntrance = param->getOptionalInt("FringeBendEntrance",1);
   AT_FLOAT fint = param->getOptionalDouble("FringeInt1", 0);
-  elemData.EntranceAngle = param->getOptionalDouble("EntranceAngle", 0);
-  sedge = sin(elemData.EntranceAngle);
-  cedge = cos(elemData.EntranceAngle);
-  tedge = tan(elemData.EntranceAngle);
-  elemData.FringeCorrEntranceX = elemData.irho*tedge;
-  elemData.FringeCorrEntranceY = elemData.irho*gap*fint*(1.0+sedge*sedge)/cedge;
+  elemData.mpole.EntranceAngle = param->getOptionalDouble("EntranceAngle", 0);
+  sedge = sin(elemData.mpole.EntranceAngle);
+  cedge = cos(elemData.mpole.EntranceAngle);
+  tedge = tan(elemData.mpole.EntranceAngle);
+  elemData.mpole.FringeCorrEntranceX = elemData.mpole.irho*tedge;
+  elemData.mpole.FringeCorrEntranceY = elemData.mpole.irho*gap*fint*(1.0+sedge*sedge)/cedge;
 
-  elemData.FringeBendExit = param->getOptionalInt("FringeBendExit",1);
+  elemData.mpole.FringeBendExit = param->getOptionalInt("FringeBendExit",1);
   fint = param->getOptionalDouble("FringeInt2", 0);
-  elemData.ExitAngle = param->getOptionalDouble("ExitAngle", 0);
-  sedge = sin(elemData.ExitAngle);
-  cedge = cos(elemData.ExitAngle);
-  tedge = tan(elemData.ExitAngle);
-  elemData.FringeCorrExitX = elemData.irho*tedge;
-  elemData.FringeCorrExitY = elemData.irho*gap*fint*(1.0+sedge*sedge)/cedge;
+  elemData.mpole.ExitAngle = param->getOptionalDouble("ExitAngle", 0);
+  sedge = sin(elemData.mpole.ExitAngle);
+  cedge = cos(elemData.mpole.ExitAngle);
+  tedge = tan(elemData.mpole.ExitAngle);
+  elemData.mpole.FringeCorrExitX = elemData.mpole.irho*tedge;
+  elemData.mpole.FringeCorrExitY = elemData.mpole.irho*gap*fint*(1.0+sedge*sedge)/cedge;
 
 }
 
 
 void BndMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept {
 
-  code.append("  AT_FLOAT p_norm = 1.0 / (1.0 + r6[4]);\n");
-
+  code.append("  AT_FLOAT p_norm = PNORM(r6[4]);\n");
   generateEnter(code,info);
   generateApertures(code,info);
   generateBendFringeEnter(code,info);
@@ -58,13 +56,13 @@ void BndMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *in
   integrator.resetMethods();
   // Default bend
   integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
-  integrator.addKickMethod("bndthinkick(r6,elem->PolynomA,elem->PolynomB,%STEP%,elem->MaxOrder,elem->irho)");
+  integrator.addKickMethod("bndthinkick(r6,elem->mpole.PolynomA,elem->mpole.PolynomB,%STEP%,elem->mpole.MaxOrder,elem->irho)");
   // Pure bend
   integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
-  integrator.addKickMethod("bndthinkick0(r6,elem->PolynomA[0],elem->PolynomB[0],%STEP%,elem->irho)");
+  integrator.addKickMethod("bndthinkick0(r6,elem->mpole.PolynomA[0],elem->mpole.PolynomB[0],%STEP%,elem->mpole.irho)");
   // Pure DQ
   integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
-  integrator.addKickMethod("dqthinkick(r6,elem->PolynomA[0],elem->PolynomB[0],elem->K,%STEP%,elem->irho)");
+  integrator.addKickMethod("dqthinkick(r6,elem->mpole.PolynomA[0],elem->mpole.PolynomB[0],elem->mpole.K,%STEP%,elem->mpole.irho)");
 
   integrator.generateCode(code);
 
@@ -75,9 +73,9 @@ void BndMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *in
 
 }
 
-void BndMPoleSymplectic4Pass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
+void BndMPoleSymplectic4Pass::fillGPUMemory(uint8_t *startAdd,ELEMENT *elemMem,uint64_t *offset) {
 
-  StrMPoleSymplectic4Pass::fillGPUMemory(elemMem,privateMem,gpuMem);
+  StrMPoleSymplectic4Pass::fillGPUMemory(startAdd,elemMem,offset);
 
   // Update Subtype for bending
   if (isBending()) {
@@ -87,7 +85,7 @@ void BndMPoleSymplectic4Pass::fillGPUMemory(void *elemMem,void *privateMem,void 
   } else {
     elemData.SubType = 0;
   }
-  ((ELEMENT *)elemMem)->SubType = elemData.SubType;
+  elemMem->SubType = elemData.SubType;
 
 }
 
@@ -154,18 +152,20 @@ void BndMPoleSymplectic4Pass::generateUtilsFunction(std::string& code, PassMetho
 }
 
 void BndMPoleSymplectic4Pass::generateBendFringeEnter(std::string& code, PassMethodInfo *info) noexcept {
-  code.append("  edge_fringe(r6,p_norm,elem->EntranceAngle,elem->irho,elem->FringeCorrEntranceX,elem->FringeCorrEntranceY,elem->FringeBendEntrance);\n");
+  code.append("  edge_fringe(r6,p_norm,elem->mpole.EntranceAngle,elem->mpole.irho,elem->mpole.FringeCorrEntranceX,"
+                  "              elem->mpole.FringeCorrEntranceY,elem->mpole.FringeBendEntrance);\n");
 }
 
 void BndMPoleSymplectic4Pass::generateBendFringeExit(std::string& code, PassMethodInfo *info) noexcept {
-  code.append("  edge_fringe(r6,p_norm,elem->ExitAngle,elem->irho,elem->FringeCorrExitX,elem->FringeCorrExitY,elem->FringeBendExit);\n");
+  code.append("  edge_fringe(r6,p_norm,elem->mpole.ExitAngle,elem->mpole.irho,elem->mpole.FringeCorrExitX,"
+              "                  elem->mpole.FringeCorrExitY,elem->mpole.FringeBendExit);\n");
 }
 
 bool BndMPoleSymplectic4Pass::isBending() {
-  return elemData.MaxOrder==0 ||
-        (elemData.MaxOrder==1 && PolynomA[1]==0.0 && PolynomB[1]==0.0);
+  return elemData.mpole.MaxOrder==0 ||
+        (elemData.mpole.MaxOrder==1 && PolynomA[1]==0.0 && PolynomB[1]==0.0);
 }
 
 bool BndMPoleSymplectic4Pass::isDQ() {
-  return elemData.MaxOrder==1 && PolynomA[1]==0.0;
+  return elemData.mpole.MaxOrder==1 && PolynomA[1]==0.0;
 }

@@ -11,7 +11,6 @@ using namespace std;
 
 CudaContext::CudaContext(CUDA_GPU_INFO* gpu) {
 
-  char name[256];
   module = nullptr;
   kernel = nullptr;
   mapkernel = nullptr;
@@ -29,7 +28,7 @@ CudaContext::CudaContext(CUDA_GPU_INFO* gpu) {
 }
 
 int CudaContext::coreNumber() {
-  return info.mpNumber * info.smNumber;
+  return info.mpNumber;
 }
 
 CudaContext::~CudaContext() {
@@ -154,10 +153,14 @@ void CudaContext::mapBuffer(void **ring,uint32_t nbElement) {
 
 }
 
-void CudaContext::run(uint32_t blockSize, uint64_t nbThread) {
+void CudaContext::run(uint64_t nbThread) {
 
-  // Set the work item dimensions
+  // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#features-and-technical-specifications
+  // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#arithmetic-instructions
+
   // Add dummy threads to allow a constant blockSize for performance
+  // Choose 64 (2 warps) which seems a good compromise
+  uint32_t blockSize = 64;
   uint32_t blockNumber = nbThread/blockSize + (((nbThread%blockSize)==0)?0:1);
   cudaCall(cuLaunchKernel, kernel,
            blockNumber, 1, 1,      // grid dim
@@ -197,6 +200,7 @@ CudaGPU::CudaGPU() {
 
   initErrorStr.clear();
   cudaGPUs.clear();
+  implementationStr = "CUDA";
 
   // Init CUDA driver API
   CUresult status = cuInit(0);
@@ -208,6 +212,11 @@ CudaGPU::CudaGPU() {
   }
 
   try {
+
+    // Cet CUDA version
+    int version;
+    cudaCall(cuDriverGetVersion,&version);
+    implementationStr += " " + to_string(version/1000) + "." + to_string((version%1000)/10);
 
     // Get list of CUDA devices
     char name[256];
@@ -228,9 +237,8 @@ CudaGPU::CudaGPU() {
       gpuInfo.arch = "sm_" + to_string(maj) + to_string(min);
       gpuInfo.info.name = name;
       gpuInfo.info.version = to_string(maj) + "." + to_string(min);
-      gpuInfo.info.smNumber = _ConvertSMVer2Cores(maj, min);
       gpuInfo.info.mpNumber = nbMP;
-      gpuInfo.info.platform = "NVIDIA CUDA";
+      gpuInfo.info.platform = implementationStr;
       cudaGPUs.push_back(gpuInfo);
     }
 
@@ -282,83 +290,16 @@ void CudaGPU::getGlobalQualifier(std::string& ftype) {
   ftype.clear();
 }
 
-// Return number of stream processors
-int CudaGPU::_ConvertSMVer2Cores(int major,int minor) {
-
-  // Defines for GPU Architecture types (using the SM version to determine
-  // the # of cores per SM
-  typedef struct {
-    int SM;  // 0xMm (hexidecimal notation), M = SM Major version,
-    // and m = SM minor version
-    int Cores;
-  } sSMtoCores;
-
-  sSMtoCores nGpuArchCoresPerSM[] = {
-          {0x20, 32},  // Fermi
-          {0x21, 48},  // Fermi
-          {0x30, 192}, // Kepler
-          {0x32, 192}, // Kepler
-          {0x35, 192}, // Kepler
-          {0x37, 192}, // Kepler
-          {0x50, 128}, // Maxwell
-          {0x52, 128}, // Maxwell
-          {0x53, 128}, // Maxwell
-          {0x60,  64}, // Pascal
-          {0x61, 128}, // Volta
-          {0x62, 128}, // Volta
-          {0x70,  64}, // Turing
-          {0x72,  64},
-          {0x75,  64}, // Turing
-          {0x80,  64}, // Ampere
-          {0x86, 128}, // Ampere
-          {0x87, 128}, // Ampere
-          {0x89, 128}, // Ampere
-          {0x90, 128}, // Hopper
-          {-1, -1} };
-
-  int index = 0;
-
-  while(nGpuArchCoresPerSM[index].SM != -1) {
-    if(nGpuArchCoresPerSM[index].SM == ((major << 4) + minor)) {
-      return nGpuArchCoresPerSM[index].Cores;
-    }
-
-    index++;
-  }
-
-  return 0;
-
-}
-
-
 // Return list of GPU device present on the system
 std::vector<GPU_INFO> CudaGPU::getDeviceList() {
 
   if(!initErrorStr.empty())
     throw initErrorStr;
-
-  char name[256];
   vector<GPU_INFO> gpuList;
-  int deviceCount = 0;
-  cudaCall(cuDeviceGetCount,&deviceCount);
-
-  for(int i=0;i< deviceCount;i++) {
-    CUdevice cuDevice;
-    cudaCall(cuDeviceGet,&cuDevice, i);
-    int min,maj,nbMP;
-    cudaCall(cuDeviceGetAttribute,&min,CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR,cuDevice);
-    cudaCall(cuDeviceGetAttribute,&maj,CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR,cuDevice);
-    cudaCall(cuDeviceGetAttribute,&nbMP,CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT,cuDevice);
-    cudaCall(cuDeviceGetName, name, 256, cuDevice );
-    GPU_INFO info;
-    info.name = name;
-    info.version = to_string(maj)+ "." + to_string(min);
-    info.smNumber = _ConvertSMVer2Cores(maj,min);
-    info.mpNumber = nbMP;
-    info.platform = "NVIDIA CUDA";
-    gpuList.push_back(info);
-  }
+  for(auto & cudaGPU : cudaGPUs)
+    gpuList.push_back(cudaGPU.info);
   return gpuList;
+
 
 }
 
