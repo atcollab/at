@@ -14,9 +14,9 @@ public:
   // Retrieve parameters from upper layer (Python, Matlab)
   void getParameters(AbstractInterface *param, PassMethodInfo *info) override;
   uint64_t getMemorySize() override;
-  void fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) override;
+  void fillGPUMemory(uint8_t *startAdd,ELEMENT *elemMem,uint64_t* offset) override;
   AT_FLOAT getLength() override;
-  uint32_t getType();
+  uint32_t getType() override;
 
   // Generic code generation
   static void generateCode(std::string& code, PassMethodInfo *info,SymplecticIntegrator &integrator) noexcept;

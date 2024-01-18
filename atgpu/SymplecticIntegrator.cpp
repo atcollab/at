@@ -57,11 +57,13 @@ double SymplecticIntegrator::getLastKickWeight() {
 
 void SymplecticIntegrator::generateCode(std::string& code) {
 
-  if( driftMethods.empty() || (driftMethods.size() != kickMethods.size()) )
+  if( driftMethods.empty() )
+    return;
+  if(driftMethods.size() != kickMethods.size())
     throw string("SymplecticIntegrator::generateCode(), wrong pass methods");
 
   code.append("  AT_FLOAT SL = elem->SL;\n");
-  code.append("  int nb = elem->NumIntSteps;\n");
+  code.append("  int nb = elem->mpole.NumIntSteps;\n");
 
   if( driftMethods.size()==1 ) {
 

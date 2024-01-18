@@ -23,7 +23,7 @@ void RFCavityPass::postInit(RING_PARAM *param) {
 
   // Harmonic number correction
   double T0 = param->Length / C0;
-  elemData.HC = C0*( round( Frequency * T0 ) / Frequency  - T0 );
+  elemData.cavity.HC = C0*( round( Frequency * T0 ) / Frequency  - T0 );
 
 }
 
@@ -34,11 +34,11 @@ void RFCavityPass::generateCode(std::string& code, PassMethodInfo *info,Symplect
 
   code.append(
           "  if(elem->Length == 0.0) {\n"
-          "    r6[4] += -elem->NV*sin(elem->FC*(r6[5] - elem->TimeLag - elem->HC*turn) - elem->PhaseLag);\n"
+          "    r6[4] += -elem->cavity.NV*sin(elem->cavity.FC*(r6[5] - elem->cavity.TimeLag - elem->cavity.HC*turn) - elem->cavity.PhaseLag);\n"
           "  } else {\n"
-          "    fastdrift(r6,elem->Length/2.0,1.0/(1.0+r6[4]));\n"
-          "    r6[4] += -elem->NV*sin(elem->FC*(r6[5] - elem->TimeLag - elem->HC*turn) - elem->PhaseLag);\n"
-          "    fastdrift(r6,elem->Length/2.0,1.0/(1.0+r6[4]));\n"
+          "    fastdrift(r6,elem->Length*(AT_FLOAT)0.5,PNORM(r6[4]));\n"
+          "    r6[4] += -elem->cavity.NV*sin(elem->cavity.FC*(r6[5] - elem->cavity.TimeLag - elem->cavity.HC*turn) - elem->cavity.PhaseLag);\n"
+          "    fastdrift(r6,elem->Length*(AT_FLOAT)0.5,PNORM(r6[4]));\n"
           "  }\n"
   );
 

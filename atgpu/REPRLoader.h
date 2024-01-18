@@ -23,10 +23,11 @@ class CppInterface: public AbstractInterface {
 public:
 
   CppInterface();
-  std::string getString(const std::string& name);
-  int getInt(const std::string& name);
-  AT_FLOAT getDouble(const std::string& name);
-  AT_FLOAT *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape);
+  std::string getString(const std::string& name) override;
+  int getInt(const std::string& name) override;
+  double getDouble(const std::string& name) override;
+  double *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) override;
+  float *getNativeFloatArray(const std::string& name,std::vector<int64_t>& shape) override;
   void setObject(CppObject *obj);
 
 private:

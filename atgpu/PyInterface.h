@@ -11,8 +11,9 @@ public:
 
   std::string getString(const std::string& name) override;
   int getInt(const std::string& name) override;
-  AT_FLOAT getDouble(const std::string& name) override;
-  AT_FLOAT *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) override;
+  double getDouble(const std::string& name) override;
+  double *getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) override;
+  float *getNativeFloatArray(const std::string& name,std::vector<int64_t>& shape) override;
 
   void setObject(PyObject *obj);
 

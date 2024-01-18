@@ -18,7 +18,7 @@ void DriftPass::generateCode(std::string& code, PassMethodInfo *info,SymplecticI
 
   generateEnter(code,info);
   generateApertures(code,info);
-  code.append("  AT_FLOAT p_norm = 1.0 / (1.0 + r6[4]);\n");
+  code.append("  AT_FLOAT p_norm = PNORM(r6[4]);\n");
   code.append("  fastdrift(r6,elem->Length,p_norm);\n");
   generateApertures(code,info);
   generateExit(code,info);
@@ -36,7 +36,7 @@ void DriftPass::generateUtilsFunction(std::string& code, PassMethodInfo *info) n
           "void fastdrift(AT_FLOAT* r,AT_FLOAT L,AT_FLOAT p_norm) {\n"
           "  r[0] += p_norm * L * r[1];\n"
           "  r[2] += p_norm * L * r[3];\n"
-          "  r[5] += p_norm * p_norm * L * (r[1] * r[1] + r[3] * r[3]) * 0.5;\n"
+          "  r[5] += p_norm * p_norm * L * (r[1] * r[1] + r[3] * r[3]) * (AT_FLOAT)0.5;\n"
           "}\n"
   );
 

@@ -60,44 +60,41 @@ uint32_t IdentityPass::getType() {
 }
 
 // Fill device memory
-void IdentityPass::fillGPUMemory(void *elemMem,void *privateMem,void *gpuMem) {
+void IdentityPass::fillGPUMemory(uint8_t *startAdd,ELEMENT *elemMem,uint64_t* offset) {
 
-  AT_FLOAT *dest = (AT_FLOAT *)privateMem;
-  AT_FLOAT *destGPU = (AT_FLOAT *)gpuMem;
+  // Store an offset from the beginning of gpuRing memory in ELEMENT
+  // for mapping buffers in GPU memory address space (see Lattice::mapBuffers)
 
   if(R1) {
-    elemData.R1 = destGPU;
-    memcpy(dest,R1,6*6*sizeof(AT_FLOAT));
-    dest += 6*6;
-    destGPU += 6*6;
+    elemData.R1 = (AT_FLOAT *)(*offset);
+    memcpy(startAdd+*offset,R1,6*6*sizeof(AT_FLOAT));
+    *offset += 6*6*sizeof(AT_FLOAT);
   }
   if(R2) {
-    elemData.R2 = destGPU;
-    memcpy(dest,R2,6*6*sizeof(AT_FLOAT));
-    dest += 6*6;
-    destGPU += 6*6;
+    elemData.R2 = (AT_FLOAT *)(*offset);
+    memcpy(startAdd+*offset,R2,6*6*sizeof(AT_FLOAT));
+    *offset += 6*6*sizeof(AT_FLOAT);
   }
   if(T1) {
-    elemData.T1 = destGPU;
-    memcpy(dest,T1,6*sizeof(AT_FLOAT));
-    dest += 6;
-    destGPU += 6;
+    elemData.T1 = (AT_FLOAT *)(*offset);
+    memcpy(startAdd+*offset,T1,6*sizeof(AT_FLOAT));
+    *offset += 6*sizeof(AT_FLOAT);
   }
   if(T2) {
-    elemData.T2 = destGPU;
-    memcpy(dest,T2,6*sizeof(AT_FLOAT));
-    dest += 6;
-    destGPU += 6;
+    elemData.T2 = (AT_FLOAT *)(*offset);
+    memcpy(startAdd+*offset,T2,6*sizeof(AT_FLOAT));
+    *offset += 6*sizeof(AT_FLOAT);
   }
   if(EApertures) {
-    elemData.EApertures = destGPU;
-    memcpy(dest,EApertures,2*sizeof(AT_FLOAT));
-    dest += 2;
-    destGPU += 2;
+    elemData.EApertures = (AT_FLOAT *)(*offset);
+    ((AT_FLOAT *)(startAdd+*offset))[0] = 1.0 / EApertures[0];
+    ((AT_FLOAT *)(startAdd+*offset))[1] = 1.0 / EApertures[1];
+    *offset += 2*sizeof(AT_FLOAT);
   }
   if(RApertures) {
-    elemData.RApertures = destGPU;
-    memcpy(dest,RApertures,4*sizeof(AT_FLOAT));
+    elemData.RApertures = (AT_FLOAT *)(*offset);
+    memcpy(startAdd+*offset,RApertures,4*sizeof(AT_FLOAT));
+    *offset += 4*sizeof(AT_FLOAT);
   }
 
   memcpy(elemMem,&elemData,sizeof(ELEMENT));
@@ -142,9 +139,9 @@ void IdentityPass::generateApertures(std::string& code, PassMethodInfo *info) no
 
 void IdentityPass::generateEAperture(std::string& code) noexcept {
   code.append("  if(elem->EApertures) {\n");
-  code.append("    AT_FLOAT xnorm = r6[0]/elem->EApertures[0];\n");
-  code.append("    AT_FLOAT ynorm = r6[2]/elem->EApertures[1];\n");
-  code.append("    isLost |= (xnorm*xnorm + ynorm*ynorm) >= 1;\n");
+  code.append("    AT_FLOAT xnorm = r6[0]*elem->EApertures[0];\n");
+  code.append("    AT_FLOAT ynorm = r6[2]*elem->EApertures[1];\n");
+  code.append("    isLost |= (xnorm*xnorm + ynorm*ynorm) >= (AT_FLOAT)1.0;\n");
   code.append("  }\n");
 }
 

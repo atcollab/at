@@ -7,9 +7,7 @@
 
 typedef double AT_FLOAT;
 #define SQR(x) ((x)*(x))
-
-// GPU thread block size
-#define GPU_BLOCK_SIZE 128
+#define PNORM(x) ((AT_FLOAT)1/((AT_FLOAT)1+(x)))
 
 // Type of lattice element
 // The define must be the corresponding class name in uppercase
@@ -23,6 +21,7 @@ typedef double AT_FLOAT;
 #define CAVITYPASS                   6
 #define RFCAVITYPASS                 7
 
+// Structure alignement
 #if defined(__CUDACC__) // NVCC
 #define STRUCT_ALIGN(n) __align__(n)
 #elif defined(__GNUC__) // GCC
@@ -41,11 +40,48 @@ typedef struct STRUCT_ALIGN(8) {
 } RING_PARAM;
 
 // Lattice element
+
+typedef struct STRUCT_ALIGN(8) {
+
+  // StrMPole
+  uint32_t  NumIntSteps;
+  uint32_t  MaxOrder;
+  AT_FLOAT  K;
+  AT_FLOAT  *PolynomA;
+  AT_FLOAT  *PolynomB;
+  uint32_t  FringeQuadEntrance;
+  uint32_t  FringeQuadExit;
+
+  // BndMPole
+  // FringeBend: Method: 1 legacy 2 Soleil 3 ThomX
+  uint32_t  FringeBendEntrance;
+  uint32_t  FringeBendExit;
+  AT_FLOAT  irho;
+  AT_FLOAT  CRAD;
+  AT_FLOAT  EntranceAngle;
+  AT_FLOAT  FringeCorrEntranceX;
+  AT_FLOAT  FringeCorrEntranceY;
+  AT_FLOAT  ExitAngle;
+  AT_FLOAT  FringeCorrExitX;
+  AT_FLOAT  FringeCorrExitY;
+
+} MPOLE;
+
+typedef struct STRUCT_ALIGN(8) {
+
+  // Cavity
+  AT_FLOAT  NV; // Voltage/Energy
+  AT_FLOAT  FC; // 2.PI.freq/c0
+  AT_FLOAT  HC; // C0*(round(freq*T0)/F - T0), T0 = ringLength/C0
+  AT_FLOAT  TimeLag;
+  AT_FLOAT  PhaseLag;
+
+} CAVITY;
+
 typedef struct STRUCT_ALIGN(8) {
 
   uint32_t  Type;
   uint32_t  SubType;
-  uint32_t  NumIntSteps;
   AT_FLOAT  SL;
   AT_FLOAT  Length;
   AT_FLOAT  *T1;
@@ -55,32 +91,10 @@ typedef struct STRUCT_ALIGN(8) {
   AT_FLOAT  *EApertures;
   AT_FLOAT  *RApertures;
 
-  // StrMPole
-  uint32_t  MaxOrder;
-  AT_FLOAT  K;
-  AT_FLOAT  *PolynomA;
-  AT_FLOAT  *PolynomB;
-  uint32_t  FringeQuadEntrance;
-  uint32_t  FringeQuadExit;
-
-  // BndMPole
-  AT_FLOAT  irho;
-  AT_FLOAT  CRAD;
-  uint32_t  FringeBendEntrance; // Method: 1 legacy 2 Soleil 3 ThomX
-  AT_FLOAT  EntranceAngle;
-  AT_FLOAT  FringeCorrEntranceX;
-  AT_FLOAT  FringeCorrEntranceY;
-  uint32_t  FringeBendExit; // Method: 1 legacy 2 Soleil 3 ThomX
-  AT_FLOAT  ExitAngle;
-  AT_FLOAT  FringeCorrExitX;
-  AT_FLOAT  FringeCorrExitY;
-
-  // Cavity
-  AT_FLOAT  NV; // Voltage/Energy
-  AT_FLOAT  FC; // 2.PI.freq/c0
-  AT_FLOAT  HC; // C0*(round(freq*T0)/F - T0), T0 = ringLength/C0
-  AT_FLOAT  TimeLag;
-  AT_FLOAT  PhaseLag;
+  union {
+    MPOLE mpole;
+    CAVITY cavity;
+  };
 
 } ELEMENT;
 

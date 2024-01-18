@@ -87,7 +87,7 @@ OpenCLContext::OpenCLContext(OCL_GPU_INFO *gpu)  {
 }
 
 int OpenCLContext::coreNumber() {
-  return info.mpNumber * info.smNumber;
+  return info.mpNumber;
 }
 
 OpenCLContext::~OpenCLContext() {
@@ -113,7 +113,7 @@ void OpenCLContext::allocDevice(void **dest,size_t size) {
 }
 
 void OpenCLContext::freeDevice(void *dest) {
-  clReleaseMemObject((cl_mem)dest);
+  openCLCall(clReleaseMemObject,(cl_mem)dest);
 }
 
 void OpenCLContext::compile(string& code) {
@@ -122,7 +122,7 @@ void OpenCLContext::compile(string& code) {
   const char *progSrc = code.c_str();
   program = clCreateProgramWithSource(context, 1, &progSrc, nullptr, &err);
   openCLCheckCall("clCreateCommandQueue",err);
-  const char *opts = "-D__GNUC__ -cl-mad-enable"; // -D__GNUC__ for structure alignment (same directive as gcc)
+  const char *opts = "-D__GNUC__"; // -D__GNUC__ for structure alignment (same directive as gcc)
   err = clBuildProgram(program, 1, &device_id, opts, nullptr, nullptr);
   if(err < 0) {
 
@@ -188,29 +188,24 @@ void OpenCLContext::mapBuffer(void **ring,uint32_t nbElement) {
 
 }
 
-void OpenCLContext::run(uint32_t blockSize, uint64_t nbThread) {
+void OpenCLContext::run(uint64_t nbThread) {
 
   //set the kernel arguments
   cl_int err;
   for(size_t i=0;i<args.size();i++) {
-    err = clSetKernelArg( kernel, i, args[i].size, args[i].arg);
+    err = clSetKernelArg( kernel, (cl_uint)i, (cl_uint)args[i].size, args[i].arg);
     if( err<0 ) {
       string errStr = "Argument #" + to_string(i) + " size:" + to_string(args[i].size) + " " + getCLErrorString(err);
       throw errStr;
     }
   }
 
-  if(nbThread<blockSize) {
-    size_t globalSize[] = {nbThread};
-    openCLCall(clEnqueueNDRangeKernel, commands, kernel, 1, nullptr, globalSize, nullptr, 0, nullptr, nullptr);
-  } else {
-    // Set the work item dimensions
-    // Add dummy threads to allow a constant blockSize for performance
-    uint32_t blockNumber = nbThread / blockSize + (((nbThread % blockSize) == 0) ? 0 : 1);
-    size_t globalSize[] = {blockSize, blockNumber};
-    openCLCall(clEnqueueNDRangeKernel, commands, kernel, 2, nullptr, globalSize, nullptr, 0, nullptr, nullptr);
-  }
-
+  // Add dummy threads to allow a constant blockSize for performance
+  // Choose 64 (2 warps) which seems a good compromise
+  uint32_t blockSize = 64;
+  uint32_t blockNumber = (uint32_t)(nbThread/blockSize + (((nbThread%blockSize)==0)?0:1));
+  size_t globalSize[] = {blockSize, blockNumber};
+  openCLCall(clEnqueueNDRangeKernel, commands, kernel, 2, nullptr, globalSize, nullptr, 0, nullptr, nullptr);
   clFinish(commands);
 
 }
@@ -232,44 +227,65 @@ OpenCLGPU::OpenCLGPU() {
   // Detect all OpenCL capable devices
   oclGPUs.clear();
   initErrorStr.clear();
+  implementationStr = "OpenCL";
 
   try {
+
     cl_uint plalformCount;
     cl_platform_id platform[MAX_OCL_PLATFORM];
     openCLCall(clGetPlatformIDs, MAX_OCL_PLATFORM, platform, &plalformCount);
     vector<GPU_INFO> gpuList;
 
-    for (int p = 0; p < plalformCount; p++) {
+    for (cl_uint p = 0; p < plalformCount; p++) {
 
       char pname[256];
+      char pversion[256];
       openCLCall(clGetPlatformInfo, platform[p], CL_PLATFORM_NAME, sizeof(pname), pname, nullptr);
+      openCLCall(clGetPlatformInfo, platform[p], CL_PLATFORM_VERSION, sizeof(pversion), pversion, nullptr);
 
-      cl_device_id device_id[MAX_OCL_GPU];
-      cl_uint deviceCount;
-      openCLCall(clGetDeviceIDs, platform[p], CL_DEVICE_TYPE_GPU, MAX_OCL_GPU, device_id, &deviceCount);
+      try {
 
-      for (int i = 0; i < deviceCount; i++) {
+        cl_device_id device_id[MAX_OCL_GPU];
+        cl_uint deviceCount;
+        openCLCall(clGetDeviceIDs, platform[p], CL_DEVICE_TYPE_GPU, MAX_OCL_GPU, device_id, &deviceCount);
 
-        char name[256];
-        cl_uint mpNumer;
-        char clExtensions[16384];
+        for (cl_uint i = 0; i < deviceCount; i++) {
 
-        openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_NAME, sizeof(name), name, nullptr);
-        openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(mpNumer), &mpNumer, nullptr);
-        openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_EXTENSIONS, sizeof(clExtensions), &clExtensions, nullptr);
+          char name[256];
+          cl_uint mpNumer;
+          cl_uint maj=0;
+          cl_uint min=0;
+          char clExtensions[16384];
 
-        OCL_GPU_INFO oInfo;
-        oInfo.device_id = device_id[i];
-        oInfo.platform_id = platform[p];
-        oInfo.info.name = name;
-        oInfo.info.version = "?";
-        oInfo.info.smNumber = 1; // No way in OpenCL to get the stream processor size
-        oInfo.info.mpNumber = mpNumer;
-        oInfo.info.platform = pname;
-        string clExtStr = clExtensions;
-        oInfo.fp64 = clExtStr.find("cl_khr_fp64") != string::npos;
-        oclGPUs.push_back(oInfo);
+          openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_NAME, sizeof(name), name, nullptr);
+          openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(mpNumer), &mpNumer, nullptr);
+          openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_EXTENSIONS, sizeof(clExtensions), &clExtensions, nullptr);
 
+#ifdef CL_DEVICE_COMPUTE_CAPABILITY_MAJOR_NV
+          try {
+            // Retrieve CUDA capabilities
+            openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_COMPUTE_CAPABILITY_MAJOR_NV, sizeof(maj), &maj, nullptr);
+            openCLCall(clGetDeviceInfo, device_id[i], CL_DEVICE_COMPUTE_CAPABILITY_MINOR_NV, sizeof(min), &min, nullptr);
+          } catch (string& errStr) {
+            // Likely not a CUDA device
+          }
+#endif
+
+          OCL_GPU_INFO oInfo;
+          oInfo.device_id = device_id[i];
+          oInfo.platform_id = platform[p];
+          oInfo.info.name = name;
+          oInfo.info.version = to_string(maj) + "." + to_string(min);
+          oInfo.info.mpNumber = mpNumer;
+          oInfo.info.platform = string(pname) + " " + string(pversion);
+          string clExtStr = clExtensions;
+          oInfo.fp64 = clExtStr.find("_fp64") != string::npos;
+          oclGPUs.push_back(oInfo);
+
+        }
+
+      } catch (string& errStr) {
+        cerr << "Warning, Platform " << pname << ": " << errStr << endl;
       }
 
     }
@@ -337,7 +353,7 @@ void OpenCLGPU::addSpecificFunctions(std::string& code) {
 
 std::string OpenCLGPU::formatFloat(double *f) {
   char bStr[128];
-  sprintf(bStr, "%.16f", *f);
+  sprintf(bStr, "(AT_FLOAT)%.16f", *f);
   return string(bStr);
 }
 
