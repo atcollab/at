@@ -12,6 +12,9 @@ public:
   SymplecticIntegrator(int type);
   ~SymplecticIntegrator();
 
+  // Set type
+  void setType(int type);
+
   // Generate integrator code
   void generateCode(std::string& code);
 
