@@ -4,6 +4,24 @@
 using namespace std;
 
 SymplecticIntegrator::SymplecticIntegrator(int type) {
+  c = nullptr;
+  d = nullptr;
+  nbCoefficients = 0;
+  setType(type);
+}
+
+SymplecticIntegrator::~SymplecticIntegrator() {
+  delete[] c;
+  delete[] d;
+}
+
+void SymplecticIntegrator::setType(int type) {
+
+  delete[] c;
+  delete[] d;
+  c = nullptr;
+  d = nullptr;
+  nbCoefficients = 0;
 
   switch (type) {
 
@@ -29,6 +47,25 @@ SymplecticIntegrator::SymplecticIntegrator(int type) {
       allocate(4);
       c[0] = DRIFT1; c[1]=DRIFT2; c[2]=DRIFT2; c[3]=DRIFT1;
       d[0] = KICK1;  d[1]=KICK2;  d[2]=KICK1;  d[3]=0.0;
+      break;
+
+    case 5: // H. Yoshida, Construction of higher order symplectic integrators, PHYSICS LETTERS A 12/11/1990
+      // 6th order symplectic integrator constants (solution A)
+      //w1=-0.117767998417887e1
+      //w2= 0.235573213359357e0
+      //w3= 0.784513610477560e0
+      //w0= 1.0 - 2.0*(w1+w2+w3)
+      //# Drift coef
+      //print(f"c[0]= {0.5*w3:.16f}; c[1]= {0.5*(w3+w2):.16f}; c[2]={0.5*(w2+w1):.16f}; c[3]= {0.5*(w1+w0):.16f};")
+      //print(f"c[4]= {0.5*(w1+w0):.16f}; c[5]={0.5*(w2+w1):.16f}; c[6]= {0.5*(w3+w2):.16f}; c[7]= {0.5*w3:.16f};")
+      //# Kick coef
+      //print(f"d[0]= {w3:.16f}; d[1]= {w2:.16f}; d[2]={w1:.16f}; d[3]= {w0:.16f};")
+      //print(f"d[4]={w1:.16f}; d[5]= {w2:.16f}; d[6]= {w3:.16f}; d[7]= 0.0;")
+      allocate(8);
+      c[0]= 0.3922568052387800; c[1]= 0.5100434119184585; c[2]=-0.4710533854097566; c[3]= 0.0687531682525181;
+      c[4]= 0.0687531682525181; c[5]=-0.4710533854097566; c[6]= 0.5100434119184585; c[7]= 0.3922568052387800;
+      d[0]= 0.7845136104775600; d[1]= 0.2355732133593570; d[2]=-1.1776799841788701; d[3]= 1.3151863206839063;
+      d[4]=-1.1776799841788701; d[5]= 0.2355732133593570; d[6]= 0.7845136104775600; d[7]= 0.0;
       break;
 
     default:
@@ -119,11 +156,6 @@ void SymplecticIntegrator::generateLoopCode(std::string& code,size_t subType) {
 
   code.append("    }\n");
 
-}
-
-SymplecticIntegrator::~SymplecticIntegrator() {
-  delete[] c;
-  delete[] d;
 }
 
 void SymplecticIntegrator::allocate(int nb) {
