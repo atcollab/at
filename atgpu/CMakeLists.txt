@@ -1,7 +1,7 @@
 # AT GPU debugging project
 
-set(_CUDA ON)
-set(_OPENCL OFF)
+set(_CUDA OFF)
+set(_OPENCL ON)
 
 cmake_minimum_required(VERSION 3.13)
 project(AT_GPU)

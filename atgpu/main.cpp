@@ -106,8 +106,8 @@ int main(int argc,char **arv) {
       uint32_t nbPart = nbX * nbY;
       uint32_t refs[] = {l->getNbElement()};
       uint32_t nbRef = sizeof(refs) / sizeof(uint32_t);
-      uint32_t starts[] = {0,200,300,400,500,600,700,200};
-      uint32_t nbStart = sizeof(starts) / sizeof(uint32_t);
+      uint32_t starts[] = {0,100,200,300,400,500,600,700};
+      uint32_t nbStride = sizeof(starts) / sizeof(uint32_t);
 
       uint64_t routSize = nbTurn * nbPart * nbRef * 6 * sizeof(AT_FLOAT);
       AT_FLOAT *rout = (AT_FLOAT *) malloc(routSize);
@@ -118,7 +118,7 @@ int main(int argc,char **arv) {
       AT_FLOAT *lostAtCoord = new AT_FLOAT[nbPart * 6];
 
       t0 = AbstractGPU::get_ticks();
-      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, nbStart, starts, lostAtTurn, lostAtElem, lostAtCoord);
+      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, nbStride, starts, lostAtTurn, lostAtElem, lostAtCoord);
       t1 = AbstractGPU::get_ticks();
 
       //int pIdx = 0;
@@ -127,10 +127,11 @@ int main(int argc,char **arv) {
       //cout << "lostAtCoord[" << pIdx << "]" << lostAtCoord[pIdx*6+0] << "," << lostAtCoord[pIdx*6+1] << endl;
 
       AT_FLOAT *P;
-      P = ROUTPTR(0,0,nbTurn-1);
-      cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
-      P = ROUTPTR(nbPart-1,0,nbTurn-1);
-      cout << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+      uint32_t strideSize = nbPart / nbStride;
+      for(int stride=0; stride < nbStride; stride++) {
+        P = ROUTPTR(stride*strideSize, 0, nbTurn - 1);
+        cout << "[" << stride << "] " << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+      }
 
       int nbLost = 0;
       for (uint32_t i = 0; i < nbPart; i++)
