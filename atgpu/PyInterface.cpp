@@ -40,11 +40,12 @@ static PyMethodDef AtGPUMethods[] = {
                           "    particle (Optional[Particle]):  circulating particle\n"
                           "    reuse:   if True, use previously cached description of the lattice.\n"
                           "    losses:  if True, process losses\n"
-                          "    gpu_pool:  List of GPU id to use\n\n"
-                          "    tracking_starts: numpy array of indices of elements where tracking should start."
-                          "       len(tracking_start) must divide the number of particle and give the stride size,\n"
-                          "       The i-th particle of rin starts at elem tracking_start[i/stride]\n"
-                          "       The stride size should be multiple of 64\n"
+                          "    gpu_pool:  List of GPU id to use\n"
+                          "    tracking_starts: numpy array of indices of elements where tracking should start.\n"
+                          "       len(tracking_start) must divide the number of particle and it gives the stride size.\n"
+                          "       The i-th particle of rin starts at elem tracking_start[i/stride].\n"
+                          "       The behavior is similar to lattice.rotate(tracking_starts[]).\n"
+                          "       The stride size should be multiple of 64 for best performance.\n"
                           "Returns:\n"
                           "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
                           "         of particle coordinates\n\n"
@@ -213,10 +214,9 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
       return PyErr_Format(PyExc_ValueError, "tracking_starts is not a numpy uint32 array");
     }
     track_starts = (uint32_t *)PyArray_DATA(trackstarts);
-    num_starts = PyArray_SIZE(refs);
-
+    num_starts = PyArray_SIZE(trackstarts);
     if( num_particles % num_starts != 0 ) {
-      return PyErr_Format(PyExc_ValueError, "len(tracking_starts) does not divide number of particle");
+      return PyErr_Format(PyExc_ValueError, "len(tracking_starts) must divide number of particle");
     }
   } else {
     trackstarts = nullptr;

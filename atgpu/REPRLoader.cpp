@@ -134,8 +134,8 @@ REPRLoader::REPRLoader(const std::string &fileName) {
   char *buff = new char[fSize+1];
   rewind(f);
   size_t nbRead = fread(buff, 1, fSize, f);
+  fclose(f);
   if( nbRead != fSize ) {
-    fclose(f);
     throw string(fileName + ": " + strerror(errno));
   }
   buff[fSize]=0;

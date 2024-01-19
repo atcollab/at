@@ -1,7 +1,7 @@
 #include "Lattice.h"
 #include <iostream>
 #include <cstring>
-#define _PROFILE
+//#define _PROFILE
 
 using namespace std;
 
@@ -198,7 +198,7 @@ void Lattice::generateGPUKernel() {
   code.append("  AT_FLOAT* r6 = sr6;\n");
   code.append("  "+mType+" AT_FLOAT* _rout = rout + 6 * ((uint64_t)turn * (uint64_t)nbPart * (uint64_t)nbRef + (uint64_t)(threadId));\n");
   code.append("  AT_FLOAT fTurn = (AT_FLOAT)(ringParam->turnCounter + turn);\n");
-  code.append("  bool pLost;\n");
+  code.append("  bool pLost = false;\n");
   code.append("  int32_t refIdx = 0;\n");
   code.append("  int elem = startElem;\n");
 
@@ -219,11 +219,11 @@ void Lattice::generateGPUKernel() {
   code.append("    return;\n");
   code.append("  }\n");
 
-  // The tracking starts at elem elemOffset (equivalent to lattice rotation of elemOffset)
+  // The tracking starts at elem elemOffset (equivalent to lattice.rotate(elemOffset))
   code.append("  int32_t elemOffset = elemOffsets?elemOffsets[threadId/offsetStride]:0;\n");
 
   // Loop over elements
-  code.append("  while(elem < startElem+nbElementToProcess) {\n");
+  code.append("  while(!pLost && elem<startElem+nbElementToProcess) {\n");
   code.append("    "+mType+" ELEMENT* elemPtr = gpuRing + ((elem+elemOffset)%NB_TOTAL_ELEMENT);\n");
   storeParticleCoord(code);
   code.append("    switch(elemPtr->Type) {\n");
@@ -362,14 +362,14 @@ void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   gpu->addArg(sizeof(void *),&gpuRing);             // The lattice
   gpu->addArg(sizeof(uint32_t),&startElem);         // Process from
   gpu->addArg(sizeof(uint32_t),&nbElemToProcess);   // Number of element to process
-  gpu->addArg(sizeof(uint32_t),&gpuOffsets);        // Tracking start offsets
+  gpu->addArg(sizeof(void *),&gpuOffsets);          // Tracking start offsets
   gpu->addArg(sizeof(uint32_t),&offsetStride);      // Number of particle which starts at elem specified in gpuOffsets
   gpu->addArg(sizeof(uint32_t),&nbParticles);       // Total number of particle to track
   gpu->addArg(sizeof(void *),&gpuRin);              // Input 6D coordinates
-  gpu->addArg(sizeof(void *),&gpuRout);             // Output 6D coordiantes
+  gpu->addArg(sizeof(void *),&gpuRout);             // Output 6D coordinates
   gpu->addArg(sizeof(void *),&gpuLost);             // Lost flags
   gpu->addArg(sizeof(uint32_t),&turn);              // Current turn
-  gpu->addArg(sizeof(void *),&gpuRefs);             // Observation points at specifed elements
+  gpu->addArg(sizeof(void *),&gpuRefs);             // Observation points at specified elements
   gpu->addArg(sizeof(uint32_t),&nbRef);             // Number of observation points
   gpu->addArg(sizeof(void *),&gpuLostAtElem);       // Element indices where particles are lost
   gpu->addArg(sizeof(void *),&gpuLostAtCoord);      // Output coordinates where particles are lost
