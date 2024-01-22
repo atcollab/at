@@ -44,8 +44,15 @@ static PyMethodDef AtGPUMethods[] = {
                           "    tracking_starts: numpy array of indices of elements where tracking should start.\n"
                           "       len(tracking_start) must divide the number of particle and it gives the stride size.\n"
                           "       The i-th particle of rin starts at elem tracking_start[i/stride].\n"
-                          "       The behavior is similar to lattice.rotate(tracking_starts[]).\n"
+                          "       The behavior is similar to lattice.rotate(tracking_starts[i/stride]).\n"
                           "       The stride size should be multiple of 64 for best performance.\n"
+                          "    integrator: Type of integrator to use.\n"
+                          "       1: Euler 1st order, 1 drift/1 kick per step.\n"
+                          "       2: Verlet 2nd order, 1 drift/2 kicks per step.\n"
+                          "       3: Ruth 3rd order, 3 drifts/3 kicks per step.\n"
+                          "       4: Forest/Ruth 4th order, 4 drifts/3 kicks per step (Default).\n"
+                          "       5: Optimal 4th order from R. Mclachlan, 4 drifts/4 kicks per step.\n"
+                          "       6: Yoshida 6th order, 8 drifts/7 kicks per step.\n\n"
                           "Returns:\n"
                           "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
                           "         of particle coordinates\n\n"
@@ -131,7 +138,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                  "energy", "particle", "keep_counter",
                                  "reuse","losses",
                                  "bunch_spos", "bunch_currents", "gpu_pool",
-                                 "tracking_starts",
+                                 "tracking_starts","integrator",
                                  nullptr};
 
   NPY_TYPES floatType;
@@ -159,10 +166,11 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   int keep_counter=0;
   int counter=0;
   int losses=0;
+  int integratorType=4;
   double t0,t1;
 
   // Get input args
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!O!", const_cast<char **>(kwlist),
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!O!i", const_cast<char **>(kwlist),
                                    &PyList_Type, &lattice,
                                    &PyArray_Type, &rin,
                                    &num_turns,
@@ -176,10 +184,13 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                    &PyArray_Type, &bspos,
                                    &PyArray_Type, &bcurrents,
                                    &PyList_Type, &gpupool,
-                                   &PyArray_Type, &trackstarts)) {
+                                   &PyArray_Type, &trackstarts,
+                                   &integratorType
+                                   )) {
     return nullptr;
   }
 
+  // Input particles
   if (PyArray_DIM(rin,0) != 6) {
     return PyErr_Format(PyExc_ValueError, "rin is not 6D");
   }
@@ -192,6 +203,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   uint32_t num_particles = (PyArray_SIZE(rin)/6);
   AT_FLOAT *drin = (AT_FLOAT *)PyArray_DATA(rin);
+
+  // Reference points
   uint32_t *ref_pts;
   uint32_t num_refs;
 
@@ -206,6 +219,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     num_refs = 0;
   }
 
+  // Starting elements
   uint32_t *track_starts;
   uint32_t num_starts;
 
@@ -223,6 +237,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     num_starts = 0;
   }
 
+  // GPU
   int gpuId = 0;
   if( gpupool ) {
     size_t nGPU = PyList_Size(gpupool);
@@ -236,11 +251,21 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     gpuId = (int)PyLong_AsLong(PyList_GET_ITEM(gpupool, 0));
   }
 
-  // Create and run lattice on GPU
+  // Integrator
+  if( integratorType!=integrator.getType() ) {
+    if( keep_lattice )
+      cout << "Warning, lattice is recreated when integrator type is changed" << endl;
+    delete gpuLattice;
+    gpuLattice = nullptr;
+    integrator.setType(integratorType);
+  }
+
+  // Set up lattice and run tracking
   if( !keep_lattice ) {
     delete gpuLattice;
     gpuLattice = nullptr;
   }
+
   if( !gpuLattice ) {
 
     // Create the GPU lattice
