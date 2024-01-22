@@ -144,7 +144,7 @@ void StrMPoleSymplectic4Pass::generateQuadFringeEnter(std::string& code, PassMet
 
   if(info->doQuadEnter)
     code.append(
-          "  if (elem->FringeQuadEntrance) {\n"
+          "  if (elem->mpole.FringeQuadEntrance) {\n"
           "    quad_fringe(r6,elem->mpole.PolynomB[1],(AT_FLOAT)1.0,p_norm);\n"
           "  }\n"
   );
@@ -155,7 +155,7 @@ void StrMPoleSymplectic4Pass::generateQuadFringeExit(std::string& code, PassMeth
 
   if(info->doQuadExit)
     code.append(
-          "  if(elem->FringeQuadExit) {\n"
+          "  if(elem->mpole.FringeQuadExit) {\n"
           "    quad_fringe(r6,elem->mpole.PolynomB[1],(AT_FLOAT)(-1.0),p_norm);\n"
           "  }\n"
   );

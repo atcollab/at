@@ -56,7 +56,7 @@ void BndMPoleSymplectic4Pass::generateCode(std::string& code, PassMethodInfo *in
   integrator.resetMethods();
   // Default bend
   integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
-  integrator.addKickMethod("bndthinkick(r6,elem->mpole.PolynomA,elem->mpole.PolynomB,%STEP%,elem->mpole.MaxOrder,elem->irho)");
+  integrator.addKickMethod("bndthinkick(r6,elem->mpole.PolynomA,elem->mpole.PolynomB,%STEP%,elem->mpole.MaxOrder,elem->mpole.irho)");
   // Pure bend
   integrator.addDriftMethod("fastdrift(r6,%STEP%,p_norm)");
   integrator.addKickMethod("bndthinkick0(r6,elem->mpole.PolynomA[0],elem->mpole.PolynomB[0],%STEP%,elem->mpole.irho)");
@@ -153,7 +153,7 @@ void BndMPoleSymplectic4Pass::generateUtilsFunction(std::string& code, PassMetho
 
 void BndMPoleSymplectic4Pass::generateBendFringeEnter(std::string& code, PassMethodInfo *info) noexcept {
   code.append("  edge_fringe(r6,p_norm,elem->mpole.EntranceAngle,elem->mpole.irho,elem->mpole.FringeCorrEntranceX,"
-                  "              elem->mpole.FringeCorrEntranceY,elem->mpole.FringeBendEntrance);\n");
+              "              elem->mpole.FringeCorrEntranceY,elem->mpole.FringeBendEntrance);\n");
 }
 
 void BndMPoleSymplectic4Pass::generateBendFringeExit(std::string& code, PassMethodInfo *info) noexcept {
