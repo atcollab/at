@@ -14,6 +14,7 @@ public:
 
   // Set type
   void setType(int type);
+  int getType() { return type; }
 
   // Generate integrator code
   void generateCode(std::string& code);
@@ -29,6 +30,7 @@ public:
 private:
 
   // Coefficients
+  int type;
   int nbCoefficients;
   double *c; // Drift
   double *d; // Kick

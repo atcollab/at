@@ -22,6 +22,7 @@ void SymplecticIntegrator::setType(int type) {
   c = nullptr;
   d = nullptr;
   nbCoefficients = 0;
+  this->type = type;
 
   switch (type) {
 
@@ -49,7 +50,13 @@ void SymplecticIntegrator::setType(int type) {
       d[0] = KICK1;  d[1]=KICK2;  d[2]=KICK1;  d[3]=0.0;
       break;
 
-    case 5: // H. Yoshida, Construction of higher order symplectic integrators, PHYSICS LETTERS A 12/11/1990
+    case 5: // Optimal 4th order from "The Accuracy of Symplectic Integrators", R. Mclachlan, 1999
+      allocate(4);
+      c[0]= 0.1288461583653843; c[1]= 0.4415830236164665; c[2]=-0.0857820194129737; c[3]= 0.5153528374311229;
+      d[0]= 0.3340036032863214; d[1]= 0.7563200005156683; d[2]=-0.2248198030794208; d[3]= 0.1344961992774311;
+      break;
+
+    case 6: // H. Yoshida, "Construction of higher order symplectic integrators", PHYSICS LETTERS A 12/11/1990
       // 6th order symplectic integrator constants (solution A)
       //w1=-0.117767998417887e1
       //w2= 0.235573213359357e0
