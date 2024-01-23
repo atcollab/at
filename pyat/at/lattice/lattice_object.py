@@ -319,13 +319,13 @@ class Lattice(list):
                                  If :py:obj:`True` a deep copy of elem
                                  is used.
         """
-        # noinspection PyUnusedLocal
         # scan the new element to update it
-        elist = list(self._addition_filter([elem],
+        elist = list(self._addition_filter([elem],  # noqa: F841
                      copy_elements=copy_elements))
         super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element], copy_elements=False):
+        # noinspection PyUnresolvedReferences
         r"""This method adds all the elements of `elems` to the end of the
         lattice. The behavior is the same as for a :py:obj:`list`
 
@@ -347,24 +347,25 @@ class Lattice(list):
         super().extend(elems)
 
     def append(self, elem: Element, copy_elements=False):
-        r"""This method overwrites the inherited method
-            :py:meth:`list.append()`,
-            it behavior is changed, it accepts only AT lattice elements
-            :py:obj:`Element` as input argument.
+        # noinspection PyUnresolvedReferences
+        r"""This method overwrites the inherited method :py:meth:`list.append()`,
+        its behavior is changed, it accepts only AT lattice elements
+        :py:obj:`Element` as input argument.
 
-            Equivalents syntaxes:
-            >>> ring.append(elem)
-            >>> ring += [elem]
+        Equivalents syntaxes:
+        >>> ring.append(elem)
+        >>> ring += [elem]
 
-            Parameters:
-                elem (Element): AT element to be appended to the lattice
-                copy_elements(bool): Default :py:obj:`True`.
-                                     If :py:obj:`True` a deep copy of elem
-                                     is used
+        Parameters:
+            elem (Element): AT element to be appended to the lattice
+            copy_elements(bool): Default :py:obj:`True`.
+                                 If :py:obj:`True` a deep copy of elem
+                                 is used
         """
         self.extend([elem], copy_elements=copy_elements)
 
     def repeat(self, n: int, copy_elements=True):
+        # noinspection SpellCheckingInspection,PyUnresolvedReferences,PyRedeclaration
         r"""This method allows to repeat the lattice `n` times.
         If `n` does not divide `ring.periodicity`, the new ring
         periodicity is set to 1, otherwise  it is et to
@@ -409,6 +410,7 @@ class Lattice(list):
 
     def concatenate(self, *lattices: Iterable[Element],
                     copy_elements=False, copy=False):
+        # noinspection PyUnresolvedReferences,SpellCheckingInspection,PyRedeclaration
         """Concatenate several `Iterable[Element]` with the lattice
 
         Equivalents syntaxes:
@@ -442,6 +444,7 @@ class Lattice(list):
         return lattice if copy else None
 
     def reverse(self, copy=False):
+        # noinspection PyUnresolvedReferences
         r"""Reverse the order of the lattice and swapt the faces
         of elements. Alignment errors are not swapped
 
@@ -520,7 +523,7 @@ class Lattice(list):
     def deepcopy(self) -> Lattice:
         """Returns a deep copy of the lattice"""
         return copy.deepcopy(self)
-        
+
     def slice_elements(self, refpts: Refpts, slices: int = 1) -> Lattice:
         """Create a new lattice by slicing the elements at refpts
 
@@ -542,7 +545,7 @@ class Lattice(list):
                 else:
                     yield el
 
-        return Lattice(slice_generator, iterator=self.attrs_filter)        
+        return Lattice(slice_generator, iterator=self.attrs_filter)
 
     def slice(self, size: Optional[float] = None, slices: Optional[int] = 1) \
             -> Lattice:
@@ -639,8 +642,8 @@ class Lattice(list):
     def energy(self, energy: float):
         # Set the Energy attribute of radiating elements
         for elem in self:
-            if (isinstance(elem, (elt.RFCavity, elt.Wiggler)) or
-                    elem.PassMethod.endswith('RadPass')):
+            if (isinstance(elem, (elt.RFCavity, elt.Wiggler))
+                    or elem.PassMethod.endswith('RadPass')):
                 elem.Energy = energy
         # Set the energy attribute of the Lattice
         # Use a numpy scalar to allow division by zero

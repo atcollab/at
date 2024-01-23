@@ -930,9 +930,9 @@ class Dipole(Radiative, Multipole):
         def invrho(dip: Dipole):
             return dip.BendingAngle / dip.Length
 
-        return (super().is_compatible(other) and
-                self.ExitAngle == -other.EntranceAngle and
-                abs(invrho(self) - invrho(other)) <= 1.e-6)
+        return (super().is_compatible(other)
+                and self.ExitAngle == -other.EntranceAngle
+                and abs(invrho(self) - invrho(other)) <= 1.e-6)
 
     def merge(self, other) -> None:
         super().merge(other)
