@@ -464,7 +464,7 @@ class _ElementObservable(Observable):
                 vmin = repeat(None)
                 vmax = repeat(None)
             else:
-                target = np.broadcast_to(self.target, (len(self._locations),))
+                target = np.broadcast_to(self.target, np.asarray(vnow).shape)
                 vmin = target + self.lbound
                 vmax = target + self.ubound
             vini = self.initial
