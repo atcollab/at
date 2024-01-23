@@ -308,6 +308,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     npy_intp outdims[4] = {6,(npy_intp)(num_particles),num_refs,num_turns};
     PyObject *rout = PyArray_EMPTY(4, outdims, floatType, 1);
+    if( rout==nullptr )
+      return PyErr_Format(PyExc_RuntimeError,"Not enough memory while trying to allocate particle output coordinates");
     AT_FLOAT *drout = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)rout);
 
     if(losses) {
