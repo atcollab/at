@@ -316,7 +316,7 @@ class ObservableList(list):
                 # Emittance computation
                 try:
                     emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
-                except AtError as err:
+                except Exception as err:
                     emdata = err
 
             if Need.GEOMETRY in needs:
