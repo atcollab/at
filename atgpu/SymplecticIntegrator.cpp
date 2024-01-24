@@ -24,6 +24,11 @@ void SymplecticIntegrator::setType(int type) {
   nbCoefficients = 0;
   this->type = type;
 
+  // Note:
+  // The integrators below have been tested on hamiltonian using quadratic approximation
+  // for the transverse momenta. McLachlan/Atela integrators give good results.
+  // TODO: Test on exact pass
+
   switch (type) {
 
     case 1: // Euler
@@ -32,10 +37,10 @@ void SymplecticIntegrator::setType(int type) {
       d[0] = 1.0;
       break;
 
-    case 2: // Verlet
+    case 2: // Optimal 2nd order from "The Accuracy of Symplectic Integrators", R. Mclachlan P Atela, 1991
       allocate(2);
-      c[0] = 0.0; c[1]=1.0;
-      d[0] = 0.5; d[1]=0.5;
+      c[0] = 1.0 - 1.0 / sqrt(2.0); c[1]=1.0 / sqrt(2.0);
+      d[0] = 1.0 - 1.0 / sqrt(2.0); d[1]=1.0 / sqrt(2.0);
       break;
 
     case 3: // Ruth
@@ -50,7 +55,7 @@ void SymplecticIntegrator::setType(int type) {
       d[0] = KICK1;  d[1]=KICK2;  d[2]=KICK1;  d[3]=0.0;
       break;
 
-    case 5: // Optimal 4th order from "The Accuracy of Symplectic Integrators", R. Mclachlan, 1999
+    case 5: // Optimal 4th order from "The Accuracy of Symplectic Integrators", R. Mclachlan P Atela, 1991
       allocate(4);
       c[0]= 0.1288461583653843; c[1]= 0.4415830236164665; c[2]=-0.0857820194129737; c[3]= 0.5153528374311229;
       d[0]= 0.3340036032863214; d[1]= 0.7563200005156683; d[2]=-0.2248198030794208; d[3]= 0.1344961992774311;
