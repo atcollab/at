@@ -39,6 +39,22 @@ AT_FLOAT *createGrid(AT_FLOAT x1,AT_FLOAT y1,AT_FLOAT x2,AT_FLOAT y2,uint32_t nb
 
 }
 
+AT_FLOAT *createArc(AT_FLOAT radius,AT_FLOAT startAngle,AT_FLOAT endAngle,uint32_t nbParticles) {
+
+  uint32_t rinSize = nbParticles * 6 * sizeof(AT_FLOAT);
+  AT_FLOAT* rin = (AT_FLOAT*)malloc(rinSize);
+  memset(rin,0,rinSize);
+
+  for(int i=0;i<nbParticles;i++) {
+    AT_FLOAT angle = startAngle + (endAngle-startAngle)*(AT_FLOAT)i/(AT_FLOAT)(nbParticles-1);
+    RINPTR(i)[0] = radius*cos(angle);
+    RINPTR(i)[2] = radius*sin(angle);
+  }
+
+  return rin;
+
+}
+
 void printGPUInfo() {
 
   try {
@@ -51,43 +67,130 @@ void printGPUInfo() {
 
 }
 
-int main(int argc,char **arv) {
+Lattice *loadLattice(string latticeName,SymplecticIntegrator& integrator,int gpu,double stepSize=0.0) {
 
-  printGPUInfo();
-
-  SymplecticIntegrator integrator(4);
   CppInterface *dI = new CppInterface();
   AbstractInterface::setHandler(dI);
   vector<CppObject> elements;
-  int DEVID = 1;
 
+  REPRLoader *loader = new REPRLoader(latticeName);
+  loader->parseREPR(elements);
+  if( stepSize!=0.0 ) {
+    // Adjust NumIntSteps to be as close as possible to stepSize
+    for(auto & element : elements) {
+      try {
+        // For element that has NumIntSteps attribute
+        string &stepStr = element.getField("NumIntSteps");
+        string &lengthStr = element.getField("Length");
+        double length = stod(lengthStr);
+        int nstep = (int)((length / stepSize)+0.5);
+        if(nstep<1) nstep = 1;
+        element.addField("NumIntSteps", to_string(nstep));
+      } catch (string&) {
+      }
+    }
+  }
+  delete loader;
+
+  Lattice *l = new Lattice(0, integrator, 6e9, gpu);
+  double t0 = AbstractGPU::get_ticks();
+  for (auto &element: elements) {
+    dI->setObject(&element);
+    l->addElement();
+  }
+  l->generateGPUKernel();
+  double t1 = AbstractGPU::get_ticks();
+  cout << "Ring build: " << (t1 - t0) * 1000.0 << "ms" << endl;
+
+  t0 = AbstractGPU::get_ticks();
+  l->fillGPUMemory();
+  t1 = AbstractGPU::get_ticks();
+  cout << "GPU lattice loading: " << (t1 - t0) * 1000.0 << "ms" << endl;
+
+  return l;
+
+}
+
+void integratorTest(int gpu,string latticeName) {
+
+  SymplecticIntegrator integrator(4);
+
+  npy::npy_data<double> refPoints = npy::read_npy<double>("/segfs/tmp/pons/at/test/data/ref_arc_yfr_10000.npy");
 
   try {
-    //REPRLoader *loader = new REPRLoader("Z:/tmp/pons/at/test/lattice/betamodel_radon.repr");
-    REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
-    //REPRLoader *loader = new REPRLoader("/segfs/tmp/pons/lattice/simple_ebs.repr");
-    loader->parseREPR(elements);
+
+    for(int integ=1;integ<7;integ++) {
+
+      integrator.setType(integ);
+      Lattice *l = loadLattice(latticeName,integrator,gpu,0.01);
+
+      uint32_t nbTurn = 1;
+      uint32_t nbPart = 256;
+      uint32_t refs[] = {l->getNbElement()};
+      uint32_t nbRef = sizeof(refs) / sizeof(uint32_t);
+      uint64_t routSize = nbTurn * nbPart * nbRef * 6 * sizeof(AT_FLOAT);
+      AT_FLOAT *rout = (AT_FLOAT *) malloc(routSize);
+
+      // Choose an arc close to 1mm where unexpected tune drift is observed when step size in too small (EBS lattice)
+      AT_FLOAT *rin = createArc(0.001,M_PI/2.0,-M_PI/2.0,nbPart);
+
+      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, 0, nullptr, nullptr, nullptr, nullptr);
+
+      double err = 0;
+      double max = 0;
+      int pMax;
+      int cMax;
+      for(int p=0;p<256;p++) {
+        AT_FLOAT *P = ROUTPTR(p, 0, nbTurn - 1);
+        err += SQR(P[0] - refPoints.data[p*6+0]);
+        err += SQR(P[1] - refPoints.data[p*6+1]);
+        err += SQR(P[2] - refPoints.data[p*6+2]);
+        err += SQR(P[3] - refPoints.data[p*6+3]);
+        err += SQR(P[4] - refPoints.data[p*6+4]);
+        err += SQR(P[5] - refPoints.data[p*6+5]);
+        if( abs(P[0] - refPoints.data[p*6+0])>max ) {max = abs(P[0] - refPoints.data[p*6+0]);pMax=p;cMax=0;}
+        if( abs(P[1] - refPoints.data[p*6+1])>max ) {max = abs(P[1] - refPoints.data[p*6+1]);pMax=p;cMax=1;}
+        if( abs(P[2] - refPoints.data[p*6+2])>max ) {max = abs(P[2] - refPoints.data[p*6+2]);pMax=p;cMax=2;}
+        if( abs(P[3] - refPoints.data[p*6+3])>max ) {max = abs(P[3] - refPoints.data[p*6+3]);pMax=p;cMax=3;}
+        if( abs(P[4] - refPoints.data[p*6+4])>max ) {max = abs(P[4] - refPoints.data[p*6+4]);pMax=p;cMax=4;}
+        if( abs(P[5] - refPoints.data[p*6+5])>max ) {max = abs(P[5] - refPoints.data[p*6+5]);pMax=p;cMax=5;}
+      }
+      err = sqrt(err) / (6.0*256.0);
+      AT_FLOAT *P = ROUTPTR(pMax, 0, nbTurn - 1);
+      cout << "[" << integ << "]" << err << " max=" << max << " @" << P[cMax] << " " << abs(max/P[cMax]) << endl;
+
+      /*
+      if( integ==4 ) {
+        // Save ref
+        npy::npy_data_ptr<double> d;
+        d.data_ptr = (double *) rout;
+        d.shape = {6, nbPart, nbRef, nbTurn};
+        d.fortran_order = true;
+        npy::write_npy("/segfs/tmp/pons/at/test/data/ref_arc_yfr_10000.npy", d);
+      }
+      */
+
+      free(rout);
+      free(rin);
+      delete l;
+
+    }
+
   } catch (string& errStr) {
-    cout << "Parse failed: " << errStr << endl;
-    exit(0);
+    string err =  "Fail: " + errStr;
+    cout << "Error: " << err << endl;
   }
 
+}
+
+void performanceTest(int gpu,string latticeName) {
+
+  double t0,t1;
+  SymplecticIntegrator integrator(4);
+
   try {
 
-    Lattice *l = new Lattice(0, integrator, 6e9, DEVID);
-    double t0 = AbstractGPU::get_ticks();
-    for (auto &element: elements) {
-      dI->setObject(&element);
-      l->addElement();
-    }
-    l->generateGPUKernel();
-    double t1 = AbstractGPU::get_ticks();
-    cout << "Ring build: " << (t1 - t0) * 1000.0 << "ms" << endl;
-
-    t0 = AbstractGPU::get_ticks();
-    l->fillGPUMemory();
-    t1 = AbstractGPU::get_ticks();
-    cout << "GPU lattice loading: " << (t1 - t0) * 1000.0 << "ms" << endl;
+    Lattice *l = loadLattice(latticeName,integrator,gpu);
 
     string gpuName = l->getGPUContext()->name();
     cout << "Running test on " << gpuName << " (" << l->getGPUContext()->coreNumber() << " units)"
@@ -108,6 +211,7 @@ int main(int argc,char **arv) {
       uint32_t nbRef = sizeof(refs) / sizeof(uint32_t);
       uint32_t starts[] = {0,100,200,300,400,500,600,700};
       uint32_t nbStride = sizeof(starts) / sizeof(uint32_t);
+      //uint32_t nbStride = 0;
 
       uint64_t routSize = nbTurn * nbPart * nbRef * 6 * sizeof(AT_FLOAT);
       AT_FLOAT *rout = (AT_FLOAT *) malloc(routSize);
@@ -168,10 +272,21 @@ int main(int argc,char **arv) {
     delete l;
 
   } catch (string& errStr) {
-    string err =  "at_gpupass() failed: " + errStr;
+    string err =  "Fail: " + errStr;
     cout << "Error: " << err << endl;
   }
 
+}
+
+int main(int argc,char **arv) {
+
+  //printGPUInfo();
+
+  int DEVID = 0;
+  //performanceTest(DEVID,"Z:/tmp/pons/at/test/lattice/betamodel_radon.repr");
+  performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
+  //performanceTest(DEVID,"/segfs/tmp/pons/lattice/simple_ebs.repr");
+  //integratorTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
 
   return 0;
 
