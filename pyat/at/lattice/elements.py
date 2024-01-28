@@ -14,8 +14,6 @@ from abc import ABC
 from collections.abc import Generator, Iterable
 from typing import Any, Optional
 
-import numpy as np
-
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
@@ -459,12 +457,12 @@ class LongElement(Element):
         def compatible_field(fieldname):
             f1 = getattr(self, fieldname, None)
             f2 = getattr(other, fieldname, None)
-            if f1 is None and f2 is None:   # no such field
+            if f1 is None and f2 is None:  # no such field
                 return True
             elif f1 is None or f2 is None:  # only one
                 return False
-            else:                           # both
-                return np.all(f1 == f2)
+            else:  # both
+                return numpy.all(f1 == f2)
 
         if not (type(other) is type(self) and self.PassMethod == other.PassMethod):
             return False
