@@ -28,11 +28,9 @@ def _compare_physdata(py_data, ml_data, fields, atol=12, rtol=1.e-7):
 
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
-@pytest.mark.parametrize('lattices',
-                         [pytest.lazy_fixture('hmba'),
-                          pytest.lazy_fixture('dba')])
-def test_linear_analysis(engine, lattices, dp):
-    py_lattice, ml_lattice, _ = lattices
+@pytest.mark.parametrize("lattices", ["dba", "hmba"])
+def test_linear_analysis(engine, request, lattices, dp):
+    py_lattice, ml_lattice, _ = request.getfixturevalue(lattices)
     nelems = len(py_lattice)
     fields = [('SPos', 's_pos'),
               ('ClosedOrbit', 'closed_orbit'),
@@ -58,10 +56,9 @@ def test_linear_analysis(engine, lattices, dp):
     _compare_physdata(py_data, ml_data, fields, rtol=1e-8)
 
 
-@pytest.mark.parametrize('lattices',
-                         [pytest.lazy_fixture('hmba')])
-def test_ohmi_envelope(engine, lattices):
-    py_lattice, ml_lattice, _ = lattices
+@pytest.mark.parametrize("lattices", ["hmba"])
+def test_ohmi_envelope(engine, request, lattices):
+    py_lattice, ml_lattice, _ = request.getfixturevalue(lattices)
     fields = [('beam66', 'r66'), ('beam44', 'r44'), ('emit66', 'emitXYZ'),
               ('emit44', 'emitXY')]
     nelems = len(py_lattice)
@@ -85,10 +82,9 @@ def test_ohmi_envelope(engine, lattices):
     _compare_physdata(py_emit, ml_emit, fields)
 
 
-@pytest.mark.parametrize('lattices',
-                         [pytest.lazy_fixture('hmba_rad')])
-def test_quantdiff(engine, lattices):
-    py_lattice, ml_lattice, radindex = lattices
+@pytest.mark.parametrize("lattices", ["hmba_rad"])
+def test_quantdiff(engine, request, lattices):
+    py_lattice, ml_lattice, radindex = request.getfixturevalue(lattices)
     # Python call
     dmat = physics.radiation.quantdiffmat(py_lattice)
     # Matlab call
@@ -97,10 +93,9 @@ def test_quantdiff(engine, lattices):
     assert_close(dmat, dmat_ml, rtol=1.0e-8, atol=1.0e-18)
 
 
-@pytest.mark.parametrize('lattices',
-                         [pytest.lazy_fixture('hmba')])
-def test_fastring(engine, lattices):
-    py_lattice, ml_lattice, _ = lattices
+@pytest.mark.parametrize("lattices", ["hmba"])
+def test_fastring(engine, request, lattices):
+    py_lattice, ml_lattice, _ = request.getfixturevalue(lattices)
     # Python call
     ring, ringrad = physics.fastring.fast_ring(py_lattice)
     # Matlab call
@@ -136,10 +131,9 @@ def test_fastring(engine, lattices):
 
 
 @pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
-@pytest.mark.parametrize('lattices',
-                         [pytest.lazy_fixture('hmba')])
-def test_parameters(engine, lattices, dp):
-    py_lattice, ml_lattice, _ = lattices
+@pytest.mark.parametrize("lattices", ["hmba"])
+def test_parameters(engine, request, lattices, dp):
+    py_lattice, ml_lattice, _ = request.getfixturevalue(lattices)
 
     # Test perimeter
     py_length = py_lattice.get_s_pos(len(py_lattice))
