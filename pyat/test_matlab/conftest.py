@@ -3,9 +3,10 @@ conftest.py is a special pytest file that allows you to share fixtures
 between other modules.
 """
 
-import pytest
 import os
 import sys
+
+import pytest
 
 if sys.version_info.minor < 9:
     from importlib_resources import files, as_file
