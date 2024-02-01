@@ -86,6 +86,7 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
 nturns=getargs(args(~funcargs),1);
 [prefunc,postfunc]=getargs(args(funcargs),cell(0),cell(0));
+[gpuid,args]=getoption(args,'gpuId',-1);
 
 newlattice = double(~keeplattice);
 
@@ -98,8 +99,13 @@ end
 props=atCheckRingProperties(ring);
 
 try
-    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts, ...
-        prefunc,postfunc,nhist,omp_num_threads,props,turn,double(keep_counter));
+    if gpuid>=0
+      [Rout,lossinfo] = gpupass(ring,Rin,newlattice,nturns,refpts, ...
+                                turn,double(keep_counter),gpuid,4);
+    else
+      [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts, ...
+          prefunc,postfunc,nhist,omp_num_threads,props,turn,double(keep_counter));
+    end
     
     if nargout>1
         if nargout>3, varargout{3}=lossinfo; end

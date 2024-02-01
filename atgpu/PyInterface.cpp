@@ -304,7 +304,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   try {
 
-    cout << "Tracking " << num_particles << " particles on " << gpuLattice->getGPUContext()->name() << " #" << gpuId << endl;
+    //cout << "Tracking " << num_particles << " particles on " << gpuLattice->getGPUContext()->name() << " #" << gpuId << endl;
 
     npy_intp outdims[4] = {6,(npy_intp)(num_particles),num_refs,num_turns};
     PyObject *rout = PyArray_EMPTY(4, outdims, floatType, 1);
@@ -325,7 +325,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
       bool *xlostPtr = (bool *)PyArray_DATA((PyArrayObject *)xlost);
       AT_FLOAT *xlostcoordPtr = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)xlostcoord);
 
-      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,xnturnPtr,xnelemPtr,xlostcoordPtr);
+      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,
+                      xnturnPtr,xnelemPtr,xlostcoordPtr,true);
 
       // Format result for AT
       for(uint32_t i=0;i<num_particles;i++) {
@@ -349,7 +350,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     } else {
 
-      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,nullptr,nullptr,nullptr);
+      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,
+                      nullptr,nullptr,nullptr,true);
       return rout;
 
     }

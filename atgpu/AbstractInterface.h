@@ -28,6 +28,7 @@ public:
   // Return handle to singleton class
   static AbstractInterface *getInstance();
   static void setHandler(AbstractInterface *obj);
+  static bool isValidHandler();
 
   // Get shape as string
   static std::string getShapeStr(std::vector<int64_t>& shape);
