@@ -27,7 +27,8 @@ public:
   void generateGPUKernel();
   // Run the simulation
   void run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,uint32_t *refPts,
-           uint32_t nbElemOffset,uint32_t *elemOffsets,uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord);
+           uint32_t nbElemOffset,uint32_t *elemOffsets,uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord,
+           bool updateRin);
   // Return handle to the GPU context
   GPUContext *getGPUContext();
   // Get ring length

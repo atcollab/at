@@ -10,6 +10,10 @@ void AbstractInterface::setHandler(AbstractInterface *obj) {
   handler = obj;
 }
 
+bool AbstractInterface::isValidHandler() {
+  return handler != nullptr;
+}
+
 AbstractInterface *AbstractInterface::getInstance() {
   if( handler== nullptr )
     throw string("AbstractInterface: handler not set");

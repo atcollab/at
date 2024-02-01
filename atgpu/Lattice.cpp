@@ -296,7 +296,8 @@ void Lattice::fillGPUMemory() {
 
 void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *rout,uint32_t nbRef,
                   uint32_t *refPts,uint32_t nbElemOffset,uint32_t *elemOffsets,
-                  uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord) {
+                  uint32_t *lostAtTurn,uint32_t *lostAtElem,AT_FLOAT *lostAtCoord,
+                  bool updateRin) {
 
 #ifdef _PROFILE
   double t0 = AbstractGPU::get_ticks();
@@ -382,7 +383,7 @@ void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
 
   // Get back data
   gpu->deviceToHost(lost,gpuLost,lostSize);
-  gpu->deviceToHost(rin, gpuRin, nbParticles * 6 * sizeof(AT_FLOAT));
+  if(updateRin) gpu->deviceToHost(rin, gpuRin, nbParticles * 6 * sizeof(AT_FLOAT));
   if( routSize ) gpu->deviceToHost(rout,gpuRout,routSize);
   if( lostAtElem ) gpu->deviceToHost(lostAtElem,gpuLostAtElem, nbParticles * sizeof(uint32_t));
   if( lostAtCoord ) gpu->deviceToHost(lostAtCoord,gpuLostAtCoord, nbParticles * 6 * sizeof(AT_FLOAT));

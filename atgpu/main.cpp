@@ -134,7 +134,7 @@ void integratorTest(int gpu,string latticeName) {
       // Choose an arc close to 1mm where unexpected tune drift is observed when step size in too small (EBS lattice)
       AT_FLOAT *rin = createArc(0.001,M_PI/2.0,-M_PI/2.0,nbPart);
 
-      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, 0, nullptr, nullptr, nullptr, nullptr);
+      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, 0, nullptr, nullptr, nullptr, nullptr, false);
 
       double err = 0;
       double max = 0;
@@ -222,7 +222,7 @@ void performanceTest(int gpu,string latticeName) {
       AT_FLOAT *lostAtCoord = new AT_FLOAT[nbPart * 6];
 
       t0 = AbstractGPU::get_ticks();
-      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, nbStride, starts, lostAtTurn, lostAtElem, lostAtCoord);
+      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, nbStride, starts, lostAtTurn, lostAtElem, lostAtCoord,false);
       t1 = AbstractGPU::get_ticks();
 
       //int pIdx = 0;
