@@ -417,7 +417,7 @@ void REPRLoader::parseParamValue(std::string& value,std::vector<int64_t> *shapeP
 
 }
 
-// Return next current significative char char
+// Return next significant char
 char REPRLoader::current() {
   jumpSpace();
   return currentChar;
@@ -452,7 +452,7 @@ void REPRLoader::readChar() {
   if (currentChar == '\\') {
     switch (nextChar) {
       case '"':
-        toNextChar();          // return '"'
+        toNextChar();        // return '"'
         backSlashed = true;  // For string handling
         break;
       case 'n':
