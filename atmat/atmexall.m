@@ -97,6 +97,7 @@ compile([atoptions, ompoptions],fullfile(cdir,'coptions.c'))
 % gpuextensions
 if ~strcmp(cuda,'None')
     gpudir=fullfile(fileparts(atroot),'atgpu','');
+    generate_gpuheader(gpudir)
     if ispc()
         % TODO
         error('AT:atmexall', 'GPU windows not supported');
@@ -288,4 +289,45 @@ warning(oldwarns.state,oldwarns.identifier);
                 }, '\n'));
         end
     end
+
+    % Generate "element.gpuh" from "Element.h" fpr GPU extensions
+    function generate_gpuheader(gpudir)
+
+        disp(strjoin(['Generating ',fullfile(gpudir,"element.gpuh")]));
+        lines = [];
+        f = fopen(fullfile(gpudir,"Element.h"),'r');
+        line = fgetl(f);
+        while ischar(line)
+            lines = [lines;convertCharsToStrings(line)];
+            line = fgetl(f);
+        end
+        fclose(f);
+
+        % Add type definitions
+        idx = startsWith(lines,'// DEFINE_TYPE');
+        I = find(idx>0,1);
+        if numel(I)==0
+            error('Invalid Element.h file "// DEFINE_TYPE" not found');
+        end
+        types = ["typedef signed char        int8_t;";...
+                 "typedef signed short       int16_t;";...
+                 "typedef signed int         int32_t;";...
+                 "typedef signed long long   int64_t;";...
+                 "typedef unsigned char      uint8_t;";...
+                 "typedef unsigned short     uint16_t;";...
+                 "typedef unsigned int       uint32_t;";...
+                 "typedef unsigned long long uint64_t;"];
+        lines = [ lines(1:I-1);types;lines(I+1:end) ];
+
+        %insert raw string marker
+        lines = ["R""(";lines];
+        lines = [lines;")"""];
+
+        % Write the file
+        f = fopen(fullfile(gpudir,"element.gpuh"),'w');
+        fprintf(f,"%s\n",lines);
+        fclose(f);
+
+    end
+
 end
