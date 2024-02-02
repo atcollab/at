@@ -5,6 +5,7 @@
 
 using namespace std;
 
+// Input params
 #define LATTICE prhs[0]
 #define RIN prhs[1]
 #define NEWLATTICE prhs[2]
@@ -14,6 +15,14 @@ using namespace std;
 #define KEEPCOUNTER prhs[6]
 #define GPUPOOL prhs[7]
 #define INTEGRATOR prhs[8]
+
+// Free locally allocated memory
+#define CLEANUP()                            \
+if(mxLostCoord) mxDestroyArray(mxLostCoord); \
+delete[] ref_pts;                            \
+delete[] xnturnPtr;                          \
+delete[] xnelemPtr;                          \
+delete[] xlostPtr;
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
@@ -25,13 +34,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     AbstractInterface::setHandler(new MatlabInterface());
   }
 
+  // Temporary buffers
+  uint32_t *ref_pts = nullptr;
+  uint32_t *xnturnPtr = nullptr;
+  uint32_t *xnelemPtr = nullptr;
+  bool *xlostPtr = nullptr;
+  mxArray *mxLostCoord = nullptr;
+
   // Default symplectic integrator (4th order)
   static SymplecticIntegrator integrator(4);
   // Lattice object
   static Lattice *gpuLattice = nullptr;
 
   int num_turns=(int)mxGetScalar(NTURNS);
-  int keep_lattice=(mxGetScalar(NEWLATTICE) == 0) ? 0 : 1;
+  int keep_lattice=(mxGetScalar(NEWLATTICE) == 0) ? 1 : 0;
   int keep_counter=(int)mxGetScalar(KEEPCOUNTER);
   int counter=(int)mxGetScalar(TURN);
   int losses=(nlhs == 2);
@@ -49,18 +65,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   AT_FLOAT *drin = (AT_FLOAT *)mxGetDoubles(RIN);
 
   // Reference points
-  uint32_t *ref_pts;
   uint32_t num_refs = (uint32_t)mxGetNumberOfElements(REFPTS);
 
   if( num_refs==0 ) {
     // One ref at the end of the turn
     num_refs = 1;
-    ref_pts = (uint32_t *) mxCalloc(num_refs, sizeof(uint32_t));
+    ref_pts = new uint32_t[num_refs];
     ref_pts[0] = mxGetNumberOfElements(LATTICE);
   } else {
     // Convert indices to uint32_t
     mxDouble *dblrefpts = mxGetDoubles(REFPTS);
-    ref_pts = (uint32_t *) mxCalloc(num_refs, sizeof(uint32_t));
+    ref_pts = new uint32_t[num_refs];
     for (int i = 0; i < num_refs; i++)
       ref_pts[i] = ((int) dblrefpts[i]) - 1;
   }
@@ -105,7 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     } catch (string& errStr) {
       delete gpuLattice;
       gpuLattice = nullptr;
-      mxFree(ref_pts);
+      CLEANUP();
       string err =  "at_gpupass() build lattice failed: " + errStr;
       mexErrMsgIdAndTxt("Atpass:RuntimeError",err.c_str());
     }
@@ -116,7 +131,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   try {
     gpuLattice->fillGPUMemory();
   } catch (string& errStr) {
-    mxFree(ref_pts);
+    CLEANUP();
     string err =  "at_gpupass() fill GPU memory failed: " + errStr;
     mexErrMsgIdAndTxt("Atpass:RuntimeError",err.c_str());
   }
@@ -125,11 +140,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if( !keep_counter )
     gpuLattice->setTurnCounter(counter);
 
-  // Buffer for lost info
-  uint32_t *xnturnPtr = nullptr;
-  uint32_t *xnelemPtr = nullptr;
-  bool *xlostPtr = nullptr;
-  mxArray *mxLostCoord = nullptr;
 
   try {
 
@@ -138,7 +148,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     uint32_t outsize=num_particles*num_refs*num_turns;
     plhs[0] = mxCreateDoubleMatrix(6,outsize,mxREAL);
     if( plhs[0]==nullptr ) {
-      mxFree(ref_pts);
+      CLEANUP();
       mexErrMsgIdAndTxt("Atpass:RuntimeError","Not enough memory while trying to allocate particle output coordinates");
     }
     AT_FLOAT *drout = (AT_FLOAT *)mxGetDoubles(plhs[0]);
@@ -155,6 +165,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       xlostPtr = new bool[num_particles];
       AT_FLOAT *xlostcoordPtr = (AT_FLOAT *)mxGetDoubles(mxLostCoord);
 
+      // Tracking
       gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,xnturnPtr,xnelemPtr,xlostcoordPtr,false);
 
       // Format result for AT
@@ -183,29 +194,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       mxSetField(mxLoss, 0, lossinfo[1], mxNturn);
       mxSetField(mxLoss, 0, lossinfo[2], mxNelem);
       mxSetField(mxLoss, 0, lossinfo[3], mxLostCoord);
+      mxLostCoord = nullptr; // Mark as used to avoid unwanted free
       plhs[1]=mxLoss;
 
     } else {
 
+      // Tracking
       gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,nullptr,nullptr,nullptr,false);
 
     }
 
   } catch (string& errStr) {
-    mxFree(ref_pts);
+    CLEANUP();
     mxDestroyArray(plhs[0]);
-    if(mxLostCoord) mxDestroyArray(mxLostCoord);
-    delete[] xnturnPtr;
-    delete[] xnelemPtr;
-    delete[] xlostPtr;
     string err =  "at_gpupass() run failed: " + errStr;
     mexErrMsgIdAndTxt("Atpass:RuntimeError",err.c_str());
-    return; // Avoid warning (delete non allocated memory)
   }
 
-  delete[] xnturnPtr;
-  delete[] xnelemPtr;
-  delete[] xlostPtr;
-  mxFree(ref_pts);
+  CLEANUP();
 
 }
