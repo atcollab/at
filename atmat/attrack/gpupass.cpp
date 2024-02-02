@@ -70,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   uint32_t num_starts = 0;
 
   // GPU (pool not supported)
-  int gpuId = (int)mxGetScalar(GPUPOOL);
+  int gpuId = (int)mxGetScalar(GPUPOOL)-1;
 
   // Integrator
   if( integratorType!=integrator.getType() ) {
