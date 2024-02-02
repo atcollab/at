@@ -235,6 +235,7 @@ void Lattice::generateGPUKernel() {
   code.append("  }\n");
 
   // Last ref after the last element
+  code.append("  if( pLost ) elem=startElem+nbElementToProcess;\n");
   code.append("  if( elem==NB_TOTAL_ELEMENT ) {\n");
   storeParticleCoord(code);
   code.append("  }\n");
