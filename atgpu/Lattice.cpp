@@ -43,7 +43,7 @@ void Lattice::addElement() {
 
   } catch (string& err) {
     // Try to retrieve name of element (if any)
-    string idxStr = "#" + to_string(elements.size());
+    string idxStr = "#" + to_string(elements.size()) + " (from #0)";
     string name = "";
     try {
       name = " (" + AbstractInterface::getInstance()->getString("Name") + ")";
