@@ -220,8 +220,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   }
 
   // Starting elements
-  uint32_t *track_starts;
-  uint32_t num_starts;
+  uint32_t *track_starts = nullptr;
+  uint32_t num_starts = 0;
 
   if (trackstarts) {
     if (PyArray_TYPE(refs) != NPY_UINT32) {
@@ -232,9 +232,6 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
     if( num_particles % num_starts != 0 ) {
       return PyErr_Format(PyExc_ValueError, "len(tracking_starts) must divide number of particle");
     }
-  } else {
-    trackstarts = nullptr;
-    num_starts = 0;
   }
 
   // GPU
