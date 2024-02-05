@@ -66,9 +66,9 @@ void CudaContext::compile(string& code) {
 
   // Compile the program
   string archOpt = "-arch=" + arch;
-  const char *opts[] = {archOpt.c_str()};
+  const char *opts[] = {archOpt.c_str(),"--ftz=true","--prec-div=true","--prec-sqrt=true","--fmad=true"};
   nvrtcResult compileResult = nvrtcCompileProgram(prog,  // prog
-                                                  1,     // numOptions
+                                                  5,     // numOptions
                                                   opts); // options
 
   if (compileResult != NVRTC_SUCCESS) {
@@ -92,9 +92,9 @@ void CudaContext::compile(string& code) {
 
 #if 0
   // nvcc --cubin --ptxas-options="-m64 -arch=sm_86 --verbose -O3" code.ptx
-  char *compiledCode = new char[36656];
+  char *compiledCode = new char[73904];
   FILE *f = fopen("code.cubin","r");
-  fread(compiledCode,1,36656,f);
+  fread(compiledCode,1,73904,f);
   fclose(f);
 #endif
 
@@ -107,6 +107,7 @@ void CudaContext::compile(string& code) {
   FILE *f = fopen("code.ptx","w");
   fwrite(compiledCode,1,ptxSize,f);
   fclose(f);
+  exit(0);
 #endif
 
 #if 1
@@ -308,7 +309,7 @@ void CudaGPU::addSpecificFunctions(std::string& code) {
   if(sizeof(AT_FLOAT)==8) {
     code.append(
             "#define INF   __longlong_as_double(0x7ff0000000000000ULL)\n"
-            "#define NAN   __longlong_as_double(0xfff8000000000000ULL)\n"
+            "#define NAN   __longlong_as_double(0x7ff8000000000000ULL)\n"
     );
   } else {
     code.append(
