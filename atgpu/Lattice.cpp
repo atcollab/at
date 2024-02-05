@@ -230,7 +230,7 @@ void Lattice::generateGPUKernel() {
   factory.generatePassMethodsCalls(code);
   code.append("    }\n");
   checkLostParticle(code);
-  //code.append("    printf(\"%d: %f %f %f %f %f %f\\n\",elem,r6[0],r6[1],r6[2],r6[3],r6[4],r6[5]);\n");
+  //code.append("    printf(\"%d %d: %f %f %f %f %f %f\\n\",turn,elem,r6[0],r6[1],r6[2],r6[3],r6[4],r6[5]);\n");
   code.append("    elem++;\n");
   code.append("  }\n");
 

@@ -138,6 +138,7 @@ diffmatrix_orig = join('atmat', 'atphysics', 'Radiation')
 
 c_pass_methods = glob.glob(join(integrator_src_orig, '*Pass.c'))
 cpp_pass_methods = glob.glob(join(integrator_src_orig, '*Pass.cc'))
+gpu_pass_methods = glob.glob(join('atgpu', '*Pass.cpp'))
 diffmatrix_source = join(diffmatrix_orig, 'findmpoleraddiffmatrix.c')
 at_source = join('pyat', 'at.c')
 
@@ -192,20 +193,13 @@ diffmatrix = Extension(
     extra_compile_args=cflags
 )
 
-gpusource = [join('atgpu', 'AbstractGPU.cpp'),
-             join('atgpu', 'AbstractInterface.cpp'),
-             join('atgpu', 'PyInterface.cpp'),
-             join('atgpu', 'Lattice.cpp'),
-             join('atgpu', 'PassMethodFactory.cpp'),
-             join('atgpu', 'SymplecticIntegrator.cpp'),
-             join('atgpu', 'IdentityPass.cpp'),
-             join('atgpu', 'DriftPass.cpp'),
-             join('atgpu', 'StrMPoleSymplectic4Pass.cpp'),
-             join('atgpu', 'BndMPoleSymplectic4Pass.cpp'),
-             join('atgpu', 'StrMPoleSymplectic4RadPass.cpp'),
-             join('atgpu', 'BndMPoleSymplectic4RadPass.cpp'),
-             join('atgpu', 'CavityPass.cpp'),
-             join('atgpu', 'RFCavityPass.cpp')]
+gpusource = (gpu_pass_methods +
+           [join('atgpu', 'AbstractGPU.cpp'),
+            join('atgpu', 'AbstractInterface.cpp'),
+            join('atgpu', 'PyInterface.cpp'),
+            join('atgpu', 'Lattice.cpp'),
+            join('atgpu', 'PassMethodFactory.cpp'),
+            join('atgpu', 'SymplecticIntegrator.cpp')])
 
 cudaext = Extension(
     name='at.tracking.gpu',

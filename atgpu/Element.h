@@ -11,7 +11,7 @@ typedef double AT_FLOAT;
 
 // Type of lattice element
 // The define must be the corresponding class name in uppercase
-#define NB_PASSMETHOD_TYPE           8
+#define NB_PASSMETHOD_TYPE           11
 #define IDENTITYPASS                 0
 #define DRIFTPASS                    1
 #define BNDMPOLESYMPLECTIC4PASS      2
@@ -20,6 +20,9 @@ typedef double AT_FLOAT;
 #define STRMPOLESYMPLECTIC4RADPASS   5
 #define CAVITYPASS                   6
 #define RFCAVITYPASS                 7
+#define EXACTDRIFTPASS               8
+#define EXACTMULTIPOLEPASS           9
+#define EXACTMULTIPOLERADPASS        10
 
 // Structure alignement
 #if defined(__CUDACC__) // NVCC
