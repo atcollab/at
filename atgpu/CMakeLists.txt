@@ -1,7 +1,7 @@
 # AT GPU debugging project
 
-set(_CUDA OFF)
-set(_OPENCL ON)
+set(_CUDA ON)
+set(_OPENCL OFF)
 
 cmake_minimum_required(VERSION 3.13)
 project(AT_GPU)
@@ -16,8 +16,11 @@ set(SOURCE_FILES
         PassMethodFactory.cpp
         IdentityPass.cpp
         DriftPass.cpp
+        ExactDriftPass.cpp
         StrMPoleSymplectic4Pass.cpp
+        ExactMultipolePass.cpp
         StrMPoleSymplectic4RadPass.cpp
+        ExactMultipoleRadPass.cpp
         BndMPoleSymplectic4Pass.cpp
         BndMPoleSymplectic4RadPass.cpp
         CavityPass.cpp
@@ -57,7 +60,7 @@ if(MSVC)
   include_directories($ENV{CUDA_PATH}/include ${OCL_SDK})
   link_directories($ENV{CUDA_PATH}/lib/x64)
 else()
-  set(CMAKE_CXX_FLAGS "-O2 ${GPU_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-g ${GPU_CXX_FLAGS}")
   set(SOURCE_FILES ${SOURCE_FILES} PyInterface.cpp)
   set(PYTHON_INCL /usr/include/python3.8)
   set(PYTHON_LIB /usr/lib/python3.8)

@@ -1,11 +1,11 @@
 #include "PassMethodFactory.h"
 #include "DriftPass.h"
+#include "ExactDriftPass.h"
+#include "ExactMultipoleRadPass.h"
 #include "StrMPoleSymplectic4RadPass.h"
 #include "BndMPoleSymplectic4RadPass.h"
 #include "RFCavityPass.h"
 #include "AbstractGPU.h"
-#include <string.h>
-#include <iostream>
 #include <algorithm>
 
 using namespace std;
@@ -35,6 +35,9 @@ PassMethodFactory::PassMethodFactory(SymplecticIntegrator& integrator) noexcept:
   passMethodInfos[STRMPOLESYMPLECTIC4RADPASS] = REGISTER_PASS(StrMPoleSymplectic4RadPass);
   passMethodInfos[CAVITYPASS] = REGISTER_PASS(CavityPass);
   passMethodInfos[RFCAVITYPASS] = REGISTER_PASS(RFCavityPass);
+  passMethodInfos[EXACTDRIFTPASS] = REGISTER_PASS(ExactDriftPass);
+  passMethodInfos[EXACTMULTIPOLEPASS] = REGISTER_PASS(ExactMultipolePass);
+  passMethodInfos[EXACTMULTIPOLERADPASS] = REGISTER_PASS(ExactMultipoleRadPass);
 
 }
 

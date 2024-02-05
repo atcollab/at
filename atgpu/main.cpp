@@ -225,12 +225,12 @@ void performanceTest(int gpu,string latticeName) {
       l->run(nbTurn, nbPart, rin, rout, nbRef, refs, nbStride, starts, lostAtTurn, lostAtElem, lostAtCoord,false);
       t1 = AbstractGPU::get_ticks();
 
-      //int pIdx = 0;
-      //cout << "lostAtTurn[" << pIdx << "]" << lostAtTurn[pIdx] << endl;
-      //cout << "lostAtElem[" << pIdx << "]" << lostAtElem[pIdx] << endl;
-      //cout << "lostAtCoord[" << pIdx << "]" << lostAtCoord[pIdx*6+0] << "," << lostAtCoord[pIdx*6+1] << endl;
+      AT_FLOAT *P = &rin[114*6];
+      cout << "[" << 114 << "] " << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
+      cout << "Lost turn:" << lostAtTurn[114] << endl;
+      cout << "Lost elem:" << lostAtElem[114] << endl;
+      cout << "Lost coord:" << lostAtCoord[114*6] << "," << lostAtCoord[114*6+2] << endl;
 
-      AT_FLOAT *P;
       uint32_t strideSize = nbPart / nbStride;
       for(int stride=0; stride < nbStride; stride++) {
         P = ROUTPTR(stride*strideSize, 0, nbTurn - 1);
@@ -284,8 +284,9 @@ int main(int argc,char **arv) {
 
   int DEVID = 0;
   //performanceTest(DEVID,"Z:/tmp/pons/at/test/lattice/betamodel_radon.repr");
-  performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
-  //performanceTest(DEVID,"/segfs/tmp/pons/lattice/simple_ebs.repr");
+  //performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
+  //performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_exact.repr");
+  performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/simple_ebs_radon.repr");
   //integratorTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
 
   return 0;
