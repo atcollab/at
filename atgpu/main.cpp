@@ -285,8 +285,8 @@ int main(int argc,char **arv) {
   int DEVID = 0;
   //performanceTest(DEVID,"Z:/tmp/pons/at/test/lattice/betamodel_radon.repr");
   //performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
-  //performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_exact.repr");
-  performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/simple_ebs_radon.repr");
+  performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_exact.repr");
+  //performanceTest(DEVID,"/segfs/tmp/pons/at/test/lattice/simple_ebs_radon.repr");
   //integratorTest(DEVID,"/segfs/tmp/pons/at/test/lattice/betamodel_radon.repr");
 
   return 0;

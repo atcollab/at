@@ -6,7 +6,7 @@
 class BndMPoleSymplectic4RadPass: public BndMPoleSymplectic4Pass {
 
 public:
-  // Construct a BendMPole pass
+  // Construct a multipole bend pass with radiation
   explicit BndMPoleSymplectic4RadPass() noexcept;
   ~BndMPoleSymplectic4RadPass() noexcept override;
 

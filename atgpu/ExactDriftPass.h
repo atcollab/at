@@ -5,7 +5,7 @@
 class ExactDriftPass: public DriftPass {
 
 public:
-    // Construct a drift pass
+    // Construct an exact drift pass
     ExactDriftPass() noexcept;
 
     // Retrieve parameters from upper layer (Python, Matlab)

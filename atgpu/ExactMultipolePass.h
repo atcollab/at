@@ -6,7 +6,7 @@
 class ExactMultipolePass: public StrMPoleSymplectic4Pass {
 
 public:
-    // Construct a MPole pass
+    // Construct an exact multipole pass
     explicit ExactMultipolePass() noexcept;
     ~ExactMultipolePass() noexcept override;
 

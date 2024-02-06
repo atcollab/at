@@ -6,7 +6,7 @@
 class StrMPoleSymplectic4Pass: public IdentityPass {
 
 public:
-  // Construct a MPole pass
+    // Construct a straight multipole pass
   explicit StrMPoleSymplectic4Pass() noexcept;
   ~StrMPoleSymplectic4Pass() noexcept override;
 

@@ -5,7 +5,7 @@
 class BndMPoleSymplectic4Pass: public StrMPoleSymplectic4Pass {
 
 public:
-  // Construct a BendMPole pass
+  // Construct a multipole bend pass
   explicit BndMPoleSymplectic4Pass() noexcept;
   ~BndMPoleSymplectic4Pass() noexcept override;
 

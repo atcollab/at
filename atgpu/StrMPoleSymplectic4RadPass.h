@@ -6,7 +6,7 @@
 class StrMPoleSymplectic4RadPass: public StrMPoleSymplectic4Pass {
 
 public:
-  // Construct a BendMPole pass
+  // Construct a straight multipole pass with radiation
   explicit StrMPoleSymplectic4RadPass() noexcept;
   ~StrMPoleSymplectic4RadPass() noexcept override;
 
