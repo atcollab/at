@@ -11,7 +11,7 @@ typedef double AT_FLOAT;
 
 // Type of lattice element
 // The define must be the corresponding class name in uppercase
-#define NB_PASSMETHOD_TYPE           11
+#define NB_PASSMETHOD_TYPE           12
 #define IDENTITYPASS                 0
 #define DRIFTPASS                    1
 #define BNDMPOLESYMPLECTIC4PASS      2
@@ -23,8 +23,9 @@ typedef double AT_FLOAT;
 #define EXACTDRIFTPASS               8
 #define EXACTMULTIPOLEPASS           9
 #define EXACTMULTIPOLERADPASS        10
+#define THINMPOLEPASS                11
 
-// Structure alignement
+// Structure alignment
 #if defined(__CUDACC__) // NVCC
 #define STRUCT_ALIGN(n) __align__(n)
 #elif defined(__GNUC__) // GCC
@@ -43,6 +44,27 @@ typedef struct STRUCT_ALIGN(8) {
 } RING_PARAM;
 
 // Lattice element
+typedef struct STRUCT_ALIGN(8) {
+
+    // FringeBend: Method: 1 legacy 2 Soleil 3 ThomX
+    uint32_t  FringeBendEntrance;
+    uint32_t  FringeBendExit;
+    AT_FLOAT  irho;
+    AT_FLOAT  EntranceAngle;
+    AT_FLOAT  FringeCorrEntranceX;
+    AT_FLOAT  FringeCorrEntranceY;
+    AT_FLOAT  ExitAngle;
+    AT_FLOAT  FringeCorrExitX;
+    AT_FLOAT  FringeCorrExitY;
+
+} MPOLEBEND;
+
+typedef struct STRUCT_ALIGN(8) {
+
+  AT_FLOAT bax;
+  AT_FLOAT bay;
+
+} MPOLETHIN;
 
 typedef struct STRUCT_ALIGN(8) {
 
@@ -54,19 +76,12 @@ typedef struct STRUCT_ALIGN(8) {
   AT_FLOAT  *PolynomB;
   uint32_t  FringeQuadEntrance;
   uint32_t  FringeQuadExit;
-
-  // BndMPole
-  // FringeBend: Method: 1 legacy 2 Soleil 3 ThomX
-  uint32_t  FringeBendEntrance;
-  uint32_t  FringeBendExit;
-  AT_FLOAT  irho;
   AT_FLOAT  CRAD;
-  AT_FLOAT  EntranceAngle;
-  AT_FLOAT  FringeCorrEntranceX;
-  AT_FLOAT  FringeCorrEntranceY;
-  AT_FLOAT  ExitAngle;
-  AT_FLOAT  FringeCorrExitX;
-  AT_FLOAT  FringeCorrExitY;
+
+  union {
+      MPOLEBEND bnd;
+      MPOLETHIN thin;
+  };
 
 } MPOLE;
 

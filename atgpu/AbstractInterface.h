@@ -22,6 +22,7 @@ public:
   double getOptionalDouble(const std::string& name,double defaultValue);
   void get1DArray(double **dest,const std::string& name,int length);
   void getOptional1DArray(double **dest,const std::string& name,int length);
+  void getOptional1DArray(double **dest,const std::string& name,int *length);
   void get1DArray(float **dest,const std::string& name,int length);
   void getOptional1DArray(float **dest,const std::string& name,int length);
 

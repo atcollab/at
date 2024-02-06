@@ -63,7 +63,7 @@ void ExactMultipoleRadPass::generateUtilsFunction(std::string& code, PassMethodI
           "  AT_FLOAT ypr = r[3]*p_norm;\n"
           // Compute normalized transverse field ( |B x v|^2 ) in straight element
           "  AT_FLOAT bx = ImSum;\n"
-          "  AT_FLOAT by = ReSum + B0;\n"
+          "  AT_FLOAT by = ReSum;\n"
           "  AT_FLOAT B2P = SQR(by) + SQR(bx) - SQR(bx*ypr + by*xpr);\n"
           // Energy loss
           "  r[4] = r[4] - CRAD * SQR((AT_FLOAT)1+r[4]) * B2P * L / sqrt((AT_FLOAT)1 - xpr*xpr - ypr*ypr);\n"
@@ -80,7 +80,6 @@ void ExactMultipoleRadPass::generateUtilsFunction(std::string& code, PassMethodI
           ftype +
           "void exact_strthinkickrad(AT_FLOAT* r,const AT_FLOAT* A,const AT_FLOAT* B,AT_FLOAT L,int max_order,AT_FLOAT CRAD) {\n"
           + PassMethodFactory::polyLoop
-          + "  AT_FLOAT B0 = B[0];\n"
           + radCode +
           "}\n"
   );

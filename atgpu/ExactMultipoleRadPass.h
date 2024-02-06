@@ -6,7 +6,7 @@
 class ExactMultipoleRadPass: public ExactMultipolePass {
 
 public:
-    // Construct a BendMPole pass
+    // Construct an exact multipole pass with radiation
     explicit ExactMultipoleRadPass() noexcept;
     ~ExactMultipoleRadPass() noexcept override;
 

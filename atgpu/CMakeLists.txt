@@ -17,6 +17,7 @@ set(SOURCE_FILES
         IdentityPass.cpp
         DriftPass.cpp
         ExactDriftPass.cpp
+        ThinMPolePass.cpp
         StrMPoleSymplectic4Pass.cpp
         ExactMultipolePass.cpp
         StrMPoleSymplectic4RadPass.cpp

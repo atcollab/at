@@ -36,15 +36,15 @@ void BndMPoleSymplectic4RadPass::generateCode(std::string& code, PassMethodInfo 
   // Default bend
   integrator.addDriftMethod("p_norm=PNORM(r6[4]);fastdrift(r6,%STEP%,p_norm)");
   integrator.addKickMethod("bndthinkickrad(r6,elem->mpole.PolynomA,elem->mpole.PolynomB,%STEP%,elem->mpole.MaxOrder,"
-                           "elem->mpole.irho,elem->mpole.CRAD,p_norm)");
+                           "elem->mpole.bnd.irho,elem->mpole.CRAD,p_norm)");
   // Pure bend
   integrator.addDriftMethod("p_norm=PNORM(r6[4]);fastdrift(r6,%STEP%,p_norm)");
   integrator.addKickMethod("bndthinkick0rad(r6,elem->mpole.PolynomA[0],elem->mpole.PolynomB[0],%STEP%,"
-                           "elem->mpole.irho,elem->mpole.CRAD,p_norm)");
+                           "elem->mpole.bnd.irho,elem->mpole.CRAD,p_norm)");
   // DQ
   integrator.addDriftMethod("p_norm=PNORM(r6[4]);fastdrift(r6,%STEP%,p_norm)");
   integrator.addKickMethod("dqthinkickrad(r6,elem->mpole.PolynomA[0],elem->mpole.PolynomB[0],elem->mpole.K,%STEP%,"
-                           "elem->mpole.irho,elem->mpole.CRAD,p_norm)");
+                           "elem->mpole.bnd.irho,elem->mpole.CRAD,p_norm)");
 
   integrator.generateCode(code);
 

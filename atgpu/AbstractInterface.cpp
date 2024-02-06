@@ -29,6 +29,25 @@ void AbstractInterface::getOptional1DArray(double **dest,const std::string& name
 
 }
 
+void AbstractInterface::getOptional1DArray(double **dest,const std::string& name,int *length) {
+
+  *dest = nullptr;
+  *length = 0;
+  try {
+    static vector<int64_t> shape;
+    double *P = getNativeDoubleArray(name,shape);
+    if(shape.size()!=1) {
+      throw string(name + ", wrong dimension: signle dimension array expected gut got " +
+                   AbstractInterface::getShapeStr(shape));
+    }
+    *dest = P;
+    *length = (int)shape[0];
+  } catch (string&) {
+  }
+
+
+}
+
 void AbstractInterface::get1DArray(double **dest,const std::string& name,int length) {
 
   *dest = nullptr;
