@@ -64,9 +64,9 @@ void ExactMultipoleRadPass::generateUtilsFunction(std::string& code, PassMethodI
           // Compute normalized transverse field ( |B x v|^2 ) in straight element
           "  AT_FLOAT bx = ImSum;\n"
           "  AT_FLOAT by = ReSum;\n"
-          "  AT_FLOAT B2P = SQR(by) + SQR(bx) - SQR(bx*ypr + by*xpr);\n"
+          "  AT_FLOAT B2P = SQR(bx) + SQR(by) - SQR(bx*ypr + by*xpr);\n"
           // Energy loss
-          "  r[4] = r[4] - CRAD * SQR((AT_FLOAT)1+r[4]) * B2P * L / sqrt((AT_FLOAT)1 - xpr*xpr - ypr*ypr);\n"
+          "  r[4] = r[4] - CRAD * SQR((AT_FLOAT)1+r[4]) * B2P * L * rsqrt((AT_FLOAT)1 - SQR(xpr) - SQR(ypr));\n"
           // Recalculate momentum from angles after losing energy for radiation
           "  r[1] = xpr + xpr * r[4];\n"
           "  r[3] = ypr + ypr * r[4];\n"

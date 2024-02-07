@@ -34,7 +34,7 @@ void ExactDriftPass::generateUtilsFunction(std::string& code, PassMethodInfo *in
   code.append(
           ftype +
           "void exact_drift(AT_FLOAT* r,AT_FLOAT L) {\n"
-          "  AT_FLOAT p_norm = L / sqrt(SQR(1 + r[4]) - SQR(r[1]) - SQR(r[3]));\n"
+          "  AT_FLOAT p_norm = L * rsqrt(SQR(1 + r[4]) - SQR(r[1]) - SQR(r[3]));\n"
           "  r[0] += p_norm * r[1];\n"
           "  r[2] += p_norm * r[3];\n"
           // Absolute path length
