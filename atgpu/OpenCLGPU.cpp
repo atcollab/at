@@ -200,10 +200,20 @@ void OpenCLContext::run(uint64_t nbThread) {
     }
   }
 
-  // Add dummy threads to allow a constant blockSize for performance
-  // Choose 64 (2 warps) which seems a good compromise
-  uint32_t blockSize = 64;
-  uint32_t blockNumber = (uint32_t)(nbThread/blockSize + (((nbThread%blockSize)==0)?0:1));
+  uint32_t blockSize;
+  uint32_t blockNumber;
+
+  if( nbThread<coreNumber() ) {
+    // Launch 1 thread per core (here, a core is a multiprocessor)
+    blockSize = 1;
+    blockNumber = nbThread;
+  } else {
+    // Add dummy threads to allow a constant blockSize for performance
+    // Choose 64 (2 warps) which seems a good compromise
+    blockSize = 64;
+    blockNumber = nbThread / blockSize + (((nbThread % blockSize) == 0) ? 0 : 1);
+  }
+
   size_t globalSize[] = {blockSize, blockNumber};
   openCLCall(clEnqueueNDRangeKernel, commands, kernel, 2, nullptr, globalSize, nullptr, 0, nullptr, nullptr);
   clFinish(commands);

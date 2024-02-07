@@ -21,7 +21,7 @@ CudaContext::CudaContext(CUDA_GPU_INFO* gpu) {
   info = gpu->info;
   arch = gpu->arch;
 
-  cudaCall(cuCtxCreate,&context, CU_CTX_SCHED_SPIN, cuDevice);
+  cudaCall(cuCtxCreate,&context,  CU_CTX_SCHED_BLOCKING_SYNC, cuDevice);
   cudaCall(cuCtxSetSharedMemConfig, CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE);
   cudaCall(cuCtxSetCacheConfig , CU_FUNC_CACHE_PREFER_L1);
 
@@ -159,10 +159,20 @@ void CudaContext::run(uint64_t nbThread) {
   // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#features-and-technical-specifications
   // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#arithmetic-instructions
 
-  // Add dummy threads to allow a constant blockSize for performance
-  // Choose 64 (2 warps) which seems a good compromise
-  uint32_t blockSize = 64;
-  uint32_t blockNumber = nbThread/blockSize + (((nbThread%blockSize)==0)?0:1);
+  uint32_t blockSize;
+  uint32_t blockNumber;
+
+  if( nbThread<coreNumber() ) {
+    // Launch 1 thread per core (here, a core is a multiprocessor)
+    blockSize = 1;
+    blockNumber = nbThread;
+  } else {
+    // Add dummy threads to allow a constant blockSize for performance
+    // Choose 64 (2 warps) which seems a good compromise
+    blockSize = 64;
+    blockNumber = nbThread / blockSize + (((nbThread % blockSize) == 0) ? 0 : 1);
+  }
+
   cudaCall(cuLaunchKernel, kernel,
            blockNumber, 1, 1,      // grid dim
            blockSize, 1, 1,        // block dim
