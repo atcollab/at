@@ -35,11 +35,14 @@ public:
   AT_FLOAT getLength();
   // Set turn counter
   void setTurnCounter(uint64_t count);
+  // Return code
+  void getCode(std::string& code);
 
 private:
 
   // Map buffer address to device space
   void mapBuffers(std::string &code);
+
   void checkLostParticle(std::string &code);
   void storeParticleCoord(std::string &code);
 
@@ -49,6 +52,7 @@ private:
   GPUContext *gpu;                          // GPU context
   void *gpuRing;                            // Ring in GPU memory
   RING_PARAM ringParams;                    // General ring parameters
+  std::string code;                         // Kernel code
 
 };
 

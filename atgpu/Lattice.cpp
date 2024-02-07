@@ -1,6 +1,7 @@
 #include "Lattice.h"
 #include <iostream>
 #include <cstring>
+#include <cmath>
 //#define _PROFILE
 
 using namespace std;
@@ -150,6 +151,10 @@ void Lattice::storeParticleCoord(std::string &code) {
 
 }
 
+void Lattice::getCode(std::string& code) {
+  code = this->code;
+}
+
 void Lattice::generateGPUKernel() {
 
 #ifdef _PROFILE
@@ -169,8 +174,8 @@ void Lattice::generateGPUKernel() {
   AbstractGPU::getInstance()->getKernelFunctionQualifier(kType);
   AbstractGPU::getInstance()->getGlobalQualifier(mType);
   AbstractGPU::getInstance()->getThreadId(threadIdCmd);
-  std::string code;
 
+  code.clear();
   AbstractGPU::getInstance()->addUtilsFunctions(code);
   code.append(header);
   factory.generateUtilsFunctions(code);
@@ -192,7 +197,7 @@ void Lattice::generateGPUKernel() {
   code.append(threadIdCmd);
   // Exit immediately if no particle to handle
   // Done for performance to have a constant group size multiple of particle number
-  code.append("  if(threadId>=nbPart) return;\n");
+  code.append("  if(threadId>=nbPart || lost[threadId]) return;\n");
   //code.append("  printf(\"Entering kernel %d part=%d turn=%d\\n\",threadId,nbPart,turn);\n");
   code.append("  AT_FLOAT sr6[6];\n");
   code.append("  AT_FLOAT* r6 = sr6;\n");
@@ -209,15 +214,6 @@ void Lattice::generateGPUKernel() {
   code.append("  sr6[3] = rin[3 + 6*threadId];\n"); // py/p0 = y'(1+d)
   code.append("  sr6[4] = rin[4 + 6*threadId];\n"); // d = (pz-p0)/p0
   code.append("  sr6[5] = rin[5 + 6*threadId];\n"); // c.tau (time lag)
-
-  // Exit if particle lost and fill rout
-  code.append("  if(nbRef>0 && lost[threadId]) {\n");
-  code.append("    while(nbRef > 0 && elem <= startElem+nbElementToProcess) {\n"); // don't forget last ref
-  storeParticleCoord(code);
-  code.append("      elem++;\n");
-  code.append("    }\n");
-  code.append("    return;\n");
-  code.append("  }\n");
 
   // The tracking starts at elem elemOffset (equivalent to lattice.rotate(elemOffset))
   code.append("  int32_t elemOffset = elemOffsets?elemOffsets[threadId/offsetStride]:0;\n");
@@ -331,7 +327,20 @@ void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   // rout
   void *gpuRout = nullptr;
   uint64_t routSize = nbParticles * nbRef * nbTurn * 6 * sizeof(AT_FLOAT);
-  if( routSize ) gpu->allocDevice(&gpuRout, routSize);
+  if( routSize ) {
+    gpu->allocDevice(&gpuRout, routSize);
+    double nan = NAN;
+    size_t nb = nbParticles * nbRef * nbTurn;
+    for(size_t p=0;p<nb;p++) {
+      rout[p*6+0] = nan;
+      rout[p*6+1] = 0;
+      rout[p*6+2] = 0;
+      rout[p*6+3] = 0;
+      rout[p*6+4] = 0;
+      rout[p*6+5] = 0;
+    }
+    gpu->hostToDevice(gpuRout, rout, routSize);
+  }
 
   // Global ring param
   void *gpuRingParams;
@@ -384,7 +393,7 @@ void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
 
   // Get back data
   gpu->deviceToHost(lost,gpuLost,lostSize);
-  if(updateRin) gpu->deviceToHost(rin, gpuRin, nbParticles * 6 * sizeof(AT_FLOAT));
+  if( updateRin ) gpu->deviceToHost(rin, gpuRin, nbParticles * 6 * sizeof(AT_FLOAT));
   if( routSize ) gpu->deviceToHost(rout,gpuRout,routSize);
   if( lostAtElem ) gpu->deviceToHost(lostAtElem,gpuLostAtElem, nbParticles * sizeof(uint32_t));
   if( lostAtCoord ) gpu->deviceToHost(lostAtCoord,gpuLostAtCoord, nbParticles * 6 * sizeof(AT_FLOAT));
