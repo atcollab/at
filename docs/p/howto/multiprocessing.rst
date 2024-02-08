@@ -119,8 +119,8 @@ number of particle. The performance of the tracking is mainly related to the GPU
 
 OpenCL Installation
 ...................
-`OpenCL`_ and installable client driver (ICD) must be preliminary installed on the system either using linux packages or by
-building the `OpenCL SDK <https://github.com/KhronosGroup/OpenCL-SDK>`::
+`OpenCL`_ and installable client driver (ICD) must be preliminary installed on the system using either linux packages or by
+building the `OpenCL SDK <https://github.com/KhronosGroup/OpenCL-SDK>`_::
 
     sudo apt install opencl-headers ocl-icd-opencl-dev -y
 
@@ -131,7 +131,7 @@ or (on Windows)::
 
     set OCL_PATH=C:\clpeak\build\sdk_instal
 
-Note: `clpeak <https://github.com/krrishnarraj/clpeak>` is a great OpenCL benchmarking tool that can be used to check system
+Note: `clpeak <https://github.com/krrishnarraj/clpeak>`_ is an OpenCL benchmarking tool that can be used to check system
 performance (especially double precision floating point arithmetic) and to build the OpenCL SDK.
 
 Install PyAT using the ``opencl`` flag::
@@ -140,7 +140,7 @@ Install PyAT using the ``opencl`` flag::
     rm -rf build
     pip install --config-settings opencl=1 .
 
-You can check the install as bellow, when no GPU support is enable, the method ``at.tracking.gpu_info()`` will return an empty list::
+You can check the install as bellow, without GPU support, the method ``at.tracking.gpu_info()`` will return an empty list::
 
     Z:\at>python
     Python 3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)] on win32
@@ -151,14 +151,13 @@ You can check the install as bellow, when no GPU support is enable, the method `
 
 CUDA Installation
 .................
-
-`NVidia CUDA`_ toolkit must be preliminary installed on the system from `NVidia <https://developer.nvidia.com/cuda-downloads>`.
+NVidia `CUDA`_ toolkit must be preliminary installed on the system from `NVidia <https://developer.nvidia.com/cuda-downloads>`_.
 Set the environment variable ``CUDA_PATH``::
 
     export CUDA_PATH=/cvmfs/hpc.esrf.fr/software/packages/ubuntu20.04/x86_64/cuda/12.3.1
 or on Windows::
 
-    set CUDA_PATH=CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3
+    set CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3
 Install PyAT using the ``cuda`` flag::
 
     pip install --config-settings cuda=1 .
