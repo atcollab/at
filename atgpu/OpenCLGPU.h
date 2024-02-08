@@ -2,10 +2,12 @@
 #define AT_GPU_OPENCLGPU_H
 #include "AbstractGPU.h"
 
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_MINIMUM_OPENCL_VERSION 200
-#define CL_HPP_TARGET_OPENCL_VERSION 200
-#include <CL/opencl.hpp>
+#define CL_TARGET_OPENCL_VERSION 200
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/opencl.h>
+#endif
 
 typedef struct {
   cl_platform_id platform_id;

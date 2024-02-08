@@ -111,18 +111,24 @@ else:
     # Generate the shared include file for the GPU kernel
     exec(open('atgpu/genheader.py').read())
     opencl_ocl_path = os.environ.get('OCL_PATH', None)
-    opencl_sdk_path = os.environ.get('OPENCL_SDK_PATH', None)
     opencl_macros = [('OPENCL', None)]
-    if opencl_ocl_path is None:
-        raise RuntimeError('OCL_PATH environment variable not defined')
-    if opencl_sdk_path is None:
-        raise RuntimeError('OPENCL_SDK_PATH environment variable not defined')
     if sys.platform.startswith('win'):
-        opencl_cppflags = ['-I' + opencl_sdk_path + '\\include','-I' + opencl_ocl_path + '\\include']
-        opencl_lflags = ['/LIBPATH:'+opencl_ocl_path+'\\lib\\x64', "OpenCL.lib"]
+        # Static link
+        if opencl_ocl_path is None:
+            raise RuntimeError('OCL_PATH environment variable not defined')
+        opencl_cppflags = ['-I' + opencl_ocl_path + '\\include']
+        opencl_lflags = ['/LIBPATH:'+opencl_ocl_path+'\\lib', "OpenCL.lib","cfgmgr32.lib","runtimeobject.lib","Advapi32.lib","ole32.lib"]
     else:
-        opencl_cppflags = ['-I' + opencl_ocl_path + '/include','-I' + opencl_sdk_path + '/include']
-        opencl_lflags = ['-L' + opencl_ocl_path + '/lib64', '-Wl,-rpath,' + opencl_ocl_path + '/lib64', '-lOpenCL']
+        if opencl_ocl_path is not None:
+            # Private install
+            opencl_cppflags = ['-I' + opencl_ocl_path + '/include']
+            opencl_lflags = ['-L' + opencl_ocl_path + '/lib', '-Wl,-rpath,' + opencl_ocl_path + '/lib', '-lOpenCL']
+        elif exists('/usr/include/CL/opencl.h'):
+            # Standard install
+            opencl_cppflags = []
+            opencl_lflags = ['-lOpenCL']
+        else:
+            raise RuntimeError('Install OpenCL include and driver (ICD) in standard path or set OCL_PATH environment variable')
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
