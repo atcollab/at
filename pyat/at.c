@@ -9,6 +9,9 @@
 #include <string.h>
 #include <omp.h>
 #endif /*_OPENMP*/
+#ifdef MPI
+#include <mpi.h>
+#endif /* MPI */
 #include "attypes.h"
 #include <stdbool.h> 
 #include <math.h>
@@ -694,10 +697,16 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"rank", "seed", NULL};
-    uint64_t rank = 0;
     uint64_t seed = AT_RNG_STATE;
+#ifdef MPI
+    int irank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &irank);
+    uint64_t rank = irank;
+#else
+    uint64_t rank = 0;
+#endif /* MPI */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|K$K", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$KK", kwlist,
         &rank, &seed)) {
         return NULL;
     }
@@ -756,11 +765,13 @@ static PyMethodDef AtMethods[] = {
               ":meta private:"
             )},
     {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("reset_rng(rank=0, seed=None)\n\n"
+    PyDoc_STR("reset_rng(*, rank=0, seed=None)\n\n"
               "Reset the *common* and *thread* random generators.\n\n"
+              "The seed is applied unchanged to the \"common\" generator, and modified in a\n"
+              "thread-specific way to the \"thread\" generator\n\n"
               "Parameters:\n"
               "    rank (int):    thread identifier (for MPI and python multiprocessing)\n"
-              "    seed (int):    single seed for both generators\n"
+              "    seed (int):    single seed for both generators. Default: initial seed\n"
             )},
     {"common_rng",  (PyCFunction)common_rng, METH_NOARGS,
     PyDoc_STR("common_rng()\n\n"
