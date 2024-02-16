@@ -304,13 +304,6 @@ class ObservableList(list):
                     )
                 except AtError as err:
                     rgdata = eldata = err
-                else:
-                    if Need.TUNEUNIT in needs:
-                        eldata["mu"] = eldata["mu"] / (2.0 * np.pi)
-                        if Need.MODULO in needs:
-                            eldata["mu"] = eldata["mu"] % 1.0
-                    elif Need.MODULO in needs:
-                        eldata["mu"] = eldata["mu"] % (2.0 * np.pi)
 
             if Need.EMITTANCE in needs and o0 is not None:
                 # Emittance computation

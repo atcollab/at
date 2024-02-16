@@ -111,6 +111,16 @@ class _RecordAccess(object):
         return data if index is None else data[self.index]
 
 
+class _MuAccess(_RecordAccess):
+    """Access to selected items in a record array"""
+
+    def __init__(self, index):
+        super().__init__("mu", index)
+
+    def __call__(self, ring, data):
+        return super().__call__(ring, data) % (2.0 * np.pi)
+
+
 def _all_rows(index: Optional[RefIndex]):
     """Prepends "all rows" (":") to an index tuple"""
     if index is None:
@@ -173,12 +183,6 @@ class Need(Enum):
     #:  Specify geometry computation and provide the full data at evaluation
     #:  points
     GEOMETRY = 9
-    #:  Specify whether the modulo of the phase has to be used, necessary when
-    #:  matching the fractional part only
-    MODULO = 10
-    #:  Specify whether the phase is expressed in units of tune units, in
-    #:  case phase = phase/(2*pi)
-    TUNEUNIT = 11
 
 
 class Observable(object):
@@ -486,9 +490,12 @@ class _ElementObservable(Observable):
 
 
 class GeometryObservable(_ElementObservable):
-    """Observe the geometrical parameters of the reference trajectory"""
+    """Observe the geometrical parameters of the reference trajectory.
 
-    field_list = {"x", "y", "angle"}
+    Process the result of calling :py:func:`.get_geometry`.
+    """
+
+    _field_list = {"x", "y", "angle"}
 
     def __init__(
         self, refpts: Refpts, param: str, name: Optional[str] = None, **kwargs
@@ -522,8 +529,8 @@ class GeometryObservable(_ElementObservable):
 
             Observe x coordinate of monitors
         """
-        if param not in self.field_list:
-            raise ValueError(f"Expected {param!r} to be one of {self.field_list!r}")
+        if param not in self._field_list:
+            raise ValueError(f"Expected {param!r} to be one of {self._field_list!r}")
         name = self._set_name(name, "geometry", param)
         fun = _RecordAccess(param, None)
         needs = {Need.GEOMETRY}
@@ -531,7 +538,10 @@ class GeometryObservable(_ElementObservable):
 
 
 class OrbitObservable(_ElementObservable):
-    """Observes the transfer matrix at selected locations"""
+    """Observe the transfer matrix at selected locations.
+
+    Process the result of calling :py:func:`.find_orbit`.
+    """
 
     def __init__(
         self, refpts: Refpts, axis: AxisDef = None, name: Optional[str] = None, **kwargs
@@ -573,7 +583,11 @@ class OrbitObservable(_ElementObservable):
 
 
 class MatrixObservable(_ElementObservable):
-    """Observes the closed orbit at selected locations"""
+    """Observe the closed orbit at selected locations.
+
+    Processs the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
+    depending of :py:meth:`~.Lattice.is_6d`.
+    """
 
     def __init__(
         self,
@@ -660,7 +674,10 @@ class _GlobalOpticsObservable(Observable):
 
 
 class LocalOpticsObservable(_ElementObservable):
-    """Observe a local optics parameter at selected locations"""
+    """Observe a local optics parameter at selected locations.
+
+    Process the local output of :py:func:`.get_optics`.
+    """
 
     def __init__(
         self,
@@ -685,6 +702,12 @@ class LocalOpticsObservable(_ElementObservable):
             use_integer:    For  the *'mu'* parameter, compute the
               phase advance at all points to avoid discontinuities (slower)
 
+              .. Attention::
+
+                 if *use_integer* is :py:obj:`False` (default value), all phase advance
+                 values are folded into the :math:`[0, 2\pi]` interval to avoid
+                 unpredictible jumps.
+
         Keyword Args:
             summary:        Set to :py:obj:`True` if the user-defined
              evaluation function returns a single item (see below)
@@ -708,7 +731,8 @@ class LocalOpticsObservable(_ElementObservable):
 
         :pycode:`value = fun(ring, elemdata)`
 
-        *elemdata* if the output of :py:func:`.get_optics`.
+        *elemdata* if the output of :py:func:`.get_optics`, evaluated at the *refpts*
+        of the observable.
 
         *value* is the value of the Observable and must have one line per
         refpoint. Alternatively, it may be a single line, but then the
@@ -746,25 +770,19 @@ class LocalOpticsObservable(_ElementObservable):
         if callable(param):
             fun = param
             needs.add(Need.CHROMATICITY)
+        elif param == "mu" and not use_integer:
+            # values and target are taken modulo 2*pi
+            fun = _MuAccess(_all_rows(ax_(plane, "index")))
         else:
             fun = _RecordAccess(param, _all_rows(ax_(plane, "index")))
         if use_integer:
             needs.add(Need.ALL_POINTS)
-        else:
-            needs.add(Need.MODULO)
-            target = kwargs.get("target", None)
-            if target is not None and param == "mu":
-                kwargs["target"] = target % (2.0 * np.pi)
-            elif target is not None and param == "mun":
-                kwargs["target"] = target % 1.0
-                needs.add(Need.TUNEUNIT)
-                fun = _RecordAccess("mu", _all_rows(ax_(plane, "index")))
 
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
 class LatticeObservable(_ElementObservable):
-    """Observe an attribute of selected lattice elements"""
+    """Observe an attribute of selected lattice elements."""
 
     def __init__(
         self,
@@ -841,15 +859,18 @@ class TrajectoryObservable(_ElementObservable):
 
 
 class EmittanceObservable(Observable):
-    """Observe emittance-related parameters"""
+    """Observe emittance-related parameters.
+
+    Process the output of :py:func:`.envelope_parameters`.
+    """
 
     def __init__(
         self, param: str, plane: AxisDef = None, name: Optional[str] = None, **kwargs
     ):
         r"""
         Args:
-            param:          Parameter name (see
-              :py:func:`.envelope_parameters`)
+            param:          Parameter name (see :py:func:`.envelope_parameters`) or
+              :ref:`user-defined evaluation function <emittance_eval>`
             plane:          One out of {0, 'x', 'h', 'H'} for horizontal plane,
              one out of {1, 'y', 'v', 'V'} for vertival plane or one out of
              {2, 'z', 'l', 'L'} for longitudinal plane
@@ -867,6 +888,18 @@ class EmittanceObservable(Observable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
+        .. _emittance_eval:
+        .. rubric:: User-defined evaluation function
+
+        It is called as:
+
+        :pycode:`value = fun(ring, paramdata)`
+
+        *paramdata* if the :py:class:`.RingParameters` object returned by
+        :py:func:`.envelope_parameters`.
+
+        *value* is the value of the Observable.
+
         Example:
 
             >>> EmittanceObservable('emittances', plane='h')
@@ -874,7 +907,10 @@ class EmittanceObservable(Observable):
             Observe the horizontal emittance
         """
         name = self._set_name(name, param, plane_(plane, "code"))
-        fun = _RecordAccess(param, plane_(plane, "index"))
+        if callable(param):
+            fun = param
+        else:
+            fun = _RecordAccess(param, plane_(plane, "index"))
         needs = {Need.EMITTANCE}
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
@@ -888,7 +924,9 @@ def GlobalOpticsObservable(
     **kwargs,
 ):
     # noinspection PyUnresolvedReferences
-    r"""Observe a global optics parameter
+    r"""Observe a global optics parameter.
+
+    Process the global output of :py:func:`.get_optics`.
 
     Args:
         param:          Optics parameter name (see :py:func:`.get_optics`)
