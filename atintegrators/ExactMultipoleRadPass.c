@@ -1,8 +1,8 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactdrift.c"
-#include "exactkickrad.c"
+#include "diff_exactdrift.c"
+#include "diff_str_exactkick.c"
 #include "exactmultipolefringe.c"
 
 struct elem {
@@ -11,8 +11,8 @@ struct elem {
   double *PolynomB;
   int MaxOrder;
   int NumIntSteps;
+  double Gamma;
   /* Optional fields */
-  double Energy;
   double Scaling;
   int FringeQuadEntrance;
   int FringeQuadExit;
@@ -25,11 +25,14 @@ struct elem {
   double *KickAngle;
 };
 
-static void multipole_pass(
-  double *r, double le, double *A, double *B, int max_order, int num_int_steps,
+static void multipole_pass(double *r, double le, double *A, double *B,
+  int max_order, int num_int_steps,
   int FringeQuadEntrance, int FringeQuadExit, /* 0 (no fringe), else  */
-  double *T1, double *T2, double *R1, double *R2, double *RApertures,
-  double *EApertures, double *KickAngle, double E0, double scaling, int num_particles)
+  double *T1, double *T2,
+  double *R1, double *R2,
+  double *RApertures, double *EApertures,
+  double *KickAngle, double scaling, double gamma, int num_particles,
+  double *bdiff)
 {
   double SL = le / num_int_steps;
   double L1 = SL * DRIFT1;
@@ -38,6 +41,8 @@ static void multipole_pass(
   double K2 = SL * KICK2;
   double B0 = B[0];
   double A0 = A[0];
+  double rad_const = RAD_CONST*pow(gamma, 3);
+  double diff_const = DIF_CONST*pow(gamma, 5);
 
   if (KickAngle) { /* Convert corrector component to polynomial coefficients */
     B[0] -= sin(KickAngle[0]) / le;
@@ -45,14 +50,15 @@ static void multipole_pass(
   }
   #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) \
                        default(none) \
-                       shared(r, num_particles, R1, T1, R2, T2, RApertures, \
-                       EApertures, A, B, L1, L2, K1, K2, max_order, \
+                       shared(r, num_particles, R1, T1, R2, T2, \
+                       RApertures, EApertures, \
+                       A, B, L1, L2, K1, K2, max_order, num_int_steps, \
+                       rad_const, diff_const, \
                        FringeQuadEntrance, FringeQuadExit, \
-                       num_int_steps, E0, scaling, le)
+                       scaling, le)
   for (int c = 0; c < num_particles; c++) { /*Loop over particles  */
     double *r6 = r + c * 6;
     if (!atIsNaN(r6[0])) {
-      int m;
 
       /* Check for change of reference momentum */
       if (scaling != 1.0) ATChangePRef(r6, scaling);
@@ -69,14 +75,14 @@ static void multipole_pass(
       if (FringeQuadEntrance) multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
 
       /*  integrator  */
-      for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
-        exact_drift(r6, L1);
-        ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
-        exact_drift(r6, L2);
-        ex_strthinkickrad(r6, A, B, 0.0, K2, E0, max_order);
-        exact_drift(r6, L2);
-        ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
-        exact_drift(r6, L1);
+      for (int m = 0; m < num_int_steps; m++) { /*  Loop over slices */
+        diff_exactdrift(r6, L1, bdiff);
+        diff_str_exactkick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
+        diff_exactdrift(r6, L2, bdiff);
+        diff_str_exactkick(r6, A, B, max_order, K2, rad_const, diff_const, bdiff);
+        diff_exactdrift(r6, L2, bdiff);
+        diff_str_exactkick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
+        diff_exactdrift(r6, L1, bdiff);
       }
 
       /* Convert absolute path length to path lengthening */
@@ -105,8 +111,10 @@ static void multipole_pass(
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                                       double *r_in, int num_particles,
-                                      struct parameters *Param) {
-  double energy;
+                                      struct parameters *Param)
+{
+  double *bdiff = Param->bdiff;
+
   if (!Elem) {
     double Length = atGetDouble(ElemData, "Length"); check_error();
     double *PolynomA = atGetDoubleArray(ElemData, "PolynomA"); check_error();
@@ -136,7 +144,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->PolynomB = PolynomB;
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
-    Elem->Energy=Energy;
+    Elem->Gamma = Energy/__E0*1.0E-9;
     /*optional fields*/
     Elem->Scaling=Scaling;
     Elem->FringeQuadEntrance=FringeQuadEntrance;
@@ -149,14 +157,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->RApertures = RApertures;
     Elem->KickAngle = KickAngle;
   }
-  energy = atEnergy(Param->energy, Elem->Energy);
-
   multipole_pass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                  Elem->MaxOrder, Elem->NumIntSteps,
                  Elem->FringeQuadEntrance, Elem->FringeQuadExit,
                  Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                  Elem->RApertures, Elem->EApertures,
-                 Elem->KickAngle, energy, Elem->Scaling, num_particles);
+                 Elem->KickAngle, Elem->Scaling, Elem->Gamma, num_particles, bdiff);
   return Elem;
 }
 
@@ -166,9 +172,7 @@ MODULE_DEF(ExactMultipoleRadPass) /* Dummy module initialisation */
 
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs >= 2) {
-    double rest_energy = 0.0;
-    double charge = -1.0;
+  if (nrhs == 2) {
     double *r_in;
     const mxArray *ElemData = prhs[0];
     int num_particles = mxGetN(prhs[1]);
@@ -179,7 +183,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
     int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
     /*optional fields*/
-    double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
+    double Energy=atGetDouble(ElemData,"Energy"); check_error();
+    double Gamma=Energy/__E0*1.0E-9;
     double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
     int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
     int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -194,8 +199,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (NumIntSteps <= 0) {
         atError("NumIntSteps must be positive"); check_error();
     }
-    if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
-
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
     r_in = mxGetDoubles(plhs[0]);
@@ -203,7 +206,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                    FringeQuadEntrance, FringeQuadExit,
                    T1, T2, R1, R2,
                    RApertures, EApertures,
-                   KickAngle, Energy, Scaling, num_particles);
+                   KickAngle, Scaling, Gamma, num_particles, NULL);
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;

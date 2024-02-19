@@ -23,6 +23,7 @@ struct parameters
   double *bunch_currents;
   struct pcg_state_setseq_64 *common_rng;
   struct pcg_state_setseq_64 *thread_rng;
+  double *bdiff;
 };
 
 #endif /*ATTYPES_H*/
