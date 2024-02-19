@@ -1,16 +1,9 @@
 function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
 %OHMIENVELOPE calculates equilibrium beam envelope in a
-% circular accelerator using Ohmi's beam envelope formalism [1].
+% circular accelerator using Ohmi's beam envelope formalism [1]
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
 %
-% [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX)
-% [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX,REFPTS)
-%
-% RING    - an AT ring.
-% RADELEMINDEX - array of length equal to length(RING) filled with ones at
-%           indexes of radiative ring elements, otherwise, zeros.
-%           See the output of atenable_6d.
-% REFPTS  - reference points along the ring. Default: 1.
+% [ENVELOPE, RMSDP, RMSBL] = ONMIENVELOPE(RING,RADELEMINDEX,REFPTS)
 %
 % ENVELOPE is a structure with fields
 % Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along
@@ -27,18 +20,10 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 % [ENVELOPE, RMSDP, RMSBL, M66, T, ORBIT] = OHMIENVELOPE(...)
 %   Returns in addition the 6x6 transfer matrices and the closed orbit
 %   from FINDM66
-%
-% See also ATENABLE_6D FINDM66
-
-check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
 if nargin<3, refpts=1; end
-
-% Erase wigglers from the radiative element list.
-% Diffusion matrix to be computed with separate FDW function.
-Wig=atgetcells(ring,'Bmax');
-radindex = radindex & ~Wig;
+radindex = atgetcells(ring,'PassMethod','.*RadPass');
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
@@ -48,10 +33,16 @@ zr={zeros(6,6)};
 B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
 
 % calculate Radiation-Diffusion matrix B for elements with radiation
-B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-    ring(radindex),orb(radindex),'UniformOutput',false);
-B(Wig)=cellfun(@FDW,...
-    ring(Wig),orb(Wig),'UniformOutput',false);
+if getoption('test_mode')
+    fprintf('diffusion_matrix\n');
+    [energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
+    B(radindex)=cellfun(@diffmatrix,...
+        ring(radindex),orb(radindex),'UniformOutput',false);
+else
+    fprintf('findmpoleraddiffmatrix\n');
+    B(radindex)=cellfun(@findmpoleraddiffmatrix,...
+        ring(radindex),orb(radindex),'UniformOutput',false);
+end
 
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
@@ -77,7 +68,7 @@ CC = AA*BCUM;
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
-rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
 
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
@@ -102,6 +93,10 @@ if nout>=1, varargout{1}=mring; end
         [u,dr] = eig(r([1 3],[1 3]));
         tilt = asin((u(2,1)-u(1,2))/2);
         sigma=sqrt([dr(1,1);dr(2,2)]);
+    end
+
+    function difm=diffmatrix(elem,orbit)
+        difm=diffusion_matrix(elem,orbit,energy,particle,cell_length,0.0);
     end
 
 end
