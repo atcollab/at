@@ -7,10 +7,10 @@ import numpy
 from typing import Union
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, Refpts, All
-from at.lattice import Dipole, Wiggler, DConstant
+from at.lattice import Dipole, Wiggler, DConstant, test_mode
 from at.lattice import Quadrupole, Multipole, QuantumDiffusion
 from at.lattice import frequency_control, set_value_refpts
-from at.tracking import internal_lpass
+from at.tracking import internal_lpass, diffusion_matrix
 from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
 from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
 from at.physics import ELossMethod
@@ -56,9 +56,20 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         internal_lpass(ring, orbit.copy(order='K'), refpts=All,
                        keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
-          if elem.PassMethod.endswith('RadPass') else b0
-          for elem, elemorb in zip(ring, orbs)]
+    if test_mode():
+        print("Using find_mpole_raddiff_matrix")
+        bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
+              if elem.PassMethod.endswith("RadPass")
+              else b0
+              for elem, elemorb in zip(ring, orbs)
+        ]
+    else:
+        print("Using diffusion_matrix")
+        bb = [diffusion_matrix(elem, elemorb, energy=energy)
+              if elem.PassMethod.endswith("RadPass")
+              else b0
+              for elem, elemorb in zip(ring, orbs)
+    ]
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
@@ -208,7 +219,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
     Keyword Args:
         dp (float):             Momentum deviation. Defaults to :py:obj:`None`
         dct (float):            Path lengthening. Defaults to :py:obj:`None`
-        df (float):             Deviation of RF frequency. Defaults to       
+        df (float):             Deviation of RF frequency. Defaults to
         method (Callable):  Method for linear optics:
 
           :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
@@ -303,7 +314,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
             """On-axis wiggler field"""
 
             def harm(coef, h, phi):
-                return -Bmax * coef * numpy.cos(h*kws + phi)
+                return -Bmax * coef * numpy.cos(h * kws + phi)
 
             kw = 2 * pi / wiggler.Lw
             Bmax = wiggler.Bmax
