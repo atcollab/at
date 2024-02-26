@@ -71,6 +71,7 @@ from ..lattice import Lattice, Refpts, End
 
 RefIndex = Union[int, Tuple[int, ...], slice]
 
+
 # Observables must be pickleable. For this, the evaluation function must be a
 # module-level function. No inner, nested function is allowed. So nested
 # functions are replaced be module-level callable class instances:
@@ -109,16 +110,6 @@ class _RecordAccess(object):
         index = self.index
         data = getattr(data, self.fieldname)
         return data if index is None else data[self.index]
-
-
-class _MuAccess(_RecordAccess):
-    """Access to selected items in a record array"""
-
-    def __init__(self, index):
-        super().__init__("mu", index)
-
-    def __call__(self, ring, data):
-        return super().__call__(ring, data) % (2.0 * np.pi)
 
 
 def _all_rows(index: Optional[RefIndex]):
@@ -180,9 +171,10 @@ class Need(Enum):
     ALL_POINTS = 7
     #:  Associated with LOCALOPTICS, require the *get_chrom* keyword
     CHROMATICITY = 8
-    #:  Specify geometry computation and provide the full data at evaluation
-    #:  points
-    GEOMETRY = 9
+    #:  Associatef with LOCALOPTICS, require the *get_w* keyword
+    W_FUNCTIONS = 9
+    #:  Specify geometry computation and provide the full data at evaluation points
+    GEOMETRY = 10
 
 
 class Observable(object):
@@ -685,7 +677,7 @@ class LocalOpticsObservable(_ElementObservable):
         param: Union[str, Callable],
         plane: AxisDef = Ellipsis,
         name: Optional[str] = None,
-        use_integer: bool = False,
+        all_points: bool= False,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
@@ -699,14 +691,10 @@ class LocalOpticsObservable(_ElementObservable):
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
-            use_integer:    For  the *'mu'* parameter, compute the
-              phase advance at all points to avoid discontinuities (slower)
-
-              .. Attention::
-
-                 if *use_integer* is :py:obj:`False` (default value), all phase advance
-                 values are folded into the :math:`[0, 2\pi]` interval to avoid
-                 unpredictible jumps.
+            all_points:     Compute the local optics at all elements. This avoids
+              discontinuities in phase advances. This is automatically set for the
+              'mu' parameter, but may need to be specified for user-defined evaluation
+              functions using the phase advance.
 
         Keyword Args:
             summary:        Set to :py:obj:`True` if the user-defined
@@ -755,7 +743,7 @@ class LocalOpticsObservable(_ElementObservable):
             ...     return mu[-1] - mu[0]
             >>>
             >>> allobs.append(LocalOpticsObservable([33, 101], phase_advance,
-            ...               use_integer=True, summary=True))
+            ...               all_points=True, summary=True))
 
             The user-defined evaluation function computes the phase-advance
             between the 1st and last given reference points, here the elements
@@ -765,18 +753,17 @@ class LocalOpticsObservable(_ElementObservable):
             ax_ = axis_
         else:
             ax_ = plane_
+
         needs = {Need.LOCALOPTICS}
         name = self._set_name(name, param, ax_(plane, "code"))
         if callable(param):
             fun = param
-            needs.add(Need.CHROMATICITY)
-        elif param == "mu" and not use_integer:
-            # values and target are taken modulo 2*pi
-            fun = _MuAccess(_all_rows(ax_(plane, "index")))
         else:
             fun = _RecordAccess(param, _all_rows(ax_(plane, "index")))
-        if use_integer:
-            needs.add(Need.ALL_POINTS)
+            if param == "mu" or all_points:
+                needs.add(Need.ALL_POINTS)
+            if param == "W":
+                needs.add(Need.W_FUNCTIONS)
 
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -980,7 +967,7 @@ def GlobalOpticsObservable(
             _Tune(plane_(plane, "index")),
             name=name,
             summary=True,
-            use_integer=True,
+            all_points=True,
             **kwargs,
         )
     else:

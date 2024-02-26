@@ -286,10 +286,6 @@ class ObservableList(list):
                 and o0 is not None
             ):
                 # Linear optics computation
-                get_chrom = Need.CHROMATICITY in needs
-                twiss_in = self.kwargs.get("twiss_in", None)
-                method = self.kwargs.get("method", linopt6)
-                # noinspection PyUnboundLocalVariable
                 try:
                     _, rgdata, eldata = ring.get_optics(
                         refpts=self.opticsrefs,
@@ -298,9 +294,10 @@ class ObservableList(list):
                         df=df,
                         orbit=o0,
                         keep_lattice=True,
-                        get_chrom=get_chrom,
-                        twiss_in=twiss_in,
-                        method=method,
+                        get_chrom=Need.CHROMATICITY in needs,
+                        get_w=Need.W_FUNCTIONS in needs,
+                        twiss_in=self.kwargs.get("twiss_in", None),
+                        method=self.kwargs.get("method", linopt6),
                     )
                 except AtError as err:
                     rgdata = eldata = err
