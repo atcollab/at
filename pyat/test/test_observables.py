@@ -46,10 +46,10 @@ def test_observables(hmba_lattice):
     )
     allobs.append(LocalOpticsObservable(at.Quadrupole, "s_pos"))
     allobs.append(
-        LocalOpticsObservable([33, 101], phase_advance, use_integer=True, summary=True)
+        LocalOpticsObservable([33, 101], phase_advance, all_points=True, summary=True)
     )
     allobs.append(GlobalOpticsObservable("tune", plane=0, use_integer=True))
-    allobs.append(LocalOpticsObservable(at.End, "mu", use_integer=True))
+    allobs.append(LocalOpticsObservable(at.End, "mu"))
     allobs.append(GlobalOpticsObservable("chromaticity"))
     allobs.append(LatticeObservable(at.Sextupole, "H", statfun=np.mean))
     allobs.append(LatticeObservable(at.Sextupole, "PolynomB", index=2))
