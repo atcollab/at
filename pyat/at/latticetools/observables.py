@@ -677,7 +677,7 @@ class LocalOpticsObservable(_ElementObservable):
         param: Union[str, Callable],
         plane: AxisDef = Ellipsis,
         name: Optional[str] = None,
-        all_points: bool= False,
+        all_points: bool = False,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
