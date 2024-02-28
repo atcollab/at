@@ -132,7 +132,7 @@ def ringparam_filter(
             ringparams.append(elem)
             for k, v in elem.items():
                 if k not in _param_ignore:
-                    params.setdefault(_param_to_lattice.get(k, k.lower()), v)
+                    params.setdefault(_param_to_lattice.get(k, k), v)
             if keep_all:
                 pars = vars(elem).copy()
                 name = pars.pop("FamName")
@@ -282,7 +282,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
 def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
     """Prepend a RingParam element to a lattice"""
-    dct = dict((_matattr_map.get(k, k.title()), v) for k, v in ring.attrs.items())
+    dct = dict((_matattr_map.get(k, k), v) for k, v in ring.attrs.items())
     famname = dct.pop("FamName")
     energy = dct.pop("Energy")
     yield RingParam(famname, energy, **dct)
