@@ -8,7 +8,7 @@ __all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
 
 import sys
 from os.path import abspath, basename, splitext
-from typing import Optional
+from typing import Optional, Any
 from collections.abc import Sequence, Generator
 from warnings import warn
 
@@ -18,24 +18,25 @@ import scipy.io
 from .allfiles import register_format
 from .utils import element_from_dict, element_from_m, RingParam
 from .utils import element_to_dict, element_to_m
-from ..lattice import Element, Lattice
+from ..lattice import Element, Lattice, Filter
 from ..lattice import elements, AtWarning, params_filter, AtError
 
-_param_to_lattice = {
+_m2p = {
+    "FamName": "name",
     "Energy": "energy",
     "Periodicity": "periodicity",
-    "FamName": "name",
-    "Particle": "_particle",
-    "cell_harmnumber": "_harmcell",
-    "HarmNumber": "harmonic_number",
+    "Particle": "particle",
+    "cell_harmnumber": "cell_harmnumber",
 }
 _param_ignore = {"PassMethod", "Length", "cavpts"}
 
-# Python to Matlab attribute translation
-_matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
+# Python to Matlab
+_p2m = {"name", "energy", "periodicity", "particle", "cell_harmnumber", "beam_current"}
 
 
-def matfile_generator(params: dict, mat_file: str) -> Generator[Element, None, None]:
+def matfile_generator(
+    params: dict[str, Any], mat_file: str
+) -> Generator[Element, None, None]:
     """Run through Matlab cells and generate AT elements
 
     Parameters:
@@ -92,7 +93,7 @@ def matfile_generator(params: dict, mat_file: str) -> Generator[Element, None, N
 
 
 def ringparam_filter(
-    params: dict, elem_iterator, *args
+    params: dict[str, Any], elem_iterator: Filter, *args
 ) -> Generator[Element, None, None]:
     """Run through all elements, process and optionally removes
     RingParam elements
@@ -132,7 +133,7 @@ def ringparam_filter(
             ringparams.append(elem)
             for k, v in elem.items():
                 if k not in _param_ignore:
-                    params.setdefault(_param_to_lattice.get(k, k), v)
+                    params.setdefault(_m2p.get(k, k), v)
             if keep_all:
                 pars = vars(elem).copy()
                 name = pars.pop("FamName")
@@ -282,10 +283,24 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
 def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
     """Prepend a RingParam element to a lattice"""
-    dct = dict((_matattr_map.get(k, k), v) for k, v in ring.attrs.items())
-    famname = dct.pop("FamName")
-    energy = dct.pop("Energy")
-    yield RingParam(famname, energy, **dct)
+
+    def required(rng):
+        # Public lattice attributes
+        params = dict((k, v) for k, v in vars(rng).items() if not k.startswith("_"))
+        # Output the required attributes/properties
+        for k in _p2m:
+            try:
+                v = getattr(rng, k)
+            except AttributeError:
+                pass
+            else:
+                params.pop(k, None)
+                yield k, v
+        # Output the remaining attributes
+        yield from params.items()
+
+    dct = dict(required(ring))
+    yield RingParam(**dct)
     for elem in ring:
         if not (
             isinstance(elem, elements.Marker)
