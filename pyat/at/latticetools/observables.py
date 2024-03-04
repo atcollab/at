@@ -762,7 +762,7 @@ class LocalOpticsObservable(_ElementObservable):
             fun = _RecordAccess(param, _all_rows(ax_(plane, "index")))
             if param == "mu" or all_points:
                 needs.add(Need.ALL_POINTS)
-            if param == "W":
+            if param in {"W", "Wp", "dalpha", "dbeta", "dmu", "ddispersion", "dR"}:
                 needs.add(Need.W_FUNCTIONS)
 
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
