@@ -29,7 +29,7 @@ __all__ = [
 
 from collections.abc import Iterable
 from functools import reduce
-from typing import Optional
+from typing import Optional, Callable
 
 import numpy as np
 
@@ -52,7 +52,16 @@ class ObservableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
-    def __init__(self, obsiter: Iterable[Observable] = (), **kwargs):
+    def __init__(
+        self,
+        obsiter: Iterable[Observable] = (),
+        *,
+        method: Callable = linopt6,
+        orbit: Orbit = None,
+        twiss_in=None,
+        r_in: Orbit = None,
+        **kwargs,
+    ):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
@@ -107,6 +116,10 @@ class ObservableList(list):
         self.passrefs = None
         self.matrixrefs = None
         self.needs = None
+        self.method = method
+        self.orbit = orbit
+        self.twiss_in = twiss_in
+        self.r_in = r_in
         self.kwargs = kwargs
         super().__init__(obsiter)
 
@@ -170,20 +183,37 @@ class ObservableList(list):
         return "\n".join((Observable._header(), values))
 
     def evaluate(
-        self, ring: Lattice, *, r_in: Orbit = None, initial: bool = False, **kwargs
+        self,
+        ring: Lattice,
+        *,
+        dp: Optional[float] = None,
+        dct: Optional[float] = None,
+        df: Optional[float] = None,
+        initial: bool = False,
+        **kwargs,
     ):
         r"""Compute all the :py:class:`Observable` values
 
         Args:
             ring:       Lattice description used for evaluation
-            r_in:       Optional coordinate input for trajectory observables
-            initial:    If :py:obj:`True`, store the values as *initial values*
-
-        Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
             dct (float):    Path lengthening. Defaults to :py:obj:`None`
             df (float):     Deviation from the nominal RF frequency.
               Defaults to :py:obj:`None`
+            initial:    If :py:obj:`True`, store the values as *initial values*
+
+        Keyword Args:
+            orbit (Orbit):      Initial orbit. Avoids looking for the closed
+              orbit if it is already known. Used for
+              :py:class:`MatrixObservable` and :py:class:`LocalOpticsObservable`
+            twiss_in:           Initial conditions for transfer line optics.
+              See :py:func:`.get_optics`. Used for
+              :py:class:`LocalOpticsObservable`
+            method (Callable):  Method for linear optics. Used for
+              :py:class:`LocalOpticsObservable`.
+              Default: :py:obj:`~.linear.linopt6`
+            r_in (Orbit):       Initial trajectory, used for
+              :py:class:`TrajectoryObservable`, Default: zeros(6)
         """
 
         def obseval(obs):
@@ -228,7 +258,6 @@ class ObservableList(list):
             dp: Optional[float] = None,
             dct: Optional[float] = None,
             df: Optional[float] = None,
-            r_in: Orbit = None,
         ):
             """Optics computations"""
             trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = None
@@ -237,20 +266,23 @@ class ObservableList(list):
 
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
+                r_in = kwargs.get("r_in", self.r_in)
                 if r_in is None:
                     r_in = np.zeros(6)
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
                 trajs = r_out[:, 0, :, 0].T
 
-            if not needs.isdisjoint({
-                Need.ORBIT,
-                Need.MATRIX,
-                Need.LOCALOPTICS,
-                Need.GLOBALOPTICS,
-                Need.EMITTANCE,
-            }):
+            if not needs.isdisjoint(
+                {
+                    Need.ORBIT,
+                    Need.MATRIX,
+                    Need.LOCALOPTICS,
+                    Need.GLOBALOPTICS,
+                    Need.EMITTANCE,
+                }
+            ):
                 # Closed orbit computation
-                orbit0 = self.kwargs.get("orbit", None)
+                orbit0 = kwargs.get("orbit", self.orbit)
                 try:
                     o0, orbits = ring.find_orbit(
                         refpts=self.orbitrefs, dp=dp, dct=dct, df=df, orbit=orbit0
@@ -296,8 +328,8 @@ class ObservableList(list):
                         keep_lattice=True,
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
-                        twiss_in=self.kwargs.get("twiss_in", None),
-                        method=self.kwargs.get("method", linopt6),
+                        twiss_in=kwargs.get("twiss_in", self.twiss_in),
+                        method=kwargs.get("method", self.method),
                     )
                 except AtError as err:
                     rgdata = eldata = err
@@ -319,7 +351,7 @@ class ObservableList(list):
             self._setup(ring)
 
         trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
-            ring, r_in=r_in, **kwargs
+            ring, dp=dp, dct=dct, df=df
         )
         for ob in self:
             obseval(ob)
