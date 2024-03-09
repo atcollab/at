@@ -11,11 +11,10 @@ import sysconfig
 from typing import Optional
 from warnings import warn
 
-import numpy
+import numpy as np
 
 # imports necessary in' globals()' for 'eval'
-# noinspection PyUnresolvedReferences
-from numpy import array, uint8, NaN  # For global namespace
+from numpy import array, uint8, NaN  # noqa: F401
 
 from at import integrators
 from at.lattice import AtWarning
@@ -24,9 +23,10 @@ from at.lattice import Particle, Element
 from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+_relativistic_particle = Particle()
 
 
-def _particle(value):
+def _particle(value) -> Particle:
     if isinstance(value, Particle):
         # Create from python: save_mat
         return value
@@ -34,6 +34,13 @@ def _particle(value):
         # Create from Matlab: load_mat
         name = value.pop("name")
         return Particle(name, **value)
+
+
+def _warn(index: int, message: str, elem_dict: dict) -> None:
+    name = elem_dict.get("FamName", "")
+    location = f'"{name}":\n' if index is None else f'{index} ("{name}"):\n'
+    warning = "".join(("In element ", location, message, f"\n{elem_dict}\n"))
+    warn(AtWarning(warning), stacklevel=2)
 
 
 class RingParam(elt.Element):
@@ -56,10 +63,11 @@ class RingParam(elt.Element):
         name: str,
         energy: float,
         periodicity: int = 1,
-        particle: Particle = Particle(),
+        particle: Particle = _relativistic_particle,
         **kwargs,
     ):
-        kwargs.setdefault("Energy", energy)
+        if not np.isnan(float(energy)):
+            kwargs.setdefault("Energy", energy)
         kwargs.setdefault("Periodicity", periodicity)
         kwargs.setdefault("Particle", particle)
         kwargs.setdefault("PassMethod", "IdentityPass")
@@ -119,7 +127,7 @@ _matclass_map = {
 # Python to Matlab type translation
 _mattype_map = {
     int: float,
-    numpy.ndarray: lambda attr: numpy.asanyarray(attr),
+    np.ndarray: lambda attr: np.asanyarray(attr),
     Particle: lambda attr: attr.to_dict(),
 }
 
@@ -151,49 +159,48 @@ def hasattrs(kwargs: dict, *attributes) -> bool:
     return False
 
 
-def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
+def find_class(
+    elem_dict: dict, quiet: bool = False, index: Optional[int] = None
+) -> type(Element):
     """Identify the class of an element from its attributes
 
     Args:
         elem_dict:      The dictionary of keyword arguments passed to the
                         Element constructor.
         quiet:          Suppress the warning for non-standard classes
+        index:          Element index in the lattice
 
     Returns:
         element_class:  The guessed Class name
     """
 
     def low_order(key):
-        polynom = numpy.array(elem_dict[key], dtype=numpy.float64).reshape(-1)
+        polynom = np.array(elem_dict[key], dtype=np.float64).reshape(-1)
         try:
-            low = numpy.where(polynom != 0.0)[0][0]
+            low = np.where(polynom != 0.0)[0][0]
         except IndexError:
             low = -1
         return low
 
-    class_name = elem_dict.pop("Class", "")
+    class_name = elem_dict.get("Class", "")
     try:
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
         if not quiet and class_name:
-            class_doesnotexist_warning = "Class '{0}' does not exist.\n" "{1}".format(
-                class_name, elem_dict
-            )
-            warn(AtWarning(class_doesnotexist_warning))
+            _warn(index, f"Class '{class_name}' does not exist.", elem_dict)
         fam_name = elem_dict.get("FamName", "")
         try:
             return _CLASS_MAP[fam_name.lower()]
         except KeyError:
             pass_method = elem_dict.get("PassMethod", "")
             if not quiet and not pass_method:
-                warn(AtWarning(f"No PassMethod provided." "\n{elem_dict}"))
+                _warn(index, "No PassMethod provided.", elem_dict)
             elif not quiet and not pass_method.endswith("Pass"):
-                warn(
-                    AtWarning(
-                        f"Invalid PassMethod ({pass_method}), "
-                        "provided pass methods should end in 'Pass'.\n{elem_dict}"
-                    )
+                message = (
+                    f"Invalid PassMethod '{pass_method}', "
+                    "provided pass methods should end in 'Pass'."
                 )
+                _warn(index, message, elem_dict)
             class_from_pass = _PASS_MAP.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
@@ -285,20 +292,6 @@ def element_from_dict(
         Raises:
             AttributeError: if the PassMethod and Class are incompatible.
         """
-
-        def err(message, *args):
-            location = ": " if index is None else " {0}: ".format(index)
-            msg = "".join(
-                (
-                    "Error in element",
-                    location,
-                    "PassMethod {0} ".format(pass_method),
-                    message.format(*args),
-                    "\n{0}".format(elem_dict),
-                )
-            )
-            return AtWarning(msg)
-
         class_name = cls.__name__
         pass_method = elem_dict.get("PassMethod")
         if pass_method is not None:
@@ -307,14 +300,22 @@ def element_from_dict(
             file_name = pass_method + _ext_suffix
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
-                warn(err(" is missing {0}.".format(file_name)))
+                message = f"PassMethod {pass_method} is missing {file_name}."
+                _warn(index, message, elem_dict)
             elif (pass_method == "IdentityPass") and (length != 0.0):
-                warn(err("is not compatible with length {0}.", length))
+                message = (
+                    f"PassMethod {pass_method} is not compatible with length {length}."
+                )
+                _warn(index, message, elem_dict)
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
-                    warn(err("is not compatible with Class {0}.", class_name))
+                    message = (
+                        f"PassMethod {pass_method} is not compatible "
+                        f"with Class {class_name}."
+                    )
+                    _warn(index, message, elem_dict)
 
-    cls = find_class(elem_dict, quiet=quiet)
+    cls = find_class(elem_dict, quiet=quiet, index=index)
     if check:
         sanitise_class(index, cls, elem_dict)
     # Remove mandatory attributes from the keyword arguments.
@@ -371,7 +372,7 @@ def element_from_m(line: str) -> Element:
             rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
             return "[{0}]".format(", ".join(rr))
 
-        return eval("numpy.array({0})".format(arraystr(mat_arr)))
+        return eval("array({0})".format(arraystr(mat_arr)))
 
     def convert(value):
         """convert Matlab syntax to numpy syntax"""
@@ -387,7 +388,7 @@ def element_from_m(line: str) -> Element:
     right = line.rindex(")")
     matcls = line[:left].strip()[2:]
     cls = _CLASS_MAP[matcls]
-    arguments = argsplit(line[left+1:right])
+    arguments = argsplit(line[left + 1 : right])
     ll = len(cls._BUILD_ATTRIBUTES)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
@@ -448,7 +449,7 @@ def element_to_m(elem: Element) -> str:
             else:
                 return str(arr)
 
-        if isinstance(arg, numpy.ndarray):
+        if isinstance(arg, np.ndarray):
             return convert_array(arg)
         elif isinstance(arg, dict):
             return convert_dict(arg)
@@ -468,7 +469,7 @@ def element_to_m(elem: Element) -> str:
     kwds = dict(
         (k, v)
         for k, v in attrs.items()
-        if not numpy.array_equal(v, getattr(defelem, k, None))
+        if not np.array_equal(v, getattr(defelem, k, None))
     )
     argstrs = [convert(arg) for arg in args]
     if "PassMethod" in kwds:
