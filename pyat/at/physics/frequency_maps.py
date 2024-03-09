@@ -282,7 +282,8 @@ def fmap_parallel_track(ring,
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1, 7)
     # check if initial tune is above 0.5
     flagabove0p5 = 0.5 < ring.get_tune()
-    for i in range(len(flagabove0p5)):
+    # modify only the transverse tunes
+    for i in range(2):
         if flagabove0p5[i]:
             verboseprint('Plane',i,'is above 0.5... fixing freq. data')
             xy_nuxy_lognudiff_array[:,2+i] = 1-xy_nuxy_lognudiff_array[:,2+i]
