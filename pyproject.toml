@@ -3,10 +3,10 @@ requires = [
     "setuptools >= 62",
     "setuptools_scm >= 7",
     "oldest-supported-numpy",
-    "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
     "wheel",
 ]
 # build-backend = "setuptools.build_meta"
+# in-tree backend because of MPI requirement
 build-backend = "backend"
 backend-path = ["_custom_build"]
 
@@ -15,9 +15,11 @@ name = "accelerator-toolbox"
 authors = [{name="The AT collaboration", email="atcollab-general@lists.sourceforge.net"}]
 description = "Accelerator Toolbox"
 readme = "pyat/README.rst"
+license = {file = "LICENSE.txt"}
 dynamic = ["version"]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Topic :: Scientific/Engineering :: Physics",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
@@ -25,6 +27,11 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
 ]
 requires-python = ">=3.7"
 dependencies = [
@@ -34,8 +41,11 @@ dependencies = [
 ]
 
 [project.urls]
-GitHub = "https://github.com/atcollab/at"
-Home="https://atcollab.github.io/at/"
+Documentation = "https://atcollab.github.io/at/"
+Repository = "https://github.com/atcollab/at.git"
+HomePage = "https://github.com/atcollab/at"
+Issues = "https://github.com/atcollab/at/issues"
+ChangeLog = "https://github.com/atcollab/at/releases"
 
 [project.optional-dependencies]
 mpi = ["mpi4py"]
@@ -44,18 +54,16 @@ dev = ["pytest >= 2.9", "pytest-cov", "flake8"]
 doc = ["Sphinx ~= 7.2", "myst-parser", "myst-nb", "pydata-sphinx-theme ~= 0.14",
     "sphinx_design", "sphinx-copybutton"]
 
-# tool.setuptools is still in BETA, so we keep temporarily setup.cfg
+[tool.setuptools]
+zip-safe = false
+include-package-data = false
 
-#[tool.setuptools]
-#zip-safe = false
-#include-package-data = false
+[tool.setuptools.packages.find]
+where = ["pyat"]
+namespaces = false
 
-#[tool.setuptools.packages.find]
-#where = ["pyat"]
-#namespaces = false
-
-#[tool.setuptools.package-data]
-#machine_data = ["*.m", "*.mat"]
+[tool.setuptools.package-data]
+machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
 # Pypy does not have Scipy so we cannot support it.
