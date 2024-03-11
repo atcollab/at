@@ -12,10 +12,10 @@ backend-path = ["_custom_build"]
 
 [project]
 name = "accelerator-toolbox"
-authors = [{name="The AT collaboration", email="atcollab-general@lists.sourceforge.net"}]
+authors = [{ name = "The AT collaboration", email = "atcollab-general@lists.sourceforge.net" }]
 description = "Accelerator Toolbox"
 readme = "pyat/README.rst"
-license = {file = "LICENSE.txt"}
+license = { file = "LICENSE.txt" }
 dynamic = ["version"]
 classifiers = [
     "Development Status :: 4 - Beta",
