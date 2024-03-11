@@ -10,8 +10,7 @@ from at.lattice import Lattice
 from at.load import register_format
 from at.load.utils import element_from_string
 # imports necessary in' globals()' for 'eval'
-# noinspection PyUnresolvedReferences
-from at.lattice import Particle
+from at.lattice import Particle  # noqa: F401
 
 __all__ = ['load_repr', 'save_repr']
 
