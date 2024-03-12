@@ -41,9 +41,8 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://atcollab.github.io/at/"
-Repository = "https://github.com/atcollab/at.git"
-HomePage = "https://github.com/atcollab/at"
+Home = "https://github.com/atcollab/at"
+Github = "https://github.com/atcollab/at.git"
 Issues = "https://github.com/atcollab/at/issues"
 ChangeLog = "https://github.com/atcollab/at/releases"
 
