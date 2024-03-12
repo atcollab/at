@@ -8,7 +8,7 @@ Accelerator Toolbox is a code used for simulating particle accelerators, used
 particularly for synchrotron light sources. It is hosted on `Github
 <https://github.com/atcollab/at>`_. Its original implementation is in Matlab.
 
-pyAT is a Python interface to Accelerator Toolbox. It uses the 'pass methods'
+pyAT is a Python interface to the Accelerator Toolbox. It uses the 'pass methods'
 defined in Accelerator Toolbox, implemented by compiling the C code used in the
 AT 'integrators' into a Python extension. These pass methods are used by
 higher-level functions to provide physics results.
@@ -16,7 +16,7 @@ higher-level functions to provide physics results.
 See the `pyAT website <https://atcollab.github.io/at/p/index.html>`_ for a
 more detailed introduction.
 
-pyAT supports Python 3.7 to 3.11.
+pyAT supports Python 3.7 to 3.12.
 
 Installation
 ------------
