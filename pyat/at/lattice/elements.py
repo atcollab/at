@@ -6,15 +6,13 @@ appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
 from __future__ import annotations
-
 import abc
 import re
+import numpy
+from copy import copy, deepcopy
 from abc import ABC
 from collections.abc import Generator, Iterable
-from copy import copy, deepcopy
-from typing import Optional, Any
-
-import numpy
+from typing import Any, Optional
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -466,8 +464,22 @@ class LongElement(Element):
         return element_list
 
     def is_compatible(self, other) -> bool:
-        return type(other) is type(self) and \
-               self.PassMethod == other.PassMethod
+        def compatible_field(fieldname):
+            f1 = getattr(self, fieldname, None)
+            f2 = getattr(other, fieldname, None)
+            if f1 is None and f2 is None:  # no such field
+                return True
+            elif f1 is None or f2 is None:  # only one
+                return False
+            else:  # both
+                return numpy.all(f1 == f2)
+
+        if not (type(other) is type(self) and self.PassMethod == other.PassMethod):
+            return False
+        for fname in ("RApertures", "EApertures"):
+            if not compatible_field(fname):
+                return False
+        return True
 
     def merge(self, other) -> None:
         super().merge(other)
