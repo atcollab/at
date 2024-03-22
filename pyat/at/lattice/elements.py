@@ -12,7 +12,7 @@ import numpy
 from copy import copy, deepcopy
 from abc import ABC
 from collections.abc import Generator, Iterable
-from typing import Optional
+from typing import Any, Optional
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -371,7 +371,7 @@ class Element(object):
         """Return a deep copy of the element"""
         return deepcopy(self)
 
-    def items(self) -> Generator[tuple, None, None]:
+    def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
         for k, v in vars(self).items():
             yield k, v
@@ -454,8 +454,22 @@ class LongElement(Element):
         return element_list
 
     def is_compatible(self, other) -> bool:
-        return type(other) is type(self) and \
-               self.PassMethod == other.PassMethod
+        def compatible_field(fieldname):
+            f1 = getattr(self, fieldname, None)
+            f2 = getattr(other, fieldname, None)
+            if f1 is None and f2 is None:  # no such field
+                return True
+            elif f1 is None or f2 is None:  # only one
+                return False
+            else:  # both
+                return numpy.all(f1 == f2)
+
+        if not (type(other) is type(self) and self.PassMethod == other.PassMethod):
+            return False
+        for fname in ("RApertures", "EApertures"):
+            if not compatible_field(fname):
+                return False
+        return True
 
     def merge(self, other) -> None:
         super().merge(other)
