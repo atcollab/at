@@ -252,7 +252,7 @@ class VariableBase(abc.ABC):
             value = self._history.pop()  # retrieve the previous value
             self.set(value, ring=ring)
         else:
-            raise IndexError(f"{self.name}: history too short",)
+            raise IndexError(f"{self.name}: history too short")
 
     def reset(self, ring=None) -> None:
         """Reset to the initial value and clear the history buffer
