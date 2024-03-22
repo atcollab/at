@@ -35,8 +35,9 @@ from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
 from .utils import get_s_pos, get_elements, get_value_refpts, set_value_refpts
 # noinspection PyProtectedMember
-from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
+from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts, getval
 from .utils import refpts_iterator, checktype, set_shift, set_tilt, get_geometry
+from .variables import Param
 from ..constants import clight, e_mass
 
 _TWO_PI_ERROR = 1.E-4
