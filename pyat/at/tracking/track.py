@@ -23,14 +23,14 @@ _globring: Optional[list[Element]] = None
 
 def _atpass_fork(seed, rank, rin, **kwargs):
     """Single forked job"""
-    reset_rng(rank, seed=seed)
+    reset_rng(rank=rank, seed=seed)
     result = _atpass(_globring, rin, **kwargs)
     return rin, result
 
 
 def _atpass_spawn(ring, seed, rank, rin, **kwargs):
     """Single spawned job"""
-    reset_rng(rank, seed=seed)
+    reset_rng(rank=rank, seed=seed)
     result = _atpass(ring, rin, **kwargs)
     return rin, result
 

@@ -27,19 +27,21 @@
 #define AT_RNG_STATE 0x853c49e6748fea9bULL
 #define AT_RNG_INC 0xda3e39cb94b95bdbULL
 
-#define COMMON_PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
-#define THREAD_PCG32_INITIALIZER   { AT_RNG_STATE, 1ULL }
+#define COMMON_PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC, 0.0, false }
+#define THREAD_PCG32_INITIALIZER   { AT_RNG_STATE, 1ULL, 0.0, false }
 
 struct pcg_state_setseq_64 {    // Internals are *Private*.
     uint64_t state;             // RNG state.  All values are possible.
     uint64_t inc;               // Controls which RNG sequence (stream) is
                                 // selected. Must *always* be odd.
+    double spare;               // spare value for normal distribution
+    bool hasSpare;
 };
 typedef struct pcg_state_setseq_64 pcg32_random_t;
 
 // If you *must* statically initialize it, here's one.
 
-#define PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
+#define PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC, 0.0, false }
 
 static pcg32_random_t pcg32_global = PCG32_INITIALIZER;
 
@@ -99,16 +101,14 @@ static double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
 {
     /* Marsaglia polar method: https://en.wikipedia.org/wiki/Marsaglia_polar_method */
 
-	static bool hasSpare = false;
-	static double spare;
 	double u, v, s;
 
-	if (hasSpare) {
-		hasSpare = false;
-		return mean + stdDev * spare;
+	if (rng->hasSpare) {
+		rng->hasSpare = false;
+		return mean + stdDev * rng->spare;
 	}
 
-	hasSpare = true;	
+	rng->hasSpare = true;
 	do {
 		u = 2.0 * atrandd_r(rng) - 1.0;
 		v = 2.0 * atrandd_r(rng) - 1.0;
@@ -116,7 +116,7 @@ static double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
 	}
 	while ((s >= 1.0) || (s == 0.0));
 	s = sqrt(-2.0 * log(s) / s);
-	spare = v * s;
+	rng->spare = v * s;
 	return mean + stdDev * u * s;
 }
 
