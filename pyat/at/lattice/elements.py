@@ -6,13 +6,15 @@ appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
 from __future__ import annotations
+
 import abc
 import re
-import numpy
-from copy import copy, deepcopy
 from abc import ABC
 from collections.abc import Generator, Iterable
-from typing import Any, Optional
+from copy import copy, deepcopy
+from typing import Optional, Any
+
+import numpy
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -280,22 +282,19 @@ class Element(object):
             raise
 
     def __str__(self):
-        first3 = ['FamName', 'Length', 'PassMethod']
         attrs = dict(self.items())
-        keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
-        keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
-        return '\n'.join((type(self).__name__ + ':', '\n'.join(keywords)))
+        return "\n".join(
+            [self.__class__.__name__ + ":"]
+            + [f"{k:>14}: {attrs.pop(k)!s}" for k in ["FamName", "Length", "PassMethod"]]
+            + [f"{k:>14}: {v!s}" for k, v in attrs.items()]
+        )
 
     def __repr__(self):
-        attrs = dict(self.items())
-        arguments = [attrs.pop(k, getattr(self, k)) for k in
-                     self._BUILD_ATTRIBUTES]
-        defelem = self.__class__(*arguments)
-        keywords = ['{0!r}'.format(arg) for arg in arguments]
-        keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
-                     if not numpy.array_equal(v, getattr(defelem, k, None))]
-        args = re.sub(r'\n\s*', ' ', ', '.join(keywords))
-        return '{0}({1})'.format(self.__class__.__name__, args)
+        clsname, args, kwargs = self.definition
+        keywords = [f"{arg!r}" for arg in args]
+        keywords += [f"{k}={v!r}" for k, v in kwargs.items()]
+        args = re.sub(r"\n\s*", " ", ", ".join(keywords))
+        return f"{clsname}({args})"
 
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
@@ -370,6 +369,19 @@ class Element(object):
     def deepcopy(self) -> Element:
         """Return a deep copy of the element"""
         return deepcopy(self)
+
+    @property
+    def definition(self) -> tuple[str, tuple, dict]:
+        """tuple (class_name, args, kwargs) defining the element"""
+        attrs = dict(self.items())
+        arguments = tuple(attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES)
+        defelem = self.__class__(*arguments)
+        keywords = dict(
+            (k, v)
+            for k, v in sorted(attrs.items())
+            if not numpy.array_equal(v, getattr(defelem, k, None))
+        )
+        return self.__class__.__name__, arguments, keywords
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
@@ -454,22 +466,8 @@ class LongElement(Element):
         return element_list
 
     def is_compatible(self, other) -> bool:
-        def compatible_field(fieldname):
-            f1 = getattr(self, fieldname, None)
-            f2 = getattr(other, fieldname, None)
-            if f1 is None and f2 is None:  # no such field
-                return True
-            elif f1 is None or f2 is None:  # only one
-                return False
-            else:  # both
-                return numpy.all(f1 == f2)
-
-        if not (type(other) is type(self) and self.PassMethod == other.PassMethod):
-            return False
-        for fname in ("RApertures", "EApertures"):
-            if not compatible_field(fname):
-                return False
-        return True
+        return type(other) is type(self) and \
+               self.PassMethod == other.PassMethod
 
     def merge(self, other) -> None:
         super().merge(other)
