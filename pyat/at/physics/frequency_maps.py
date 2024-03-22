@@ -280,6 +280,15 @@ def fmap_parallel_track(ring,
     xy_nuxy_lognudiff_array = numpy.delete(xy_nuxy_lognudiff_array, 0)
     # reshape for plots and output files
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1, 7)
+    # check if initial tune is above 0.5
+    flagabove0p5 = 0.5 < ring.get_tune()
+    # modify only the transverse tunes
+    for i in range(2):
+        if flagabove0p5[i]:
+            verboseprint('Plane',i,'is above 0.5... fixing freq. data')
+            xy_nuxy_lognudiff_array[:,2+i] = 1-xy_nuxy_lognudiff_array[:,2+i]
+            xy_nuxy_lognudiff_array[:,4+i] =  -xy_nuxy_lognudiff_array[:,4+i]
+
 
     return xy_nuxy_lognudiff_array, loss_map_array
 # the end
