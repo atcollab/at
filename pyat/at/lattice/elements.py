@@ -732,7 +732,7 @@ class Collimator(Drift):
 class ThinMultipole(Element):
     """Thin multipole element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA', 'PolynomB']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -789,14 +789,14 @@ class ThinMultipole(Element):
             intval = int(value)
             lmax = min(len(getattr(self, k)) for k in polys)
             if not intval < lmax:
-                raise ValueError('MaxOrder must be smaller than {0}'.format(lmax))
+                raise ValueError("MaxOrder must be smaller than {0}".format(lmax))
         super(ThinMultipole, self).__setattr__(key, value)
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['PolynomA', 'PolynomB']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
