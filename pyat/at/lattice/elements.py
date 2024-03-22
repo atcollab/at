@@ -885,7 +885,7 @@ class Collimator(Drift):
 class ThinMultipole(Element):
     """Thin multipole element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA', 'PolynomB']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -942,14 +942,14 @@ class ThinMultipole(Element):
             intval = int(value)
             lmax = min(len(getattr(self, k)) for k in polys)
             if not intval < lmax:
-                raise ValueError('MaxOrder must be smaller than {0}'.format(lmax))
+                raise ValueError("MaxOrder must be smaller than {0}".format(lmax))
         super(ThinMultipole, self).__setattr__(key, value)
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['PolynomA', 'PolynomB']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
@@ -995,7 +995,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     # noinspection PyPep8Naming
     @K.setter
     def K(self, strength: float):
-        self.set_parameter('PolynomB', strength, index=1)
+        self.set_parameter("PolynomB", strength, index=1)
 
     # noinspection PyPep8Naming
     @property
@@ -1007,7 +1007,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     # noinspection PyPep8Naming
     @H.setter
     def H(self, strength):
-        self.set_parameter('PolynomB', strength, index=2)
+        self.set_parameter("PolynomB", strength, index=2)
 
 
 class Dipole(Radiative, Multipole):

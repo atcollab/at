@@ -81,21 +81,23 @@ keeping their sum constant:
 """
 
 from __future__ import annotations
-import numpy as np
+
+__all__ = [
+    "VariableBase",
+    "CustomVariable",
+    "VariableList",
+    "ParamBase",
+    "Param",
+    "ParamArray",
+]
+
 import abc
 from operator import add, sub, mul, truediv, pos, neg
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
 from typing import Any, Union
 
-__all__ = [
-    "VariableBase",
-    "CustomVariable",
-    "ParamBase",
-    "Param",
-    "ParamArray",
-    "VariableList",
-]
+import numpy as np
 
 Number = Union[int, float]
 
@@ -187,9 +189,9 @@ class VariableBase(abc.ABC):
             ring:       provided to an attempt to get the initial value of the
               variable
         """
-        self.name = self._setname(name)  #: Variable name
-        self.bounds = bounds  #: Variable bounds
-        self.delta = delta  #: Increment step
+        self.name: str = self._setname(name)  #: Variable name
+        self.bounds: tuple[Number, Number] = bounds  #: Variable bounds
+        self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
@@ -308,7 +310,7 @@ class VariableBase(abc.ABC):
             value = self._history.pop()  # retrieve the previous value
             self.set(value, ring=ring)
         else:
-            raise IndexError(f"{self.name}: history too short",)
+            raise IndexError(f"{self.name}: history too short")
 
     def reset(self, ring=None) -> None:
         """Reset to the initial value and clear the history buffer
