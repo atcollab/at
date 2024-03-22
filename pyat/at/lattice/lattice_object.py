@@ -33,7 +33,7 @@ from . import elements as elt
 from .elements import Element
 from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
-from .utils import get_s_pos, get_elements,get_value_refpts, set_value_refpts
+from .utils import get_s_pos, get_elements, get_value_refpts, set_value_refpts
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
 from .utils import refpts_iterator, checktype, set_shift, set_tilt, get_geometry
@@ -296,11 +296,11 @@ class Lattice(list):
         if cavities and not hasattr(self, '_cell_harmnumber'):
             cavities.sort(key=lambda el: el.Frequency)
             try:
-                self._cell_harmnumber = getattr(cavities[0], 'HarmNumber')
+                self._cell_harmnumber = cavities[0].HarmNumber
             except AttributeError:
                 length += self.get_s_pos(len(self))[0]
                 rev = self.beta * clight / length
-                frequency = getattr(cavities[0], 'Frequency')
+                frequency = cavities[0].Frequency
                 self._cell_harmnumber = int(round(frequency / rev))
         self._radiation |= params.pop('_radiation')
 
@@ -1475,7 +1475,7 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
     cavities = []
     cell_length = 0
 
-    for idx, elem in enumerate(elem_filter(params, *args)):
+    for elem in elem_filter(params, *args):
         if isinstance(elem, elt.RFCavity):
             cavities.append(elem)
         elif hasattr(elem, 'Energy'):

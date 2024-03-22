@@ -781,7 +781,7 @@ class ThinMultipole(Element):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
         polys = ('PolynomA', 'PolynomB')
         if key in polys:
-            lmin = getattr(self, 'MaxOrder')
+            lmin = self.MaxOrder
             if not len(value) > lmin:
                 raise ValueError(
                     'Length of {0} must be larger than {1}'.format(key, lmin))
