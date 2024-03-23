@@ -11,16 +11,8 @@ from ..lattice import Element, Lattice, Particle, get_class_map
 _CLASS_MAP = get_class_map()
 
 
-def elemstr(self):
-    attrs = dict(self.items())
-    return "\n".join(
-        [self.__class__.__name__ + ":"]
-        + [f"{k:>14}: {attrs.pop(k)!s}" for k in ["FamName", "Length", "PassMethod"]]
-        + [f"{k:>14}: {v!s}" for k, v in attrs.items()]
-    )
-
-
 class _AtEncoder(json.JSONEncoder):
+    """JSON encoder for specific AT types"""
     def default(self, obj):
         if isinstance(obj, Element):
             return obj.definition
@@ -45,7 +37,7 @@ def save_json(ring: Lattice, filename: Optional[str] = None) -> None:
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     if filename is None:
-        json.dumps(("Lattice", ring, ring.attrs), cls=_AtEncoder)
+        print(json.dumps(("Lattice", ring, ring.attrs), cls=_AtEncoder))
     else:
         with open(filename, "wt") as jsonfile:
             json.dump(("Lattice", ring, ring.attrs), jsonfile, cls=_AtEncoder)
