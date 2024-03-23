@@ -12,24 +12,18 @@
 
 #include "atelem.c"
 #include "atlalib.c"
-
-/* Fourth order-symplectic integrator constants */
-
-#define DRIFT1    0.6756035959798286638
-#define DRIFT2   -0.1756035959798286639
-#define KICK1     1.351207191959657328
-#define KICK2    -1.702414383919314656
+#include "atconstants.h"
 
 /* Physical constants used in the calculations */
 
-#define TWOPI		6.28318530717959
-#define CGAMMA 	8.846056192e-05 			/* [m]/[GeV^3] Ref[1] (4.1)      */
-#define M0C2      5.10999060e5				/* Electron rest mass [eV]       */
+#define M0C2      5.1099895e5				/* Electron rest mass [eV]       */
 #define LAMBDABAR 3.86159323e-13			/* Compton wavelength/2pi [m]    */
 #define CER   		2.81794092e-15			/* Classical electron radius [m] */
 #define CU        1.323094366892892			/* 55/(24*sqrt(3)) factor        */
 
-
+#define ROOT_3 1.7320508075688772
+#define HBAR_C    197.3269804e-18            /* reduced Planck constant x c [GeV.m] */
+const double CCCC = 55.0/24.0/ROOT_3 * HBAR_C / __E0 * __RE;    /* [m^2] */
 
 #define SQR(X) ((X)*(X))
 
@@ -289,7 +283,7 @@ static void thinkickB(double* orbit_in, double* A, double* B, double L,
 								orbit_in[2] , orbit_in[3]*p_norm );
 	B3P = B2P*sqrt(B2P);
 
-	BB = CU * CER * LAMBDABAR *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
+	BB = CCCC *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
 				(1+orbit_in[0]*irho + (SQR(orbit_in[1])+SQR(orbit_in[3]))*p_norm2/2);
 
 	

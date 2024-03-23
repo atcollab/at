@@ -23,6 +23,7 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 
 NumElements = length(ring);
 if nargin<3, refpts=1; end
+radindex = atgetcells(ring,'PassMethod','.*RadPass');
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
@@ -32,8 +33,16 @@ zr={zeros(6,6)};
 B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
 
 % calculate Radiation-Diffusion matrix B for elements with radiation
-B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-    ring(radindex),orb(radindex),'UniformOutput',false);
+if getoption('test_mode')
+    fprintf('diffusion_matrix\n');
+    [energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
+    B(radindex)=cellfun(@diffmatrix,...
+        ring(radindex),orb(radindex),'UniformOutput',false);
+else
+    fprintf('findmpoleraddiffmatrix\n');
+    B(radindex)=cellfun(@findmpoleraddiffmatrix,...
+        ring(radindex),orb(radindex),'UniformOutput',false);
+end
 
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
@@ -84,6 +93,10 @@ if nout>=1, varargout{1}=mring; end
         [u,dr] = eig(r([1 3],[1 3]));
         tilt = asin((u(2,1)-u(1,2))/2);
         sigma=sqrt([dr(1,1);dr(2,2)]);
+    end
+
+    function difm=diffmatrix(elem,orbit)
+        difm=diffusion_matrix(elem,orbit,energy,particle,cell_length,0.0);
     end
 
 end

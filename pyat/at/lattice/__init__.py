@@ -7,7 +7,7 @@ These functions are useful for building ad manipulating these sequences.
 import sys
 import numpy as np
 from .axisdef import *
-from .options import DConstant, random
+from .options import *
 from .particle_object import Particle
 from .elements import *
 from .rectangular_bend import *
