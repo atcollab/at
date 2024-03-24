@@ -12,13 +12,13 @@ from typing import Optional, Any
 from collections.abc import Sequence, Generator
 from warnings import warn
 
-import numpy
+import numpy as np
 import scipy.io
 
 from .allfiles import register_format
-from .utils import element_from_dict, element_from_m, RingParam
+from .utils import element_from_dict, element_from_m, RingParam, save_filter
 from .utils import element_to_dict, element_to_m
-from ..lattice import Element, Lattice, Filter
+from ..lattice import Element, Lattice, Particle, Filter
 from ..lattice import elements, AtWarning, params_filter, AtError
 
 _m2p = {
@@ -32,6 +32,18 @@ _param_ignore = {"PassMethod", "Length", "cavpts"}
 
 # Python to Matlab
 _p2m = {"name", "energy", "periodicity", "particle", "cell_harmnumber", "beam_current"}
+
+# Python to Matlab type translation
+_mattype_map = {
+    int: float,
+    np.ndarray: lambda attr: np.asanyarray(attr),
+    Particle: lambda attr: attr.to_dict(),
+}
+
+
+def _mat_encoder(v):
+    """type encoding for .mat files"""
+    return _mattype_map.get(type(v), lambda attr: attr)(v)
 
 
 def matfile_generator(
@@ -58,12 +70,12 @@ def matfile_generator(
     """
 
     def mclean(data):
-        if data.dtype.type is numpy.str_:
+        if data.dtype.type is np.str_:
             # Convert strings in arrays back to strings.
             return str(data[0]) if data.size > 0 else ""
         elif data.size == 1:
             v = data[0, 0]
-            if issubclass(v.dtype.type, numpy.void):
+            if issubclass(v.dtype.type, np.void):
                 # Object => Return a dict
                 return {f: mclean(v[f]) for f in v.dtype.fields}
             else:
@@ -71,7 +83,7 @@ def matfile_generator(
                 return v
         else:
             # Remove any surplus dimensions in arrays.
-            return numpy.squeeze(data)
+            return np.squeeze(data)
 
     # noinspection PyUnresolvedReferences
     m = scipy.io.loadmat(params.setdefault("mat_file", mat_file))
@@ -301,12 +313,7 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
 
     dct = dict(required(ring))
     yield RingParam(**dct)
-    for elem in ring:
-        if not (
-            isinstance(elem, elements.Marker)
-            and getattr(elem, "tag", None) == "RingParam"
-        ):
-            yield elem
+    yield from save_filter(ring)
 
 
 def save_mat(ring: Lattice, filename: str, mat_key: str = "RING") -> None:
@@ -321,7 +328,7 @@ def save_mat(ring: Lattice, filename: str, mat_key: str = "RING") -> None:
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
-    lring = tuple((element_to_dict(elem),) for elem in matlab_ring(ring))
+    lring = tuple(element_to_dict(el, encoder=_mat_encoder) for el in matlab_ring(ring))
     # noinspection PyUnresolvedReferences
     scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
 

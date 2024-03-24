@@ -1,18 +1,23 @@
 """Text representation of a python AT lattice with each element represented by
 its :py:func:`repr` string
 """
+
 from __future__ import print_function
+
+__all__ = ["load_repr", "save_repr"]
+
 import sys
 from os.path import abspath
 from typing import Optional
+
 import numpy
+
 from at.lattice import Lattice
-from at.load import register_format
-from at.load.utils import element_from_string
+
 # imports necessary in' globals()' for 'eval'
 from at.lattice import Particle  # noqa: F401
-
-__all__ = ['load_repr', 'save_repr']
+from at.load import register_format
+from at.load.utils import element_from_string
 
 
 def load_repr(filename: str, **kwargs) -> Lattice:
@@ -37,8 +42,9 @@ def load_repr(filename: str, **kwargs) -> Lattice:
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
+
     def elem_iterator(params, repr_file):
-        with open(params.setdefault('repr_file', repr_file), 'rt') as file:
+        with open(params.setdefault("repr_file", repr_file), "rt") as file:
             # the 1st line is the dictionary of saved lattice parameters
             for k, v in eval(next(file)).items():
                 params.setdefault(k, v)
@@ -59,25 +65,21 @@ def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
+
     def save(file):
-        # print(repr(dict((k, v) for k, v in vars(ring).items()
-        #                 if not k.startswith('_'))), file=file)
         print(repr(ring.attrs), file=file)
         for elem in ring:
             print(repr(elem), file=file)
 
-    # Save the current options
-    opts = numpy.get_printoptions()
     # Set options to print the full representation of float variables
-    numpy.set_printoptions(formatter={'float_kind': repr})
-    if filename is None:
-        save(sys.stdout)
-    else:
-        with open(filename, 'wt') as reprfile:
-            save(reprfile)
-    # Restore the current options
-    numpy.set_printoptions(**opts)
+    with numpy.printoptions(formatter={"float_kind": repr}):
+        if filename is None:
+            save(sys.stdout)
+        else:
+            with open(filename, "wt") as reprfile:
+                save(reprfile)
 
 
-register_format('.repr', load_repr, save_repr,
-                descr='Text representation of a python AT Lattice')
+register_format(
+    ".repr", load_repr, save_repr, descr="Text representation of a python AT Lattice"
+)
