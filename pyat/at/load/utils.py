@@ -8,22 +8,28 @@ import collections
 import os
 import re
 import sysconfig
-from typing import Optional
+from typing import Any, Optional
 from warnings import warn
+from collections.abc import Callable, Generator
 
 import numpy as np
 
-# imports necessary in' globals()' for 'eval'
+# imports necessary in 'globals()' for 'eval'
 from numpy import array, uint8, NaN  # noqa: F401
 
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
-from at.lattice import Particle, Element
+from at.lattice import Lattice, Particle, Element, Marker
 from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _relativistic_particle = Particle()
+
+
+def _no_encoder(v):
+    """type encoding for .mat files"""
+    return v
 
 
 def _particle(value) -> Particle:
@@ -124,13 +130,6 @@ _matclass_map = {
     "M66": "Matrix66",
 }
 
-# Python to Matlab type translation
-_mattype_map = {
-    int: float,
-    np.ndarray: lambda attr: np.asanyarray(attr),
-    Particle: lambda attr: attr.to_dict(),
-}
-
 _class_to_matfunc = {
     elt.Dipole: "atsbend",
     elt.Bend: "atsbend",
@@ -139,7 +138,7 @@ _class_to_matfunc = {
 }
 
 
-def hasattrs(kwargs: dict, *attributes) -> bool:
+def _hasattrs(kwargs: dict, *attributes) -> bool:
     """Checks the presence of keys in a :py:class:`dict`
 
     Returns :py:obj:`True` if any of the ``attributes`` is in ``kwargs``
@@ -157,6 +156,15 @@ def hasattrs(kwargs: dict, *attributes) -> bool:
         if attribute in kwargs:
             return True
     return False
+
+
+def save_filter(ring: Lattice) -> Generator[Element, None, None]:
+    for elem in ring:
+        if not (
+            isinstance(elem, Marker)
+            and getattr(elem, "tag", None) == "RingParam"
+        ):
+            yield elem
 
 
 def find_class(
@@ -206,7 +214,7 @@ def find_class(
                 return class_from_pass
             else:
                 length = float(elem_dict.get("Length", 0.0))
-                if hasattrs(
+                if _hasattrs(
                     elem_dict,
                     "FullGap",
                     "FringeInt1",
@@ -216,7 +224,7 @@ def find_class(
                     "ExitAngle",
                 ):
                     return elt.Dipole
-                elif hasattrs(
+                elif _hasattrs(
                     elem_dict,
                     "Voltage",
                     "Frequency",
@@ -225,16 +233,16 @@ def find_class(
                     "TimeLag",
                 ):
                     return elt.RFCavity
-                elif hasattrs(elem_dict, "Periodicity"):
+                elif _hasattrs(elem_dict, "Periodicity"):
                     # noinspection PyProtectedMember
                     return RingParam
-                elif hasattrs(elem_dict, "Limits"):
+                elif _hasattrs(elem_dict, "Limits"):
                     return elt.Aperture
-                elif hasattrs(elem_dict, "M66"):
+                elif _hasattrs(elem_dict, "M66"):
                     return elt.M66
-                elif hasattrs(elem_dict, "K"):
+                elif _hasattrs(elem_dict, "K"):
                     return elt.Quadrupole
-                elif hasattrs(elem_dict, "PolynomB", "PolynomA"):
+                elif _hasattrs(elem_dict, "PolynomB", "PolynomA"):
                     loworder = low_order("PolynomB")
                     if loworder == 1:
                         return elt.Quadrupole
@@ -246,11 +254,11 @@ def find_class(
                         return elt.Multipole
                     else:
                         return elt.ThinMultipole
-                elif hasattrs(elem_dict, "KickAngle"):
+                elif _hasattrs(elem_dict, "KickAngle"):
                     return elt.Corrector
                 elif length > 0.0:
                     return elt.Drift
-                elif hasattrs(elem_dict, "GCR"):
+                elif _hasattrs(elem_dict, "GCR"):
                     return elt.Monitor
                 elif pass_method == "IdentityPass":
                     return elt.Marker
@@ -403,18 +411,17 @@ def element_from_m(line: str) -> Element:
     return cls(*args, **kwargs)
 
 
-def element_to_dict(elem: Element) -> dict:
+def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
     """Builds the Matlab structure of an :py:class:`.Element`
 
     Parameters:
         elem:           :py:class:`.Element`
+        encoder:        data converter
 
     Returns:
         dct (dict):     Dictionary of :py:class:`.Element` attributes
     """
-    dct = dict(
-        (k, _mattype_map.get(type(v), lambda attr: attr)(v)) for k, v in elem.items()
-    )
+    dct = dict((k, encoder(v)) for k, v in elem.items())
     class_name = elem.__class__.__name__
     dct["Class"] = _matclass_map.get(class_name, class_name)
     return dct
