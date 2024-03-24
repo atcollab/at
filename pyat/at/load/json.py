@@ -1,18 +1,24 @@
+"""
+Handling of JSON files
+"""
+
 from __future__ import annotations
+
+__all__ = ["save_json", "load_json"]
 
 import json
 from typing import Optional, Any
 
 import numpy as np
 
-from . import register_format
-from ..lattice import Element, Lattice, Particle, get_class_map
-
-_CLASS_MAP = get_class_map()
+from .allfiles import register_format
+from .utils import element_to_dict, element_from_dict, save_filter
+from ..lattice import Element, Lattice, Particle
 
 
 class _AtEncoder(json.JSONEncoder):
     """JSON encoder for specific AT types"""
+
     def default(self, obj):
         if isinstance(obj, Element):
             return obj.definition
@@ -36,11 +42,15 @@ def save_json(ring: Lattice, filename: Optional[str] = None) -> None:
         :py:func:`.save_lattice` for a generic lattice-saving function.
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
+    data = dict(
+        elements=[element_to_dict(el) for el in save_filter(ring)],
+        parameters=ring.attrs,
+    )
     if filename is None:
-        print(json.dumps(("Lattice", ring, ring.attrs), cls=_AtEncoder))
+        print(json.dumps(data, cls=_AtEncoder, indent=2))
     else:
         with open(filename, "wt") as jsonfile:
-            json.dump(("Lattice", ring, ring.attrs), jsonfile, cls=_AtEncoder)
+            json.dump(data, jsonfile, cls=_AtEncoder, indent=2)
 
 
 def load_json(filename: str, **kwargs) -> Lattice:
@@ -50,14 +60,7 @@ def load_json(filename: str, **kwargs) -> Lattice:
         filename:           Name of a JSON file
 
     Keyword Args:
-        name (str):         Name of the lattice. Default: taken from
-          the lattice
-        energy (float):     Energy of the lattice [eV]. Default: taken
-          from the lattice elements
-        periodicity(int):   Number of periods. Default: taken from the
-          elements, or 1
-        *:                  All other keywords will be set as Lattice
-          attributes
+        *:                  All keywords update the lattice properties
 
     Returns:
         lattice (Lattice):          New :py:class:`.Lattice` object
@@ -69,27 +72,22 @@ def load_json(filename: str, **kwargs) -> Lattice:
     def json_generator(params: dict[str, Any], elem_list):
         particle_dict = params.pop("particle", {})
         params["particle"] = Particle(**particle_dict)
-        for clname, args, keys in elem_list:
-            cls = _CLASS_MAP[clname]
-            yield cls(*args, **keys)
+        for idx, elem_dict in enumerate(elem_list):
+            yield element_from_dict(elem_dict, index=idx, check=False)
 
     with open(filename, "rt") as jsonfile:
         data = json.load(jsonfile)
 
     try:
-        code, elems, prms = data
-    except ValueError:
+        elements = data["elements"]
+        parameters = data["parameters"]
+    except KeyError:
         raise TypeError("Not a Lattice")
-    if not (
-        isinstance(code, str)
-        and isinstance(elems, list)
-        and isinstance(prms, dict)
-        and (code == "Lattice")
-    ):
+    if not (isinstance(elements, list) and isinstance(parameters, dict)):
         raise TypeError("Not a lattice")
 
-    prms.update(kwargs)
-    return Lattice(elems, iterator=json_generator, **prms)
+    parameters.update(kwargs)
+    return Lattice(elements, iterator=json_generator, **parameters)
 
 
 register_format(

@@ -83,20 +83,14 @@ lattice=atSetRingProperties(lattice,varargs{:});
 
     function [lattice, opts]=load_json(fpath, opts)
         data=jsondecode(fileread(fpath));
-        % File signature for later use
-        try
-            atjson=data.atjson;
-        catch
-            atjson=1;
-        end
-        props=data.properties;
-        name=props.name;
-        energy=props.energy;
-        periodicity=props.periodicity;
-        particle=atparticle.loadobj(props.particle);
-        harmnumber=props.harmonic_number;
-        props=rmfield(props,{'name','energy','periodicity','particle','harmonic_number'});
-        args=[fieldnames(props) struct2cell(props)]';
+        prms=data.parameters;
+        name=prms.name;
+        energy=prms.energy;
+        periodicity=prms.periodicity;
+        particle=atparticle.loadobj(prms.particle);
+        harmnumber=prms.harmonic_number;
+        prms=rmfield(prms,{'name','energy','periodicity','particle','harmonic_number'});
+        args=[fieldnames(prms) struct2cell(prms)]';
         lattice=atSetRingProperties(data.elements,...
             'FamName', name,...
             'Energy', energy,...
