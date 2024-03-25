@@ -15,8 +15,8 @@ def test_data_checks():
 
 def test_element_string_ordering():
     d = elements.Drift('D0', 1, attr=numpy.array(0))
-    assert d.__str__() == ("Drift:\n\tFamName : D0\n\tLength : 1.0\n"
-                           "\tPassMethod : DriftPass\n\tattr : 0")
+    assert d.__str__() == ("Drift:\n       FamName: D0\n        Length: 1.0\n"
+                           "    PassMethod: DriftPass\n          attr: 0")
     assert d.__repr__() == "Drift('D0', 1.0, attr=array(0))"
 
 
