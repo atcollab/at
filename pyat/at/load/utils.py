@@ -19,12 +19,11 @@ from numpy import array, uint8, NaN  # noqa: F401
 
 from at import integrators
 from at.lattice import AtWarning
-from at.lattice import CLASS_MAP, elements as elt
+from at.lattice import get_class_map, elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
 from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
-_relativistic_particle = Particle()
 
 
 def _no_encoder(v):
@@ -36,10 +35,11 @@ def _particle(value) -> Particle:
     if isinstance(value, Particle):
         # Create from python: save_mat
         return value
-    else:
+    elif isinstance(value, dict):
         # Create from Matlab: load_mat
-        name = value.pop("name")
-        return Particle(name, **value)
+        return Particle(**value)
+    else:
+        return Particle(value)
 
 
 def _warn(index: int, message: str, elem_dict: dict) -> None:
@@ -64,20 +64,18 @@ class RingParam(elt.Element):
         elt.Element._conversions, Energy=float, Periodicity=int, Particle=_particle
     )
 
+    # noinspection PyPep8Naming
     def __init__(
         self,
-        name: str,
-        energy: float,
-        periodicity: int = 1,
-        particle: Particle = _relativistic_particle,
+        FamName: str,
+        Energy: float,
+        Periodicity: int ,
         **kwargs,
     ):
-        if not np.isnan(float(energy)):
-            kwargs.setdefault("Energy", energy)
-        kwargs.setdefault("Periodicity", periodicity)
-        kwargs.setdefault("Particle", particle)
+        if not np.isnan(float(Energy)):
+            kwargs["Energy"] = Energy
         kwargs.setdefault("PassMethod", "IdentityPass")
-        super(RingParam, self).__init__(name, **kwargs)
+        super(RingParam, self).__init__(FamName, Periodicity=Periodicity, **kwargs)
 
 
 _alias_map = {
@@ -96,7 +94,7 @@ _alias_map = {
 
 
 # Matlab to Python class translation
-_CLASS_MAP = dict((k.lower(), v) for k, v in CLASS_MAP.items())
+_CLASS_MAP = dict((k.lower(), v) for k, v in get_class_map().items())
 _CLASS_MAP.update(_alias_map)
 
 _PASS_MAP = {
@@ -114,13 +112,6 @@ _PASS_MAP = {
     "AperturePass": elt.Aperture,
     "IdTablePass": idtable_element.InsertionDeviceKickMap,
     "GWigSymplecticPass": elt.Wiggler,
-}
-
-# Matlab to Python attribute translation
-_param_to_lattice = {
-    "Energy": "energy",
-    "Periodicity": "periodicity",
-    "FamName": "name",
 }
 
 # Python to Matlab class translation
@@ -343,7 +334,7 @@ def element_from_string(elem_string: str) -> Element:
     Returns:
         elem (Element): new :py:class:`.Element`
     """
-    return eval(elem_string, globals(), CLASS_MAP)
+    return eval(elem_string, globals(), get_class_map())
 
 
 def element_from_m(line: str) -> Element:
