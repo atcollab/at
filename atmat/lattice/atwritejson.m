@@ -22,9 +22,6 @@ if ~isempty(filename)
     %Check file extension
     if isempty(ext), ext='.json'; end
 
-    % Make fullname
-    fn=fullfile(pname,[fname ext]);
-
     % Open file to be written
     [fid,mess]=fopen(fullfile(pname,[fname ext]),'wt');
 
@@ -42,22 +39,26 @@ end
     function jsondata=sjson(ring)
         ok=~atgetcells(ring, 'Class', 'RingParam');
         data.elements=ring(ok);
-        data.parameters=get_params(ring);
+        data.properties=get_params(ring);
         jsondata=jsonencode(data, 'PrettyPrint', ~compact);
     end
 
     function prms=get_params(ring)
+        % Get "standard" properties
         [name, energy, part, periodicity, harmonic_number]=...
             atGetRingProperties(ring,'FamName', 'Energy', 'Particle',...
             'Periodicity', 'HarmNumber');
         prms=struct('name', name, 'energy', energy, 'periodicity', periodicity,...
             'particle', saveobj(part), 'harmonic_number', harmonic_number);
+        % Add user-defined properties
         idx=atlocateparam(ring);
-        p2=rmfield(ring{idx},{'FamName','PassMethod','Length','Class',...
-            'Energy', 'Particle','Periodicity','cell_harmnumber'});
-        for nm=fieldnames(p2)'
-            na=nm{1};
-            prms.(na)=p2.(na);
+        if ~isempty(idx)
+            p2=rmfield(ring{idx},{'FamName','PassMethod','Length','Class',...
+                'Energy', 'Particle','Periodicity','cell_harmnumber'});
+            for nm=fieldnames(p2)'
+                na=nm{1};
+                prms.(na)=p2.(na);
+            end
         end
     end
 
