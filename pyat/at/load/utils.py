@@ -4,6 +4,18 @@ Conversion utilities for creating pyat elements
 
 from __future__ import annotations
 
+__all__ = [
+    "element_from_dict",
+    "element_to_dict",
+    "element_from_m",
+    "element_to_m",
+    "element_from_string",
+    "find_class",
+    "save_filter",
+    "split_ignoring_parentheses",
+    "RingParam",
+]
+
 import collections
 import os
 import re
@@ -69,7 +81,7 @@ class RingParam(elt.Element):
         self,
         FamName: str,
         Energy: float,
-        Periodicity: int ,
+        Periodicity: int,
         **kwargs,
     ):
         if not np.isnan(float(Energy)):
@@ -79,6 +91,7 @@ class RingParam(elt.Element):
 
 
 _alias_map = {
+    "bend": elt.Dipole,
     "rbend": elt.Dipole,
     "sbend": elt.Dipole,
     "quad": elt.Quadrupole,
@@ -115,17 +128,16 @@ _PASS_MAP = {
 }
 
 # Python to Matlab class translation
-_matclass_map = {
+# Default: element_class.__name__
+_mat_class = {
     "Dipole": "Bend",
-    "InsertionDeviceKickMap": "InsertionDeviceKickMap",
     "M66": "Matrix66",
 }
-
-_class_to_matfunc = {
-    elt.Dipole: "atsbend",
-    elt.Bend: "atsbend",
-    elt.M66: "atM66",
-    idtable_element.InsertionDeviceKickMap: "atinsertiondevicekickmap",
+# Matlab constructor function
+# Default: "".join(("at", element_class.__name__.lower()))
+_mat_constructor = {
+    "Dipole": "atsbend",
+    "M66": "atM66",
 }
 
 
@@ -151,10 +163,7 @@ def _hasattrs(kwargs: dict, *attributes) -> bool:
 
 def save_filter(ring: Lattice) -> Generator[Element, None, None]:
     for elem in ring:
-        if not (
-            isinstance(elem, Marker)
-            and getattr(elem, "tag", None) == "RingParam"
-        ):
+        if not (isinstance(elem, Marker) and getattr(elem, "tag", None) == "RingParam"):
             yield elem
 
 
@@ -414,7 +423,7 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     """
     dct = dict((k, encoder(v)) for k, v in elem.items())
     class_name = elem.__class__.__name__
-    dct["Class"] = _matclass_map.get(class_name, class_name)
+    dct["Class"] = _mat_class.get(class_name, class_name)
     return dct
 
 
@@ -457,8 +466,8 @@ def element_to_m(elem: Element) -> str:
             return repr(arg)
 
     def m_name(elclass):
-        stdname = "".join(("at", elclass.__name__.lower()))
-        return _class_to_matfunc.get(elclass, stdname)
+        classname = elclass.__name__
+        return _mat_constructor.get(classname, "".join(("at", classname.lower())))
 
     attrs = dict(elem.items())
     # noinspection PyProtectedMember
@@ -474,19 +483,6 @@ def element_to_m(elem: Element) -> str:
         argstrs.append(convert(kwds.pop("PassMethod")))
     argstrs += [", ".join((repr(k), convert(v))) for k, v in kwds.items()]
     return "{0:>15}({1});...".format(m_name(elem.__class__), ", ".join(argstrs))
-
-
-# Kept for compatibility but should be deprecated:
-
-
-CLASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _CLASS_MAP.items())
-
-PASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _PASS_MAP.items())
-
-
-def find_class_name(elem_dict, quiet=False):
-    """Derive the class name of an Element from its attributes"""
-    return find_class(elem_dict, quiet=quiet).__name__
 
 
 def split_ignoring_parentheses(string, delimiter):

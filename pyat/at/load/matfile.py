@@ -331,7 +331,11 @@ def save_mat(ring: Lattice, filename: str, mat_key: str = "RING") -> None:
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
-    lring = tuple(element_to_dict(el, encoder=_mat_encoder) for el in matlab_ring(ring))
+#   lring = tuple(element_to_dict(el, encoder=_mat_encoder) for el in matlab_ring(ring))
+#   Ensure the lattice is a Matlab column vector
+    lring = np.array(
+        [element_to_dict(el, encoder=_mat_encoder) for el in matlab_ring(ring)]
+    ).reshape(-1, 1)
     # noinspection PyUnresolvedReferences
     scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
 
