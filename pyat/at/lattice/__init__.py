@@ -12,6 +12,7 @@ from .particle_object import Particle
 from .elements import *
 from .rectangular_bend import *
 from .idtable_element import InsertionDeviceKickMap
+from .undulator_dipoles import undulator_dipoles, insert_undulator
 from .utils import *
 from .lattice_object import *
 from .cavity_access import *
