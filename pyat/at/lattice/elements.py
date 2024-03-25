@@ -280,11 +280,9 @@ class Element(object):
             raise
 
     def __str__(self):
-        attrs = dict(self.items())
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {attrs.pop(k)!s}" for k in ["FamName", "Length", "PassMethod"]]
-            + [f"{k:>14}: {v!s}" for k, v in attrs.items()]
+            + [f"{k:>14}: {v!s}" for k, v in self.items()]
         )
 
     def __repr__(self):
@@ -376,14 +374,17 @@ class Element(object):
         defelem = self.__class__(*arguments)
         keywords = dict(
             (k, v)
-            for k, v in sorted(attrs.items())
+            for k, v in attrs.items()
             if not numpy.array_equal(v, getattr(defelem, k, None))
         )
         return self.__class__.__name__, arguments, keywords
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        for k, v in vars(self).items():
+        v = vars(self).copy()
+        for k in ["FamName", "Length", "PassMethod"]:
+            yield k, v.pop(k)
+        for k, v in sorted(v.items()):
             yield k, v
 
     def is_compatible(self, other: Element) -> bool:

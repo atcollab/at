@@ -21,17 +21,19 @@ from .utils import element_to_dict, element_to_m
 from ..lattice import Element, Lattice, Particle, Filter
 from ..lattice import elements, AtWarning, params_filter, AtError
 
+# Translation of RingParam attributes
 _m2p = {
     "FamName": "name",
     "Energy": "energy",
     "Periodicity": "periodicity",
     "Particle": "particle",
     "cell_harmnumber": "cell_harmnumber",
+    "beam_current": "beam_current",
+    "PassMethod": None,
+    "Length": None,
+    "cavpts": None,
 }
-_param_ignore = {"PassMethod", "Length", "cavpts"}
-
-# Python to Matlab
-_p2m = {"name", "energy", "periodicity", "particle", "cell_harmnumber", "beam_current"}
+_p2m = dict((v, k) for k, v in _m2p.items() if v is not None)
 
 # Python to Matlab type translation
 _mattype_map = {
@@ -144,8 +146,9 @@ def ringparam_filter(
         if isinstance(elem, RingParam):
             ringparams.append(elem)
             for k, v in elem.items():
-                if k not in _param_ignore:
-                    params.setdefault(_m2p.get(k, k), v)
+                k2 = _m2p.get(k, k)
+                if k2 is not None:
+                    params.setdefault(k2, v)
             if keep_all:
                 pars = vars(elem).copy()
                 name = pars.pop("FamName")
@@ -300,14 +303,14 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
         # Public lattice attributes
         params = dict((k, v) for k, v in vars(rng).items() if not k.startswith("_"))
         # Output the required attributes/properties
-        for k in _p2m:
+        for kp, km in _p2m.items():
             try:
-                v = getattr(rng, k)
+                v = getattr(rng, kp)
             except AttributeError:
                 pass
             else:
-                params.pop(k, None)
-                yield k, v
+                params.pop(kp, None)
+                yield km, v
         # Output the remaining attributes
         yield from params.items()
 
