@@ -1,7 +1,7 @@
 from .elements import Element
 import numpy
 import io
-from ..constants import clight
+from ..constants import clight, e_mass
 from warnings import warn
 
 
@@ -24,8 +24,8 @@ class InsertionDeviceKickMap(Element):
                                                      'Normalization_energy',
                                                      'Nslice',
                                                      'Length',
-                                                     'xkick',
-                                                     'ykick',
+                                                     'xkick2',
+                                                     'ykick2',
                                                      'xkick1',
                                                      'ykick1',
                                                      'xtable',
@@ -33,8 +33,8 @@ class InsertionDeviceKickMap(Element):
 
     _conversions = dict(Element._conversions,
                         Nslice=int,
-                        xkick=_anyarray,
-                        ykick=_anyarray,
+                        xkick2=_anyarray,
+                        ykick2=_anyarray,
                         xkick1=_anyarray,
                         ykick1=_anyarray
                         )
@@ -109,6 +109,9 @@ class InsertionDeviceKickMap(Element):
                 data_lines = 0     # line not starting with '#'
                 header_lines = 0   # line starting with '#'
                 block_counter = 0  # START of the h.map, START of the v.map
+                kick_block_list = []
+                kick_haxes_list = []
+                kick_vaxes_list = []
                 for line in f:
                     sline = line.split()
                     if sline[0] == '#':  # line is comment
@@ -122,7 +125,7 @@ class InsertionDeviceKickMap(Element):
                         elif data_lines == 3:  # get the number of ver. points
                             v_points = int(sline[0])
                             # initialize element kicks and table_axes
-                            kick_map = numpy.zeros((v_points, h_points))
+                            kick_block = numpy.zeros((v_points, h_points))
                             haxis = numpy.zeros(h_points)
                             vaxis = numpy.zeros(v_points)
                         else:
@@ -137,28 +140,35 @@ class InsertionDeviceKickMap(Element):
                                 # and minus another one due
                                 # to the column labels in first line
                                 vaxis[block_lines - 2] = float(sline[0])
-                                kick_map[block_lines - 2][:] = sline[1:]
+                                kick_block[block_lines - 2][:] = sline[1:]
                             if block_lines > v_points:
                                 block_lines = 0
-                                if block_counter == 1:
-                                    hkickmap = numpy.copy(kick_map)
-                                    table_cols1 = haxis
-                                    table_rows1 = vaxis
-                                if block_counter == 2:
-                                    vkickmap = numpy.copy(kick_map)
-                                    table_cols2 = haxis
-                                    table_rows2 = vaxis
-                                if block_counter > 2:
-                                    print('atWarning: only two tables read')
+                                kick_block_list.append(kick_block)
+                                kick_haxes_list.append(haxis)
+                                kick_vaxes_list.append(vaxis)
                             block_lines += 1
-            # dummy variables not implemented in the reading function
-            # but required
-            hkickmap1 = 0.0 * numpy.copy(hkickmap)
-            vkickmap1 = 0.0 * numpy.copy(vkickmap)
+            # checking how many kick blocks were added
+            lenkick_block_list = len(kick_block_list)
+            if lenkick_block_list < 2 or lenkick_block_list == 3:
+                _minimumBlocknumberErrormsg = ('Input file contains only '
+                                               f'{len(kick_block_list)} block')
+                raise ValueError(_minimumBlocknumberErrormsg)
+            if lenkick_block_list == 2:
+                # first order kick not in file
+                kick_block_list.append(0.0 * numpy.copy(kick_block))
+                kick_block_list.append(0.0 * numpy.copy(kick_block))
+            elif lenkick_block_list > 4:
+                # file contains more blocks that required
+                _warn4kickblocks = ('Input file contains more than 4 blocks. '
+                                    'Additional blocks ignored')
+                warn(_warn4kickblocks)
 
-            return el_length, hkickmap, vkickmap, table_cols1, table_rows1, \
-                table_cols2, table_rows2, h_points, v_points, \
-                hkickmap1, vkickmap1
+            return el_length, \
+                kick_block_list[0], kick_block_list[1], \
+                kick_haxes_list[0], kick_vaxes_list[0], \
+                kick_haxes_list[1], kick_vaxes_list[1], \
+                kick_block_list[2], kick_block_list[3], \
+                h_points, v_points
 
         def sorted_table(table_in, sorted_index, order_axis):
             # numpy.asfortranarray makes a copy of contiguous memory positions
@@ -172,33 +182,34 @@ class InsertionDeviceKickMap(Element):
             return table_out2
 
         # read the input data
-        el_length, hkickmap, vkickmap, \
-            table_cols1, table_rows1, \
-            table_cols2, table_rows2, \
-            NumX, NumY, \
-            hkickmap1, vkickmap1 \
+        el_length, \
+            hkickmap2, vkickmap2, \
+            table_colshkick, table_rowshkick, \
+            table_colsvkick, table_rowsvkick, \
+            hkickmap1, vkickmap1, \
+            NumX, NumY \
             = readRadiaFieldMap(Filename_in)
 
         # set to float
-        table_cols1array = numpy.array(table_cols1, dtype='float64')
-        table_rows1array = numpy.array(table_rows1, dtype='float64')
-        table_cols2array = numpy.array(table_cols2, dtype='float64')
-        table_rows2array = numpy.array(table_rows2, dtype='float64')
+        table_colshkickarray = numpy.array(table_colshkick, dtype='float64')
+        table_rowshkickarray = numpy.array(table_rowshkick, dtype='float64')
+        table_colsvkickarray = numpy.array(table_colsvkick, dtype='float64')
+        table_rowsvkickarray = numpy.array(table_rowsvkick, dtype='float64')
 
         # Reorder table_axes
-        cols1sorted_index = numpy.argsort(table_cols1array)
-        table_cols1array.sort()
-        rows1sorted_index = numpy.argsort(table_rows1array)
-        table_rows1array.sort()
-        cols2sorted_index = numpy.argsort(table_cols2array)
-        table_cols2array.sort()
-        rows2sorted_index = numpy.argsort(table_rows2array)
-        table_rows2array.sort()
-        # Reorder kickmap
-        hkickmap_a = sorted_table(hkickmap, cols1sorted_index, 'col')
-        hkickmap = sorted_table(hkickmap_a, rows1sorted_index, 'row')
-        vkickmap_a = sorted_table(vkickmap, cols2sorted_index, 'col')
-        vkickmap = sorted_table(vkickmap_a, rows2sorted_index, 'row')
+        cols1sorted_index = numpy.argsort(table_colshkickarray)
+        table_colshkickarray.sort()
+        rows1sorted_index = numpy.argsort(table_rowshkickarray)
+        table_rowshkickarray.sort()
+        cols2sorted_index = numpy.argsort(table_colsvkickarray)
+        table_colsvkickarray.sort()
+        rows2sorted_index = numpy.argsort(table_rowsvkickarray)
+        table_rowsvkickarray.sort()
+        # Reorder kickmap2
+        hkickmap2_a = sorted_table(hkickmap2, cols1sorted_index, 'col')
+        hkickmap2 = sorted_table(hkickmap2_a, rows1sorted_index, 'row')
+        vkickmap2_a = sorted_table(vkickmap2, cols2sorted_index, 'col')
+        vkickmap2 = sorted_table(vkickmap2_a, rows2sorted_index, 'row')
         # Reorder kickmap1
         hkickmap1_a = sorted_table(hkickmap1, cols1sorted_index, 'col')
         hkickmap1 = sorted_table(hkickmap1_a, rows1sorted_index, 'row')
@@ -206,24 +217,27 @@ class InsertionDeviceKickMap(Element):
         vkickmap1 = sorted_table(vkickmap1_a, rows2sorted_index, 'row')
 
         # Field to kick factors
-        Brho = 1e9 * Energy/clight
-        factor = 1.0/(Brho**2)
-        xkick = factor * hkickmap
-        ykick = factor * vkickmap
-        # kick1 vars set to zero, not yet implemented
-        factor1 = -1.0/(Brho)
+        e_massGeV = e_mass * 1e-9
+        Brho = 1e9 * numpy.sqrt(Energy**2 - e_massGeV**2)/clight
+        # kick2 vars
+        factor2 = 1.0/(Brho**2)
+        xkick2 = factor2 * hkickmap2
+        ykick2 = factor2 * vkickmap2
+        # kick1 vars
+        factor1 = 1.0/(Brho)
         xkick1 = factor1 * hkickmap1
         ykick1 = factor1 * vkickmap1
-        xtable = table_cols1array.T
-        ytable = table_rows1array.T
+        # axes
+        xtable = table_colshkickarray.T
+        ytable = table_rowshkickarray.T
 
         args_dict = {'PassMethod': 'IdTablePass',
                      'Filename_in': Filename_in,
                      'Normalization_energy': Energy,
                      'Nslice': numpy.uint8(Nslice),
                      'Length': el_length,
-                     'xkick': xkick,
-                     'ykick': ykick,
+                     'xkick2': xkick2,
+                     'ykick2': ykick2,
                      'xkick1': xkick1,
                      'ykick1': ykick1,
                      'xtable': xtable,
@@ -237,12 +251,26 @@ class InsertionDeviceKickMap(Element):
                      'Normalization_energy',
                      'Nslice',
                      'Length',
-                     'xkick',
-                     'ykick',
+                     'xkick2',
+                     'ykick2',
                      'xkick1',
                      'ykick1',
                      'xtable',
                      'ytable']
+        # change of variable names since Pull Request
+        # https://github.com/atcollab/at/pull/683#issuecomment-1805667215
+        _args_change = {'xkick': 'xkick2', 'ykick': 'ykick2'}
+        for _old_name in _args_change:
+            if _old_name in kwargs:
+                # insert in args while keeping order before zipping
+                _inda = _argnames.index(_args_change[_old_name])
+                _argslist = list(args)
+                _argslist.insert(_inda, kwargs.pop(_old_name))
+                args = tuple(_argslist)
+                _deprecat_msg = (f' argument {_old_name} is deprecated; '
+                                 f'it is changed to {_args_change[_old_name]}'
+                                 )
+                warn(_deprecat_msg)
         if len(args) < 11:
             # get data from text file
             elemargs = self.from_text_file(*args)
