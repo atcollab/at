@@ -13,7 +13,7 @@ from typing import Optional, Any
 import numpy as np
 
 from .allfiles import register_format
-from .utils import element_to_dict, element_from_dict, save_filter
+from .utils import element_to_dict, element_from_dict, keep_elements, keep_attributes
 from ..lattice import Element, Lattice, Particle
 
 
@@ -48,7 +48,7 @@ def save_json(
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     indent = None if compact else 2
-    data = dict(elements=list(save_filter(ring)), properties=ring.attrs)
+    data = dict(elements=list(keep_elements(ring)), properties=keep_attributes(ring))
     if filename is None:
         print(json.dumps(data, cls=_AtEncoder, indent=indent))
     else:
@@ -74,7 +74,7 @@ def load_json(filename: str, **kwargs) -> Lattice:
 
     def json_generator(params: dict[str, Any], fn):
 
-        with open(params.setdefault("json_file", fn), "rt") as jsonfile:
+        with open(params.setdefault("in_file", fn), "rt") as jsonfile:
             data = json.load(jsonfile)
         elements = data["elements"]
         try:

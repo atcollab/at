@@ -7,6 +7,7 @@ from __future__ import print_function, annotations
 __all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
 
 import sys
+import os
 from os.path import abspath, basename, splitext
 from typing import Optional, Any
 from collections.abc import Sequence, Generator
@@ -16,8 +17,9 @@ import numpy as np
 import scipy.io
 
 from .allfiles import register_format
-from .utils import element_from_dict, element_from_m, RingParam, save_filter
+from .utils import element_from_dict, element_from_m, RingParam, keep_elements
 from .utils import element_to_dict, element_to_m
+from .utils import _drop_attrs
 from ..lattice import Element, Lattice, Particle, Filter
 from ..lattice import elements, AtWarning, params_filter, AtError
 
@@ -27,13 +29,15 @@ _m2p = {
     "Energy": "energy",
     "Periodicity": "periodicity",
     "Particle": "particle",
-    "cell_harmnumber": "cell_harmnumber",
-    "beam_current": "beam_current",
+    "cell_harmnumber": "cell_harmnumber",  # necessary: property
+    "beam_current": "beam_current",  # necessary: property
     "PassMethod": None,
     "Length": None,
     "cavpts": None,
 }
 _p2m = dict((v, k) for k, v in _m2p.items() if v is not None)
+# Attribute to drop when writing a file
+_p2m.update(_drop_attrs)
 
 # Python to Matlab type translation
 _mattype_map = {
@@ -88,7 +92,7 @@ def matfile_generator(
             return np.squeeze(data)
 
     # noinspection PyUnresolvedReferences
-    m = scipy.io.loadmat(params.setdefault("mat_file", mat_file))
+    m = scipy.io.loadmat(params.setdefault("in_file", mat_file))
     matvars = [varname for varname in m if not varname.startswith("__")]
     default_key = matvars[0] if (len(matvars) == 1) else "RING"
     key = params.setdefault("mat_key", default_key)
@@ -213,7 +217,7 @@ def mfile_generator(params: dict, m_file: str) -> Generator[Element, None, None]
     Yields:
         elem (Element): new Elements
     """
-    with open(params.setdefault("m_file", m_file), "rt") as file:
+    with open(params.setdefault("in_file", m_file), "rt") as file:
         _ = next(file)  # Matlab function definition
         _ = next(file)  # Cell array opening
         for lineno, line in enumerate(file):
@@ -310,13 +314,14 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
                 pass
             else:
                 params.pop(kp, None)
-                yield km, v
+                if km is not None:
+                    yield km, v
         # Output the remaining attributes
         yield from params.items()
 
     dct = dict(required(ring))
     yield RingParam(**dct)
-    yield from save_filter(ring)
+    yield from keep_elements(ring)
 
 
 def save_mat(ring: Lattice, filename: str, mat_key: str = "RING") -> None:
@@ -364,5 +369,20 @@ def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
             print("end", file=mfile)
 
 
+def _mat_file(ring):
+    """.mat input file"""
+    try:
+        in_file = ring.in_file
+    except AttributeError:
+        raise AttributeError("'Lattice' object has no attribute 'mat_file'")
+    else:
+        _, ext = os.path.splitext(in_file)
+        if ext != ".mat":
+            raise AttributeError("'Lattice' object has no attribute 'mat_file'")
+    return in_file
+
+
 register_format(".mat", load_mat, save_mat, descr="Matlab binary mat-file")
 register_format(".m", load_m, save_m, descr="Matlab text m-file")
+
+Lattice.mat_file = property(_mat_file, None, None)
