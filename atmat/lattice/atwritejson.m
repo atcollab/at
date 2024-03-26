@@ -53,8 +53,10 @@ end
         % Add user-defined properties
         idx=atlocateparam(ring);
         if ~isempty(idx)
-            p2=rmfield(ring{idx},{'FamName','PassMethod','Length','Class',...
-                'Energy', 'Particle','Periodicity','cell_harmnumber'});
+            flist={'FamName','PassMethod','Length','Class',...
+                'Energy', 'Particle','Periodicity','cell_harmnumber'};
+            present=isfield(ring{idx}, flist);
+            p2=rmfield(ring{idx},flist(present));
             for nm=fieldnames(p2)'
                 na=nm{1};
                 prms.(na)=p2.(na);

@@ -31,24 +31,29 @@ class _AtEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def save_json(ring: Lattice, filename: Optional[str] = None) -> None:
+def save_json(
+    ring: Lattice, filename: Optional[str] = None, compact: bool = False
+) -> None:
     """Save a :py:class:`.Lattice` as a JSON file
 
     Parameters:
         ring:           Lattice description
         filename:       Name of the JSON file. Default: outputs on
           :py:obj:`sys.stdout`
+        compact:        If :py:obj:`False` (default), the JSON file is pretty-printed
+          with line feeds and indentation. Otherwise, the output is a single line.
 
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
+    indent = None if compact else 2
     data = dict(elements=list(save_filter(ring)), properties=ring.attrs)
     if filename is None:
-        print(json.dumps(data, cls=_AtEncoder, indent=2))
+        print(json.dumps(data, cls=_AtEncoder, indent=indent))
     else:
         with open(filename, "wt") as jsonfile:
-            json.dump(data, jsonfile, cls=_AtEncoder, indent=2)
+            json.dump(data, jsonfile, cls=_AtEncoder, indent=indent)
 
 
 def load_json(filename: str, **kwargs) -> Lattice:
