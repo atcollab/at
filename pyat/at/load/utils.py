@@ -11,7 +11,8 @@ __all__ = [
     "element_to_m",
     "element_from_string",
     "find_class",
-    "save_filter",
+    "keep_elements",
+    "keep_attributes",
     "split_ignoring_parentheses",
     "RingParam",
 ]
@@ -140,6 +141,15 @@ _mat_constructor = {
     "M66": "atM66",
 }
 
+# Lattice attributes which must be dropped when writing a file
+_drop_attrs = {
+    "in_file": None,
+    "mat_key": None,
+    "mat_file": None,  # Not used anymore...
+    "m_file": None,
+    "repr_file": None,
+}
+
 
 def _hasattrs(kwargs: dict, *attributes) -> bool:
     """Checks the presence of keys in a :py:class:`dict`
@@ -161,7 +171,15 @@ def _hasattrs(kwargs: dict, *attributes) -> bool:
     return False
 
 
-def save_filter(ring: Lattice) -> Generator[Element, None, None]:
+def keep_attributes(ring: Lattice):
+    """Remove Lattice attributes which must not be saved on file"""
+    return dict(
+        (k, v) for k, v in ring.attrs.items() if _drop_attrs.get(k, k) is not None
+    )
+
+
+def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
+    """Remove the 'RingParam' Marker"""
     for elem in ring:
         if not (isinstance(elem, Marker) and getattr(elem, "tag", None) == "RingParam"):
             yield elem

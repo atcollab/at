@@ -17,7 +17,7 @@ from at.lattice import Lattice
 # imports necessary in' globals()' for 'eval'
 from at.lattice import Particle  # noqa: F401
 from at.load import register_format
-from at.load.utils import element_from_string
+from at.load.utils import element_from_string, keep_attributes, keep_elements
 
 
 def load_repr(filename: str, **kwargs) -> Lattice:
@@ -44,7 +44,7 @@ def load_repr(filename: str, **kwargs) -> Lattice:
     """
 
     def elem_iterator(params, repr_file):
-        with open(params.setdefault("repr_file", repr_file), "rt") as file:
+        with open(params.setdefault("in_file", repr_file), "rt") as file:
             # the 1st line is the dictionary of saved lattice parameters
             for k, v in eval(next(file)).items():
                 params.setdefault(k, v)
@@ -67,8 +67,8 @@ def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
     """
 
     def save(file):
-        print(repr(ring.attrs), file=file)
-        for elem in ring:
+        print(repr(keep_attributes(ring)), file=file)
+        for elem in keep_elements(ring):
             print(repr(elem), file=file)
 
     # Set options to print the full representation of float variables
