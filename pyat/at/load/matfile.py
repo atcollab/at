@@ -21,7 +21,6 @@ from numpy import array, uint8, NaN  # noqa: F401
 
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, RingParam, keep_elements
-from .utils import element_from_dict
 from .utils import _drop_attrs, _CLASS_MAP
 from ..lattice import Element, Lattice, Particle, Filter
 from ..lattice import elements, AtWarning, params_filter, AtError
@@ -98,7 +97,7 @@ def _matfile_generator(
     for index, mat_elem in enumerate(cell_array):
         elem = mat_elem[0, 0]
         kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-        yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
+        yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
 def ringparam_filter(
@@ -344,7 +343,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
         for elem in latt:
-            yield element_from_dict(elem)
+            yield Element.from_dict(elem)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
