@@ -337,10 +337,8 @@ def load_elegant(filename: str, **kwargs) -> Lattice:
         name (str):         Name of the lattice. Default: taken from
           the file.
         energy (float):     Energy of the lattice [eV]
-        periodicity(int):   Number of periods. Default: taken from the
-          elements, or 1
-        *:                  All other keywords will be set as Lattice
-          attributes
+        periodicity(int):   Number of periods. Default: taken from the elements, or 1
+        *:                  All other keywords will be set as Lattice attributes
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
@@ -354,7 +352,7 @@ def load_elegant(filename: str, **kwargs) -> Lattice:
         harmonic_number = kwargs.pop("harmonic_number")
 
         def elem_iterator(params, elegant_file):
-            with open(params.setdefault("elegant_file", elegant_file)) as f:
+            with open(params.setdefault("in_file", elegant_file)) as f:
                 contents = f.read()
                 element_lines = expand_elegant(
                     contents, lattice_key, energy, harmonic_number
@@ -370,4 +368,5 @@ def load_elegant(filename: str, **kwargs) -> Lattice:
                          'lattice {}: {}'.format(filename, e))
 
 
-register_format(".lte", load_elegant, descr="Elegant format")
+register_format(
+    ".lte", load_elegant, descr="Elegant format. See :py:func:`.load_elegant`.")

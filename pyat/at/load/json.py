@@ -95,5 +95,5 @@ register_format(
     ".json",
     load_json,
     save_json,
-    descr="JSON representation of a python AT Lattice",
+    descr="JSON representation of a python AT Lattice. See :py:func:`.load_json`.",
 )
