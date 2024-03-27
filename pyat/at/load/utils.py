@@ -363,7 +363,7 @@ def element_from_dict(
 
 
 def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
-    """Builds the Matlab structure of an :py:class:`.Element`
+    """Convert a :py:class:`.Element` to a :py:class:`dict`
 
     Parameters:
         elem:           :py:class:`.Element`
@@ -396,4 +396,5 @@ def split_ignoring_parentheses(string, delimiter):
     return replaced_parts
 
 
+Element.from_dict = staticmethod(element_from_dict)
 Element.to_dict = element_to_dict
