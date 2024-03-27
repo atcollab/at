@@ -370,7 +370,9 @@ class Element(object):
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element"""
         attrs = dict(self.items())
-        arguments = tuple(attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES)
+        arguments = tuple(attrs.pop(
+            k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
+        )
         defelem = self.__class__(*arguments)
         keywords = dict(
             (k, v)
