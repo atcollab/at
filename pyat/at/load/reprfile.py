@@ -2,7 +2,7 @@
 its :py:func:`repr` string
 """
 
-from __future__ import print_function
+from __future__ import annotations
 
 __all__ = ["load_repr", "save_repr"]
 
