@@ -61,28 +61,10 @@ def _mat_encoder(v):
     return _mattype_map.get(type(v), lambda attr: attr)(v)
 
 
-def matfile_generator(
+def _matfile_generator(
     params: dict[str, Any], mat_file: str
 ) -> Generator[Element, None, None]:
-    """Run through Matlab cells and generate AT elements
-
-    Parameters:
-        params:         Lattice building parameters (see :py:class:`.Lattice`)
-        mat_file:       File name
-
-    The following keys in ``params`` are used:
-
-    ============    ===================
-    **mat_key**     name of the Matlab variable containing the lattice.
-                    Default: Matlab variable name if there is only one,
-                    otherwise 'RING'
-    **check**        Skip the coherence tests
-    **quiet**       Suppress the warning for non-standard classes
-    ============    ===================
-
-    Yields:
-        elem (Element): new Elements
-    """
+    """Run through Matlab cells and generate AT elements"""
 
     def mclean(data):
         if data.dtype.type is np.str_:
@@ -212,7 +194,7 @@ def load_mat(filename: str, **kwargs) -> Lattice:
         kwargs.setdefault("use", kwargs.pop("key"))
     return Lattice(
         ringparam_filter,
-        matfile_generator,
+        _matfile_generator,
         abspath(filename),
         iterator=params_filter,
         **kwargs,
@@ -284,34 +266,6 @@ def _element_from_m(line: str) -> Element:
     return cls(*args, **kwargs)
 
 
-def mfile_generator(params: dict, m_file: str) -> Generator[Element, None, None]:
-    """Run through the lines of a Matlab m-file and generate AT elements
-
-    Parameters:
-        params:         Lattice building parameters (see :py:class:`.Lattice`)
-        m_file:         File name
-
-    Yields:
-        elem (Element): new Elements
-    """
-    with open(params.setdefault("in_file", m_file), "rt") as file:
-        _ = next(file)  # Matlab function definition
-        _ = next(file)  # Cell array opening
-        for lineno, line in enumerate(file):
-            if line.startswith("};"):
-                break
-            try:
-                elem = _element_from_m(line)
-            except ValueError:
-                warn(AtWarning("Invalid line {0} skipped.".format(lineno)))
-                continue
-            except KeyError:
-                warn(AtWarning("Line {0}: Unknown class.".format(lineno)))
-                continue
-            else:
-                yield elem
-
-
 def load_m(filename: str, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Matlab m-file
 
@@ -336,6 +290,26 @@ def load_m(filename: str, **kwargs) -> Lattice:
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
+
+    def mfile_generator(params: dict, m_file: str) -> Generator[Element, None, None]:
+        """Run through the lines of a Matlab m-file and generate AT elements"""
+        with open(params.setdefault("in_file", m_file), "rt") as file:
+            _ = next(file)  # Matlab function definition
+            _ = next(file)  # Cell array opening
+            for lineno, line in enumerate(file):
+                if line.startswith("};"):
+                    break
+                try:
+                    elem = _element_from_m(line)
+                except ValueError:
+                    warn(AtWarning("Invalid line {0} skipped.".format(lineno)))
+                    continue
+                except KeyError:
+                    warn(AtWarning("Line {0}: Unknown class.".format(lineno)))
+                    continue
+                else:
+                    yield elem
+
     return Lattice(
         ringparam_filter,
         mfile_generator,
@@ -504,8 +478,9 @@ def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
             print("end", file=mfile)
 
 
+# Simulates the deprecated "mat_file" and "mat_key" attributes
 def _mat_file(ring):
-    """.mat input file"""
+    """.mat input file. Deprecated, use 'in_file' instead."""
     try:
         in_file = ring.in_file
     except AttributeError:
@@ -517,7 +492,17 @@ def _mat_file(ring):
     return in_file
 
 
+def _mat_key(ring):
+    """selected Matlab variable. Deprecated, use 'use' instead."""
+    try:
+        mat_key = ring.use
+    except AttributeError:
+        raise AttributeError("'Lattice' object has no attribute 'mat_key'")
+    return mat_key
+
+
 register_format(".mat", load_mat, save_mat, descr="Matlab binary mat-file")
 register_format(".m", load_m, save_m, descr="Matlab text m-file")
 
 Lattice.mat_file = property(_mat_file, None, None)
+Lattice.mat_key = property(_mat_key, None, None)
