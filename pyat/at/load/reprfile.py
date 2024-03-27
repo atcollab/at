@@ -10,14 +10,32 @@ import sys
 from os.path import abspath
 from typing import Optional
 
-import numpy
+import numpy as np
 
-from at.lattice import Lattice
+# imports necessary in 'globals()' for 'eval'
+from numpy import array, uint8, NaN  # noqa: F401
+
+from at.lattice import Lattice, Element
 
 # imports necessary in' globals()' for 'eval'
 from at.lattice import Particle  # noqa: F401
 from at.load import register_format
-from at.load.utils import element_from_string, keep_attributes, keep_elements
+from at.load.utils import element_classes, keep_attributes, keep_elements
+
+# Map class names to Element classes
+_CLASS_MAP = dict((cls.__name__, cls) for cls in element_classes())
+
+
+def _element_from_string(elem_string: str) -> Element:
+    """Builds an :py:class:`.Element` from its python :py:func:`repr` string
+
+    Parameters:
+        elem_string:    String representation of an :py:class:`.Element`
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
+    """
+    return eval(elem_string, globals(), _CLASS_MAP)
 
 
 def load_repr(filename: str, **kwargs) -> Lattice:
@@ -49,7 +67,7 @@ def load_repr(filename: str, **kwargs) -> Lattice:
             for k, v in eval(next(file)).items():
                 params.setdefault(k, v)
             for line in file:
-                yield element_from_string(line.strip())
+                yield _element_from_string(line.strip())
 
     return Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
 
@@ -72,7 +90,7 @@ def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
             print(repr(elem), file=file)
 
     # Set options to print the full representation of float variables
-    with numpy.printoptions(formatter={"float_kind": repr}):
+    with np.printoptions(formatter={"float_kind": repr}):
         if filename is None:
             save(sys.stdout)
         else:
@@ -81,5 +99,9 @@ def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
 
 
 register_format(
-    ".repr", load_repr, save_repr, descr="Text representation of a python AT Lattice"
+    ".repr",
+    load_repr,
+    save_repr,
+    descr=("Text representation of a python AT Lattice. "
+           "See also :py:func:`.load_repr`."),
 )

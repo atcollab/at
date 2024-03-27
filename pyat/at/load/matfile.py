@@ -16,10 +16,13 @@ from warnings import warn
 import numpy as np
 import scipy.io
 
+# imports necessary in 'globals()' for 'eval'
+from numpy import array, uint8, NaN  # noqa: F401
+
 from .allfiles import register_format
-from .utils import element_from_dict, element_from_m, RingParam, keep_elements
-from .utils import element_to_dict, element_to_m
-from .utils import _drop_attrs
+from .utils import split_ignoring_parentheses, RingParam, keep_elements
+from .utils import element_from_dict
+from .utils import _drop_attrs, _CLASS_MAP
 from ..lattice import Element, Lattice, Particle, Filter
 from ..lattice import elements, AtWarning, params_filter, AtError
 
@@ -44,6 +47,12 @@ _mattype_map = {
     int: float,
     np.ndarray: lambda attr: np.asanyarray(attr),
     Particle: lambda attr: attr.to_dict(),
+}
+# Matlab constructor function
+# Default: "".join(("at", element_class.__name__.lower()))
+_mat_constructor = {
+    "Dipole": "atsbend",
+    "M66": "atM66",
 }
 
 
@@ -95,11 +104,11 @@ def matfile_generator(
     m = scipy.io.loadmat(params.setdefault("in_file", mat_file))
     matvars = [varname for varname in m if not varname.startswith("__")]
     default_key = matvars[0] if (len(matvars) == 1) else "RING"
-    key = params.setdefault("mat_key", default_key)
+    key = params.setdefault("use", default_key)
     if key not in m.keys():
         kok = [k for k in m.keys() if "__" not in k]
         raise AtError(
-            "Selected mat_key does not exist, please select in: {}".format(kok)
+            f"Selected '{key}' variable does not exist, please select in: {kok}"
         )
     check = params.pop("check", True)
     quiet = params.pop("quiet", False)
@@ -172,9 +181,10 @@ def load_mat(filename: str, **kwargs) -> Lattice:
         filename:           Name of a '.mat' file
 
     Keyword Args:
-        mat_key (str):      Name of the Matlab variable containing
+        use (str):          Name of the Matlab variable containing
           the lattice. Default: Matlab variable name if there is only one,
           otherwise 'RING'
+        mat_key (str):      alias for *use*
         check (bool):       Run the coherence tests. Default:
           :py:obj:`True`
         quiet (bool):       Suppress the warning for non-standard
@@ -197,7 +207,9 @@ def load_mat(filename: str, **kwargs) -> Lattice:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     if "key" in kwargs:  # process the deprecated 'key' keyword
-        kwargs.setdefault("mat_key", kwargs.pop("key"))
+        kwargs.setdefault("use", kwargs.pop("key"))
+    if "mat_key" in kwargs:  # process the deprecated 'mat_key' keyword
+        kwargs.setdefault("use", kwargs.pop("key"))
     return Lattice(
         ringparam_filter,
         matfile_generator,
@@ -205,6 +217,71 @@ def load_mat(filename: str, **kwargs) -> Lattice:
         iterator=params_filter,
         **kwargs,
     )
+
+
+def _element_from_m(line: str) -> Element:
+    """Builds an :py:class:`.Element` from a line in an m-file
+
+    Parameters:
+        line:           Matlab string representation of an :py:class:`.Element`
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
+    """
+
+    def argsplit(value):
+        return [a.strip() for a in split_ignoring_parentheses(value, ",")]
+
+    def makedir(mat_struct):
+        """Build directory from Matlab struct arguments"""
+
+        def pairs(it):
+            while True:
+                try:
+                    a = next(it)
+                except StopIteration:
+                    break
+                yield eval(a), convert(next(it))
+
+        return dict(pairs(iter(mat_struct)))
+
+    def makearray(mat_arr):
+        """Build numpy array for Matlab array syntax"""
+
+        def arraystr(arr):
+            lns = arr.split(";")
+            rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
+            return f"[{', '.join(rr)}]"
+
+        return eval(f"array({arraystr(mat_arr)})")
+
+    def convert(value):
+        """convert Matlab syntax to numpy syntax"""
+        if value.startswith("["):
+            result = makearray(value[1:-1])
+        elif value.startswith("struct"):
+            result = makedir(argsplit(value[7:-1]))
+        else:
+            result = eval(value)
+        return result
+
+    left = line.index("(")
+    right = line.rindex(")")
+    matcls = line[:left].strip()[2:]
+    cls = _CLASS_MAP[matcls]
+    arguments = argsplit(line[left + 1 : right])
+    ll = len(cls._BUILD_ATTRIBUTES)
+    if ll < len(arguments) and arguments[ll].endswith("Pass'"):
+        arguments.insert(ll, "'PassMethod'")
+    args = [convert(v) for v in arguments[:ll]]
+    kwargs = makedir(arguments[ll:])
+    if matcls == "rbend":
+        # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
+        # necessary for using the python sector bend
+        halfangle = 0.5 * args[2]
+        kwargs.setdefault("EntranceAngle", halfangle)
+        kwargs.setdefault("ExitAngle", halfangle)
+    return cls(*args, **kwargs)
 
 
 def mfile_generator(params: dict, m_file: str) -> Generator[Element, None, None]:
@@ -224,7 +301,7 @@ def mfile_generator(params: dict, m_file: str) -> Generator[Element, None, None]
             if line.startswith("};"):
                 break
             try:
-                elem = element_from_m(line)
+                elem = _element_from_m(line)
             except ValueError:
                 warn(AtWarning("Invalid line {0} skipped.".format(lineno)))
                 continue
@@ -337,8 +414,66 @@ def save_mat(ring: Lattice, filename: str, mat_key: str = "RING") -> None:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
     # Ensure the lattice is a Matlab column vector: list(list)
-    lring = [[element_to_dict(el, encoder=_mat_encoder)] for el in matlab_ring(ring)]
+    lring = [[el.to_dict(encoder=_mat_encoder)] for el in matlab_ring(ring)]
     scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
+
+
+def _element_to_m(elem: Element) -> str:
+    """Builds the Matlab-evaluable string for an :py:class:`.Element`
+
+    Parameters:
+        elem:           :py:class:`.Element`
+
+    Returns:
+        mstr (str):     Matlab string representation of the
+          :py:class:`.Element` attributes
+    """
+
+    def convert(arg):
+        def convert_dict(pdir):
+            def scan(d):
+                for k, v in d.items():
+                    yield convert(k)
+                    yield convert(v)
+
+            return "struct({0})".format(", ".join(scan(pdir)))
+
+        def convert_array(arr):
+            if arr.ndim > 1:
+                lns = (str(list(ln)).replace(",", "")[1:-1] for ln in arr)
+                return "".join(("[", "; ".join(lns), "]"))
+            elif arr.ndim > 0:
+                return str(list(arr)).replace(",", "")
+            else:
+                return str(arr)
+
+        if isinstance(arg, np.ndarray):
+            return convert_array(arg)
+        elif isinstance(arg, dict):
+            return convert_dict(arg)
+        elif isinstance(arg, Particle):
+            return convert_dict(arg.to_dict())
+        else:
+            return repr(arg)
+
+    def m_name(elclass):
+        classname = elclass.__name__
+        return _mat_constructor.get(classname, "".join(("at", classname.lower())))
+
+    attrs = dict(elem.items())
+    # noinspection PyProtectedMember
+    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
+    defelem = elem.__class__(*args)
+    kwds = dict(
+        (k, v)
+        for k, v in attrs.items()
+        if not np.array_equal(v, getattr(defelem, k, None))
+    )
+    argstrs = [convert(arg) for arg in args]
+    if "PassMethod" in kwds:
+        argstrs.append(convert(kwds.pop("PassMethod")))
+    argstrs += [", ".join((repr(k), convert(v))) for k, v in kwds.items()]
+    return "{0:>15}({1});...".format(m_name(elem.__class__), ", ".join(argstrs))
 
 
 def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
@@ -356,7 +491,7 @@ def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
     def save(file):
         print("ring = {...", file=file)
         for elem in matlab_ring(ring):
-            print(element_to_m(elem), file=file)
+            print(_element_to_m(elem), file=file)
         print("};", file=file)
 
     if filename is None:

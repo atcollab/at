@@ -13,7 +13,7 @@ from typing import Optional, Any
 import numpy as np
 
 from .allfiles import register_format
-from .utils import element_to_dict, element_from_dict, keep_elements, keep_attributes
+from .utils import element_from_dict, keep_elements, keep_attributes
 from ..lattice import Element, Lattice, Particle
 
 
@@ -22,7 +22,7 @@ class _AtEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, Element):
-            return element_to_dict(obj)
+            return obj.to_dict()
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, Particle):
