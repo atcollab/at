@@ -13,39 +13,29 @@ _save_extension = {}
 def load_lattice(filepath: str, **kwargs) -> Lattice:
     """Load a Lattice object from a file
 
-The file format is indicated by the filepath extension.
+The file format is indicated by the filepath extension. The file name is stored in
+the *in_file* Lattice attribute. The selected variable, if relevant, is stored
+in the *use* Lattice attribute.
 
 Parameters:
     filepath:           Name of the file
 
 Keyword Args:
+    use (str):          Name of the variable containing the desired lattice.
+      Default: if there is a single variable, use it, otherwise select ``"RING"``
     name (str):         Name of the lattice.
-      Default: taken from the file, or ``''``
+      Default: taken from the file, or ``""``
     energy (float):     Energy of the lattice
       (default: taken from the file)
-    periodicity (int]): Number of periods
+    periodicity (int):  Number of periods
       (default: taken from the file, or 1)
     *:                  All other keywords will be set as :py:class:`.Lattice`
       attributes
 
-Specific keywords for .mat files
-
-Keyword Args:
-    mat_key (str):      Name of the Matlab variable containing
-      the lattice. Default: Matlab variable name if there is only one,
-      otherwise ``'RING'``
-    check (bool):       Run coherence tests. Default: :py:obj:`True`
-    quiet (bool):       Suppress the warning for non-standard classes.
-      Default: :py:obj:`False`
-    keep_all (bool):    Keep Matlab RingParam elements as Markers.
-      Default: :py:obj:`False`
+Check the format-specific function for specific keyword arguments.
 
 Returns:
     lattice (Lattice):          New :py:class:`.Lattice` object
-
-See Also:
-    :py:func:`.load_mat`, :py:func:`.load_m`, :py:func:`.load_repr`,
-    :py:func:`.load_elegant`, :py:func:`.load_tracy`
 
 .. Admonition:: Known extensions are:
     """

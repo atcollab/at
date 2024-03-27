@@ -103,5 +103,5 @@ register_format(
     load_repr,
     save_repr,
     descr=("Text representation of a python AT Lattice. "
-           "See also :py:func:`.load_repr`."),
+           "See :py:func:`.load_repr`."),
 )
