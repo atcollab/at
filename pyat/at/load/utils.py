@@ -5,11 +5,9 @@ Conversion utilities for creating pyat elements
 from __future__ import annotations
 
 __all__ = [
+    "element_classes",
     "element_from_dict",
     "element_to_dict",
-    "element_from_m",
-    "element_to_m",
-    "element_from_string",
     "find_class",
     "keep_elements",
     "keep_attributes",
@@ -27,12 +25,9 @@ from collections.abc import Callable, Generator
 
 import numpy as np
 
-# imports necessary in 'globals()' for 'eval'
-from numpy import array, uint8, NaN  # noqa: F401
-
 from at import integrators
 from at.lattice import AtWarning
-from at.lattice import get_class_map, elements as elt
+from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
 from at.lattice import idtable_element
 
@@ -60,6 +55,20 @@ def _warn(index: int, message: str, elem_dict: dict) -> None:
     location = f'"{name}":\n' if index is None else f'{index} ("{name}"):\n'
     warning = "".join(("In element ", location, message, f"\n{elem_dict}\n"))
     warn(AtWarning(warning), stacklevel=2)
+
+
+def element_classes() -> frozenset[type[Element]]:
+    """Build a set of all Element subclasses"""
+
+    # Misses class aliases (Bend, Matrix66)
+    def subclasses_recursive(cl):
+        direct = cl.__subclasses__()
+        indirect = []
+        for subclass in direct:
+            indirect.extend(subclasses_recursive(subclass))
+        return frozenset([cl] + direct + indirect)
+
+    return subclasses_recursive(Element)
 
 
 class RingParam(elt.Element):
@@ -102,15 +111,14 @@ _alias_map = {
     "ap": elt.Aperture,
     "ringparam": RingParam,
     "wig": elt.Wiggler,
-    "insertiondevicekickmap": idtable_element.InsertionDeviceKickMap,
     "matrix66": elt.M66,
 }
 
-
-# Matlab to Python class translation
-_CLASS_MAP = dict((k.lower(), v) for k, v in get_class_map().items())
+# Map class names to Element classes
+_CLASS_MAP = dict((cls.__name__.lower(), cls) for cls in element_classes())
 _CLASS_MAP.update(_alias_map)
 
+# Maps passmethods to Element classes
 _PASS_MAP = {
     "BendLinearPass": elt.Dipole,
     "BndMPoleSymplectic4RadPass": elt.Dipole,
@@ -128,22 +136,17 @@ _PASS_MAP = {
     "GWigSymplecticPass": elt.Wiggler,
 }
 
-# Python to Matlab class translation
+# Maps python class name to Matlab class
 # Default: element_class.__name__
 _mat_class = {
     "Dipole": "Bend",
     "M66": "Matrix66",
 }
-# Matlab constructor function
-# Default: "".join(("at", element_class.__name__.lower()))
-_mat_constructor = {
-    "Dipole": "atsbend",
-    "M66": "atM66",
-}
 
 # Lattice attributes which must be dropped when writing a file
 _drop_attrs = {
     "in_file": None,
+    "use": None,
     "mat_key": None,
     "mat_file": None,  # Not used anymore...
     "m_file": None,
@@ -185,10 +188,65 @@ def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
             yield elem
 
 
+def _from_contents(elem: dict) -> type[Element]:
+    """Deduce the element class from its contents"""
+
+    def low_order(key):
+        polynom = np.array(elem[key], dtype=np.float64).reshape(-1)
+        try:
+            low = np.where(polynom != 0.0)[0][0]
+        except IndexError:
+            low = -1
+        return low
+
+    length = float(elem.get("Length", 0.0))
+    pass_method = elem.get("PassMethod", "")
+    if _hasattrs(
+        elem, "FullGap", "FringeInt1", "FringeInt2", "gK", "EntranceAngle", "ExitAngle"
+    ):
+        return elt.Dipole
+    elif _hasattrs(elem, "Voltage", "Frequency", "HarmNumber", "PhaseLag", "TimeLag"):
+        return elt.RFCavity
+    elif _hasattrs(elem, "Periodicity"):
+        # noinspection PyProtectedMember
+        return RingParam
+    elif _hasattrs(elem, "Limits"):
+        return elt.Aperture
+    elif _hasattrs(elem, "M66"):
+        return elt.M66
+    elif _hasattrs(elem, "K"):
+        return elt.Quadrupole
+    elif _hasattrs(elem, "PolynomB", "PolynomA"):
+        loworder = low_order("PolynomB")
+        if loworder == 1:
+            return elt.Quadrupole
+        elif loworder == 2:
+            return elt.Sextupole
+        elif loworder == 3:
+            return elt.Octupole
+        elif pass_method.startswith("StrMPoleSymplectic4") or (length > 0):
+            return elt.Multipole
+        else:
+            return elt.ThinMultipole
+    elif _hasattrs(elem, "KickAngle"):
+        return elt.Corrector
+    elif length > 0.0:
+        return elt.Drift
+    elif _hasattrs(elem, "GCR"):
+        return elt.Monitor
+    elif pass_method == "IdentityPass":
+        return elt.Marker
+    else:
+        return elt.Element
+
+
 def find_class(
     elem_dict: dict, quiet: bool = False, index: Optional[int] = None
 ) -> type(Element):
-    """Identify the class of an element from its attributes
+    """Deduce the class of an element from its attributes
+
+    `find_class` looks first at the "Class" field, if existing. It then tries to deduce
+    the class from "FamName", from "PassMethod", and finally form the element contents.
 
     Args:
         elem_dict:      The dictionary of keyword arguments passed to the
@@ -200,88 +258,40 @@ def find_class(
         element_class:  The guessed Class name
     """
 
-    def low_order(key):
-        polynom = np.array(elem_dict[key], dtype=np.float64).reshape(-1)
-        try:
-            low = np.where(polynom != 0.0)[0][0]
-        except IndexError:
-            low = -1
-        return low
+    def check_class(clname):
+        if clname:
+            _warn(index, f"Class '{clname}' does not exist.", elem_dict)
 
-    class_name = elem_dict.pop("Class", "")
-    try:
-        return _CLASS_MAP[class_name.lower()]
-    except KeyError:
-        if not quiet and class_name:
-            _warn(index, f"Class '{class_name}' does not exist.", elem_dict)
-        fam_name = elem_dict.get("FamName", "")
-        try:
-            return _CLASS_MAP[fam_name.lower()]
-        except KeyError:
-            pass_method = elem_dict.get("PassMethod", "")
-            if not quiet and not pass_method:
-                _warn(index, "No PassMethod provided.", elem_dict)
-            elif not quiet and not pass_method.endswith("Pass"):
-                message = (
-                    f"Invalid PassMethod '{pass_method}', "
-                    "provided pass methods should end in 'Pass'."
-                )
-                _warn(index, message, elem_dict)
-            class_from_pass = _PASS_MAP.get(pass_method)
-            if class_from_pass is not None:
-                return class_from_pass
-            else:
-                length = float(elem_dict.get("Length", 0.0))
-                if _hasattrs(
-                    elem_dict,
-                    "FullGap",
-                    "FringeInt1",
-                    "FringeInt2",
-                    "gK",
-                    "EntranceAngle",
-                    "ExitAngle",
-                ):
-                    return elt.Dipole
-                elif _hasattrs(
-                    elem_dict,
-                    "Voltage",
-                    "Frequency",
-                    "HarmNumber",
-                    "PhaseLag",
-                    "TimeLag",
-                ):
-                    return elt.RFCavity
-                elif _hasattrs(elem_dict, "Periodicity"):
-                    # noinspection PyProtectedMember
-                    return RingParam
-                elif _hasattrs(elem_dict, "Limits"):
-                    return elt.Aperture
-                elif _hasattrs(elem_dict, "M66"):
-                    return elt.M66
-                elif _hasattrs(elem_dict, "K"):
-                    return elt.Quadrupole
-                elif _hasattrs(elem_dict, "PolynomB", "PolynomA"):
-                    loworder = low_order("PolynomB")
-                    if loworder == 1:
-                        return elt.Quadrupole
-                    elif loworder == 2:
-                        return elt.Sextupole
-                    elif loworder == 3:
-                        return elt.Octupole
-                    elif pass_method.startswith("StrMPoleSymplectic4") or (length > 0):
-                        return elt.Multipole
-                    else:
-                        return elt.ThinMultipole
-                elif _hasattrs(elem_dict, "KickAngle"):
-                    return elt.Corrector
-                elif length > 0.0:
-                    return elt.Drift
-                elif _hasattrs(elem_dict, "GCR"):
-                    return elt.Monitor
-                elif pass_method == "IdentityPass":
-                    return elt.Marker
-                else:
-                    return elt.Element
+    def check_pass(passm):
+        if not passm:
+            _warn(index, "No PassMethod provided.", elem_dict)
+        elif not passm.endswith("Pass"):
+            message = (
+                f"Invalid PassMethod '{passm}': "
+                "provided pass methods should end in 'Pass'."
+            )
+            _warn(index, message, elem_dict)
+
+    class_name = elem_dict.pop("Class", "")  # try from class name
+    cls = _CLASS_MAP.get(class_name.lower(), None)
+    if cls is not None:
+        return cls
+    elif not quiet:
+        check_class(class_name)
+
+    elname = elem_dict.get("FamName", "")  # try from element name
+    cls = _CLASS_MAP.get(elname.lower(), None)
+    if cls is not None:
+        return cls
+
+    pass_method = elem_dict.get("PassMethod", "")  # try from passmethod
+    cls = _PASS_MAP.get(pass_method, None)
+    if cls is not None:
+        return cls
+    elif not quiet:
+        check_pass(pass_method)
+
+    return _from_contents(elem_dict)  # look for contents
 
 
 def element_from_dict(
@@ -352,83 +362,6 @@ def element_from_dict(
     return element
 
 
-def element_from_string(elem_string: str) -> Element:
-    """Builds an :py:class:`.Element` from its python :py:func:`repr` string
-
-    Parameters:
-        elem_string:    String representation of an :py:class:`.Element`
-
-    Returns:
-        elem (Element): new :py:class:`.Element`
-    """
-    return eval(elem_string, globals(), get_class_map())
-
-
-def element_from_m(line: str) -> Element:
-    """Builds an :py:class:`.Element` from a line in an m-file
-
-    Parameters:
-        line:           Matlab string representation of an :py:class:`.Element`
-
-    Returns:
-        elem (Element): new :py:class:`.Element`
-    """
-
-    def argsplit(value):
-        return [a.strip() for a in split_ignoring_parentheses(value, ",")]
-
-    def makedir(mat_struct):
-        """Build directory from Matlab struct arguments"""
-
-        def pairs(it):
-            while True:
-                try:
-                    a = next(it)
-                except StopIteration:
-                    break
-                yield eval(a), convert(next(it))
-
-        return dict(pairs(iter(mat_struct)))
-
-    def makearray(mat_arr):
-        """Build numpy array for Matlab array syntax"""
-
-        def arraystr(arr):
-            lns = arr.split(";")
-            rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
-            return "[{0}]".format(", ".join(rr))
-
-        return eval("array({0})".format(arraystr(mat_arr)))
-
-    def convert(value):
-        """convert Matlab syntax to numpy syntax"""
-        if value.startswith("["):
-            result = makearray(value[1:-1])
-        elif value.startswith("struct"):
-            result = makedir(argsplit(value[7:-1]))
-        else:
-            result = eval(value)
-        return result
-
-    left = line.index("(")
-    right = line.rindex(")")
-    matcls = line[:left].strip()[2:]
-    cls = _CLASS_MAP[matcls]
-    arguments = argsplit(line[left + 1 : right])
-    ll = len(cls._BUILD_ATTRIBUTES)
-    if ll < len(arguments) and arguments[ll].endswith("Pass'"):
-        arguments.insert(ll, "'PassMethod'")
-    args = [convert(v) for v in arguments[:ll]]
-    kwargs = makedir(arguments[ll:])
-    if matcls == "rbend":
-        # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
-        # necessary for using the python sector bend
-        halfangle = 0.5 * args[2]
-        kwargs.setdefault("EntranceAngle", halfangle)
-        kwargs.setdefault("ExitAngle", halfangle)
-    return cls(*args, **kwargs)
-
-
 def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
     """Builds the Matlab structure of an :py:class:`.Element`
 
@@ -443,64 +376,6 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     class_name = elem.__class__.__name__
     dct["Class"] = _mat_class.get(class_name, class_name)
     return dct
-
-
-def element_to_m(elem: Element) -> str:
-    """Builds the Matlab-evaluable string for an :py:class:`.Element`
-
-    Parameters:
-        elem:           :py:class:`.Element`
-
-    Returns:
-        mstr (str):     Matlab string representation of the
-          :py:class:`.Element` attributes
-    """
-
-    def convert(arg):
-        def convert_dict(pdir):
-            def scan(d):
-                for k, v in d.items():
-                    yield convert(k)
-                    yield convert(v)
-
-            return "struct({0})".format(", ".join(scan(pdir)))
-
-        def convert_array(arr):
-            if arr.ndim > 1:
-                lns = (str(list(ln)).replace(",", "")[1:-1] for ln in arr)
-                return "".join(("[", "; ".join(lns), "]"))
-            elif arr.ndim > 0:
-                return str(list(arr)).replace(",", "")
-            else:
-                return str(arr)
-
-        if isinstance(arg, np.ndarray):
-            return convert_array(arg)
-        elif isinstance(arg, dict):
-            return convert_dict(arg)
-        elif isinstance(arg, Particle):
-            return convert_dict(arg.to_dict())
-        else:
-            return repr(arg)
-
-    def m_name(elclass):
-        classname = elclass.__name__
-        return _mat_constructor.get(classname, "".join(("at", classname.lower())))
-
-    attrs = dict(elem.items())
-    # noinspection PyProtectedMember
-    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
-    defelem = elem.__class__(*args)
-    kwds = dict(
-        (k, v)
-        for k, v in attrs.items()
-        if not np.array_equal(v, getattr(defelem, k, None))
-    )
-    argstrs = [convert(arg) for arg in args]
-    if "PassMethod" in kwds:
-        argstrs.append(convert(kwds.pop("PassMethod")))
-    argstrs += [", ".join((repr(k), convert(v))) for k, v in kwds.items()]
-    return "{0:>15}({1});...".format(m_name(elem.__class__), ", ".join(argstrs))
 
 
 def split_ignoring_parentheses(string, delimiter):
@@ -519,3 +394,6 @@ def split_ignoring_parentheses(string, delimiter):
     assert not matches
 
     return replaced_parts
+
+
+Element.to_dict = element_to_dict
