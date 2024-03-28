@@ -378,7 +378,11 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     return dct
 
 
-def split_ignoring_parentheses(string, delimiter):
+def split_ignoring_parentheses(string: str, delimiter: str = ",") -> list[str]:
+    """Split a string while keeping parenthesized expressions intact
+
+    Example: "l=0,hom(4,0.0,0)" -> ["l=0", "hom(4,0.0,0)"]
+    """
     placeholder = "placeholder"
     substituted = string[:]
     matches = collections.deque(re.finditer("\\(.*?\\)", string))

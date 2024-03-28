@@ -211,7 +211,7 @@ def _element_from_m(line: str) -> Element:
     """
 
     def argsplit(value):
-        return [a.strip() for a in split_ignoring_parentheses(value, ",")]
+        return [a.strip() for a in split_ignoring_parentheses(value)]
 
     def makedir(mat_struct):
         """Build directory from Matlab struct arguments"""
@@ -505,13 +505,14 @@ register_format(
     load_mat,
     save_mat,
     descr="Matlab binary mat-file. See :py:func:`.load_mat`.",
-),
+)
+
 register_format(
     ".m",
     load_m,
     save_m,
-    descr="Matlab text m-file. See :py:func:`.load_m`."
-),
+    descr="Matlab text m-file. See :py:func:`.load_m`.",
+)
 
 Lattice.mat_file = property(_mat_file, None, None)
 Lattice.mat_key = property(_mat_key, None, None)
