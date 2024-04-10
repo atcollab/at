@@ -182,7 +182,7 @@ def find_class(
             low = -1
         return low
 
-    class_name = elem_dict.get("Class", "")
+    class_name = elem_dict.pop("Class", "")
     try:
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
