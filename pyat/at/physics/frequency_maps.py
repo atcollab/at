@@ -77,9 +77,17 @@ def fmap_parallel_track(ring,
           the coordinates
         add_offset6D: default numpy.zeros((6,1))
         verbose:  prints additional info
-        lossmap:  default false
+        lossmap:  default False
     Optional:
         pool_size:number of processes. See :py:func:`.patpass`
+        nu0p5:    default False. If set to True the tune is checked to know if
+                  it is above 0.5, and if so, it is  modified to
+                     '1-tune',
+                  and the tune variation to
+                     '-deltatune'.
+                  This is useful when the ring tune is above 0.5 because there
+                  is a mismatch in tune interval in AT [0,1), and the one that
+                  could be obtained from a frequency analysis [0,0.5).
 
     Returns:
         xy_nuxy_lognudiff_array: numpy array with columns
@@ -100,6 +108,14 @@ def fmap_parallel_track(ring,
 
     # https://github.com/atcollab/at/pull/608
     kwargs.setdefault('pool_size', None)
+
+    # https://github.com/atcollab/at/pull/745
+    kwargs.setdefault('nu0p5', False)
+    nu0p5 = kwargs.pop('nu0p5')
+    # check if the ring tune is above 0.5
+    flagabove0p5 = 0.5 < ring.get_tune()
+    if any(flagabove0p5) and not(nu0p5):
+        print('Warning: at least one tune is above 0.5, and nu0p5 flag is False')
 
     # https://github.com/atcollab/at/pull/608
     if 'ncpu' in kwargs:
@@ -280,14 +296,13 @@ def fmap_parallel_track(ring,
     xy_nuxy_lognudiff_array = numpy.delete(xy_nuxy_lognudiff_array, 0)
     # reshape for plots and output files
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1, 7)
-    # check if initial tune is above 0.5
-    flagabove0p5 = 0.5 < ring.get_tune()
-    # modify only the transverse tunes
-    for i in range(2):
-        if flagabove0p5[i]:
-            verboseprint('Plane',i,'is above 0.5... fixing freq. data')
-            xy_nuxy_lognudiff_array[:,2+i] = 1-xy_nuxy_lognudiff_array[:,2+i]
-            xy_nuxy_lognudiff_array[:,4+i] =  -xy_nuxy_lognudiff_array[:,4+i]
+    # modify only the transverse tunes if above 0.5
+    if nu0p5:
+        for i in range(2):
+            if flagabove0p5[i]:
+                verboseprint('Plane',i,'is above 0.5... fixing freq. data')
+                xy_nuxy_lognudiff_array[:,2+i] = 1-xy_nuxy_lognudiff_array[:,2+i]
+                xy_nuxy_lognudiff_array[:,4+i] =  -xy_nuxy_lognudiff_array[:,4+i]
 
 
     return xy_nuxy_lognudiff_array, loss_map_array
