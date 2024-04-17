@@ -5,6 +5,7 @@ and pyat parallel tracking (patpass)
 
 # orblancog
 # generates the frequency and diffusion map for a given ring
+# 2024apr16 create get_freqmap
 # 2023jan16 tracking is parallel (patpass), frequency analysis is serial
 # 2022jun07 serial version
 
@@ -13,12 +14,236 @@ from at.physics import find_orbit
 import numpy
 from warnings import warn
 from at.lattice import AtWarning
+from ..acceptance.boundary import set_ring_orbit
+from ..acceptance.boundary import grid_configuration
+from ..acceptance.boundary import get_parts
+from ..acceptance.boundary import get_survived
+from ..acceptance.boundary import GridMode
+from ..acceptance.boundary import get_plane_index
+from at.lattice import Lattice, AtError, AtWarning
+from typing import Optional, Sequence
+from ..lattice import Lattice, Refpts, frequency_control, AtError
+import multiprocessing
+import time
+
+_pdict = {'x': 0, 'xp': 1,
+          'y': 2, 'yp': 3,
+          'dp': 4, 'ct': 5}
 
 
 # Jaime Coello de Portugal (JCdP) frequency analysis implementation
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['fmap_parallel_track']
+__all__ = ['fmap_parallel_track','get_freqmap']
+
+def get_freqmap(
+        ring: Lattice,
+        planes,
+        npoints,
+        amplitudes,
+        bounds=None,
+        nturns: Optional[int] = 512,
+        dp: Optional[float] = None,
+        offset: Sequence[float] = None,
+        refpts: Optional[Refpts] = 0,
+        grid_mode: Optional[GridMode] = GridMode.CARTESIAN,
+        use_mp: Optional[bool] = True,
+        verbose: Optional[bool] = False,
+        lossmap: Optional[int] = 2,
+        shift_zero: Optional[float] = 0.0e-6,
+        start_method: Optional[str] = None,
+):
+    # noinspection PyUnresolvedReferences
+    r"""Computes the acceptance at ``repfts`` observation points
+
+    Parameters:
+        ring:           Lattice definition
+        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
+          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
+          ``'yp'``, ``'dp'``, ``'ct'``
+        npoints:        (len(planes),) array: number of points in each
+          dimension
+        amplitudes:     (len(planes),) array: set the search range:
+
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+        nturns:         Number of turns for the tracking
+        refpts:         Observation points. Default: start of the machine
+        dp:             static momentum offset
+        offset:         initial orbit. Default: closed orbit
+        bounds:         defines the tracked range: range=bounds*amplitude.
+          It can be use to select quadrants. For example, default values are:
+
+          * :py:attr:`.GridMode.CARTESIAN`: ((-1, 1), (0, 1))
+          * :py:attr:`GridMode.RADIAL/RECURSIVE <.GridMode.RADIAL>`: ((0, 1),
+            (:math:`\pi`, 0))
+        grid_mode:      defines the evaluation grid:
+
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`).
+        verbose:        Print out some information
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero: Epsilon offset applied on all 6 coordinates
+        start_method:   Python multiprocessing start method. The default
+          ``None`` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for MacOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
+          the calculation or to solve runtime errors, however  it is
+          considered unsafe.
+
+    Returns:
+        boundary:   (2,n) array: 2D acceptance
+        survived:   (2,n) array: Coordinates of surviving particles
+        tracked:    (2,n) array: Coordinates of tracked particles
+
+    In case of multiple refpts, return values are lists of arrays, with one
+    array per ref. point.
+
+    Examples:
+
+        >>> bf,sf,gf = ring.get_acceptance(planes, npoints, amplitudes)
+        >>> plt.plot(*gf,'.')
+        >>> plt.plot(*sf,'.')
+        >>> plt.plot(*bf)
+        >>> plt.show()
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
+    """
+    kwargs = {}
+    if start_method is not None:
+        kwargs['start_method'] = start_method
+
+    if verbose:
+        nproc = multiprocessing.cpu_count()
+        print('\n{0} cpu found for acceptance calculation'.format(nproc))
+        if use_mp:
+            nprocu = nproc
+            print('Multi-process acceptance calculation selected...')
+            if nproc == 1:
+                print('Consider use_mp=False for single core computations')
+        else:
+            nprocu = 1
+            print('Single process acceptance calculation selected...')
+            if nproc > 1:
+                print('Consider use_mp=True for parallelized computations')
+        np = numpy.atleast_1d(npoints)
+        na = 2
+        if len(np) == 2:
+            na = np[1]
+        npp = numpy.prod(npoints)
+        rpp = 2*numpy.ceil(numpy.log2(np[0]))*numpy.ceil(na/nprocu)
+        mpp = npp/nprocu
+        #if rpp > mpp:
+        #    cond = (grid_mode is GridMode.RADIAL or
+        #            grid_mode is GridMode.CARTESIAN)
+        #else:
+        #    cond = grid_mode is GridMode.RECURSIVE
+        #if rpp > mpp and not cond:
+        #    print('The estimated load for grid mode is {0}'.format(mpp))
+        #    print('The estimated load for recursive mode is {0}'.format(rpp))
+        #    print('{0} or {1} is recommended'.format(GridMode.RADIAL,
+        #                                             GridMode.CARTESIAN))
+        #elif rpp < mpp and not cond:
+        #    print('The estimated load for grid mode is {0}'.format(mpp))
+        #    print('The estimated load for recursive mode is {0}'.format(rpp))
+        #    print('{0} is recommended'.format(GridMode.RECURSIVE))
+
+    boundary = []
+    survived = []
+    grid = []
+    if refpts is not None:
+        rp = ring.uint32_refpts(refpts)
+    else:
+        rp = numpy.atleast_1d(refpts)
+    if offset is not None:
+        try:
+            offset = numpy.broadcast_to(offset, (len(rp), 6))
+        except ValueError:
+            msg = ('offset and refpts have incoherent '
+                   'shapes: {0}, {1}'.format(numpy.shape(offset),
+                                             numpy.shape(refpts)))
+            raise AtError(msg)
+    else:
+        offset = find_orbit(ring,refpts)
+        planesi = numpy.atleast_1d(get_plane_index(planes))
+        offset[0][planesi[0]] =  offset[0][planesi[0]] + 1e-6
+        offset[0][planesi[1]] =  offset[0][planesi[1]] + 1e-6
+        #offset=[None for _ in rp]
+    dataobs = []
+    t0 = time.time()
+    for r, o in zip(rp, offset):
+        #b, s, g = boundary_search(ring, planes, npoints, amplitudes,
+        #                          nturns=nturns, obspt=r, dp=dp,
+        #                          offset=o, bounds=bounds,
+        #                          grid_mode=grid_mode, use_mp=use_mp,
+        #                          verbose=verbose, divider=divider,
+        #                          shift_zero=shift_zero, **kwargs)
+        obspt=r
+        dp=dp
+        offset=o
+
+        offset, newring = set_ring_orbit(ring, dp, obspt,
+                                         offset)
+        config = grid_configuration(planes, npoints, amplitudes,
+                                    grid_mode, bounds=bounds,
+                                    shift_zero=shift_zero)
+        obspt = None
+        if verbose:
+            print('\nRunning grid boundary search:')
+            if obspt is None:
+                print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
+            else:
+                print('Element {0}, obspt={1}'.format(ring[obspt].FamName,
+                                                      obspt))
+            print('The grid mode is {0}'.format(config.mode))
+            print('The planes are {0}'.format(config.planes))
+            print('Number of steps are {0}'.format(config.shape))
+            print('The maximum amplitudes are {0}'.format(config.amplitudes))
+            print('The maximum boundaries are {0}'.format(config.bounds))
+            print('The initial offset is {0} with dp={1}'.format(offset, dp))
+            parts, grid = get_parts(config, offset)
+            rout, tp, td = ring.track(parts, nturns=2*nturns, losses=True, use_mp=use_mp, **kwargs)
+
+            mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
+            survived = grid.grid[:, mask]
+
+            planesi = numpy.atleast_1d(get_plane_index(planes))
+            tunes = numpy.zeros((len(planesi),2,len(numpy.where(mask)[0])))
+            print(planesi)
+
+            for i in range(len(planesi)):
+                tunes[i,0] = get_tunes_harmonic(rout[planesi[i],mask,:,     0:  nturns],use_mp=use_mp, **kwargs)
+                tunes[i,1] = get_tunes_harmonic(rout[planesi[i],mask,:,nturns:2*nturns],use_mp=use_mp, **kwargs)
+
+            # metric
+            diffplane1 = tunes[0,0,:] - tunes[0,1,:]
+            diffplane2 = tunes[1,0,:] - tunes[1,1,:]
+            nudiff = 0.5*numpy.log10( (diffplane1*diffplane1 + diffplane2*diffplane2) /nturns )
+            # set min-max
+            nudiff = numpy.clip(nudiff,-10,-2)
+
+            #return rout,tp,td,grid,tunes
+            firstturns = 0
+#            return numpy.concatenate((survived.T, tunes[0,firstturns].T, tunes[1,firstturns].T, diffplane1.T, diffplane2.T, nudiff.T),axis=0), grid, td
+            #return survived.T, tunes[0,firstturns].T, tunes[1,firstturns].T, diffplane1.T, diffplane2.T, nudiff.T, grid, td
+            dataobs.append((numpy.vstack((survived, tunes[0,firstturns], tunes[1,firstturns], diffplane1, diffplane2, nudiff)).T, grid, td))
+    if verbose:
+        print('Calculation took {0}'.format(time.time()-t0))
+
+    return dataobs
+
+
+
 
 
 def fmap_parallel_track(ring,
