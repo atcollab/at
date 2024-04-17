@@ -16,4 +16,4 @@ from .radiation import *
 from .ring_parameters import *
 from .nonlinear import *
 from .fastring import *
-from .frequency_maps import fmap_parallel_track
+from .frequency_maps import fmap_parallel_track, get_freqmap
