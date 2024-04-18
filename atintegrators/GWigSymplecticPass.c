@@ -157,7 +157,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int Nstep, Nmeth;
         int NHharm, NVharm;
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
