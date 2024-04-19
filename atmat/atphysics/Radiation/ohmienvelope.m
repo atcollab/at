@@ -24,18 +24,11 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 NumElements = length(ring);
 if nargin<3, refpts=1; end
 
-Rad=char('RadPass');
 Wig=atgetcells(ring,'Bmax');
 Wigidx=find(Wig(:)==1);
-if ~isempty(Wigidx)
-    passlistW=atgetfieldvalues(ring(Wigidx),'PassMethod');
-    psmW=char(passlistW);
-    for i=1:size(psmW,1)
-        RPSW0=psmW(i,1:end-4);
-        RPSW=[RPSW0,Rad];
-        ring{Wigidx(i),1}.PassMethod=RPSW;
-    end
-end
+
+radindex(Wigidx) = false; % Erase wigglers from the radiative element list.
+% Diffusion matrix to be computed with separate FDW function.
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
@@ -59,19 +52,22 @@ Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
-% We rewrite it in the form of Lyapunov equation to use MATLAB's LYAP function
-%            AA*R + R*BB = -CC
+% We rewrite it in the form of Sylvester-Lyapunov equation
+% to use MATLAB's SYLVERTER function:
+%            AA*R + R*BB = CC
 % where
-%				AA =  inv(MRING)
+%				AA = inv(MRING)
 %				BB = -MRING'
-%				CC = -inv(MRING)*BCUM
+%				CC = inv(MRING)*BCUM
 % -----------------------------------------------------------------------
-AA =  inv(mring);
+AA = inv(mring);
 BB = -mring';
-CC = -inv(mring)*BCUM;
-R = lyap(AA,BB,CC);          % Envelope matrix at the ring entrance
-rmsdp = sqrt(abs(R(5,5)));   % R.M.S. energy spread
-rmsbl = sqrt(abs(R(6,6)));   % R.M.S. bunch lenght
+CC = AA*BCUM;
+
+R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
+
+rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
 
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
