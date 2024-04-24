@@ -342,10 +342,8 @@ void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
 }
 
 
-
-
-
-void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+#if defined(MATLAB_MEX_FILE)
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 /* The calling syntax of this mex-function from MATLAB is
    FindWiggRadDiffMatrix(ELEMENT, ORBIT)
    ELEMENT is the element structure with field names consistent with 
@@ -470,10 +468,102 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   else
     pt2 = NULL;
     
-    
-           
-    
 
 	FindElemB(orb, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,
                 pBy, pBx, E0, pt1, pt2, PR1, PR2, BDIFF);
 }
+#endif /*MATLAB_MEX_FILE*/
+
+#if defined(PYAT)
+
+#define MODULE_NAME diffmatrix
+#define MODULE_DESCR "Computation of the radiation diffusion matrix"
+
+static PyObject *compute_diffmatrix(PyObject *self, PyObject *args) {
+    PyObject *pyElem, *pyMatrix;
+    PyArrayObject *pyOrbit;
+    double *orb0, *bdiff, *retval;
+    double orb[6];
+    double energy;
+    npy_intp outdims[2] = {6, 6};
+    int i;
+
+    if (!PyArg_ParseTuple(args, "OO!d", &pyElem, &PyArray_Type, &pyOrbit, &energy)) {
+        return NULL;
+    }
+    if (PyArray_DIM(pyOrbit,0) != 6) {
+        PyErr_SetString(PyExc_ValueError, "Orbit is not a (6,) array");
+        return NULL;
+    }
+    if (PyArray_TYPE(pyOrbit) != NPY_DOUBLE) {
+        PyErr_SetString(PyExc_ValueError, "Orbit is not a double array");
+        return NULL;
+    }
+    if ((PyArray_FLAGS(pyOrbit) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        PyErr_SetString(PyExc_ValueError, "Orbit is not Fortran-aligned");
+        return NULL;
+    }
+
+    orb0 = PyArray_DATA(pyOrbit);
+	/* make local copy of the input closed orbit vector */
+	for (i=0;i<6;i++) orb[i] = orb0[i];
+
+	/* ALLOCATE memory for the output array */
+    pyMatrix = PyArray_ZEROS(2, outdims, NPY_DOUBLE, 1);
+    bdiff = PyArray_DATA((PyArrayObject *)pyMatrix);
+
+    retval = diffmatrix(pyElem, orb, energy, bdiff);
+    if (retval == NULL) {
+        Py_DECREF(pyMatrix);
+        return NULL;
+    }
+    return pyMatrix;
+}
+
+static PyMethodDef AtMethods[] = {
+    {"find_mpole_raddiff_matrix",
+    (PyCFunction)compute_diffmatrix, METH_VARARGS,
+    PyDoc_STR(
+    "find_mpole_raddiff_matrix(element, orbit, energy)\n\n"
+    "Computes the radiation diffusion matrix B defined in [2]_\n"
+    "for multipole elements\n\n"
+    "Args:\n"
+    "    element:    Lattice element\n"
+    "    orbit:      (6,) closed orbit at the entrance of ``element``\n"
+    "    energy:     particle energy\n\n"
+    "Returns:\n"
+    "    diffmatrix: The radiation diffusion matrix\n\n"
+    "References:\n"
+    "    **[1]** M.Sands, *The Physics of Electron Storage Rings*\n\n"
+    "    .. [2] Ohmi, Kirata, Oide, *From the beam-envelope matrix to synchrotron\n"
+    "       radiation integrals*, Phys.Rev.E  Vol.49 p.751 (1994)\n"
+	)},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+
+PyMODINIT_FUNC MOD_INIT(MODULE_NAME)
+{
+
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    STR(MODULE_NAME), /* m_name */
+    PyDoc_STR(MODULE_DESCR),      /* m_doc */
+    -1,           /* m_size */
+    AtMethods,    /* m_methods */
+    NULL,         /* m_reload */
+    NULL,         /* m_traverse */
+    NULL,         /* m_clear */
+    NULL,         /* m_free */
+    };
+    PyObject *m = PyModule_Create(&moduledef);
+#else
+    PyObject *m = Py_InitModule3(STR(MODULE_NAME), AtMethods,
+        MODULE_DESCR);
+#endif
+    if (m == NULL) return MOD_ERROR_VAL;
+    import_array();
+    return MOD_SUCCESS_VAL(m);
+}
+
+#endif /*PYAT*/
