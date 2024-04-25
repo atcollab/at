@@ -123,9 +123,8 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
     /* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
     Energy = Energy / 1e9;
 
-    GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, T1, T2, R1, R2);
-
     for (c = 0;c<num_particles;c++) {
+		GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, T1, T2, R1, R2);
         r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             switch (Nmeth) {
@@ -158,7 +157,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int Nstep, Nmeth;
         int NHharm, NVharm;
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
