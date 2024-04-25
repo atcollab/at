@@ -2,13 +2,19 @@
  *----------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .06  2018-06-01      A.Mash'al, ILSF, a-mashal@ipm.ir 
+ *                      Implementing Hessian of the Hamiltonian for computing wiggler transfer matrix
+ *
+ * .05  2018-02-13      O.Jimenez, ALBA Synchrotron, oscar.jimenez.1996@gmail.com
+ *                      Implementing radiation loss.
+ *
  * .04  2003-04-29      YK Wu, Duke University 
- *			using scientific notation for constants. 
+ *			            Using scientific notation for constants. 
  *                      Checked with TRACY pascal code.
  *                      Computing differential pathlength only.
  *
  * .03  2003-04-28      YK Wu, Duke University 
- *			Convert to C code and cross-checked with the pascal version;
+ *			            Convert to C code and cross-checked with the pascal version;
  *
  * .02  2001-12-xx      Y. K. Wu, Duke University
  *                      Implementing DA version of the wiggler integrator for Pascal.
@@ -22,7 +28,7 @@
  *----------------------------------------------------------------------------
  *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu  
  */
-
+ 
 #ifndef  GWIG
 #include "gwig.h"
 #include <stdlib.h>
@@ -30,15 +36,25 @@
 #include <stdio.h>
 #endif
 
+#define SQR(X) ((X)*(X))
+
 void GWigGauge(struct gwigR *pWig, double *X, int flag);
 void GWigPass_2nd(struct gwigR *pWig, double *X);
 void GWigPass_4th(struct gwigR *pWig, double *X);
 void GWigMap_2nd(struct gwigR *pWig, double *X, double dl);
 void GWigAx(struct gwigR *pWig, double *Xvec, double *pax, double *paxpy);
 void GWigAy(struct gwigR *pWig, double *Xvec, double *pay, double *paypx);
-void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxyz, double dl);
+void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxy, double dl);
 void GWigB(struct gwigR *pWig, double *Xvec, double *B);
-double sinc(double x );
+void AxHessian(struct gwigR *pWig, double *Xvec, double *pax);
+void AyHessian(struct gwigR *pWig, double *Xvec, double *pay);
+void Hessian(struct gwigR *pWig, double *Xvec, double *H2);
+void GWigInit(struct gwigR *pWig, double design_energy, double Ltot, double Lw, double Bmax,
+	      int Nstep, int Nmeth, int NHharm, int NVharm,
+		  int HSplitPole, int VSplitPole, double *zEndPointH, double *zEndPointV,
+	      double *By, double *Bx, double *T1, double *T2, 
+	      double *R1, double *R2);
+double sinc(double x);
 
 /* This function appears to be unused. */
 void GWigGauge(struct gwigR *pWig, double *X, int flag)
@@ -103,11 +119,12 @@ void GWigPass_4th(struct gwigR *pWig, double *X)
   double dl, dl1, dl0;
   double B[2];
   double ax, ay, axpy, aypx;	
-	Nstep = pWig->PN*(pWig->Nw);
-	dl = pWig->Lw/(pWig->PN);
+  
+  Nstep = pWig->PN*(pWig->Nw);
+  dl = pWig->Lw/(pWig->PN);
 
-	dl1 = x1*dl;
-	dl0 = x0*dl;
+  dl1 = x1*dl;
+  dl0 = x0*dl;
 
     GWigAx(pWig, X, &ax, &axpy);
     GWigAy(pWig, X, &ay, &aypx);
@@ -117,7 +134,7 @@ void GWigPass_4th(struct gwigR *pWig, double *X)
     GWigRadiationKicks(pWig, X, B, dl);
     X[1] += ax;
     X[3] += ay;
-  for (i = 1; i <= Nstep; i++ ) {
+  for (i = 1; i <= Nstep; i++) {
     GWigMap_2nd(pWig, X, dl1);
     GWigMap_2nd(pWig, X, dl0);
     GWigMap_2nd(pWig, X, dl1);
@@ -193,7 +210,6 @@ void GWigMap_2nd(struct gwigR *pWig, double *X, double dl)
 
 void GWigAx(struct gwigR *pWig, double *Xvec, double *pax, double *paxpy) 
 {
-
   int    i;
   double x, y, z;
   double kx, ky, kz, tz, kw;
@@ -334,10 +350,90 @@ double sinc(double x)
   double x2, result;
 /* Expand sinc(x) = sin(x)/x to x^8 */
   x2 = x*x;
-  result = 1e0 - x2/6e0*(1e0 - x2/20e0 *(1e0 - x2/42e0*(1e0-x2/72e0) ) );
+  result = 1e0 - x2/6e0*(1e0 - x2/20e0 *(1e0 - x2/42e0*(1e0-x2/72e0)));
   return result;
 }
 
+void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
+            double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
+            int HSplitPole, int VSplitPole, double *zEndPointH,
+            double *zEndPointV, double *By, double *Bx, double *T1,
+            double *T2, double *R1, double *R2)
+{
+    double *tmppr;
+    int    i;
+    double kw;
+
+    Wig->E0 = design_energy;
+    Wig->Po = Wig->E0/XMC2;
+    Wig->Pmethod = Nmeth;
+    Wig->PN = Nstep;
+    Wig->Nw = (int)(Ltot / Lw);
+    Wig->NHharm = NHharm;
+    Wig->NVharm = NVharm;
+    Wig->PB0 = Bmax;
+    Wig->Lw = Lw;
+	
+    /*------------------ radiation including -------------------*/
+    Wig->srCoef = (q_e*q_e)*((Wig->Po)*(Wig->Po)*(Wig->Po))/(6*PI*epsilon_o*m_e*(clight*clight));
+    Wig->HSplitPole = HSplitPole;
+    Wig->VSplitPole = VSplitPole;
+    Wig->zStartH = zEndPointH[0];
+    Wig->zEndH = zEndPointH[1];
+    Wig->zStartV = zEndPointV[0];
+    Wig->zEndV = zEndPointV[1];
+    /*----------------------------------------------------------*/
+
+    kw = 2.0e0*PI/(Wig->Lw);
+    Wig->Zw = 0.0;
+    Wig->Aw = 0.0;
+    tmppr = By;
+    for (i = 0; i < NHharm; i++) {
+        tmppr++;
+        Wig->HCw[i] = 0.0;
+        Wig->HCw_raw[i] = *tmppr;
+        tmppr++;
+        Wig->Hkx[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Hky[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Hkz[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Htz[i] = *tmppr;
+        tmppr++;
+    }
+    tmppr = Bx;
+    for (i = 0; i < NVharm; i++) {
+        tmppr++;
+        Wig->VCw[i] = 0.0;
+        Wig->VCw_raw[i] = *tmppr;
+        tmppr++;
+        Wig->Vkx[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Vky[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Vkz[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Vtz[i] = *tmppr;
+        tmppr++;
+    }
+    for (i = NHharm; i< WHmax; i++) {
+        Wig->HCw[i] = 0.0;
+        Wig->HCw_raw[i] = 0.0;
+        Wig->Hkx[i] = 0.0;
+        Wig->Hky[i] = 0.0;
+        Wig->Hkz[i] = 0.0;
+        Wig->Htz[i] = 0.0;
+    }
+    for (i = NVharm; i< WHmax; i++) {
+        Wig->VCw[i] = 0.0;
+        Wig->VCw_raw[i] = 0.0;
+        Wig->Vkx[i] = 0.0;
+        Wig->Vky[i] = 0.0;
+        Wig->Vkz[i] = 0.0;
+        Wig->Vtz[i] = 0.0;
+    }
+}
 
 
 void GWigB(struct gwigR *pWig, double *Xvec, double *B) 
@@ -445,7 +541,6 @@ void GWigB(struct gwigR *pWig, double *Xvec, double *B)
   }
 }
 
-
 void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxy, double dl)
 /* Apply kicks for synchrotron radiation.
  * Added by M. Borland, August 2007.
@@ -475,5 +570,256 @@ void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxy, double dl)
     X[1] *= (1+dDelta);
     X[3] *= (1+dDelta);
  
+}
+
+/* Hessian functions */
+
+void Hessian(struct gwigR *pWig, double *Xvec, double *H2)
+{
+	
+	int i,j,k;
+	double x,px,y,py,D;
+	double ax,axx,axxx,axy,axyy,axxy;
+	double ay, ayx, ayxx, ayy, ayyy, ayxy;
+	double Pax[6];
+	double Pay[6];
+	double H[6][6];
+
+	AxHessian(pWig, Xvec, Pax); 
+	AyHessian(pWig, Xvec, Pay); 
+	
+	ax  =Pax[0];
+	axx =Pax[1];  
+	axxx=Pax[2];  
+	axy =Pax[3]; 
+	axyy=Pax[4]; 
+	axxy=Pax[5]; 
+	
+	ay  =Pay[0];
+	ayx =Pay[1];  
+	ayxx=Pay[2];  
+	ayy =Pay[3]; 
+	ayyy=Pay[4]; 
+	ayxy=Pay[5]; 
+	//printf("Ax=%e,Axy=%e,Axyy=%e\n",ax,axy,axyy);
+	x =Xvec[0];
+	px=Xvec[1];
+	y =Xvec[2];
+	py=Xvec[3];
+	D =Xvec[4];
+	
+	for(i=0;i<6;i++){
+		for(j=0;j<6;j++){
+			H[i][j]=0;
+		}
+	}
+
+
+	H[0][0]= 0.5*(1/(1+D))*(((ax-px)*axxx)+ ((ay-py)*ayxx)+ (axx*axx)+ (ayx*ayx));
+	H[0][1]=-0.5*(axx/(1+D));
+	H[0][2]= 0.5*(1/(1+D))*(((ax-px)*axxy)+ ((ay-py)*ayxy)+ (axx*axy)+ (ayx*ayy));
+	H[0][3]= -0.5*(ayx/(1+D));
+	H[0][4]= -0.5*(1/((1+D)*(1+D)))*( ((ax-px)*axx)+ ((ay-py)*ayx));
+	H[0][5]=  0.00;
+	
+	H[1][0]=-0.5*(axx/(1+D));
+	H[1][1]= 0;
+	H[1][2]=-0.5*(axy/(1+D));
+	H[1][3]= 0;
+	H[1][4]= 0.5*ax/((1+D)*(1+D));
+	H[1][5]= 0.00;
+
+	H[2][0]= 0.5*(1/(1+D))*(((ax-px)*axxy)+ ((ay-py)*ayxy)+ (axx*axy)+ (ayx*ayy));
+	H[2][1]=-0.5*(axy/(1+D));
+	H[2][2]= 0.5*(1/(1+D))*(((ax-px)*axxy)+ ((ay-py)*ayxy)+ (axy*axy)+ (ayy*ayy));
+	H[2][3]= -0.5*(ayy/(1+D));
+	H[2][4]= -0.5*(1/((1+D)*(1+D)))*( ((ax-px)*axy)+ ((ay-py)*ayy));
+	H[2][5]=0;
+
+	H[3][0]=-0.5*(ayx/(1+D));
+	H[3][1]= 0;
+	H[3][2]=-0.5*(ayy/(1+D));
+	H[3][3]= 0;
+	H[3][4]=0.5 *ay/((1+D)*(1+D));
+	H[3][5]=0;
+
+	H[4][0]= -0.5*(1/((1+D)*(1+D)))*( ((ax-px)*axx)+ ((ay-py)*ayx));
+	H[4][1]= 0.5 *ax/((1+D)*(1+D));
+	H[4][2]= -0.5*(1/((1+D)*(1+D)))*( ((ax-px)*axy)+ ((ay-py)*ayy));
+	H[4][3]= 0.5 *ay/((1+D)*(1+D));
+	H[4][4]=0.5 *(1/((1+D)*(1+D) *(1+D)))*(((ax*ax)+(ay*ay))-2*((ax*px)+(ay*py)));
+	H[4][5]=0;
+
+	
+	for (i=0;i<6;i++){
+		for(j=0;j<6;j++){
+			k=j+i*6;
+			H2[k]=H[i][j];
+		}
+	}
+}
+
+void AxHessian(struct gwigR *pWig, double *Xvec, double *pax) 
+{
+
+  int    i;
+  double x, y, z;
+  double kx, ky, kz, tz, kw;
+  double cx, chx, shx;
+  double sx;
+  double cy, sy, chy, shy, sz;
+  double gamma0, beta0;
+  double ax,axx,axxx,axy,axyy,axxy;
+
+  
+  x = Xvec[0];
+  y = Xvec[2];
+  z = pWig->Zw;
+  //printf("x=%e,y=%e,z=%e\n",x,y,z);
+  kw   = 2e0*PI/(pWig->Lw);
+  ax   = 0e0;
+  axx  = 0e0;
+  axxx = 0e0;
+  axy  = 0e0;
+  axyy = 0e0;
+  axxy = 0e0;
+  gamma0   = pWig->E0/XMC2;
+  beta0    = sqrt(1e0 - 1e0/(gamma0*gamma0));
+  pWig->Aw = (q_e/m_e/clight)/(2e0*PI) * (pWig->Lw) * (pWig->PB0);
+
+  /* Horizontal Wiggler: note that one potentially could have: kx=0 */
+  for (i = 0; i < pWig->NHharm; i++) {
+    pWig->HCw[i] = pWig->HCw_raw[i]*(pWig->Aw)/(gamma0*beta0);
+    kx = pWig->Hkx[i];
+    ky = pWig->Hky[i];
+    kz = pWig->Hkz[i];
+    tz = pWig->Htz[i];
+
+    cx  = cos(kx*x);
+	sx  = sin(kx*x);
+    chy = cosh(ky * y);
+    shy = sinh(ky * y);
+    sz  = sin(kz * z + tz);
+    ax  = ax + (pWig->HCw[i])*(kw/kz)*cx*chy*sz;
+	axx = axx- (pWig->HCw[i])*(kx)*(kw/kz)*sx*chy*sz;
+	axxx=axxx- (pWig->HCw[i])*(kx*kx)*(kw/kz)*cx*chy*sz;
+	axy = axy+ (pWig->HCw[i])*(ky)*(kw/kz)*cx*shy*sz;
+	axyy=axyy+ (pWig->HCw[i])*(ky*ky)*(kw/kz)*cx*chy*sz;
+	axxy=axxy- (pWig->HCw[i])*(kx*ky)*(kw/kz)*sx*shy*sz;
+	
+  }
+
+
+  /* Vertical Wiggler: note that one potentially could have: ky=0 */
+  for (i = 0; i < pWig->NVharm; i++ ) {
+    pWig->VCw[i] = pWig->VCw_raw[i]*(pWig->Aw)/(gamma0*beta0);
+    kx = pWig->Vkx[i];
+    ky = pWig->Vky[i];
+    kz = pWig->Vkz[i];
+    tz = pWig->Vtz[i];
+
+    shx = sinh(kx * x);
+    sy  = sin(ky * y);
+	chx = cosh(kx * x);
+    cy  = cos(ky * y);
+    sz  = sin(kz * z + tz);
+    ax  = ax + pWig->VCw[i]*(kw/kz)*(ky/kx)*shx*sy*sz;
+	axx = axx+ pWig->VCw[i]*(kw/kz)*(ky)*chx*sy*sz;
+	axxx=axxx+ pWig->VCw[i]*(kw/kz)*(ky*kx)*chx*sy*sz;
+	axy = axy+ pWig->VCw[i]*(kw/kz)*(ky)*(ky/kx)*shx*cy*sz;
+	axyy=axyy- pWig->VCw[i]*(kw/kz)*(ky*ky)*(ky/kx)*shx*sy*sz;
+	axxy=axxy+ pWig->VCw[i]*(kw/kz)*(ky*ky)*chx*cy*sz;
+
+  }
+
+  pax[0]   = ax;
+  pax[1]   = axx;
+  pax[2]   = axxx;
+  pax[3]   = axy;
+  pax[4]   = axyy;
+  pax[5]   = axxy;
+}
+
+void AyHessian(struct gwigR *pWig, double *Xvec, double *pay)
+{
+  int    i;
+  double x, y, z;
+  double kx, ky, kz, tz, kw;
+  double cx, sx, chx, shx, sy;
+  double cy, chy, shy, sz;
+  double gamma0, beta0;
+  double ay, ayx, ayxx, ayy, ayyy, ayxy;
+
+  x = Xvec[0];
+  y = Xvec[2];
+  z = pWig->Zw;
+    
+  kw   = 2e0*PI/(pWig->Lw);
+  ay   = 0e0;
+  ayx  = 0e0;
+  ayxx = 0e0;
+  ayy  = 0e0;
+  ayyy = 0e0;
+  ayxy = 0e0;
+
+  gamma0  = pWig->E0/XMC2;
+  beta0   = sqrt(1e0 - 1e0/(gamma0*gamma0));
+  pWig->Aw = (q_e/m_e/clight)/(2e0*PI) * (pWig->Lw) * (pWig->PB0);
+     
+  /* Horizontal Wiggler: note that one potentially could have: kx=0 */
+  for ( i = 0; i < pWig->NHharm; i++ ){
+    pWig->HCw[i] = (pWig->HCw_raw[i])*(pWig->Aw)/(gamma0*beta0);
+    kx = pWig->Hkx[i];
+    ky = pWig->Hky[i];
+    kz = pWig->Hkz[i];
+    tz = pWig->Htz[i];
+  
+    sx = sin(kx * x);
+    shy = sinh(ky * y);
+    sz  = sin(kz * z + tz);
+	cx  = cos(kx * x);
+    chy = cosh(ky * y);
+	
+	
+    ay  = ay + (pWig->HCw[i])*(kw/kz)*(kx/ky)*sx*shy*sz;
+	ayx = ayx+ (pWig->HCw[i])*(kx)*(kw/kz)*(kx/ky)*cx*shy*sz;
+    ayxx=ayxx- (pWig->HCw[i])*(kw/kz)*(kx*kx)*(kx/ky)*sx*shy*sz;
+	ayy = ayy+ (pWig->HCw[i])*(kw/kz)*(kx)*sx*chy*sz;
+	ayyy=ayyy+ (pWig->HCw[i])*(kw/kz)*(ky*kx)*sx*shy*sz;
+	ayxy=ayxy+ (pWig->HCw[i])*(kw/kz)*(kx*kx)*cx*chy*sz;
+    
+    
+  }
+
+  /* Vertical Wiggler: note that one potentially could have: ky=0 */
+  for (i = 0; i < pWig->NVharm; i++) {
+    pWig->VCw[i] = (pWig->VCw_raw[i])*(pWig->Aw)/(gamma0*beta0);       
+    kx = pWig->Vkx[i];
+    ky = pWig->Vky[i];
+    kz = pWig->Vkz[i];
+    tz = pWig->Vtz[i];
+
+    chx = cosh(kx * x);
+    cy  = cos(ky * y);
+	sy  = sin(ky * y);
+    sz  = sin(kz * z + tz);
+	shx = sinh(kx * x);
+	
+    ay  = ay + (pWig->VCw[i])*(kw/kz)*chx*cy*sz;
+	ayx = ayx+ (pWig->VCw[i])*(kx)*(kw/kz)*shx*cy*sz;
+	ayxx=ayxx+ (pWig->VCw[i])*(kx*kx)*(kw/kz)*chx*cy*sz;
+	ayy = ayy- (pWig->VCw[i])*(ky)*(kw/kz)*chx*sy*sz;
+	ayyy=ayyy- (pWig->VCw[i])*(ky*ky)*(kw/kz)*chx*cy*sz;
+	ayxy=ayxy- (pWig->VCw[i])*(kx*ky)*(kw/kz)*shx*sy*sz; 
+   
+
+  }
+  
+  pay[0]   = ay;
+  pay[1]   = ayx;
+  pay[2]   = ayxx;
+  pay[3]   = ayy;
+  pay[4]   = ayyy;
+  pay[5]   = ayxy;
 }
 

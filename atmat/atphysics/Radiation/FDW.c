@@ -14,7 +14,7 @@
 #include "matrix.h"
 #include "atlalib.c"
 #include <math.h>
-#include "gwigrad2.c"
+#include "gwigR.c"
 
 
 /* Fourth order-symplectic integrator constants */
@@ -242,6 +242,7 @@ void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
     double zEndPointV[2];
 	double ax,ay,axpy,aypx;
 	double B[2];
+	double E0G;
     struct gwigR pWig;
     int flag;       
     
@@ -273,9 +274,11 @@ void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
   zEndPointH[1] = le;
   zEndPointV[0] = 0;
   zEndPointV[1] = le;
+  
+  E0G = E0 / 1e9;
 
 		  
-  GWigInit(&pWig, E0, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,pBy,pBx,pt1,pt2,PR1,PR2);
+  GWigInit(&pWig, E0G, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,pBy,pBx,pt1,pt2,PR1,PR2);
     
  /*   GWigInit(&pWig, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,pBy,pBx,
               E0,pt1,pt2,PR1,PR2);
