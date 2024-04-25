@@ -278,7 +278,7 @@ void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
   E0G = E0 / 1e9;
 
 		  
-  GWigInit(&pWig, E0G, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,pBy,pBx,pt1,pt2,PR1,PR2);
+  GWigInit2(&pWig, E0G, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,pBy,pBx,pt1,pt2,PR1,PR2);
     
  /*   GWigInit(&pWig, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,pBy,pBx,
               E0,pt1,pt2,PR1,PR2);

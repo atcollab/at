@@ -49,7 +49,7 @@ void GWigB(struct gwigR *pWig, double *Xvec, double *B);
 void AxHessian(struct gwigR *pWig, double *Xvec, double *pax);
 void AyHessian(struct gwigR *pWig, double *Xvec, double *pay);
 void Hessian(struct gwigR *pWig, double *Xvec, double *H2);
-void GWigInit(struct gwigR *pWig, double design_energy, double Ltot, double Lw, double Bmax,
+void GWigInit2(struct gwigR *pWig, double design_energy, double Ltot, double Lw, double Bmax,
 	      int Nstep, int Nmeth, int NHharm, int NVharm,
 		  int HSplitPole, int VSplitPole, double *zEndPointH, double *zEndPointV,
 	      double *By, double *Bx, double *T1, double *T2, 
@@ -354,7 +354,7 @@ double sinc(double x)
   return result;
 }
 
-void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
+void GWigInit2(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             int HSplitPole, int VSplitPole, double *zEndPointH,
             double *zEndPointV, double *By, double *Bx, double *T1,
