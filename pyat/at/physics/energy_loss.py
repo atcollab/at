@@ -132,7 +132,10 @@ def get_timelag_fromU0(ring: Lattice,
 
     def eq(x, freq, rfv, tl0, u0):
         omf = 2*numpy.pi*freq/clight
-        eq1 = (numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0)/u0
+        if u0 > 0.0:
+            eq1 = (numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0)/u0
+        else:
+            eq1 = numpy.sum(-rfv * numpy.sin(omf * (x - tl0)))
         eq2 = numpy.sum(-omf*rfv*numpy.cos(omf*(x-tl0)))
         if eq2 > 0:
             return numpy.sqrt(eq1**2+eq2**2)
