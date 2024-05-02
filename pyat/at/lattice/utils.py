@@ -282,7 +282,12 @@ def make_copy(copy: bool) -> Callable:
         def copy_decorator(func):
             @functools.wraps(func)
             def wrapper(ring, refpts, *args, **kwargs):
-                ring = ring.replace(refpts)
+                try:
+                    ring = ring.replace(refpts)
+                except AttributeError:
+                    check = get_bool_index(ring, refpts)
+                    ring = [el.deepcopy() if ok else el 
+                            for el, ok in zip(ring, check)]
                 func(ring, refpts, *args, **kwargs)
                 return ring
             return wrapper
