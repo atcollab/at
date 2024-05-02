@@ -123,7 +123,7 @@ void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
 
 #define second 2
 #define fourth 4
-void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
+void GWigSymplecticRadPass(double *r, double Energy, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             double *By, double *Bx, double *T1, double *T2,
             double *R1, double *R2, int num_particles)
@@ -141,12 +141,13 @@ void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
     zEndPointV[0] = 0;
     zEndPointV[1] = Ltot;
 
-   
-
     for(c = 0;c<num_particles;c++) {
 		GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, zEndPointH, zEndPointV, By, Bx, T1, T2, R1, R2);
         r6 = r+c*6;
         if(!atIsNaN(r6[0])) {
+			/* Misalignment at entrance */
+			if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             switch (Nmeth) {
                 case second:
                     GWigPass_2nd(&Wig, r6);
@@ -158,6 +159,9 @@ void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
                     printf("Invalid wiggler integration method %d.\n", Nmeth);
                     break;
             }
+			/* Misalignment at exit */
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
 }

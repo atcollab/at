@@ -127,6 +127,9 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
 		GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, T1, T2, R1, R2);
         r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
+			/* Misalignment at entrance */
+			if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             switch (Nmeth) {
                 case second:
                     GWigPass_2nd(&Wig, r6);
@@ -138,6 +141,9 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
                     printf("Invalid wiggler integration method %d.\n", Nmeth);
                     break;
             }
+			/* Misalignment at exit */
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
 }
