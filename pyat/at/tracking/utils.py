@@ -10,7 +10,7 @@ from ..lattice import Lattice, Element
 from ..lattice import BeamMoments, Collective, QuantumDiffusion
 from ..lattice import SimpleQuantDiff, VariableMultipole
 from ..lattice import elements, refpts_iterator, set_value_refpts
-from ..lattice import DConstant, checktype, get_bool_index
+from ..lattice import DConstant, checktype, checkattr, get_bool_index
 
 
 __all__ = ['fortran_align', 'get_bunches', 'format_results',
@@ -34,7 +34,10 @@ def _set_beam_monitors(ring: Sequence[Element], nbunch: int, nturns: int):
 
 
 def variable_refs(ring):
-    return get_bool_index(ring, checktype(_DISABLE_ELEMS))
+    idref = get_bool_index(ring, checkattr('PassMethod', 'IdentityPass'))
+    varref = get_bool_index(ring, checktype(_DISABLE_ELEMS))
+    varref = varref & ~idref
+    return varref
 
 
 def has_collective(ring) -> bool:
