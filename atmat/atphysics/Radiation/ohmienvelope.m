@@ -24,11 +24,10 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 NumElements = length(ring);
 if nargin<3, refpts=1; end
 
-Wig=atgetcells(ring,'Bmax');
-Wigidx=find(Wig(:)==1);
-
-radindex(Wigidx) = false; % Erase wigglers from the radiative element list.
+% Erase wigglers from the radiative element list.
 % Diffusion matrix to be computed with separate FDW function.
+Wig=atgetcells(ring,'Bmax');
+radindex = radindex & ~Wig;
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
