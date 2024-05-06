@@ -17,7 +17,7 @@ __all__ = ['get_bunch_length_espread', 'get_lifetime', 'get_scattering_rate']
 
 def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
     """Haissinski equation solver
-    
+
     Solves the Haissinski formula and returns the bunch length and energy
     spread for given bunch current and :math:`Z/n`. If both ``zn`` and
     ``bunch_curr`` are ``None``, zero current case, otherwise both are needed
@@ -77,8 +77,12 @@ def get_beam_sizes(ring, bunch_curr, zn=None, emitx=None,
 
 
 def int_piwinski(k, km, B1, B2):
-    """
+    r"""
     Integrand of the piwinski formula
+    In case the Bessel function has too large value
+    (more than :math:`10^251`) it
+    is substituted by its exponential approximation:
+    :math:`I_0(x)~\frac{\exp(x)}{\sqrt{2 \pi x}}`
     """
     t = numpy.tan(k)**2
     tm = numpy.tan(km)**2
@@ -124,9 +128,9 @@ def _get_vals(ring, rp, ma, emity, bunch_curr, emitx=None,
     bs = bxy2/sigb2*(1-(sigh2*(dt2/sigb2).T).T)
     bg2i = 1/(2*beta2*gamma2)
     B1 = bg2i*numpy.sum(bs, axis=1)
-    B2sq = bg2i*bg2i*(numpy.diff(bs, axis=1).T**2 +
-                      sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
-                      numpy.prod(sigb2*sigb2, axis=1))
+    B2sq = (bg2i*bg2i*numpy.diff(bs, axis=1).T**2 +
+            sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
+            numpy.prod(sigb2*sigb2, axis=1))
     B2 = numpy.squeeze(numpy.sqrt(B2sq))
 
     val = numpy.zeros((2, len(rp)))
@@ -138,8 +142,8 @@ def _get_vals(ring, rp, ma, emity, bunch_curr, emitx=None,
         for ii in range(len(rp)):
             args = (km[ii], B1[ii], B2[ii])
             val[i, ii], *_ = integrate.quad(int_piwinski, args[0], numpy.pi/2,
-                                        args=args, epsabs=epsabs,
-                                        epsrel=epsrel)
+                                            args=args, epsabs=epsabs,
+                                            epsrel=epsrel)
 
         val[i] *= (_e_radius**2*clight*nc /
                    (8*numpy.pi*gamma2*sigs *
@@ -210,7 +214,7 @@ def _init_ma_rp(ring, refpts=None, offset=None, momap=None,
 def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                  zn=None, momap=None, refpts=None, offset=None, **kwargs):
     """Touschek lifetime calculation
-    
+
     Computes the touschek lifetime using the Piwinski formula
 
     args:
@@ -223,8 +227,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         sigs=None:       rms bunch length
         sigp=None:       energy spread
         zn=None:         full ring :math:`Z/n`
-        momap=None:      momentum aperture, has to be consistent with ``refpts``
-                         if provided the momentum aperture is not calculated
+        momap=None:      momentum aperture, has to be consistent with
+                         ``refpts`` if provided the momentum aperture is
+                         not calculated
         refpts=None:     ``refpts`` where the momentum aperture is calculated,
                          the default is to compute it for all elements in the
                          ring, ``len(refpts)>2`` is required
@@ -245,7 +250,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         epsabs, epsrel:  integral absolute and relative tolerances
 
     Returns:
-        tl: touschek lifetime, double expressed in seconds 
+        tl: touschek lifetime, double expressed in seconds
         ma: momentum aperture (len(refpts), 2) array
         refpts: refpts used for momentum aperture calculation
                 (len(refpts), ) array
@@ -281,8 +286,9 @@ def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
         sigs=None:       rms bunch length
         sigp=None:       energy spread
         zn=None:         full ring :math:`Z/n`
-        momap=None:      momentum aperture, has to be consistent with ``refpts``
-                         if provided the momentum aperture is not calculated
+        momap=None:      momentum aperture, has to be consistent with
+                         ``refpts`` if provided the momentum aperture
+                         is not calculated
         refpts=None:     ``refpts`` where the momentum aperture is calculated,
                          the default is to compute it for all elements in the
                          ring, ``len(refpts)>2`` is required
@@ -317,7 +323,8 @@ def get_scattering_rate(ring, emity, bunch_curr, emitx=None, sigs=None,
     vals = _get_vals(ring, rp, ma, emity, bunch_curr, emitx=emitx,
                      sigs=sigs, sigp=sigp, zn=zn, epsabs=epsabs,
                      epsrel=epsrel)
-    scattering_rate = numpy.mean(vals, axis=0)*bunch_curr/ring.revolution_frequency/qe
+    scattering_rate = (numpy.mean(vals, axis=0)*bunch_curr /
+                       ring.revolution_frequency / qe)
     return scattering_rate, ma, rp
 
 
