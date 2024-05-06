@@ -6,6 +6,11 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
+ *              Adding rotations and translations to wiggler.
+ *				Bug fix in wiggler initialisation.
+ *				Energy parameter bug fix.
+ *				
  * .02  2003-06-18     J. Li
  *				Cleanup the code
  *
