@@ -1,42 +1,50 @@
-/* FDW.c
+/*FDW.c for Accelerator Toolbox 
+ *----------------------------------------------------------------------------
+ * Modification Log:
+ * -----------------
+ * .02  2024-05-09      J. Arenillas, ALBA, jarenillas@axt.email
+ *                      Rewriting mex function.
+ *						Cleaning up code, using constants in gwig.h.
+ *                    	New factors for diffusion matrix computation.
+ *						Updated version of radiation kicks in diffusion matrix propagation.
+ *
+ * .01  2018-06-01      A. Mash'al, ILSF, a-mashal@ipm.ir 
+ *                      Implementing the diffusion matrix for a wiggler
+ *----------------------------------------------------------------------------
+ *  mex-function to calculate integrated radiation diffusion matrix B defined in [2] 
+ *  for wiggler elements in MATLAB Accelerator Toolbox and based on [3].
+ *  
+ * References
+ * [1] M.Sands 'The Physics of Electron Storage Rings'
+ * [2] Ohmi, Kirata, Oide 'From the beam-envelope matrix to synchrotron
+ * radiation integrals', Phys.Rev.E  Vol.49 p.751 (1994) 
+ * [3] A. Mashal, F. D. Kashani, J. Rahighi, E. Ahmadi, Z. Marti, and O. J. Arranz. 
+ * Study the effect of insertion devices on electron beam properties by envelope method. 
+ * Journal of Instrumentation, May 2021.
+ */
 
-   mex-function to calculate integrated radiation diffusion matrix B defined in [2] 
-   for wiggler elements in MATLAB Accelerator Toolbox
-   O.Jimenez 3/08/18
-
-   References
-   [1] M.Sands 'The Physics of Electron Storage Rings
-   [2] Ohmi, Kirata, Oide 'From the beam-envelope matrix to synchrotron
-   radiation integrals', Phys.Rev.E  Vol.49 p.751 (1994)
-*/
-
+#include "atlalib.c"
+#include "atelem.c"
+#include "gwigR.c"
+#include <math.h>
 #include "mex.h"
 #include "matrix.h"
-#include "atlalib.c"
-#include <math.h>
-#include "gwigR.c"
-
+#include "gwig.h"
 
 /* Fourth order-symplectic integrator constants */
 
-#define x1     1.351207191959657328
-#define x0    -1.702414383919314656
+#define KICK1     1.351207191959657328
+#define KICK2    -1.702414383919314656
 
 /* Physical constants used in the calculations */
 
-#define TWOPI	   6.28318530717959
-#define CGAMMA 	   8.846056192e-05 			/* [m]/[GeV^3] Ref[1] (4.1)      */
-#define M0C2       5.10999060e5				/* Electron rest mass [eV]       */
-#define LAMBDABAR  3.86159323e-13			/* Compton wavelength/2pi [m]    */
-#define CER   	   2.81794092e-15			/* Classical electron radius [m] */
+#define LAMBDABAR  3.8615926796e-13			/* Compton wavelength/2pi [m]    */
 #define CU         1.323094366892892		/* 55/(24*sqrt(3)) factor        */
 
 #define SQR(X) ((X)*(X))
 
 
-
-
-void wigglerM(struct gwigR *pWig, double* orbit_in, double L, double *M66)
+static void wigglerM(struct gwigR *pWig, double* orbit_in, double L, double *M66)
 {
     /* Computes the transfer matrix for a wiggler. */
 	int i,j,k;
@@ -50,6 +58,7 @@ void wigglerM(struct gwigR *pWig, double* orbit_in, double L, double *M66)
 			H[i][j]=H2[k];
 		}
 	}
+	
 	/* Initialize M66 to a 1-by-36 zero vector. */
 	for(i=0;i<36;i++){
 		M66[i]= 0;
@@ -96,72 +105,54 @@ void wigglerM(struct gwigR *pWig, double* orbit_in, double L, double *M66)
 	M66[33]  =-H[2][5];
 	M66[34]  = H[5][5];
 	M66[35]  =1-H[4][5];
-
 }
 
 
-void wigglerB(struct gwigR *pWig, double* orbit_in, double L, 
-				 double E0, double *B66)
-
-/* Calculate Ohmi's diffusion matrix of a wiggler. 
+static void wigglerB(struct gwigR *pWig, double* orbit_in, double L, double *B66)
+{  /* Calculate Ohmi's diffusion matrix of a wiggler. 
    Since wigglers have a straight coordinate system: irho=0
    The result is stored in a preallocated 1-dimentional array B66
    (of 36 elements) of matrix B arranged column-by-column
-*/
+*/	
 
-{	
-	double ax,ay,kx,ky,axpy,aypx;
-	double BB,B3P;
-	double H,irho2,B2;
-	double Bxy[2];
+    double ax,ay,kx,ky,axpy,aypx;
+	double BB, E;
+	double Brho,irho3,B2;
+	double Bxyz[3];
 	double p_norm = 1/(1+orbit_in[4]);
 	double p_norm2 = SQR(p_norm);
-    double c = 299792458;   /* m s-1 */
-    double e = 1;
-    double irho = 0;
 	double x,px,y,py,D;
 	double DLDS;
     int i;
 
-	x =orbit_in[0];
-	px=orbit_in[1];
-	y =orbit_in[2];
-	py=orbit_in[3];
-	D =orbit_in[4];
+	x = orbit_in[0];
+	px= orbit_in[1];
+	y = orbit_in[2];
+	py= orbit_in[3];
+	D = orbit_in[4];
 	GWigAx(pWig, orbit_in, &ax, &axpy);
 	GWigAy(pWig, orbit_in, &ay, &aypx);
 	kx=px-ax;
-	ky=py-ay;
-          
-	DLDS=L*SQR(SQR(1+orbit_in[4]))*(1+((px-ax)*(px-ax)/(2*(1+D)*(1+D)))+((py-ay)*(py-ay)/(2*(1+D)*(1+D))));
-	
-	//printf("DLDS=%e DLDS2=%e\n",(px)*(px)/(2*(1+D)*(1+D)),(px-ax)*(px-ax)/(2*(1+D)*(1+D)));
+	ky=py-ay;  
 
-  	/* calculate the local  magnetic field in m-1 */  
-    GWigB(pWig, orbit_in, Bxy);
-    B2 = (Bxy[0]*Bxy[0]) + (Bxy[1]*Bxy[1]);
+	/* Calculate the local  magnetic field in T^2 */  
+    GWigB(pWig, orbit_in, Bxyz);
+    B2 = (Bxyz[0]*Bxyz[0]) + (Bxyz[1]*Bxyz[1]) + (Bxyz[2]*Bxyz[2]);
   
     /* Beam rigidity in T*m */
-    H = (pWig->Po)/586.679074042074490;
+	E = (pWig->E0)*(1+orbit_in[4]);
+	Brho = E*1E9/clight;
 
-    /* 1/rho^2 */
-    irho2 = B2/(H*H);
-	B3P = irho2*sqrt(irho2);
-
-    BB=CU * CER * LAMBDABAR * pow(E0/M0C2,5) * B3P * DLDS;
-    /* calculate |B x n|^3 - the third power of the B field component 
-	   orthogonal to the normalized velocity vector n
-    */
+    /* 1/rho^3 */
+    irho3 = B2/(Brho*Brho)*sqrt(B2)/Brho;
 	
-   
-     
-	//printf("BB=%e, BB2=%e \n",(1+((px)*(px)/(2*(1+D)*(1+D)))+((py-ay)*(py-ay)/(2*(1+D)*(1+D)))),(1+((px-ax)*(px-ax)/(2*(1+D)*(1+D)))+((py-ay)*(py-ay)/(2*(1+D)*(1+D)))));
+	DLDS = (1+D)/(sqrt((1+D)*(1+D)-(px-ax)*(px-ax)-(py-ay)*(py-ay)));
+	BB = CU*r_e*LAMBDABAR*pow(pWig->Po,5)*irho3*DLDS*L;
 
 	/* When a 6-by-6 matrix is represented in MATLAB as one-dimentional 
 	   array containing 36 elements arranged column-by-column,
 	   the relationship between indexes  is
-	   [i][j] <---> [i+6*j] 
-
+	   [i][j] <---> [i+6*j]
 	*/
 	
 	/* initialize B66 to 0 */
@@ -178,53 +169,13 @@ void wigglerB(struct gwigR *pWig, double* orbit_in, double L,
 	B66[22]     = BB*ky*p_norm;
 	B66[27]     = B66[22];
 	B66[28]     = BB;
-	
-	
 }
 
 
-void drift_propagateB(double *orb_in, double L,  double *B)
-{	/* Propagate cumulative Ohmi's diffusion matrix B through a drift.
-	   B is a (*double) pointer to 1-dimentional array 
-	   containing 36 elements of matrix elements arranged column-by-column
-	   as in MATLAB representation 
-
-	   The relationship between indexes when a 6-by-6 matrix is 
-	   represented in MATLAB as one-dimentional array containing
-	   36 elements arranged column-by-column is
-	   [i][j] <---> [i+6*j] 
-	*/
-		
-	int m;
-		
-	double *DRIFTMAT = (double*)mxCalloc(36,sizeof(double));
-	for(m=0;m<36;m++)
-		DRIFTMAT[m] = 0;
-	/* Set diagonal elements to 1	*/
-	for(m=0;m<6;m++)
-		DRIFTMAT[m*7] = 1;
-
-	DRIFTMAT[6]  =  L/(1+orb_in[4]);
-	DRIFTMAT[20] =  DRIFTMAT[6];
-	DRIFTMAT[24] = -L*orb_in[1]/SQR(1+orb_in[4]);
-	DRIFTMAT[26] = -L*orb_in[3]/SQR(1+orb_in[4]);
-	DRIFTMAT[11] =  L*orb_in[1]/SQR(1+orb_in[4]);
-	DRIFTMAT[23] =  L*orb_in[3]/SQR(1+orb_in[4]);	
-	DRIFTMAT[29] = -L*(SQR(orb_in[1])+SQR(orb_in[3]))/((1+orb_in[4])*SQR(1+orb_in[4]));
-
-	ATsandwichmmt(DRIFTMAT,B);
-	mxFree(DRIFTMAT);
-	for (m=0;m<36;m++)
-		printf("B[%d]=%e \n",m,B[m]);
-	
-}
-
-
-void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
+static void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
                int Nstep, int Nmeth, int NHharm, int NVharm,
-               double *pBy, double *pBx, double E0, double *pt1,
-               double *pt2, double *PR1, double *PR2, double *BDIFF)
-
+               double *By, double *Bx, double E0, double *T1,
+               double *T2, double *R1, double *R2, double *BDIFF)
 {	/* Find Ohmi's diffusion matrix BDIFF (la integrada) of a wiggler
 	   BDIFF - cumulative Ohmi's diffusion is initialized to 0
 	   BDIFF is preallocated 1 dimensional array to store 6-by-6 matrix 
@@ -232,257 +183,200 @@ void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
 	*/
 	
 	int m;	
-	double  *MKICK, *BKICK;
+	double  MKICK[36], BKICK[36];
 
 	/* 4-th order symplectic integrator constants */
-	double dl1,dl0;
-    int Niter = Nstep*(le/Lw);
+	int Niter = Nstep*(le/Lw);
     double SL = Lw/Nstep;
-	double zEndPointH[2];
-    double zEndPointV[2];
-	double ax,ay,axpy,aypx;
-	double B[2];
-	double E0G;
-    struct gwigR pWig;
-    int flag;       
-    
-	dl1 = x1*SL;
-    dl0 = x0*SL;
+	double dl1 = SL*KICK1;
+    double dl0 = SL*KICK2;
 	
 	/* Allocate memory for thin kick matrix MKICK
 	   and a diffusion matrix BKICK
 	*/
- 	MKICK = (double*)mxCalloc(36,sizeof(double));
-	BKICK = (double*)mxCalloc(36,sizeof(double));
 	for(m=0; m < 6; m++)
 		{	MKICK[m] = 0;
 			BKICK[m] = 0;
 		}
 	
+	double zEndPointH[2];
+    double zEndPointV[2];
+	double ax,ay,axpy,aypx;
+	double B[3];
+	double E0G;
+	double factorvect;
+    struct gwigR pWig;
+    int flag;       
+    
 	/* Transform orbit to a local coordinate system of an element
        BDIFF stays zero	*/
-    if(pt1)
-        ATaddvv(orbit_in,pt1);	
-    if(PR1)
-        ATmultmv(orbit_in,PR1);	
+    if(T1) ATaddvv(orbit_in,T1);	
+    if(R1) ATmultmv(orbit_in,R1);	
 
-   
     /*Generate the wiggler*/ 
-
-  
-  zEndPointH[0] = 0;
-  zEndPointH[1] = le;
-  zEndPointV[0] = 0;
-  zEndPointV[1] = le;
-  
-  E0G = E0 / 1e9;
-
-		  
-  GWigInit2(&pWig, E0G, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,pBy,pBx,pt1,pt2,PR1,PR2);
+    zEndPointH[0] = 0;
+    zEndPointH[1] = le;
+    zEndPointV[0] = 0;
+    zEndPointV[1] = le;
+	
+	/* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
+	E0G = E0 / 1e9; 
+    GWigInit2(&pWig,E0G,le,Lw,Bmax,Nstep,Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,By,Bx,T1,T2,R1,R2);
     
- /*   GWigInit(&pWig, le, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,pBy,pBx,
-              E0,pt1,pt2,PR1,PR2);
-    
- */   
-	/* Propagate orbit_in and BDIFF through a 4-th orderintegrator */
-        
+    /* Propagate orbit_in and BDIFF through a 4-th order integrator */
     flag=1;
     GWigGauge(&pWig, orbit_in, flag);
  
     GWigAx(&pWig, orbit_in, &ax, &axpy);
     GWigAy(&pWig, orbit_in, &ay, &aypx);
     GWigB(&pWig, orbit_in, B);
-
+	factorvect = vectorialnB2(&pWig, orbit_in, B);
     orbit_in[1] -= ax;
     orbit_in[3] -= ay;
-    GWigRadiationKicks(&pWig, orbit_in, B, SL);
+	
+    GWigRadiationKicks(&pWig, orbit_in, factorvect, SL);
     orbit_in[1] += ax;
     orbit_in[3] += ay;
 	
     for (m = 1; m <= Niter; m++ )   /* Loop over slices	*/
 		{	   
-
-			   wigglerM(&pWig, orbit_in, dl1, MKICK);
-			   wigglerB(&pWig, orbit_in, dl1, E0, BKICK);
-			   ATsandwichmmt(MKICK,BKICK);
-			   ATaddmm(BKICK,BDIFF);
-			   GWigMap_2nd(&pWig, orbit_in, dl1);
+			wigglerM(&pWig, orbit_in, dl1, MKICK);
+			wigglerB(&pWig, orbit_in, dl1, BKICK);
+			ATsandwichmmt(MKICK,BKICK);
+		    ATaddmm(BKICK,BDIFF);
+	   	    GWigMap_2nd(&pWig, orbit_in, dl1);
                 
-			   wigglerM(&pWig, orbit_in, dl0, MKICK);
-			   wigglerB(&pWig, orbit_in, dl0, E0, BKICK);
-			   ATsandwichmmt(MKICK,BKICK);
-			   ATaddmm(BKICK,BDIFF);
-               GWigMap_2nd(&pWig, orbit_in, dl0);
+			wigglerM(&pWig, orbit_in, dl0, MKICK);
+			wigglerB(&pWig, orbit_in, dl0, BKICK);
+			ATsandwichmmt(MKICK,BKICK);
+			ATaddmm(BKICK,BDIFF);
+            GWigMap_2nd(&pWig, orbit_in, dl0);
                
-			   wigglerM(&pWig, orbit_in, dl1, MKICK);
-			   wigglerB(&pWig, orbit_in, dl1, E0, BKICK);
-			   ATsandwichmmt(MKICK,BKICK);
-			   ATaddmm(BKICK,BDIFF);
-               GWigMap_2nd(&pWig, orbit_in, dl1);
+			wigglerM(&pWig, orbit_in, dl1, MKICK);
+			wigglerB(&pWig, orbit_in, dl1, BKICK);
+			ATsandwichmmt(MKICK,BKICK);
+			ATaddmm(BKICK,BDIFF);
+            GWigMap_2nd(&pWig, orbit_in, dl1);
 			   
-			   GWigAx(&pWig, orbit_in, &ax, &axpy);
-			   GWigAy(&pWig, orbit_in, &ay, &aypx);
-               GWigB(&pWig, orbit_in, B);
-			   orbit_in[1] -= ax;
-               orbit_in[3] -= ay;
-               GWigRadiationKicks(&pWig, orbit_in, B, SL);
-               orbit_in[1] += ax;
-               orbit_in[3] += ay;	
+			GWigAx(&pWig, orbit_in, &ax, &axpy);
+			GWigAy(&pWig, orbit_in, &ay, &aypx);
+            GWigB(&pWig, orbit_in, B);
+			factorvect = vectorialnB2(&pWig, orbit_in, B);
+			orbit_in[1] -= ax;
+			orbit_in[3] -= ay;
+			
+			GWigRadiationKicks(&pWig, orbit_in, factorvect, SL);
+			orbit_in[1] += ax;
+			orbit_in[3] += ay;
 		}      
         
-        flag=-1;
-        GWigGauge(&pWig, orbit_in, flag);
-       
+    flag=-1;
+    GWigGauge(&pWig, orbit_in, flag);
 		
-        if(PR2)
-            ATmultmv(orbit_in,PR2);	
-        if(pt2)
-            ATaddvv(orbit_in,pt2);	
-        
-        
-		mxFree(MKICK);
-		mxFree(BKICK);
+    if(R2) { 
+	   ATmultmv(orbit_in,R2);
+	   wigglerM(&pWig, orbit_in, dl1, MKICK);
+	   wigglerB(&pWig, orbit_in, dl1, BKICK);
+	   ATsandwichmmt(MKICK,BKICK);
+	   ATaddmm(BKICK,BDIFF);
+	}
+    if(T2) ATaddvv(orbit_in,T2);	
+}
+
+
+static double *wiggdiffmatrix(const atElem *ElemData, double *orb, double energy, double *bdiff)
+{
+    double Ltot, Lw, Bmax;  
+	int Nstep, Nmeth;
+	int NHharm, NVharm;
+    double *R1, *R2, *T1, *T2;
+    double *By, *Bx;
+
+    /* Required fields */
+	Ltot = atGetOptionalDouble(ElemData, "Length",0.0);
+	/* If ELEMENT has a zero length, return zeros matrix end exit */
+	if (Ltot == 0.0) return bdiff;
+	
+	Nstep = atGetLong(ElemData, "Nstep"); check_error();
+ 
+	if (atIsNaN(energy)) {
+        energy=atGetDouble(ElemData,"Energy"); check_error();
+    }
+    Lw = atGetDouble(ElemData, "Lw"); check_error();
+    Bmax = atGetDouble(ElemData, "Bmax"); check_error();
+    Nmeth = atGetLong(ElemData, "Nmeth"); check_error();
+    NHharm = atGetLong(ElemData, "NHharm"); check_error();
+    NVharm = atGetLong(ElemData, "NVharm"); check_error();
+    By = atGetDoubleArray(ElemData, "By"); check_error();
+    Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
+	
+	/* Optional fields */
+    R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+    R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+    T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+    T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+
+	FindElemB(orb, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, energy, T1, T2, R1, R2, bdiff);
+    return bdiff;
 }
 
 
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-/* The calling syntax of this mex-function from MATLAB is
-   FindWiggRadDiffMatrix(ELEMENT, ORBIT)
-   ELEMENT is the element structure with field names consistent with 
-           a multipole transverse field model.
-   ORBIT is a 6-by-1 vector of the closed orbit at the entrance (calculated elsewhere)
+{	 /* The calling syntax of this mex-function from MATLAB is
+     FindWiggRadDiffMatrix(ELEMENT, ORBIT)
+     ELEMENT is the element structure with field names consistent with 
+             a multipole transverse field model.
+     ORBIT is a 6-by-1 vector of the closed orbit at the entrance (calculated elsewhere)
 */
-{	int m,n;  
-	double E0;
-    double Ltot, Lw, Bmax; 
-    double *pBy, *pBx;
-	double *BDIFF;
-    int Nstep, Nmeth;
-    int NHharm, NVharm;
-    mxArray *tmpmxptr;
 
-	double *orb, *orb0;
-	double *pt1, *pt2, *PR1, *PR2;
-    
+	mxDouble *orb0;
+	const mxArray *mxElem, *mxOrbit;
+	double *bdiff;
+	double orb[6];
+    double energy;
+    int i, m, n;
+	
+	if (nrhs < 2)
+        mexErrMsgIdAndTxt("AT:WrongArg", """FDW"" needs at least 2 arguments");
+    mxElem = prhs[0];
+    mxOrbit = prhs[1];
+	
+	m = mxGetM(mxOrbit);
+	n = mxGetN(mxOrbit);
+	if (!(mxIsDouble(mxOrbit) && (m==6 && n==1)))
+		mexErrMsgIdAndTxt("AT:WrongArg", "Orbit must be a double 6x1 vector");
 
+	orb0 = mxGetDoubles(mxOrbit);
+	/* make local copy of the input closed orbit vector */
+	for (i=0;i<6;i++) orb[i] = orb0[i];
+	
+	if (nrhs >= 3) {
+	    const mxArray *mxEnergy = prhs[2];
+	    if (!(mxIsDouble(mxEnergy) && mxIsScalar(mxEnergy)))
+	        mexErrMsgIdAndTxt("AT:WrongArg", "Energy must be a double scalar");
+	    energy=mxGetScalar(mxEnergy);
+		}
 
-	m = mxGetM(prhs[1]);
-	n = mxGetN(prhs[1]);
-	if(!(m==6 && n==1))
-		mexErrMsgTxt("Second argument must be a 6-by-1 column vector");
-    
+    else {
+        energy=mxGetNaN();
+    }
 	/* ALLOCATE memory for the output array */
 	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
-	BDIFF = mxGetPr(plhs[0]);
-
+	bdiff = mxGetDoubles(plhs[0]);
+    for (i=0; i<36; i++) bdiff[i]=0.0;
     
-
-	orb0 = mxGetPr(prhs[1]);
-	/* make local copy of the input closed orbit vector */
-	orb = (double*)mxCalloc(6,sizeof(double));
-	for(m=0;m<6;m++)
-		orb[m] = orb0[m];
-    
-	/* Retrieve element information */
-    
-     
-  tmpmxptr = mxGetField(prhs[0],0,"Length");
-  if(tmpmxptr)
-    Ltot = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-	
-  tmpmxptr = mxGetField(prhs[0],0,"Lw");
-  if(tmpmxptr)
-    Lw = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Lw' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"Bmax");
-  if(tmpmxptr)
-    Bmax = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Bmax' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"Nstep");
-  if(tmpmxptr)
-    Nstep = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Nstep' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"Nmeth");
-  if(tmpmxptr)
-    Nmeth = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Nmeth' was not found in the element data structure"); 
-
-  tmpmxptr = mxGetField(prhs[0],0,"NHharm");
-  if(tmpmxptr)
-    NHharm = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'NHharm' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"NVharm");
-  if(tmpmxptr)
-    NVharm = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'NVharm' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"By");
-  if(tmpmxptr)
-    pBy = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'By' was not found in the element data structure"); 
-
-  tmpmxptr = mxGetField(prhs[0],0,"Bx");
-  if(tmpmxptr)
-    pBx = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Bx' was not found in the element data structure"); 
-
-  tmpmxptr = mxGetField(prhs[0],0,"Energy");
-  if(tmpmxptr)
-    E0 = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Energy' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"R1");
-  if(tmpmxptr)
-    PR1 = mxGetPr(tmpmxptr);
-  else
-    PR1 = NULL; 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"R2");
-  if(tmpmxptr)
-    PR2 = mxGetPr(tmpmxptr);
-  else
-    PR2 = NULL; 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"T1");
-  if(tmpmxptr)
-    pt1 = mxGetPr(tmpmxptr);
-  else
-    pt1 = NULL; 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"T2");
-  if(tmpmxptr)
-    pt2 = mxGetPr(tmpmxptr);
-  else
-    pt2 = NULL;
-    
-
-	FindElemB(orb, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,
-                pBy, pBx, E0, pt1, pt2, PR1, PR2, BDIFF);
+    wiggdiffmatrix(mxElem, orb, energy, bdiff);
 }
-#endif /*MATLAB_MEX_FILE*/
+#endif
+
 
 #if defined(PYAT)
 
-#define MODULE_NAME diffmatrix
-#define MODULE_DESCR "Computation of the radiation diffusion matrix"
+#define MODULE_NAME wiggdiffmatrix
+#define MODULE_DESCR "Computation of the radiation diffusion matrix for a wiggler"
 
-static PyObject *compute_diffmatrix(PyObject *self, PyObject *args) {
+static PyObject *compute_wiggdiffmatrix(PyObject *self, PyObject *args) {
     PyObject *pyElem, *pyMatrix;
     PyArrayObject *pyOrbit;
     double *orb0, *bdiff, *retval;
@@ -515,7 +409,7 @@ static PyObject *compute_diffmatrix(PyObject *self, PyObject *args) {
     pyMatrix = PyArray_ZEROS(2, outdims, NPY_DOUBLE, 1);
     bdiff = PyArray_DATA((PyArrayObject *)pyMatrix);
 
-    retval = diffmatrix(pyElem, orb, energy, bdiff);
+    retval = wiggdiffmatrix(pyElem, orb, energy, bdiff);
     if (retval == NULL) {
         Py_DECREF(pyMatrix);
         return NULL;
@@ -524,18 +418,18 @@ static PyObject *compute_diffmatrix(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef AtMethods[] = {
-    {"find_mpole_raddiff_matrix",
-    (PyCFunction)compute_diffmatrix, METH_VARARGS,
+    {"FDW",
+    (PyCFunction)compute_wiggdiffmatrix, METH_VARARGS,
     PyDoc_STR(
-    "find_mpole_raddiff_matrix(element, orbit, energy)\n\n"
+    "FDW(element, orbit, energy)\n\n"
     "Computes the radiation diffusion matrix B defined in [2]_\n"
-    "for multipole elements\n\n"
+    "for wiggler elements\n\n"
     "Args:\n"
     "    element:    Lattice element\n"
     "    orbit:      (6,) closed orbit at the entrance of ``element``\n"
     "    energy:     particle energy\n\n"
     "Returns:\n"
-    "    diffmatrix: The radiation diffusion matrix\n\n"
+    "    diffmatrix: The radiation diffusion matrix of the wiggler\n\n"
     "References:\n"
     "    **[1]** M.Sands, *The Physics of Electron Storage Rings*\n\n"
     "    .. [2] Ohmi, Kirata, Oide, *From the beam-envelope matrix to synchrotron\n"
@@ -568,5 +462,4 @@ PyMODINIT_FUNC MOD_INIT(MODULE_NAME)
     import_array();
     return MOD_SUCCESS_VAL(m);
 }
-
 #endif /*PYAT*/

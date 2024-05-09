@@ -130,3 +130,44 @@ ExitAngle
 : Angle of the exit pole face {math}`\varepsilon_2` with respect to the plane
 perpendicular to the output trajectory. Use 0 for a sector magnet,
 {math}`\theta/2` for a rectangular magnet.
+
+(GWigSymplecticPass)=
+## `GWigSymplecticPass`
+2 {sup}`nd` and 4{sup}`th` order Forest-Knuth integrator for wigglers without radiation
+
+Length
+: Length {math}`L` of the element.
+
+MaxOrder, NumIntSteps
+: see [StrMPoleSymplectic4Pass](#StrMPoleSymplectic4Pass)
+
+Period
+: Wiggler period {math}`L_w`.
+
+Peak magnetic field, B_0
+: Maximum magnetic field {math}`B_0` of the wiggler.
+
+Integration method, Nmeth
+: Nmeth indicates the integration method: 2nd or 4th order integrator
+
+NHharm
+: Number of horizontal harmonics of the wiggler
+
+NVharm
+: Number of vertical harmonics of the wiggler
+
+By
+: 6 x NHharm array containing the following quantities. row 1: Number of current horizontal
+harmonic; row 2: relative amplitudes of wiggler harmonics; row 3: {math}`k_x*L_w/2\pi`;
+row 4: {math}`k_y*L_w/2\pi`; row 5: {math}`k_z*L_w/2\pi`; row 6: {math}`\theta_n`, the relative 
+phase of the n{sup}`th` wiggler harmonic. {math}`k_x`, {math}`k_y` and {math}`k_z` are defined in [^Wu].
+
+Bx
+: 6 x NVharm array containing the following quantities. row 1: Number of current vertical
+harmonic; row 2: relative amplitudes of wiggler harmonics; row 3: {math}`k_x*L_w/2\pi`;
+row 4: {math}`k_y*L_w/2\pi`; row 5: {math}`k_z*L_w/2\pi`; row 6: {math}`\theta_n`, the relative 
+phase of the n{sup}`th` wiggler harmonic. {math}`k_x`, {math}`k_y` and {math}`k_z` are defined in [^Wu].
+
+
+[^Wu]: Y. K. Wu, E. Forest, and D. S. Robin, _Explicit symplectic integrator for s-dependent static magnetic
+field_, Phys. Rev. E, 68:046502, Oct 2003.
