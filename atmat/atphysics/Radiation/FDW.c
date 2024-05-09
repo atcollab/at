@@ -275,12 +275,12 @@ static void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
 		
     if(R2) { 
 	   ATmultmv(orbit_in,R2);
-	   wigglerM(&pWig, orbit_in, dl1, MKICK);
-	   wigglerB(&pWig, orbit_in, dl1, BKICK);
-	   ATsandwichmmt(MKICK,BKICK);
-	   ATaddmm(BKICK,BDIFF);
+	   ATsandwichmmt(R2,BDIFF);
 	}
-    if(T2) ATaddvv(orbit_in,T2);	
+    if(T2) {
+		ATaddvv(orbit_in,T2);	
+		ATsandwichmmt(T2,BDIFF);
+	}
 }
 
 
