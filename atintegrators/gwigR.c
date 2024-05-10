@@ -585,8 +585,8 @@ static void GWigRadiationKicks(struct gwigR *pWig, double *X, double factorvect,
   GWigAx(pWig, X, &ax, &axpy);
   GWigAy(pWig, X, &ay, &aypx);
   
-  mpartialH=1+(X[1]-ax)*(X[1]-ax)/(2*(1+X[4])*(1+X[4]))+(X[3]-ay)*(X[3]-ay)/(2*(1+X[4])*(1+X[4]));
- 
+  mpartialH= (1+X[4])/(sqrt((1+X[4])*(1+X[4])-(X[1]-ax)*(X[1]-ax)-(X[3]-ay)*(X[3]-ay)));
+  
   /* Calculate angles from momentums */
   p_norm = 1/(1+X[4]);
   x   = X[0];  
