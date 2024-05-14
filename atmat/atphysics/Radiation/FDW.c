@@ -277,10 +277,7 @@ static void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
 	   ATmultmv(orbit_in,R2);
 	   ATsandwichmmt(R2,BDIFF);
 	}
-    if(T2) {
-		ATaddvv(orbit_in,T2);	
-		ATsandwichmmt(T2,BDIFF);
-	}
+    if(T2) ATaddvv(orbit_in,T2);	
 }
 
 
