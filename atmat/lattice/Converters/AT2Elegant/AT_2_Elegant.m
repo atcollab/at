@@ -49,7 +49,7 @@ for i=1:length(families)
                     ' DY= ' num2str(-1*el.('T1')(3),form) ', &\n' ] ;
                 end
                 di= [di ...
-                    ' N_KICKS= 40 \n'...
+                    ' N_SLICES= 40 \n'...
                     ];
                 elelat=[elelat di '\n']; %#ok<*AGROW>
                 
@@ -73,7 +73,7 @@ for i=1:length(families)
                         ' DY= ' num2str(-1*el.('T1')(3),form) ', &\n' ] ;
                 end
                 qp= [qp ...
-                    ' N_KICKS= 40 \n'...
+                    ' N_SLICES= 40 \n'...
                     ];
                 
                 elelat=[elelat qp '\n'];
@@ -91,7 +91,7 @@ for i=1:length(families)
                 if(isfield(el,'Tilt'))
                     sx = [ sx ' TILT= ' num2str(el.('Tilt')) ', &\n' ];
                 end
-                sx = [ sx ' N_KICKS= 40 \n'];
+                sx = [ sx ' N_SLICES= 40 \n'];
                 
                 elelat=[elelat sx '\n'];
         case 'Octupole' % octupole
@@ -107,7 +107,7 @@ for i=1:length(families)
             if(isfield(el,'Tilt'))
                 sx = [ sx ' TILT= ' num2str(el.('Tilt')) ', &\n' ];
             end
-            sx = [ sx ' N_KICKS= 40 \n'];
+            sx = [ sx ' N_SLICES= 40 \n'];
             
             elelat=[elelat sx '\n'];
         case 'Multipole'
@@ -129,13 +129,13 @@ for i=1:length(families)
                 if(isfield(el,'Tilt'))
                     mp = [ mp ' TILT= ' num2str(el.('Tilt')) ', &\n' ];
                 end
-                mp = [ mp ' N_KICKS= 40 \n'];
+                mp = [ mp ' N_SLICES= 40 \n'];
                 
                 elelat=[elelat mp '\n'];
         case 'Monitor' % bpm
             pu=[el.('FamName') ' : MONI, L= ' num2str(el.('Length'),form) ' \n'];
             elelat=[elelat pu '\n'];
-        case 'Marker'% marker
+        case {'Marker','RingParam'}% Marker, or, RingParam
             mrk=[el.('FamName') ' :MARK' ' \n'...
                 ];
             elelat=[elelat mrk '\n'];
