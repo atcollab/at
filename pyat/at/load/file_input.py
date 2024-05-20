@@ -116,7 +116,7 @@ class ElementDescr(AnyDescr, dict):
 
     @staticmethod
     def convert(name: str, *args, **params) -> list[Element]:
-        """Generate the AT element"""
+        """Generate the AT element, Most be overloaded for each specific element"""
         return []
 
     # noinspection PyUnusedLocal
@@ -145,7 +145,7 @@ class SequenceDescr(AnyDescr, list, abc.ABC):
     """Simple representation of a sequence of elements as a list"""
 
     @property
-    def length(self):
+    def length(self) -> float:
         return getattr(self, "l", 0.0)
 
 
@@ -154,8 +154,9 @@ class BaseParser(dict):
 
     Analyses files with the following MAD-like format:
 
-    variable = value
-    label : command [,attribute=value] [,attribute=value]...
+    ``variable = value``
+
+    ``label : command [,attribute=value] [,attribute=value]...``
 
     The parser builds a database of all the defined objects
     """
@@ -169,19 +170,19 @@ class BaseParser(dict):
         *args,
         delimiter: Optional[str] = None,
         continuation: str = "\\",
-        linecomment: Union[None, str, Sequence[str]] = "#",
+        linecomment: Union[str, Sequence[str], None] = "#",
         blockcomment: Optional[tuple[str, str]] = None,
         endfile: Optional[str] = None,
         **kwargs,
     ):
         """
         Args:
-            env: global namespace
+            env: global namespace used for evaluating commands
             delimiter: command delimiter
             continuation: command continuation character
             linecomment: Line comment character
             blockcomment: Block comment delimiter
-            endfile: End of input marker
+            endfile: "End of input" marker
             *args: dict initializer
             **kwargs: dict initializer
         """
@@ -201,12 +202,13 @@ class BaseParser(dict):
         super().__init__(*args, **kwargs)
 
     def clear(self):
+        """Clean the database"""
         super().clear()
         self.update(self.kwargs)
 
     # noinspection PyUnusedLocal
     def evaluate(self, item, no_global: bool = False):
-        """Evaluate an expression using self as local namespace"""
+        """Evaluate an expression using *self* as local namespace"""
         return eval(_clean_expr(item), self.env, self)
 
     def _eval_cmd(self, cmdname: str, no_global: bool = False):
@@ -255,7 +257,6 @@ class BaseParser(dict):
         **kwargs,
     ):
         """Command execution"""
-
         argparser = self._argument_parser.get(cmdname, _default_arg_parser)
         kwargs.update(argparser(self, arg) for arg in argnames)
         if label is None:
@@ -274,7 +275,6 @@ class BaseParser(dict):
         Overload this method for specific languages"""
         line, matches = protect(line, fence=('"', '"'))  # protect the quoted parts
         line = "".join(line.split()).lower()  # Remove all spaces, lower
-        # line = re.sub(r"(?<=[a-z_.])\.", "_", line)  # Replace "." by "_"
         (line,) = restore(matches, line)
         return line
 

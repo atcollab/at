@@ -5,6 +5,7 @@ from __future__ import annotations
 __all__ = ["MadxParser", "load_madx"]
 
 import functools
+import warnings
 
 # functions known by MADX
 from math import pi, e, sqrt, exp, log, log10, sin, cos, tan  # noqa: F401
@@ -42,7 +43,9 @@ prad = erad * emass / pmass  # [m]
 
 
 def sinc(x: float) -> float:
-    return sin(x)/x
+    return sin(x) / x
+
+
 # -------------------
 #  Utility functions
 # -------------------
@@ -68,10 +71,10 @@ def set_tilt(func):
     return wrapper
 
 
-def polyn(a):
+def polyn(a: Sequence[float]) -> np.ndarray:
     """Convert polynomials from MADX to AT"""
 
-    def ref(n, t):
+    def ref(n: int, t: float):
         nonlocal f
         v = t / f
         f *= n + 1
@@ -449,22 +452,24 @@ class _BeamDescr(ElementDescr):
         callfun,
         *args,
         particle="positron",
-        mass=emass,
+        mass=emass,  # GeV
         charge=1.0,
-        energy=1.0,
+        energy=1.0,  # GeV
         bcurrent=0.0,
         **kwargs,
     ):
-        atparticle = Particle(particle, rest_energy=1.0e09 * mass, charge=charge)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            atparticle = Particle(particle, rest_energy=1.0e09 * mass, charge=charge)
         mass = 1.0e-09 * atparticle.rest_energy
         charge = atparticle.charge
         gamma = energy / mass
         beta = sqrt(1.0 - 1.0 / gamma / gamma)
         pc = beta * energy  # GeV
-        kwargs.setdefault("gamma",  gamma)
+        kwargs.setdefault("gamma", gamma)
         kwargs.setdefault("beta", beta)
         kwargs.setdefault("pc", pc)
-        kwargs.setdefault("brho",  1.0e09 * pc / abs(charge) / clight)
+        kwargs.setdefault("brho", 1.0e09 * pc / abs(charge) / clight)
         super().__init__(
             *args,
             source="beam",
@@ -500,9 +505,39 @@ class _BeamDescr(ElementDescr):
 
 
 class MadxParser(UnorderedParser):
-    """MADX specific parser
+    # noinspection PyUnresolvedReferences
+    """MAD-X specific parser
 
-    After processing a file, the parser is a database containing all the MADX variables
+    The parser is a subclass of :py:class:`dict` and is database containing all the
+    MAD-X variables.
+
+    Example:
+        Parse a 1st file:
+
+        >>> parser = at.MadxParser()
+        >>> parser.parse_file("file1")
+
+        Parse another file:
+
+        >>> parser.parse_file("file2")
+
+        Get the variable "vkick"
+
+        >>> parser["vkick"]
+        0.003
+
+        Define a new variable:
+
+        >>> parser["hkick"] = -0.0024
+
+        Get the "qf1" element
+
+        >>> parser["qf1"]
+        quadrupole(name=qf1, l=1.0, k1=0.5, tilt=0.001)
+
+        Generate an AT :py:class:`.Lattice` from the "ring" sequence
+
+        >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
     _soft_eval = {"file", "refer"}
@@ -557,16 +592,10 @@ class MadxParser(UnorderedParser):
         self[name] = beam
 
     def _format_statement(self, line: str) -> str:
-
-        # def repl(match):
-        #     return match.group().replace(".", "_")
-
         line, matches = protect(line, fence=('"', '"'))
         line = "".join(line.split()).lower()  # Remove all spaces, lower
-        # line = re.sub(r"[a-z][\w.]*", repl, line)  # Replace "." by "_"
         line = line.replace("from", "frm")  # Replace from by frm
         line = line.replace("{", "(").replace("}", ")")
-        # line = line.replace("->", ".")  # for attribute access
         line = line.replace(":=", "=")  # since we evaluate only once
         (line,) = restore(matches, line)
         return line
@@ -619,7 +648,7 @@ class MadxParser(UnorderedParser):
             beam = self["beam"]
         return beam
 
-    def lattice(self, use="cell", **kwargs):
+    def lattice(self, use: str = "cell", **kwargs):
         """Create a lattice from the selected sequence
 
         Parameters:
@@ -656,10 +685,10 @@ class MadxParser(UnorderedParser):
 
 
 def load_madx(*files: str, use: str = "cell", verbose=False, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a MADX file
+    """Create a :py:class:`.Lattice`  from MAD-X files
 
     Parameters:
-        files:              Names of one or several Mad files to process
+        files:              Names of one or several MAD-X files
         use:                Name of the MADX sequence or line containing the desired
           lattice. Default: ``cell``
         verbose:            Print details on processing
