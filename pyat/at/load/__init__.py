@@ -8,4 +8,5 @@ from .matfile import *
 from .reprfile import *
 from .tracy import *
 from .elegant import *
-from .json import *
+from .file_input import *
+from .madx import *
