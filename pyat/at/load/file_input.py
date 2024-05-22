@@ -14,18 +14,10 @@ from typing import Union, Optional
 from .utils import split_ignoring_parentheses, protect, restore
 from ..lattice import Element
 
-
-def _clean_expr(expr):
-    """Replace "." by "_" """
-
-    def repl(match):
-        return match.group().replace(".", "_")
-
-    expr, matches = protect(expr, fence=('"', '"'))
-    expr = re.sub(r"[a-z][\w.]*", repl, expr)  # Replace "." by "_"
-    expr = expr.replace("->", ".")  # for attribute access
-    (expr,) = restore(matches, expr)
-    return expr
+_dot = re.compile(r"[a-z][\w.]*")  # An identifier: starts with a letter
+_singlequoted = re.compile(r"'([\w.]*)'")
+_named = re.compile(r"name=([\w.]*)")
+_doublequoted = re.compile(r'^"(.*)"$')
 
 
 def _default_arg_parser(parser: BaseParser, argstr: str):
@@ -42,14 +34,10 @@ def _default_arg_parser(parser: BaseParser, argstr: str):
             key = argstr
             v = True
     else:  # Keyword argument
-        try:
+        if key in parser._str_arguments:
+            v = _doublequoted.sub(r"\1", value)
+        else:
             v = parser.evaluate(value)
-        except (NameError, SyntaxError):
-            # noinspection PyProtectedMember
-            if key in parser._soft_eval:
-                v = value
-            else:
-                raise
     return key, v
 
 
@@ -64,14 +52,14 @@ class AnyDescr(abc.ABC):
     def __neg__(self):
         return self.inversed(copy=True)
 
-    def __call__(self, *args, copy: bool = True, **kwargs) -> AnyDescr:
+    def __call__(self, *args, copy: bool = True, **kwargs) -> Optional[AnyDescr]:
         """Create a copy of the element with updated fields"""
         if copy:
             b = dict((key, kwargs.pop(key, value)) for key, value in vars(self).items())
             return type(self)(self, *args, **b, **kwargs)
         else:
             self.update(*args, **kwargs)
-            return self
+            return None
 
     def update(self, *args, **kwargs):
         for key, value in vars(self).items():
@@ -161,7 +149,7 @@ class BaseParser(dict):
     The parser builds a database of all the defined objects
     """
 
-    _soft_eval = set()
+    _str_arguments = set()
     _argument_parser = {}
 
     def __init__(
@@ -201,20 +189,31 @@ class BaseParser(dict):
         self.kwargs = kwargs
         super().__init__(*args, **kwargs)
 
+    @staticmethod
+    def _no_dot(expr):
+        def repl(match):
+            return match.group().replace(".", "_")
+        return _dot.sub(repl, expr)
+
+    def __setitem__(self, key, value):
+        super().__setitem__(self._no_dot(key), value)
+
     def clear(self):
         """Clean the database"""
         super().clear()
         self.update(self.kwargs)
 
     # noinspection PyUnusedLocal
-    def evaluate(self, item, no_global: bool = False):
+    def evaluate(self, expr, no_global: bool = False):
         """Evaluate an expression using *self* as local namespace"""
-        return eval(_clean_expr(item), self.env, self)
+        expr = self._no_dot(expr)  # Replace "." by "_"
+        expr = expr.replace("->", ".")  # for attribute access
+        return eval(expr, self.env, self)
 
-    def _eval_cmd(self, cmdname: str, no_global: bool = False):
+    def _eval_cmd(self, cmdname: str, no_global: bool = False) -> Callable:
         """Evaluate a command"""
-        cname = _clean_expr(cmdname)
-        cmd = self.get(cname, None)
+        cname = self._no_dot(cmdname)
+        cmd: Optional[Callable] = self.get(cname, None)
         if cmd is not None:
             return cmd
         else:
@@ -229,18 +228,21 @@ class BaseParser(dict):
     @staticmethod
     def _reason(exc: Exception) -> str:
         """Extract the element name from the exception"""
-        if isinstance(exc, KeyError):
+        if isinstance(exc, KeyError):  # Undefined element, attribute
             return exc.args[0]
-        elif isinstance(exc, NameError):
-            return re.search(r"'(\w*)'", exc.args[0])[1]
+        elif isinstance(exc, NameError):  # Refpos missing
+            return _singlequoted.search(exc.args[0])[1]
         elif isinstance(exc, TypeError):
-            idx = re.search(r"name=(\w*)", exc.args[-1])
+            idx = _named.search(exc.args[-1])  # Missing pos. arg.
             if idx is None:
-                idx = re.search(r"'(\w*)'", exc.args[0])
+                idx = _singlequoted.search(exc.args[0])  # Not allowed in seq.
             if idx is None:
                 return "TypeError"
             else:
                 return idx[1]
+        elif isinstance(exc, ValueError):  # overlap
+            print(exc.args[0])
+            return _singlequoted.search(exc.args[0])[1]
         else:
             return type(exc).__name__
 
@@ -302,7 +304,7 @@ class BaseParser(dict):
             key = label
             result = self._command(label, cmdname, *argnames)
         if not (key is None or result is None):
-            self[_clean_expr(key)] = result
+            self[key] = result
 
     def _finalise(self) -> None:
         """Called at the end of processing"""
@@ -316,7 +318,7 @@ class BaseParser(dict):
     def expand(self, key: str) -> Generator[Element, None, None]:
         """iterator over AT objects generated by a source object"""
         try:
-            v = self[key]
+            v = self[self._no_dot(key)]
             if isinstance(v, AnyDescr):
                 yield from v.expand(self)
             else:
@@ -469,26 +471,13 @@ class UnorderedParser(BaseParser):
         self.delayed = []
         self.missing = set()
 
-    def _assign(self, label: str, key: str, value: str):
-        """Store the failing assignments in self.delayed for later evaluation"""
-        try:
-            result = self.evaluate(value)
-        except NameError as exc:  # store the failing assignment
-            self.delayed.append((label, "=".join((key, value))))
-            self.missing.add(self._reason(exc))
-            result = None
-        return result
-
-    def _command(self, label: Optional[str], cmdname: str, *argnames: str, **kwargs):
+    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
         """Store failing commands in self.delayed for later evaluation"""
         try:
-            result = super()._command(label, cmdname, *argnames, **kwargs)
+            super()._decode(label, cmdname, *argnames)
         except (KeyError, NameError) as exc:  # store the failing assignment
-            # NameError for evaluate, KeyError for eval_cmd
             self.delayed.append((label, cmdname, *argnames))
             self.missing.add(self._reason(exc))
-            result = None
-        return result
 
     def _finalise(self) -> None:
         """Loop on evaluation of the pending statements"""

@@ -98,7 +98,8 @@ class _MadElement(ElementDescr):
         self.frm = frm
         super().__init__(*args, **kwargs)
 
-    def limits(self, refer):
+    # noinspection PyUnusedLocal
+    def limits(self, parser: MadxParser, refer: float):
         """return [entrance, exit] coordinate"""
         half_length = 0.5 * self.length
         offset = self.at + refer * half_length
@@ -290,7 +291,7 @@ class _Ignored(_MadElement):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         type1 = self["source"].title()
-        type2 = "Marker" if kwargs.get("l", 0.0) == 0.0 else "Drift"
+        type2 = "Marker" if self.length == 0.0 else "Drift"
         print(f"MADX type {type1} is ignored and replaced by a {type2}.")
 
     @staticmethod
@@ -383,6 +384,7 @@ class _Sequence(SequenceDescr):
         *args,
         l=0,
         refer="centre",
+        refpos=None,
         at=0.0,
         frm=None,
         valid=True,
@@ -393,6 +395,7 @@ class _Sequence(SequenceDescr):
             self.refer = self._offset[refer]
         except KeyError as exc:
             raise ValueError(f"REFER must be in {set(self._offset.keys())}") from exc
+        self.refpos = refpos
         self.at = at
         self.frm = frm
         self.valid = valid
@@ -400,12 +403,29 @@ class _Sequence(SequenceDescr):
 
     def __call__(self, *args, **kwargs):
         # Never make a copy
-        kwargs.pop("copy", None)
-        return super().__call__(*args, copy=False, **kwargs)
+        copy = kwargs.pop("copy", None)
+        super().__call__(*args, copy=False, **kwargs)
+        return self if copy else None
 
-    def limits(self, refer):
+    def limits(self, parser: MadxParser, refer: float):
         half_length = 0.5 * self.length
-        offset = self.at + refer * half_length
+
+        if self.refpos is None:
+            offset = self.at + refer * half_length
+        else:
+            offset = None
+            for fname, *anames in self:
+                if fname == self.refpos:
+                    elem = parser._raw_command(
+                        None, fname, *anames, no_global=True, copy=True
+                    )
+                    offset = self.at - elem.at + half_length
+                    break
+            if offset is None:
+                raise NameError(
+                    f"REFPOS {self.refpos!r} is not in the sequence {self.name!r}"
+                )
+
         if self.frm is not None:
             offset += self.frm.at
         return np.array([-half_length, half_length]) + offset
@@ -416,7 +436,7 @@ class _Sequence(SequenceDescr):
                 yield from drift(name="filler", l=dl).expand(parser)
             elif dl < -1.0e-12:
                 elemtype = type(el).__name__.upper()
-                raise ValueError(f"{elemtype}({el.name!r}) is overlapping")
+                raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
         if not self.valid:
             raise NameError(f"name {self.name!r} is not defined")
@@ -429,7 +449,7 @@ class _Sequence(SequenceDescr):
                 elem = parser._raw_command(
                     None, fname, *anames, no_global=True, copy=True
                 )
-                entry, ext = elem.limits(self.refer)
+                entry, ext = elem.limits(parser, self.refer)
                 yield from insert_drift(entry - end, elem)
                 end = ext
                 yield from elem.expand(parser)
@@ -540,7 +560,7 @@ class MadxParser(UnorderedParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    _soft_eval = {"file", "refer"}
+    _str_arguments = {"file", "refer", "refpos"}
     _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
 
     def __init__(self):
@@ -608,12 +628,12 @@ class MadxParser(UnorderedParser):
             except (KeyError, NameError) as exc:
                 if cmdname == "sequence":
                     # if sequence creation failed, create a dummy sequence anyway
-                    cmdname = label
                     res = self._raw_command(label, cmdname, "valid=False", **kwargs)
-                    argnames += ("valid=True",)
-                    self.current_sequence = res
-                self.delayed.append((label, cmdname, *argnames))
-                self.missing.add(self._reason(exc))
+                    # But store the command for later update
+                    self.delayed.append((None, label, "valid=True", *argnames))
+                    self.missing.add(self._reason(exc))
+                else:
+                    raise
             finally:
                 if isinstance(res, _Sequence):
                     self.current_sequence = res
@@ -624,9 +644,6 @@ class MadxParser(UnorderedParser):
                 if label is not None:
                     try:
                         res = self._raw_command(label, cmdname, *argnames, **kwargs)
-                    except (NameError, KeyError) as exc:
-                        self.delayed.append((label, cmdname, *argnames))
-                        self.missing.add(self._reason(exc))
                     finally:
                         self.current_sequence.append((label, *argnames))
                 else:
@@ -643,7 +660,7 @@ class MadxParser(UnorderedParser):
 
     def _get_beam(self, key: str):
         try:
-            beam = self[f"beam%{key}"]
+            beam = self[f"beam%{self._no_dot(key)}"]
         except KeyError:
             beam = self["beam"]
         return beam
@@ -678,7 +695,7 @@ class MadxParser(UnorderedParser):
             yield from self.expand(use)
 
         options = {}
-        lat = Lattice(iterator=gener, **kwargs)
+        lat = Lattice(options, iterator=gener, **kwargs)
         if options.get("radiate", False):
             lat.enable_6d(copy=False)
         return lat
