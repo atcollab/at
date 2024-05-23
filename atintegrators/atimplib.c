@@ -173,7 +173,12 @@ static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         zpos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         xpos[i] =  (weight[i]>0.0) ? xpos[i]/weight[i] : 0.0;
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
-        weight[i] *= bunch_currents[ib]/np_bunch[ib];
+        if (np_bunch[ib] == 0.0) {
+            weight[i] = 0.0;
+            }
+        else {
+            weight[i] *= bunch_currents[ib]/np_bunch[ib];
+        }
     } 
     atFree(np_bunch);
     atFree(smin);
