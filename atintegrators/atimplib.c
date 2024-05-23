@@ -38,11 +38,13 @@ static double getTableWake(double *waketable,double *waketableT,double distance,
 };
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
-    memmove(turnhistory, turnhistory + nslice, 4*nslice*nturns*sizeof(double));
-    double *z = turnhistory+nslice*nturns*2;
     int i;
-    for(i=0; i<nslice*nturns; i++){
-        z[i] += -circumference;
+    if(nturns > 1){
+        memmove(turnhistory, turnhistory + nslice, 4*nslice*nturns*sizeof(double));
+        double *z = turnhistory+nslice*nturns*2;
+        for(i=0; i<nslice*nturns; i++){
+            z[i] += -circumference;
+        }
     }
     double *x0 = turnhistory + (nturns-1)*nslice;
     double *y0 = turnhistory + (2*nturns-1)*nslice;
@@ -171,7 +173,12 @@ static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         zpos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         xpos[i] =  (weight[i]>0.0) ? xpos[i]/weight[i] : 0.0;
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
-        weight[i] *= bunch_currents[ib]/np_bunch[ib];
+        if (np_bunch[ib] == 0.0) {
+            weight[i] = 0.0;
+            }
+        else {
+            weight[i] *= bunch_currents[ib]/np_bunch[ib];
+        }
     } 
     atFree(np_bunch);
     atFree(smin);
