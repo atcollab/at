@@ -25,7 +25,7 @@ from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
 from ..lattice import Lattice, Particle, elements as elt, tilt_elem
 from .utils import split_ignoring_parentheses, protect, restore
 
-
+_relativistic = Particle()
 # Constants known by MADX
 true = True
 false = False
@@ -85,6 +85,43 @@ def polyn(a: Sequence[float]) -> np.ndarray:
     return np.array([ref(n, t) for n, t in enumerate(a)], dtype=float)
 
 
+def _energy_variables(particle: Particle = _relativistic, **kwargs):
+    """Compute E, pc, beta, gamma, brho from one of them"""
+    mass = 1.0e-09 * particle.rest_energy  # [GeV]
+    charge = particle.charge
+    data = {"mass": mass, "charge": charge}
+
+    if "energy" in kwargs:
+        energy = data.setdefault("energy", kwargs["energy"])
+        gamma = energy / mass
+        betgam = sqrt(gamma * gamma - 1.0)
+    elif "pc" in kwargs:
+        pc = data.setdefault("pc", kwargs["pc"])
+        betgam = pc / mass
+        gamma = sqrt(betgam * betgam + 1.0)
+    elif "gamma" in kwargs:
+        gamma = data.setdefault("gamma", kwargs["gamma"])
+        betgam = sqrt(gamma * gamma - 1.0)
+    elif "beta" in kwargs:
+        beta = data.setdefault("beta", kwargs["beta"])
+        gamma = 1.0 / sqrt(1.0 - beta * beta)
+        betgam = beta * gamma
+    elif "brho" in kwargs:
+        brho = data.setdefault("brho", kwargs["brho"])
+        betgam = 1.0e-9 * brho * clight * abs(charge) / mass
+        gamma = sqrt(betgam * betgam + 1.0)
+    else:
+        gamma = 1.0 / mass  # Default to 1 GeV
+        betgam = sqrt(gamma * gamma - 1.0)
+
+    pc = kwargs.setdefault("pc", betgam * mass)
+    kwargs.setdefault("gamma", gamma)
+    kwargs.setdefault("energy", gamma * mass)
+    kwargs.setdefault("beta", betgam / gamma)
+    kwargs.setdefault("brho", 1.0e09 * pc / abs(charge) / clight)
+    return data
+
+
 # ------------------------------
 #  Base class for MAD-X elements
 # ------------------------------
@@ -109,7 +146,7 @@ class _MadElement(ElementDescr):
 
 
 # ------------------------------
-#  MAD-X elements
+#  MAD-X classes
 # ------------------------------
 
 
@@ -328,11 +365,6 @@ def value(**kwargs):
         print(f"{key}: {v}")
 
 
-# ------------------------------
-#  MAD-X LIST element
-# ------------------------------
-
-
 class _List(SequenceDescr):
     """Descriptor for the MADX LIST"""
 
@@ -366,11 +398,6 @@ class _List(SequenceDescr):
                 elif isinstance(elem, Sequence):  # Other sequence (tuple)
                     for el in elem:
                         yield from el.expand(parser)
-
-
-# ------------------------------
-#  MAD-X SEQUENCE
-# ------------------------------
 
 
 # noinspection PyPep8Naming
@@ -466,6 +493,7 @@ class _Sequence(SequenceDescr):
 
 
 class _BeamDescr(ElementDescr):
+    """Descriptor for the MAD-X BEAM object"""
 
     def __init__(
         self,
@@ -474,30 +502,66 @@ class _BeamDescr(ElementDescr):
         particle="positron",
         mass=emass,  # GeV
         charge=1.0,
-        energy=1.0,  # GeV
         bcurrent=0.0,
+        kbunch=1,
+        radiate=False,
         **kwargs,
     ):
+        def energy_params(particle, **kwargs):
+            """Updates all energy-related properties if one is changed"""
+            mass = 1.0e-09 * particle.rest_energy  # [GeV]
+            charge = particle.charge
+
+            data = {}
+            # Respect the precedence of MAD-X
+            if "energy" in kwargs:
+                energy = data.setdefault("energy", kwargs["energy"])
+                gamma = energy / mass
+                betgam = sqrt(gamma * gamma - 1.0)
+            elif "pc" in kwargs:
+                pc = data.setdefault("pc", kwargs["pc"])
+                betgam = pc / mass
+                gamma = sqrt(betgam * betgam + 1.0)
+            elif "gamma" in kwargs:
+                gamma = data.setdefault("gamma", kwargs["gamma"])
+                betgam = sqrt(gamma * gamma - 1.0)
+            elif "beta" in kwargs:
+                beta = data.setdefault("beta", kwargs["beta"])
+                gamma = 1.0 / sqrt(1.0 - beta * beta)
+                betgam = beta * gamma
+            elif "brho" in kwargs:
+                brho = data.setdefault("brho", kwargs["brho"])
+                betgam = 1.0e-9 * brho * clight * abs(charge) / mass
+                gamma = sqrt(betgam * betgam + 1.0)
+            else:
+                energy = data.setdefault("energy", 1.0)
+                gamma = energy / mass
+                betgam = sqrt(gamma * gamma - 1.0)
+
+            data.setdefault("energy", gamma * mass)  # [GeV]
+            pc = data.setdefault("pc", betgam * mass)
+            data.setdefault("gamma", gamma)
+            data.setdefault("beta", betgam / gamma)
+            data.setdefault("brho", 1.0e09 * pc / abs(charge) / clight)
+            return data
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             atparticle = Particle(particle, rest_energy=1.0e09 * mass, charge=charge)
-        mass = 1.0e-09 * atparticle.rest_energy
+        mass = 1.0e-09 * atparticle.rest_energy  # [GeV]
         charge = atparticle.charge
-        gamma = energy / mass
-        beta = sqrt(1.0 - 1.0 / gamma / gamma)
-        pc = beta * energy  # GeV
-        kwargs.setdefault("gamma", gamma)
-        kwargs.setdefault("beta", beta)
-        kwargs.setdefault("pc", pc)
-        kwargs.setdefault("brho", 1.0e09 * pc / abs(charge) / clight)
+
+        kwargs.update(energy_params(atparticle, **kwargs))
+
         super().__init__(
             *args,
             source="beam",
             atparticle=atparticle,
-            mass=mass,
+            mass=mass,  # [GeV]
             charge=charge,
-            energy=energy,
             bcurrent=bcurrent,
+            kbunch=kbunch,
+            radiate=radiate,
             **kwargs,
         )
         self.callfun = callfun
@@ -516,10 +580,11 @@ class _BeamDescr(ElementDescr):
     def expand(self, parser: MadxParser) -> dict:
         res = dict(
             particle=self["atparticle"],
-            energy=1.0e09 * self.energy,
-            beam_current=self.bcurrent,
+            energy=1.0e09 * self["energy"],  # [eV]
+            beam_current=self["bcurrent"],
+            nbunch=self["kbunch"],
             periodicity=1,
-            radiate=self.get("radiate", False),
+            radiate=self["radiate"],
         )
         return res
 
@@ -560,7 +625,7 @@ class MadxParser(UnorderedParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    _str_arguments = {"file", "refer", "refpos"}
+    _str_arguments = {"file", "refer", "refpos", "sequence"}
     _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
 
     def __init__(self):
@@ -594,16 +659,15 @@ class MadxParser(UnorderedParser):
     def _beam_cmd(
         self,
         *args,
-        sequence=None,
+        sequence: Optional[str] = None,
         **kwargs,
     ):
         """Implement the BEAM MAD-X statement"""
-        if isinstance(sequence, _Sequence):
-            name = f"beam%{sequence.name}"
-        elif isinstance(sequence, str):
-            name = f"beam%{sequence}"
-        else:
+        if sequence is None:
             name = "beam"
+        else:
+            name = f"beam%{sequence}"
+
         beam = _BeamDescr(
             self._beam_cmd,
             *args,
@@ -653,66 +717,69 @@ class MadxParser(UnorderedParser):
     def _assign(self, label: str, key: str, value: str):
         if key == "list":
             members = split_ignoring_parentheses(value[1:-1])
-            self[label] = _List(members, name=label)
-            return None
+            return label, _List(members, name=label)
         else:
             return super()._assign(label, key, value)
 
     def _get_beam(self, key: str):
+        """Get the beam object for a given sequence"""
         try:
             beam = self[f"beam%{self._no_dot(key)}"]
         except KeyError:
             beam = self["beam"]
         return beam
 
-    def lattice(self, use: str = "cell", **kwargs):
+    def _generator(self, params, *args):
+        """generate AT elements for the Lattice constructor"""
+        use = params.setdefault("use", "ring")
+
+        # generate the Lattice attributes from the BEAM object
+        beam = self._get_beam(use).expand(self)
+        for key, value in beam.items():
+            params.setdefault(key, value)
+
+        # Iterate from the elements
+        yield from super()._generator(params)
+
+    def lattice(self, use="ring", **kwargs):
         """Create a lattice from the selected sequence
 
         Parameters:
             use:                Name of the MADX sequence or line containing the desired
-              lattice. Default: ``cell``
+              lattice. Default: ``ring``
 
         Keyword Args:
             name (str):         Name of the lattice. Default: MADX sequence name.
-            energy (float):     Energy of the lattice [eV]
+            particle(Particle): Circulating particle. Default: from MADX
+            energy (float):     Energy of the lattice [eV], Default: from MADX
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-
-        def gener(params, *args):
-            params.setdefault("use", use)
-            params.setdefault("name", use)
-
-            # generate the Lattice attributes from the BEAM object
-            beam = self._get_beam(use).expand(self)
-            rad = beam.pop("radiate")
-            if args:
-                args[0].update(radiate=rad)
-            for key, value in beam.items():
-                params.setdefault(key, value)
-
-            # Iterate from the elements
-            yield from self.expand(use)
-
-        options = {}
-        lat = Lattice(options, iterator=gener, **kwargs)
-        if options.get("radiate", False):
+        lat = super().lattice(use=use, **kwargs)
+        try:
+            radiate = lat.radiate
+        except AttributeError:
+            radiate = False
+        else:
+            del lat.radiate
+        if radiate:
             lat.enable_6d(copy=False)
         return lat
 
 
-def load_madx(*files: str, use: str = "cell", verbose=False, **kwargs) -> Lattice:
+def load_madx(*files: str, use: str = "ring", verbose=False, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from MAD-X files
 
     Parameters:
         files:              Names of one or several MAD-X files
         use:                Name of the MADX sequence or line containing the desired
-          lattice. Default: ``cell``
+          lattice. Default: ``ring``
         verbose:            Print details on processing
 
     Keyword Args:
         name (str):         Name of the lattice. Default: MADX sequence name.
-        energy (float):     Energy of the lattice [eV]
+        particle(Particle): Circulating particle. Default: from MADX
+        energy (float):     Energy of the lattice [eV], Default: from MADX
         periodicity(int):   Number of periods. Default: 1
         *:                  All other keywords will be set as Lattice attributes
 

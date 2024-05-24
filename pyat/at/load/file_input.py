@@ -12,7 +12,7 @@ from collections.abc import Sequence, Callable, Iterable, Generator, Mapping
 from typing import Union, Optional
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Element
+from ..lattice import Element, Lattice
 
 _dot = re.compile(r"[a-z][\w.]*")  # An identifier: starts with a letter
 _singlequoted = re.compile(r"'([\w.]*)'")
@@ -248,7 +248,7 @@ class BaseParser(dict):
 
     def _assign(self, label: str, key: str, value: str):
         """Variable assignment"""
-        return self.evaluate(value)
+        return key, self.evaluate(value)
 
     def _raw_command(
         self,
@@ -297,14 +297,13 @@ class BaseParser(dict):
 
     def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
         """Execute the split statement"""
-        key, *vals = cmdname.split("=")
-        if vals:
-            result = self._assign(label, key, vals[0])
+        left, *right = cmdname.split("=")
+        if right:
+            label, result = self._assign(label, left, right[0])
         else:
-            key = label
             result = self._command(label, cmdname, *argnames)
-        if not (key is None or result is None):
-            self[key] = result
+        if not (label is None or result is None):
+            self[label] = result
 
     def _finalise(self) -> None:
         """Called at the end of processing"""
@@ -329,6 +328,30 @@ class BaseParser(dict):
                 print(arg)
             self._analyse(self._reason(exc))
             raise
+
+    def _generator(self, params):
+        """Generate AT elements for the Lattice constructor"""
+        use = params.setdefault("use", "ring")
+        params.setdefault("name", use)
+
+        # Iterate from the elements
+        yield from self.expand(use)
+
+    def lattice(self, use="ring", **kwargs):
+        """Create a lattice from the selected sequence
+
+        Parameters:
+            use:                Name of the MADX sequence or line containing the desired
+              lattice. Default: ``ring``
+
+        Keyword Args:
+            name (str):         Name of the lattice. Default: MADX sequence name.
+            particle(Particle): Circulating particle. Default: from MADX
+            energy (float):     Energy of the lattice [eV], Default: from MADX
+            periodicity(int):   Number of periods. Default: 1
+            *:                  All other keywords will be set as Lattice attributes
+        """
+        return Lattice(iterator=self._generator, use=use, **kwargs)
 
     def parse_lines(
         self,
