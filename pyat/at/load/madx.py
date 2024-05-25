@@ -7,7 +7,7 @@ __all__ = ["MadxParser", "load_madx"]
 import functools
 import warnings
 
-# functions known by MADX
+# functions known by MAD-X
 from math import pi, e, sqrt, exp, log, log10, sin, cos, tan  # noqa: F401
 from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
 from os.path import abspath
@@ -17,7 +17,7 @@ from collections.abc import Sequence, Generator
 
 import numpy as np
 
-# constants known by MADX
+# constants known by MAD-X
 from scipy.constants import c as clight, hbar as _hb, e as qelect
 from scipy.constants import physical_constants as _cst
 
@@ -25,8 +25,15 @@ from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
 from ..lattice import Lattice, Particle, elements as elt, tilt_elem
 from .utils import split_ignoring_parentheses, protect, restore
 
-_relativistic = Particle()
-# Constants known by MADX
+_default_beam = dict(
+    particle="positron",
+    energy=1.0,  # GeV
+    bcurrent=0.0,
+    kbunch=1,
+    radiate=False,
+)
+
+# Constants known by MAD-X
 true = True
 false = False
 twopi = 2 * pi
@@ -43,6 +50,7 @@ prad = erad * emass / pmass  # [m]
 
 
 def sinc(x: float) -> float:
+    """Cardinal sine function known by MAD-X"""
     return sin(x) / x
 
 
@@ -85,43 +93,6 @@ def polyn(a: Sequence[float]) -> np.ndarray:
     return np.array([ref(n, t) for n, t in enumerate(a)], dtype=float)
 
 
-def _energy_variables(particle: Particle = _relativistic, **kwargs):
-    """Compute E, pc, beta, gamma, brho from one of them"""
-    mass = 1.0e-09 * particle.rest_energy  # [GeV]
-    charge = particle.charge
-    data = {"mass": mass, "charge": charge}
-
-    if "energy" in kwargs:
-        energy = data.setdefault("energy", kwargs["energy"])
-        gamma = energy / mass
-        betgam = sqrt(gamma * gamma - 1.0)
-    elif "pc" in kwargs:
-        pc = data.setdefault("pc", kwargs["pc"])
-        betgam = pc / mass
-        gamma = sqrt(betgam * betgam + 1.0)
-    elif "gamma" in kwargs:
-        gamma = data.setdefault("gamma", kwargs["gamma"])
-        betgam = sqrt(gamma * gamma - 1.0)
-    elif "beta" in kwargs:
-        beta = data.setdefault("beta", kwargs["beta"])
-        gamma = 1.0 / sqrt(1.0 - beta * beta)
-        betgam = beta * gamma
-    elif "brho" in kwargs:
-        brho = data.setdefault("brho", kwargs["brho"])
-        betgam = 1.0e-9 * brho * clight * abs(charge) / mass
-        gamma = sqrt(betgam * betgam + 1.0)
-    else:
-        gamma = 1.0 / mass  # Default to 1 GeV
-        betgam = sqrt(gamma * gamma - 1.0)
-
-    pc = kwargs.setdefault("pc", betgam * mass)
-    kwargs.setdefault("gamma", gamma)
-    kwargs.setdefault("energy", gamma * mass)
-    kwargs.setdefault("beta", betgam / gamma)
-    kwargs.setdefault("brho", 1.0e09 * pc / abs(charge) / clight)
-    return data
-
-
 # ------------------------------
 #  Base class for MAD-X elements
 # ------------------------------
@@ -137,7 +108,7 @@ class _MadElement(ElementDescr):
 
     # noinspection PyUnusedLocal
     def limits(self, parser: MadxParser, refer: float):
-        """return [entrance, exit] coordinate"""
+        """return [entrance, exit] coordinates"""
         half_length = 0.5 * self.length
         offset = self.at + refer * half_length
         if self.frm is not None:
@@ -198,7 +169,7 @@ class octupole(_MadElement):
 class multipole(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, knl, ksl=(), **params):  # noqa: E741
+    def convert(name, knl, ksl=(), **params):
         params.pop("l", None)
         return [elt.ThinMultipole(name, polyn(ksl), polyn(knl), **params)]
 
@@ -217,8 +188,8 @@ class sbend(_MadElement):
         k2=None,
         hgap=None,
         fint=0.0,
-        **params,  # noqa: E741
-    ):  # noqa: E741
+        **params,
+    ):
         if hgap is not None:
             fintx = params.pop("fintx", fint)
             params.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
@@ -294,7 +265,6 @@ class rfcavity(_MadElement):
             PassMethod="IdentityPass" if l == 0.0 else "DriftPass",
             **params,
         )
-        # del cavity.energy
         return [cavity]
 
 
@@ -495,98 +465,58 @@ class _Sequence(SequenceDescr):
 class _BeamDescr(ElementDescr):
     """Descriptor for the MAD-X BEAM object"""
 
-    def __init__(
-        self,
-        callfun,
-        *args,
-        particle="positron",
-        mass=emass,  # GeV
-        charge=1.0,
-        bcurrent=0.0,
-        kbunch=1,
-        radiate=False,
-        **kwargs,
-    ):
-        def energy_params(particle, **kwargs):
-            """Updates all energy-related properties if one is changed"""
-            mass = 1.0e-09 * particle.rest_energy  # [GeV]
-            charge = particle.charge
-
-            data = {}
-            # Respect the precedence of MAD-X
-            if "energy" in kwargs:
-                energy = data.setdefault("energy", kwargs["energy"])
-                gamma = energy / mass
-                betgam = sqrt(gamma * gamma - 1.0)
-            elif "pc" in kwargs:
-                pc = data.setdefault("pc", kwargs["pc"])
-                betgam = pc / mass
-                gamma = sqrt(betgam * betgam + 1.0)
-            elif "gamma" in kwargs:
-                gamma = data.setdefault("gamma", kwargs["gamma"])
-                betgam = sqrt(gamma * gamma - 1.0)
-            elif "beta" in kwargs:
-                beta = data.setdefault("beta", kwargs["beta"])
-                gamma = 1.0 / sqrt(1.0 - beta * beta)
-                betgam = beta * gamma
-            elif "brho" in kwargs:
-                brho = data.setdefault("brho", kwargs["brho"])
-                betgam = 1.0e-9 * brho * clight * abs(charge) / mass
-                gamma = sqrt(betgam * betgam + 1.0)
-            else:
-                energy = data.setdefault("energy", 1.0)
-                gamma = energy / mass
-                betgam = sqrt(gamma * gamma - 1.0)
-
-            data.setdefault("energy", gamma * mass)  # [GeV]
-            pc = data.setdefault("pc", betgam * mass)
-            data.setdefault("gamma", gamma)
-            data.setdefault("beta", betgam / gamma)
-            data.setdefault("brho", 1.0e09 * pc / abs(charge) / clight)
-            return data
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            atparticle = Particle(particle, rest_energy=1.0e09 * mass, charge=charge)
-        mass = 1.0e-09 * atparticle.rest_energy  # [GeV]
-        charge = atparticle.charge
-
-        kwargs.update(energy_params(atparticle, **kwargs))
-
-        super().__init__(
-            *args,
-            source="beam",
-            atparticle=atparticle,
-            mass=mass,  # [GeV]
-            charge=charge,
-            bcurrent=bcurrent,
-            kbunch=kbunch,
-            radiate=radiate,
-            **kwargs,
-        )
-        self.callfun = callfun
-
-    @property
-    def particle(self):
-        return self["atparticle"].name
-
-    def __call__(self, *args, **kwargs):
-        return self.callfun(*args, **kwargs)
-
     @staticmethod
     def convert(name, *args, **params):
         return []
 
     def expand(self, parser: MadxParser) -> dict:
-        res = dict(
-            particle=self["atparticle"],
-            energy=1.0e09 * self["energy"],  # [eV]
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            atparticle = Particle(
+                self["particle"],
+                rest_energy=self.get("mass", emass),
+                charge=self.get("charge", 1),
+            )
+        mass = 1.0e-09 * atparticle.rest_energy  # [GeV]
+        charge = atparticle.charge
+
+        # Respect the precedence of MAD-X
+        if "energy" in self:
+            energy = self["energy"]
+            gamma = energy / mass
+            # betagamma = sqrt(gamma * gamma - 1.0)
+        elif "pc" in self:
+            pc = self["pc"]
+            betagamma = pc / mass
+            gamma = sqrt(betagamma * betagamma + 1.0)
+        elif "gamma" in self:
+            gamma = self["gamma"]
+            # betagamma = sqrt(gamma * gamma - 1.0)
+        elif "beta" in self:
+            beta = self["beta"]
+            gamma = 1.0 / sqrt(1.0 - beta * beta)
+            # betagamma = beta * gamma
+        elif "brho" in self:
+            brho = self["brho"]
+            betagamma = 1.0e-9 * brho * clight * abs(charge) / mass
+            gamma = sqrt(betagamma * betagamma + 1.0)
+        else:
+            gamma = 1.0 / mass
+
+        energy = gamma * mass  # [GeV]
+        # pc = betagamma * mass  # [GeV]
+        # beta = betagamma / gamma
+        # brho = 1.0e09 * pc / abs(charge) / clight
+
+        return dict(
+            particle=atparticle,
+            energy=1.0e09 * energy,  # [eV]
             beam_current=self["bcurrent"],
             nbunch=self["kbunch"],
             periodicity=1,
             radiate=self["radiate"],
         )
-        return res
 
 
 class MadxParser(UnorderedParser):
@@ -656,24 +586,15 @@ class MadxParser(UnorderedParser):
         """Implement the CALL MAD-X command"""
         self.parse_files(file)
 
-    def _beam_cmd(
-        self,
-        *args,
-        sequence: Optional[str] = None,
-        **kwargs,
-    ):
+    def _beam_cmd(self, sequence=None, **kwargs):
         """Implement the BEAM MAD-X statement"""
-        if sequence is None:
-            name = "beam"
-        else:
-            name = f"beam%{sequence}"
+        name = "beam%" if sequence is None else f"beam%{sequence}"
+        beamobj = self.get(self._no_dot(name), None)
+        if beamobj is None:
+            beamobj = _BeamDescr(_default_beam)
+            self[name] = beamobj
 
-        beam = _BeamDescr(
-            self._beam_cmd,
-            *args,
-            **kwargs,
-        )
-        self[name] = beam
+        beamobj.update(**kwargs)
 
     def _format_statement(self, line: str) -> str:
         line, matches = protect(line, fence=('"', '"'))
@@ -726,7 +647,7 @@ class MadxParser(UnorderedParser):
         try:
             beam = self[f"beam%{self._no_dot(key)}"]
         except KeyError:
-            beam = self["beam"]
+            beam = self["beam%"]
         return beam
 
     def _generator(self, params, *args):

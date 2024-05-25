@@ -44,8 +44,9 @@ V3 = True
 test_data = dict(data1=test_data1, data2=test_data2)
 
 madx_data = """
-BEAM, PARTICLE='electron', RADIATE, ENERGY=6.0, SEQUENCE=RING.1;
+BEAM, PARTICLE='electron', ENERGY=6.0, SEQUENCE=RING.1;
 BEAM, PARTICLE='positron', ENERGY=2.0;
+BEAM, SEQUENCE=RING.1, RADIATE;
 
 Q1: QUADRUPOLE, L:=QL ;   ! check forward reference
 
@@ -63,7 +64,7 @@ RFCAVITY, VOLT=5, FREQ=352.2, HARMON=31;
 
 CELL.1: SEQUENCE, L=4.0;
 QFCELL: Q1.F,   AT=0.75;
-Q1.D,           AT=2.0, FROM=QFCELL;
+        Q1.D,   AT=2.0, FROM=QFCELL;
 ENDSEQUENCE;
 
 RING.1: SEQUENCE, L=LRING;

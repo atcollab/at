@@ -62,12 +62,14 @@ class AnyDescr(abc.ABC):
             return None
 
     def update(self, *args, **kwargs):
+        # Update attributes
         for key, value in vars(self).items():
             setattr(self, key, kwargs.pop(key, value))
-        # if isinstance(self, ElementDescr):
         if isinstance(self, Mapping):
+            # Update mapping
             super().update(*args, **kwargs)
         else:
+            # Add new attributes
             for key, value in kwargs:
                 setattr(self, key, value)
 
@@ -193,6 +195,7 @@ class BaseParser(dict):
     def _no_dot(expr):
         def repl(match):
             return match.group().replace(".", "_")
+
         return _dot.sub(repl, expr)
 
     def __setitem__(self, key, value):
