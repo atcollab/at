@@ -25,10 +25,10 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: :py:obj:`False`
         fit_order:      Maximum momentum compaction factor order to be fitted.
-          Defaults to 1, corresponding to the first-order momentum compaction factor.
+          Default to 1, corresponding to the first-order momentum compaction factor.
         n_step:         Number of different calculated momentum deviations to be fitted
           with a polynomial.
-          Defaults to 2.
+          Default to 2.
 
     Keyword Args:
         DPStep (Optional[float]):       Momentum step size.
