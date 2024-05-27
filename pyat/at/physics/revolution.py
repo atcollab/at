@@ -44,7 +44,7 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
         ' for a better fit.')
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     dp_samples = numpy.linspace(-dp_step/2, dp_step/2, n_step)
-    fp_i = tuple(find_orbit4(ring_py, dp=dp + dp_i, keep_lattice=True)[0] \
+    fp_i = tuple(find_orbit4(ring, dp=dp + dp_i, keep_lattice=True)[0] \
        for dp_i in dp_samples)
     fp = numpy.stack(fp_i, axis=0).T  # generate a Fortran contiguous array
     b = numpy.squeeze(internal_lpass(ring, fp, keep_lattice=True), axis=(2, 3))
