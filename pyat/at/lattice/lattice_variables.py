@@ -11,15 +11,18 @@ kinds of element variables:
 """
 
 from __future__ import annotations
-from collections.abc import Sequence
-from typing import Union, Optional
-import numpy as np
-from .utils import Refpts, getval, setval
-from .elements import Element
-from .lattice_object import Lattice
-from .variables import VariableBase
 
 __all__ = ["RefptsVariable", "ElementVariable"]
+
+from collections.abc import Sequence
+from typing import Union, Optional
+
+import numpy as np
+
+from .elements import Element
+from .lattice_object import Lattice
+from .utils import Refpts, getval, setval
+from .variables import VariableBase
 
 
 class RefptsVariable(VariableBase):
