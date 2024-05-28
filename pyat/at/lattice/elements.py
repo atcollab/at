@@ -5,14 +5,20 @@ Each element has a default PassMethod attribute for which it should have the
 appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
+
 from __future__ import annotations
+
 import abc
 import re
-import numpy
-from copy import copy, deepcopy
 from abc import ABC
 from collections.abc import Generator, Iterable
+from copy import copy, deepcopy
 from typing import Any, Optional
+
+import numpy
+
+# noinspection PyProtectedMember
+from .variables import _nop
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -25,8 +31,17 @@ def _array66(value):
     return _array(value, shape=(6, 6))
 
 
-def _nop(value):
-    return value
+def _float(value) -> float:
+    return float(value)
+
+
+def _int(value, vmin: Optional[int] = None, vmax: Optional[int] = None) -> int:
+    intv = int(value)
+    if vmin is not None and intv < vmin:
+        raise ValueError(f"Value must be greater of equal to {vmin}")
+    if vmax is not None and intv > vmax:
+        raise ValueError(f"Value must be smaller of equal to {vmax}")
+    return intv
 
 
 class LongtMotion(ABC):
@@ -42,6 +57,7 @@ class LongtMotion(ABC):
     * ``set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs)``
       must enable or disable longitudinal motion.
     """
+
     @abc.abstractmethod
     def _get_longt_motion(self):
         return False
@@ -103,7 +119,8 @@ class _DictLongtMotion(LongtMotion):
 
         Defines a class such that :py:meth:`set_longt_motion` will select
         ``'IdentityPass'`` or ``'IdentityPass'``.
-        """
+    """
+
     def _get_longt_motion(self):
         return self.PassMethod != self.default_pass[False]
 
@@ -161,16 +178,20 @@ class _Radiative(LongtMotion):
         if new_pass is None or new_pass == self.PassMethod:
             return self if copy else None
         if enable:
+
             def setpass(el):
                 el.PassMethod = new_pass
                 el.Energy = kwargs['energy']
+
         else:
+
             def setpass(el):
                 el.PassMethod = new_pass
                 try:
                     del el.Energy
                 except AttributeError:
                     pass
+
         if copy:
             newelem = deepcopy(self)
             setpass(newelem)
@@ -240,7 +261,7 @@ class Element(object):
     """Base class for AT elements"""
 
     _BUILD_ATTRIBUTES = ['FamName']
-    _conversions = dict(FamName=str, PassMethod=str, Length=float,
+    _conversions = dict(FamName=str, PassMethod=str, Length=_float,
                         R1=_array66, R2=_array66,
                         T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
@@ -248,9 +269,9 @@ class Element(object):
                         EApertures=lambda v: _array(v, (2,)),
                         KickAngle=lambda v: _array(v, (2,)),
                         PolynomB=_array, PolynomA=_array,
-                        BendingAngle=float,
-                        MaxOrder=int, NumIntSteps=int,
-                        Energy=float,
+                        BendingAngle=_float,
+                        MaxOrder=_int, NumIntSteps=lambda v: _int(v, vmin=0),
+                        Energy=_float,
                         )
 
     _entrance_fields = ['T1', 'R1']
@@ -272,12 +293,13 @@ class Element(object):
 
     def __setattr__(self, key, value):
         try:
-            super(Element, self).__setattr__(
-                key, self._conversions.get(key, _nop)(value))
+            value = self._conversions.get(key, _nop)(value)
         except Exception as exc:
             exc.args = ('In element {0}, parameter {1}: {2}'.format(
                 self.FamName, key, exc),)
             raise
+        else:
+            super(Element, self).__setattr__(key, value)
 
     def __str__(self):
         return "\n".join(
@@ -321,10 +343,12 @@ class Element(object):
 
     def swap_faces(self, copy=False):
         """Swap the faces of an element, alignment errors are ignored"""
+
         def swapattr(element, attro, attri):
             val = getattr(element, attri)
             delattr(element, attri)
             return attro, val
+
         if copy:
             el = self.copy()
         else:
@@ -355,7 +379,7 @@ class Element(object):
         Update the element attributes with the given arguments
         """
         attrs = dict(*args, **kwargs)
-        for (key, value) in attrs.items():
+        for key, value in attrs.items():
             setattr(self, key, value)
 
     def copy(self) -> Element:
@@ -397,8 +421,7 @@ class Element(object):
         """Merge another element"""
         if not self.is_compatible(other):
             badname = getattr(other, 'FamName', type(other))
-            raise TypeError('Cannot merge {0} and {1}'.format(self.FamName,
-                                                              badname))
+            raise TypeError("Cannot merge {0} and {1}".format(self.FamName, badname))
 
     # noinspection PyMethodMayBeStatic
     def _get_longt_motion(self):
@@ -420,8 +443,8 @@ class Element(object):
 
 
 class LongElement(Element):
-    """Base class for long elements
-    """
+    """Base class for long elements"""
+
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Length']
 
     def __init__(self, family_name: str, length: float, *args, **kwargs):
@@ -455,8 +478,7 @@ class LongElement(Element):
         # Remove entrance and exit attributes
         fin = dict(popattr(el, key) for key in vars(self) if
                    key in self._entrance_fields)
-        fout = dict(popattr(el, key) for key in vars(self) if
-                    key in self._exit_fields)
+        fout = dict(popattr(el, key) for key in vars(self) if key in self._exit_fields)
         # Split element
         element_list = [el._part(f, numpy.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
@@ -529,6 +551,7 @@ class BeamMoments(Element):
 
 class SliceMoments(Element):
     """Element to compute slices mean and std"""
+
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['nslice']
     _conversions = dict(Element._conversions, nslice=int)
 
@@ -547,8 +570,7 @@ class SliceMoments(Element):
         kwargs.setdefault('PassMethod', 'SliceMomentsPass')
         self._startturn = kwargs.pop('startturn', 0)
         self._endturn = kwargs.pop('endturn', 1)
-        super(SliceMoments, self).__init__(family_name, nslice=nslice,
-                                           **kwargs)
+        super(SliceMoments, self).__init__(family_name, nslice=nslice, **kwargs)
         self._nbunch = 1
         self.startturn = self._startturn
         self.endturn = self._endturn
@@ -563,45 +585,33 @@ class SliceMoments(Element):
         self.endturn = min(self.endturn, nturns)
         self._dturns = self.endturn - self.startturn
         self._nbunch = nbunch
-        self._stds = numpy.zeros((3, nbunch*self.nslice, self._dturns),
-                                 order='F')
-        self._means = numpy.zeros((3, nbunch*self.nslice, self._dturns),
-                                  order='F')
-        self._spos = numpy.zeros((nbunch*self.nslice, self._dturns),
-                                 order='F')
-        self._weights = numpy.zeros((nbunch*self.nslice, self._dturns),
-                                    order='F')
+        self._stds = numpy.zeros((3, nbunch*self.nslice, self._dturns), order="F")
+        self._means = numpy.zeros((3, nbunch*self.nslice, self._dturns), order="F")
+        self._spos = numpy.zeros((nbunch*self.nslice, self._dturns), order="F")
+        self._weights = numpy.zeros((nbunch*self.nslice, self._dturns), order="F")
 
     @property
     def stds(self):
         """Slices x,y,dp standard deviation"""
-        return self._stds.reshape((3, self._nbunch,
-                                   self.nslice,
-                                   self._dturns))
+        return self._stds.reshape((3, self._nbunch, self.nslice, self._dturns))
 
     @property
     def means(self):
         """Slices x,y,dp center of mass"""
-        return self._means.reshape((3, self._nbunch,
-                                    self.nslice,
-                                    self._dturns))
+        return self._means.reshape((3, self._nbunch, self.nslice, self._dturns))
 
     @property
     def spos(self):
         """Slices s position"""
-        return self._spos.reshape((self._nbunch,
-                                   self.nslice,
-                                   self._dturns))
+        return self._spos.reshape((self._nbunch, self.nslice, self._dturns))
 
     @property
     def weights(self):
         """Slices weights in mA if beam current >0,
-           otherwise fraction of total number of
-           particles in the bunch
+        otherwise fraction of total number of
+        particles in the bunch
         """
-        return self._weights.reshape((self._nbunch,
-                                      self.nslice,
-                                      self._dturns))
+        return self._weights.reshape((self._nbunch, self.nslice, self._dturns))
 
     @property
     def startturn(self):
@@ -632,6 +642,7 @@ class SliceMoments(Element):
 
 class Aperture(Element):
     """Aperture element"""
+
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
@@ -710,6 +721,7 @@ class Drift(LongElement):
 
 class Collimator(Drift):
     """Collimator element"""
+
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['RApertures']
 
     def __init__(self, family_name: str, length: float, limits, **kwargs):
@@ -728,8 +740,8 @@ class Collimator(Drift):
 
 class ThinMultipole(Element):
     """Thin multipole element"""
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
-                                                     'PolynomB']
+
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -757,10 +769,13 @@ class ThinMultipole(Element):
             else:
                 return poly
 
-        # Remove MaxOrder, PolynomA and PolynomB
-        poly_a, len_a, ord_a = getpol(_array(kwargs.pop('PolynomA', poly_a)))
-        poly_b, len_b, ord_b = getpol(_array(kwargs.pop('PolynomB', poly_b)))
+        # PolynomA and PolynomB and convert to ParamArray
+        prmpola = self._conversions["PolynomA"](kwargs.pop("PolynomA", poly_a))
+        prmpolb = self._conversions["PolynomB"](kwargs.pop("PolynomB", poly_b))
+        poly_a, len_a, ord_a = getpol(prmpola)
+        poly_b, len_b, ord_b = getpol(prmpolb)
         deforder = max(getattr(self, 'DefaultOrder', 0), ord_a, ord_b)
+        # Remove MaxOrder
         maxorder = kwargs.pop('MaxOrder', deforder)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
         super(ThinMultipole, self).__init__(family_name, **kwargs)
@@ -768,36 +783,32 @@ class ThinMultipole(Element):
         super(ThinMultipole, self).__setattr__('MaxOrder', maxorder)
         # Adjust polynom lengths and set them
         len_ab = max(self.MaxOrder + 1, len_a, len_b)
-        self.PolynomA = lengthen(poly_a, len_ab - len_a)
-        self.PolynomB = lengthen(poly_b, len_ab - len_b)
+        self.PolynomA = lengthen(prmpola, len_ab - len_a)
+        self.PolynomB = lengthen(prmpolb, len_ab - len_b)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
         polys = ('PolynomA', 'PolynomB')
         if key in polys:
-            value = _array(value)
-            lmin = getattr(self, 'MaxOrder')
+            lmin = self.MaxOrder
             if not len(value) > lmin:
                 raise ValueError(
                     'Length of {0} must be larger than {1}'.format(key, lmin))
         elif key == 'MaxOrder':
-            value = int(value)
+            intval = int(value)
             lmax = min(len(getattr(self, k)) for k in polys)
-            if not value < lmax:
-                raise ValueError(
-                    'MaxOrder must be smaller than {0}'.format(lmax))
-
+            if not intval < lmax:
+                raise ValueError("MaxOrder must be smaller than {0}".format(lmax))
         super(ThinMultipole, self).__setattr__(key, value)
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['PolynomA',
-                                                         'PolynomB']
+
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
-    def __init__(self, family_name: str, length: float, poly_a, poly_b,
-                 **kwargs):
+    def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
         Args:
             family_name:    Name of the element
@@ -817,12 +828,10 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         kwargs.setdefault('NumIntSteps', 10)
-        super(Multipole, self).__init__(family_name, length,
-                                        poly_a, poly_b, **kwargs)
+        super(Multipole, self).__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
-        if super().is_compatible(other) and \
-                self.MaxOrder == other.MaxOrder:
+        if super().is_compatible(other) and self.MaxOrder == other.MaxOrder:
             for i in range(self.MaxOrder + 1):
                 if self.PolynomB[i] != other.PolynomB[i]:
                     return False
@@ -836,7 +845,8 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     @property
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
-        return 0.0 if len(self.PolynomB) < 2 else self.PolynomB[1]
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 2 else arr[1]
 
     # noinspection PyPep8Naming
     @K.setter
@@ -847,7 +857,8 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     @property
     def H(self) -> float:
         """Sextupolar strength [mˆ-3]"""
-        return 0.0 if len(self.PolynomB) < 3 else self.PolynomB[2]
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 3 else arr[2]
 
     # noinspection PyPep8Naming
     @H.setter
@@ -920,16 +931,15 @@ class Dipole(Radiative, Multipole):
 
         Default PassMethod: :ref:`BndMPoleSymplectic4Pass`
         """
-        poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         kwargs.setdefault('BendingAngle', bending_angle)
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
-        super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
+        super(Dipole, self).__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple, None, None]:
+    def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
-        yield 'K', self.K
+        yield "K", vars(self)["PolynomB"][1]
 
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
@@ -942,9 +952,9 @@ class Dipole(Radiative, Multipole):
         def invrho(dip: Dipole):
             return dip.BendingAngle / dip.Length
 
-        return (super().is_compatible(other) and
-                self.ExitAngle == -other.EntranceAngle and
-                abs(invrho(self) - invrho(other)) <= 1.e-6)
+        return (super().is_compatible(other)
+                and self.ExitAngle == -other.EntranceAngle
+                and abs(invrho(self) - invrho(other)) <= 1.e-6)
 
     def merge(self, other) -> None:
         super().merge(other)
@@ -959,6 +969,7 @@ Bend = Dipole
 
 class Quadrupole(Radiative, Multipole):
     """Quadrupole element"""
+
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
                         FringeQuadExit=int)
@@ -996,18 +1007,17 @@ class Quadrupole(Radiative, Multipole):
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
-        poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
-        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
-        super(Quadrupole, self).__init__(family_name, length, [], poly_b,
-                                         **kwargs)
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        super(Quadrupole, self).__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple, None, None]:
+    def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
-        yield 'K', self.K
+        yield "K", vars(self)["PolynomB"][1]
 
 
 class Sextupole(Multipole):
     """Sextupole element"""
+
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['H']
 
     DefaultOrder = 2
@@ -1031,14 +1041,18 @@ class Sextupole(Multipole):
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
-        poly_b = kwargs.pop('PolynomB', [0, 0, h])
-        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
-        super(Sextupole, self).__init__(family_name, length, [], poly_b,
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        super(Sextupole, self).__init__(family_name, length, [], [0.0, 0.0, h],
                                         **kwargs)
+
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
+        yield "H", vars(self)["PolynomB"][2]
 
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
+
     _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
 
     DefaultOrder = 3
@@ -1046,6 +1060,7 @@ class Octupole(Multipole):
 
 class RFCavity(LongtMotion, LongElement):
     """RF cavity element"""
+
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Voltage',
                                                          'Frequency',
                                                          'HarmNumber',
@@ -1086,9 +1101,9 @@ class RFCavity(LongtMotion, LongElement):
         return pp
 
     def is_compatible(self, other) -> bool:
-        return (super().is_compatible(other) and
-                self.Frequency == other.Frequency and
-                self.TimeLag == other.TimeLag)
+        return (super().is_compatible(other)
+                and self.Frequency == other.Frequency
+                and self.TimeLag == other.TimeLag)
 
     def merge(self, other) -> None:
         super().merge(other)
@@ -1107,6 +1122,7 @@ class RFCavity(LongtMotion, LongElement):
 
 class M66(Element):
     """Linear (6, 6) transfer matrix"""
+
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["M66"]
     _conversions = dict(Element._conversions, M66=_array66)
 
@@ -1117,7 +1133,7 @@ class M66(Element):
             m66:            Transfer matrix. Default: Identity matrix
 
         Default PassMethod: ``Matrix66Pass``
-       """
+        """
         if m66 is None:
             m66 = numpy.identity(6)
         kwargs.setdefault('PassMethod', 'Matrix66Pass')
@@ -1133,6 +1149,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
     Note: The damping times are needed to compute the correct
     kick for the emittance. Radiation damping is NOT applied.
     """
+
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'SimpleQuantDiffPass'}
 
@@ -1157,8 +1174,8 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             tauz:          Longitudinal damping time [turns]
 
         Default PassMethod: ``SimpleQuantDiffPass``
-       """
-        kwargs.setdefault('PassMethod', self.default_pass[True])
+        """
+        kwargs.setdefault("PassMethod", self.default_pass[True])
 
         assert taux >= 0.0, 'taux must be greater than or equal to 0'
         self.taux = taux
@@ -1191,6 +1208,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
 
 class SimpleRadiation(_DictLongtMotion, Radiative, Element):
     """Simple radiation damping and energy loss"""
+
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(Element._conversions, U0=float,
                         damp_mat_diag=lambda v: _array(v, shape=(6,)))
@@ -1212,7 +1230,7 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
             U0:            Energy loss per turn [eV]
 
         Default PassMethod: ``SimpleRadiationPass``
-       """
+        """
         assert taux >= 0.0, 'taux must be greater than or equal to 0'
         if taux == 0.0:
             dampx = 1
@@ -1241,6 +1259,7 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
 
 class Corrector(LongElement):
     """Corrector element"""
+
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['KickAngle']
 
     def __init__(self, family_name: str, length: float, kick_angle, **kwargs):
@@ -1266,6 +1285,7 @@ class Wiggler(Radiative, LongElement):
 
     See atwiggler.m
     """
+
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Lw', 'Bmax',
                                                          'Energy']
     _conversions = dict(Element._conversions, Lw=float, Bmax=float,
@@ -1308,14 +1328,12 @@ class Wiggler(Radiative, LongElement):
         for i, b in enumerate(self.By.T):
             dk = abs(b[3] ** 2 - b[4] ** 2 - b[2] ** 2) / abs(b[4])
             if dk > 1e-6:
-                raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
-                                 "{0}".format(i))
+                raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = {0}".format(i))
 
         for i, b in enumerate(self.Bx.T):
             dk = abs(b[2] ** 2 - b[4] ** 2 - b[3] ** 2) / abs(b[4])
             if dk > 1e-6:
-                raise ValueError("Wiggler(V): ky^2 + kz^2 -kx^2 !=0, i = "
-                                 "{0}".format(i))
+                raise ValueError("Wiggler(V): ky^2 + kz^2 -kx^2 !=0, i = {0}".format(i))
 
         self.NHharm = self.By.shape[1]
         self.NVharm = self.Bx.shape[1]
