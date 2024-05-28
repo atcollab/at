@@ -128,9 +128,9 @@ def _get_vals(ring, rp, ma, emity, bunch_curr, emitx=None,
     bs = bxy2/sigb2*(1-(sigh2*(dt2/sigb2).T).T)
     bg2i = 1/(2*beta2*gamma2)
     B1 = bg2i*numpy.sum(bs, axis=1)
-    B2sq = (bg2i*bg2i*numpy.diff(bs, axis=1).T**2 +
-            sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
-            numpy.prod(sigb2*sigb2, axis=1))
+    B2sq = bg2i*bg2i*(numpy.diff(bs, axis=1).T**2 +
+                      4*sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
+                      numpy.prod(sigb2*sigb2, axis=1))
     B2 = numpy.squeeze(numpy.sqrt(B2sq))
 
     val = numpy.zeros((2, len(rp)))
