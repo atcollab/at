@@ -288,7 +288,7 @@ class ObservableList(list):
                         refpts=self.orbitrefs, dp=dp, dct=dct, df=df, orbit=orbit0
                     )
                 except AtError as err:
-                    orbits = mxdata = rgdata = eldata = err
+                    orbits = mxdata = rgdata = eldata = emdata = err
 
             if Need.MATRIX in needs and o0 is not None:
                 # Transfer matrix computation

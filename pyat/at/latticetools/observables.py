@@ -578,7 +578,7 @@ class MatrixObservable(_ElementObservable):
     """Observe the closed orbit at selected locations.
 
     Processs the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
-    depending of :py:meth:`~.Lattice.is_6d`.
+    depending upon :py:meth:`~.Lattice.is_6d`.
     """
 
     def __init__(
