@@ -48,7 +48,9 @@ def save_json(
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     indent = None if compact else 2
-    data = dict(elements=list(keep_elements(ring)), properties=keep_attributes(ring))
+    data = dict(
+        atjson=1, elements=list(keep_elements(ring)), properties=keep_attributes(ring)
+    )
     if filename is None:
         print(json.dumps(data, cls=_AtEncoder, indent=indent))
     else:
@@ -76,13 +78,21 @@ def load_json(filename: str, **kwargs) -> Lattice:
 
         with open(params.setdefault("in_file", fn), "rt") as jsonfile:
             data = json.load(jsonfile)
+        # Check the file signature - For later use
+        try:
+            atjson = data["atjson"]  # noqa F841
+        except KeyError:
+            atjson = 1  # noqa F841
+        # Get elements
         elements = data["elements"]
+        # Get lattice properties
         try:
             properties = data["properties"]
         except KeyError:
             properties = {}
         particle_dict = properties.pop("particle", {})
         params.setdefault("particle", Particle(**particle_dict))
+
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
