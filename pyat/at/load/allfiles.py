@@ -3,12 +3,14 @@ determined by the file extension
 """
 
 from __future__ import annotations
-import os.path
-from typing import Optional
-from collections.abc import Callable
-from at.lattice import Lattice
 
 __all__ = ["load_lattice", "save_lattice", "register_format"]
+
+import os.path
+from collections.abc import Callable
+from typing import Optional
+
+from at.lattice import Lattice
 
 _load_extension = {}
 _save_extension = {}
