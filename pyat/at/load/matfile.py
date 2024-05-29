@@ -190,7 +190,7 @@ def load_mat(filename: str, **kwargs) -> Lattice:
     if "key" in kwargs:  # process the deprecated 'key' keyword
         kwargs.setdefault("use", kwargs.pop("key"))
     if "mat_key" in kwargs:  # process the deprecated 'mat_key' keyword
-        kwargs.setdefault("use", kwargs.pop("key"))
+        kwargs.setdefault("use", kwargs.pop("mat_key"))
     return Lattice(
         ringparam_filter,
         _matfile_generator,
