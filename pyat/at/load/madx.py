@@ -21,9 +21,10 @@ import numpy as np
 from scipy.constants import c as clight, hbar as _hb, e as qelect
 from scipy.constants import physical_constants as _cst
 
+from . import register_format
 from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem
 from .utils import split_ignoring_parentheses, protect, restore
+from ..lattice import Lattice, Particle, elements as elt, tilt_elem
 
 _default_beam = dict(
     particle="positron",
@@ -700,7 +701,7 @@ def load_madx(*files: str, use: str = "ring", verbose=False, **kwargs) -> Lattic
     Keyword Args:
         name (str):         Name of the lattice. Default: MADX sequence name.
         particle(Particle): Circulating particle. Default: from MADX
-        energy (float):     Energy of the lattice [eV], Default: from MADX
+        energy (float):     Energy of the lattice [eV]. Default: from MADX
         periodicity(int):   Number of periods. Default: 1
         *:                  All other keywords will be set as Lattice attributes
 
@@ -722,3 +723,8 @@ def load_madx(*files: str, use: str = "ring", verbose=False, **kwargs) -> Lattic
             print(f'\n{nmiss} missing definitions\nUse "verbose=True" to see them.\n')
 
     return parser.lattice(use=use)
+
+
+register_format(
+    ".seq", load_madx, descr="MAD-X lattice description. See :py:func:`.load_madx`."
+)
