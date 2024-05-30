@@ -1,7 +1,7 @@
 import numpy
 import time
 
-_all_ = ["momaperture_project2start"]
+_all_ = ["momaperture_project2start","projectrefpts"]
 
 # 2024may29 oblanco at ALBA CELLS. First working version
 #           Based on the MATLAB implementation by Z.Marti at ALBA
@@ -161,6 +161,53 @@ def momaperture_project2start(ring, *args, **kwargs):
     etnp = etnp.T
 
     return etnp
+
+def projectrefpts(ring, startrefpts, **kwargs):
+    """
+    This function tracks the particles from multiple refpts to a single
+    refpts.
+    """
+    lenring = len(ring)
+    srps = startrefpts
+    nrps = len(srps)
+
+    # verboseprint to check flag only once
+    erp = lenring
+    verbose = False
+    if "verbose" in kwargs:
+        verbose = bool(kwargs["verbose"])
+    verboseprint = print if verbose else lambda *a, **k: None
+
+    if 'endrefpt' in kwargs:
+        erp = kwargs['endrefpt']
+        verboseprint(f'Project particles to start of element index {erp}')
+    else:
+        erp = lenring
+        verboseprint('Project to end point')
+
+    if "particles" in kwargs:
+        orbit_s = kwargs["particles"]
+        verboseprint("Using the users particles")
+    else:
+        _, orbit_s = ring.find_orbit(rp)
+        verboseprint("Using the closed orbit")
+        dxy = 1e-5
+        add_offset = numpy.tile(dxy, [2, nrp])
+        verboseprint(f"Adding default transverse offsets {dxy}")
+
+    zin = numpy.zeros((6, nrps))
+    zout = numpy.zeros((6, nrps))
+    lostpart = numpy.ones((nrps), dtype=bool)
+    # first, track the remaining portion of the ring
+    for i in range(nrps):
+        ring_downstream = ring.rotate(srps[i])
+        zin[:, i] = orbit_s[i, :].copy()
+        zo, _, dout1 = ring_downstream.track(
+            zin[:, i], nturns=1, refpts=lenring - rp[i], losses=True
+        )
+        lostpart[i] = dout1["loss_map"]["islost"][0]
+        zout[:, i] = zo[:, 0, 0, 0]
+    return zout, lostpart
 
 
 def multirefpts_track_islost(ring, refpts, e, orbit, nturns, initcoord, **dicttrack):
