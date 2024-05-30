@@ -35,6 +35,9 @@ function [etn, etp]=MomAperture_Project2Start(varargin)
 % Returns an array of zeros and ones: tells whether the particle launched at
 % position poss(ii) with energy e(ii) is lost or not after nturns turns.
 % default input variables
+
+% 2024may30 Z.Marti at ALBA CELLS
+
 global THERING;
 REFPTS=1:numel(THERING)+1;
 nturns=500;
