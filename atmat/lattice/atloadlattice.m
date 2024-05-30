@@ -83,6 +83,12 @@ lattice=atSetRingProperties(lattice,varargs{:});
 
     function [lattice, opts]=load_json(fpath, opts)
         data=jsondecode(fileread(fpath));
+        % File signature for later use
+        try
+            atjson=data.atjson;
+        catch
+            atjson=1;
+        end
         props=data.properties;
         name=props.name;
         energy=props.energy;

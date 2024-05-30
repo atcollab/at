@@ -38,6 +38,7 @@ end
 
     function jsondata=sjson(ring)
         ok=~atgetcells(ring, 'Class', 'RingParam');
+        data.atjson= 1;
         data.elements=ring(ok);
         data.properties=get_params(ring);
         jsondata=jsonencode(data, 'PrettyPrint', ~compact);
