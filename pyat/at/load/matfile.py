@@ -374,21 +374,25 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
     yield from keep_elements(ring)
 
 
-def save_mat(ring: Lattice, filename: str, mat_key: str = "RING") -> None:
+def save_mat(ring: Lattice, filename: str, **kwargs) -> None:
     """Save a :py:class:`.Lattice` as a Matlab mat-file
 
     Parameters:
-        ring:           Lattice description
-        filename:       Name of the '.mat' file
-        mat_key (str):  Name of the Matlab variable containing
-          the lattice. Default: ``'RING'``
+        ring:       Lattice description
+        filename:   Name of the '.mat' file
+
+    Keyword Args:
+        use (str):  Name of the Matlab variable containing the lattice, Default: "RING"
+        mat_key (str): Deprecated, alias for *use*
 
     See Also:
         :py:func:`.save_lattice` for a generic lattice-saving function.
     """
     # Ensure the lattice is a Matlab column vector: list(list)
+    use = kwargs.pop("mat_key", "RING")  # For backward compatibility
+    use = kwargs.pop("use", use)
     lring = [[el.to_dict(encoder=_mat_encoder)] for el in matlab_ring(ring)]
-    scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
+    scipy.io.savemat(filename, {use: lring}, long_field_names=True)
 
 
 def _element_to_m(elem: Element) -> str:
