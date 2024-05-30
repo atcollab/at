@@ -1,17 +1,17 @@
 import numpy
-import at
 import time
 
-_all_ = ["momap_multirefpts"]
+_all_ = ["momaperture_project2start"]
 
-# 2024may29 oblanco at ALBA. First working version
-#                            Based on the MATLAB implementation by Z.Marti at ALBA
+# 2024may29 oblanco at ALBA CELLS. First working version
+#           Based on the MATLAB implementation by Z.Marti at ALBA
 
 
-def momap_multirefpts(ring, *args, **kwargs):
+def momaperture_project2start(ring, *args, **kwargs):
     """
-    :py:func:`momap_multirefpts` does tracking to search the negative and
-    positive energy boundaries of stability around the closed orbit.
+    :py:func:`momap_project2start` calculates the local momemtum aperture.
+    It is a binary search of the negative and positive energy thresholds
+    of stability around the closed orbit.
 
     For a given energy offset the particles are first tracked from every
     reference point to the end of the ring, and then, only particles with
@@ -20,7 +20,7 @@ def momap_multirefpts(ring, *args, **kwargs):
     found or the limit of the rf bucket is reached.
 
     Usage:
-      >>> momap_multirefpts(ring)
+      >>> momaperture_project2start(ring)
 
     Parameters:
         ring: list of elements
@@ -28,7 +28,7 @@ def momap_multirefpts(ring, *args, **kwargs):
     Keyword arguments:
       refpts: Selects the location of coordinates output.
         See ":ref:`Selecting elements in a lattice <refpts>`"
-      nturns: number of turns to be tracked
+      nturns: number of turns to be tracked. Default 1000
       dptol: energy offset resolution. Default 1e-4
       add_offset: (2, N) offsets to be added to the transverse coordinates
         on the N reference points. Default 1e-5 m
@@ -36,10 +36,10 @@ def momap_multirefpts(ring, *args, **kwargs):
       orbit: (N,6) offsets to be added on the N reference points.
         Default, the closed orbit
       verbose: print in the standard output additional info. Default False
-      omp_num_threads (int): See lattice_track
-      use_mp (bool): Default True. See lattice_track
-      pool_size: See lattice_track
-      start_method: See lattice track
+      use_mp (bool): Default True. See :py:func:.`lattice_track`
+      omp_num_threads (int): See :py:fun:`lattice_track`
+      pool_size: See :py:func:`lattice_track`
+      start_method: See :py:fun:`lattice_track`
 
     Returns:
       dnp: (2,N) array with negative and positive stable energy boundaries
@@ -127,6 +127,9 @@ def momap_multirefpts(ring, *args, **kwargs):
         verboseprint("Using the closed orbit")
 
     # start scan
+    # eu, unstable energy
+    # es, stable energy
+    # et, test energy
     etnp = numpy.ones((2, nrp))
     thesign = [-1, 1]  # first negative side, then positive side
     verbosesign = ["negative", "positive"]
@@ -137,11 +140,7 @@ def momap_multirefpts(ring, *args, **kwargs):
         es = thesign[i] * es_ini * numpy.ones(nrp)
         de = 1
         iteration = 0
-        stopiter = False
-        while iteration < 100 and (not stopiter):  # safety limit on iterations
-            if de <= dptol:
-                stopiter = True
-            verboseprint(f"{iteration=}, {de=}, {dptol=}")
+        while iteration < 100 and (de > dptol):  # safety limit on iterations
             t0 = time.time()
             # L is a mask, True for lost particles
             L = multirefpts_track_islost(
@@ -154,7 +153,8 @@ def momap_multirefpts(ring, *args, **kwargs):
             iteration = iteration + 1
             outmsg = (
                 f"Iteration {iteration} in {verbosesign[i]} side",
-                f" took {format(time.time()-t0):.3} s",
+                f" took {format(time.time()-t0):.3} s.",
+                f" {de=}, {dptol=}",
             )
             verboseprint("".join(outmsg))
         etnp[i, :] = et
