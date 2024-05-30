@@ -112,7 +112,7 @@ class _MadElement(ElementDescr):
         half_length = 0.5 * self.length
         offset = self.at + refer * half_length
         if self.frm is not None:
-            offset += self.frm.at
+            offset += parser[self.frm].at
         return np.array([-half_length, half_length]) + offset
 
 
@@ -216,7 +216,7 @@ class rbend(_MadElement):
         hangle = 0.5 * angle
         arclength = l * hangle / sin(hangle)
         return sbend.convert(
-            name, arclength, angle, e1=hangle - e1, e2=hangle - e2, **params
+            name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
 
     def _length(self):
@@ -555,7 +555,7 @@ class MadxParser(UnorderedParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    _str_arguments = {"file", "refer", "refpos", "sequence"}
+    _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
     _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
 
     def __init__(self):
