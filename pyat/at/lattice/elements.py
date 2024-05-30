@@ -302,26 +302,17 @@ class Element(object):
             super(Element, self).__setattr__(key, value)
 
     def __str__(self):
-        first3 = ["FamName", "Length", "PassMethod"]
-        # Get values and parameter objects
-        attrs = dict(self.items())
-        keywords = [f"\t{k} : {attrs.pop(k)!s}" for k in first3]
-        keywords += [f"\t{k} : {v!s}" for k, v in attrs.items()]
-        return "\n".join((type(self).__name__ + ":", "\n".join(keywords)))
+        return "\n".join(
+            [self.__class__.__name__ + ":"]
+            + [f"{k:>14}: {v!s}" for k, v in self.items()]
+        )
 
     def __repr__(self):
-        # Get values only, even for parameters
-        attrs = dict((k, getattr(self, k)) for k, v in self.items())
-        arguments = [attrs.pop(k) for k in self._BUILD_ATTRIBUTES]
-        defelem = self.__class__(*arguments)
-        keywords = [f"{v!r}" for v in arguments]
-        keywords += [
-            f"{k}={v!r}"
-            for k, v in sorted(attrs.items())
-            if not numpy.array_equal(v, getattr(defelem, k, None))
-        ]
+        clsname, args, kwargs = self.definition
+        keywords = [f"{arg!r}" for arg in args]
+        keywords += [f"{k}={v!r}" for k, v in kwargs.items()]
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
-        return "{0}({1})".format(self.__class__.__name__, args)
+        return f"{clsname}({args})"
 
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
@@ -399,10 +390,28 @@ class Element(object):
         """Return a deep copy of the element"""
         return deepcopy(self)
 
+    @property
+    def definition(self) -> tuple[str, tuple, dict]:
+        """tuple (class_name, args, kwargs) defining the element"""
+        attrs = dict(self.items())
+        arguments = tuple(attrs.pop(
+            k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
+        )
+        defelem = self.__class__(*arguments)
+        keywords = dict(
+            (k, v)
+            for k, v in attrs.items()
+            if not numpy.array_equal(v, getattr(defelem, k, None))
+        )
+        return self.__class__.__name__, arguments, keywords
+
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        # Properties may be added by overloading this method
-        yield from vars(self).items()
+        v = vars(self).copy()
+        for k in ["FamName", "Length", "PassMethod"]:
+            yield k, v.pop(k)
+        for k, v in sorted(v.items()):
+            yield k, v
 
     def is_compatible(self, other: Element) -> bool:
         """Checks if another :py:class:`Element` can be merged"""
