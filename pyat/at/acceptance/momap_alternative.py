@@ -162,20 +162,48 @@ def momaperture_project2start(ring, *args, **kwargs):
 
     return etnp
 
-def projectrefpts(ring, startrefpts, **kwargs):
+def projectrefpts(ring, startrefpts, particles, **kwargs):
     """
-    This function tracks the particles from multiple refpts to a single
-    refpts.
+    :py:fun:`projectrefpts` tracks particles from multiple reference
+    points to a single end point.
+
+    Usage:
+      >>> projectrefpts(ring, startrefpts, particles)
+
+    Parameters:
+      ring: list of elements
+      startrefpts: reference point to start tracking from.
+      particles: (6,N,R,1) array, where N is the number of
+        particles per reference point, and R is the number of
+        reference points.
+
+    Keyword arguments:
+      endrefpt: end reference point. Default: end of last ring element
+      use_mp: Default True. See :py:fun:`lattice_track`
+      group: Default False. The starting point info is removed.
+        All tracked particles are grouped together.
+      verbose: prints additional info
+
+    Returns:
+      zout:     Tracked particle coordinates at the end ref. point.
+                Default (6,N,R,1) array, where N is the number of
+                  particles per R references points
+                If the flag 'group' is used the output becomes a
+                  (6,N*R,1,1) array with all particles.
+      lostpart: Bool array, True when the particle is lost.
+                Default (N,R).
+                If the flag 'group' is used the output becomes a
+                  (N*R) array
     """
     lenring = len(ring)
-    srps = startrefpts
-    nrps = len(srps)
+    rp = startrefpts
+    nrp = len(rp)
+    nparticles = 1
+    if len(particles.shape) >= 2:
+        nparticles = particles.shape[1]
 
     # verboseprint to check flag only once
-    erp = lenring
-    verbose = False
-    if "verbose" in kwargs:
-        verbose = bool(kwargs["verbose"])
+    verbose = kwargs.pop('verbose',False)
     verboseprint = print if verbose else lambda *a, **k: None
 
     if 'endrefpt' in kwargs:
@@ -185,28 +213,41 @@ def projectrefpts(ring, startrefpts, **kwargs):
         erp = lenring
         verboseprint('Project to end point')
 
-    if "particles" in kwargs:
-        orbit_s = kwargs["particles"]
-        verboseprint("Using the users particles")
-    else:
-        _, orbit_s = ring.find_orbit(rp)
-        verboseprint("Using the closed orbit")
-        dxy = 1e-5
-        add_offset = numpy.tile(dxy, [2, nrp])
-        verboseprint(f"Adding default transverse offsets {dxy}")
+    groupparts = kwargs.pop('group',False)
 
-    zin = numpy.zeros((6, nrps))
-    zout = numpy.zeros((6, nrps))
-    lostpart = numpy.ones((nrps), dtype=bool)
+    verboseprint(f'{nparticles=}')
+    verboseprint(f'Number of reference points {nrp}')
+
+    # default to parallel
+    use_mp = kwargs.pop('use_mp',True)
+    if nparticles == 1:
+        use_mp = False
+
+    zin = numpy.zeros((6, nparticles, nrp, 1))
+    if groupparts:
+        zout = numpy.zeros((6,nparticles*nrp,1,1))
+        lostpart = numpy.ones((nparticles*nrp), dtype=bool)
+    else:
+        zout = numpy.zeros((6,nparticles,nrp,1))
+        lostpart = numpy.ones((nparticles,nrp), dtype=bool)
+
     # first, track the remaining portion of the ring
-    for i in range(nrps):
-        ring_downstream = ring.rotate(srps[i])
-        zin[:, i] = orbit_s[i, :].copy()
+    zin = particles.copy()
+    for i in range(nrp):
+        ring_downstream = ring.rotate(rp[i])
+        zaux = numpy.squeeze(zin[:, :, i, 0])
+        verboseprint(f'Tracking {nparticles} particles on reference point {i+1} of {nrp}')
         zo, _, dout1 = ring_downstream.track(
-            zin[:, i], nturns=1, refpts=lenring - rp[i], losses=True
+                zaux, nturns=1, refpts=erp - rp[i], losses=True,
+                use_mp=use_mp
         )
-        lostpart[i] = dout1["loss_map"]["islost"][0]
-        zout[:, i] = zo[:, 0, 0, 0]
+        verboseprint(zo.shape)
+        if groupparts:
+            zout[:,nparticles*i:nparticles*(i+1),0,0] = numpy.squeeze(zo)
+            lostpart[nparticles*i:nparticles*(i+1)] = dout1["loss_map"]["islost"]
+        else:
+            zout[:,:,i,0] = numpy.reshape(zo,(6,nparticles))
+            lostpart[:,i] = dout1["loss_map"]["islost"]
     return zout, lostpart
 
 
