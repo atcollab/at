@@ -1,7 +1,9 @@
-"""momap_alternative"""
+"""
+momap_alternative
+"""
 
-import numpy
 import time
+import numpy
 
 __all__ = ["momaperture_project2start", "projectrefpts"]
 
@@ -9,7 +11,7 @@ __all__ = ["momaperture_project2start", "projectrefpts"]
 #           Based on the MATLAB implementation by Z.Marti at ALBA
 
 
-def momaperture_project2start(ring, *args, **kwargs):
+def momaperture_project2start(ring, **kwargs):
     """
     :py:func:`momap_project2start` calculates the local momemtum aperture.
     It is a binary search of the negative and positive energy thresholds
@@ -78,7 +80,7 @@ def momaperture_project2start(ring, *args, **kwargs):
 
     if "add_offset" in kwargs:
         add_offset = kwargs["add_offset"]
-        verboseprint(f"Add user offsets")
+        verboseprint("Add user offsets")
     else:
         dxy = 1e-5
         add_offset = numpy.tile(dxy, [2, nrp])
@@ -91,7 +93,7 @@ def momaperture_project2start(ring, *args, **kwargs):
         if pp in kwargs:
             dicttrack.update({pp: kwargs[pp]})
     # default to parallel
-    if not "use_mp" in dicttrack:
+    if "use_mp" not in dicttrack:
         dicttrack.update({"use_mp": True})
 
     # use radiation parameters to get the rf bucket
@@ -101,14 +103,19 @@ def momaperture_project2start(ring, *args, **kwargs):
     # S.Y.Lee, 4th Edition, Eqs 3.37, 3.38, Sect. II.2 Bucket area
     h = ring.harmonic_number
     etac = pars.etac
-    E = pars.E0
+    theenergy = pars.E0
     phis = pars.phi_s
     betar = ring.beta
-    V = ring.get_rf_voltage()
-    Y = numpy.sqrt(
+    thevoltage = ring.get_rf_voltage()
+    yfactor = numpy.sqrt(
         numpy.abs(numpy.cos(phis) - 0.5 * (numpy.pi - 2 * phis) * numpy.sin(phis))
     )
-    db = numpy.sqrt(2 * V / (numpy.pi * betar**2 * E * h * numpy.abs(etac))) * Y
+    db = (
+        numpy.sqrt(
+            2 * thevoltage / (numpy.pi * betar**2 * theenergy * h * numpy.abs(etac))
+        )
+        * yfactor
+    )
     verboseprint(f"Bucket height {db}")
 
     # first guess
@@ -144,12 +151,12 @@ def momaperture_project2start(ring, *args, **kwargs):
         iteration = 0
         while iteration < 100 and (de > dptol):  # safety limit on iterations
             t0 = time.time()
-            # L is a mask, True for lost particles
-            L = multirefpts_track_islost(
+            # plost is a mask, True for lost particles
+            plost = multirefpts_track_islost(
                 ring, rp, et, orbit_s, nturns, add_offset, **dicttrack
             )
-            es[~L] = et[~L]
-            eu[L] = et[L]
+            es[~plost] = et[~plost]
+            eu[plost] = et[plost]
             et = (es + eu) / 2
             de = max(abs(es - eu))
             iteration = iteration + 1
@@ -293,9 +300,7 @@ def multirefpts_track_islost(ring, refpts, e, orbit, nturns, initcoord, **dicttr
 
     # second, track particles that have survived the ring to the end
     if cntalive == 1:
-        zaux1, _, dout2 = ring.track(
-            zinalive, nturns=nturns, refpts=len(ring), losses=True
-        )
+        _, _, dout2 = ring.track(zinalive, nturns=nturns, refpts=len(ring), losses=True)
         lostpart[aliveatringend] = dout2["loss_map"]["islost"][0]
     elif cntalive > 1:
         # search for non numerically similar (istiny = 100 times eps) particles
@@ -314,7 +319,7 @@ def multirefpts_track_islost(ring, refpts, e, orbit, nturns, initcoord, **dicttr
         zaux2 = numpy.array([initcoord[0, 0], 0, initcoord[1, 0], 0, issmall, 0]).T
         ring.track(zaux2, nturns=1)
         # track non-numerically similar particles
-        zaux3, _, dout3 = ring.track(
+        _, _, dout3 = ring.track(
             zinalive[:, uniqueidx],
             nturns=nturns,
             keep_lattice=True,
