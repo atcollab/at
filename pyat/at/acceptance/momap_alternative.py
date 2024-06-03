@@ -1,5 +1,3 @@
-"""momap_alternative."""
-
 import time
 
 import numpy
