@@ -107,11 +107,9 @@ class _MadElement(ElementDescr):
         self.frm = frm
         super().__init__(*args, **kwargs)
 
-    # noinspection PyUnusedLocal
-    def limits(self, parser: MadxParser, refer: float):
-        """return [entrance, exit] coordinates"""
+    def limits(self, parser: MadxParser, offset: float, refer: float):
         half_length = 0.5 * self.length
-        offset = self.at + refer * half_length
+        offset = offset + refer * half_length + self.at
         if self.frm is not None:
             offset += parser[self.frm].at
         return np.array([-half_length, half_length]) + offset
@@ -405,28 +403,42 @@ class _Sequence(SequenceDescr):
         super().__call__(*args, copy=False, **kwargs)
         return self if copy else None
 
-    def limits(self, parser: MadxParser, refer: float):
-        half_length = 0.5 * self.length
-
-        if self.refpos is None:
-            offset = self.at + refer * half_length
+    def origin(self, parser, refer, refpos):
+        if refpos is None:
+            orig = 0.5 * (refer - 1.0) * self.length
         else:
-            offset = None
+            orig = None
             for fname, *anames in self:
-                if fname == self.refpos:
+                if fname == refpos:
                     elem = parser._raw_command(
                         None, fname, *anames, no_global=True, copy=True
                     )
-                    offset = self.at - elem.at + half_length
+                    orig = -elem.at
                     break
-            if offset is None:
+            if orig is None:
                 raise NameError(
-                    f"REFPOS {self.refpos!r} is not in the sequence {self.name!r}"
+                    f"REFPOS {refpos!r} is not in the sequence {self.name!r}"
                 )
-
         if self.frm is not None:
-            offset += self.frm.at
-        return np.array([-half_length, half_length]) + offset
+            orig += parser[self.frm].at
+        return orig
+
+    def flatten(self, parser, offset: float = 0.0, refer: float = 1.0, refpos=None):
+        offset = offset + self.origin(parser, refer, refpos) + self.at
+        for fname, *anames in self:
+            try:
+                # noinspection PyProtectedMember
+                elem = parser._raw_command(
+                    None, fname, *anames, no_global=True, copy=True
+                )
+            except Exception as exc:
+                mess = (f"In sequence {self.name!r}: \"{fname}, {', '.join(anames)}\"",)
+                exc.args += mess
+                raise
+            if isinstance(elem, _Sequence):
+                yield from elem.flatten(parser, offset, self.refer, elem.refpos)
+            elif isinstance(elem, _MadElement):
+                yield elem.limits(parser, offset, self.refer), elem
 
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
@@ -436,25 +448,14 @@ class _Sequence(SequenceDescr):
                 elemtype = type(el).__name__.upper()
                 raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
-        if not self.valid:
-            raise NameError(f"name {self.name!r} is not defined")
-
         end = 0.0
         elem = None
-        for fname, *anames in self:
-            try:
-                # noinspection PyProtectedMember
-                elem = parser._raw_command(
-                    None, fname, *anames, no_global=True, copy=True
-                )
-                entry, ext = elem.limits(parser, self.refer)
-                yield from insert_drift(entry - end, elem)
-                end = ext
-                yield from elem.expand(parser)
-            except Exception as exc:
-                mess = (f"In sequence {self.name!r}: \"{fname}, {', '.join(anames)}\"",)
-                exc.args += mess
-                raise
+        self.at = 0.0
+        for (entry, ext), elem in self.flatten(parser):
+            yield from insert_drift(entry - end, elem)
+            end = ext
+            yield from elem.expand(parser)
+
         try:
             yield from insert_drift(self.length - end, elem)
         except Exception as exc:  # Cannot happen if no element in sequence
@@ -590,7 +591,7 @@ class MadxParser(UnorderedParser):
     def _beam_cmd(self, sequence=None, **kwargs):
         """Implement the BEAM MAD-X statement"""
         name = "beam%" if sequence is None else f"beam%{sequence}"
-        beamobj = self.get(self._no_dot(name), None)
+        beamobj = self.get(name, None)
         if beamobj is None:
             beamobj = _BeamDescr(_default_beam)
             self[name] = beamobj
@@ -646,7 +647,7 @@ class MadxParser(UnorderedParser):
     def _get_beam(self, key: str):
         """Get the beam object for a given sequence"""
         try:
-            beam = self[f"beam%{self._no_dot(key)}"]
+            beam = self[f"beam%{key}"]
         except KeyError:
             beam = self["beam%"]
         return beam

@@ -103,6 +103,7 @@ def command1(**kwargs):
     assert kwargs["arg3"] is True
     return "done"
 
+
 # End of global definitions
 
 
@@ -123,9 +124,9 @@ def test_unordered_parser(delimiter, linecomment, data):
 def test_madx_parser():
     # fmt: off
     expected_ring_pos = np.array([
-        0.0,    0.25,   1.25,   2.25,   3.25,   4.0,    4.25,   4.75,   4.8,
-        4.8,    4.8,    4.8,    4.8,    4.85,   4.9,    4.9,    4.95,   5.0,
-        5.0,    5.25,   6.25,   7.25,   8.25,   9.0,
+        0.0,    0.25,   1.25,   2.25,   3.25,   4.25,   4.75,   4.8,    4.8,
+        4.8,    4.8,    4.8,    4.85,   4.9,    4.9,    4.95,   5.0,    5.0,
+        5.25,   6.25,   7.25,   8.25,   9.0,
     ])
     expected_cell_pos = np.array([0.,   0.25,   1.25,   2.25,   3.25,   4.])
     # fmt: on
@@ -133,7 +134,7 @@ def test_madx_parser():
     parser.parse_lines(madx_data.splitlines())
 
     ring = parser.lattice(use="ring.1")
-    assert len(ring) == 23
+    assert len(ring) == 22
     assert ring.energy == 6.0e09
     assert str(ring.particle) == "electron"
     assert ring.circumference == 9.0
