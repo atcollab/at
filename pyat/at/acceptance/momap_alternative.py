@@ -7,13 +7,15 @@ from typing import Dict
 
 import numpy
 
+from ..lattice.lattice_object import Lattice
+
 __all__ = ["momaperture_project2start", "projectrefpts"]
 
 # 2024may29 oblanco at ALBA CELLS. First working version
 #           Based on the MATLAB implementation by Z.Marti at ALBA
 
 
-def momaperture_project2start(ring: list, **kwargs: Dict[str, any]) -> numpy.ndarray:
+def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.ndarray:
     """
     :py:func:`momap_project2start` calculates the local momemtum aperture.
 
@@ -167,7 +169,7 @@ def momaperture_project2start(ring: list, **kwargs: Dict[str, any]) -> numpy.nda
 
 
 def projectrefpts(
-    ring: list,
+    ring: Lattice,
     startrefpts: numpy.ndarray,
     particles: numpy.ndarray,
     **kwargs: Dict[str, any],
@@ -251,7 +253,9 @@ def projectrefpts(
             zaux, nturns=1, refpts=erps - rps[i], losses=True, use_mp=use_mp
         )
         if groupparts:
-            zout[:, nparticles * i : nparticles * (i + 1), 0, 0] = numpy.squeeze(zoaux)
+            zout[:, nparticles * i : nparticles * (i + 1), 0, 0] = numpy.reshape(
+                zoaux, (6, nparticles)
+            )
             lostpart[nparticles * i : nparticles * (i + 1)] = dout1["loss_map"][
                 "islost"
             ]
@@ -262,7 +266,7 @@ def projectrefpts(
 
 
 def multirefpts_track_islost(
-    ring: list,
+    ring: Lattice,
     refpts: numpy.ndarray,
     energysetpt: numpy.ndarray,
     orbit: numpy.ndarray,
@@ -287,33 +291,26 @@ def multirefpts_track_islost(
     Returns:
       Lostpart: (N) bool array. True if the particle is lost.
     """
-    lenring = len(ring)
     rps = refpts
     nrps = len(rps)
     lostpart = numpy.ones((nrps), dtype=bool)
-    zin = numpy.zeros((6, nrps))
-    zout = numpy.zeros((6, nrps))
+    zin = numpy.zeros((6, 1, nrps, 1))
+    zout = numpy.zeros((6, 1, nrps, 1))
     issmall = 1e-6
     eps = numpy.finfo(float).eps
     istiny = 100 * eps
     nturns = dicttrack.pop("nturns", 1000)
 
     # first, track the remaining portion of the ring
-    for i in range(nrps):
-        ring_downstream = ring.rotate(rps[i])  # [rp[i]:]
-        zin[:, i] = orbit[i, :].copy()
-        zin[0, :] = zin[0, :] + initcoord[0, :]
-        zin[2, :] = zin[2, :] + initcoord[1, :]
-        zin[4, :] = zin[4, :] + energysetpt
-        zoaux, _, dout1 = ring_downstream.track(
-            zin[:, i], nturns=1, refpts=lenring - rps[i], losses=True
-        )
-        lostpart[i] = dout1["loss_map"]["islost"][0]
-        zout[:, i] = zoaux[:, 0, 0, 0]
+    zin[:, 0, :, 0] = orbit.T.copy()
+    zin[0, 0, :, 0] = zin[0, 0, :, 0] + initcoord[0, :]
+    zin[2, 0, :, 0] = zin[2, 0, :, 0] + initcoord[1, :]
+    zin[4, 0, :, 0] = zin[4, 0, :, 0] + energysetpt
+    zout, lostpart = projectrefpts(ring, rps, zin, group=True)
 
     cntalive = nrps - sum(lostpart)
     aliveatringend = ~lostpart
-    zinaliveaux = numpy.squeeze(zout[:, aliveatringend])
+    zinaliveaux = numpy.squeeze(zout[:, aliveatringend, 0, 0])
     zinalive = numpy.asfortranarray(zinaliveaux.copy())
 
     # second, track particles that have survived the ring to the end
