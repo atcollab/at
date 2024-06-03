@@ -54,7 +54,8 @@ if any(long)
     avemu(lg,:)=0.5*(mu0+mu1);
     avedisp(lg,[1 3])=(disp1(:,[1 3])+disp0(:,[1 3]))*0.5;
     avedisp(lg,[2 4])=(disp1(:,[1 3])-disp0(:,[1 3]))./L2;
-    foc=atgetcells(ring(long),'PolynomB',@(el,polb) length(polb)>=2 && polb(2)~=0||polb(3)~=0); %long
+    foc=atgetcells(ring(long),'PolynomB',@(el,polb) ...
+        (el.MaxOrder>=1 && polb(2)~=0) ||(el.MaxOrder>=2 && polb(3)~=0)); %long
     if any(foc)
         qp=false(size(lg));
         qp(lg)=foc;
