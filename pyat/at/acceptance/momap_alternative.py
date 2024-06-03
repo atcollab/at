@@ -13,6 +13,7 @@ __all__ = ["momaperture_project2start", "projectrefpts"]
 def momaperture_project2start(ring: list, **kwargs: dict[str, any]) -> numpy.ndarray:
     """
     :py:func:`momap_project2start` calculates the local momemtum aperture.
+
     It is a binary search of the negative and positive energy thresholds
     of stability around the closed orbit.
 
@@ -26,9 +27,9 @@ def momaperture_project2start(ring: list, **kwargs: dict[str, any]) -> numpy.nda
       >>> momaperture_project2start(ring)
 
     Parameters:
-        ring: list of elements
+      ring: list of elements
 
-    Keyword arguments:
+    Keyword Arguments:
       refpts: Selects the location of coordinates output.
         See ":ref:`Selecting elements in a lattice <refpts>`"
       nturns: number of turns to be tracked. Default 1000
@@ -145,7 +146,7 @@ def momaperture_project2start(ring: list, **kwargs: dict[str, any]) -> numpy.nda
             t00 = time.time()
             # plost is a mask, True for lost particles
             plost = multirefpts_track_islost(
-                ring, rps, deltaet, orbit_s, nturns, add_offset, **dicttrack
+                ring, rps, deltaet, orbit_s, add_offset, nturns=nturns, **dicttrack
             )
             deltaes[~plost] = deltaet[~plost]
             deltaeu[plost] = deltaet[plost]
@@ -162,10 +163,14 @@ def momaperture_project2start(ring: list, **kwargs: dict[str, any]) -> numpy.nda
     return etnp.T
 
 
-def projectrefpts(ring, startrefpts, particles, **kwargs):
+def projectrefpts(
+    ring: list,
+    startrefpts: numpy.ndarray,
+    particles: numpy.ndarray,
+    **kwargs: dict[str, any],
+) -> tuple:
     """
-    :py:fun:`projectrefpts` tracks particles from multiple reference
-    points to a single end point.
+    :py:fun:`projectrefpts` tracks from multiple reference points.
 
     Usage:
       >>> projectrefpts(ring, startrefpts, particles)
@@ -256,16 +261,28 @@ def projectrefpts(ring, startrefpts, particles, **kwargs):
 def multirefpts_track_islost(
     ring: list,
     refpts: numpy.ndarray,
-    energysetpt: float,
+    energysetpt: numpy.ndarray,
     orbit: numpy.ndarray,
-    nturns: int,
     initcoord: numpy.ndarray,
     **dicttrack: dict[str, any],
 ) -> numpy.ndarray:
     """
-    Returns a boolean array: tells whether the particle launched is lost.
+    Tell whether the particle launched is lost.
 
-    True means lost.
+    Usage:
+      >>> multirefpts_track_islost(ring, refpts, energysetpt, orbit, initcoord)
+
+    Parameters:
+      ring: list of elements
+
+    Keyword Arguments:
+      refpts: Selects the locations.
+      energysetpt: enery set point for tracking.
+      orbit: (6,N) orbit to be added to the N refpts.
+      initcoords: (2,N) hor. and ver. transverse offsets in m.
+
+    Returns:
+      Lostpart: (N) bool array. True if the particle is lost.
     """
     lenring = len(ring)
     rps = refpts
@@ -276,6 +293,7 @@ def multirefpts_track_islost(
     issmall = 1e-6
     eps = numpy.finfo(float).eps
     istiny = 100 * eps
+    nturns = dicttrack.pop("nturns", 1000)
 
     # first, track the remaining portion of the ring
     for i in range(nrps):
