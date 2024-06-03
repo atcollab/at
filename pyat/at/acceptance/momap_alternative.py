@@ -1,8 +1,11 @@
+"""momentum aperture alternative."""
+
+from __future__ import annotations
+
 import time
+from typing import Dict
 
 import numpy
-
-from typing import Dict
 
 __all__ = ["momaperture_project2start", "projectrefpts"]
 
@@ -264,7 +267,7 @@ def multirefpts_track_islost(
     energysetpt: numpy.ndarray,
     orbit: numpy.ndarray,
     initcoord: numpy.ndarray,
-    **dicttrack: dict[str, any],
+    **dicttrack: Dict[str, any],
 ) -> numpy.ndarray:
     """
     Tell whether the particle launched is lost.
