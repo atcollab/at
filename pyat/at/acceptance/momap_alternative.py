@@ -4,13 +4,15 @@ import time
 
 import numpy
 
+from typing import Dict
+
 __all__ = ["momaperture_project2start", "projectrefpts"]
 
 # 2024may29 oblanco at ALBA CELLS. First working version
 #           Based on the MATLAB implementation by Z.Marti at ALBA
 
 
-def momaperture_project2start(ring: list, **kwargs: dict[str, any]) -> numpy.ndarray:
+def momaperture_project2start(ring: list, **kwargs: Dict[str, any]) -> numpy.ndarray:
     """
     :py:func:`momap_project2start` calculates the local momemtum aperture.
 
@@ -167,7 +169,7 @@ def projectrefpts(
     ring: list,
     startrefpts: numpy.ndarray,
     particles: numpy.ndarray,
-    **kwargs: dict[str, any],
+    **kwargs: Dict[str, any],
 ) -> tuple:
     """
     :py:fun:`projectrefpts` tracks from multiple reference points.
