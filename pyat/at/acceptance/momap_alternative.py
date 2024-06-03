@@ -159,7 +159,7 @@ def momaperture_project2start(ring: list, **kwargs: Dict[str, any]) -> numpy.nda
             outmsg = (
                 f"Iteration {iteration} in {verbosesign[i]} side",
                 f" took {format(time.time()-t00):.3} s.",
-                f" {deltae=}, {dptol=}",
+                f" deltae={deltae}, dptol={dptol}",
             )
             verboseprint("".join(outmsg))
         etnp[i, :] = deltaet
@@ -223,7 +223,7 @@ def projectrefpts(
 
     groupparts = kwargs.pop("group", False)
 
-    verboseprint(f"{nparticles=} per reference point")
+    verboseprint(f"nparticles={nparticles} per reference point")
     verboseprint(f"Number of reference points {nrps}")
 
     # default to parallel
