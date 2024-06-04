@@ -47,7 +47,7 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
     fp_i = tuple(find_orbit4(ring, dp=dp + dp_i, keep_lattice=keep_lattice)[0] \
        for dp_i in dp_samples)
     fp = numpy.stack(fp_i, axis=0).T  # generate a Fortran contiguous array
-    b = numpy.squeeze(internal_lpass(ring, fp, keep_lattice=keep_lattice), axis=(2, 3))
+    b = numpy.squeeze(internal_lpass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
     p = numpy.polynomial.Polynomial.fit(b[4], b[5], deg=fit_order).convert().coef
     alphac = p[1:] / ring_length[0]
