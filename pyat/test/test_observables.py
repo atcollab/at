@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose as assert_close
 
 import at
 from at import (
-    Observable,
+    RingObservable,
     ObservableList,
     OrbitObservable,
     GlobalOpticsObservable,
@@ -18,12 +18,12 @@ from at import (
 
 def test_observables(hmba_lattice):
     # noinspection PyUnusedLocal
-    def phase_advance(rng, elemdata):
+    def phase_advance(elemdata):
         mu = elemdata.mu
         return mu[-1] - mu[0]
 
-    def circumference(rng):
-        return rng.cell_length
+    def circumference(ring):
+        return ring.cell_length
 
     ring = hmba_lattice.enable_6d(copy=True)
     ring.set_rf_frequency(dp=0.0)
@@ -54,7 +54,7 @@ def test_observables(hmba_lattice):
     allobs.append(LatticeObservable(at.Sextupole, "H", statfun=np.mean))
     allobs.append(LatticeObservable(at.Sextupole, "PolynomB", index=2))
     allobs.append(EmittanceObservable("emittances", plane="x"))
-    allobs.append(Observable(circumference))
+    allobs.append(RingObservable(circumference))
     allobs.append(TrajectoryObservable(at.Monitor, axis="px"))
     allobs.append(GeometryObservable(at.Monitor, "x"))
 
@@ -62,7 +62,7 @@ def test_observables(hmba_lattice):
     r_in = np.zeros(6)
     r_in[0] = 0.001
     r_in[2] = 0.001
-    allobs.evaluate(ring, r_in=r_in, initial=True)
+    allobs.evaluate(r_in=r_in, initial=True, ring=ring)
 
     # Get the expected values
     o0, o = ring.find_orbit(refpts=at.All)

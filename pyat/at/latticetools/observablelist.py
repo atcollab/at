@@ -34,7 +34,7 @@ from typing import Optional, Callable
 import numpy as np
 
 # noinspection PyProtectedMember
-from .observables import Observable, _ElementObservable, Need
+from .observables import Observable, ElementObservable, Need
 from ..lattice import AtError, frequency_control
 from ..lattice import Lattice, Orbit, Refpts, All
 from ..physics import linopt6
@@ -51,6 +51,25 @@ class ObservableList(list):
     :py:class:`ObservableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
     """
+
+    needs_ring = {
+        Need.RING,
+        Need.ORBIT,
+        Need.MATRIX,
+        Need.GLOBALOPTICS,
+        Need.LOCALOPTICS,
+        Need.TRAJECTORY,
+        Need.EMITTANCE,
+        Need.GEOMETRY,
+    }
+    needs_orbit = {
+        Need.ORBIT,
+        Need.MATRIX,
+        Need.GLOBALOPTICS,
+        Need.LOCALOPTICS,
+        Need.EMITTANCE,
+    }
+    needs_optics = {Need.GLOBALOPTICS, Need.LOCALOPTICS}
 
     def __init__(
         self,
@@ -125,30 +144,44 @@ class ObservableList(list):
 
     # noinspection PyProtectedMember
     def _setup(self, ring: Lattice):
-        noref = ring.get_bool_index(None)
-        orbitrefs = opticsrefs = passrefs = matrixrefs = noref
+        # Compute the union of all needs
         needs = set()
         for obs in self:
-            obs._setup(ring)
-            obsneeds = obs.needs
-            needs |= obsneeds
-            if isinstance(obs, _ElementObservable):
-                if Need.ORBIT in obsneeds:
-                    orbitrefs |= obs._boolrefs
-                if Need.MATRIX in obsneeds:
-                    matrixrefs |= obs._boolrefs
-                if Need.LOCALOPTICS in obsneeds:
-                    if Need.ALL_POINTS in obsneeds:
-                        opticsrefs = ring.get_bool_index(All)
-                    else:
-                        opticsrefs |= obs._boolrefs
-                if Need.TRAJECTORY in obsneeds:
-                    passrefs |= obs._boolrefs
-        self.orbitrefs = orbitrefs
-        self.opticsrefs = opticsrefs
-        self.passrefs = passrefs
-        self.matrixrefs = matrixrefs
+            needs |= obs.needs
+            if isinstance(obs, ElementObservable):
+                needs.add(Need.RING)
+
+        if (needs & self.needs_ring) and ring is None:
+            raise ValueError("At least one Observable needs a ring argument")
+
         self.needs = needs
+        if ring is None:
+            # Initialise each observable
+            for obs in self:
+                obs._setup(ring)
+        else:
+            # Initialise each observable and make a summary all refpoints
+            noref = ring.get_bool_index(None)
+            orbitrefs = opticsrefs = passrefs = matrixrefs = noref
+            for obs in self:
+                obs._setup(ring)
+                obsneeds = obs.needs
+                if isinstance(obs, ElementObservable):
+                    if Need.ORBIT in obsneeds:
+                        orbitrefs |= obs._boolrefs
+                    if Need.MATRIX in obsneeds:
+                        matrixrefs |= obs._boolrefs
+                    if Need.LOCALOPTICS in obsneeds:
+                        if Need.ALL_POINTS in obsneeds:
+                            opticsrefs = ring.get_bool_index(All)
+                        else:
+                            opticsrefs |= obs._boolrefs
+                    if Need.TRAJECTORY in obsneeds:
+                        passrefs |= obs._boolrefs
+            self.orbitrefs = orbitrefs
+            self.opticsrefs = opticsrefs
+            self.passrefs = passrefs
+            self.matrixrefs = matrixrefs
 
     def __iadd__(self, other: ObservableList):
         if not isinstance(other, ObservableList):
@@ -184,73 +217,64 @@ class ObservableList(list):
 
     def evaluate(
         self,
-        ring: Lattice,
         *,
         dp: Optional[float] = None,
         dct: Optional[float] = None,
         df: Optional[float] = None,
         initial: bool = False,
+        ring: Optional[Lattice] = None,
         **kwargs,
     ):
         r"""Compute all the :py:class:`Observable` values
 
         Args:
-            ring:       Lattice description used for evaluation
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
             dct (float):    Path lengthening. Defaults to :py:obj:`None`
             df (float):     Deviation from the nominal RF frequency.
               Defaults to :py:obj:`None`
             initial:    If :py:obj:`True`, store the values as *initial values*
+            ring:           Lattice description used for evaluation
 
         Keyword Args:
-            orbit (Orbit):      Initial orbit. Avoids looking for the closed
+            orbit (Orbit):  Initial orbit. Avoids looking for the closed
               orbit if it is already known. Used for
               :py:class:`MatrixObservable` and :py:class:`LocalOpticsObservable`
-            twiss_in:           Initial conditions for transfer line optics.
+            twiss_in:       Initial conditions for transfer line optics.
               See :py:func:`.get_optics`. Used for
               :py:class:`LocalOpticsObservable`
             method (Callable):  Method for linear optics. Used for
               :py:class:`LocalOpticsObservable`.
               Default: :py:obj:`~.linear.linopt6`
-            r_in (Orbit):       Initial trajectory, used for
+            r_in (Orbit):   Initial trajectory, used for
               :py:class:`TrajectoryObservable`, Default: zeros(6)
         """
 
-        def obseval(obs):
+        def obseval(ring, obs):
             """Evaluate a single observable"""
+
+            def check_error(data, refpts):
+                return data if isinstance(data, AtError) else data[refpts]
+
             obsneeds = obs.needs
             obsrefs = getattr(obs, "_boolrefs", None)
             data = []
+            if Need.RING in obsneeds:
+                data.append(ring)
             if Need.ORBIT in obsneeds:
-                dd = (
-                    orbits
-                    if isinstance(orbits, AtError)
-                    else orbits[obsrefs[self.orbitrefs]]
-                )
-                data.append(dd)
+                data.append(check_error(orbits, obsrefs[self.orbitrefs]))
             if Need.MATRIX in obsneeds:
-                dd = (
-                    mxdata
-                    if isinstance(mxdata, AtError)
-                    else mxdata[obsrefs[self.matrixrefs]]
-                )
-                data.append(dd)
+                data.append(check_error(mxdata, obsrefs[self.matrixrefs]))
             if Need.GLOBALOPTICS in obsneeds:
                 data.append(rgdata)
             if Need.LOCALOPTICS in obsneeds:
-                dd = (
-                    eldata
-                    if isinstance(eldata, AtError)
-                    else eldata[obsrefs[self.opticsrefs]]
-                )
-                data.append(dd)
+                data.append(check_error(eldata, obsrefs[self.opticsrefs]))
             if Need.TRAJECTORY in obsneeds:
                 data.append(trajs[obsrefs[self.passrefs]])
             if Need.EMITTANCE in obsneeds:
                 data.append(emdata)
             if Need.GEOMETRY in obsneeds:
                 data.append(geodata[obsrefs])
-            obs.evaluate(ring, *data, initial=initial)
+            obs.evaluate(*data, initial=initial)
 
         @frequency_control
         def ringeval(
@@ -272,15 +296,7 @@ class ObservableList(list):
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
                 trajs = r_out[:, 0, :, 0].T
 
-            if not needs.isdisjoint(
-                {
-                    Need.ORBIT,
-                    Need.MATRIX,
-                    Need.LOCALOPTICS,
-                    Need.GLOBALOPTICS,
-                    Need.EMITTANCE,
-                }
-            ):
+            if needs & self.needs_orbit:
                 # Closed orbit computation
                 orbit0 = kwargs.get("orbit", self.orbit)
                 try:
@@ -313,10 +329,7 @@ class ObservableList(list):
                         keep_lattice=True,
                     )
 
-            if (
-                not needs.isdisjoint({Need.LOCALOPTICS, Need.GLOBALOPTICS})
-                and o0 is not None
-            ):
+            if (needs & self.needs_optics) and o0 is not None:
                 # Linear optics computation
                 try:
                     _, rgdata, eldata = ring.get_optics(
@@ -354,7 +367,7 @@ class ObservableList(list):
             ring, dp=dp, dct=dct, df=df
         )
         for ob in self:
-            obseval(ob)
+            obseval(ring, ob)
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):

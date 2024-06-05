@@ -9,24 +9,24 @@ Class hierarchy
 ---------------
 
 :py:class:`Observable`\ (evalfun, name, target, weight, bounds, ...)
+    :py:class:`RingObservable`\ (fun, ...)
+
     :py:func:`GlobalOpticsObservable`\ (attrname, plane, name, ...)
 
     :py:class:`EmittanceObservable`\ (attrname, plane, name, ...)
 
-    :py:class:`_ElementObservable`\ (...)
+    :py:class:`ElementObservable`\ (fun, ...)
         :py:class:`OrbitObservable`\ (refpts, axis, name, ...)
 
-        :py:class:`BPMOrbitObservable`\ (refpts, axis, name, ...)
-
         :py:class:`TrajectoryObservable`\ (refpts, axis, name, ...)
-
-        :py:class:`BPMTrajectoryObservable`\ (refpts, axis, name, ...)
 
         :py:class:`MatrixObservable`\ (refpts, axis, name, ...)
 
         :py:class:`LocalOpticsObservable`\ (refpts, attrname, axis, name, ...)
 
         :py:class:`LatticeObservable`\ (refpts, attrname, index, name, ...)
+
+        :py:class:`GeometryObservable`\ (refpts, attrname, name, ...)
 
 :py:class:`.Observable`\ s are usually not evaluated directly, but through a
 container which performs the required optics computation and feeds each
@@ -44,10 +44,12 @@ from __future__ import annotations
 
 __all__ = [
     "Observable",
-    "OrbitObservable",
+    "RingObservable",
     "EmittanceObservable",
-    "GeometryObservable",
     "GlobalOpticsObservable",
+    "ElementObservable",
+    "OrbitObservable",
+    "GeometryObservable",
     "LocalOpticsObservable",
     "LatticeObservable",
     "MatrixObservable",
@@ -84,8 +86,8 @@ class _ModFun(object):
         self.fun = fun
         self.statfun = statfun
 
-    def __call__(self, ring, *a):
-        return self.statfun(self.fun(ring, *a), axis=0)
+    def __call__(self, *a):
+        return self.statfun(self.fun(*a), axis=0)
 
 
 class _ArrayAccess(object):
@@ -94,7 +96,7 @@ class _ArrayAccess(object):
     def __init__(self, index):
         self.index = _all_rows(index)
 
-    def __call__(self, ring, data):
+    def __call__(self, data):
         index = self.index
         return data if index is None else data[self.index]
 
@@ -106,7 +108,7 @@ class _RecordAccess(object):
         self.index = index
         self.fieldname = fieldname
 
-    def __call__(self, ring, data):
+    def __call__(self, data):
         index = self.index
         data = getattr(data, self.fieldname)
         return data if index is None else data[self.index]
@@ -128,8 +130,8 @@ class _Tune(object):
     def __init__(self, idx: RefIndex):
         self.fun = _RecordAccess("mu", _all_rows(idx))
 
-    def __call__(self, ring, data):
-        mu = self.fun(ring, data)
+    def __call__(self, data):
+        mu = self.fun(data)
         return np.squeeze(mu, axis=0) / 2 / pi
 
 
@@ -141,40 +143,43 @@ class _Ring(object):
         self.refpts = refpts
 
     def __call__(self, ring):
-        vals = [self.get_val(ring, el) for el in ring.select(self.refpts)]
+        vals = [self.get_val(el) for el in ring.select(self.refpts)]
         return np.array(vals)
 
 
 class Need(Enum):
     """Defines the computation requirements for an :py:class:`Observable`."""
 
-    #:  Specify :py:func:`.find_orbit` computation and provide its *orbit*
-    #:  t to the evaluation function
-    ORBIT = 1
+    #:  Provides the *ring* data to the evaluation function
+    RING = 1
+    #:  Specify :py:func:`.find_orbit` computation and provide its *orbit* output
+    #:  to the evaluation function
+    ORBIT = 2
     #:  Specify :py:func:`.find_m44` or :py:func:`.find_m44` computation and
     #:  provide its *m44* or *m66* output to the evaluation function
-    MATRIX = 2
-    #:  Specify :py:func:`.get_optics` computation and provide its *ringdata*
+    MATRIX = 3
+    #:  Specify :py:func:`.get_optics` computation and provide its *ringdata* output
     #:  to the evaluation function
-    GLOBALOPTICS = 3
-    #:  Specify :py:func:`.get_optics` computation and provide its *elemdata*
+    GLOBALOPTICS = 4
+    #:  Specify :py:func:`.get_optics` computation and provide its *elemdata* output
     #:  to the evaluation function
-    LOCALOPTICS = 4
+    LOCALOPTICS = 5
     #:  Specify :py:func:`.lattice_pass` computation and provide its *r_out*
     #:  to the evaluation function
-    TRAJECTORY = 5
+    TRAJECTORY = 6
     #:  Specify :py:func:`.envelope_parameters` computation and provide its
-    #:  *params* to the evaluation function
-    EMITTANCE = 6
+    #:  *params* output to the evaluation function
+    EMITTANCE = 7
     #:  Associated with LOCALOPTICS, require local optics computation at all
     #:  points: slower but avoids jumps in phase advance
-    ALL_POINTS = 7
+    ALL_POINTS = 8
     #:  Associated with LOCALOPTICS, require the *get_chrom* keyword
-    CHROMATICITY = 8
+    CHROMATICITY = 9
     #:  Associatef with LOCALOPTICS, require the *get_w* keyword
-    W_FUNCTIONS = 9
-    #:  Specify geometry computation and provide the full data at evaluation points
-    GEOMETRY = 10
+    W_FUNCTIONS = 10
+    #:  Specify :py:meth:`~.Lattice.get_geometry` computation and provide its ? output
+    #:  to the evaluation function
+    GEOMETRY = 11
 
 
 class Observable(object):
@@ -183,12 +188,12 @@ class Observable(object):
     def __init__(
         self,
         fun: Callable,
+        *args,
         name: Optional[str] = None,
         target=None,
         weight=1.0,
         bounds=(0.0, 0.0),
         needs: Optional[Set[Need]] = None,
-        fun_args: tuple = (),
         **kwargs,
     ):
         r"""
@@ -196,6 +201,7 @@ class Observable(object):
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
             fun:            :ref:`evaluation function <base_eval>`
+            *args:          Arguments provided to the evaluation function
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -207,6 +213,9 @@ class Observable(object):
               to the evaluation function. *needs* items are members of the
               :py:class:`Need` enumeration
 
+        Keyword Args:
+            **kwargs:       Keyword arguments provided to the evaluation function
+
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
@@ -215,11 +224,14 @@ class Observable(object):
 
         The general form is:
 
-        :pycode:`value = fun(ring, *data)`
+        :pycode:`value = fun(*data, *args, **kwargs)`
 
-        *data* depends on the *needs* argument, and by default is empty.
-
-        *value* is the value of the observable,
+        - *data* depends on the *needs* argument, and by default is empty. If several
+          needed values are specified, their order is: *ring*, *orbit*, *m44/m66*,
+          *ringdata*, *elemdata*, *r_out*, *params*, *geomdata*,
+        - *args* are the positional arguments provided to the observable constructor,
+        - *kwargs* are the keyword arguments provided to the observable constructor,
+        - *value* is the value of the observable.
 
         For user-defined evaluation functions using linear optics data or
         emittance data, it is recommended to use
@@ -231,13 +243,13 @@ class Observable(object):
 
             >>> def circumference(ring):
             ...     return ring.get_s_pos(len(ring))[0]
-            >>> obs = Observable(circumference)
+            >>> obs = Observable(circumference, needs={Need.RING})
 
             Defines an Observable for the ring circumference.
 
             >>> def momentum_compaction(ring):
             ...     return ring.get_mcf()
-            >>> obs = Observable(momentum_compaction)
+            >>> obs = Observable(momentum_compaction, needs={Need.RING})
 
             Defines an Observable for the momentum compaction factor.
         """
@@ -251,7 +263,7 @@ class Observable(object):
         self.initial = None
         self._value = None
         self._shape = None
-        self.args = fun_args
+        self.args = args
         self.kwargs = kwargs
 
     def __str__(self):
@@ -303,15 +315,14 @@ class Observable(object):
         """Setup function called when the observable is added to a list"""
         pass
 
-    def evaluate(self, ring: Lattice, *data, initial: bool = False):
+    def evaluate(self, *data, initial: bool = False):
         """Compute and store the value of the observable
 
         The direct evaluation of a single :py:class:`Observable` is normally
         not used. This method is called by the :py:class:`.ObservableList`
-        container which provides the *data* argument.
+        container which provides the *data* arguments.
 
         Args:
-            ring:       Lattice description
             *data:      Raw data, provided by :py:class:`.ObservableList` and
               sent to the evaluation function
             initial:    It :py:obj:`None`, store the result as the initial
@@ -322,7 +333,7 @@ class Observable(object):
                 self._value = d
                 return
 
-        val = self.fun(ring, *data, *self.args, **self.kwargs)
+        val = self.fun(*data, *self.args, **self.kwargs)
         if self._shape is None:
             self._shape = np.asarray(val).shape
         if initial:
@@ -400,7 +411,63 @@ class Observable(object):
         return name
 
 
-class _ElementObservable(Observable):
+class RingObservable(Observable):
+    """Observe any user-defined property of a ring"""
+
+    def __init__(
+        self,
+        fun: Callable,
+        name: Optional[str] = None,
+        ** kwargs,
+    ):
+        r"""
+        Args:
+            fun:            :ref:`user-defined evaluation function <ring_eval>`
+            name:           Observable name. If :py:obj:`None`, an explicit
+              name will be generated
+
+        Keyword Args:
+            target:         Target value for a constraint. If :py:obj:`None`
+              (default), the residual will always be zero.
+            weight:         Weight factor: the residual is
+              :pycode:`((value-target)/weight)**2`
+            bounds:         Tuple of lower and upper bounds. The parameter
+              is constrained in the interval
+              [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+
+        The *target*, *weight* and *bounds* inputs must be broadcastable to the
+        shape of *value*.
+
+        .. _ring_eval:
+        .. rubric:: User-defined evaluation function
+
+        It is called as:
+
+        :pycode:`value = fun(ring)`
+
+        - *ring* is the lattice description,
+        - *value* is the value of the Observable.
+
+        Examples:
+
+            >>> def circumference(ring):
+            ...     return ring.get_s_pos(len(ring))[0]
+            >>> obs = RingObservable(circumference)
+
+            Defines an Observable for the ring circumference.
+
+            >>> def momentum_compaction(ring):
+            ...     return ring.get_mcf()
+            >>> obs = RingObservable(momentum_compaction)
+
+            Defines an Observable for the momentum compaction factor.
+        """
+        needs = {Need.RING}
+        name = fun.__name__ if name is None else name
+        super().__init__(fun, name=name, needs=needs, **kwargs)
+
+
+class ElementObservable(Observable):
     """Base class for Observables linked to a position in the lattice"""
 
     def __init__(
@@ -481,10 +548,10 @@ class _ElementObservable(Observable):
         self._locations = locs
 
 
-class GeometryObservable(_ElementObservable):
+class GeometryObservable(ElementObservable):
     """Observe the geometrical parameters of the reference trajectory.
 
-    Process the result of calling :py:func:`.get_geometry`.
+    Process the *geomdata* output of :py:func:`.get_geometry`.
     """
 
     _field_list = {"x", "y", "angle"}
@@ -529,10 +596,10 @@ class GeometryObservable(_ElementObservable):
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
-class OrbitObservable(_ElementObservable):
+class OrbitObservable(ElementObservable):
     """Observe the transfer matrix at selected locations.
 
-    Process the result of calling :py:func:`.find_orbit`.
+    Process the *orbit* output of :py:func:`.find_orbit`.
     """
 
     def __init__(
@@ -574,7 +641,7 @@ class OrbitObservable(_ElementObservable):
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
-class MatrixObservable(_ElementObservable):
+class MatrixObservable(ElementObservable):
     """Observe the closed orbit at selected locations.
 
     Processs the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
@@ -634,7 +701,7 @@ class _GlobalOpticsObservable(Observable):
         Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ring, ringdata)` and returning the value of
+              :pycode:`value = fun(ringdata, ring=ring)` and returning the value of
               the Observable
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
@@ -665,7 +732,7 @@ class _GlobalOpticsObservable(Observable):
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
 
-class LocalOpticsObservable(_ElementObservable):
+class LocalOpticsObservable(ElementObservable):
     """Observe a local optics parameter at selected locations.
 
     Process the local output of :py:func:`.get_optics`.
@@ -717,14 +784,13 @@ class LocalOpticsObservable(_ElementObservable):
 
         It is called as:
 
-        :pycode:`value = fun(ring, elemdata)`
+        :pycode:`value = fun(elemdata)`
 
-        *elemdata* if the output of :py:func:`.get_optics`, evaluated at the *refpts*
-        of the observable.
-
-        *value* is the value of the Observable and must have one line per
-        refpoint. Alternatively, it may be a single line, but then the
-        *summary* keyword must be set to :py:obj:`True`
+        - *elemdata* is the output of :py:func:`.get_optics`, evaluated at the *refpts*
+          of the observable,
+        - *value* is the value of the Observable and must have one line per
+          refpoint. Alternatively, it may be a single line, but then the
+          *summary* keyword must be set to :py:obj:`True`.
 
         Examples:
 
@@ -738,7 +804,7 @@ class LocalOpticsObservable(_ElementObservable):
 
             Observe the maximum vertical beta in Quadrupoles
 
-            >>> def phase_advance(ring, elemdata):
+            >>> def phase_advance(elemdata):
             ...     mu = elemdata.mu
             ...     return mu[-1] - mu[0]
             >>>
@@ -768,7 +834,7 @@ class LocalOpticsObservable(_ElementObservable):
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
-class LatticeObservable(_ElementObservable):
+class LatticeObservable(ElementObservable):
     """Observe an attribute of selected lattice elements."""
 
     def __init__(
@@ -802,12 +868,16 @@ class LatticeObservable(_ElementObservable):
             Observe the sum of horizontal kicks in Sextupoles
         """
         fun = _Ring(attrname, index, refpts)
+        needs = {Need.RING}
         name = self._set_name(name, attrname, index)
-        super().__init__(fun, refpts, name=name, **kwargs)
+        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
-class TrajectoryObservable(_ElementObservable):
-    """Observe trajectory coordinates at selected locations"""
+class TrajectoryObservable(ElementObservable):
+    """Observe trajectory coordinates at selected locations
+
+    Process the *r_out* output if :py:meth:`.Lattice.track`
+    """
 
     def __init__(
         self,
@@ -880,7 +950,7 @@ class EmittanceObservable(Observable):
 
         It is called as:
 
-        :pycode:`value = fun(ring, paramdata)`
+        :pycode:`value = fun(paramdata)`
 
         *paramdata* if the :py:class:`.RingParameters` object returned by
         :py:func:`.envelope_parameters`.
@@ -913,7 +983,7 @@ def GlobalOpticsObservable(
     # noinspection PyUnresolvedReferences
     r"""Observe a global optics parameter.
 
-    Process the global output of :py:func:`.get_optics`.
+    Process the *ringdata* output of :py:func:`.get_optics`.
 
     Args:
         param:          Optics parameter name (see :py:func:`.get_optics`)
@@ -945,9 +1015,8 @@ def GlobalOpticsObservable(
 
     :pycode:`value = fun(ring, ringdata)`
 
-    *ringdata* if the output of :py:func:`.get_optics`,
-
-    *value* is the value of the Observable.
+    - *ringdata* is the output of :py:func:`.get_optics`,
+    - *value* is the value of the Observable.
 
     Examples:
 
@@ -961,7 +1030,7 @@ def GlobalOpticsObservable(
     """
     if param == "tune" and use_integer:
         # noinspection PyProtectedMember
-        name = _ElementObservable._set_name(name, param, plane_(plane, "code"))
+        name = ElementObservable._set_name(name, param, plane_(plane, "code"))
         return LocalOpticsObservable(
             End,
             _Tune(plane_(plane, "index")),
