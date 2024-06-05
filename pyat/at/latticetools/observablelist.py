@@ -84,7 +84,7 @@ class ObservableList(list):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
-            obsiter:    Iterable of :py:class:`Observable`\ s
+            obsiter:    Iterable of :py:class:`.Observable`\ s
 
         Keyword Args:
             orbit (Orbit):      Initial orbit. Avoids looking for the closed
@@ -238,15 +238,15 @@ class ObservableList(list):
         Keyword Args:
             orbit (Orbit):  Initial orbit. Avoids looking for the closed
               orbit if it is already known. Used for
-              :py:class:`MatrixObservable` and :py:class:`LocalOpticsObservable`
+              :py:class:`.MatrixObservable` and :py:class:`.LocalOpticsObservable`
             twiss_in:       Initial conditions for transfer line optics.
               See :py:func:`.get_optics`. Used for
-              :py:class:`LocalOpticsObservable`
+              :py:class:`.LocalOpticsObservable`
             method (Callable):  Method for linear optics. Used for
-              :py:class:`LocalOpticsObservable`.
+              :py:class:`.LocalOpticsObservable`.
               Default: :py:obj:`~.linear.linopt6`
             r_in (Orbit):   Initial trajectory, used for
-              :py:class:`TrajectoryObservable`, Default: zeros(6)
+              :py:class:`.TrajectoryObservable`, Default: zeros(6)
         """
 
         def obseval(ring, obs):
