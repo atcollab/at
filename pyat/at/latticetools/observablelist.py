@@ -217,23 +217,23 @@ class ObservableList(list):
 
     def evaluate(
         self,
+        ring: Optional[Lattice] = None,
         *,
         dp: Optional[float] = None,
         dct: Optional[float] = None,
         df: Optional[float] = None,
         initial: bool = False,
-        ring: Optional[Lattice] = None,
         **kwargs,
     ):
         r"""Compute all the :py:class:`Observable` values
 
         Args:
+            ring:           Lattice used for evaluation
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
             dct (float):    Path lengthening. Defaults to :py:obj:`None`
             df (float):     Deviation from the nominal RF frequency.
               Defaults to :py:obj:`None`
             initial:    If :py:obj:`True`, store the values as *initial values*
-            ring:           Lattice description used for evaluation
 
         Keyword Args:
             orbit (Orbit):  Initial orbit. Avoids looking for the closed

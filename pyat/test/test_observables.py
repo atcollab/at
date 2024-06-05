@@ -62,7 +62,7 @@ def test_observables(hmba_lattice):
     r_in = np.zeros(6)
     r_in[0] = 0.001
     r_in[2] = 0.001
-    allobs.evaluate(r_in=r_in, initial=True, ring=ring)
+    allobs.evaluate(ring, r_in=r_in, initial=True)
 
     # Get the expected values
     o0, o = ring.find_orbit(refpts=at.All)

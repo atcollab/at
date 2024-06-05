@@ -238,20 +238,6 @@ class Observable(object):
         :py:class:`LocalOpticsObservable`, :py:obj:`GlobalOpticsObservable`
         or :py:class:`EmittanceObservable` which provide the corresponding
         *data* argument.
-
-        Examples:
-
-            >>> def circumference(ring):
-            ...     return ring.get_s_pos(len(ring))[0]
-            >>> obs = Observable(circumference, needs={Need.RING})
-
-            Defines an Observable for the ring circumference.
-
-            >>> def momentum_compaction(ring):
-            ...     return ring.get_mcf()
-            >>> obs = Observable(momentum_compaction, needs={Need.RING})
-
-            Defines an Observable for the momentum compaction factor.
         """
         name = fun.__name__ if name is None else name
         self.fun: Callable = fun  #: Evaluation function
