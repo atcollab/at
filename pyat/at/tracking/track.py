@@ -5,7 +5,7 @@ from .utils import fortran_align, has_collective, format_results
 from .utils import initialize_lpass, disable_varelem, variable_refs
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
-from ..lattice import AtWarning, DConstant, random
+from ..lattice import AtWarning, DConstant, random, AtError
 from collections.abc import Iterable
 from typing import Optional
 from functools import partial
@@ -117,6 +117,11 @@ def lattice_track(lattice: Iterable[Element], r_in,
           :py:obj:`True` and reports the coordinates at
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
+          If the flag startrefpts is given, the input should be
+          (6,N*R) where N is the number of particles per reference
+          point, and R is the number of reference points. The order
+          must be the N particles of the first refpoint followed by
+          the N particles of the next reference point.
 
     Keyword arguments:
         nturns: number of turns to be tracked
@@ -149,6 +154,9 @@ def lattice_track(lattice: Iterable[Element], r_in,
           calculation or to solve Runtime Errors, however it is considered
           unsafe. Used only when *use_mp* is :py:obj:`True`. It can be globally
           set using the variable *at.lattice.DConstant.patpass_startmethod*
+        startrefpts: warning. This changes the tracking behaviour.
+          If given, it should contain a numpy array of reference points.
+          The input r_in should be set accordingly.
 
     The following keyword arguments overload the lattice values
 
@@ -256,6 +264,56 @@ def lattice_track(lattice: Iterable[Element], r_in,
     use_mp = kwargs.pop('use_mp', False)
     start_method = kwargs.pop('start_method', None)
     pool_size = kwargs.pop('pool_size', None)
+    
+    startrefpts = kwargs.pop('startrefpts',[])
+    lensrefpts = len(startrefpts)
+    if lensrefpts:
+        if (npart % lensrefpts) != 0:
+            msgErrMod = ('Particle number is not a multiple of the reference',
+                         ' points. They are incompatible')
+            AtError(msgErrMod) 
+        nparts_per_startrp = int(npart / lensrefpts)
+        for i in range(lensrefpts):
+            ring_downstream = ring.rotate(startrefpts[i])
+            r_aux = numpy.squeeze(numpy.reshape(r_in[:,nparts_per_startrp*i:nparts_per_startrp*(i+1)],(6,nparts_per_startrp)))
+            rout = switch_to_parallel_tracking(use_mp,
+                                              lattice,
+                                              r_aux,
+                                              pool_size,
+                                              start_method,
+                                              1,
+                                              at.End - startrefpts[i],
+                                              **kwargs)
+    else:
+        rout = switch_to_parallel_tracking(use_mp,
+                                           lattice,
+                                           r_in,
+                                           pool_size,
+                                           start_method,
+                                           nturns,
+                                           refpts,
+                                           **kwargs)
+        if kwargs.get('losses', False):
+            rout, lm = rout
+            lm['coord'] = lm['coord'].T
+            for k, v in lm.items():
+                loss_map[k] = v
+
+        trackdata.update({'loss_map': loss_map})
+        trackparam.update({'rout': r_in})
+
+    return rout, trackparam, trackdata
+
+def switch_to_parallel_tracking(use_mp,
+                                lattice,
+                                r_in, pool_size,
+                                start_method,
+                                nturns,
+                                refpts,
+                                **kwargs):
+    """
+    This function checks if the tracking is paralelized or not.
+    """
     if use_mp:
         kwargs.update({'pool_size': pool_size,
                        'start_method': start_method})
@@ -265,18 +323,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
         rout = _lattice_pass(lattice, r_in, nturns=nturns,
                              refpts=refpts, no_varelem=False,
                              **kwargs)
-
-    if kwargs.get('losses', False):
-        rout, lm = rout
-        lm['coord'] = lm['coord'].T
-        for k, v in lm.items():
-            loss_map[k] = v
-
-    trackdata.update({'loss_map': loss_map})
-    trackparam.update({'rout': r_in})
-
-    return rout, trackparam, trackdata
-
+    return rout
 
 def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
     """
