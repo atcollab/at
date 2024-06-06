@@ -148,6 +148,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         deltae = 1
         iteration = 0
         while iteration < 100 and (deltae > dptol):  # safety limit on iterations
+            iteration = iteration + 1
             t00 = time.time()
             # plost is a mask, True for lost particles
             plost = multirefpts_track_islost(
@@ -157,7 +158,6 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
             deltaeu[plost] = deltaet[plost]
             deltaet = (deltaes + deltaeu) / 2
             deltae = max(abs(deltaes - deltaeu))
-            iteration = iteration + 1
             outmsg = (
                 f"Iteration {iteration} in {verbosesign[i]} side",
                 f" took {format(time.time()-t00):.3} s.",
