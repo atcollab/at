@@ -38,7 +38,7 @@ label : command1, flag1, \    # Test continuation
 -flag2, title="test parser",\ # Test disabled flag
 arg1=v1, arg2=v2, arg3=v3     # Test postponed definition
 
-V3 = True
+V3 = True ; V4 = False        # Test several commands
 """
 
 test_data = dict(data1=test_data1, data2=test_data2)
@@ -53,7 +53,8 @@ Q1: QUADRUPOLE, L:=QL ;   ! check forward reference
 Q1.F: Q1, K1=0.5 ;
 Q1.D: Q1, K1=-Q1.F->K1;   ! check attribute access
 Q1.F, TILT=0.001;         ! check element update
-SOL1: SOLENOID, L=0.5,  K1S=3.0;
+SOL1: SOLENOID, L=0.5,
+                K1S=3.0;  ! check continuation
 MULT1: MULTIPOLE, KNL={1.0, 1.0, 2.0, 6.0};
 HK1: HKICKER,   L=0,    KICK=0.001;
 VK1: VKICKER,   L=0,    KICK=-0.001;
@@ -108,13 +109,15 @@ def command1(**kwargs):
 
 
 @pytest.mark.parametrize(
-    "delimiter, linecomment, data", [[";", ("!", "//"), "data1"], [None, "#", "data2"]]
+    "continuation, delimiter, linecomment, data",
+    [[None, ";", ("!", "//"), "data1"], ["\\", ";", "#", "data2"]],
 )
-def test_unordered_parser(delimiter, linecomment, data):
+def test_unordered_parser(continuation, delimiter, linecomment, data):
     parser = UnorderedParser(
         globals(),
         blockcomment=("/*", "*/"),
         linecomment=linecomment,
+        continuation=continuation,
         delimiter=delimiter,
     )
     parser.parse_lines(test_data[data].splitlines())

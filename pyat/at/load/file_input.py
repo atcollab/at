@@ -27,6 +27,7 @@ def _default_arg_parser(parser: BaseParser, argstr: str):
     try:
         key, value = split_ignoring_parentheses(argstr, delimiter="=")
     except ValueError:  # Positional argument -> boolean flag
+        argstr = argstr.lower()
         if argstr.startswith("-"):
             v = False
             key = argstr[1:]
@@ -34,6 +35,7 @@ def _default_arg_parser(parser: BaseParser, argstr: str):
             key = argstr
             v = True
     else:  # Keyword argument
+        key = key.lower().replace("from", "frm")
         if key in parser._str_arguments:
             v = _doublequoted.sub(r"\1", value)
         else:
@@ -196,7 +198,7 @@ class BaseParser(dict):
         def repl(match):
             return match.group().replace(".", "_")
 
-        return _dot.sub(repl, expr)
+        return _dot.sub(repl, expr.lower())
 
     def __setitem__(self, key, value):
         super().__setitem__(self._no_dot(key), value)
@@ -215,8 +217,9 @@ class BaseParser(dict):
     # noinspection PyUnusedLocal
     def evaluate(self, expr, no_global: bool = False):
         """Evaluate an expression using *self* as local namespace"""
-        expr = self._no_dot(expr)  # Replace "." by "_"
-        expr = expr.replace("->", ".")  # for attribute access
+        expr = self._no_dot(expr)  # Replace "." by "_", lower case
+        expr = expr.replace("->", ".")  # Attribute access
+        expr = expr.replace("^", "**")  # Exponentiation
         return eval(expr, self.env, self)
 
     def _eval_cmd(self, cmdname: str, no_global: bool = False) -> Callable:
@@ -225,6 +228,7 @@ class BaseParser(dict):
         if cmd is not None:
             return cmd
         else:
+            cmdname = cmdname.lower()
             cmd = self.env.get(cmdname, None)
         if cmd is None:
             raise KeyError(cmdname)
@@ -284,7 +288,7 @@ class BaseParser(dict):
 
         Overload this method for specific languages"""
         line, matches = protect(line, fence=('"', '"'))  # protect the quoted parts
-        line = "".join(line.split()).lower()  # Remove all spaces, lower
+        line = "".join(line.split())  # Remove all spaces
         (line,) = restore(matches, line)
         return line
 
@@ -403,19 +407,22 @@ class BaseParser(dict):
 
             # Handle continuations
             c1 = contents.rstrip()
-            if c1.endswith(self.continuation):
+            if self.continuation is None or not c1.endswith(self.continuation):
+                buffer.append(contents)
+            else:
                 buffer.append(c1[: -len(self.continuation)])
                 continue
-            else:
-                buffer.append(contents)
             contents = "".join(buffer)
             buffer = []
 
             # Split line
             if self.delimiter is not None:
                 cmd = contents.split(sep=self.delimiter)
-                commands = cmd[:-1]
-                buffer.append(cmd[-1])
+                if self.continuation is None:
+                    commands = cmd[:-1]
+                    buffer.append(cmd[-1])
+                else:
+                    commands = cmd
                 if not commands:
                     continue
             else:

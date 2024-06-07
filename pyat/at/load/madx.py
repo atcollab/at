@@ -442,9 +442,9 @@ class _Sequence(SequenceDescr):
 
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
-            if dl > 1.0e-12:
+            if dl > 1.0e-10:
                 yield from drift(name="filler", l=dl).expand(parser)
-            elif dl < -1.0e-12:
+            elif dl < -1.0e-10:
                 elemtype = type(el).__name__.upper()
                 raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
@@ -564,6 +564,7 @@ class MadxParser(UnorderedParser):
         """"""
         super().__init__(
             globals(),
+            continuation=None,
             delimiter=";",
             linecomment=("!", "//"),
             blockcomment=("/*", "*/"),
@@ -601,7 +602,6 @@ class MadxParser(UnorderedParser):
     def _format_statement(self, line: str) -> str:
         line, matches = protect(line, fence=('"', '"'))
         line = "".join(line.split()).lower()  # Remove all spaces, lower
-        line = line.replace("from", "frm")  # Replace from by frm
         line = line.replace("{", "(").replace("}", ")")
         line = line.replace(":=", "=")  # since we evaluate only once
         (line,) = restore(matches, line)
