@@ -23,7 +23,7 @@ from scipy.constants import physical_constants as _cst
 
 from . import register_format
 from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
-from .utils import split_ignoring_parentheses, protect, restore
+from .utils import protect, restore
 from ..lattice import Lattice, Particle, elements as elt, tilt_elem
 
 _default_beam = dict(
@@ -168,7 +168,7 @@ class octupole(_MadElement):
 class multipole(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, knl, ksl=(), **params):
+    def convert(name, knl=(), ksl=(), **params):
         params.pop("l", None)
         return [elt.ThinMultipole(name, polyn(ksl), polyn(knl), **params)]
 
@@ -227,7 +227,7 @@ class rbend(_MadElement):
 class kicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, hkick=0.0, vkick=0.0, **params):  # noqa: E741
+    def convert(name, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
         kicks = np.array([hkick, vkick])
         return [elt.Corrector(name, l, kicks, **params)]
 
@@ -334,8 +334,8 @@ def value(**kwargs):
         print(f"{key}: {v}")
 
 
-class _List(SequenceDescr):
-    """Descriptor for the MADX LIST"""
+class _Line(SequenceDescr):
+    """Descriptor for the MADX LINE"""
 
     def __add__(self, other):
         return type(self)(chain(self, other))
@@ -352,16 +352,14 @@ class _List(SequenceDescr):
 
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         if self.inverse:
-            for elemstr in reversed(self):
-                elem = parser.evaluate(elemstr)
+            for elem in reversed(self):
                 if isinstance(elem, AnyDescr):  # Element or List
                     yield from (-elem).expand(parser)
                 elif isinstance(elem, Sequence):  # Other sequence (tuple)
                     for el in reversed(elem):
                         yield from (-el).expand(parser)
         else:
-            for elemstr in self:
-                elem = parser.evaluate(elemstr)
+            for elem in self:
                 if isinstance(elem, AnyDescr):  # Element or List
                     yield from elem.expand(parser)
                 elif isinstance(elem, Sequence):  # Other sequence (tuple)
@@ -388,7 +386,7 @@ class _Sequence(SequenceDescr):
     ):
         self.l = l  # noqa: E741
         try:
-            self.refer = self._offset[refer]
+            self.refer = self._offset[refer.lower()]
         except KeyError as exc:
             raise ValueError(f"REFER must be in {set(self._offset.keys())}") from exc
         self.refpos = refpos
@@ -560,8 +558,10 @@ class MadxParser(UnorderedParser):
     _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
     _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
 
-    def __init__(self):
+    def __init__(self, strict: bool = True, **kwargs):
         """"""
+        if not strict:
+            kwargs.update(none=0.0)
         super().__init__(
             globals(),
             continuation=None,
@@ -575,6 +575,7 @@ class MadxParser(UnorderedParser):
             centre="centre",
             entry="entry",
             exit="exit",
+            **kwargs
         )
         self.current_sequence = None
         self._beam_cmd()
@@ -601,7 +602,7 @@ class MadxParser(UnorderedParser):
 
     def _format_statement(self, line: str) -> str:
         line, matches = protect(line, fence=('"', '"'))
-        line = "".join(line.split()).lower()  # Remove all spaces, lower
+        line = "".join(line.split())  # Remove all spaces
         line = line.replace("{", "(").replace("}", ")")
         line = line.replace(":=", "=")  # since we evaluate only once
         (line,) = restore(matches, line)
@@ -613,19 +614,19 @@ class MadxParser(UnorderedParser):
             try:
                 res = self._raw_command(label, cmdname, *argnames, **kwargs)
             except (KeyError, NameError) as exc:
-                if cmdname == "sequence":
+                if cmdname.lower() == "sequence":
                     # if sequence creation failed, create a dummy sequence anyway
                     res = self._raw_command(label, cmdname, "valid=False", **kwargs)
                     # But store the command for later update
-                    self.delayed.append((None, label, "valid=True", *argnames))
-                    self.missing.add(self._reason(exc))
+                    reason = self._reason(exc)
+                    self._postpone(reason, None, label, "valid=True", *argnames)
                 else:
                     raise
             finally:
                 if isinstance(res, _Sequence):
                     self.current_sequence = res
         else:
-            if cmdname == "endsequence":
+            if cmdname.lower() == "endsequence":
                 self.current_sequence = None
             else:
                 if label is not None:
@@ -638,11 +639,20 @@ class MadxParser(UnorderedParser):
         return res
 
     def _assign(self, label: str, key: str, value: str):
-        if key == "list":
-            members = split_ignoring_parentheses(value[1:-1])
-            return label, _List(members, name=label)
+        if key.lower() == "line":
+            return label, _Line(self.evaluate(value), name=label)
         else:
             return super()._assign(label, key, value)
+
+    def _finalise(self) -> None:
+        super()._finalise()
+        try:
+            default_value = self["none"]
+            for var in self.missing:
+                self[var] = default_value
+            super()._finalise()
+        except KeyError:
+            pass
 
     def _get_beam(self, key: str):
         """Get the beam object for a given sequence"""
@@ -690,7 +700,7 @@ class MadxParser(UnorderedParser):
         return lat
 
 
-def load_madx(*files: str, use: str = "ring", verbose=False, **kwargs) -> Lattice:
+def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from MAD-X files
 
     Parameters:
@@ -712,16 +722,13 @@ def load_madx(*files: str, use: str = "ring", verbose=False, **kwargs) -> Lattic
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
-    parser = MadxParser()
+    parser = MadxParser(strict=strict)
     absfiles = tuple(abspath(file) for file in files)
     kwargs.setdefault("in_file", absfiles)
     parser.parse_files(*absfiles)
-    nmiss = len(parser.missing)
-    if nmiss > 0:
-        if verbose:
-            print(f"\nMissing definitions: {parser.missing}\n")
-        else:
-            print(f'\n{nmiss} missing definitions\nUse "verbose=True" to see them.\n')
+    missing = parser.missing
+    if len(missing) > 0:
+        print(f"\nMissing definitions: {missing}\n")
 
     return parser.lattice(use=use)
 

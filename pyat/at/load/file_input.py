@@ -272,12 +272,12 @@ class BaseParser(dict):
     ):
         """Command execution"""
         argparser = self._argument_parser.get(cmdname, _default_arg_parser)
+        func = self._eval_cmd(cmdname, no_global=no_global)
         kwargs.update(argparser(self, arg) for arg in argnames)
         if label is None:
             kwargs.setdefault("copy", False)
         else:
             kwargs.setdefault("name", label)
-        func = self._eval_cmd(cmdname, no_global=no_global)
         return func(**kwargs)
 
     def _command(self, *args, **kwargs):
@@ -320,6 +320,13 @@ class BaseParser(dict):
     def _finalise(self) -> None:
         """Called at the end of processing"""
         pass
+
+    @staticmethod
+    def _command_str(_, label, cmdname, *argnames):
+        str = ", ".join((cmdname, *argnames))
+        if label is not None:
+            str = " : ".join((label, str))
+        return str
 
     def _analyse(self, key: str) -> None:
         """Print info on failed statements"""
@@ -502,20 +509,24 @@ class UnorderedParser(BaseParser):
         """
         super().__init__(*args, **kwargs)
         self.delayed = []
-        self.missing = set()
 
     def clear(self):
         super().clear()
         self.delayed = []
-        self.missing = set()
+
+    def _postpone(self, reason, label, cmdname, *argnames):
+        if reason == cmdname:
+            print(f"Unknown command {cmdname!r} ignored: "
+                  f"{self._command_str(reason, label, cmdname, *argnames)!r}")
+        else:
+            self.delayed.append((reason, label, cmdname, *argnames))
 
     def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
         """Store failing commands in self.delayed for later evaluation"""
         try:
             super()._decode(label, cmdname, *argnames)
         except (KeyError, NameError) as exc:  # store the failing assignment
-            self.delayed.append((label, cmdname, *argnames))
-            self.missing.add(self._reason(exc))
+            self._postpone(self._reason(exc), label, cmdname, *argnames)
 
     def _finalise(self) -> None:
         """Loop on evaluation of the pending statements"""
@@ -523,44 +534,54 @@ class UnorderedParser(BaseParser):
         while nend > 0:
             statements = self.delayed
             self.delayed = []
-            self.missing = set()
             nstart = nend
-            for args in statements:
+            for reason, *args in statements:
                 self._decode(*args)
             nend = len(self.delayed)
             if nend == nstart:
                 break
+
+    @property
+    def missing(self):
+
+        def lookup(item):
+            """Search for an object in the pending statements"""
+            for reason, label, command, *args in self.delayed:
+                if label is None:
+                    if command.lower() == item:
+                        return (reason, label, command, *args)
+                elif label.lower() == item:
+                    return (reason, label, command, *args)
+            return None
+
+        miss = set()
+        for cmd in self.delayed:
+            while cmd is not None:
+                newkey = cmd[0]
+                key = newkey
+                cmd = lookup(newkey.lower())
+
+            miss.add(key)
+        return miss
 
     def _analyse(self, key: str) -> None:
         """Print the chain of failing commands"""
 
         def lookup(item):
             """Search for an object in the pending statements"""
-            for label, command, *args in self.delayed:
-                if label == item:
-                    return (label, command, *args)
-                elif label is None and command == item:
-                    return (label, command, *args)
+            for reason, label, command, *args in self.delayed:
+                if label is None:
+                    if command.lower() == item:
+                        return (reason, label, command, *args)
+                elif label.lower() == item:
+                    return (reason, label, command, *args)
             return None
 
-        def decode(label, cmdname, *argnames):
-            """Try evaluating the command to identify the error"""
-            _, *vals = cmdname.split("=")
-            if vals:
-                self.evaluate(vals[0])
-            else:
-                self._raw_command(label, cmdname, *argnames)
-
-        cmd = lookup(key)
+        cmd = lookup(key.lower())
         print()
         while cmd is not None:
-            try:
-                decode(*cmd)
-            except Exception as exc:
-                newkey = self._reason(exc)
-            else:  # Should not happen since the command is in the pending list
-                newkey = "NoException"
-            print(f"{key!r} depends on {newkey!r}: \"{cmd[0]} : {', '.join(cmd[1:])}\"")
+            newkey = cmd[0]
+            print(f"{key!r} depends on {newkey!r}: {self._command_str(*cmd)!r}\n")
             key = newkey
-            cmd = lookup(key)
+            cmd = lookup(newkey.lower())
         print(f"{key!r} is not defined\n")
