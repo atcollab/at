@@ -1,4 +1,4 @@
-function [etn, etp]=MomAperture_Project2Start(varargin)
+function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 % MOMAPERTURE_PROJECT2START calculates the local momentum aperture
 %
 % MOMAPERTURE_PROJECT2START is a Bipartition search of the negative and 
@@ -7,7 +7,6 @@ function [etn, etp]=MomAperture_Project2Start(varargin)
 %  -Particles launched at different REFPTS along the ring are first projected
 %  to the ring last element so that all particles can be tracked together.
 %
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START()
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING)
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS)
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns)
@@ -38,7 +37,6 @@ function [etn, etp]=MomAperture_Project2Start(varargin)
 
 % 2024may30 Z.Marti at ALBA CELLS
 
-global THERING;
 REFPTS=1:numel(THERING)+1;
 nturns=500;
 detole=0.0001;
