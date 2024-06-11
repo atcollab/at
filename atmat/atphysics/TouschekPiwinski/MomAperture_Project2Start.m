@@ -83,83 +83,66 @@ end
 %% bipatition method for multiple points
 orbit=findorbit6(THERING,REFPTS);
 
-% positive branch
-et=et_ini*ones(np,1);
-eu=eu_ini*ones(np,1);
-es=es_ini*ones(np,1);
+% positive/negative branch
+etp=et_ini*ones(np,1);
+eup=eu_ini*ones(np,1);
+esp=es_ini*ones(np,1);
+etn=et_ini*ones(np,1);
+eun=eu_ini*ones(np,1);
+esn=es_ini*ones(np,1);
 de=1;
 iteration=0;
 while de>detole && iteration < 100
     if verbose
         seconds_initial=datetime('now');
-        fprintf('Positive branch search, iteration %d...',iteration);
+        fprintf('Positive and negative boundary search, iteration %d...',iteration);
     end
-    L=Multiorigin_ringpass_islost(THERING,REFPTS,et,orbit,nturns,initcoord);
-    es(L==0)=et(L==0);
-    eu(L~=0)=et(L~=0);
-    et=(es+eu)/2;
-    de=max(abs(es-eu));
+    L=Multiorigin_ringpass_islost(THERING,REFPTS,etp,etn,orbit,nturns,initcoord);
+    esp(L==0)=etp(L==0);
+    eup(L~=0)=etp(L~=0);
+    etp=(esp+eup)/2;
+    esn(L==0)=etn(L==0);
+    eun(L~=0)=etn(L~=0);
+    etn=(esn+eun)/2;
+    dep=max(abs(esp-eup));
+    den=max(abs(esn-eun));
+    de = max([dep,den]);
     if verbose
         elapsed_time=seconds(time(between(seconds_initial,datetime('now'))));
         fprintf('Elapsed time is %1.3f seconds. Energy resolution is %1.3e\n',elapsed_time,de);
     end
     iteration=iteration+1;
 end
-etp=et;%+orbit(5,:)';
-etp(etp<1e-6)=1e-6;
-
-% negative branch
-et=-et_ini*ones(np,1);
-eu=-eu_ini*ones(np,1);
-es=-es_ini*ones(np,1);
-de=1;
-iteration=0;
-while de>detole && iteration < 100
-    if verbose
-        seconds_initial=datetime('now');
-        fprintf('Negative branch search, iteration %d...',iteration);
-    end
-    L=Multiorigin_ringpass_islost(THERING,REFPTS,et,orbit,nturns,initcoord);
-    es(L==0)=et(L==0);
-    eu(L~=0)=et(L~=0);
-    et=(es+eu)/2;
-    de=max(abs(es-eu));
-    if verbose
-        elapsed_time=seconds(time(between(seconds_initial,datetime('now'))));
-        fprintf('Elapsed time is %1.3f seconds. Energy resolution is %1.3e\n',elapsed_time,de);
-    end
-    iteration=iteration+1;
-end
-etn=et;%+orbit(5,:)';
-etn(etn>-1e-6)=-1e-6;
 end
 
 
-function Loste=Multiorigin_ringpass_islost(THERING,refpts,e,orbit,nturns,initcoord)
+function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,initcoord)
 % Returns an boolean array: tells whether the particle nposs launched at
 % position poss(ii) with energy e(ii) is lost or not.
 %
 %   Inputs:
 %       -THERING: cell array Lattice used for the traking.
 %       -refpts: array [npossx1] with the elements number where to start the traking.
-%       -e: array [npossx1] with the relative energy deviation at each refpts.
+%       -ep: array [npossx1] with the positive energy deviation at each refpts.
+%       -en: array [npossx1] with the negative energy deviation at each refpts.
 %       -orbit: array [npossx6] with the orbit at each refpts.  
 %       -nturns: number of full turns to track.
 %       -initcoord: deviation from the 6D closed orbit, same dor each refpts.
 
 nposs=numel(refpts);
-Loste=ones(nposs,1);
-Rin=zeros(6,nposs);
-Rout=zeros(6,nposs);
+Loste=ones(2*nposs,1);
+Rin=zeros(6,2*nposs);
+Rout=zeros(6,2*nposs);
 small=0.000001;
 tiny=100*eps;
 
 % first track the remaining portion of the ring
 for ii=1:nposs
     Line=THERING(refpts(ii):end);
-    Rin(:,ii)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 e(ii) 0.0]';
-    Rout(:,ii)=ringpass(Line,Rin(:,ii));
-    Loste(ii)=sign(sum(isnan(Rout(:,ii))));
+    Rin(:,ii)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 ep(ii) 0.0]';
+    Rin(:,ii+1)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 en(ii) 0.0]';
+    Rout(:,ii:(ii+1))=ringpass(Line,Rin(:,ii:(ii+1)));
+    Loste(ii,ii+1)=sign(sum(isnan(Rout(:,ii))));
 end
 ngood1=nposs-sum(Loste);
 Rin1=Rout(:,Loste==0);
