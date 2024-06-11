@@ -89,7 +89,7 @@ eu=eu_ini*ones(np,1);
 es=es_ini*ones(np,1);
 de=1;
 iteration=0;
-while de>detole
+while de>detole && iteration < 100
     if verbose
         seconds_initial=datetime('now');
         fprintf('Positive branch search, iteration %d...',iteration);
@@ -114,7 +114,7 @@ eu=-eu_ini*ones(np,1);
 es=-es_ini*ones(np,1);
 de=1;
 iteration=0;
-while de>detole
+while de>detole && iteration < 100
     if verbose
         seconds_initial=datetime('now');
         fprintf('Negative branch search, iteration %d...',iteration);
