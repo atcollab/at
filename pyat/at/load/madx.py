@@ -294,11 +294,15 @@ class vmonitor(monitor):
 
 class _Ignored(_MadElement):
 
+    report = True
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         type1 = self["source"].title()
         type2 = "Marker" if self.length == 0.0 else "Drift"
-        print(f"MADX type {type1} is ignored and replaced by a {type2}.")
+        if self.report:
+            self.__class__.report = False
+            print(f"MADX type {type1} is ignored and replaced by a {type2}.")
 
     @staticmethod
     def convert(name, l=0.0, **params):  # noqa: E741
@@ -310,21 +314,43 @@ class _Ignored(_MadElement):
 
 # noinspection PyPep8Naming
 class solenoid(_Ignored):
+    report = True
     pass
 
 
 # noinspection PyPep8Naming
 class rfmultipole(_Ignored):
+    report = True
     pass
 
 
 # noinspection PyPep8Naming
 class crabcavity(_Ignored):
+    report = True
     pass
 
 
 # noinspection PyPep8Naming
 class elseparator(_Ignored):
+    report = True
+    pass
+
+
+# noinspection PyPep8Naming
+class collimator(_Ignored):
+    report = True
+    pass
+
+
+# noinspection PyPep8Naming
+class instrument(_Ignored):
+    report = True
+    pass
+
+
+# noinspection PyPep8Naming
+class tkicker(_Ignored):
+    report = True
     pass
 
 
@@ -519,7 +545,116 @@ class _BeamDescr(ElementDescr):
         )
 
 
-class MadxParser(UnorderedParser):
+class _MadParser(UnorderedParser):
+    """Common class for both MAD8 anf MAD-X parsers"""
+
+    def __init__(self, *args, strict: bool = True, **kwargs):
+        """"""
+        if not strict:
+            kwargs.update(none=0.0)
+        super().__init__(
+            *args,
+            delimiter=";",
+            linecomment=("!", "//"),
+            blockcomment=("/*", "*/"),
+            endfile="return",
+            call=self._call_cmd,
+            beam=self._beam_cmd,
+            **kwargs
+        )
+        self._beam_cmd()
+
+    def clear(self):
+        super().clear()
+        self._beam_cmd()
+
+    # noinspection PyUnusedLocal
+    def _call_cmd(self, file=None, name=None, copy=False):
+        """Implement the CALL MAD-X command"""
+        self.parse_files(file, final=False)
+
+    def _beam_cmd(self, sequence=None, **kwargs):
+        """Implement the BEAM MAD-X statement"""
+        name = "beam%" if sequence is None else f"beam%{sequence}"
+        beamobj = self.get(name, None)
+        if beamobj is None:
+            beamobj = _BeamDescr(_default_beam)
+            self[name] = beamobj
+
+        beamobj.update(**kwargs)
+
+    def _format_statement(self, line: str) -> str:
+        line, matches = protect(line, fence=('"', '"'))
+        line = "".join(line.split())  # Remove all spaces
+        line = line.replace("{", "(").replace("}", ")")
+        line = line.replace(":=", "=")  # since we evaluate only once
+        (line,) = restore(matches, line)
+        return line
+
+    def _assign(self, label: str, key: str, val: str):
+        if key.lower() == "line":
+            return label, _Line(self.evaluate(val), name=label)
+        else:
+            return super()._assign(label, key, val)
+
+    def _finalise(self, final: bool = True) -> None:
+        super()._finalise(final=final)
+        if final:
+            try:
+                default_value = self["none"]
+                for var in self.missing:
+                    self[var] = default_value
+                super()._finalise()
+            except KeyError:
+                pass
+
+    def _get_beam(self, key: str):
+        """Get the beam object for a given sequence"""
+        try:
+            beam = self[f"beam%{key}"]
+        except KeyError:
+            beam = self["beam%"]
+        return beam
+
+    def _generator(self, params, *args):
+        """generate AT elements for the Lattice constructor"""
+        use = params.setdefault("use", "ring")
+
+        # generate the Lattice attributes from the BEAM object
+        beam = self._get_beam(use).expand(self)
+        for key, val in beam.items():
+            params.setdefault(key, val)
+
+        # Iterate from the elements
+        yield from super()._generator(params)
+
+    def lattice(self, use="ring", **kwargs):
+        """Create a lattice from the selected sequence
+
+        Parameters:
+            use:                Name of the MADX sequence or line containing the desired
+              lattice. Default: ``ring``
+
+        Keyword Args:
+            name (str):         Name of the lattice. Default: MADX sequence name.
+            particle(Particle): Circulating particle. Default: from MADX
+            energy (float):     Energy of the lattice [eV], Default: from MADX
+            periodicity(int):   Number of periods. Default: 1
+            *:                  All other keywords will be set as Lattice attributes
+        """
+        lat = super().lattice(use=use, **kwargs)
+        try:
+            radiate = lat.radiate
+        except AttributeError:
+            radiate = False
+        else:
+            del lat.radiate
+        if radiate:
+            lat.enable_6d(copy=False)
+        return lat
+
+
+class MadxParser(_MadParser):
     # noinspection PyUnresolvedReferences
     """MAD-X specific parser
 
@@ -565,12 +700,6 @@ class MadxParser(UnorderedParser):
         super().__init__(
             globals(),
             continuation=None,
-            delimiter=";",
-            linecomment=("!", "//"),
-            blockcomment=("/*", "*/"),
-            endfile="return",
-            call=self._call_cmd,
-            beam=self._beam_cmd,
             sequence=_Sequence,
             centre="centre",
             entry="entry",
@@ -583,30 +712,6 @@ class MadxParser(UnorderedParser):
     def clear(self):
         super().clear()
         self.current_sequence = None
-        self._beam_cmd()
-
-    # noinspection PyUnusedLocal
-    def _call_cmd(self, file=None, name=None, copy=False):
-        """Implement the CALL MAD-X command"""
-        self.parse_files(file)
-
-    def _beam_cmd(self, sequence=None, **kwargs):
-        """Implement the BEAM MAD-X statement"""
-        name = "beam%" if sequence is None else f"beam%{sequence}"
-        beamobj = self.get(name, None)
-        if beamobj is None:
-            beamobj = _BeamDescr(_default_beam)
-            self[name] = beamobj
-
-        beamobj.update(**kwargs)
-
-    def _format_statement(self, line: str) -> str:
-        line, matches = protect(line, fence=('"', '"'))
-        line = "".join(line.split())  # Remove all spaces
-        line = line.replace("{", "(").replace("}", ")")
-        line = line.replace(":=", "=")  # since we evaluate only once
-        (line,) = restore(matches, line)
-        return line
 
     def _command(self, label: Optional[str], cmdname: str, *argnames: str, **kwargs):
         res = None
@@ -638,43 +743,7 @@ class MadxParser(UnorderedParser):
                     self.current_sequence.append((cmdname, *argnames))
         return res
 
-    def _assign(self, label: str, key: str, value: str):
-        if key.lower() == "line":
-            return label, _Line(self.evaluate(value), name=label)
-        else:
-            return super()._assign(label, key, value)
-
-    def _finalise(self) -> None:
-        super()._finalise()
-        try:
-            default_value = self["none"]
-            for var in self.missing:
-                self[var] = default_value
-            super()._finalise()
-        except KeyError:
-            pass
-
-    def _get_beam(self, key: str):
-        """Get the beam object for a given sequence"""
-        try:
-            beam = self[f"beam%{key}"]
-        except KeyError:
-            beam = self["beam%"]
-        return beam
-
-    def _generator(self, params, *args):
-        """generate AT elements for the Lattice constructor"""
-        use = params.setdefault("use", "ring")
-
-        # generate the Lattice attributes from the BEAM object
-        beam = self._get_beam(use).expand(self)
-        for key, value in beam.items():
-            params.setdefault(key, value)
-
-        # Iterate from the elements
-        yield from super()._generator(params)
-
-    def lattice(self, use="ring", **kwargs):
+    def lattice(self, use="ring", **kwargs) -> Lattice:
         """Create a lattice from the selected sequence
 
         Parameters:
@@ -688,16 +757,8 @@ class MadxParser(UnorderedParser):
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-        lat = super().lattice(use=use, **kwargs)
-        try:
-            radiate = lat.radiate
-        except AttributeError:
-            radiate = False
-        else:
-            del lat.radiate
-        if radiate:
-            lat.enable_6d(copy=False)
-        return lat
+        # defined only to get the documentation
+        return super().lattice(use=use, **kwargs)
 
 
 def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> Lattice:
@@ -705,9 +766,9 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
 
     Parameters:
         files:              Names of one or several MAD-X files
+        strict:             If :py:obj:`False`, assign 0 to undefined variables
         use:                Name of the MADX sequence or line containing the desired
           lattice. Default: ``ring``
-        verbose:            Print details on processing
 
     Keyword Args:
         name (str):         Name of the lattice. Default: MADX sequence name.
@@ -726,10 +787,6 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     absfiles = tuple(abspath(file) for file in files)
     kwargs.setdefault("in_file", absfiles)
     parser.parse_files(*absfiles)
-    missing = parser.missing
-    if len(missing) > 0:
-        print(f"\nMissing definitions: {missing}\n")
-
     return parser.lattice(use=use)
 
 
