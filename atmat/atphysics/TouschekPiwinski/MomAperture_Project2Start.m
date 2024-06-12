@@ -45,26 +45,22 @@ initcoord=[1e-6 1e-6];
 verbose=false;
 
 if nargin>=1
-    THERING=varargin{1};
-    REFPTS=1:numel(THERING)+1;
+    REFPTS=varargin{1};
 end
 if nargin>=2
-    REFPTS=varargin{2};
+    nturns=varargin{2};
 end
 if nargin>=3
-    nturns=varargin{3};
+    detole=varargin{3};
 end
 if nargin>=4
-    detole=varargin{4};
+    eu_ini=varargin{4};
 end
 if nargin>=5
-    eu_ini=varargin{5};
+    initcoord=varargin{5};
 end
 if nargin>=6
-    initcoord=varargin{6};
-end
-if nargin>=7
-    verbose=varargin{7};
+    verbose=varargin{6};
 end
 
 
