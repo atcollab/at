@@ -276,9 +276,9 @@ class monitor(_MadElement):
         else:
             hl = 0.5 * l
             return [
-                elt.Drift(name, hl, source="monitor"),
+                elt.Drift(name, hl, madtype="monitor"),
                 elt.Monitor(name, **params),
-                elt.Drift(name, hl, source="monitor"),
+                elt.Drift(name, hl, madtype="monitor"),
             ]
 
 
@@ -292,13 +292,18 @@ class vmonitor(monitor):
     pass
 
 
+# noinspection PyPep8Naming
+class instrument(monitor):
+    pass
+
+
 class _Ignored(_MadElement):
 
     report = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        type1 = self["source"].title()
+        type1 = self["madtype"].title()
         type2 = "Marker" if self.length == 0.0 else "Drift"
         if self.report:
             self.__class__.report = False
@@ -338,12 +343,6 @@ class elseparator(_Ignored):
 
 # noinspection PyPep8Naming
 class collimator(_Ignored):
-    report = True
-    pass
-
-
-# noinspection PyPep8Naming
-class instrument(_Ignored):
     report = True
     pass
 
@@ -402,12 +401,12 @@ class _Sequence(SequenceDescr):
     def __init__(
         self,
         *args,
-        l=0,
-        refer="centre",
-        refpos=None,
-        at=0.0,
-        frm=None,
-        valid=True,
+        l: float = 0,
+        refer: str = "centre",
+        refpos: Optional[str] = None,
+        at: float = 0.0,
+        frm: Optional[str] = None,
+        valid: int = 1,
         **kwargs,  # noqa: E741
     ):
         self.l = l  # noqa: E741
@@ -418,7 +417,7 @@ class _Sequence(SequenceDescr):
         self.refpos = refpos
         self.at = at
         self.frm = frm
-        self.valid = valid
+        self.valid = bool(valid)
         super().__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -434,6 +433,7 @@ class _Sequence(SequenceDescr):
             orig = None
             for fname, *anames in self:
                 if fname == refpos:
+                    # noinspection PyProtectedMember
                     elem = parser._raw_command(
                         None, fname, *anames, no_global=True, copy=True
                     )
@@ -548,6 +548,9 @@ class _BeamDescr(ElementDescr):
 class _MadParser(UnorderedParser):
     """Common class for both MAD8 anf MAD-X parsers"""
 
+    _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
+    _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
+
     def __init__(self, *args, strict: bool = True, **kwargs):
         """"""
         if not strict:
@@ -560,12 +563,18 @@ class _MadParser(UnorderedParser):
             endfile="return",
             call=self._call_cmd,
             beam=self._beam_cmd,
-            **kwargs
+            sequence=_Sequence,
+            centre="centre",
+            entry="entry",
+            exit="exit",
+            **kwargs,
         )
+        self.current_sequence = None
         self._beam_cmd()
 
     def clear(self):
         super().clear()
+        self.current_sequence = None
         self._beam_cmd()
 
     # noinspection PyUnusedLocal
@@ -582,6 +591,36 @@ class _MadParser(UnorderedParser):
             self[name] = beamobj
 
         beamobj.update(**kwargs)
+
+    def _command(self, label: Optional[str], cmdname: str, *argnames: str, **kwargs):
+        res = None
+        if self.current_sequence is None:
+            try:
+                res = self._raw_command(label, cmdname, *argnames, **kwargs)
+            except (KeyError, NameError) as exc:
+                if cmdname.lower() == "sequence":
+                    # if sequence creation failed, create a dummy sequence anyway
+                    res = self._raw_command(label, cmdname, "valid=0", **kwargs)
+                    # But store the command for later update
+                    reason = self._reason(exc)
+                    self._postpone(reason, None, label, "valid=1", *argnames)
+                else:
+                    raise
+            finally:
+                if isinstance(res, _Sequence):
+                    self.current_sequence = res
+        else:
+            if cmdname.lower() == "endsequence":
+                self.current_sequence = None
+            else:
+                if label is not None:
+                    try:
+                        res = self._raw_command(label, cmdname, *argnames, **kwargs)
+                    finally:
+                        self.current_sequence.append((label, *argnames))
+                else:
+                    self.current_sequence.append((cmdname, *argnames))
+        return res
 
     def _format_statement(self, line: str) -> str:
         line, matches = protect(line, fence=('"', '"'))
@@ -690,58 +729,9 @@ class MadxParser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
-    _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
-
-    def __init__(self, strict: bool = True, **kwargs):
+    def __init__(self, **kwargs):
         """"""
-        if not strict:
-            kwargs.update(none=0.0)
-        super().__init__(
-            globals(),
-            continuation=None,
-            sequence=_Sequence,
-            centre="centre",
-            entry="entry",
-            exit="exit",
-            **kwargs
-        )
-        self.current_sequence = None
-        self._beam_cmd()
-
-    def clear(self):
-        super().clear()
-        self.current_sequence = None
-
-    def _command(self, label: Optional[str], cmdname: str, *argnames: str, **kwargs):
-        res = None
-        if self.current_sequence is None:
-            try:
-                res = self._raw_command(label, cmdname, *argnames, **kwargs)
-            except (KeyError, NameError) as exc:
-                if cmdname.lower() == "sequence":
-                    # if sequence creation failed, create a dummy sequence anyway
-                    res = self._raw_command(label, cmdname, "valid=False", **kwargs)
-                    # But store the command for later update
-                    reason = self._reason(exc)
-                    self._postpone(reason, None, label, "valid=True", *argnames)
-                else:
-                    raise
-            finally:
-                if isinstance(res, _Sequence):
-                    self.current_sequence = res
-        else:
-            if cmdname.lower() == "endsequence":
-                self.current_sequence = None
-            else:
-                if label is not None:
-                    try:
-                        res = self._raw_command(label, cmdname, *argnames, **kwargs)
-                    finally:
-                        self.current_sequence.append((label, *argnames))
-                else:
-                    self.current_sequence.append((cmdname, *argnames))
-        return res
+        super().__init__(globals(), continuation=None, **kwargs)
 
     def lattice(self, use="ring", **kwargs) -> Lattice:
         """Create a lattice from the selected sequence

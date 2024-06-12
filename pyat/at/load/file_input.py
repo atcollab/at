@@ -15,7 +15,7 @@ from os import getcwd
 from os.path import join, normpath, dirname
 import re
 import abc
-from collections.abc import Sequence, Callable, Iterable, Generator, Mapping
+from collections.abc import Callable, Iterable, Generator, Mapping
 from typing import Union, Optional
 
 from .utils import split_ignoring_parentheses, protect, restore
@@ -43,6 +43,7 @@ def _default_arg_parser(parser: BaseParser, argstr: str):
             v = True
     else:  # Keyword argument
         key = key.lower().replace("from", "frm")
+        # noinspection PyProtectedMember
         if key in parser._str_arguments:
             v = _doublequoted.sub(r"\1", value)
         else:
@@ -75,15 +76,17 @@ class AnyDescr(abc.ABC):
     def __init__(self, *args, **kwargs):
         self.name = kwargs.pop("name", self.__class__.__name__)
         self.inverse = kwargs.pop("inverse", False)
+        # kwargs.setdefault("madclass", self.__class__.__name__)
         super().__init__(*args, **kwargs)
 
     def __neg__(self):
-        return self.inversed(copy=True)
+        return self.inverted(copy=True)
 
     def __call__(self, *args, copy: bool = True, **kwargs) -> Optional[AnyDescr]:
         """Create a copy of the element with updated fields"""
         if copy:
             b = dict((key, kwargs.pop(key, value)) for key, value in vars(self).items())
+            # b.update(madclass=self.name)
             return type(self)(self, *args, **b, **kwargs)
         else:
             self.update(*args, **kwargs)
@@ -101,7 +104,7 @@ class AnyDescr(abc.ABC):
             for key, value in kwargs:
                 setattr(self, key, value)
 
-    def inversed(self, copy=False):
+    def inverted(self, copy=False):
         """Return a reversed element or line"""
         instance = self() if copy else self
         instance.inverse = not self.inverse
@@ -118,8 +121,8 @@ class ElementDescr(AnyDescr, dict):
 
     def __init__(self, *args, **kwargs):
         kwargs.pop("copy", False)
-        source = kwargs.pop("source", self.__class__.__name__)
-        super().__init__(*args, source=source, **kwargs)
+        kwargs.setdefault("madtype", self.__class__.__name__)
+        super().__init__(*args, **kwargs)
 
     def __getattr__(self, item):
         # Allows accessing items using the attribute access syntax
@@ -127,7 +130,7 @@ class ElementDescr(AnyDescr, dict):
 
     def __repr__(self):
         descr = super().copy()
-        cls = descr.pop("source")
+        cls = descr.pop("madtype")
         keywords = [f"name={self.name}"]
         keywords += [f"{k}={v!r}" for k, v in descr.items()]
         return f"{cls}({', '.join(keywords)})"
@@ -188,7 +191,7 @@ class BaseParser(DictNoDot):
         *args,
         delimiter: Optional[str] = None,
         continuation: str = "\\",
-        linecomment: Union[str, Sequence[str], None] = "#",
+        linecomment: Union[str, tuple[str], None] = "#",
         blockcomment: Optional[tuple[str, str]] = None,
         endfile: Optional[str] = None,
         **kwargs,
@@ -204,19 +207,55 @@ class BaseParser(DictNoDot):
             *args: dict initializer
             **kwargs: dict initializer
         """
-        if not (linecomment is None or isinstance(linecomment, Sequence)):
-            linecomment = (linecomment,)
+        if isinstance(linecomment, tuple):
+
+            def line_comment(line):
+                for linecom in linecomment:
+                    line, *_ = line.split(sep=linecom, maxsplit=1)
+                return line
+
+        else:
+            if linecomment is None:
+
+                def line_comment(line):
+                    return line
+
+            else:
+
+                def line_comment(line):
+                    line, *_ = line.split(sep=linecomment, maxsplit=1)
+                    return line
+
+        if blockcomment is None:
+            # noinspection PyUnusedLocal
+            def handle_comments(buffer, line, in_comment):
+                buffer.append(line_comment(line))
+                return False, ""
+
+        else:
+
+            def handle_comments(buffer, line, in_comment):
+                if in_comment:
+                    *rest, line = line.split(sep=endcomment, maxsplit=1)
+                    in_comment = len(rest) <= 0
+                    return in_comment, "" if in_comment > 0 else line
+                else:
+                    line = line_comment(line)
+                    contents, *rest = line.split(sep=begcomment, maxsplit=1)
+                    buffer.append(contents)
+                    in_comment = len(rest) > 0
+                    return in_comment, rest[0] if in_comment else ""
+
+            begcomment, endcomment = blockcomment
+
+        self.skip_comments = handle_comments
         self.delimiter = delimiter
         self.continuation = continuation
-        self.linecomment = linecomment
-        if blockcomment is None:
-            self.begcomment = self.endcomment = None
-        else:
-            self.begcomment, self.endcomment = blockcomment
         self.endfile = endfile
         self.env = env
         self.bases = [getcwd()]
         self.kwargs = kwargs
+
         super().__init__(*args, **kwargs)
 
     def clear(self):
@@ -252,7 +291,7 @@ class BaseParser(DictNoDot):
         """Extract the element name from the exception"""
         if isinstance(exc, KeyError):  # Undefined element, attribute
             return exc.args[0]
-        elif isinstance(exc, NameError):  # Refpos missing
+        elif isinstance(exc, NameError):  # refpos missing
             return _singlequoted.search(exc.args[0])[1]
         elif isinstance(exc, TypeError):
             idx = _named.search(exc.args[-1])  # Missing pos. arg.
@@ -401,39 +440,25 @@ class BaseParser(DictNoDot):
         ok: bool = True
         for line_number, contents in enumerate(lines):
 
-            # Handle block comments
-            if in_comment:
-                parts = contents.split(sep=self.endcomment, maxsplit=1)
-                if len(parts) == 1:
-                    continue
-                else:
-                    in_comment = False
-                    contents = parts[1]
-
             # Handle comments
-            if self.linecomment is not None:
-                for linecom in self.linecomment:
-                    contents, *cmt = contents.split(sep=linecom, maxsplit=1)
-            if self.begcomment is not None:
-                contents, *cmt = contents.split(sep=self.begcomment, maxsplit=1)
-                if len(cmt) > 0:
-                    *cmt, c2 = cmt[0].split(sep=self.endcomment, maxsplit=1)
-                    if len(cmt) == 0:
-                        in_comment = True
-                    else:
-                        contents += c2
+            while contents:
+                in_comment, contents = self.skip_comments(buffer, contents, in_comment)
 
-            buffer.append(contents)
-
-            contents = "".join(buffer).strip()
-            buffer = []
-
-            # Handle delimiters
-            if self.delimiter is not None:
-                *statements, last = contents.split(sep=self.delimiter)
+            if buffer:
+                contents = "".join(buffer).strip()
+                buffer = []
+                if not contents:
+                    continue
             else:
+                continue
+
+            # print(repr(contents))
+            # Handle delimiters
+            if self.delimiter is None:
                 statements = []
                 last = contents
+            else:
+                *statements, last = contents.split(sep=self.delimiter)
 
             # Handle continuation
             if self.continuation is None:
@@ -505,7 +530,7 @@ class UnorderedParser(BaseParser):
     """parser allowing definitions in any order
 
     This is done by storing the failed statements in a queue and iteratively trying
-    to execute them after all imput statements have been processed, until the number
+    to execute them after all input statements have been processed, until the number
     of failures is constant (hopefully zero)
     """
 
@@ -529,10 +554,11 @@ class UnorderedParser(BaseParser):
         self.delayed = []
 
     def _postpone(self, reason, label, cmdname, *argnames):
+        """Store failing commands in self.delayed for later evaluation"""
         self.delayed.append((reason, label, cmdname, *argnames))
 
     def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
-        """Store failing commands in self.delayed for later evaluation"""
+        """Postpone failing commands"""
         try:
             super()._decode(label, cmdname, *argnames)
         except (KeyError, NameError) as exc:  # store the failing assignment
@@ -560,11 +586,14 @@ class UnorderedParser(BaseParser):
 
     @property
     def missing(self):
+        """Return a set of missing definitions"""
         miss = set()
         for cmd in self.delayed:
             reason = cmd[0]
             if reason == cmd[2].lower():
-                print(f"Unknown command {cmd[2]!r} ignored: {self._command_str(*cmd)!r}")
+                print(
+                    f"Unknown command {cmd[2]!r} ignored: {self._command_str(*cmd)!r}"
+                )
                 continue
             while cmd is not None:
                 reason = cmd[0]

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose as assert_close
 
-from at import UnorderedParser, MadxParser
+from at import UnorderedParser, MadxParser, Mad8Parser
 
 __all__ = []
 
@@ -87,6 +87,48 @@ LRING = 9.0;
 VKICK = 0.003;
 """
 
+mad8_data = """
+BEAM, PARTICLE='positron', ENERGY=2.0
+
+Q1: QUADRUPOLE, L:=QL    ! check forward reference
+
+Q1.F: Q1, K1=0.5
+Q1.D: Q1, K1=-Q1.F->K1   ! check attribute access
+Q1.F, TILT=0.001         ! check element update
+SOL1: SOLENOID, L=0.5,   & check continuation
+                K1S=3.0
+MULT1: MULTIPOLE, KNL={1.0, 1.0, 2.0, 6.0}
+HK1: HKICKER,   L=0,    KICK=0.001
+VK1: VKICKER,   L=0,    KICK=-0.001
+HVK2: KICKER,   L=0,    VKICK=VKICK
+BPM1: MONITOR,  L=0.1
+BPM2: VMONITOR
+RFCAVITY, VOLT=5, FREQ=352.2, HARMON=31
+
+CELL.1: SEQUENCE, L=4.0
+QFCELL: Q1.F,   AT=0.75
+        Q1.D,   AT=2.75
+ENDSEQUENCE
+
+RING.1: SEQUENCE, L=LRING
+CELL.1, AT=2.0
+SOL1,   AT=4.5
+MULT1,  AT=4.8
+HK1,    AT=4.8
+VK1,    AT=4.8
+HVK2,   AT=4.8
+BPM1,   AT=4.9
+BPM2,   AT=5
+CELL.1, AT=7.0
+ENDSEQUENCE
+
+VALUE, EMASS
+
+QL = sqrt(4)/2          ! check arithmetic
+LRING = 9.0
+VKICK = 0.003
+"""
+
 # Global definitions for BaseParser
 
 true = True
@@ -124,7 +166,14 @@ def test_unordered_parser(continuation, delimiter, linecomment, data):
     assert parser["label"] == "done"
 
 
-def test_madx_parser():
+@pytest.mark.parametrize(
+    "Parser, data, energy, particle, radiate",
+    [
+        [MadxParser, madx_data, 6.0e9, "electron", True],
+        [Mad8Parser, mad8_data, 2.0e9, "positron", False],
+    ],
+)
+def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: bool):
     # fmt: off
     expected_ring_pos = np.array([
         0.0,    0.25,   1.25,   2.25,   3.25,   4.25,   4.75,   4.8,    4.8,
@@ -133,15 +182,15 @@ def test_madx_parser():
     ])
     expected_cell_pos = np.array([0.,   0.25,   1.25,   2.25,   3.25,   4.])
     # fmt: on
-    parser = MadxParser()
-    parser.parse_lines(madx_data.splitlines())
+    parser = Parser()
+    parser.parse_lines(data.splitlines())
 
     ring = parser.lattice(use="ring.1")
     assert len(ring) == 22
-    assert ring.energy == 6.0e09
-    assert str(ring.particle) == "electron"
+    assert ring.energy == energy
+    assert str(ring.particle) == particle
     assert ring.circumference == 9.0
-    assert ring.is_6d is True
+    assert ring.is_6d is radiate
     assert_close(ring.get_s_pos(), expected_ring_pos)
 
     cell = parser.lattice(use="cell.1")
