@@ -14,6 +14,7 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini)
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini,initcoord)
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini,initcoord,verbose)
+% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini,initcoord,verbose,epsilon6D)
 %          
 %
 % Output:
@@ -21,12 +22,17 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %       etp: stability threshold for negative off energy particles
 % Inputs:
 %       THERING: ring used for tracking. Default: global THERING
-%       REFPTS: REFPTS where to calculate the momentum acceptance.Default 1:numel(THERING)+1;
+%       REFPTS: REFPTS where to calculate the momentum acceptance.
+%               Default 1:numel(THERING)+1;
 %       nturns: Number of turns to track. Default 500
 %       detole: resolution in energy acceptance. Default 1e-4
-%       eu_ini: upper limit of the stability threshold. Default [] (uses the linear energy acceptance from ringpara)
+%       eu_ini: upper limit of the stability threshold. Default []
+%               (uses the linear energy acceptance from ringpara)
 %       initcoord: [x y] starting transverse offset for the tracking. Default [1e-6 1e-6]
 %       verbose: boolean indicating verbose mode. Default false.
+%       epsilon6D: if not passed, all particles are tracked. if epsilon6D
+%               is given, we track for many turns only the particles with
+%               6D coordinates different by epsilon6D after the 1st turn.
 %
 % Other functions in the file:
 %
@@ -43,24 +49,28 @@ detole=0.0001;
 eu_ini=[]; 
 initcoord=[1e-6 1e-6];
 verbose=false;
+epsilon6D = [];
 
-if nargin>=1
+if nargin>=2
     REFPTS=varargin{1};
 end
-if nargin>=2
+if nargin>=3
     nturns=varargin{2};
 end
-if nargin>=3
+if nargin>=4
     detole=varargin{3};
 end
-if nargin>=4
+if nargin>=5
     eu_ini=varargin{4};
 end
-if nargin>=5
+if nargin>=6
     initcoord=varargin{5};
 end
-if nargin>=6
+if nargin>=7
     verbose=varargin{6};
+end
+if nargin>=8
+    epsilon6D=varargin{7};
 end
 
 
@@ -93,7 +103,7 @@ while de>detole && iteration < 100
         seconds_initial=datetime('now');
         fprintf('Positive and negative boundary search, iteration %d...',iteration);
     end
-    L=Multiorigin_ringpass_islost(THERING,REFPTS,etp,etn,orbit,nturns,initcoord);
+    L=Multiorigin_ringpass_islost(THERING,REFPTS,etp,etn,orbit,nturns,initcoord,epsilon6D);
     esp(L==0)=etp(L==0);
     eup(L~=0)=etp(L~=0);
     etp=(esp+eup)/2;
@@ -112,7 +122,7 @@ end
 end
 
 
-function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,initcoord)
+function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,initcoord,epsilon6D)
 % Returns an boolean array: tells whether the particle nposs launched at
 % position poss(ii) with energy e(ii) is lost or not.
 %
@@ -124,46 +134,49 @@ function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,ini
 %       -orbit: array [npossx6] with the orbit at each refpts.  
 %       -nturns: number of full turns to track.
 %       -initcoord: deviation from the 6D closed orbit, same dor each refpts.
+%       -epsilon6D: minimum 6D distance between particles
 
 nposs=numel(refpts);
-Loste=ones(2*nposs,1);
+Loste=ones(1,2*nposs);
 Rin=zeros(6,2*nposs);
 Rout=zeros(6,2*nposs);
-small=0.000001;
-tiny=100*eps;
+if len(epsilon6D) == 1
+    tinyoffset=epsilon6D;
+end
 
 % first track the remaining portion of the ring
 for ii=1:nposs
     Line=THERING(refpts(ii):end);
     Rin(:,ii)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 ep(ii) 0.0]';
     Rin(:,ii+1)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 en(ii) 0.0]';
-    Rout(:,ii:(ii+1))=ringpass(Line,Rin(:,ii:(ii+1)));
-    Loste(ii,ii+1)=sign(sum(isnan(Rout(:,ii))));
+    [Rout(:,ii:(ii+1)),Loste(ii:(ii+1))] = ringpass(Line,Rin(:,ii:(ii+1)));
 end
-ngood1=nposs-sum(Loste);
-Rin1=Rout(:,Loste==0);
-%Rin1(6,:)=0;
+nalive1stturn=2*nposs-sum(Loste);
+Ralive1stturn=Rout(:,Loste==0);
     
-%Just track particles that have survived to the ring end 
-if ngood1==1
-    [~, LOSS1] =ringpass(THERING,Rin1,nturns);
-    Loste(Loste==0)=LOSS1; 
-elseif ngood1>1
+% track particles that have survived to the ring end
+% note: first call is only to reuse the lattice
+ringpass(THERING,[initcoord(1) 0 initcoord(2) 0 1e-6 0]',1);
+if len(epsilon6D) == 1
     % search for non numerically similar (100 x eps) particles
-    DiffR=squeeze(std(repmat(Rin1,[1 1 ngood1])-repmat(reshape(Rin1,[6 1 ngood1]),[1 ngood1 1])));
-    allposs=(1:ngood1)'*ones(1,ngood1);
-    similarposs=max(allposs.*(DiffR<tiny));
+    DiffR = squeeze(std(repmat(Ralive1stturn,[1 1 nalive1stturn]) ...
+            - repmat(reshape(Ralive1stturn,[6 1 nalive1stturn]),[1 nalive1stturn 1])));
+    allposs = (1:nalive1stturn)'*ones(1,nalive1stturn);
+    similarposs=max(allposs.*(DiffR<tinyoffset));
     [non_rep_poss,~, rep_index]=unique(similarposs);
     
     %track non numerically similar (100 x eps) particles
-    ringpass(THERING,[initcoord(1) 0 initcoord(2) 0 small 0]',1);
-    [~, rep_LOSS1] =ringpass(THERING,Rin1(:,non_rep_poss),nturns,'reuse');
+    [~, rep_LOSS1] =ringpass(THERING,Ralive1stturn(:,non_rep_poss),nturns,'reuse');
 
     % copy result for numerically similar (100 x eps) particles
     Loste1=rep_LOSS1(rep_index);
     
     % Now group with the particles that did not pass the first turn
     Loste(Loste==0)=Loste1;
+else
+    %track non numerically similar (100 x eps) particles
+    [~, rep_LOSS1] =ringpass(THERING,Ralive1stturn(:,non_rep_poss),nturns,'reuse');
+
 end
 
 end
