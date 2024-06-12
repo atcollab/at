@@ -39,15 +39,13 @@ static double getTableWake(double *waketable,double *waketableT,double distance,
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
 
-    int i, ii;
+    int i;
     double *z;
     if(nturns>1){
         memmove(turnhistory, turnhistory + nslice, 4*nslice*(nturns-1)*sizeof(double));
-        for(i=0; i<nturns; i++){
-            z = turnhistory + nslice*(i+nturns*2);
-            for(ii=0; ii<nslice; ii++){
-                z[ii] -= circumference;
-            }
+        z = turnhistory + nslice*nturns*2;
+        for(i=0; i<nslice*nturns; i++){
+            z[i] -= circumference;
         }
     }
     double *x0 = turnhistory + (nturns-1)*nslice;
