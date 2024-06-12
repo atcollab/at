@@ -43,7 +43,7 @@ struct elem
 
 void write_buffer(double *data, double *buffer, int datasize, int buffersize){
     if(buffersize>1){
-        memmove(buffer, buffer + datasize, datasize*buffersize*sizeof(double));
+        memmove(buffer, buffer + datasize, datasize*(buffersize-1)*sizeof(double));
     }
     memcpy(buffer + datasize*(buffersize-1), data, datasize*sizeof(double));
 }
