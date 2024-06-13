@@ -90,34 +90,39 @@ end
 orbit=findorbit6(THERING,REFPTS);
 
 % positive/negative branch
-etp=et_ini*ones(np,1);
-eup=eu_ini*ones(np,1);
-esp=es_ini*ones(np,1);
-etn=et_ini*ones(np,1);
-eun=eu_ini*ones(np,1);
-esn=es_ini*ones(np,1);
+etp= et_ini*ones(np,1);
+eup= eu_ini*ones(np,1);
+esp= es_ini*ones(np,1);
+etn=-et_ini*ones(np,1);
+eun=-eu_ini*ones(np,1);
+esn=-es_ini*ones(np,1);
 de=1;
 iteration=0;
 while de>detole && iteration < 100
+    iteration=iteration+1;
     if verbose
         seconds_initial=datetime('now');
-        fprintf('Positive and negative boundary search, iteration %d...',iteration);
+        fprintf('Boundary search, iteration %d ...',iteration);
     end
+    % L is true for particles lost on the track
     L=Multiorigin_ringpass_islost(THERING,REFPTS,etp,etn,orbit,nturns,initcoord,epsilon6D);
-    esp(L==0)=etp(L==0);
-    eup(L~=0)=etp(L~=0);
+    % split in positive and negative side of energy offsets
+    Lp = L(1:2:2*np);
+    Ln = L(2:2:2*np);
+    % split in stable (es), unstable (eu) and test (et) energy
+    esp(Lp==0)=etp(Lp==0);
+    eup(Lp~=0)=etp(Lp~=0);
     etp=(esp+eup)/2;
-    esn(L==0)=etn(L==0);
-    eun(L~=0)=etn(L~=0);
+    esn(Ln==0)=etn(Ln==0);
+    eun(Ln~=0)=etn(Ln~=0);
     etn=(esn+eun)/2;
     dep=max(abs(esp-eup));
     den=max(abs(esn-eun));
     de = max([dep,den]);
     if verbose
         elapsed_time=seconds(time(between(seconds_initial,datetime('now'))));
-        fprintf('Elapsed time is %1.3f seconds. Energy resolution is %1.3e\n',elapsed_time,de);
+        fprintf(' %1.3f seconds. Energy resolution is %1.3e and tolerance %1.3e\n',elapsed_time,de,detole);
     end
-    iteration=iteration+1;
 end
 end
 
@@ -140,44 +145,60 @@ nposs=numel(refpts);
 Loste=ones(1,2*nposs);
 Rin=zeros(6,2*nposs);
 Rout=zeros(6,2*nposs);
-if len(epsilon6D) == 1
+length_epsilon6D = length(epsilon6D);
+if length_epsilon6D == 1
     tinyoffset=epsilon6D;
 end
 
 % first track the remaining portion of the ring
 for ii=1:nposs
     Line=THERING(refpts(ii):end);
-    Rin(:,ii)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 ep(ii) 0.0]';
-    Rin(:,ii+1)=orbit(:,ii)+[initcoord(1) 0 initcoord(2) 0 en(ii) 0.0]';
-    [Rout(:,ii:(ii+1)),Loste(ii:(ii+1))] = ringpass(Line,Rin(:,ii:(ii+1)));
+    Rin(:,2*ii-1) = orbit(:,ii) + [initcoord(1) 0 initcoord(2) 0 ep(ii) 0.0]';
+    Rin(:,2*ii  ) = orbit(:,ii) + [initcoord(1) 0 initcoord(2) 0 en(ii) 0.0]';
+    [Rout(:,2*ii-1:2*ii),Loste(2*ii-1:2*ii)] = ringpass( ...
+                                                        Line, ...
+                                                        Rin(:,2*ii-1:2*ii) ...
+                                                       );
 end
-nalive1stturn=2*nposs-sum(Loste);
-Ralive1stturn=Rout(:,Loste==0);
+nalive1stturn = length(Loste)-sum(Loste);
+Ralive1stturn = Rout(:,Loste==0);
     
-% track particles that have survived to the ring end
-% note: first call is only to reuse the lattice
-ringpass(THERING,[initcoord(1) 0 initcoord(2) 0 1e-6 0]',1);
-if len(epsilon6D) == 1
+% use particles that have survived to the ring end,
+% filter them if necessary, and track them
+trackonly_mask = logical(1:length(Ralive1stturn));
+similarparticles_index = [];
+if length_epsilon6D == 1
     % search for non numerically similar (100 x eps) particles
     DiffR = squeeze(std(repmat(Ralive1stturn,[1 1 nalive1stturn]) ...
-            - repmat(reshape(Ralive1stturn,[6 1 nalive1stturn]),[1 nalive1stturn 1])));
+                            - repmat(reshape( ...
+                                            Ralive1stturn, ...
+                                            [6 1 nalive1stturn] ...
+                                            ), ...
+                                            [1 nalive1stturn 1] ...
+                                    ) ...
+                        ) ...
+                    );
     allposs = (1:nalive1stturn)'*ones(1,nalive1stturn);
-    similarposs=max(allposs.*(DiffR<tinyoffset));
-    [non_rep_poss,~, rep_index]=unique(similarposs);
+    similarposs = max(allposs.*(DiffR<tinyoffset));
+     % get mask of non numerically similar (100 x eps) particles
+    [trackonly_mask, ~, similarparticles_index]=unique(similarposs);
+    % Loste1=losses_in_multiturn(similarparticles_index);
     
-    %track non numerically similar (100 x eps) particles
-    [~, rep_LOSS1] =ringpass(THERING,Ralive1stturn(:,non_rep_poss),nturns,'reuse');
-
-    % copy result for numerically similar (100 x eps) particles
-    Loste1=rep_LOSS1(rep_index);
-    
-    % Now group with the particles that did not pass the first turn
-    Loste(Loste==0)=Loste1;
+end
+% track
+% note: first call is only to reuse the lattice
+ringpass(THERING,[initcoord(1) 0 initcoord(2) 0 1e-6 0]',1);
+[~, losses_in_multiturn] =ringpass( THERING, ...
+                                    Ralive1stturn(:,trackonly_mask), ...
+                                    nturns, ...
+                                    'reuse' ...
+                                  );
+if length_epsilon6D == 1
+    % copy losses result for numerically similar particles
+    Lostpaux=losses_in_multiturn(similarparticles_index);
 else
-    %track non numerically similar (100 x eps) particles
-    [~, rep_LOSS1] =ringpass(THERING,Ralive1stturn(:,non_rep_poss),nturns,'reuse');
-
+    Lostpaux = losses_in_multiturn;
 end
-
+% Now group with the particles that did not pass the first turn
+Loste(Loste==0)=Lostpaux;
 end
-
