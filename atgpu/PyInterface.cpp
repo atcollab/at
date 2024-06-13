@@ -48,7 +48,7 @@ static PyMethodDef AtGPUMethods[] = {
                           "       The stride size should be multiple of 64 for best performance.\n"
                           "    integrator: Type of integrator to use.\n"
                           "       1: Euler 1st order, 1 drift/1 kick per step.\n"
-                          "       2: Verlet 2nd order, 1 drift/2 kicks per step.\n"
+                          "       2: Mclachlan 2nd order, 2 drift/2 kicks per step.\n"
                           "       3: Ruth 3rd order, 3 drifts/3 kicks per step.\n"
                           "       4: Forest/Ruth 4th order, 4 drifts/3 kicks per step (Default).\n"
                           "       5: Optimal 4th order from R. Mclachlan, 4 drifts/4 kicks per step.\n"
