@@ -71,10 +71,18 @@ if nargin>=7
 end
 if nargin>=8
     epsilon6D=varargin{7};
+    fprintf('Particles differing by less than %.3e are considered similar.\n', ...
+             epsilon6D);
 end
 
-
 np = numel(REFPTS);
+if verbose
+    fprintf('Using %d reference points.\n',np);
+    fprintf('Tracking %d turns.\n',nturns);
+    fprintf('Iteration stops when the energy step is below %.3f.\n',detole);
+    fprintf('Using init coords %.3f %.3f um as transverse offsets.\n',1e6*initcoord(1), ...
+             1e6*initcoord(2));
+end
 
 % initial bipartition settings
 res=ringpara(THERING);
@@ -83,10 +91,15 @@ es_ini=0; % lower limit of the stability threshold
 et_ini=EACC/2; % starting guess of the stability threshold
 if isempty(eu_ini)
     eu_ini=EACC;
+    if verbose
+        fprintf('Using the rf bucket height as unstable energy limit.\n');
+    end
+end
+if verbose
+    fprintf('Unstable energy limit set at start to %.3f%%.\n',100*eu_ini);
 end
 
-
-%% bipatition method for multiple points
+% bipatition method for multiple points
 orbit=findorbit6(THERING,REFPTS);
 
 % positive/negative branch
@@ -102,32 +115,42 @@ while de>detole && iteration < 100
     iteration=iteration+1;
     if verbose
         seconds_initial=datetime('now');
-        fprintf('Boundary search, iteration %d ...',iteration);
+        fprintf('Boundary search, iteration %d ...\n',iteration);
     end
     % L is true for particles lost on the track
-    L=Multiorigin_ringpass_islost(THERING,REFPTS,etp,etn,orbit,nturns,initcoord,epsilon6D);
+    L=Multiorigin_ringpass_islost(  THERING, ...
+                                    REFPTS, ...
+                                    etp, ...
+                                    etn, ...
+                                    orbit, ...
+                                    nturns, ...
+                                    initcoord, ...
+                                    epsilon6D, ...
+                                    verbose ...
+                                 );
     % split in positive and negative side of energy offsets
     Lp = L(1:2:2*np);
     Ln = L(2:2:2*np);
     % split in stable (es), unstable (eu) and test (et) energy
-    esp(Lp==0)=etp(Lp==0);
-    eup(Lp~=0)=etp(Lp~=0);
-    etp=(esp+eup)/2;
-    esn(Ln==0)=etn(Ln==0);
-    eun(Ln~=0)=etn(Ln~=0);
-    etn=(esn+eun)/2;
-    dep=max(abs(esp-eup));
-    den=max(abs(esn-eun));
+    esp(Lp==0) = etp(Lp==0);
+    eup(Lp~=0) = etp(Lp~=0);
+    etp = (esp+eup)/2;
+    esn(Ln==0) = etn(Ln==0);
+    eun(Ln~=0) = etn(Ln~=0);
+    etn = (esn+eun)/2;
+    % define new energy step
+    dep = max(abs(esp-eup));
+    den = max(abs(esn-eun));
     de = max([dep,den]);
     if verbose
         elapsed_time=seconds(time(between(seconds_initial,datetime('now'))));
-        fprintf(' %1.3f seconds. Energy resolution is %1.3e and tolerance %1.3e\n',elapsed_time,de,detole);
+        fprintf('%1.3f seconds. Energy resolution is %1.3e and stops at %1.3e\n',elapsed_time,de,detole);
     end
 end
 end
 
 
-function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,initcoord,epsilon6D)
+function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,initcoord,epsilon6D,verbose)
 % Returns an boolean array: tells whether the particle nposs launched at
 % position poss(ii) with energy e(ii) is lost or not.
 %
@@ -140,6 +163,7 @@ function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,ini
 %       -nturns: number of full turns to track.
 %       -initcoord: deviation from the 6D closed orbit, same dor each refpts.
 %       -epsilon6D: minimum 6D distance between particles
+%       -verbose: print additional info
 
 nposs=numel(refpts);
 Loste=ones(1,2*nposs);
@@ -168,7 +192,7 @@ Ralive1stturn = Rout(:,Loste==0);
 trackonly_mask = logical(1:length(Ralive1stturn));
 similarparticles_index = [];
 if length_epsilon6D == 1
-    % search for non numerically similar (100 x eps) particles
+    % search for non numerically similar particles
     DiffR = squeeze(std(repmat(Ralive1stturn,[1 1 nalive1stturn]) ...
                             - repmat(reshape( ...
                                             Ralive1stturn, ...
@@ -183,6 +207,10 @@ if length_epsilon6D == 1
      % get mask of non numerically similar (100 x eps) particles
     [trackonly_mask, ~, similarparticles_index]=unique(similarposs);
     % Loste1=losses_in_multiturn(similarparticles_index);
+    if verbose
+        fprintf('Speed up when discarding similar particles %.3f%%\n', ...
+                100*(1-length(trackonly_mask)/length(Ralive1stturn)));
+    end
     
 end
 % track
