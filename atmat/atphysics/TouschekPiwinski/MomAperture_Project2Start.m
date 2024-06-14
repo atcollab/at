@@ -18,8 +18,8 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %          
 %
 % Output:
-%       etn: stability threshold for positive off energy particles
-%       etp: stability threshold for negative off energy particles
+%       ETN: stability threshold for positive off energy particles
+%       ETP: stability threshold for negative off energy particles
 % Inputs:
 %       THERING: ring used for tracking. Default: global THERING
 %       REFPTS: REFPTS where to calculate the momentum acceptance.
@@ -27,19 +27,22 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %       nturns: Number of turns to track. Default 500
 %       detole: resolution in energy acceptance. Default 1e-4
 %       eu_ini: upper limit of the stability threshold. Default []
-%               (uses the linear energy acceptance from ringpara)
-%       initcoord: [x y] starting transverse offset for the tracking. Default [1e-6 1e-6]
+%               If not given it uses the linear energy acceptance from
+%               ringpara
+%       initcoord: [x y] starting transverse offset for the tracking.
+%               Default [1e-6 1e-6]
 %       verbose: boolean indicating verbose mode. Default false.
-%       epsilon6D: if not passed, all particles are tracked. if epsilon6D
-%               is given, we track for many turns only the particles with
-%               6D coordinates different by epsilon6D after the 1st turn.
+%       epsilon6D: if not passed, all particles are tracked.
+%               If epsilon6D is given, we track for many turns only
+%               the particles with 6D coordinates different by epsilon6D
+%               after the 1st turn.
 %
 % Other functions in the file:
 %
-% Loste=Multiorigin_ringpass_islost(poss,e,nturns):
-% Returns an array of zeros and ones: tells whether the particle launched at
-% position poss(ii) with energy e(ii) is lost or not after nturns turns.
-% default input variables
+% Loste = Multiorigin_ringpass_islost
+% Returns a boolean array: tells whether the particle launched at
+% the reference point refpts with positive and negative energy offset is
+% lost or not.
 
 % 2024may30 Z.Marti at ALBA CELLS
 
@@ -150,10 +153,29 @@ end
 end
 
 
-function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,initcoord,epsilon6D,verbose)
-% Returns an boolean array: tells whether the particle nposs launched at
-% position poss(ii) with energy e(ii) is lost or not.
-%
+function Loste=Multiorigin_ringpass_islost( THERING, ...
+                                            refpts, ...
+                                            ep, ...
+                                            en, ...
+                                            orbit, ...
+                                            nturns, ...
+                                            initcoord, ...
+                                            epsilon6D, ...
+                                            verbose ...
+                                          )
+% Loste=Multiorigin_ringpass_islost( THERING, ...
+%                                    refpts, ...
+%                                    ep, ...
+%                                    en, ...
+%                                    orbit, ...
+%                                    nturns, ...
+%                                    initcoord, ...
+%                                    epsilon6D, ...
+%                                    verbose ...
+%                                  )
+% Returns a boolean array: tells whether the particle launched at
+% the reference point refpts with positive and negative energy offset is
+% lost or not.
 %   Inputs:
 %       -THERING: cell array Lattice used for the traking.
 %       -refpts: array [npossx1] with the elements number where to start the traking.
@@ -164,6 +186,10 @@ function Loste=Multiorigin_ringpass_islost(THERING,refpts,ep,en,orbit,nturns,ini
 %       -initcoord: deviation from the 6D closed orbit, same dor each refpts.
 %       -epsilon6D: minimum 6D distance between particles
 %       -verbose: print additional info
+%   Output:
+%       -Loste : bool array [npossx2], True for lost particles.
+%                every pair Loste(2*k-1,2*k) for k = 1,...
+%                corresponds to the positive and negative energy offset.
 
 nposs=numel(refpts);
 Loste=ones(1,2*nposs);
