@@ -733,6 +733,13 @@ class MadxParser(_MadParser):
         """"""
         super().__init__(globals(), continuation=None, **kwargs)
 
+    def evaluate(self, expr):
+        """Evaluate an expression using *self* as local namespace"""
+        expr = self._no_dot(expr)  # Replace "." by "_", lower case
+        expr = expr.replace("->", ".")  # Attribute access
+        expr = expr.replace("^", "**")  # Exponentiation
+        return super().evaluate(expr)
+
     def lattice(self, use="ring", **kwargs) -> Lattice:
         """Create a lattice from the selected sequence
 

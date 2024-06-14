@@ -86,8 +86,9 @@ class AnyDescr(abc.ABC):
         """Create a copy of the element with updated fields"""
         if copy:
             b = dict((key, kwargs.pop(key, value)) for key, value in vars(self).items())
+            b.update(kwargs)
             # b.update(madclass=self.name)
-            return type(self)(self, *args, **b, **kwargs)
+            return type(self)(self, *args, **b)
         else:
             self.update(*args, **kwargs)
             return None
@@ -263,12 +264,8 @@ class BaseParser(DictNoDot):
         super().clear()
         self.update(self.kwargs)
 
-    # noinspection PyUnusedLocal
-    def evaluate(self, expr, no_global: bool = False):
+    def evaluate(self, expr):
         """Evaluate an expression using *self* as local namespace"""
-        expr = self._no_dot(expr)  # Replace "." by "_", lower case
-        expr = expr.replace("->", ".")  # Attribute access
-        expr = expr.replace("^", "**")  # Exponentiation
         return eval(expr, self.env, self)
 
     def _eval_cmd(self, cmdname: str, no_global: bool = False) -> Callable:

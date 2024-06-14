@@ -9,6 +9,7 @@ from os.path import abspath
 # functions known by MAD-8
 from math import pi, e, sqrt, exp, log, sin, cos, tan  # noqa: F401
 from math import asin  # noqa: F401
+import re
 
 # constants known by MAD-8
 from scipy.constants import c as clight, e as qelect  # noqa: F401
@@ -17,6 +18,7 @@ from scipy.constants import physical_constants as _cst
 from ..lattice import Lattice
 # noinspection PyProtectedMember
 from .madx import _MadParser
+from .utils import protect, restore
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -54,6 +56,8 @@ raddeg = pi / 180.0
 emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
+_attr = re.compile(r"\[([a-zA-Z][\w.]*)]")  # Identifier enclosed in square brackets
+
 
 class Mad8Parser(_MadParser):
     # noinspection PyUnresolvedReferences
@@ -63,7 +67,7 @@ class Mad8Parser(_MadParser):
     MAD-X variables.
 
     Example:
-        Parse a 1st file:
+        Parse a 1\ :sup:`st` file:
 
         >>> parser = at.Mad8Parser()
         >>> parser.parse_file("file1")
@@ -95,9 +99,29 @@ class Mad8Parser(_MadParser):
         """"""
         super().__init__(globals(), continuation="&")
 
+    def evaluate(self, expr):
+        """Evaluate an expression using *self* as local namespace"""
+        expr = self._no_dot(expr)  # Replace "." by "_", lower case
+        expr = _attr.sub(r".\1", expr)  # Attribute access
+        expr = expr.replace("^", "**")  # Exponentiation
+        return super().evaluate(expr)
+
 
 def load_mad8(*files: str, use: str = "ring", **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from MAD8 files
+
+    .. admonition:: In conversion to AT:
+
+       The *energy* and *particle* of the generated lattice are taken from the MAD8
+       ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
+       These parameters are overloaded by the value given in the *energy* and
+       *particle* keyword arguments.
+
+       The radiation state is given by the ``RADIATE`` flag of the ``BEAM`` object, using
+       the AT defaults: RF cavities active, synchrotron radiation in dipoles and
+       quadrupoles.
+
+       Long elements are split according to the default AT value for *NumIntSteps* (10).
 
     Parameters:
         files:              Names of one or several MAD8 files
