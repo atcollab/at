@@ -16,9 +16,9 @@ from scipy.constants import c as clight, e as qelect  # noqa: F401
 from scipy.constants import physical_constants as _cst
 
 from ..lattice import Lattice
+
 # noinspection PyProtectedMember
 from .madx import _MadParser
-from .utils import protect, restore
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -61,7 +61,7 @@ _attr = re.compile(r"\[([a-zA-Z][\w.]*)]")  # Identifier enclosed in square brac
 
 class Mad8Parser(_MadParser):
     # noinspection PyUnresolvedReferences
-    """MAD-X specific parser
+    r"""MAD-X specific parser
 
     The parser is a subclass of :py:class:`dict` and is database containing all the
     MAD-X variables.
@@ -110,18 +110,14 @@ class Mad8Parser(_MadParser):
 def load_mad8(*files: str, use: str = "ring", **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from MAD8 files
 
-    .. admonition:: In conversion to AT:
-
-       The *energy* and *particle* of the generated lattice are taken from the MAD8
-       ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
-       These parameters are overloaded by the value given in the *energy* and
-       *particle* keyword arguments.
-
-       The radiation state is given by the ``RADIATE`` flag of the ``BEAM`` object, using
-       the AT defaults: RF cavities active, synchrotron radiation in dipoles and
-       quadrupoles.
-
-       Long elements are split according to the default AT value for *NumIntSteps* (10).
+    - The *energy* and *particle* of the generated lattice are taken from the MAD8
+      ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
+      These parameters are overloaded by the value given in the *energy* and
+      *particle* keyword arguments.
+    - The radiation state is given by the ``RADIATE`` flag of the ``BEAM`` object,
+      using the AT defaults: RF cavities active, synchrotron radiation in dipoles and
+      quadrupoles.
+    - Long elements are split according to the default AT value for *NumIntSteps* (10).
 
     Parameters:
         files:              Names of one or several MAD8 files

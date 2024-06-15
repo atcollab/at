@@ -581,16 +581,16 @@ class UnorderedParser(BaseParser):
                 return (reason, label, *args)
         return None
 
-    @property
-    def missing(self):
-        """Return a set of missing definitions"""
+    def _missing(self, verbose: bool = False):
         miss = set()
         for cmd in self.delayed:
             reason = cmd[0]
             if reason == cmd[2].lower():
-                print(
-                    f"Unknown command {cmd[2]!r} ignored: {self._command_str(*cmd)!r}"
-                )
+                if verbose:
+                    print(
+                        f"Unknown command {cmd[2]!r} ignored: "
+                        f"{self._command_str(*cmd)!r}"
+                    )
                 continue
             while cmd is not None:
                 reason = cmd[0]
@@ -608,3 +608,5 @@ class UnorderedParser(BaseParser):
             key = reason
             cmd = self._lookup(reason)
         print(f"\n{reason!r} is not defined\n")
+
+    missing = property(_missing, doc="Set of missing definitions")

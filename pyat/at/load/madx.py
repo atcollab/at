@@ -641,7 +641,7 @@ class _MadParser(UnorderedParser):
         if final:
             try:
                 default_value = self["none"]
-                for var in self.missing:
+                for var in self._missing(verbose=True):
                     self[var] = default_value
                 super()._finalise()
             except KeyError:
@@ -671,13 +671,13 @@ class _MadParser(UnorderedParser):
         """Create a lattice from the selected sequence
 
         Parameters:
-            use:                Name of the MADX sequence or line containing the desired
+            use:                Name of the MAD sequence or line containing the desired
               lattice. Default: ``ring``
 
         Keyword Args:
-            name (str):         Name of the lattice. Default: MADX sequence name.
-            particle(Particle): Circulating particle. Default: from MADX
-            energy (float):     Energy of the lattice [eV], Default: from MADX
+            name (str):         Name of the lattice. Default: MAD sequence name.
+            particle(Particle): Circulating particle. Default: from MAD
+            energy (float):     Energy of the lattice [eV], Default: from MAD
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
@@ -691,6 +691,11 @@ class _MadParser(UnorderedParser):
         if radiate:
             lat.enable_6d(copy=False)
         return lat
+
+    @property
+    def sequences(self):
+        """List of available sequences or lines"""
+        return [k for k, v in self.items() if isinstance(v, (_Line, _Sequence))]
 
 
 class MadxParser(_MadParser):
@@ -740,26 +745,23 @@ class MadxParser(_MadParser):
         expr = expr.replace("^", "**")  # Exponentiation
         return super().evaluate(expr)
 
-    def lattice(self, use="ring", **kwargs) -> Lattice:
-        """Create a lattice from the selected sequence
-
-        Parameters:
-            use:                Name of the MADX sequence or line containing the desired
-              lattice. Default: ``ring``
-
-        Keyword Args:
-            name (str):         Name of the lattice. Default: MADX sequence name.
-            particle(Particle): Circulating particle. Default: from MADX
-            energy (float):     Energy of the lattice [eV], Default: from MADX
-            periodicity(int):   Number of periods. Default: 1
-            *:                  All other keywords will be set as Lattice attributes
-        """
-        # defined only to get the documentation
-        return super().lattice(use=use, **kwargs)
-
 
 def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from MAD-X files
+
+    - The *energy* and *particle* of the generated lattice are taken from the MAD-X
+      ``BEAM`` object, using the MAD-X default parameters: positrons at 1 Gev.
+      These parameters are overloaded by the value given in the *energy* and
+      *particle* keyword arguments.
+    - The radiation state is given by the ``RADIATE`` flag of the ``BEAM`` object,
+      using the AT defaults: RF cavities active, synchrotron radiation in dipoles and
+      quadrupoles.
+    - Long elements are split according to the default AT value for *NumIntSteps* (10).
+
+    Parameters:
+        files:              Names of one or several MAD8 files
+        use:                Name of the MAD8 sequence or line containing the desired
+          lattice. Default: ``ring``
 
     Parameters:
         files:              Names of one or several MAD-X files
