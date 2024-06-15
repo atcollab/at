@@ -154,6 +154,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
           is used. It can be globally set using the variable
           *at.lattice.DConstant.patpass_poolsize*
         use_gpu (bool): Flag to activate GPU processing (default: False)
+	gpu_pool: List of GPU to use (default [0])
         start_method:           python multiprocessing start method.
           :py:obj:`None` uses the python default that is considered safe.
           Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -334,10 +335,10 @@ def gpu_info():
     support is not enabled or if no capable device are present on the system, an empty list is returned.
 
     Returns:
-        gpu: [gpu name,hardware version (CUDA device),processing units number,platform]. The number of processing
+        gpu: [gpu name,hardware version (CUDA device),compute unit number,platform]. The number of compute
         units is not the so-called number of "CUDA cores". The number of threads that can be executed simultaneously
         depends on the hardware and on the type of used instructions. For best performance, it is recommended to
-        track a number of particles which is multiple of 64 (or 128) times the number of processing units.
+        track a number of particles which is multiple of 64 (or 128) times the number of compute units.
     """
     if iscuda() or isopencl():
         return _gpuinfo()
