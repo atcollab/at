@@ -21,7 +21,7 @@ static PyMethodDef AtGPUMethods[] = {
         {"gpuinfo",  (PyCFunction)at_gpuinfo, METH_VARARGS | METH_KEYWORDS,
                 PyDoc_STR("gpuinfo()\n\n"
                           "Return lists of GPU present on the system.\n"
-                          "[name,compute capability,multi processor number,platform]\n"
+                          "[name,compute capability,compute unit number,platform]\n"
                 )},
         {"gpupass",  (PyCFunction)at_gpupass, METH_VARARGS | METH_KEYWORDS,
                 PyDoc_STR("gpupass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
