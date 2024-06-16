@@ -184,6 +184,10 @@ def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: b
     parser = Parser()
     parser.parse_lines(data.splitlines())
 
+    sequences = parser.sequences
+
+    assert sequences == ["cell_1", "ring_1"]
+
     ring = parser.lattice(use="ring.1")
     assert len(ring) == 22
     assert ring.energy == energy

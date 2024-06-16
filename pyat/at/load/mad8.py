@@ -141,4 +141,4 @@ def load_mad8(*files: str, use: str = "ring", **kwargs) -> Lattice:
     absfiles = tuple(abspath(file) for file in files)
     kwargs.setdefault("in_file", absfiles)
     parser.parse_files(*absfiles)
-    return parser.lattice(use=use)
+    return parser.lattice(use=use, **kwargs)

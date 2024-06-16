@@ -786,7 +786,7 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     absfiles = tuple(abspath(file) for file in files)
     kwargs.setdefault("in_file", absfiles)
     parser.parse_files(*absfiles)
-    return parser.lattice(use=use)
+    return parser.lattice(use=use, **kwargs)
 
 
 register_format(

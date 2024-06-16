@@ -19,7 +19,7 @@ from collections.abc import Callable, Iterable, Generator, Mapping
 from typing import Union, Optional
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Element, Lattice
+from ..lattice import Element, Lattice, params_filter
 
 _dot = re.compile(r"[a-z][\w.]*")  # An identifier: starts with a letter
 _singlequoted = re.compile(r"'([\w.]*)'")
@@ -418,7 +418,7 @@ class BaseParser(DictNoDot):
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-        return Lattice(iterator=self._generator, use=use, **kwargs)
+        return Lattice(self._generator, iterator=params_filter, use=use, **kwargs)
 
     def parse_lines(
         self,
