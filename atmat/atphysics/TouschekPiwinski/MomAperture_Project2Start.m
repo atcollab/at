@@ -16,7 +16,7 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %               Default 1:numel(THERING);
 %       nturns: Number of turns to track. Default 500
 %       detole: resolution in energy acceptance. Default 1e-4
-%       eu_guess: unstable energy threshold guess. Default [].
+%       euguess: unstable energy threshold guess. Default [].
 %               If not given it uses the linear energy acceptance delta_max
 %               from ringpara.
 %       troffset: [x y] starting transverse offset for the tracking.
@@ -45,7 +45,7 @@ p = inputParser;
 addOptional(p,'refpts',1:numel(THERING));
 addOptional(p,'nturns',500);
 addOptional(p,'detole',1e-4);
-addOptional(p,'eu_guess',[]);
+addOptional(p,'euguess',[]);
 addOptional(p,'troffset',[1e-6 1e-6]);
 addOptional(p,'verbose',false);
 addOptional(p,'epsilon6D',[]);
@@ -55,12 +55,12 @@ par = p.Results;
 REFPTS=par.refpts;
 nturns=par.nturns;
 detole=par.detole;
-eu_ini=par.eu_guess;
+eu_ini=par.euguess;
 initcoord=par.troffset;
 verbose=par.verbose;
 epsilon6D = par.epsilon6D;
 
-if length(epsilon6D)
+if ~isempty(epsilon6D)
     fprintf('Particles differing by less than %.3e are considered similar.\n', ...
              epsilon6D);
 end
