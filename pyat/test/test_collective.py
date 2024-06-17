@@ -169,6 +169,10 @@ def test_buffers(hmba_lattice):
     for i in numpy.arange(1, nturns):
         dth = numpy.sum(th[i-1,(nturns-i)*ns:]
                         -th[i,(nturns-i-1)*ns:(nturns-1)*ns]) - i*ls  
-        dvbh = numpy.sum(dvbh[i-1,(nturns-i)*2:]
-                         -dvbh[i,(nturns-i-1)*ns:(nturns-1)*2])     
-    assert_allclose([dthm dvbh], 0.0, atol = 1e-9)
+        dvbh = numpy.sum(vbh[i-1, :, (nturns-i):]
+                         -vbh[i, :, (nturns-i-1):(nturns-1)])  
+        dvgh = numpy.sum(vgh[i-1, :,(nturns-i):]
+                         -vgh[i, :,(nturns-i-1):(nturns-1)]) 
+        dvbbh = numpy.sum(vbbh[i-1, :,(nturns-i):]
+                         -vbbh[i, :,(nturns-i-1):(nturns-1)])           
+    assert_close([dth, dvbh, dvgh, dvbbh], numpy.zeros(4), atol = 1e-9)
