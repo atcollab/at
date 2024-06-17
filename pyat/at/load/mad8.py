@@ -95,9 +95,9 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """"""
-        super().__init__(globals(), continuation="&")
+        super().__init__(globals(), continuation="&", **kwargs)
 
     def evaluate(self, expr):
         """Evaluate an expression using *self* as local namespace"""

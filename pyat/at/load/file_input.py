@@ -21,7 +21,7 @@ from typing import Union, Optional
 from .utils import split_ignoring_parentheses, protect, restore
 from ..lattice import Element, Lattice, params_filter
 
-_dot = re.compile(r"[a-z][\w.]*")  # An identifier: starts with a letter
+_dot = re.compile(r"\.?[a-z][\w.]*")  # An identifier: starts with a letter
 _singlequoted = re.compile(r"'([\w.]*)'")
 _named = re.compile(r"name=([\w.]*)")
 _doublequoted = re.compile(r'^"(.*)"$')

@@ -13,7 +13,7 @@ from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
 from os.path import abspath
 from typing import Optional
 from itertools import chain
-from collections.abc import Sequence, Generator
+from collections.abc import Sequence, Generator, Iterable
 
 import numpy as np
 
@@ -24,7 +24,7 @@ from scipy.constants import physical_constants as _cst
 from . import register_format
 from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
 from .utils import protect, restore
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem
+from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
 _default_beam = dict(
     particle="positron",
@@ -252,7 +252,7 @@ class vkicker(_MadElement):
 class rfcavity(_MadElement):
     @staticmethod
     def convert(
-        name, l=0.0, volt=0.0, freq=0.0, lag=0.0, harmon=0, **params  # noqa: E741
+        name, l=0.0, volt=0.0, freq=np.nan, lag=0.0, harmon=0, **params  # noqa: E741
     ):
         cavity = elt.RFCavity(
             name,
@@ -655,19 +655,7 @@ class _MadParser(UnorderedParser):
             beam = self["beam%"]
         return beam
 
-    def _generator(self, params, *args):
-        """generate AT elements for the Lattice constructor"""
-        use = params.setdefault("use", "ring")
-
-        # generate the Lattice attributes from the BEAM object
-        beam = self._get_beam(use).expand(self)
-        for key, val in beam.items():
-            params.setdefault(key, val)
-
-        # Iterate from the elements
-        yield from super()._generator(params)
-
-    def lattice(self, use="ring", **kwargs):
+    def lattice(self, use: str = "ring", **kwargs):
         """Create a lattice from the selected sequence
 
         Parameters:
@@ -681,7 +669,47 @@ class _MadParser(UnorderedParser):
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-        lat = super().lattice(use=use, **kwargs)
+
+        def mad_filter(params: dict, elems: Filter, *args) -> Iterable[elt.Element]:
+            def beta() -> float:
+                rest_energy = params["particle"].rest_energy
+                if rest_energy == 0.0:
+                    return 1.0
+                else:
+                    gamma = float(params["energy"] / rest_energy)
+                    return sqrt(1.0 - 1.0 / gamma / gamma)
+
+            use = params.setdefault("use", "ring")
+            # generate the Lattice attributes from the BEAM object
+            beam = self._get_beam(use).expand(self)
+            for key, val in beam.items():
+                params.setdefault(key, val)
+
+            cavities = []
+            cell_length = 0
+
+            for elem in elems(params, *args):
+                if isinstance(elem, elt.RFCavity):
+                    cavities.append(elem)
+                cell_length += getattr(elem, 'Length', 0.0)
+                yield elem
+
+            params['_length'] = cell_length
+            rev = beta() * clight / cell_length
+            print(cavities)
+            for cav in cavities:
+                if np.isnan(cav.Frequency):
+                    cav.Frequency = rev * cav.HarmNumber
+                print(cav.FamName, cav.Frequency)
+            if cavities:
+                cavities.sort(key=lambda el: el.Frequency)
+                c0 = cavities[0]
+                params['_harmnumber'] = getattr(c0, 'HarmNumber', np.nan)
+
+        part = kwargs.get("particle", None)
+        if isinstance(part, str):
+            kwargs["particle"] = Particle(part)
+        lat = Lattice(self._generator, iterator=mad_filter, use=use, **kwargs)
         try:
             radiate = lat.radiate
         except AttributeError:
