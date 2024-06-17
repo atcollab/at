@@ -8,34 +8,29 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %  to the ring last element so that all particles can be tracked together.
 %
 % [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini,initcoord)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini,initcoord,verbose)
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING,REFPTS,nturns,detole,eu_ini,initcoord,verbose,epsilon6D)
 %          
 %
-% Output:
-%       ETN: stability threshold for positive off energy particles
-%       ETP: stability threshold for negative off energy particles
 % Inputs:
 %       THERING: ring used for tracking. Default: global THERING
+% Options:
 %       REFPTS: REFPTS where to calculate the momentum acceptance.
-%               Default 1:numel(THERING)+1;
+%               Default 1:numel(THERING);
 %       nturns: Number of turns to track. Default 500
 %       detole: resolution in energy acceptance. Default 1e-4
-%       eu_ini: upper limit of the stability threshold. Default []
-%               If not given it uses the linear energy acceptance from
-%               ringpara
-%       initcoord: [x y] starting transverse offset for the tracking.
+%       eu_guess: unstable energy threshold guess. Default []
+%               If not given it uses the linear energy acceptance delta_max
+%               from ringpara
+%       troffset: [x y] starting transverse offset for the tracking.
 %               Default [1e-6 1e-6]
 %       verbose: boolean indicating verbose mode. Default false.
 %       epsilon6D: if not passed, all particles are tracked.
 %               If epsilon6D is given, we track for many turns only
 %               the particles with 6D coordinates different by epsilon6D
 %               after the 1st turn.
+% Output:
+%       ETN: stability threshold for positive off energy particles
+%       ETP: stability threshold for negative off energy particles
+%
 %
 % Other functions in the file:
 %
@@ -46,34 +41,27 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 
 % 2024may30 Z.Marti at ALBA CELLS
 
-REFPTS=1:numel(THERING)+1;
-nturns=500;
-detole=0.0001;
-eu_ini=[]; 
-initcoord=[1e-6 1e-6];
-verbose=false;
-epsilon6D = [];
+% Parse input
+p = inputParser;
+addOptional(p,'refpts',1:numel(THERING));
+addOptional(p,'nturns',500);
+addOptional(p,'detole',1e-4);
+addOptional(p,'eu_guess',[]);
+addOptional(p,'troffset',[1e-6 1e-6]);
+addOptional(p,'verbose',false);
+addOptional(p,'epsilon6D',[]);
+parse(p,varargin{:});
+par = p.Results;
 
-if nargin>=2
-    REFPTS=varargin{1};
-end
-if nargin>=3
-    nturns=varargin{2};
-end
-if nargin>=4
-    detole=varargin{3};
-end
-if nargin>=5
-    eu_ini=varargin{4};
-end
-if nargin>=6
-    initcoord=varargin{5};
-end
-if nargin>=7
-    verbose=varargin{6};
-end
-if nargin>=8
-    epsilon6D=varargin{7};
+REFPTS=par.refpts;
+nturns=par.nturns;
+detole=par.detole;
+eu_ini=par.eu_guess;
+initcoord=par.troffset;
+verbose=par.verbose;
+epsilon6D = par.epsilon6D;
+
+if length(epsilon6D)
     fprintf('Particles differing by less than %.3e are considered similar.\n', ...
              epsilon6D);
 end
