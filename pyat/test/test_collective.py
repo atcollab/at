@@ -1,6 +1,7 @@
 import at
 import numpy
 import pytest
+import warnings
 from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
@@ -140,8 +141,12 @@ def test_track_beamloading(hmba_lattice, func):
 
 def test_buffers(hmba_lattice):
     ring = hmba_lattice.radiation_on(copy=True)
+    ring.periodicity = 1
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ring.harmonic_number = 32
     nturns = 11
-    nbunch = 16
+    nbunch = 4
     nslice = 51
     ns = nbunch*nslice
     ls = ns*ring.circumference/ring.periodicity
