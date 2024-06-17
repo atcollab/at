@@ -151,7 +151,7 @@ def test_buffers(hmba_lattice):
     ns = nbunch*nslice
     ls = ns*ring.circumference/ring.periodicity
     add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
-                    buffersize=nturns, blmode=BLMode.PHASOR)
+                    buffersize=nturns, blmode=BLMode.WAKE)
     ring.set_fillpattern(nbunch)
     ring.beam_current = 0.2
     rin = numpy.zeros((6, nbunch)) + 1.0e-6
