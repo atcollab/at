@@ -109,7 +109,7 @@ def _closure(m22):
         beta = m22[0, 1] / sinmu
         return alpha, beta, cosmu + sinmu*1j
     except ValueError:          # Unstable motion
-        return numpy.NaN, numpy.NaN, numpy.NaN
+        return numpy.nan, numpy.nan, numpy.nan
 
 
 # noinspection PyShadowingNames,PyPep8Naming
@@ -127,7 +127,7 @@ def _tunes(ring, **kwargs):
     except AtError:
         warnings.warn(AtWarning('Unstable ring'))
         tunes = numpy.empty(nd)
-        tunes[:] = numpy.NaN
+        tunes[:] = numpy.nan
     return tunes
 
 
@@ -509,7 +509,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                          ('s_pos', numpy.float64)]
         data0 = (d0, orb0, mt, get_s_pos(ring, len(ring))[0])
         datas = (ds, orbs, ms, spos)
-        damping_times = numpy.NaN
+        damping_times = numpy.nan
 
     if get_w:
         dtype = dtype + wtype
@@ -523,7 +523,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         deltap = o0up[4] - o0dn[4]
         chrom = (tunesup - tunesdn) / deltap
     else:
-        chrom = numpy.NaN
+        chrom = numpy.nan
 
     beamdata = numpy.array((tunes, chrom, damping_times),
                            dtype=[('tune', numpy.float64, (dms,)),
