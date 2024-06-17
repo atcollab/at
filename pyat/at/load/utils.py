@@ -112,6 +112,7 @@ _alias_map = {
     "ringparam": RingParam,
     "wig": elt.Wiggler,
     "matrix66": elt.M66,
+    "M66": elt.M66,
 }
 
 # Map class names to Element classes

@@ -12,7 +12,10 @@ __all__ = ['get_mcf', 'get_slip_factor', 'get_revolution_frequency',
 
 @check_6d(False)
 def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
-            keep_lattice: bool = False, **kwargs) -> float:
+            keep_lattice: bool = False,
+            fit_order: Optional[int] = 1,
+            n_step: Optional[int] = 2,
+            **kwargs) -> float:
     r"""Compute the momentum compaction factor :math:`\alpha`
 
     Parameters:
@@ -21,24 +24,34 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
         dp:             Momentum deviation. Defaults to :py:obj:`None`
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: :py:obj:`False`
+        fit_order:      Maximum momentum compaction factor order to be fitted.
+          Default to 1, corresponding to the first-order momentum compaction factor.
+        n_step:         Number of different calculated momentum deviations to be fitted
+          with a polynomial.
+          Default to 2.
 
     Keyword Args:
         DPStep (Optional[float]):       Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
-        mcf (float):    Momentum compaction factor :math:`\alpha`
+        mcf (float/array):    Momentum compaction factor :math:`\alpha`
+          up to the order fit_order. Returns a float if fit_order=1 otherwise
+          returns an array.
     """
+    if n_step < 2*fit_order:
+        raise ValueError('Low nunber of steps, it is advised to have n_step >= 2*fit_order'+
+        ' for a better fit.')
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    fp_a, _ = find_orbit4(ring, dp=dp - 0.5*dp_step, keep_lattice=keep_lattice)
-    fp_b, _ = find_orbit4(ring, dp=dp + 0.5*dp_step, keep_lattice=True)
-    fp = numpy.stack((fp_a, fp_b),
-                     axis=0).T  # generate a Fortran contiguous array
+    dp_samples = numpy.linspace(-dp_step/2, dp_step/2, n_step)
+    fp_i = tuple(find_orbit4(ring, dp=dp + dp_i, keep_lattice=keep_lattice)[0] \
+       for dp_i in dp_samples)
+    fp = numpy.stack(fp_i, axis=0).T  # generate a Fortran contiguous array
     b = numpy.squeeze(internal_lpass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
-    alphac = (b[5, 1] - b[5, 0]) / dp_step / ring_length[0]
-    return alphac
-
+    p = numpy.polynomial.Polynomial.fit(b[4], b[5], deg=fit_order).convert().coef
+    alphac = p[1:] / ring_length[0]
+    return alphac[0] if len(alphac)<2 else alphac
 
 def get_slip_factor(ring: Lattice, **kwargs) -> float:
     r"""Compute the slip factor :math:`\eta`
