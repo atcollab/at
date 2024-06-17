@@ -168,5 +168,7 @@ def test_buffers(hmba_lattice):
         vbbh[i] = bl_elem.Vbunch_buffer
     for i in numpy.arange(1, nturns):
         dth = numpy.sum(th[i-1,(nturns-i)*ns:]
-                        -th[i,(nturns-i-1)*ns:(nturns-1)*ns]) - i*ls      
-    assert_close(dth, 0.0, atol = 1e-9)
+                        -th[i,(nturns-i-1)*ns:(nturns-1)*ns]) - i*ls  
+        dvbh = numpy.sum(dvbh[i-1,(nturns-i)*2:]
+                         -dvbh[i,(nturns-i-1)*ns:(nturns-1)*2])     
+    assert_allclose([dthm dvbh], 0.0, atol = 1e-9)
