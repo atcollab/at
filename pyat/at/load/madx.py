@@ -696,11 +696,9 @@ class _MadParser(UnorderedParser):
 
             params['_length'] = cell_length
             rev = beta() * clight / cell_length
-            print(cavities)
             for cav in cavities:
                 if np.isnan(cav.Frequency):
                     cav.Frequency = rev * cav.HarmNumber
-                print(cav.FamName, cav.Frequency)
             if cavities:
                 cavities.sort(key=lambda el: el.Frequency)
                 c0 = cavities[0]
