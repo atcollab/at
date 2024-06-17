@@ -1,5 +1,5 @@
 function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
-% MOMAPERTURE_PROJECT2START calculates the local momentum aperture
+% MOMAPERTURE_PROJECT2START calculates the local momentum aperture.
 %
 % MOMAPERTURE_PROJECT2START is a Bipartition search of the negative and 
 % positive stability thesholds in the 5th dimension (relative energy).
@@ -7,26 +7,25 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %  -Particles launched at different REFPTS along the ring are first projected
 %  to the ring last element so that all particles can be tracked together.
 %
-% [ETN, ETP]=MOMAPERTURE_PROJECT2START(THERING)
+% [ETN, ETP] = MOMAPERTURE_PROJECT2START(THERING)
 %          
-%
 % Inputs:
-%       THERING: ring used for tracking. Default: global THERING
+%       THERING: ring used for tracking.
 % Options:
 %       REFPTS: REFPTS where to calculate the momentum acceptance.
 %               Default 1:numel(THERING);
 %       nturns: Number of turns to track. Default 500
 %       detole: resolution in energy acceptance. Default 1e-4
-%       eu_guess: unstable energy threshold guess. Default []
+%       eu_guess: unstable energy threshold guess. Default [].
 %               If not given it uses the linear energy acceptance delta_max
-%               from ringpara
+%               from ringpara.
 %       troffset: [x y] starting transverse offset for the tracking.
 %               Default [1e-6 1e-6]
 %       verbose: boolean indicating verbose mode. Default false.
 %       epsilon6D: if not passed, all particles are tracked.
-%               If epsilon6D is given, we track for many turns only
-%               the particles with 6D coordinates different by epsilon6D
-%               after the 1st turn.
+%               If epsilon6D is given, we track for nturns only
+%               particles having 6D coordinates different by epsilon6D
+%               after being projected to the end of the ring.
 % Output:
 %       ETN: stability threshold for positive off energy particles
 %       ETP: stability threshold for negative off energy particles
@@ -203,9 +202,12 @@ Ralive1stturn = Rout(:,Loste==0);
     
 % use particles that have survived to the ring end,
 % filter them if necessary, and track them
-trackonly_mask = logical(1:length(Ralive1stturn));
+sizeRalive1turn = size(Ralive1stturn);
+trackonly_mask = logical(1:sizeRalive1turn(2));
 similarparticles_index = [];
-if length_epsilon6D == 1
+particles_were_filtered = false;
+if length_epsilon6D == 1 && nalive1stturn > 1
+    particles_were_filtered = true;
     % search for non numerically similar particles
     DiffR = squeeze(std(repmat(Ralive1stturn,[1 1 nalive1stturn]) ...
                             - repmat(reshape( ...
@@ -223,7 +225,7 @@ if length_epsilon6D == 1
     % Loste1=losses_in_multiturn(similarparticles_index);
     if verbose
         fprintf('Speed up when discarding similar particles %.3f%%\n', ...
-                100*(1-length(trackonly_mask)/length(Ralive1stturn)));
+                100*(1-length(trackonly_mask)/sizeRalive1turn(2)));
     end
     
 end
@@ -235,7 +237,7 @@ ringpass(THERING,[initcoord(1) 0 initcoord(2) 0 1e-6 0]',1);
                                     nturns, ...
                                     'reuse' ...
                                   );
-if length_epsilon6D == 1
+if particles_were_filtered
     % copy losses result for numerically similar particles
     Lostpaux=losses_in_multiturn(similarparticles_index);
 else
