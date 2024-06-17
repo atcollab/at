@@ -66,7 +66,7 @@ class Variable(object):
         return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
             'Name', 'Initial', 'Final ', 'Variation')
 
-    def status(self, ring: Lattice, vini=np.NaN):
+    def status(self, ring: Lattice, vini=np.nan):
         vnow = self.get(ring)
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
             self.name, vini, vnow, (vnow - vini))
@@ -235,7 +235,7 @@ class Constraints(object):
     def status(self, ring: Lattice, initial=None):
         """Return a string giving the actual state of constraints"""
         if initial is None:
-            initial = repeat(np.NaN)
+            initial = repeat(np.nan)
         strs = []
         for name, ini, now, target in zip(self.name, initial,
                                           self.values(ring), self.target):
