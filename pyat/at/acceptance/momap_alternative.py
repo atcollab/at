@@ -81,7 +81,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     else:
         dxy = 1e-5
         add_offset = numpy.tile(dxy, [2, nrps])
-        verboseprint(f"Adding default transverse offsets {dxy}")
+        verboseprint(f"Adding default transverse offsets {dxy} per plane")
 
     # set the minimum distance btw particles that makes them similar
     epsilon6d = kwargs.pop("epsilon6d", 0)
