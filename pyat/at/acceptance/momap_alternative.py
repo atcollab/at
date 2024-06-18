@@ -166,7 +166,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         # define new energy step
         depos = max(abs(espos-eupos))
         deneg = max(abs(esneg-euneg))
-        deltae = max((numpy.concatenate([depos,deneg]))
+        deltae = max(numpy.concatenate([depos,deneg]))
         outmsg = (
                   f"Iteration {iteration}",
                   f" took {format(time.time()-t00):.3} s.",
@@ -308,6 +308,8 @@ def multirefpts_track_islost(
       Lostpart: (2*N) bool array, for N reference points.
         True if the particle is lost.
     """
+    verboseprint = print if verbose else lambda *a, **k: None
+
     # track positive and negative side at the same time
     nparticles = 2
 
@@ -316,9 +318,10 @@ def multirefpts_track_islost(
     lostpart = numpy.ones((nparticles*nrps), dtype=bool)
     zin = numpy.zeros((6, nparticles*nrps))
     zout = numpy.zeros((6, nparticles*nrps))
-    eps = numpy.finfo(float).eps
     tinyoffset = epsilon6D
-    nturns = dicttrack.pop("nturns", 1000)
+
+    # project to the end of the ring
+    erps = len(ring)
 
     # first, track the remaining portion of the ring
     zin[:, 0::2] = orbit.T.copy()
@@ -331,35 +334,37 @@ def multirefpts_track_islost(
     zin[4, 1::2] = zin[4, 1::2] + esetptneg
     for i in range(nrps):
         ring_downstream = ring.rotate(rps[i])
-        zaux = zin[:, (nparticles*i):(nparticles*i+1)])
-        verboseprint(
-            f"Tracking {nparticles} particles on reference point {i+1} of {nrps}"
-        )
+        zaux = zin[:, (nparticles*i):(nparticles*i+2)]
+        #verboseprint(
+        #    f"Tracking {nparticles} particles on reference point {i+1} of {nrps}"
+        #)
         zoaux, _, doutaux = ring_downstream.track(
             zaux, nturns=1, refpts=erps - rps[i], losses=True, **kwargs
         )
-        zout[:, (nparticles*i):(nparticles*i+1)] = numpy.reshape(
+        zout[:, (nparticles*i):(nparticles*(i+1))] = numpy.reshape(
             zoaux, (6, nparticles)
         )
-        lostpart[ (nparticles*i):(nparticles*i+1)] = doutaux["loss_map"][
+        lostpart[ (nparticles*i):(nparticles*(i+1))] = doutaux["loss_map"][
             "islost"
         ]
 
     cntalive = nrps - sum(lostpart)
     aliveatringend = ~lostpart
     zinaliveaux = zout[:, aliveatringend]
-    zinalive = numpy.asfortranarray(zinaliveaux.copy())
+    zinalive_at_ring_end = numpy.asfortranarray(zinaliveaux.copy())
 
-    # second, track particles that have survived the ring to the end
-    if cntalive == 1:
-        _, _, dout2 = ring.track(zinalive, nturns=nturns, refpts=len(ring), losses=True)
-        lostpart[aliveatringend] = dout2["loss_map"]["islost"][0]
-    elif cntalive > 1:
+    # second, use the particles that have survived the ring to the end
+    # filter them if necessary, and track them
+    shapealiveatend = numpy.shape(zinalive_at_ring_end)
+    trackonly_mask = numpy.ones(shapealiveatend[1],dtype=bool)
+    similarparticles_index = numpy.array([])
+    particles_were_filtered = False
+    if epsilon6D != 0 and cntalive > 1:
         # search for non numerically similar particles
         closenessmatrix = numpy.zeros((cntalive, cntalive), dtype=bool)
         for i in range(cntalive):
             closenessmatrix[i, :] = [
-                numpy.allclose(zinalive[:, j], zinalive[:, i], atol=tinyoffset)
+                numpy.allclose(zinalive_at_ring_end[:, j], zinalive_at_ring_end[:, i], atol=tinyoffset)
                 for j in range(cntalive)
             ]
         _, rowidx = numpy.indices((cntalive, cntalive))
@@ -372,7 +377,7 @@ def multirefpts_track_islost(
         ring.track(zaux2, nturns=1)
         # track non-numerically similar particles
         _, _, dout3 = ring.track(
-            zinalive[:, uniqueidx],
+            zinalive_at_ring_end[:, uniqueidx],
             nturns=nturns,
             keep_lattice=True,
             losses=True,
@@ -383,5 +388,21 @@ def multirefpts_track_islost(
         losteaux = replossmask[rep_index]
         # now, group the particles that did not pass the first turn
         lostpart[aliveatringend] = losteaux
+    # track
+    # dummy track to later reuse the ring
+    zaux2 = numpy.array([initcoord[0, 0], 0, initcoord[1, 0], 0, 1e-6, 0]).T
+    ring.track(zaux2, nturns=1)
+    # track non-numerically similar particles
+    _, _, dout3 = ring.track(
+        zinalive_at_ring_end[:, trackonly_mask],
+        nturns=nturns,
+        keep_lattice=True,
+        losses=True,
+        **kwargs
+    )
+    if particles_were_filtered:
+        print('ok')
+    else:
+        lostpart[~lostpart] = dout3["loss_map"]["islost"]
 
     return lostpart
