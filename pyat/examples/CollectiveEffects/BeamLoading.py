@@ -52,7 +52,7 @@ rank = comm.Get_rank()
 print(size, rank)
 
 ring = at.load_lattice('../../../machine_data/esrf.m')
-ring.radiation_on(cavity_pass='RFCavityPass')
+ring.enable_6d(cavity_pass='RFCavityPass')
 ring.set_rf_frequency()
 
 
@@ -74,7 +74,7 @@ fring.pop(-1)  # drop diffusion element
 
 # Here we specify whether we want to use PHASOR or WAKE
 # beam loading models.
-mode = 'PHASOR'
+mode = 'WAKE'
 if mode == 'WAKE':
     blm = BLMode.WAKE
 else:
@@ -107,6 +107,18 @@ if rank == 0:
 
     z_all = numpy.zeros((Nturns, Nbunches))
     dp_all = numpy.zeros((Nturns, Nbunches))
+
+
+# Here it should be considered that there are 2 ways to run
+# simulations in pyat. Either with ring.track(part, nturns=Nturns)
+# or with for i in np.arange(Nturns): ring.track(part, nturns=1).
+# With the former, you should use the BeamMoments element to acquire
+# the means and stds of each bunch turn by turn when using MPI.
+# However, when you want to kick after a certain turn, you have 1
+# of 2 choices. Either you use a BeamMoments element, and split the 
+# tracking into 2 (before and after). You can then concatenate the
+# the results. Or you can use the code below to gather all particles
+# yourself with the MPICOMM after each turn.
 
 for i in numpy.arange(Nturns):
     # Apply a kick to ensure the coherent tune is large
