@@ -50,7 +50,7 @@ addOptional(p,'dptol',1e-4);
 addOptional(p,'euguess',[]);
 addOptional(p,'troffset',[1e-6 1e-6]);
 addOptional(p,'verbose',false);
-addOptional(p,'epsilon6D',[]);
+addOptional(p,'epsilon6D',0);
 parse(p,varargin{:});
 par = p.Results;
 
@@ -62,7 +62,7 @@ initcoord=par.troffset;
 verbose=par.verbose;
 epsilon6D = par.epsilon6D;
 
-if ~isempty(epsilon6D)
+if 0 ~= epsilon6D
     fprintf('Particles differing by less than %.3e are considered similar.\n', ...
              epsilon6D);
 end
@@ -183,10 +183,7 @@ nposs=numel(refpts);
 Loste=ones(1,2*nposs);
 Rin=zeros(6,2*nposs);
 Rout=zeros(6,2*nposs);
-length_epsilon6D = length(epsilon6D);
-if length_epsilon6D == 1
-    tinyoffset=epsilon6D;
-end
+tinyoffset=epsilon6D;
 
 % first track the remaining portion of the ring
 for ii=1:nposs
@@ -207,7 +204,7 @@ sizeRalive1turn = size(Ralive1stturn);
 trackonly_mask = logical(1:sizeRalive1turn(2));
 similarparticles_index = [];
 particles_were_filtered = false;
-if length_epsilon6D == 1 && nalive1stturn > 1
+if (epsilon6D ~= 0) && (nalive1stturn > 1)
     particles_were_filtered = true;
     % search for non numerically similar particles
     DiffR = squeeze(std(repmat(Ralive1stturn,[1 1 nalive1stturn]) ...
