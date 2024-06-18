@@ -377,7 +377,7 @@ def multirefpts_track_islost(
             maxidx, return_index=True, return_inverse=True
         )
         outmsg = (
-            f"Speed up when discarding similar particles ",
+            "Speed up when discarding similar particles ",
             f"{100*len(trackonly_mask)/cntalive:.3f}%",
         )
         verboseprint("".join(outmsg))
