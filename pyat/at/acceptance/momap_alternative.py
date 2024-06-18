@@ -23,10 +23,10 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     of stability around the closed orbit.
 
     For a given energy offset the particles are first tracked from every
-    reference point to the end of the ring, and then, only particles with
-    differing 6D coordinates are tracked together.  The surviving particles
-    continue the boundary search with a new energy until the boundary is
-    found or the limit of the rf bucket is reached.
+    reference point to the end of the ring, and then, all or a set of particles
+    with different 6D coordinates are tracked together.  The surviving particles
+    continue the boundary search with a new energy step until the boundary is
+    found when the step limit or the  energy limit is reached.
 
     Usage:
       >>> momaperture_project2start(ring)
@@ -39,9 +39,9 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         See ":ref:`Selecting elements in a lattice <refpts>`"
       nturns: number of turns to be tracked. Default 1000
       dptol: energy offset resolution. Default 1e-4
-      add_offset: (2, N) offsets to be added to the transverse coordinates
+      euguess: maximum energy boundary. Default: the rf bucket height.
+      troffset: (2, N) offsets to be added to the transverse coordinates
         on the N reference points. Default 1e-5 m
-      eu_ini: maximum energy boundary. Default: the rf bucket height
       orbit: (N,6) offsets to be added on the N reference points.
         Default, the closed orbit
       verbose: print in the standard output additional info. Default False
@@ -74,8 +74,8 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     dptol = kwargs.pop("dptol", 1e-4)
     verboseprint(f"Energy resolution {dptol}")
 
-    if "add_offset" in kwargs:
-        add_offset = kwargs["add_offset"]
+    if "troffset" in kwargs:
+        add_offset = kwargs["troffset"]
         verboseprint("Add user offsets")
     else:
         dxy = 1e-5
@@ -92,39 +92,39 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     if "use_mp" not in dicttrack:
         dicttrack.update({"use_mp": True})
 
-    # use radiation parameters to get the rf bucket
-    pars = ring.radiation_parameters()
-
-    # get energy bucket (deltabucket) max height.
-    # S.Y.Lee, 4th Edition, Eqs 3.37, 3.38, Sect. II.2 Bucket area
-    harmonnumber = ring.harmonic_number
-    etac = pars.etac
-    theenergy = pars.E0
-    phis = pars.phi_s
-    betar = ring.beta
-    thevoltage = ring.get_rf_voltage()
-    yfactor = numpy.sqrt(
-        numpy.abs(numpy.cos(phis) - 0.5 * (numpy.pi - 2 * phis) * numpy.sin(phis))
-    )
-    deltabucket = (
-        numpy.sqrt(
-            2
-            * thevoltage
-            / (numpy.pi * betar**2 * theenergy * harmonnumber * numpy.abs(etac))
-        )
-        * yfactor
-    )
-    verboseprint(f"Bucket height {deltabucket}")
 
     # first guess
-    es_ini = 0
-    et_ini = deltabucket / 2
-    if "eu_ini" in kwargs:
-        eu_ini = kwargs["eu_ini"]
-        verboseprint(f"Using the users max boundary {eu_ini}")
+    if "euguess" in kwargs:
+        eu_ini = kwargs["euguess"]
+        verboseprint(f"Using the users max boundary {euguess}")
     else:
+        # use radiation parameters to get the rf bucket
+        pars = ring.radiation_parameters()
+        # get energy bucket (deltabucket) max height.
+        # S.Y.Lee, 4th Edition, Eqs 3.37, 3.38, Sect. II.2 Bucket area
+        harmonnumber = ring.harmonic_number
+        etac = pars.etac
+        theenergy = pars.E0
+        phis = pars.phi_s
+        betar = ring.beta
+        thevoltage = ring.get_rf_voltage()
+        yfactor = numpy.sqrt(
+            numpy.abs(numpy.cos(phis) - 0.5 * (numpy.pi - 2 * phis) * numpy.sin(phis))
+        )
+        deltabucket = (
+            numpy.sqrt(
+                2
+                * thevoltage
+                / (numpy.pi * betar**2 * theenergy * harmonnumber * numpy.abs(etac))
+            )
+            * yfactor
+        )
+        verboseprint(f"Bucket height {deltabucket}")
         eu_ini = deltabucket
         verboseprint("Using the bucket height as maximum boundary")
+    es_ini = 0
+    et_ini = eu_ini / 2
+
 
     if "orbit" in kwargs:
         orbit_s = kwargs["orbit"]

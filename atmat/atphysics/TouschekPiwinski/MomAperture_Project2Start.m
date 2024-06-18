@@ -8,14 +8,14 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %  to the ring last element so that all particles can be tracked together.
 %
 % [ETN, ETP] = MOMAPERTURE_PROJECT2START(THERING)
-%          
+%
 % Inputs:
 %       THERING: ring used for tracking.
 % Options:
 %       REFPTS: REFPTS where to calculate the momentum acceptance.
 %               Default 1:numel(THERING);
-%       nturns: Number of turns to track. Default 500
-%       detole: resolution in energy acceptance. Default 1e-4
+%       nturns: Number of turns to track. Default 1000
+%       dptol:  resolution in energy acceptance. Default 1e-4
 %       euguess: unstable energy threshold guess. Default [].
 %               If not given it uses the linear energy acceptance delta_max
 %               from ringpara.
@@ -38,13 +38,15 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 % the reference point refpts with positive and negative energy offset is
 % lost or not.
 
-% 2024may30 Z.Marti at ALBA CELLS
+% 2024may30 Z.Marti at ALBA CELLS, original
+% 2024jun18 oblanco at ALBA CELLS, rewritten to track positive and negative
+%                                  sides in a single call
 
 % Parse input
 p = inputParser;
 addOptional(p,'refpts',1:numel(THERING));
-addOptional(p,'nturns',500);
-addOptional(p,'detole',1e-4);
+addOptional(p,'nturns',1000);
+addOptional(p,'dptol',1e-4);
 addOptional(p,'euguess',[]);
 addOptional(p,'troffset',[1e-6 1e-6]);
 addOptional(p,'verbose',false);
@@ -54,7 +56,7 @@ par = p.Results;
 
 REFPTS=par.refpts;
 nturns=par.nturns;
-detole=par.detole;
+detole=par.dptol;
 eu_ini=par.euguess;
 initcoord=par.troffset;
 verbose=par.verbose;
@@ -75,16 +77,15 @@ if verbose
 end
 
 % initial bipartition settings
-res=ringpara(THERING);
-EACC=res.delta_max;
-es_ini=0; % lower limit of the stability threshold
-et_ini=EACC/2; % starting guess of the stability threshold
 if isempty(eu_ini)
-    eu_ini=EACC;
+    res = ringpara(THERING);
+    eu_ini = res.delta_max;
     if verbose
         fprintf('Using the rf bucket height as unstable energy limit.\n');
     end
 end
+es_ini = 0; % lower limit of the stability threshold
+et_ini = eu_ini / 2; % starting guess of the stability threshold
 if verbose
     fprintf('Unstable energy limit set at start to %.3f%%.\n',100*eu_ini);
 end
