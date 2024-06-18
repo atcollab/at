@@ -168,7 +168,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         deneg = max(abs(esneg-euneg))
         deltae = max(depos,deneg)
         outmsg = (
-                  f"Iteration {iteration}",
+              f"Iteration {iteration}",
                   f" took {format(time.time()-t00):.3} s.",
                   f" deltae={deltae}, dptol={dptol}",
                  )
@@ -349,8 +349,7 @@ def multirefpts_track_islost(
         ]
 
     cntalive = nrps - sum(lostpart)
-    aliveatringend = ~lostpart
-    zinaliveaux = zout[:, aliveatringend]
+    zinaliveaux = zout[:, ~lostpart]
     zinalive_at_ring_end = numpy.asfortranarray(zinaliveaux.copy())
 
     # second, use the particles that have survived the ring to the end
@@ -360,40 +359,31 @@ def multirefpts_track_islost(
     similarparticles_index = numpy.array([])
     particles_were_filtered = False
     if epsilon6D != 0 and cntalive > 1:
+        particles_were_filtered = True
         # search for non numerically similar particles
         closenessmatrix = numpy.zeros((cntalive, cntalive), dtype=bool)
         for i in range(cntalive):
             closenessmatrix[i, :] = [
-                numpy.allclose(zinalive_at_ring_end[:, j], zinalive_at_ring_end[:, i], atol=tinyoffset)
+                numpy.allclose(zinalive_at_ring_end[:, j],
+                               zinalive_at_ring_end[:, i],
+                               atol=tinyoffset)
                 for j in range(cntalive)
             ]
         _, rowidx = numpy.indices((cntalive, cntalive))
         maxidx = numpy.max(rowidx * closenessmatrix, 1)
-        uniqueidx, _, rep_index = numpy.unique(
+        trackonly_mask, _, similarparticles_index = numpy.unique(
             maxidx, return_index=True, return_inverse=True
         )
-        # dummy track to later reuse the ring
-        zaux2 = numpy.array([initcoord[0, 0], 0, initcoord[1, 0], 0, 1e-6, 0]).T
-        ring.track(zaux2, nturns=1)
-        # track non-numerically similar particles
-        _, _, dout3 = ring.track(
-            zinalive_at_ring_end[:, uniqueidx],
-            nturns=nturns,
-            keep_lattice=True,
-            losses=True,
-            **dicttrack,
-        )
-        replossmask = dout3["loss_map"]["islost"]
-        # copy result for numerically similar (100 times eps) particles
-        losteaux = replossmask[rep_index]
-        # now, group the particles that did not pass the first turn
-        lostpart[aliveatringend] = losteaux
+        outmsg = (f'Speed up when discarding similar particles ',
+                  f'{100*len(trackonly_mask)/cntalive:.3f}%',
+                )
+        verboseprint("".join(outmsg))
     # track
     # dummy track to later reuse the ring
     zaux2 = numpy.array([initcoord[0, 0], 0, initcoord[1, 0], 0, 1e-6, 0]).T
     ring.track(zaux2, nturns=1)
     # track non-numerically similar particles
-    _, _, dout3 = ring.track(
+    _, _, dout_multiturn = ring.track(
         zinalive_at_ring_end[:, trackonly_mask],
         nturns=nturns,
         keep_lattice=True,
@@ -401,8 +391,12 @@ def multirefpts_track_islost(
         **kwargs
     )
     if particles_were_filtered:
-        print('ok')
+        print(f'{dout_multiturn["loss_map"]["islost"]=}')
+        print(f'{trackonly_mask=}')
+        print(f'{similarparticles_index=}')
+        lostpaux =  dout_multiturn["loss_map"]["islost"][trackonly_mask[similarparticles_index]]
     else:
-        lostpart[~lostpart] = dout3["loss_map"]["islost"]
+        lostpaux = dout_multiturn["loss_map"]["islost"]
+    lostpart[~lostpart] = lostpaux
 
     return lostpart
