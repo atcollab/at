@@ -13,7 +13,7 @@ __all__ = ["momaperture_project2start", "projectrefpts"]
 
 # 2024may29 oblanco at ALBA CELLS. First working version
 #           Based on the MATLAB implementation by Z.Marti at ALBA
-
+#           See https://github.com/atcollab/at/pull/773
 
 def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.ndarray:
     """

@@ -41,6 +41,7 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 % 2024may30 Z.Marti at ALBA CELLS, original
 % 2024jun18 oblanco at ALBA CELLS, rewritten to track positive and negative
 %                                  sides in a single call
+%                                  See https://github.com/atcollab/at/pull/773
 
 % Parse input
 p = inputParser;
