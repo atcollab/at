@@ -255,8 +255,8 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
     co = ax.contourf(CT, DP, hamiltonian, levels, cmap='coolwarm', alpha=0.7)
     ax.contour(CT, DP, hamiltonian, levels, cmap='coolwarm') # additional contour for visibility
     if plot_separatrix:
-        ax.contour(CT, DP, hamiltonian, [0], colors='black',
-                  label='Separatrix') # separatrix contour
+        ax.contour(CT, DP, hamiltonian, [0], colors='black') # separatrix contour
+        plt.plot([], [], color='black', label='Separatrix')
         ax.legend()
     cb = fig.colorbar(co)
     cb.set_label(r'$\mathcal{H}(ct,\delta)$ [a.u.]', fontsize=18)
