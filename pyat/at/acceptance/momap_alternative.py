@@ -45,16 +45,18 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
       orbit: (N,6) offsets to be added on the N reference points.
         Default, the closed orbit
       verbose: print in the standard output additional info. Default False
-      use_mp (bool): Default True. See :py:func:.`lattice_track`
-      omp_num_threads (int): See :py:fun:`lattice_track`
-      pool_size: See :py:func:`lattice_track`
-      start_method: See :py:fun:`lattice_track`
+      epsilon6D: float.
+        If not passed, all particles are tracked.
+        If epsilon6D is given, we track for nturns only particles
+        having 6D coordinates different by epsilon6D
 
     Returns:
       dnp: (2,N) array with negative and positive stable energy boundaries
         for the N reference points
 
     ..note::
+      * This function could track in parallel. Set use_mp=True.
+        Other arguments could be passed through :py:func:`lattice_track`.
       * This function does a quick search, but, it is succeptible to miss
         islands of instability due to the varying energy step.
     """
@@ -81,17 +83,6 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         dxy = 1e-5
         add_offset = numpy.tile(dxy, [2, nrps])
         verboseprint(f"Adding default transverse offsets {dxy}")
-
-    # get the tracking options
-    dicttrack = {}
-    lpartrack = ["omp_num_threads", "use_mp", "pool_size", "start_method"]
-    for theparameter in lpartrack:
-        if theparameter in kwargs:
-            dicttrack.update({theparameter: kwargs[theparameter]})
-    # default to parallel
-    if "use_mp" not in dicttrack:
-        dicttrack.update({"use_mp": True})
-
 
     # first guess
     if "euguess" in kwargs:
@@ -137,23 +128,28 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     # deltaeu, unstable energy
     # deltaes, stable energy
     # deltaet, test energy
-    etnp = numpy.ones((2, nrps))
-    thesign = [-1, 1]  # first negative side, then positive side
-    verbosesign = ["negative", "positive"]
-    for i in [0, 1]:
-        verboseprint(f"Search on the {verbosesign[i]} side")
-        deltaet = thesign[i] * et_ini * numpy.ones(nrps)
-        deltaeu = thesign[i] * eu_ini * numpy.ones(nrps)
-        deltaes = thesign[i] * es_ini * numpy.ones(nrps)
-        deltae = 1
-        iteration = 0
-        while iteration < 100 and (deltae > dptol):  # safety limit on iterations
-            iteration = iteration + 1
-            t00 = time.time()
-            # plost is a mask, True for lost particles
-            plost = multirefpts_track_islost(
-                ring, rps, deltaet, orbit_s, add_offset, nturns=nturns, **dicttrack
-            )
+    etpos = et_ini*numpy.ones((1, nrps))
+    eupos = eu_ini*numpy.ones((1, nrps))
+    espos = es_ini*numpy.ones((1, nrps))
+    etneg = -1*et_ini*numpy.ones((1, nrps))
+    euneg = -1*eu_ini*numpy.ones((1, nrps))
+    esneg = -1*es_ini*numpy.ones((1, nrps))
+    deltae = 1
+    iteration = 0
+    while iteration < 100 and (deltae > dptol):  # safety limit on iterations
+        iteration = iteration + 1
+        t00 = time.time()
+        # plost is a mask, True for lost particles
+        plost = multirefpts_track_islost(
+                                         ring,
+                                         rps,
+                                         etpos,
+                                         etneg,
+                                         orbit_s,
+                                         add_offset,
+                                         nturns=nturns,
+                                         **dicttrack
+                                        )
             deltaes[~plost] = deltaet[~plost]
             deltaeu[plost] = deltaet[plost]
             deltaet = (deltaes + deltaeu) / 2
