@@ -1,6 +1,9 @@
 """AT plotting functions"""
 from __future__ import annotations
 from at.lattice import Lattice, axis_
+from at import RFCavity
+from at.physics.revolution import get_mcf
+from at.constants import clight
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import numpy
@@ -172,6 +175,110 @@ def plot_sigma(sigma, axis: tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
     ax.set_ylabel('{0}{1}'.format(ax2['label'], ax2['unit']))
     return line
 
+def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=400,
+                               num_levels=41, plot_separatrix=True, **kwargs):
+    r"""Plot the resulting longitudinal Hamiltonian of a ring (defining the RF bucket).
+    The Hamiltonian is calculated by summing all the cavities in the ring.
+    Harmonic cavities are supported by the function.
+
+    Parameters:
+        ring: Lattice description
+        ct_range (tuple): Forced lower and upper ct values for the plot.
+        Default to :math:`\pm 1.1 \times C / (2h)`
+        dp_range (tuple): Forced lower and upper dp values for the plot.
+        Default to twice the RF acceptance of the bucket.
+        num_points (int): Number of points for 1D grid (ct/dp)
+        Default to 400.
+        num_levels (int): Number of levels for contour plot. Odd number of
+        levels allow to center the colorbar around 0.
+        Default to 41.
+        plot_separatrix (bool): Flag to plot the separatrix contour
+        (:math:`\mathcal{H}=0`).
+
+    Returns:
+        CT:   (num_points,num_points) array: ct grid
+        DP:    (num_points,num_points) array: dp grid
+        hamiltonian:   (num_points,num_points) array: Hamiltonian values
+        along (CT,DP) grid
+    """
+    # (ct, dp) grid calculation (defined around the main RF bucket)
+    if ct_range is None:
+        ct = numpy.linspace(-1.1 * ring.circumference/ring.harmonic_number/2,
+                     1.1 * ring.circumference/ring.harmonic_number/2, num=num_points)
+    else:
+        ct = numpy.linspace(ct_range[0], ct_range[1], num=num_points)
+    if dp_range is None:
+        ring.disable_6d()
+        U0 = ring.energy_loss
+        overvoltage = ring.rf_voltage / U0
+        rfa = numpy.sqrt(2 * U0 / (numpy.pi * ring.mcf * ring.harmonic_number * ring.energy) * \
+                      (numpy.sqrt(overvoltage**2 - 1) - numpy.arccos(1 / overvoltage)))
+        ring.enable_6d()
+        dp = numpy.linspace(-2 * rfa, 2 * rfa, num=num_points)
+    else:
+        dp = numpy.linspace(dp_range[0], dp_range[1], num=num_points)
+    CT, DP = numpy.meshgrid(ct, dp)
+
+    hamiltonian = 0
+    # Iteration over all lattice cavities
+    for rfcav in ring.get_elements(RFCavity):
+        Voltage = rfcav.Voltage
+        HarmNumber = rfcav.HarmNumber
+        TimeLag = rfcav.TimeLag
+
+        phi_s = TimeLag * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
+        phi = (numpy.pi - phi_s) + CT * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
+
+        # Momentum compaction/phase slip factors computed up to third order
+        ring.disable_6d()
+        alpha = get_mcf(ring, fit_order=3, n_step=10)
+        ring.enable_6d()
+
+        eta = numpy.zeros(len(alpha))
+        eta[0] = alpha[0] - 1 / ring.gamma**2
+        eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + alpha[1] - alpha[0] * eta[0]
+        eta[2] = -ring.beta**2*(5*ring.beta**2 - 1) / (2 * ring.gamma**2) + \
+        alpha[2] - 2 * alpha[0] * alpha[1] + alpha[1] / ring.gamma**2 + alpha[0]**2 * eta[0] - \
+        (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
+
+        eta_delta = eta[0] / 2 + eta[1] / 3 * DP + eta[2] / 4 * DP**2
+
+        # Hamiltonian divided by harmonic number to have U = U(V_rf, h, phi_s)
+        T = numpy.pi * eta_delta * DP**2
+        U = Voltage / (ring.beta**2 * ring.energy * HarmNumber) * \
+        (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) * numpy.sin(phi_s))
+        hamiltonian += T + U
+
+    fig, ax = plt.subplots(1)
+    lim_range = numpy.max((numpy.abs(hamiltonian).min(), numpy.abs(hamiltonian).max()))
+    levels = numpy.linspace(-lim_range, lim_range, num_levels, endpoint=True)
+    co = ax.contourf(CT, DP, hamiltonian, levels, cmap='coolwarm', alpha=0.7)
+    ax.contour(CT, DP, hamiltonian, levels, cmap='coolwarm') # additional contour for visibility
+    if plot_separatrix:
+        ax.contour(CT, DP, hamiltonian, [0], colors='black') # separatrix contour
+    cb = fig.colorbar(co)
+    cb.set_label(r'$\mathcal{H}(ct,\delta)$ [a.u.]', fontsize=18)
+
+    ax.set_xlabel(r'ct [m]')
+    ax.set_ylabel(r'$\delta$')
+
+    phi_s = ring.get_rf_timelag() * 2 * numpy.pi * ring.get_revolution_frequency() * \
+    ring.harmonic_number / ring.beta / clight
+    def ct_to_phi(ct):
+        return numpy.pi - phi_s + \
+        ct / (2 * numpy.pi * ring.get_revolution_frequency() * ring.harmonic_number / clight)
+
+    def phi_to_ct(phase):
+        return numpy.pi - phi_s - \
+        phase * (2 * numpy.pi * ring.get_revolution_frequency() * ring.harmonic_number / clight)
+
+    ax2 = ax.secondary_xaxis("top", functions=(phi_to_ct,ct_to_phi))
+    ax2.set_xlabel(r'$\phi$ [rad]')
+
+    plt.title(r'$\phi_{RF}$ '+rf'= $\pi -$ {phi_s:.2f}', fontsize=18)
+
+    return CT, DP, hamiltonian
 
 Lattice.plot_acceptance = plot_acceptance
 Lattice.plot_geometry = plot_geometry
+Lattice.plot_RF_bucket_hamiltonian = plot_RF_bucket_hamiltonian
