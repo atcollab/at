@@ -129,12 +129,12 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     # unstable energy
     # stable energy
     # test energy
-    etpos = et_ini*numpy.ones((1, nrps))
-    eupos = eu_ini*numpy.ones((1, nrps))
-    espos = es_ini*numpy.ones((1, nrps))
-    etneg = -1*et_ini*numpy.ones((1, nrps))
-    euneg = -1*eu_ini*numpy.ones((1, nrps))
-    esneg = -1*es_ini*numpy.ones((1, nrps))
+    etpos = et_ini*numpy.ones(nrps)
+    eupos = eu_ini*numpy.ones(nrps)
+    espos = es_ini*numpy.ones(nrps)
+    etneg = -1*et_ini*numpy.ones(nrps)
+    euneg = -1*eu_ini*numpy.ones(nrps)
+    esneg = -1*es_ini*numpy.ones(nrps)
     deltae = 1
     iteration = 0
     while iteration < 100 and (deltae > dptol):  # safety limit on iterations
@@ -157,16 +157,16 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         plostpos = plost[0::2]
         plostneg = plost[1::2]
         # split in stable (es), unstable (eu) and test (et) energy
-        espos[~plost] = etpos[~plost]
-        eupos[plost] = etpos[plost]
+        espos[~plostpos] = etpos[~plostpos]
+        eupos[plostpos] = etpos[plostpos]
         etpos = (espos+eupos) / 2
-        esneg[~plost] = etneg[~plost]
-        euneg[plost] = etneg[plost]
+        esneg[~plostneg] = etneg[~plostneg]
+        euneg[plostneg] = etneg[plostneg]
         etneg = (esneg+euneg) / 2
         # define new energy step
         depos = max(abs(espos-eupos))
         deneg = max(abs(esneg-euneg))
-        deltae = max(numpy.concatenate([depos,deneg]))
+        deltae = max(depos,deneg)
         outmsg = (
                   f"Iteration {iteration}",
                   f" took {format(time.time()-t00):.3} s.",
