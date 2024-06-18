@@ -89,7 +89,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     # first guess
     if "euguess" in kwargs:
         eu_ini = kwargs.pop("euguess")
-        verboseprint(f"Using the users max boundary {euguess}")
+        verboseprint(f"Using the users max boundary {eu_ini}")
     else:
         # use radiation parameters to get the rf bucket
         pars = ring.radiation_parameters()
