@@ -45,10 +45,10 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
       orbit: (N,6) offsets to be added on the N reference points.
         Default, the closed orbit
       verbose: print in the standard output additional info. Default False
-      epsilon6D: float.
+      epsilon6d: float.
         If not passed, all particles are tracked.
-        If epsilon6D is given, we track for nturns only particles
-        having 6D coordinates different by epsilon6D
+        If epsilon6d is given, we track for nturns only particles
+        having 6D coordinates different by epsilon6d
 
     Returns:
       dnp: (N,2) array with negative and positive stable energy boundaries
@@ -84,7 +84,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         verboseprint(f"Adding default transverse offsets {dxy}")
 
     # set the minimum distance btw particles that makes them similar
-    epsilon6D = kwargs.pop("epsilon6D", 0)
+    epsilon6d = kwargs.pop("epsilon6d", 0)
 
     # first guess
     if "euguess" in kwargs:
@@ -149,7 +149,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
             orbit_s,
             add_offset,
             nturns,
-            epsilon6D,
+            epsilon6d,
             verbose,
             **kwargs,
         )
@@ -281,7 +281,7 @@ def multirefpts_track_islost(
     orbit: numpy.ndarray,
     initcoord: numpy.ndarray,
     nturns: float,
-    epsilon6D: float,
+    epsilon6d: float,
     verbose: bool,
     **kwargs: Dict[str, any],
 ) -> numpy.ndarray:
@@ -301,7 +301,7 @@ def multirefpts_track_islost(
       orbit: (6,N) orbit to be added to the N refpts.
       initcoords: (2,N) hor. and ver. transverse offsets in m.
       nturns: number of turns to track
-      epsilon6D: maximum value to consider particles as similar
+      epsilon6d: maximum value to consider particles as similar
       verbose: print info
 
     Returns:
@@ -318,7 +318,7 @@ def multirefpts_track_islost(
     lostpart = numpy.ones((nparticles * nrps), dtype=bool)
     zin = numpy.zeros((6, nparticles * nrps))
     zout = numpy.zeros((6, nparticles * nrps))
-    tinyoffset = epsilon6D
+    tinyoffset = epsilon6d
 
     # project to the end of the ring
     erps = len(ring)
@@ -358,7 +358,7 @@ def multirefpts_track_islost(
     trackonly_mask = numpy.ones(shapealiveatend[1], dtype=bool)
     similarparticles_index = numpy.array([])
     particles_were_filtered = False
-    if epsilon6D != 0 and cntalive > 1:
+    if epsilon6d != 0 and cntalive > 1:
         particles_were_filtered = True
         # search for non numerically similar particles
         closenessmatrix = numpy.zeros((cntalive, cntalive), dtype=bool)
