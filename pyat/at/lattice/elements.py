@@ -265,7 +265,7 @@ class Element(object):
                         R1=_array66, R2=_array66,
                         T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
-                        RApertures=lambda v: _array(v, (4,)),
+                        RApertures=lambda v: _array(v, (8,)),
                         EApertures=lambda v: _array(v, (2,)),
                         KickAngle=lambda v: _array(v, (2,)),
                         PolynomB=_array, PolynomA=_array,
@@ -644,14 +644,14 @@ class Aperture(Element):
     """Aperture element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
-    _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
+    _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (8,)))
 
     def __init__(self, family_name, limits, **kwargs):
         """
         Args:
             family_name:    Name of the element
-            limits:         (4,) array of physical aperture:
-              [xmin, xmax, zmin, zmax] [m]
+            limits:         (8,) array of physical aperture:
+              [xmin, xmax, ymin, ymax, dpmin, dpmax, ctmin, ctmax]
 
         Default PassMethod: ``AperturePass``
         """
