@@ -84,7 +84,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         verboseprint(f"Adding default transverse offsets {dxy}")
 
     # set the minimum distance btw particles that makes them similar
-    epsilon6D = kwargs.pop("epsilon6D",[])
+    epsilon6D = kwargs.pop("epsilon6D",0)
 
     # first guess
     if "euguess" in kwargs:
@@ -148,13 +148,14 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
                                          etneg,
                                          orbit_s,
                                          add_offset,
-                                         nturns=nturns,
+                                         nturns,
+                                         epsilon6D,
+                                         verbose,
                                          **kwargs
                                         )
         # split in positive and negative side of energy offsets
-        lenplost = len(plost)
-        plostpos = plost[0:lenplost:2]
-        plostneg = plost[1:lenplost:2]
+        plostpos = plost[0::2]
+        plostneg = plost[1::2]
         # split in stable (es), unstable (eu) and test (et) energy
         espos[~plost] = etpos[~plost]
         eupos[plost] = etpos[plost]
@@ -279,7 +280,10 @@ def multirefpts_track_islost(
     esetptneg: numpy.ndarray,
     orbit: numpy.ndarray,
     initcoord: numpy.ndarray,
-    **dicttrack: Dict[str, any],
+    nturns: float,
+    epsilon6D: float,
+    verbose: bool,
+    **kwargs: Dict[str, any],
 ) -> numpy.ndarray:
     """
     Tell whether the particle launched is lost.
@@ -296,30 +300,54 @@ def multirefpts_track_islost(
       esetptneg: negative energy set point for tracking.
       orbit: (6,N) orbit to be added to the N refpts.
       initcoords: (2,N) hor. and ver. transverse offsets in m.
+      nturns: number of turns to track
+      epsilon6D: maximum value to consider particles as similar
+      verbose: print info
 
     Returns:
-      Lostpart: (N) bool array. True if the particle is lost.
+      Lostpart: (2*N) bool array, for N reference points.
+        True if the particle is lost.
     """
+    # track positive and negative side at the same time
+    nparticles = 2
+
     rps = refpts
     nrps = len(rps)
-    lostpart = numpy.ones((2*nrps), dtype=bool)
-    zin = numpy.zeros((6, 1, nrps, 1))
-    zout = numpy.zeros((6, 1, nrps, 1))
-    issmall = 1e-6
+    lostpart = numpy.ones((nparticles*nrps), dtype=bool)
+    zin = numpy.zeros((6, nparticles*nrps))
+    zout = numpy.zeros((6, nparticles*nrps))
     eps = numpy.finfo(float).eps
-    istiny = 100 * eps
+    tinyoffset = epsilon6D
     nturns = dicttrack.pop("nturns", 1000)
 
     # first, track the remaining portion of the ring
-    zin[:, 0, :, 0] = orbit.T.copy()
-    zin[0, 0, :, 0] = zin[0, 0, :, 0] + initcoord[0, :]
-    zin[2, 0, :, 0] = zin[2, 0, :, 0] + initcoord[1, :]
-    zin[4, 0, :, 0] = zin[4, 0, :, 0] + energysetpt
-    zout, lostpart = projectrefpts(ring, rps, zin, group=True)
+    zin[:, 0::2] = orbit.T.copy()
+    zin[:, 1::2] = orbit.T.copy()
+    zin[0, 0::2] = zin[0, 0::2] + initcoord[0, :]
+    zin[0, 1::2] = zin[0, 1::2] + initcoord[0, :]
+    zin[2, 0::2] = zin[2, 0::2] + initcoord[1, :]
+    zin[2, 1::2] = zin[2, 1::2] + initcoord[1, :]
+    zin[4, 0::2] = zin[4, 0::2] + esetptpos
+    zin[4, 1::2] = zin[4, 1::2] + esetptneg
+    for i in range(nrps):
+        ring_downstream = ring.rotate(rps[i])
+        zaux = zin[:, (nparticles*i):(nparticles*i+1)])
+        verboseprint(
+            f"Tracking {nparticles} particles on reference point {i+1} of {nrps}"
+        )
+        zoaux, _, doutaux = ring_downstream.track(
+            zaux, nturns=1, refpts=erps - rps[i], losses=True, **kwargs
+        )
+        zout[:, (nparticles*i):(nparticles*i+1)] = numpy.reshape(
+            zoaux, (6, nparticles)
+        )
+        lostpart[ (nparticles*i):(nparticles*i+1)] = doutaux["loss_map"][
+            "islost"
+        ]
 
     cntalive = nrps - sum(lostpart)
     aliveatringend = ~lostpart
-    zinaliveaux = numpy.squeeze(zout[:, aliveatringend, 0, 0])
+    zinaliveaux = zout[:, aliveatringend]
     zinalive = numpy.asfortranarray(zinaliveaux.copy())
 
     # second, track particles that have survived the ring to the end
@@ -327,11 +355,11 @@ def multirefpts_track_islost(
         _, _, dout2 = ring.track(zinalive, nturns=nturns, refpts=len(ring), losses=True)
         lostpart[aliveatringend] = dout2["loss_map"]["islost"][0]
     elif cntalive > 1:
-        # search for non numerically similar (istiny = 100 times eps) particles
+        # search for non numerically similar particles
         closenessmatrix = numpy.zeros((cntalive, cntalive), dtype=bool)
         for i in range(cntalive):
             closenessmatrix[i, :] = [
-                numpy.allclose(zinalive[:, j], zinalive[:, i], atol=istiny)
+                numpy.allclose(zinalive[:, j], zinalive[:, i], atol=tinyoffset)
                 for j in range(cntalive)
             ]
         _, rowidx = numpy.indices((cntalive, cntalive))
@@ -340,7 +368,7 @@ def multirefpts_track_islost(
             maxidx, return_index=True, return_inverse=True
         )
         # dummy track to later reuse the ring
-        zaux2 = numpy.array([initcoord[0, 0], 0, initcoord[1, 0], 0, issmall, 0]).T
+        zaux2 = numpy.array([initcoord[0, 0], 0, initcoord[1, 0], 0, 1e-6, 0]).T
         ring.track(zaux2, nturns=1)
         # track non-numerically similar particles
         _, _, dout3 = ring.track(
