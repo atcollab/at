@@ -94,14 +94,14 @@ end
 orbit=findorbit6(THERING,REFPTS);
 
 % positive/negative branch
-etp= et_ini*ones(np,1);
-eup= eu_ini*ones(np,1);
-esp= es_ini*ones(np,1);
-etn=-et_ini*ones(np,1);
-eun=-eu_ini*ones(np,1);
-esn=-es_ini*ones(np,1);
-de=1;
-iteration=0;
+etp =  et_ini*ones(np,1);
+eup =  eu_ini*ones(np,1);
+esp =  es_ini*ones(np,1);
+etn = -et_ini*ones(np,1);
+eun = -eu_ini*ones(np,1);
+esn = -es_ini*ones(np,1);
+de = 1;
+iteration = 0;
 while de>detole && iteration < 100
     iteration=iteration+1;
     if verbose
