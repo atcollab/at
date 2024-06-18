@@ -222,7 +222,7 @@ if (epsilon6D ~= 0) && (nalive1stturn > 1)
     [trackonly_mask, ~, similarparticles_index]=unique(similarposs);
     % Loste1=losses_in_multiturn(similarparticles_index);
     if verbose
-        fprintf('Speed up when discarding similar particles %.3f%%\n', ...
+        fprintf('Speed up when discarding similar particles, %.3f%%\n', ...
                 100*(1-length(trackonly_mask)/sizeRalive1turn(2)));
     end
     
