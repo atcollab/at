@@ -132,7 +132,7 @@ while de>detole && iteration < 100
     % define new energy step
     dep = max(abs(esp-eup));
     den = max(abs(esn-eun));
-    de = max([dep,den]);
+    de = max(dep,den);
     if verbose
         elapsed_time=seconds(time(between(seconds_initial,datetime('now'))));
         fprintf('%1.3f seconds. Energy resolution is %1.3e and stops at %1.3e\n',elapsed_time,de,detole);
