@@ -348,7 +348,7 @@ def multirefpts_track_islost(
             "islost"
         ]
 
-    cntalive = nrps - sum(lostpart)
+    cntalive = len(lostpart) - sum(lostpart)
     zinaliveaux = zout[:, ~lostpart]
     zinalive_at_ring_end = numpy.asfortranarray(zinaliveaux.copy())
 
@@ -391,10 +391,7 @@ def multirefpts_track_islost(
         **kwargs
     )
     if particles_were_filtered:
-        print(f'{dout_multiturn["loss_map"]["islost"]=}')
-        print(f'{trackonly_mask=}')
-        print(f'{similarparticles_index=}')
-        lostpaux =  dout_multiturn["loss_map"]["islost"][trackonly_mask[similarparticles_index]]
+        lostpaux =  dout_multiturn["loss_map"]["islost"][similarparticles_index]
     else:
         lostpaux = dout_multiturn["loss_map"]["islost"]
     lostpart[~lostpart] = lostpaux
