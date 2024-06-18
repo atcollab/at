@@ -8,9 +8,9 @@ struct elem {
 
 void AperturePass(double *r_in, double *limits, int num_particles)
 {
-    /* Checks X and Y of each input 6-vector and marks the corresponding element in
-     * lossflag array with 0 if X,Y are exceed the limits given by limitsptr array
-     * limitsptr has 4 elements: (MinX, MaxX, MinY, MaxY)
+    /* Checks X, Y, CT and DP of each input 6-vector and marks the corresponding element in
+     * lossflag array with 0 if X,Y,CT,DP are exceed the limits given by limitsptr array
+     * limitsptr has 8 elements: (MinX, MaxX, MinY, MaxY, MinDP, MaxDP, MinCT, MaxCT)
      */
     int c;
     double *r6;
