@@ -61,7 +61,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         islands of instability due to the varying energy step.
     """
     # verboseprint to check flag only once
-    verbose = kwargs.pop('verbose',False)
+    verbose = kwargs.pop("verbose", False)
     verboseprint = print if verbose else lambda *a, **k: None
 
     rps = kwargs.pop("refpts", ring.uint32_refpts(range(len(ring))))
@@ -84,7 +84,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         verboseprint(f"Adding default transverse offsets {dxy}")
 
     # set the minimum distance btw particles that makes them similar
-    epsilon6D = kwargs.pop("epsilon6D",0)
+    epsilon6D = kwargs.pop("epsilon6D", 0)
 
     # first guess
     if "euguess" in kwargs:
@@ -129,12 +129,12 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     # unstable energy
     # stable energy
     # test energy
-    etpos = et_ini*numpy.ones(nrps)
-    eupos = eu_ini*numpy.ones(nrps)
-    espos = es_ini*numpy.ones(nrps)
-    etneg = -1*et_ini*numpy.ones(nrps)
-    euneg = -1*eu_ini*numpy.ones(nrps)
-    esneg = -1*es_ini*numpy.ones(nrps)
+    etpos = et_ini * numpy.ones(nrps)
+    eupos = eu_ini * numpy.ones(nrps)
+    espos = es_ini * numpy.ones(nrps)
+    etneg = -1 * et_ini * numpy.ones(nrps)
+    euneg = -1 * eu_ini * numpy.ones(nrps)
+    esneg = -1 * es_ini * numpy.ones(nrps)
     deltae = 1
     iteration = 0
     while iteration < 100 and (deltae > dptol):  # safety limit on iterations
@@ -142,38 +142,38 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         t00 = time.time()
         # plost is a mask, True for lost particles
         plost = multirefpts_track_islost(
-                                         ring,
-                                         rps,
-                                         etpos,
-                                         etneg,
-                                         orbit_s,
-                                         add_offset,
-                                         nturns,
-                                         epsilon6D,
-                                         verbose,
-                                         **kwargs
-                                        )
+            ring,
+            rps,
+            etpos,
+            etneg,
+            orbit_s,
+            add_offset,
+            nturns,
+            epsilon6D,
+            verbose,
+            **kwargs,
+        )
         # split in positive and negative side of energy offsets
         plostpos = plost[0::2]
         plostneg = plost[1::2]
         # split in stable (es), unstable (eu) and test (et) energy
         espos[~plostpos] = etpos[~plostpos]
         eupos[plostpos] = etpos[plostpos]
-        etpos = (espos+eupos) / 2
+        etpos = (espos + eupos) / 2
         esneg[~plostneg] = etneg[~plostneg]
         euneg[plostneg] = etneg[plostneg]
-        etneg = (esneg+euneg) / 2
+        etneg = (esneg + euneg) / 2
         # define new energy step
-        depos = max(abs(espos-eupos))
-        deneg = max(abs(esneg-euneg))
-        deltae = max(depos,deneg)
+        depos = max(abs(espos - eupos))
+        deneg = max(abs(esneg - euneg))
+        deltae = max(depos, deneg)
         outmsg = (
-              f"Iteration {iteration}",
-                  f" took {format(time.time()-t00):.3} s.",
-                  f" deltae={deltae}, dptol={dptol}",
-                 )
+            f"Iteration {iteration}",
+            f" took {format(time.time()-t00):.3} s.",
+            f" deltae={deltae}, dptol={dptol}",
+        )
         verboseprint("".join(outmsg))
-    return numpy.vstack([etneg,etpos]).T
+    return numpy.vstack([etneg, etpos]).T
 
 
 def projectrefpts(
@@ -315,9 +315,9 @@ def multirefpts_track_islost(
 
     rps = refpts
     nrps = len(rps)
-    lostpart = numpy.ones((nparticles*nrps), dtype=bool)
-    zin = numpy.zeros((6, nparticles*nrps))
-    zout = numpy.zeros((6, nparticles*nrps))
+    lostpart = numpy.ones((nparticles * nrps), dtype=bool)
+    zin = numpy.zeros((6, nparticles * nrps))
+    zout = numpy.zeros((6, nparticles * nrps))
     tinyoffset = epsilon6D
 
     # project to the end of the ring
@@ -334,17 +334,17 @@ def multirefpts_track_islost(
     zin[4, 1::2] = zin[4, 1::2] + esetptneg
     for i in range(nrps):
         ring_downstream = ring.rotate(rps[i])
-        zaux = zin[:, (nparticles*i):(nparticles*i+2)]
-        #verboseprint(
+        zaux = zin[:, (nparticles * i) : (nparticles * i + 2)]
+        # verboseprint(
         #    f"Tracking {nparticles} particles on reference point {i+1} of {nrps}"
-        #)
+        # )
         zoaux, _, doutaux = ring_downstream.track(
             zaux, nturns=1, refpts=erps - rps[i], losses=True, **kwargs
         )
-        zout[:, (nparticles*i):(nparticles*(i+1))] = numpy.reshape(
+        zout[:, (nparticles * i) : (nparticles * (i + 1))] = numpy.reshape(
             zoaux, (6, nparticles)
         )
-        lostpart[ (nparticles*i):(nparticles*(i+1))] = doutaux["loss_map"][
+        lostpart[(nparticles * i) : (nparticles * (i + 1))] = doutaux["loss_map"][
             "islost"
         ]
 
@@ -355,7 +355,7 @@ def multirefpts_track_islost(
     # second, use the particles that have survived the ring to the end
     # filter them if necessary, and track them
     shapealiveatend = numpy.shape(zinalive_at_ring_end)
-    trackonly_mask = numpy.ones(shapealiveatend[1],dtype=bool)
+    trackonly_mask = numpy.ones(shapealiveatend[1], dtype=bool)
     similarparticles_index = numpy.array([])
     particles_were_filtered = False
     if epsilon6D != 0 and cntalive > 1:
@@ -364,9 +364,11 @@ def multirefpts_track_islost(
         closenessmatrix = numpy.zeros((cntalive, cntalive), dtype=bool)
         for i in range(cntalive):
             closenessmatrix[i, :] = [
-                numpy.allclose(zinalive_at_ring_end[:, j],
-                               zinalive_at_ring_end[:, i],
-                               atol=tinyoffset)
+                numpy.allclose(
+                    zinalive_at_ring_end[:, j],
+                    zinalive_at_ring_end[:, i],
+                    atol=tinyoffset,
+                )
                 for j in range(cntalive)
             ]
         _, rowidx = numpy.indices((cntalive, cntalive))
@@ -374,9 +376,10 @@ def multirefpts_track_islost(
         trackonly_mask, _, similarparticles_index = numpy.unique(
             maxidx, return_index=True, return_inverse=True
         )
-        outmsg = (f'Speed up when discarding similar particles ',
-                  f'{100*len(trackonly_mask)/cntalive:.3f}%',
-                )
+        outmsg = (
+            f"Speed up when discarding similar particles ",
+            f"{100*len(trackonly_mask)/cntalive:.3f}%",
+        )
         verboseprint("".join(outmsg))
     # track
     # dummy track to later reuse the ring
@@ -388,10 +391,10 @@ def multirefpts_track_islost(
         nturns=nturns,
         keep_lattice=True,
         losses=True,
-        **kwargs
+        **kwargs,
     )
     if particles_were_filtered:
-        lostpaux =  dout_multiturn["loss_map"]["islost"][similarparticles_index]
+        lostpaux = dout_multiturn["loss_map"]["islost"][similarparticles_index]
     else:
         lostpaux = dout_multiturn["loss_map"]["islost"]
     lostpart[~lostpart] = lostpaux
