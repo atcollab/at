@@ -51,19 +51,17 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         having 6D coordinates different by epsilon6D
 
     Returns:
-      dnp: (2,N) array with negative and positive stable energy boundaries
+      dnp: (N,2) array with negative and positive stable energy boundaries
         for the N reference points
 
     ..note::
       * This function could track in parallel. Set use_mp=True.
-        Other arguments could be passed through :py:func:`lattice_track`.
+        Other arguments could be passed, check :py:func:`lattice_track`.
       * This function does a quick search, but, it is succeptible to miss
         islands of instability due to the varying energy step.
     """
     # verboseprint to check flag only once
-    verbose = False
-    if "verbose" in kwargs:
-        verbose = bool(kwargs["verbose"])
+    verbose = kwargs.pop('verbose',False)
     verboseprint = print if verbose else lambda *a, **k: None
 
     rps = kwargs.pop("refpts", ring.uint32_refpts(range(len(ring))))
@@ -76,17 +74,21 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     dptol = kwargs.pop("dptol", 1e-4)
     verboseprint(f"Energy resolution {dptol}")
 
+    # set transverse offsets
     if "troffset" in kwargs:
-        add_offset = kwargs["troffset"]
+        add_offset = kwargs.pop("troffset")
         verboseprint("Add user offsets")
     else:
         dxy = 1e-5
         add_offset = numpy.tile(dxy, [2, nrps])
         verboseprint(f"Adding default transverse offsets {dxy}")
 
+    # set the minimum distance btw particles that makes them similar
+    epsilon6D = kwargs.pop("epsilon6D",[])
+
     # first guess
     if "euguess" in kwargs:
-        eu_ini = kwargs["euguess"]
+        eu_ini = kwargs.pop("euguess")
         verboseprint(f"Using the users max boundary {euguess}")
     else:
         # use radiation parameters to get the rf bucket
@@ -116,18 +118,17 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     es_ini = 0
     et_ini = eu_ini / 2
 
-
     if "orbit" in kwargs:
-        orbit_s = kwargs["orbit"]
+        orbit_s = kwargs.pop("orbit")
         verboseprint("Using the users orbit")
     else:
         _, orbit_s = ring.find_orbit(rps)
         verboseprint("Using the closed orbit")
 
-    # start scan
-    # deltaeu, unstable energy
-    # deltaes, stable energy
-    # deltaet, test energy
+    # start scan of:
+    # unstable energy
+    # stable energy
+    # test energy
     etpos = et_ini*numpy.ones((1, nrps))
     eupos = eu_ini*numpy.ones((1, nrps))
     espos = es_ini*numpy.ones((1, nrps))
@@ -148,20 +149,30 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
                                          orbit_s,
                                          add_offset,
                                          nturns=nturns,
-                                         **dicttrack
+                                         **kwargs
                                         )
-            deltaes[~plost] = deltaet[~plost]
-            deltaeu[plost] = deltaet[plost]
-            deltaet = (deltaes + deltaeu) / 2
-            deltae = max(abs(deltaes - deltaeu))
-            outmsg = (
-                f"Iteration {iteration} in {verbosesign[i]} side",
-                f" took {format(time.time()-t00):.3} s.",
-                f" deltae={deltae}, dptol={dptol}",
-            )
-            verboseprint("".join(outmsg))
-        etnp[i, :] = deltaet
-    return etnp.T
+        # split in positive and negative side of energy offsets
+        lenplost = len(plost)
+        plostpos = plost[0:lenplost:2]
+        plostneg = plost[1:lenplost:2]
+        # split in stable (es), unstable (eu) and test (et) energy
+        espos[~plost] = etpos[~plost]
+        eupos[plost] = etpos[plost]
+        etpos = (espos+eupos) / 2
+        esneg[~plost] = etneg[~plost]
+        euneg[plost] = etneg[plost]
+        etneg = (esneg+euneg) / 2
+        # define new energy step
+        depos = max(abs(espos-eupos))
+        deneg = max(abs(esneg-euneg))
+        deltae = max((numpy.concatenate([depos,deneg]))
+        outmsg = (
+                  f"Iteration {iteration}",
+                  f" took {format(time.time()-t00):.3} s.",
+                  f" deltae={deltae}, dptol={dptol}",
+                 )
+        verboseprint("".join(outmsg))
+    return numpy.vstack([etneg,etpos]).T
 
 
 def projectrefpts(
@@ -264,7 +275,8 @@ def projectrefpts(
 def multirefpts_track_islost(
     ring: Lattice,
     refpts: numpy.ndarray,
-    energysetpt: numpy.ndarray,
+    esetptpos: numpy.ndarray,
+    esetptneg: numpy.ndarray,
     orbit: numpy.ndarray,
     initcoord: numpy.ndarray,
     **dicttrack: Dict[str, any],
@@ -280,7 +292,8 @@ def multirefpts_track_islost(
 
     Keyword Arguments:
       refpts: Selects the locations.
-      energysetpt: enery set point for tracking.
+      esetptpos: positive energy set point for tracking.
+      esetptneg: negative energy set point for tracking.
       orbit: (6,N) orbit to be added to the N refpts.
       initcoords: (2,N) hor. and ver. transverse offsets in m.
 
@@ -289,7 +302,7 @@ def multirefpts_track_islost(
     """
     rps = refpts
     nrps = len(rps)
-    lostpart = numpy.ones((nrps), dtype=bool)
+    lostpart = numpy.ones((2*nrps), dtype=bool)
     zin = numpy.zeros((6, 1, nrps, 1))
     zout = numpy.zeros((6, 1, nrps, 1))
     issmall = 1e-6
