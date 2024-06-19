@@ -20,14 +20,14 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     """
     :py:func:`momap_project2start` calculates the local momemtum aperture.
 
-    It is a binary search of the negative and positive energy thresholds
+    It is a binary search of the negative and positive momentum thresholds
     of stability around the closed orbit.
 
-    For a given energy offset the particles are first tracked from every
+    For a given momentum offset the particles are first tracked from every
     reference point to the end of the ring, and then, all or a set of particles
     with different 6D coordinates are tracked together.  The surviving particles
     continue the boundary search with a new energy step until the boundary is
-    found when the step limit or the  energy limit is reached.
+    found when the step limit or the momentum limit is reached.
 
     Usage:
       >>> momaperture_project2start(ring)
@@ -40,7 +40,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         See ":ref:`Selecting elements in a lattice <refpts>`"
       nturns: number of turns to be tracked. Default 1000
       dptol: momentum offset resolution. Default 1e-4
-      euguess: maximum energy boundary. Default: the rf bucket height.
+      euguess: maximum mometum boundary. Default: the rf bucket height.
       troffset: (2, N) offsets to be added to the transverse coordinates
         on the N reference points. Default 1e-5 m
       orbit: (N,6) offsets to be added on the N reference points.
@@ -52,7 +52,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         having 6D coordinates different by epsilon6d
 
     Returns:
-      dnp: (N,2) array with negative and positive stable energy boundaries
+      dnp: (N,2) array with negative and positive stable momentum boundaries
         for the N reference points
 
     ..note::
