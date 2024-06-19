@@ -15,6 +15,7 @@ __all__ = ["momaperture_project2start", "projectrefpts"]
 #           Based on the MATLAB implementation by Z.Marti at ALBA
 #           See https://github.com/atcollab/at/pull/773
 
+
 def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.ndarray:
     """
     :py:func:`momap_project2start` calculates the local momemtum aperture.
@@ -242,7 +243,6 @@ def projectrefpts(
     if nparticles == 1:
         use_mp = False
 
-    zin = numpy.zeros((6, nparticles, nrps, 1))
     if groupparts:
         zout = numpy.zeros((6, nparticles * nrps, 1, 1))
         lostpart = numpy.ones((nparticles * nrps), dtype=bool)
