@@ -2,7 +2,7 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 % MOMAPERTURE_PROJECT2START calculates the local momentum aperture.
 %
 % MOMAPERTURE_PROJECT2START is a Bipartition search of the negative and 
-% positive stability thesholds in the 5th dimension (relative energy).
+% positive stability thesholds in the 5th dimension (relative momentum).
 %  -The 6D closed orbit is taken into account.
 %  -Particles launched at different REFPTS along the ring are first projected
 %  to the ring last element so that all particles can be tracked together.
@@ -15,9 +15,9 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %       REFPTS: REFPTS where to calculate the momentum acceptance.
 %               Default 1:numel(THERING);
 %       nturns: Number of turns to track. Default 1000
-%       dptol:  resolution in energy acceptance. Default 1e-4
-%       euguess: unstable energy threshold guess. Default [].
-%               If not given it uses the linear energy acceptance delta_max
+%       dptol:  resolution in momentum acceptance. Default 1e-4
+%       euguess: unstable momentum threshold guess. Default [].
+%               If not given it uses the linear momentum acceptance delta_max
 %               from ringpara.
 %       troffset: [x y] starting transverse offset for the tracking.
 %               Default [1e-6 1e-6]
@@ -27,15 +27,15 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %               particles having 6D coordinates different by epsilon6D
 %               after being projected to the end of the ring.
 % Output:
-%       ETN: stability threshold for positive off energy particles
-%       ETP: stability threshold for negative off energy particles
+%       ETN: stability threshold for positive off momentum particles
+%       ETP: stability threshold for negative off momentum particles
 %
 %
 % Other functions in the file:
 %
 % Loste = Multiorigin_ringpass_islost
 % Returns a boolean array: tells whether the particle launched at
-% the reference point refpts with positive and negative energy offset is
+% the reference point refpts with positive and negative momentum offset is
 % lost or not.
 
 % 2024may30 Z.Marti at ALBA CELLS, original
