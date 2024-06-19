@@ -20,11 +20,11 @@
 
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
 
-#define NPY_NO_DEPRECATED_API NPY_2_0_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
-
-#define NUMPY_IMPORT_ARRAY_RETVAL NULL
-#define NUMPY_IMPORT_ARRAY_TYPE void *
+#if NPY_ABI_VERSION < 0x02000000
+    #define NPY_RAVEL_AXIS 32
+#endif
 
 typedef PyObject atElem;
 
