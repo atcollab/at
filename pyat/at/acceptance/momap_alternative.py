@@ -74,7 +74,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     verboseprint(f"Track over {nturns} turns")
 
     dptol = kwargs.pop("dptol", 1e-4)
-    verboseprint(f"Energy resolution {dptol}")
+    verboseprint(f"Momentum resolution {dptol}")
 
     # set transverse offsets
     if "troffset" in kwargs:
@@ -172,7 +172,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         outmsg = (
             f"Iteration {iteration}",
             f" took {format(time.time()-t00):.3} s.",
-            f" deltae={deltae}, dptol={dptol}",
+            f" dp_step={deltae}, dptol={dptol}",
         )
         verboseprint("".join(outmsg))
     return numpy.vstack([etneg, etpos]).T
