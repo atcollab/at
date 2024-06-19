@@ -16,7 +16,7 @@ function [etn, etp]=MomAperture_Project2Start(THERING, varargin)
 %               Default 1:numel(THERING);
 %       nturns: Number of turns to track. Default 1000
 %       dptol:  resolution in momentum acceptance. Default 1e-4
-%       euguess: unstable momentum threshold guess. Default [].
+%       dpuguess: unstable momentum threshold guess. Default [].
 %               If not given it uses the linear momentum acceptance delta_max
 %               from ringpara.
 %       troffset: [x y] starting transverse offset for the tracking.
@@ -48,7 +48,7 @@ p = inputParser;
 addOptional(p,'refpts',1:numel(THERING));
 addOptional(p,'nturns',1000);
 addOptional(p,'dptol',1e-4);
-addOptional(p,'euguess',[]);
+addOptional(p,'dpuguess',[]);
 addOptional(p,'troffset',[1e-6 1e-6]);
 addOptional(p,'verbose',false);
 addOptional(p,'epsilon6D',0);
@@ -58,7 +58,7 @@ par = p.Results;
 REFPTS=par.refpts;
 nturns=par.nturns;
 detole=par.dptol;
-eu_ini=par.euguess;
+eu_ini=par.dpuguess;
 initcoord=par.troffset;
 verbose=par.verbose;
 epsilon6D = par.epsilon6D;

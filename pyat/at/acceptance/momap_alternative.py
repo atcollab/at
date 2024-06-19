@@ -40,7 +40,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
         See ":ref:`Selecting elements in a lattice <refpts>`"
       nturns: number of turns to be tracked. Default 1000
       dptol: momentum offset resolution. Default 1e-4
-      euguess: maximum mometum boundary. Default: the rf bucket height.
+      dpuguess: maximum momentum boundary. Default: the rf bucket height.
       troffset: (2, N) offsets to be added to the transverse coordinates
         on the N reference points. Default 1e-5 m
       orbit: (N,6) offsets to be added on the N reference points.
@@ -89,8 +89,8 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     epsilon6d = kwargs.pop("epsilon6d", 0)
 
     # first guess
-    if "euguess" in kwargs:
-        eu_ini = kwargs.pop("euguess")
+    if "dpuguess" in kwargs:
+        eu_ini = kwargs.pop("dpuguess")
         verboseprint(f"Using the users max boundary {eu_ini}")
     else:
         # use radiation parameters to get the rf bucket
