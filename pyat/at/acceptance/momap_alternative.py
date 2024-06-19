@@ -65,6 +65,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
     verboseprint = print if verbose else lambda *a, **k: None
 
     rps = kwargs.pop("refpts", ring.uint32_refpts(range(len(ring))))
+    rps = ring.get_uint32_index(rps)
     nrps = len(rps)
     verboseprint(f"Using {nrps} reference points")
 
