@@ -72,7 +72,7 @@ np = numel(REFPTS);
 if verbose
     fprintf('Using %d reference points.\n',np);
     fprintf('Tracking %d turns.\n',nturns);
-    fprintf('Iteration stops when the energy step is below %.3f.\n',detole);
+    fprintf('Iteration stops when the momentum step is below %.3f.\n',detole);
     fprintf('Using init coords %.3f %.3f um as transverse offsets.\n',1e6*initcoord(1), ...
              1e6*initcoord(2));
 end
@@ -82,13 +82,13 @@ if isempty(eu_ini)
     res = ringpara(THERING);
     eu_ini = res.delta_max;
     if verbose
-        fprintf('Using the rf bucket height as unstable energy limit.\n');
+        fprintf('Using the rf bucket height as unstable momentum limit.\n');
     end
 end
 es_ini = 0; % lower limit of the stability threshold
 et_ini = eu_ini / 2; % starting guess of the stability threshold
 if verbose
-    fprintf('Unstable energy limit set at start to %.3f%%.\n',100*eu_ini);
+    fprintf('Unstable momentum limit set at start to %.3f%%.\n',100*eu_ini);
 end
 
 % bipatition method for multiple points
@@ -136,7 +136,7 @@ while de>detole && iteration < 100
     de = max(dep,den);
     if verbose
         elapsed_time=seconds(time(between(seconds_initial,datetime('now'))));
-        fprintf('%1.3f seconds. Energy resolution is %1.3e and stops at %1.3e\n',elapsed_time,de,detole);
+        fprintf('%1.3f seconds. Momentum resolution is %1.3e and stops at %1.3e\n',elapsed_time,de,detole);
     end
 end
 end
