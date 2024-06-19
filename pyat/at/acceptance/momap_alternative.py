@@ -335,7 +335,7 @@ def multirefpts_track_islost(
     zin[4, 1::2] = zin[4, 1::2] + esetptneg
     for i in range(nrps):
         ring_downstream = ring.rotate(rps[i])
-        zaux = zin[:, (nparticles * i) : (nparticles * i + 2)]
+        zaux = zin[:, (nparticles * i) : (nparticles * (i + 1))]
         # verboseprint(
         #    f"Tracking {nparticles} particles on reference point {i+1} of {nrps}"
         # )
