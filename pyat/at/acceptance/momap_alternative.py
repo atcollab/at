@@ -38,7 +38,7 @@ def momaperture_project2start(ring: Lattice, **kwargs: Dict[str, any]) -> numpy.
       refpts: Selects the location of coordinates output.
         See ":ref:`Selecting elements in a lattice <refpts>`"
       nturns: number of turns to be tracked. Default 1000
-      dptol: energy offset resolution. Default 1e-4
+      dptol: momentum offset resolution. Default 1e-4
       euguess: maximum energy boundary. Default: the rf bucket height.
       troffset: (2, N) offsets to be added to the transverse coordinates
         on the N reference points. Default 1e-5 m
