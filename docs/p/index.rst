@@ -26,6 +26,7 @@ Sub-packages
 
    howto/Installation
    howto/Primer
+   notebooks/variables
 
 .. toctree::
    :maxdepth: 2
