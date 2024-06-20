@@ -4,22 +4,28 @@
 
 struct elem {
     double *limits;
+    double *limitslong;
 };
 
-void AperturePass(double *r_in, double *limits, int num_particles)
+void AperturePass(double *r_in, double *limits, double *limitslong, int num_particles)
 {
     /* Checks X, Y, CT and DP of each input 6-vector and marks the corresponding element in
-     * lossflag array with 0 if X,Y,CT,DP are exceed the limits given by limitsptr array
-     * limitsptr has 8 elements: (MinX, MaxX, MinY, MaxY, MinDP, MaxDP, MinCT, MaxCT)
+     * lossflag array with 0 if X,Y,CT,DP are exceed the limits given by limits and limitslong
+     * arrays
+     * limits has 4 elements: (MinX, MaxX, MinY, MaxY)
+     * limitslong has 4 elements: (MinDP, MaxDP, MinCT, MaxCT)
      */
     int c;
     double *r6;
     for (c=0; c<num_particles; c++) {
         r6 = r_in+c*6;
-        if (!atIsNaN(r6[0])) 
+        if (!atIsNaN(r6[0]))
         {
             /*  check if this particle is already marked as lost */
             checkiflostRectangularAp(r6, limits);
+            if (limitslong != NULL) {
+                checkiflostLongRectangularAp(r6, limitslong);
+            }
         }
     }
 }
@@ -30,10 +36,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double *limits=atGetDoubleArray(ElemData,"Limits"); check_error();
-        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        double *limitslong=atGetDoubleArray(ElemData, "LimitsLong"); check_error();
+	Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->limits=limits;
-    }
-    AperturePass(r_in, Elem->limits, num_particles);
+        Elem->limitslong=limitslong;
+	}
+    AperturePass(r_in, Elem->limits, Elem->limitslong, num_particles);
+
     return Elem;
 }
 
@@ -44,7 +53,19 @@ MODULE_DEF(AperturePass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs == 3) {
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[2]);
+        double *limits=atGetDoubleArray(ElemData,"Limits"); check_error();
+        double *limitslong=atGetDoubleArray(ElemData,"LimitsLong"); check_error();
+        if (mxGetM(prhs[2]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[2]);
+        r_in = mxGetDoubles(plhs[0]);
+        AperturePass(r_in,limits,limitslong, num_particles);
+    }
+    else if (nrhs == 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -53,7 +74,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        AperturePass(r_in,limits, num_particles);
+        AperturePass(r_in,limits,NULL, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -65,7 +86,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
     else {
-        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0, 2 or 3 arguments");
     }
 }
 #endif /*defined(MATLAB_MEX_FILE)*/
