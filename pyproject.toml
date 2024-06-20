@@ -76,7 +76,7 @@ build-verbosity = "1"
 # build-frontend = "build"
 
 [tool.cibuildwheel.macos]
-archs = ["x86_64", "arm64"]
+archs = "native"
 
 #[tool.cibuildwheel.linux]
 ## Pass the detected PyAT version to the linux docker containers
