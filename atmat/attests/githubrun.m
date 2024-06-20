@@ -7,5 +7,8 @@ tsuite=fullfile(atroot,'attests');
 % else
 %     v=assertSuccess(run(testsuite(tsuite,'Tag','GitHub')));
 % end
+if ~(ispc || ismac)
+    py.sys.setdlopenflags(int32(bitor(int64(py.os.RTLD_LAZY), int64(py.os.RTLD_DEEPBIND))));
+end
 v=assertSuccess(run(testsuite(tsuite)));
 disp(table(v));
