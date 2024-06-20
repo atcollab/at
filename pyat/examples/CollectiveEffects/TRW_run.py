@@ -36,7 +36,7 @@ def launch():
 
     # Set up the ring
     ring = at.load_m('../../../machine_data/esrf.m')
-    ring.radiation_off(cavity_pass='RFCavityPass')
+    ring.disable_6d(cavity_pass='RFCavityPass')
 
     current = 200e-3
     nturns = 10000
@@ -85,7 +85,7 @@ def launch():
     fring.append(bmon)
 
     # Particle generation and tracking
-    sigm = at.sigma_matrix(ring.radiation_on(copy=True))
+    sigm = at.sigma_matrix(ring.enable_6d(copy=True))
     part = at.beam(Npart, sigm)
     part[0, :] = 1e-6
     part[1, :] = 0

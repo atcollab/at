@@ -48,11 +48,10 @@ def launch():
     ring.beam_current = current
     ring.set_rf_voltage(6e6)
 
-    ring.radiation_off(cavity_pass='RFCavityPass')
+    ring.disable_6d(cavity_pass='RFCavityPass')
     ring.set_fillpattern(Nbunches)
 
     ring.set_rf_frequency()
-    freqres = ring.rf_frequency
 
     qx, qy, qs = ring.get_tune()
     fs0 = qs * ring.revolution_frequency
@@ -77,7 +76,7 @@ def launch():
     fring.append(bmon)
 
     # Particle generation and tracking
-    sigm = at.sigma_matrix(ring.radiation_on(copy=True))
+    sigm = at.sigma_matrix(ring.enable_6d(copy=True))
     part = at.beam(Npart, sigm, orbit=ld0)
     part[4, :] = 0
     part[5, :] = 0
