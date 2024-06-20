@@ -15,7 +15,7 @@ elseif ismac
     execmode='InProcess';
 else
     execfile=fullfile(getenv('pythonLocation'),'bin','python');
-    execmode='OutOfProcess';
+    execmode='InProcess';
 end
 pyenv("Version", execfile,'ExecutionMode', execmode);
 disp(pyenv);
