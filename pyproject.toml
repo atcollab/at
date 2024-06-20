@@ -75,9 +75,6 @@ build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"
 
-[tool.cibuildwheel.macos]
-archs = "native"
-
 #[tool.cibuildwheel.linux]
 ## Pass the detected PyAT version to the linux docker containers
 #environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
