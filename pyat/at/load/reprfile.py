@@ -13,7 +13,7 @@ from typing import Optional
 import numpy as np
 
 # imports necessary in 'globals()' for 'eval'
-from numpy import array, uint8, NaN  # noqa: F401
+from numpy import array, uint8, nan as NaN  # noqa: F401
 
 from at.lattice import Lattice, Element
 
