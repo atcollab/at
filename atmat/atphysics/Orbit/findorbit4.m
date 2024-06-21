@@ -56,6 +56,7 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
+if check_6d(ring), warning('The ring is 6d'); end
 [orbitin,varargs]=getoption(varargin,'orbit',[]);
 [dp,varargs]=getdparg(varargs,0.0);
 [dct,varargs]=getoption(varargs,'dct',NaN);
