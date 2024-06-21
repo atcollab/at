@@ -94,8 +94,7 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %
 
 %check_radiation(ring,false);
-the_ring_is_6d = check_6d(ring);
-if the_ring_is_6d, warning('The ring is 6d'); end
+if check_6d(ring), warning('The ring is 6d'); end
 
 NE = length(ring);
 [get_chrom,varargs]=getflag(varargin,'get_chrom');
