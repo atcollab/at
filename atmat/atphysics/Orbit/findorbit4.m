@@ -8,7 +8,10 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 %    under the CONSTANT MOMENTUM constraint, dP2 = dP1 = dP and
 %    there is NO constraint on the 6-th coordinate CT
 %
-% IMPORTANT!!! FINDORBIT4 imposes a constraint on dP and relaxes
+% IMPORTANT !!!
+% FINDORBIT4 gives a wrong result with 6-d rings. If you still want to
+%    get the result, set 'strict' to false.
+% FINDORBIT4 imposes a constraint on dP and relaxes
 %    the constraint on the revolution frequency. A physical storage
 %    ring does exactly the opposite: the momentum deviation of a
 %    particle on the closed orbit settles at the value
@@ -32,6 +35,8 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
 %FINDORBIT4(RING,DP,REFPTS,...) Obsolete syntax
+%FINDORBIT4(RIG, ...,'strict',STRICT) Default: true.
+%   Setting it to false shows a warning instead of an error for a 6d-ring.
 %FINDORBIT4(RING,...,'dp',DP)   Specifies the off-momentum
 %
 %FINDORBIT4(RING,...,'dct',DCT) Specifies the path lengthening
@@ -51,13 +56,16 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 %	The optional second return parameter is a 6x1 vector:
 %   closed orbit at the entrance of the RING.
 %
-% See also FINDSYNCORBIT, FINDORBIT6.
+% See also FINDSYNCORBIT, FINDORBIT6, ATDISABLE_6D, CHECK_6D
 
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
-if check_6d(ring), warning('The ring is 6d'); end
-[orbitin,varargs]=getoption(varargin,'orbit',[]);
+[strict6dcheck, varargs]=getoption(varargin,'strict',true);
+ring6d_flag = check_6d(ring);
+if strict6dcheck && ring6d_flag, error('The lattice is 6d'); end
+if ring6d_flag, warning('The ring is 6d'); end
+[orbitin,varargs]=getoption(varargs,'orbit',[]);
 [dp,varargs]=getdparg(varargs,0.0);
 [dct,varargs]=getoption(varargs,'dct',NaN);
 [df,varargs]=getoption(varargs,'df',NaN);
