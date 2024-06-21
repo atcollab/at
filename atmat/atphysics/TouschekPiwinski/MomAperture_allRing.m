@@ -43,6 +43,8 @@ function [map_l,map_h]=MomAperture_allRing(THERING,points,varargin)
 %
 % [...] = MomAperture_allRing(..., 'verbose',VERBOSE)
 %         Print info the current position. Default 0.
+%         If set to 1 it will print info at every reference point.
+%         If set to 2 it will print info at each energy step.
 %
 % ex: [map_l,map_h] = MomAperture_allRing(THERING,points,nturns);
 % ex: [map_l,map_h] = ...
@@ -72,6 +74,12 @@ addOptional(p,'verbose',0);
 parse(p,varargin{:});
 par = p.Results;
 
+verbose = par.verbose;
+deepverbose = false;
+if verbose == 2
+    deepverbose = true;
+end
+
 if ~isequal(size(par.reforbit),[6,length(points)])
     fprintf('ERROR: The size of the reference orbit needs to be (6,number of points)\n');
     return;
@@ -100,13 +108,14 @@ for i=1:length(points)
                         par.ntimessplit, ...
                         par.splitdivisor, ...
                         nturns, ...
-                        'reforbit',par.reforbit(:,i) ...
+                        'reforbit',par.reforbit(:,i), ...
+                        'verbose', deepverbose ...
                         );
         catch
             maps(i,j)=0;
         end
     end
-    if par.verbose
+    if verbose
       fprintf('%d turns, point %d of %d, %.0f%%\tdppP:%6.3f\tdppN:%6.3f\n', ...
                   nturns, ...
                   i, ...
