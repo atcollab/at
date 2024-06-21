@@ -13,6 +13,8 @@ __all__ = [
     "keep_attributes",
     "split_ignoring_parentheses",
     "RingParam",
+    "protect",
+    "restore",
 ]
 
 import collections
@@ -32,6 +34,7 @@ from at.lattice import Lattice, Particle, Element, Marker
 from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+_placeholder = "placeholder"
 
 
 def _no_encoder(v):
@@ -379,25 +382,41 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     return dct
 
 
-def split_ignoring_parentheses(string: str, delimiter: str = ",") -> list[str]:
-    """Split a string while keeping parenthesized expressions intact
+def split_ignoring_parentheses(
+        string: str,
+        delimiter: str = ",",
+        fence: tuple[str, str] = ('\\(', '\\)'),
+        maxsplit: int = -1,
+) -> list[str]:
+    """Split a string while keeping protected expressions intact
 
     Example: "l=0,hom(4,0.0,0)" -> ["l=0", "hom(4,0.0,0)"]
     """
-    placeholder = "placeholder"
-    substituted = string[:]
-    matches = collections.deque(re.finditer("\\(.*?\\)", string))
-    for match in matches:
-        substituted = substituted.replace(match.group(), placeholder, 1)
-    parts = substituted.split(delimiter)
-    replaced_parts = []
-    for part in parts:
-        if placeholder in part:
-            next_match = matches.popleft()
-            part = part.replace(placeholder, next_match.group(), 1)
-        replaced_parts.append(part)
-    assert not matches
+    substituted, matches = protect(string, fence=fence)
+    parts = substituted.split(delimiter, maxsplit=maxsplit)
+    return restore(matches, *parts)
 
+
+def protect(string: str, fence: tuple[str, str] = ('"', '"')):
+    inf, outf = fence
+    pattern = f"{inf}.*?{outf}"
+    substituted = string[:]
+    matches = collections.deque(re.finditer(pattern, string))
+    for match in matches:
+        substituted = substituted.replace(match.group(), _placeholder, 1)
+    return substituted, matches
+
+
+def restore(matches, *parts):
+
+    def rep(part):
+        while _placeholder in part:
+            next_match = matches.popleft()
+            part = part.replace(_placeholder, next_match.group(), 1)
+        return part
+
+    replaced_parts = [rep(part) for part in parts]
+    assert not matches
     return replaced_parts
 
 

@@ -17,7 +17,7 @@ import numpy as np
 import scipy.io
 
 # imports necessary in 'globals()' for 'eval'
-from numpy import array, uint8, NaN  # noqa: F401
+from numpy import array, uint8, nan as NaN  # noqa: F401
 
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, RingParam, keep_elements
