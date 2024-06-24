@@ -219,6 +219,24 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         dp = numpy.linspace(dp_range[0], dp_range[1], num=num_points)
     CT, DP = numpy.meshgrid(ct, dp)
 
+    # Momentum compaction/phase slip factors computed up to third order
+    ring.disable_6d()
+    alpha = get_mcf(ring, fit_order=3, n_step=10)
+    ring.enable_6d()
+
+    eta = numpy.zeros(len(alpha))
+    eta[0] = alpha[0] - 1 / ring.gamma**2
+    eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + alpha[1] - alpha[0] * eta[0]
+    eta[2] = -ring.beta**2*(5*ring.beta**2 - 1) / (2 * ring.gamma**2) + \
+    alpha[2] - 2 * alpha[0] * alpha[1] + alpha[1] / ring.gamma**2 + alpha[0]**2 * eta[0] - \
+    (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
+
+    eta_delta = eta[0] / 2 + eta[1] / 3 * DP + eta[2] / 4 * DP**2
+
+    # Hamiltonian (H=U+T) divided by harmonic number to have U = U(V_rf, h, phi_s)
+    # First term of the Hamiltonian
+    T = numpy.pi * eta_delta * DP**2
+
     hamiltonian = 0
     # Iteration over all lattice cavities
     for rfcav in ring[RFCavity]:
@@ -229,24 +247,10 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         phi_s = TimeLag * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
         phi = (numpy.pi - phi_s) + CT * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
 
-        # Momentum compaction/phase slip factors computed up to third order
-        ring.disable_6d()
-        alpha = get_mcf(ring, fit_order=3, n_step=10)
-        ring.enable_6d()
-
-        eta = numpy.zeros(len(alpha))
-        eta[0] = alpha[0] - 1 / ring.gamma**2
-        eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + alpha[1] - alpha[0] * eta[0]
-        eta[2] = -ring.beta**2*(5*ring.beta**2 - 1) / (2 * ring.gamma**2) + \
-        alpha[2] - 2 * alpha[0] * alpha[1] + alpha[1] / ring.gamma**2 + alpha[0]**2 * eta[0] - \
-        (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
-
-        eta_delta = eta[0] / 2 + eta[1] / 3 * DP + eta[2] / 4 * DP**2
-
-        # Hamiltonian divided by harmonic number to have U = U(V_rf, h, phi_s)
-        T = numpy.pi * eta_delta * DP**2
+        # Second term of the Hamiltonian
         U = Voltage / (ring.beta**2 * ring.energy * HarmNumber) * \
         (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) * numpy.sin(phi_s))
+        # Total Hamiltonian
         hamiltonian += T + U
 
     fig, ax = plt.subplots(1)
