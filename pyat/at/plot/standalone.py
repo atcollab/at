@@ -221,7 +221,7 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
 
     hamiltonian = 0
     # Iteration over all lattice cavities
-    for rfcav in ring.get_elements(RFCavity):
+    for rfcav in ring[RFCavity]:
         Voltage = rfcav.Voltage
         HarmNumber = rfcav.HarmNumber
         TimeLag = rfcav.TimeLag
