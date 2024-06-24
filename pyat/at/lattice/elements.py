@@ -661,20 +661,19 @@ class Aperture(Element):
 class LongAperture(Element):
     """Longitudinal aperture element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits', 'LimitsLong']
-    limits = _array((-numpy.inf, numpy.inf, -numpy.inf, numpy.inf), (4,))
-    _conversions = dict(Element._conversions, LimitsLong=lambda v: _array(v, (4,)))
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
+    _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
-    def __init__(self, family_name, limitslong, limits=limits, **kwargs):
+    def __init__(self, family_name, limits, **kwargs):
         """
         Args:
             family_name:    Name of the element
-            limitslong:         (4,) array of physical aperture:
+            limits:         (4,) array of physical aperture:
               [dpmin, dpmax, ctmin, ctmax]
-        Default PassMethod: ``AperturePass``
+        Default PassMethod: ``LongAperturePass``
         """
-        kwargs.setdefault('PassMethod', 'AperturePass')
-        super(LongAperture, self).__init__(family_name, Limits=limits, LimitsLong=limitslong, **kwargs)
+        kwargs.setdefault('PassMethod', 'LongAperturePass')
+        super(LongAperture, self).__init__(family_name, Limits=limits, **kwargs)
 
 class Drift(LongElement):
     """Drift space element"""
