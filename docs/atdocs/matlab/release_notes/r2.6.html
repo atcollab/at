@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,IE=9,chrome=1"><meta name="generator" content="MATLAB 2024a"><title>2.6</title><style type="text/css">.rtcContent { padding: 30px; } .S0 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 28.8px; min-height: 0px; white-space: pre-wrap; color: rgb(192, 76, 11); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 24px; font-weight: 400; text-align: left;  }
+.S1 { margin: 15px 10px 5px 4px; padding: 0px; line-height: 18px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 17px; font-weight: 700; text-align: left;  }
+.S2 { margin: 10px 0px 20px; padding-left: 0px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;  }
+.S3 { margin-left: 56px; line-height: 21px; min-height: 0px; text-align: left; white-space: pre-wrap;  }
+.S4 { margin: 2px 10px 9px 4px; padding: 0px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: left;  }</style></head><body><div class = rtcContent><h1  class = 'S0'><span style=' font-weight: bold;'>2.6</span></h1><h3  class = 'S1'><span style=' font-weight: bold;'>Main changes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>First release under the Apache 2.0 license</span></li><li  class = 'S3'><span>Lattices may be loaded and saved in JSON format. AT files in JSON format can be used for exchanging lattices between Matlab and python, as an alternative to the proprietary </span><span style=' font-family: monospace;'>.mat</span><span> format.</span></li></ul><h3  class = 'S1'><span>New features</span></h3><ul  class = 'S2'><li  class = 'S3'><span>AT Licensing by</span><span> </span><a href = "https://github.com/lfarv"><span style=' text-decoration: underline;'>@lfarv</span></a><span> </span><span>in</span><span> </span><a href = "https://github.com/atcollab/at/pull/760"><span style=' text-decoration: underline;'>#760</span></a></li><li  class = 'S3'><span>Save and load lattices in JSON format by</span><span> </span><a href = "https://github.com/lfarv"><span style=' text-decoration: underline;'>@lfarv</span></a><span> </span><span>in</span><span> </span><a href = "https://github.com/atcollab/at/pull/766"><span style=' text-decoration: underline;'>#766</span></a></li></ul><h3  class = 'S1'><span>Bug fixes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>Update atsimplering in Matlab by</span><span> </span><a href = "https://github.com/lfarv"><span style=' text-decoration: underline;'>@lfarv</span></a><span> </span><span>in</span><span> </span><a href = "https://github.com/atcollab/at/pull/719"><span style=' text-decoration: underline;'>#719</span></a></li><li  class = 'S3'><span>Atavedata by</span><span> </span><a href = "https://github.com/ZeusMarti"><span style=' text-decoration: underline;'>@ZeusMarti</span></a><span> </span><span>in</span><span> </span><a href = "https://github.com/atcollab/at/pull/678"><span style=' text-decoration: underline;'>#678</span></a></li><li  class = 'S3'><span>Bug in piwinski touschek scattering B2 term by</span><span> </span><a href = "https://github.com/swhite2401"><span style=' text-decoration: underline;'>@swhite2401</span></a><span> </span><span>in</span><span> </span><a href = "https://github.com/atcollab/at/pull/765"><span style=' text-decoration: underline;'>#765</span></a></li><li  class = 'S3'><span>Fix a regression bug in atavedata by</span><span> </span><a href = "https://github.com/lfarv"><span style=' text-decoration: underline;'>@lfarv</span></a><span> </span><span>in</span><span> </span><a href = "https://github.com/atcollab/at/pull/774"><span style=' text-decoration: underline;'>#774</span></a></li></ul><div  class = 'S4'><span> Full Changelog</span><span>:</span><span> </span><a href = "https://github.com/atcollab/at/compare/2.5...2.6"><span style=' text-decoration: underline; font-family: monospace;'>2.5...2.6</span></a></div>
+<br>
+<!-- 
+##### SOURCE BEGIN #####
+%% *2.6*
+% *Main changes*
+%% 
+% * First release under the Apache 2.0 license
+% * Lattices may be loaded and saved in JSON format. AT files in JSON format 
+% can be used for exchanging lattices between Matlab and python, as an alternative 
+% to the proprietary |.mat| format.
+% New features
+%% 
+% * AT Licensing by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/760 
+% #760>
+% * Save and load lattices in JSON format by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/766 #766>
+% Bug fixes
+%% 
+% * Update atsimplering in Matlab by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/719 
+% #719>
+% * Atavedata by <https://github.com/ZeusMarti @ZeusMarti> in <https://github.com/atcollab/at/pull/678 
+% #678>
+% * Bug in piwinski touschek scattering B2 term by <https://github.com/swhite2401 
+% @swhite2401> in <https://github.com/atcollab/at/pull/765 #765>
+% * Fix a regression bug in atavedata by <https://github.com/lfarv @lfarv> in 
+% <https://github.com/atcollab/at/pull/774 #774>
+%% 
+% Full Changelog: <https://github.com/atcollab/at/compare/2.5...2.6 |2.5...2.6|>
+##### SOURCE END #####
+-->
+</div></body></html>
