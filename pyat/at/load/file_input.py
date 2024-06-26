@@ -15,6 +15,7 @@ from os import getcwd
 from os.path import join, normpath, dirname
 import re
 import abc
+from itertools import repeat
 from collections.abc import Callable, Iterable, Generator, Mapping
 from typing import Union, Optional
 
@@ -129,6 +130,10 @@ class ElementDescr(AnyDescr, dict):
         # Allows accessing items using the attribute access syntax
         return self[item]
 
+    def __rmul__(self, other):
+        """Element repetition"""
+        return list(repeat(self, other))
+
     def __repr__(self):
         descr = super().copy()
         cls = descr.pop("madtype")
@@ -165,6 +170,10 @@ class ElementDescr(AnyDescr, dict):
 
 class SequenceDescr(AnyDescr, list, abc.ABC):
     """Simple representation of a sequence of elements as a list"""
+
+    def __repr__(self):
+        str = super().__repr__()
+        return f"{self.__class__.__name__}({str})"
 
     @property
     def length(self) -> float:

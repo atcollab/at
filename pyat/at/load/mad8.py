@@ -97,7 +97,12 @@ class Mad8Parser(_MadParser):
 
     def __init__(self, **kwargs):
         """"""
-        super().__init__(globals(), continuation="&", **kwargs)
+        super().__init__(
+            globals(),
+            continuation="&",
+            blockcomment=("comment", "endcomment"),
+            **kwargs,
+        )
 
     def evaluate(self, expr):
         """Evaluate an expression using *self* as local namespace"""

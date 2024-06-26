@@ -44,9 +44,16 @@ V3 = True ; V4 = False        # Test several commands
 test_data = dict(data1=test_data1, data2=test_data2)
 
 madx_data = """
+/* test block comment
+delimiter:      ";"
+linecomment:    "!", "//"
+end of comments */
+
 BEAM,   PARTICLE='electron', ENERGY=6.0, SEQUENCE=RING.1;
 BEAM,   PARTICLE='positron', ENERGY=2.0;
 BEAM,   SEQUENCE=RING.1, RADIATE;
+
+! Test comment
 
 Q1:     QUADRUPOLE, L:=QL ;         ! check forward reference
 
@@ -69,15 +76,15 @@ QFCELL: Q1.F,       AT=0.75;
 ENDSEQUENCE;
 
 RING.1: SEQUENCE,   L=LRING;
-CELL.1, AT=2.0;
-    SOL1,       AT=4.5;
-    MULT1,      AT=4.8;
-    HK1,        AT=4.8;
-    VK1,        AT=4.8;
-    HVK2,       AT=4.8;
-    BPM1,       AT=4.9;
-    BPM2,       AT=5;
-    CELL.1,     AT=7.0;
+        CELL.1,     AT=2.0;
+        SOL1,       AT=4.5;
+        MULT1,      AT=4.8;
+        HK1,        AT=4.8;
+        VK1,        AT=4.8;
+        HVK2,       AT=4.8;
+        BPM1,       AT=4.9;
+        BPM2,       AT=5;
+        CELL.1,     AT=7.0;
 ENDSEQUENCE;
 
 VALUE, EMASS;
@@ -88,7 +95,15 @@ VKICK = 0.003;
 """
 
 mad8_data = """
+comment
+test block comment
+delimiter:      ";"
+linecomment:    "!", "//"
+endcomment
+
 BEAM,   PARTICLE='positron', ENERGY=2.0;
+
+! Test comment
 
 Q1:     QUADRUPOLE, L:=QL ;         ! check forward reference
 
@@ -111,15 +126,15 @@ QFCELL: Q1.F,       AT=0.75;
 ENDSEQUENCE;
 
 RING.1: SEQUENCE,   L=LRING;
-CELL.1, AT=2.0;
-    SOL1,       AT=4.5;
-    MULT1,      AT=4.8;
-    HK1,        AT=4.8;
-    VK1,        AT=4.8;
-    HVK2,       AT=4.8;
-    BPM1,       AT=4.9;
-    BPM2,       AT=5;
-    CELL.1,     AT=7.0;
+        CELL.1,     AT=2.0;
+        SOL1,       AT=4.5;
+        MULT1,      AT=4.8;
+        HK1,        AT=4.8;
+        VK1,        AT=4.8;
+        HVK2,       AT=4.8;
+        BPM1,       AT=4.9;
+        BPM2,       AT=5;
+        CELL.1,     AT=7.0;
 ENDSEQUENCE;
 
 VALUE, EMASS;

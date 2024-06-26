@@ -387,7 +387,7 @@ class _Line(SequenceDescr):
             for elem in self:
                 if isinstance(elem, AnyDescr):  # Element or List
                     yield from elem.expand(parser)
-                elif isinstance(elem, Sequence):  # Other sequence (tuple)
+                elif isinstance(elem, Sequence):  # Other sequence (tuple, list)
                     for el in elem:
                         yield from el.expand(parser)
 
@@ -559,7 +559,6 @@ class _MadParser(UnorderedParser):
             *args,
             delimiter=";",
             linecomment=("!", "//"),
-            blockcomment=("/*", "*/"),
             endfile="return",
             call=self._call_cmd,
             beam=self._beam_cmd,
@@ -691,10 +690,10 @@ class _MadParser(UnorderedParser):
             for elem in elems(params, *args):
                 if isinstance(elem, elt.RFCavity):
                     cavities.append(elem)
-                cell_length += getattr(elem, 'Length', 0.0)
+                cell_length += getattr(elem, "Length", 0.0)
                 yield elem
 
-            params['_length'] = cell_length
+            params["_length"] = cell_length
             rev = beta() * clight / cell_length
             for cav in cavities:
                 if np.isnan(cav.Frequency):
@@ -702,7 +701,7 @@ class _MadParser(UnorderedParser):
             if cavities:
                 cavities.sort(key=lambda el: el.Frequency)
                 c0 = cavities[0]
-                params['_harmnumber'] = getattr(c0, 'HarmNumber', np.nan)
+                params["_harmnumber"] = getattr(c0, "HarmNumber", np.nan)
 
         part = kwargs.get("particle", None)
         if isinstance(part, str):
@@ -762,7 +761,9 @@ class MadxParser(_MadParser):
 
     def __init__(self, **kwargs):
         """"""
-        super().__init__(globals(), continuation=None, **kwargs)
+        super().__init__(
+            globals(), continuation=None, blockcomment=("/*", "*/"), **kwargs
+        )
 
     def evaluate(self, expr):
         """Evaluate an expression using *self* as local namespace"""
