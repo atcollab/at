@@ -35,7 +35,7 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
 %FINDORBIT4(RING,DP,REFPTS,...) Obsolete syntax
-%FINDORBIT4(RING, ...,'strict',STRICT) Default: -1.
+%FINDORBIT4(RING, ...,'strict',STRICT) Default: 0.
 %   If STRICT is -1, check_6d is skipped
 %   If STRICT is  0, check_6d emits a warning for non-6d rings.
 %   If STRICT is  1, check_6d emits an error for non-6d rings.
