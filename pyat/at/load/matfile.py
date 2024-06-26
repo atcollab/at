@@ -33,9 +33,13 @@ _m2p = {
     "Particle": "particle",
     "cell_harmnumber": "cell_harmnumber",  # necessary: property
     "beam_current": "beam_current",  # necessary: property
-    "PassMethod": None,
+    "PassMethod": None,  # Useless Matlab attributes
     "Length": None,
     "cavpts": None,
+    "Mat_File": None,  # These are erroneous attributes saved in
+    "Mat_Key": None,  # RingParam by old versions
+    "Beam_Current": None,
+    "Nbunch": None,
 }
 _p2m = dict((v, k) for k, v in _m2p.items() if v is not None)
 # Attribute to drop when writing a file
@@ -504,6 +508,10 @@ def _mat_key(ring):
     return mat_key
 
 
+def _ignore(ring, value):
+    pass
+
+
 register_format(
     ".mat",
     load_mat,
@@ -518,5 +526,5 @@ register_format(
     descr="Matlab text m-file. See :py:func:`.load_m`.",
 )
 
-Lattice.mat_file = property(_mat_file, None, None)
-Lattice.mat_key = property(_mat_key, None, None)
+Lattice.mat_file = property(_mat_file, _ignore, None)
+Lattice.mat_key = property(_mat_key, _ignore, None)
