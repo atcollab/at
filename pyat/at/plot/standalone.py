@@ -233,7 +233,7 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
     eta_delta = eta[0] / 2 + eta[1] / 3 * DP + eta[2] / 4 * DP**2
     T = ring.beta**2 * ring.energy * eta_delta * DP**2
 
-    hamiltonian = 0
+    hamiltonian = T
     # Iteration over all lattice cavities
     for rfcav in ring[RFCavity]:
         Voltage = rfcav.Voltage
@@ -246,8 +246,8 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         # Second term of the Hamiltonian
         U = Voltage / (2 * numpy.pi * HarmNumber) * \
         (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) * numpy.sin(phi_s))
-        # Total Hamiltonian
-        hamiltonian += T + U
+        # Add to total Hamiltonian
+        hamiltonian += U
 
     fig, ax = plt.subplots(1)
     lim_range = numpy.max((numpy.abs(hamiltonian).min(), numpy.abs(hamiltonian).max()))
