@@ -235,7 +235,7 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
 
     # Hamiltonian (H=U+T) divided by harmonic number to have U = U(V_rf, h, phi_s)
     # First term of the Hamiltonian
-    T = numpy.pi * eta_delta * DP**2
+    T = ring.beta**2 * ring.energy * eta_delta * DP**2
 
     hamiltonian = 0
     # Iteration over all lattice cavities
@@ -248,8 +248,8 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         phi = (numpy.pi - phi_s) + CT * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
 
         # Second term of the Hamiltonian
-        U = Voltage / (ring.beta**2 * ring.energy * HarmNumber) * \
-        (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) * numpy.sin(phi_s))
+        U = Voltage / (2 * np.pi * HarmNumber) * \
+        (np.cos(phi) - np.cos(phi_s) + (phi - phi_s) * np.sin(phi_s))
         # Total Hamiltonian
         hamiltonian += T + U
 
