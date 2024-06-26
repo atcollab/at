@@ -1,8 +1,8 @@
 """AT plotting functions"""
 from __future__ import annotations
 from at.lattice import Lattice, axis_
-from at import RFCavity
-from at.physics.revolution import get_mcf
+from at.lattice import RFCavity
+from at.physics import get_mcf
 from at.constants import clight
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
