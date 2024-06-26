@@ -1,4 +1,4 @@
-function [is_6d, newring] = check_6d(ring,enable,varargin)
+function [is_6d, ring] = check_6d(ring,enable,varargin)
 %CHECK_6D Checks the presence of longitudinal motion in a lattice.
 %
 %IS_6D = CHECK_6D(RING) Returns the radiation state of RING (true/false).
@@ -13,16 +13,16 @@ function [is_6d, newring] = check_6d(ring,enable,varargin)
 %  IS_6D contains the status of the RING before conversion.
 %
 %[IS_6D, NEWRING] = CHECK_6D(RING,ENABLE,'strict',STRICT)
-%  Default, STRICT=1.
-%  If STRICT is 1, a difference btw IS_6D and ENABLE produces an error.
-%  If STRICT is 0, a difference btw IS_6D and ENABLE produces a warning,
+%  Default, STRICT=true.
+%  If STRICT is true, a difference btw IS_6D and ENABLE produces an error.
+%  If STRICT is false, a difference btw IS_6D and ENABLE produces a warning,
 %  and the RING is converted according to the value of ENABLE.
 %  IS_6D contains the status of the RING before conversion.
 %
 % See also: ATGETRINGPROPERTIES, ATENABLE_6D, ATDISABLE_6D
 
 [force, varargs] = getflag(varargin, 'force');
-[strict, ~] = getoption(varargs, 'strict', 1);
+[strict, ~] = getoption(varargs, 'strict', true);
 is_6d = atGetRingProperties(ring, 'is_6d');
 
 if nargin == 1, return; end
@@ -32,8 +32,11 @@ if xor(is_6d, enable) && ~force
     if strict, error(outmsg); else, warning(outmsg); end
 end
 
-if enable, newring = atenable_6d(ring);
-else, newring = atdisable_6d(ring); end
+if xor(enable,is_6d)
+    if enable, atenable_6d(ring);
+    else, ring = atdisable_6d(ring); end
+end
+
 
 function bstr=boolstring(enable)
     if enable
