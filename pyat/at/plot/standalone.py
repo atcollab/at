@@ -201,6 +201,17 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         hamiltonian:   (num_points,num_points) array: Hamiltonian values
         along (CT,DP) grid
     """
+    # Momentum compaction/phase slip factors computed up to third order
+    tmp_ring = ring.disable_6d(copy=True)
+    alpha = get_mcf(tmp_ring, fit_order=3, n_step=10)
+
+    eta = numpy.zeros(len(alpha))
+    eta[0] = alpha[0] - 1 / ring.gamma**2
+    eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + alpha[1] - alpha[0] * eta[0]
+    eta[2] = -ring.beta**2*(5*ring.beta**2 - 1) / (2 * ring.gamma**2) + \
+    alpha[2] -2 * alpha[0] * alpha[1] + alpha[1] / ring.gamma**2 + alpha[0]**2 * eta[0] - \
+    (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
+
     # (ct, dp) grid calculation (defined around the main RF bucket)
     if ct_range is None:
         ct = numpy.linspace(-1.1 * ring.circumference/ring.harmonic_number/2,
@@ -208,33 +219,18 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
     else:
         ct = numpy.linspace(ct_range[0], ct_range[1], num=num_points)
     if dp_range is None:
-        ring.disable_6d()
         U0 = ring.energy_loss
         overvoltage = ring.rf_voltage / U0
-        rfa = numpy.sqrt(2 * U0 / (numpy.pi * ring.mcf * ring.harmonic_number * ring.energy) * \
+        rfa = numpy.sqrt(2 * U0 / (numpy.pi * alpha[0] * ring.harmonic_number * ring.energy) * \
                       (numpy.sqrt(overvoltage**2 - 1) - numpy.arccos(1 / overvoltage)))
-        ring.enable_6d()
         dp = numpy.linspace(-2 * rfa, 2 * rfa, num=num_points)
     else:
         dp = numpy.linspace(dp_range[0], dp_range[1], num=num_points)
     CT, DP = numpy.meshgrid(ct, dp)
 
-    # Momentum compaction/phase slip factors computed up to third order
-    ring.disable_6d()
-    alpha = get_mcf(ring, fit_order=3, n_step=10)
-    ring.enable_6d()
-
-    eta = numpy.zeros(len(alpha))
-    eta[0] = alpha[0] - 1 / ring.gamma**2
-    eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + alpha[1] - alpha[0] * eta[0]
-    eta[2] = -ring.beta**2*(5*ring.beta**2 - 1) / (2 * ring.gamma**2) + \
-    alpha[2] - 2 * alpha[0] * alpha[1] + alpha[1] / ring.gamma**2 + alpha[0]**2 * eta[0] - \
-    (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
-
-    eta_delta = eta[0] / 2 + eta[1] / 3 * DP + eta[2] / 4 * DP**2
-
     # Hamiltonian (H=U+T) divided by harmonic number to have U = U(V_rf, h, phi_s)
     # First term of the Hamiltonian
+    eta_delta = eta[0] / 2 + eta[1] / 3 * DP + eta[2] / 4 * DP**2
     T = ring.beta**2 * ring.energy * eta_delta * DP**2
 
     hamiltonian = 0
@@ -248,8 +244,8 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         phi = (numpy.pi - phi_s) + CT * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
 
         # Second term of the Hamiltonian
-        U = Voltage / (2 * np.pi * HarmNumber) * \
-        (np.cos(phi) - np.cos(phi_s) + (phi - phi_s) * np.sin(phi_s))
+        U = Voltage / (2 * numpy.pi * HarmNumber) * \
+        (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) * numpy.sin(phi_s))
         # Total Hamiltonian
         hamiltonian += T + U
 
