@@ -35,8 +35,11 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
 %FINDORBIT4(RING,DP,REFPTS,...) Obsolete syntax
-%FINDORBIT4(RIG, ...,'strict',STRICT) Default: true.
-%   Setting it to false shows a warning instead of an error for a 6d-ring.
+%FINDORBIT4(RING, ...,'strict',STRICT) Default: -1.
+%   If STRICT is -1, check_6d is skipped
+%   If STRICT is  0, check_6d emits a warning for non-6d rings.
+%   If STRICT is  1, check_6d emits an error for non-6d rings.
+%
 %FINDORBIT4(RING,...,'dp',DP)   Specifies the off-momentum
 %
 %FINDORBIT4(RING,...,'dct',DCT) Specifies the path lengthening
@@ -61,10 +64,8 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[strict6dcheck, varargs]=getoption(varargin,'strict',true);
-ring6d_flag = check_6d(ring);
-if strict6dcheck && ring6d_flag, error('The lattice is 6d'); end
-if ring6d_flag, warning('The ring is 6d'); end
+[strict6dcheck, varargs]=getoption(varargin,'strict',0);
+if strict6dcheck >= 0, check_6d(ring,false,'strict',strict6dcheck); end
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
 [dp,varargs]=getdparg(varargs,0.0);
 [dct,varargs]=getoption(varargs,'dct',NaN);
