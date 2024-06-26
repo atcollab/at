@@ -157,15 +157,6 @@ _drop_attrs = {
     "repr_file": None,
 }
 
-# Lattice attributes which must be dropped when writing a file
-_drop_attrs = {
-    "in_file": None,
-    "mat_key": None,
-    "mat_file": None,  # Not used anymore...
-    "m_file": None,
-    "repr_file": None,
-}
-
 
 def _hasattrs(kwargs: dict, *attributes) -> bool:
     """Checks the presence of keys in a :py:class:`dict`
