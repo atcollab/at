@@ -13,27 +13,23 @@ function [is_6d, newring] = check_6d(ring,enable,varargin)
 %  IS_6D contains the status of the RING before conversion.
 %
 %[IS_6D, NEWRING] = CHECK_6D(RING,ENABLE,'strict',STRICT)
-%  Default, STRICT=true.
-%  If STRICT is true, a non-6d ring produces an error.
-%  If STRICT is false, a non-6d ring produces a warning,
+%  Default, STRICT=1.
+%  If STRICT is 1, a difference btw IS_6D and ENABLE produces an error.
+%  If STRICT is 0, a difference btw IS_6D and ENABLE produces a warning,
 %  and the RING is converted according to the value of ENABLE.
 %  IS_6D contains the status of the RING before conversion.
 %
 % See also: ATGETRINGPROPERTIES, ATENABLE_6D, ATDISABLE_6D
 
 [force, varargs] = getflag(varargin, 'force');
-[strict, ~] = getoption(varargs, 'strict', true);
+[strict, ~] = getoption(varargs, 'strict', 1);
 is_6d = atGetRingProperties(ring, 'is_6d');
 
 if nargin == 1, return; end
 
-if xor(is_6d, enable) && strict && ~force
-    error('AT:Radiation',['''is_6d'' must be ' boolstring(enable)]);
-end
-
-if ~is_6d && ~force
-    if strict, error('RING is not 6d.');
-    else, warning('RING is not 6d.'); end
+if xor(is_6d, enable) && ~force
+    outmsg = ['AT:Radiation ',['''is_6d'' must be ' boolstring(enable)]];
+    if strict, error(outmsg); else, warning(outmsg); end
 end
 
 if enable, newring = atenable_6d(ring);
