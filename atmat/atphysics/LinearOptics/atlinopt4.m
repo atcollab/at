@@ -93,7 +93,7 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %   Private keyword for the generation of the legacy atlinopt output
 %
 
-check_6d(ring, false, 'strict', 0)
+check_6d(ring, false, 'strict', 0);
 NE = length(ring);
 [get_chrom,varargs]=getflag(varargin,'get_chrom');
 [get_w,varargs]=getflag(varargs,'get_w');
