@@ -1139,10 +1139,12 @@ def avlinopt(ring, dp, refpts, **kwargs):
         :py:func:`linopt4`, :py:func:`get_optics`
     """
     def get_strength(elem):
-        try:
+       try:
             k = elem.PolynomB[1]
+            if k < 1.e-7:
+                k = 0.0
         except (AttributeError, IndexError):
-            k = 1e-7
+            k = 0.0
         return k
 
     def get_sext_strength(elem):
