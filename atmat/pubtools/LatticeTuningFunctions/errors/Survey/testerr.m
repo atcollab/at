@@ -21,7 +21,7 @@ indm=find(atgetcells(rerr,'Class','Monitor'));
 %% plots
 figure('units','normalized','position',[0.1 0.4 0.65 0.35])
 s=findspos(rerr,indm);
-o=findorbit4(rerr,0,indm);
+o=findorbit4(rerr,0,indm, 'strict', -1);
 plot(s,o(1,:)'*1e3,'k');
 hold on;
 oe=findorbit4Err(rerr,0,indm);
