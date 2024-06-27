@@ -48,7 +48,7 @@ classdef pytests < matlab.unittest.TestCase
     methods(Static)
         function [dct,df]=dctdf(r4, dpp)
             [frf,l]=atGetRingProperties(r4,'rf_frequency','cell_length');
-            [~,o0]=findorbit4(r4,dp=dpp,'strict',-1);
+            [~,o0]=findorbit4(r4,dp=dpp,strict=-1);
             o1=ringpass(r4, o0);
             dct=o1(6);
             df=-frf*dct/(l+dct);
