@@ -120,10 +120,10 @@ else
 end
 
 if isempty(twiss_in)        % Circular machine
-    [orbit,orbitin]=findorbit4(ring,dp,refpts,dpargs{:},'XYStep',XYStep);
+    [orbit,orbitin]=findorbit4(ring,dp,refpts,dpargs{:},'XYStep',XYStep, 'strict', -1);
     dp=orbitin(5);
-    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,orbitin,'XYStep',XYStep);
-    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,orbitin,'XYStep',XYStep);
+    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,orbitin,'XYStep',XYStep, 'strict', -1);
+    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,orbitin,'XYStep',XYStep, 'strict', -1);
 else                        % Transfer line
     if ~isempty(orbitin), orbitin=zeros(6,1); end
     orbit=linepass(ring,orbitin,refpts);
