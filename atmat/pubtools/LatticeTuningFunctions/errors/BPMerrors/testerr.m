@@ -35,7 +35,7 @@ ringerr=atsetbpmerr(ringerr,indm,ox,oy,gx,gy,rx,ry,rot);
 % plots
 figure('units','normalized','position',[0.1 0.4 0.65 0.35])
 s=findspos(ringerr,indm);
-o=findorbit4(ringerr,0,indm);
+o=findorbit4(ringerr,0,indm, 'strict', -1);
 plot(s,o(1,:)'*1e6,'k');
 hold on;
 oe=findorbit4Err(ringerr,0,indm);
@@ -56,7 +56,7 @@ export_fig('OrbitBPMAllErrX.jpg','-r300')
 % plots
 figure('units','normalized','position',[0.1 0.4 0.65 0.35])
 s=findspos(ringerr,indm);
-o=findorbit4(ringerr,0,indm);
+o=findorbit4(ringerr,0,indm, 'strict', -1);
 plot(s,o(1,:)'*1e6,'k');
 hold on;
 oe=findorbit4Err(ringerr,0,indm);
