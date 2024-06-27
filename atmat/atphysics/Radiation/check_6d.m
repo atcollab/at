@@ -27,7 +27,9 @@ is_6d = atGetRingProperties(ring, 'is_6d');
 
 if nargin == 1, return; end
 
-if xor(is_6d, enable) && ~force
+if ~xor(is_6d,enable), return; end
+
+if ~force
     outmsg = ['AT:Radiation ',['''is_6d'' must be ' boolstring(enable)]];
     if strict, error(outmsg); else, warning(outmsg); end
 end
