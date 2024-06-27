@@ -1142,7 +1142,7 @@ def avlinopt(ring, dp, refpts, **kwargs):
         try:
             k = elem.PolynomB[1]
         except (AttributeError, IndexError):
-            k = numpy.finfo(numpy.float64).eps
+            k = 0.0
         return k
 
     def get_sext_strength(elem):
