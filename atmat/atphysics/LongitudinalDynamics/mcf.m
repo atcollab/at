@@ -6,8 +6,8 @@ function a = mcf(RING,dp0)
 
 if nargin < 2, dp0=0; end
 ddp = 0.000001;
-fpdown = findorbit4(RING,dp0-0.5*ddp);
-fpup = findorbit4(RING,dp0+0.5*ddp);
+fpdown = findorbit4(RING,dp0-0.5*ddp, 'strict', -1);
+fpup = findorbit4(RING,dp0+0.5*ddp, 'strict', -1);
 % Build initial condition vector that starts
 % on the fixed point
 
