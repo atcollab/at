@@ -83,9 +83,9 @@ switch ORBITFUNCTION
 case 'findorbit4' 
     orbit_function_handle = @findorbit4;
     if nargin == 9
-        orbit_function_args   = {varargin{5}, OBSINDEX};
+        orbit_function_args   = {varargin{5}, OBSINDEX, 'strict', -1};
     else
-        orbit_function_args   = {0, OBSINDEX};
+        orbit_function_args   = {0, OBSINDEXi, 'strict', -1};
     end
 case 'findsyncorbit'
     orbit_function_handle = @findsyncorbit;
