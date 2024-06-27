@@ -3,6 +3,11 @@ function a = mcf(RING,dp0)
 % MCF(RING) calculates momentum compaction factor of RING
 %
 % MCF(RING,DPP) computes the momentum compaction for off-momentum DPP
+%
+% IMPORTANT!!!
+% MCF gives a wrong result with 6-d rings. The RING should be set to 4d.
+% See also: ATDISABLE_6D, CHECK_6D
+
 
 if nargin < 2, dp0=0; end
 ddp = 0.000001;
