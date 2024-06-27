@@ -34,10 +34,8 @@ if ~force
     if strict, error(outmsg); else, warning(outmsg); end
 end
 
-if xor(enable,is_6d)
-    if enable, atenable_6d(ring);
-    else, ring = atdisable_6d(ring); end
-end
+if enable, atenable_6d(ring);
+else, ring = atdisable_6d(ring); end
 
 
 function bstr=boolstring(enable)
