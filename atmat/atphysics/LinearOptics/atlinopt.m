@@ -108,7 +108,7 @@ if isempty(twiss_in)        % Circular machine
     elseif isnan(ct)
         [~,orbitin]=findorbit4(RING,dp,REFPTS,'XYStep',XYStep, 'strict', -1);
     else
-        [~,orbitin]=findsyncorbit(RING,ct,REFPTS,'XYStep',XYStep);
+        [~,orbitin]=findsyncorbit(RING,ct,REFPTS,'XYStep',XYStep, 'strict', -1);
         dp=orbitin(5);
     end
     [orbitP,o1P]=findorbit4(RING,dp+0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep, 'strict', -1);
