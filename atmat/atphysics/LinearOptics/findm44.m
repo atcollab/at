@@ -95,7 +95,7 @@ if ~isempty(orbitin)
     end
     orbitin = [orbitin(1:4);dp;0];
 else
-    [~,orbitin]=findorbit4(LATTICE,'dp',dp,dpargs{:});
+    [~,orbitin]=findorbit4(LATTICE,'dp',dp,dpargs{:}, 'strict', -1);
 end
 
 refs=setelems(refpts,NE+1); % Add end-of-lattice
