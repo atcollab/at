@@ -10,7 +10,7 @@ function [orb4,orbitin] = findorbit4(ring,varargin)
 %
 % IMPORTANT !!!
 % FINDORBIT4 gives a wrong result with 6-d rings. If you still want to
-%    get the result, set 'strict' to false.
+%    get the result, set 'strict' to -1 or 0.
 % FINDORBIT4 imposes a constraint on dP and relaxes
 %    the constraint on the revolution frequency. A physical storage
 %    ring does exactly the opposite: the momentum deviation of a
