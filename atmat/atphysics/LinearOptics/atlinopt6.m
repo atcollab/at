@@ -143,8 +143,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         else                        % 4D processing
             dp=orbitin(5);
             [alpha,beta]=cellfun(@output4,ri,'UniformOutput',false);
-            [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'orbit',o1P,'guess',orbitin,varargs{:});
-            [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'orbit',o1M,'guess',orbitin,varargs{:});
+            [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'orbit',o1P,'guess',orbitin,varargs{:}, 'strict', -1);
+            [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'orbit',o1M,'guess',orbitin,varargs{:}, 'strict', -1);
             disp = num2cell((orbitP-orbitM)/DPStep,1);
             if get_w
                 [ringdata.chromaticity,w]=chrom_w(ring,ring,o1P,o1M,refpts);
