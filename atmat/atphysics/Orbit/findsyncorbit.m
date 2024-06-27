@@ -10,7 +10,10 @@ function [orb5,orbitin] = findsyncorbit(ring,varargin)
 %    Frev0 = Frf0/HarmNumber is the design revolution frequency
 %    Frev  = (Frf0 + dFrf)/HarmNumber is the imposed revolution frequency
 %
-% IMPORTANT!!!  FINDSYNCORBIT imposes a constraint (CT2 - CT1) and
+% IMPORTANT!!!
+% FINDSYNCORBIT gives a wrong result with 6-d rings. If you still want to
+%    get the result, set 'strict' to -1 or 0.
+% FINDSYNCORBIT imposes a constraint (CT2 - CT1) and
 %    dP2 = dP1 but no constraint on the value of dP1, dP2
 %    The algorithm assumes time-independent fixed-momentum ring
 %    to reduce the dimensionality of the problem.
@@ -29,7 +32,13 @@ function [orb5,orbitin] = findsyncorbit(ring,varargin)
 %   REFPTS is an array of increasing indexes that  select elements
 %   from the range 1 to length(RING)+1.
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
+% FINDSYNCORBIT(RING, ...,'strict',STRICT) Default: 0.
+%   If STRICT is -1, check_6d is skipped
+%   If STRICT is  0, check_6d emits a warning for non-6d rings.
+%   If STRICT is  1, check_6d emits an error for non-6d rings.
 %
+% See also FINDSYNCORBIT, FINDORBIT6, ATDISABLE_6D, CHECK_6D
+
 %FINDORBIT4(RING,DCT,REFPTS,...) Obsolete syntax
 %FINDORBIT4(RING,...,'dct',DCT)  Specifies the path lengthening
 %
@@ -55,7 +64,9 @@ function [orb5,orbitin] = findsyncorbit(ring,varargin)
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[orbitin,varargs]=getoption(varargin,'orbit',[]);
+[strict6dcheck, varargs]=getoption(varargin,'strict',0);
+if strict6dcheck >= 0, check_6d(ring,false,'strict',strict6dcheck); end
+[orbitin,varargs]=getoption(varargs,'orbit',[]);
 [dct,varargs]=getdparg(varargs,0.0,'key','dct');
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [df,varargs]=getoption(varargs,'df',NaN);
