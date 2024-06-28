@@ -8,6 +8,7 @@ and pyat parallel tracking (patpass)
 # 2024apr16 create get_freqmap
 # 2023jan16 tracking is parallel (patpass), frequency analysis is serial
 # 2022jun07 serial version
+# 2024jun21 adds get_freqmap
 
 from at.tracking import patpass
 from at.physics import find_orbit
@@ -54,7 +55,7 @@ def get_freqmap(
         start_method: Optional[str] = None,
 ):
     # noinspection PyUnresolvedReferences
-    r"""Computes the acceptance at ``repfts`` observation points
+    r"""Computes the frequency map at ``repfts`` observation points.
 
     Parameters:
         ring:           Lattice definition
@@ -98,9 +99,13 @@ def get_freqmap(
           considered unsafe.
 
     Returns:
-        boundary:   (2,n) array: 2D acceptance
-        survived:   (2,n) array: Coordinates of surviving particles
-        tracked:    (2,n) array: Coordinates of tracked particles
+        fmaout:   list containing the result of every reference point.
+            Inside,
+              1) the frequency map
+                `[xcoor, ycoor, nux, ny, dnux, dnuy,
+                 log10(sqrt(sum(dnu**2)/turns)) ]`
+              2) the grid
+              3) the dictionary of particle losses
 
     In case of multiple refpts, return values are lists of arrays, with one
     array per ref. point.
@@ -143,22 +148,7 @@ def get_freqmap(
         npp = numpy.prod(npoints)
         rpp = 2*numpy.ceil(numpy.log2(np[0]))*numpy.ceil(na/nprocu)
         mpp = npp/nprocu
-        #if rpp > mpp:
-        #    cond = (grid_mode is GridMode.RADIAL or
-        #            grid_mode is GridMode.CARTESIAN)
-        #else:
-        #    cond = grid_mode is GridMode.RECURSIVE
-        #if rpp > mpp and not cond:
-        #    print('The estimated load for grid mode is {0}'.format(mpp))
-        #    print('The estimated load for recursive mode is {0}'.format(rpp))
-        #    print('{0} or {1} is recommended'.format(GridMode.RADIAL,
-        #                                             GridMode.CARTESIAN))
-        #elif rpp < mpp and not cond:
-        #    print('The estimated load for grid mode is {0}'.format(mpp))
-        #    print('The estimated load for recursive mode is {0}'.format(rpp))
-        #    print('{0} is recommended'.format(GridMode.RECURSIVE))
 
-    boundary = []
     survived = []
     grid = []
     if refpts is not None:
@@ -174,32 +164,23 @@ def get_freqmap(
                                              numpy.shape(refpts)))
             raise AtError(msg)
     else:
-        offset = find_orbit(ring,refpts)
+        _, offset = find_orbit(ring,refpts)
         planesi = numpy.atleast_1d(get_plane_index(planes))
-        offset[0][planesi[0]] =  offset[0][planesi[0]] + 1e-6
-        offset[0][planesi[1]] =  offset[0][planesi[1]] + 1e-6
-        #offset=[None for _ in rp]
+        offset[:,planesi[0]] =  offset[:,planesi[0]] + 1e-9
+        offset[:,planesi[1]] =  offset[:,planesi[1]] + 1e-9
     dataobs = []
     t0 = time.time()
     for r, o in zip(rp, offset):
-        #b, s, g = boundary_search(ring, planes, npoints, amplitudes,
-        #                          nturns=nturns, obspt=r, dp=dp,
-        #                          offset=o, bounds=bounds,
-        #                          grid_mode=grid_mode, use_mp=use_mp,
-        #                          verbose=verbose, divider=divider,
-        #                          shift_zero=shift_zero, **kwargs)
         obspt=r
         dp=dp
         offset=o
-
         offset, newring = set_ring_orbit(ring, dp, obspt,
                                          offset)
         config = grid_configuration(planes, npoints, amplitudes,
                                     grid_mode, bounds=bounds,
                                     shift_zero=shift_zero)
-        obspt = None
         if verbose:
-            print('\nRunning grid boundary search:')
+            print('\nRunning grid frequency search:')
             if obspt is None:
                 print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
             else:
@@ -210,40 +191,35 @@ def get_freqmap(
             print('Number of steps are {0}'.format(config.shape))
             print('The maximum amplitudes are {0}'.format(config.amplitudes))
             print('The maximum boundaries are {0}'.format(config.bounds))
+            print('Number of turns is {0}'.format(nturns))
             print('The initial offset is {0} with dp={1}'.format(offset, dp))
-            parts, grid = get_parts(config, offset)
-            rout, tp, td = ring.track(parts, nturns=2*nturns, losses=True, use_mp=use_mp, **kwargs)
+        parts, grid = get_parts(config, offset)
+        rout, tp, td = ring.track(parts, nturns=2*nturns, losses=True, use_mp=use_mp, **kwargs)
 
-            mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
-            survived = grid.grid[:, mask]
+        mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
+        survived = grid.grid[:, mask]
 
-            planesi = numpy.atleast_1d(get_plane_index(planes))
-            tunes = numpy.zeros((len(planesi),2,len(numpy.where(mask)[0])))
-            print(planesi)
+        planesi = numpy.atleast_1d(get_plane_index(planes))
+        tunes = numpy.zeros((len(planesi),2,len(numpy.where(mask)[0])))
 
-            for i in range(len(planesi)):
-                tunes[i,0] = get_tunes_harmonic(rout[planesi[i],mask,:,     0:  nturns],use_mp=use_mp, **kwargs)
-                tunes[i,1] = get_tunes_harmonic(rout[planesi[i],mask,:,nturns:2*nturns],use_mp=use_mp, **kwargs)
 
-            # metric
-            diffplane1 = tunes[0,0,:] - tunes[0,1,:]
-            diffplane2 = tunes[1,0,:] - tunes[1,1,:]
-            nudiff = 0.5*numpy.log10( (diffplane1*diffplane1 + diffplane2*diffplane2) /nturns )
-            # set min-max
-            nudiff = numpy.clip(nudiff,-10,-2)
+        for i in range(len(planesi)):
+            tunes[i,0] = get_tunes_harmonic(rout[planesi[i],mask,:,     0:  nturns],use_mp=use_mp, **kwargs)
+            tunes[i,1] = get_tunes_harmonic(rout[planesi[i],mask,:,nturns:2*nturns],use_mp=use_mp, **kwargs)
+        # metric
+        diffplane1 = tunes[0,0,:] - tunes[0,1,:]
+        diffplane2 = tunes[1,0,:] - tunes[1,1,:]
+        nudiff = 0.5*numpy.log10( (diffplane1*diffplane1 + diffplane2*diffplane2) /nturns )
+        # set min-max
+        nudiff = numpy.clip(nudiff,-10,-2)
 
-            #return rout,tp,td,grid,tunes
-            firstturns = 0
-#            return numpy.concatenate((survived.T, tunes[0,firstturns].T, tunes[1,firstturns].T, diffplane1.T, diffplane2.T, nudiff.T),axis=0), grid, td
-            #return survived.T, tunes[0,firstturns].T, tunes[1,firstturns].T, diffplane1.T, diffplane2.T, nudiff.T, grid, td
-            dataobs.append((numpy.vstack((survived, tunes[0,firstturns], tunes[1,firstturns], diffplane1, diffplane2, nudiff)).T, grid, td))
+        #return rout,tp,td,grid,tunes
+        firstturns = 0
+        dataobs.append((numpy.vstack((survived, tunes[0,firstturns], tunes[1,firstturns], diffplane1, diffplane2, nudiff)).T, grid, td))
     if verbose:
         print('Calculation took {0}'.format(time.time()-t0))
 
     return dataobs
-
-
-
 
 
 def fmap_parallel_track(ring,
