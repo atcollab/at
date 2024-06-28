@@ -18,12 +18,18 @@ from warnings import warn
 
 import numpy
 
-from ..acceptance.boundary import (GridMode, get_parts, get_plane_index,
-                                   get_survived, grid_configuration,
-                                   set_ring_orbit)
+from ..acceptance.boundary import (
+    GridMode,
+    get_parts,
+    get_plane_index,
+    get_survived,
+    grid_configuration,
+    set_ring_orbit,
+)
 from ..lattice import AtError, AtWarning, Lattice, Refpts
 from ..physics import find_orbit
 from ..tracking import patpass
+
 # Jaime Coello de Portugal (JCdP) frequency analysis implementation
 from .harmonic_analysis import get_tunes_harmonic
 
