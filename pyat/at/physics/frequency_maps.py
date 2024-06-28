@@ -54,10 +54,10 @@ def get_freqmap(
     verbose: Optional[bool] = False,
     shift_zero: Optional[float] = 0.0e-6,
     start_method: Optional[str] = None,
-):
+    **kwargs: dict[str, any],
+) -> list:
     # noinspection PyUnresolvedReferences
     r"""Computes the frequency map at ``repfts`` observation points.
-
     Parameters:
         ring:           Lattice definition
         planes:         max. dimension 2, Plane(s) to scan for the acceptance.
@@ -131,13 +131,13 @@ def get_freqmap(
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
     """
-    kwargs = {}
+
     if start_method is not None:
         kwargs["start_method"] = start_method
 
     if verbose:
         nproc = multiprocessing.cpu_count()
-        print(f"\n{0} cpu found for acceptance calculation".format(nproc))
+        print(f"\n{nproc} cpu found for acceptance calculation")
         if use_mp:
             print("Multi-process acceptance calculation selected...")
             if nproc == 1:
@@ -157,8 +157,9 @@ def get_freqmap(
         try:
             offset = numpy.broadcast_to(offset, (len(rps), 6))
         except ValueError as incoherent_shape:
-            msg = f"offset and refpts have incoherent shapes: {0}, {1}".format(
-                numpy.shape(offset), numpy.shape(refpts)
+            msg = (
+                "offset and refpts have incoherent shapes: "
+                f"{numpy.shape(offset)}, {numpy.shape(refpts)}"
             )
             raise AtError(msg) from incoherent_shape
     else:
@@ -175,17 +176,14 @@ def get_freqmap(
         )
         if verbose:
             print("\nRunning grid frequency search:")
-            if obspt is None:
-                print(f"Element {0}, obspt={1}".format(ring[0].FamName, 0))
-            else:
-                print(f"Element {0}, obspt={1}".format(ring[obspt].FamName, obspt))
-            print(f"The grid mode is {0}".format(config.mode))
-            print(f"The planes are {0}".format(config.planes))
-            print(f"Number of steps are {0}".format(config.shape))
-            print(f"The maximum amplitudes are {0}".format(config.amplitudes))
-            print(f"The maximum boundaries are {0}".format(config.bounds))
-            print(f"Number of turns is {0}".format(nturns))
-            print(f"The initial offset is {0} with deltap={1}".format(offset, deltap))
+            print(f"Element {ring[obspt].FamName}, obspt={obspt}")
+            print(f"The grid mode is {config.mode}")
+            print(f"The planes are {config.planes}")
+            print(f"Number of steps are {config.shape}")
+            print(f"The maximum amplitudes are {config.amplitudes}")
+            print(f"The maximum boundaries are {config.bounds}")
+            print(f"Number of turns is {nturns}")
+            print(f"The initial offset is {offset} with deltap={deltap}")
         parts, grid = get_parts(config, offset)
         rout, _, tdl = ring.track(
             parts, nturns=2 * nturns, losses=True, use_mp=use_mp, **kwargs
@@ -232,7 +230,7 @@ def get_freqmap(
             )
         )
     if verbose:
-        print(f"Calculation took {0}".format(time.time() - t00))
+        print(f"Calculation took {time.time() - t00}")
 
     return dataobs
 
