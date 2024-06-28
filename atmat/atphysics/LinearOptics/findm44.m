@@ -2,7 +2,9 @@ function [M44, varargout]  = findm44(LATTICE,varargin)
 %FINDM44 numerically finds the 4x4 transfer matrix of an accelerator lattice
 % for a particle with relative momentum deviation DP
 %
-% IMPORTANT!!! FINDM44 assumes constant momentum deviation.
+% IMPORTANT!!!
+% FINDM44 gives a wrong result with 6-d rings.
+% FINDM44 assumes constant momentum deviation.
 %   PassMethod used for any element in the LATTICE SHOULD NOT
 %   1.change the longitudinal momentum dP
 %     (cavities , magnets with radiation, ...)
@@ -58,7 +60,7 @@ function [M44, varargout]  = findm44(LATTICE,varargin)
 %   In addition returns the closed orbit at the entrance of each element
 %   indexed by REFPTS.
 %
-% See also FINDM66, FINDORBIT4
+% See also FINDM66, FINDORBIT4, ATENABLE_6D, ATDISABLE_6D, CHECK_6D
 
 % *************************************************************************
 %   The numerical differentiation in FINDM44 uses symmetric form
@@ -95,7 +97,7 @@ if ~isempty(orbitin)
     end
     orbitin = [orbitin(1:4);dp;0];
 else
-    [~,orbitin]=findorbit4(LATTICE,'dp',dp,dpargs{:});
+    [~,orbitin]=findorbit4(LATTICE,'dp',dp,dpargs{:}, 'strict', -1);
 end
 
 refs=setelems(refpts,NE+1); % Add end-of-lattice
