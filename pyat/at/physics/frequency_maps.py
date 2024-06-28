@@ -1,6 +1,4 @@
-"""
-Frequency analysis (FMAP).
-"""
+""" Frequency analysis (FMAP). """
 
 
 # orblancog
@@ -13,22 +11,19 @@ Frequency analysis (FMAP).
 
 from __future__ import annotations
 
-from warnings import warn
 import multiprocessing
-from typing import Optional, Sequence
 import time
+from typing import Optional, Sequence
+from warnings import warn
+
 import numpy
 
-from ..lattice import Lattice, Refpts, AtError, AtWarning
-from ..tracking import patpass
+from ..acceptance.boundary import (GridMode, get_parts, get_plane_index,
+                                   get_survived, grid_configuration,
+                                   set_ring_orbit)
+from ..lattice import AtError, AtWarning, Lattice, Refpts
 from ..physics import find_orbit
-from ..acceptance.boundary import set_ring_orbit
-from ..acceptance.boundary import grid_configuration
-from ..acceptance.boundary import get_parts
-from ..acceptance.boundary import get_survived
-from ..acceptance.boundary import GridMode
-from ..acceptance.boundary import get_plane_index
-
+from ..tracking import patpass
 # Jaime Coello de Portugal (JCdP) frequency analysis implementation
 from .harmonic_analysis import get_tunes_harmonic
 
@@ -212,7 +207,7 @@ def get_freqmap(
         # set min-max
         nudiff = numpy.clip(nudiff, -10, -2)
 
-        # return rout,tp,tdl,grid,tunes
+        # now return rout,tp,tdl,grid,tunes
         firstturns = 0
         dataobs.append(
             (
@@ -248,7 +243,7 @@ def fmap_parallel_track(
     verbose: bool = False,
     lossmap: bool = False,
     **kwargs: dict[str, any],
-):
+) -> numpy.ndarray:
     r"""Computes frequency maps.
     This function calculates the norm of the transverse tune variation per turn
     for a particle tracked along a ring with a set of offsets in the initial
@@ -285,6 +280,7 @@ def fmap_parallel_track(
 
     Parameters:
         ring:     a valid pyat ring
+    Optional:
         coords:   default [-10,10,-10,10] in mm
         steps:    (xsteps, ysteps): number of steps in each plane
         scale:    default 'linear'; or 'non-linear'
@@ -294,7 +290,6 @@ def fmap_parallel_track(
         add_offset6d: default numpy.zeros((6,1))
         verbose:  prints additional info
         lossmap:  default false
-    Optional:
         pool_size:number of processes. See :py:func:`.patpass`
 
     Returns:
@@ -390,14 +385,14 @@ def fmap_parallel_track(
     print("Start tracking and frequency analysis")
 
     # tracking in parallel multiple x coordinates with the same y coordinate
-    for iy, iy_index in zip(iyarray, range(leniyarray)):
+    for iiy, iy_index in zip(iyarray, range(leniyarray)):
         print(f"Tracked particles {abs(-100.0*iy_index/leniyarray):.1f} %")
-        verboseprint("y =", iy)
+        verboseprint("y =", iiy)
         z00 = numpy.zeros((lenixarray, 6))  # transposed, and C-aligned
         z00 = z00 + add_offset6d + orbit
         # add 1 nm to tracking to avoid zeros in array for the ideal lattice
         z00[:, 0] = z00[:, 0] + xscale * ixarray + 1e-9
-        z00[:, 2] = z00[:, 2] + yscale * iy + 1e-9
+        z00[:, 2] = z00[:, 2] + yscale * iiy + 1e-9
 
         verboseprint("tracking ...")
         # z00.T is Fortran-aligned
@@ -441,17 +436,14 @@ def fmap_parallel_track(
             if len(xfreqfirst) == 0:
                 verboseprint("  No frequency")
                 continue
-            # xfreqlast  = PyNAFF.naff(xlastpart,tns,1,0,False)
             xfreqlast = get_tunes_harmonic(xlast)
             if len(xfreqlast) == 0:
                 verboseprint("  No frequency")
                 continue
-            # yfreqfirst = PyNAFF.naff(yfirstpart,tns,1,0,False)
             yfreqfirst = get_tunes_harmonic(yfirst)
             if len(yfreqfirst) == 0:
                 verboseprint("  No frequency")
                 continue
-            # yfreqlast  = PyNAFF.naff(ylastpart,tns,1,0,False)
             yfreqlast = get_tunes_harmonic(ylast)
             if len(yfreqlast) == 0:
                 verboseprint("  No frequency")
@@ -459,7 +451,7 @@ def fmap_parallel_track(
             verboseprint(
                 "NAFF results, (x,y)=",
                 ixarray[ix_index],
-                iy,
+                iiy,
                 "\nH freq. first part =\t",
                 xfreqfirst[0],
                 "\nH freq. last part =\t",
@@ -484,7 +476,7 @@ def fmap_parallel_track(
                 xy_nuxy_lognudiff_array,
                 [
                     ixarray[ix_index],
-                    iy,
+                    iiy,
                     xfreqfirst[0],
                     yfreqfirst[0],
                     xdiff,
