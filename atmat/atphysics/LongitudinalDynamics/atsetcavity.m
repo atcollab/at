@@ -110,7 +110,7 @@ if isempty(varargs)             % New syntax
             elseif isfinite(dp)
                 % Find the path lengthening for dp
                 [~,rnorad]=check_radiation(ring,false,'force');
-                [~,orbitin]=findorbit4(rnorad,dp);
+                [~,orbitin]=findorbit4(rnorad,dp, 'strict', -1);
                 orbitout=ringpass(rnorad,orbitin);
                 dct=orbitout(6);
                 frev=frev * lcell/(lcell+dct);

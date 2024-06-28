@@ -70,8 +70,8 @@ end
                 deltap=o1P(5)-o1M(5);
             else
                 dp=orbitin(5);
-                [~,o1P]=findorbit4(ring,dp+0.5*DPStep,'guess',orbitin,varargs{:});
-                [~,o1M]=findorbit4(ring,dp-0.5*DPStep,'guess',orbitin,varargs{:});
+                [~,o1P]=findorbit4(ring,dp+0.5*DPStep,'guess',orbitin,varargs{:},'strict',-1);
+                [~,o1M]=findorbit4(ring,dp-0.5*DPStep,'guess',orbitin,varargs{:},'strict',-1);
                 deltap=DPStep;
             end
             tuneP=tunefunc(ring,'orbit',o1P,varargs{:});
