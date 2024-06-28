@@ -27,32 +27,31 @@ from ..lattice import Lattice, Refpts, frequency_control, AtError
 import multiprocessing
 import time
 
-_pdict = {'x': 0, 'xp': 1,
-          'y': 2, 'yp': 3,
-          'dp': 4, 'ct': 5}
+_pdict = {"x": 0, "xp": 1, "y": 2, "yp": 3, "dp": 4, "ct": 5}
 
 
 # Jaime Coello de Portugal (JCdP) frequency analysis implementation
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['fmap_parallel_track','get_freqmap']
+__all__ = ["fmap_parallel_track", "get_freqmap"]
+
 
 def get_freqmap(
-        ring: Lattice,
-        planes,
-        npoints,
-        amplitudes,
-        bounds=None,
-        nturns: Optional[int] = 512,
-        dp: Optional[float] = None,
-        offset: Sequence[float] = None,
-        refpts: Optional[Refpts] = 0,
-        grid_mode: Optional[GridMode] = GridMode.CARTESIAN,
-        use_mp: Optional[bool] = True,
-        verbose: Optional[bool] = False,
-        lossmap: Optional[int] = 2,
-        shift_zero: Optional[float] = 0.0e-6,
-        start_method: Optional[str] = None,
+    ring: Lattice,
+    planes,
+    npoints,
+    amplitudes,
+    bounds=None,
+    nturns: Optional[int] = 512,
+    dp: Optional[float] = None,
+    offset: Sequence[float] = None,
+    refpts: Optional[Refpts] = 0,
+    grid_mode: Optional[GridMode] = GridMode.CARTESIAN,
+    use_mp: Optional[bool] = True,
+    verbose: Optional[bool] = False,
+    lossmap: Optional[int] = 2,
+    shift_zero: Optional[float] = 0.0e-6,
+    start_method: Optional[str] = None,
 ):
     # noinspection PyUnresolvedReferences
     r"""Computes the frequency map at ``repfts`` observation points.
@@ -126,28 +125,28 @@ def get_freqmap(
     """
     kwargs = {}
     if start_method is not None:
-        kwargs['start_method'] = start_method
+        kwargs["start_method"] = start_method
 
     if verbose:
         nproc = multiprocessing.cpu_count()
-        print('\n{0} cpu found for acceptance calculation'.format(nproc))
+        print("\n{0} cpu found for acceptance calculation".format(nproc))
         if use_mp:
             nprocu = nproc
-            print('Multi-process acceptance calculation selected...')
+            print("Multi-process acceptance calculation selected...")
             if nproc == 1:
-                print('Consider use_mp=False for single core computations')
+                print("Consider use_mp=False for single core computations")
         else:
             nprocu = 1
-            print('Single process acceptance calculation selected...')
+            print("Single process acceptance calculation selected...")
             if nproc > 1:
-                print('Consider use_mp=True for parallelized computations')
+                print("Consider use_mp=True for parallelized computations")
         np = numpy.atleast_1d(npoints)
         na = 2
         if len(np) == 2:
             na = np[1]
         npp = numpy.prod(npoints)
-        rpp = 2*numpy.ceil(numpy.log2(np[0]))*numpy.ceil(na/nprocu)
-        mpp = npp/nprocu
+        rpp = 2 * numpy.ceil(numpy.log2(np[0])) * numpy.ceil(na / nprocu)
+        mpp = npp / nprocu
 
     survived = []
     grid = []
@@ -159,80 +158,101 @@ def get_freqmap(
         try:
             offset = numpy.broadcast_to(offset, (len(rp), 6))
         except ValueError:
-            msg = ('offset and refpts have incoherent '
-                   'shapes: {0}, {1}'.format(numpy.shape(offset),
-                                             numpy.shape(refpts)))
+            msg = "offset and refpts have incoherent " "shapes: {0}, {1}".format(
+                numpy.shape(offset), numpy.shape(refpts)
+            )
             raise AtError(msg)
     else:
-        _, offset = find_orbit(ring,refpts)
+        _, offset = find_orbit(ring, refpts)
         planesi = numpy.atleast_1d(get_plane_index(planes))
-        offset[:,planesi[0]] =  offset[:,planesi[0]] + 1e-9
-        offset[:,planesi[1]] =  offset[:,planesi[1]] + 1e-9
+        offset[:, planesi[0]] = offset[:, planesi[0]] + 1e-9
+        offset[:, planesi[1]] = offset[:, planesi[1]] + 1e-9
     dataobs = []
     t0 = time.time()
     for r, o in zip(rp, offset):
-        obspt=r
-        dp=dp
-        offset=o
-        offset, newring = set_ring_orbit(ring, dp, obspt,
-                                         offset)
-        config = grid_configuration(planes, npoints, amplitudes,
-                                    grid_mode, bounds=bounds,
-                                    shift_zero=shift_zero)
+        obspt = r
+        dp = dp
+        offset = o
+        offset, newring = set_ring_orbit(ring, dp, obspt, offset)
+        config = grid_configuration(
+            planes, npoints, amplitudes, grid_mode, bounds=bounds, shift_zero=shift_zero
+        )
         if verbose:
-            print('\nRunning grid frequency search:')
+            print("\nRunning grid frequency search:")
             if obspt is None:
-                print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
+                print("Element {0}, obspt={1}".format(ring[0].FamName, 0))
             else:
-                print('Element {0}, obspt={1}'.format(ring[obspt].FamName,
-                                                      obspt))
-            print('The grid mode is {0}'.format(config.mode))
-            print('The planes are {0}'.format(config.planes))
-            print('Number of steps are {0}'.format(config.shape))
-            print('The maximum amplitudes are {0}'.format(config.amplitudes))
-            print('The maximum boundaries are {0}'.format(config.bounds))
-            print('Number of turns is {0}'.format(nturns))
-            print('The initial offset is {0} with dp={1}'.format(offset, dp))
+                print("Element {0}, obspt={1}".format(ring[obspt].FamName, obspt))
+            print("The grid mode is {0}".format(config.mode))
+            print("The planes are {0}".format(config.planes))
+            print("Number of steps are {0}".format(config.shape))
+            print("The maximum amplitudes are {0}".format(config.amplitudes))
+            print("The maximum boundaries are {0}".format(config.bounds))
+            print("Number of turns is {0}".format(nturns))
+            print("The initial offset is {0} with dp={1}".format(offset, dp))
         parts, grid = get_parts(config, offset)
-        rout, tp, td = ring.track(parts, nturns=2*nturns, losses=True, use_mp=use_mp, **kwargs)
+        rout, tp, td = ring.track(
+            parts, nturns=2 * nturns, losses=True, use_mp=use_mp, **kwargs
+        )
 
         mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
         survived = grid.grid[:, mask]
 
         planesi = numpy.atleast_1d(get_plane_index(planes))
-        tunes = numpy.zeros((len(planesi),2,len(numpy.where(mask)[0])))
-
+        tunes = numpy.zeros((len(planesi), 2, len(numpy.where(mask)[0])))
 
         for i in range(len(planesi)):
-            tunes[i,0] = get_tunes_harmonic(rout[planesi[i],mask,:,     0:  nturns],use_mp=use_mp, **kwargs)
-            tunes[i,1] = get_tunes_harmonic(rout[planesi[i],mask,:,nturns:2*nturns],use_mp=use_mp, **kwargs)
+            tunes[i, 0] = get_tunes_harmonic(
+                rout[planesi[i], mask, :, 0:nturns], use_mp=use_mp, **kwargs
+            )
+            tunes[i, 1] = get_tunes_harmonic(
+                rout[planesi[i], mask, :, nturns : 2 * nturns], use_mp=use_mp, **kwargs
+            )
         # metric
-        diffplane1 = tunes[0,0,:] - tunes[0,1,:]
-        diffplane2 = tunes[1,0,:] - tunes[1,1,:]
-        nudiff = 0.5*numpy.log10( (diffplane1*diffplane1 + diffplane2*diffplane2) /nturns )
+        diffplane1 = tunes[0, 0, :] - tunes[0, 1, :]
+        diffplane2 = tunes[1, 0, :] - tunes[1, 1, :]
+        nudiff = 0.5 * numpy.log10(
+            (diffplane1 * diffplane1 + diffplane2 * diffplane2) / nturns
+        )
         # set min-max
-        nudiff = numpy.clip(nudiff,-10,-2)
+        nudiff = numpy.clip(nudiff, -10, -2)
 
-        #return rout,tp,td,grid,tunes
+        # return rout,tp,td,grid,tunes
         firstturns = 0
-        dataobs.append((numpy.vstack((survived, tunes[0,firstturns], tunes[1,firstturns], diffplane1, diffplane2, nudiff)).T, grid, td))
+        dataobs.append(
+            (
+                numpy.vstack(
+                    (
+                        survived,
+                        tunes[0, firstturns],
+                        tunes[1, firstturns],
+                        diffplane1,
+                        diffplane2,
+                        nudiff,
+                    )
+                ).T,
+                grid,
+                td,
+            )
+        )
     if verbose:
-        print('Calculation took {0}'.format(time.time()-t0))
+        print("Calculation took {0}".format(time.time() - t0))
 
     return dataobs
 
 
-def fmap_parallel_track(ring,
-                        coords=[-10, 10, -10, 10],
-                        steps=[100, 100],
-                        scale='linear',
-                        turns=512,
-                        orbit=None,
-                        add_offset6D=numpy.zeros(6),
-                        verbose=False,
-                        lossmap=False,
-                        **kwargs
-                        ):
+def fmap_parallel_track(
+    ring,
+    coords=[-10, 10, -10, 10],
+    steps=[100, 100],
+    scale="linear",
+    turns=512,
+    orbit=None,
+    add_offset6D=numpy.zeros(6),
+    verbose=False,
+    lossmap=False,
+    **kwargs,
+):
     r"""Computes frequency maps
 
     This function calculates the norm of the transverse tune variation per turn
@@ -300,17 +320,17 @@ def fmap_parallel_track(ring,
     """
 
     # https://github.com/atcollab/at/pull/608
-    kwargs.setdefault('pool_size', None)
+    kwargs.setdefault("pool_size", None)
 
     # https://github.com/atcollab/at/pull/608
-    if 'ncpu' in kwargs:
-        warn(AtWarning('ncpu argument is deprecated; use pool_size instead'))
-        kwargs['pool_size'] = kwargs.pop('ncpu')
+    if "ncpu" in kwargs:
+        warn(AtWarning("ncpu argument is deprecated; use pool_size instead"))
+        kwargs["pool_size"] = kwargs.pop("ncpu")
 
     if orbit is None:
         # closed orbit values are not returned. It seems not necessary here
         orbit, _ = find_orbit(ring)
-        print(f'Closed orbit:\t{orbit}')
+        print(f"Closed orbit:\t{orbit}")
 
     # verboseprint to check flag only once
     verboseprint = print if verbose else lambda *a, **k: None
@@ -320,7 +340,7 @@ def fmap_parallel_track(ring,
     # nturns is twice tns in order to get the tune in the first and second
     #     part of the tracking
     tns = turns
-    nturns = 2*tns
+    nturns = 2 * tns
 
     # scale the inumpyut coordinates
     xscale = 1e-3
@@ -332,7 +352,7 @@ def fmap_parallel_track(ring,
 
     # verify steps
     if numpy.count_nonzero(steps) != 2:
-        raise ValueError('steps can not be zero')
+        raise ValueError("steps can not be zero")
 
     xmin = numpy.minimum(coords[0], coords[1])
     xmax = numpy.maximum(coords[0], coords[1])
@@ -343,28 +363,26 @@ def fmap_parallel_track(ring,
 
     # define rectangle and x,y step size
     if scale == "nonlinear":
-        verboseprint('non linear steps')
-        xinterval = 1.0*(xmax - xmin)
-        yinterval = 1.0*(ymax - ymin)
-        xauxsteps = numpy.arange(-0.5, 0.0 + 1e-9, 1./xsteps)
-        yauxsteps = numpy.arange(-0.5, 0.0 + 1e-9, 1./ysteps)
+        verboseprint("non linear steps")
+        xinterval = 1.0 * (xmax - xmin)
+        yinterval = 1.0 * (ymax - ymin)
+        xauxsteps = numpy.arange(-0.5, 0.0 + 1e-9, 1.0 / xsteps)
+        yauxsteps = numpy.arange(-0.5, 0.0 + 1e-9, 1.0 / ysteps)
         xnrsteps = 10**xauxsteps
         xnrsteps = xnrsteps / sum(xnrsteps)
         ynrsteps = 10**yauxsteps
         ynrsteps = ynrsteps / sum(ynrsteps)
-        xscalesteps = numpy.concatenate((xnrsteps,
-                                        numpy.flip(xnrsteps)), axis=None)
-        yscalesteps = numpy.concatenate((ynrsteps,
-                                        numpy.flip(ynrsteps)), axis=None)
+        xscalesteps = numpy.concatenate((xnrsteps, numpy.flip(xnrsteps)), axis=None)
+        yscalesteps = numpy.concatenate((ynrsteps, numpy.flip(ynrsteps)), axis=None)
         ixarray = xmin + 0.5 * xinterval * numpy.cumsum(xscalesteps)
         iyarray = ymin + 0.5 * yinterval * numpy.cumsum(yscalesteps)
     else:  # scale == 'linear', ignore any other
-        verboseprint('linear steps')
+        verboseprint("linear steps")
         # get the intervals
-        xstep = 1.0*(xmax - xmin)/xsteps
-        ystep = 1.0*(ymax - ymin)/ysteps
-        ixarray = numpy.arange(xmin, xmax+1e-6, xstep)
-        iyarray = numpy.arange(ymin, ymax+1e-6, ystep)
+        xstep = 1.0 * (xmax - xmin) / xsteps
+        ystep = 1.0 * (ymax - ymin) / ysteps
+        ixarray = numpy.arange(xmin, xmax + 1e-6, xstep)
+        iyarray = numpy.arange(ymin, ymax + 1e-6, ystep)
     lenixarray = len(ixarray)
     leniyarray = len(iyarray)
 
@@ -372,20 +390,19 @@ def fmap_parallel_track(ring,
 
     # tracking in parallel multiple x coordinates with the same y coordinate
     for iy, iy_index in zip(iyarray, range(leniyarray)):
-        print(f'Tracked particles {abs(-100.0*iy_index/leniyarray):.1f} %')
+        print(f"Tracked particles {abs(-100.0*iy_index/leniyarray):.1f} %")
         verboseprint("y =", iy)
         z0 = numpy.zeros((lenixarray, 6))  # transposed, and C-aligned
         z0 = z0 + add_offset6D + orbit
         # add 1 nm to tracking to avoid zeros in array for the ideal lattice
-        z0[:, 0] = z0[:, 0] + xscale*ixarray + 1e-9
-        z0[:, 2] = z0[:, 2] + yscale*iy + 1e-9
+        z0[:, 0] = z0[:, 0] + xscale * ixarray + 1e-9
+        z0[:, 2] = z0[:, 2] + yscale * iy + 1e-9
 
         verboseprint("tracking ...")
         # z0.T is Fortran-aligned
         if lossmap:
             # patpass output changes when losses flag is true
-            zOUT, dictloss = \
-                patpass(ring, z0.T, nturns, losses=lossmap, **kwargs)
+            zOUT, dictloss = patpass(ring, z0.T, nturns, losses=lossmap, **kwargs)
             loss_map_array = numpy.append(loss_map_array, dictloss)
         else:
             zOUT = patpass(ring, z0.T, nturns, **kwargs)
@@ -410,7 +427,7 @@ def fmap_parallel_track(ring,
             # pxfirst = pxfirst - numpy.mean(pxfirst)
             # xfirstpart = xfirst + 1j*pxfirst
             # get the last turns in x
-            xlast = z1[0, tns:2*tns]
+            xlast = z1[0, tns : 2 * tns]
             xlast = xlast - numpy.mean(xlast)
             # pxlast = z1[1, tns:2*tns]
             # pxlast = pxlast - numpy.mean(pxlast)
@@ -423,7 +440,7 @@ def fmap_parallel_track(ring,
             # pyfirst = pyfirst - numpy.mean(pyfirst)
             # yfirstpart = yfirst + 1j*pyfirst
             # get the last turns in y
-            ylast = z1[2, tns:2*tns]
+            ylast = z1[2, tns : 2 * tns]
             ylast = ylast - numpy.mean(ylast)
             # pylast = z1[3, tns:2*tns]
             # pylast = pylast - numpy.mean(pylast)
@@ -450,32 +467,42 @@ def fmap_parallel_track(ring,
             if len(yfreqlast) == 0:
                 verboseprint("  No frequency")
                 continue
-            verboseprint("NAFF results, (x,y)=",
-                         ixarray[ix_index],
-                         iy,
-                         "\nH freq. first part =\t", xfreqfirst[0],
-                         "\nH freq. last part =\t", xfreqlast[0],
-                         "\nV freq. first part =\t", yfreqfirst[0],
-                         "\nV freq. last part =\t", yfreqlast[0])
+            verboseprint(
+                "NAFF results, (x,y)=",
+                ixarray[ix_index],
+                iy,
+                "\nH freq. first part =\t",
+                xfreqfirst[0],
+                "\nH freq. last part =\t",
+                xfreqlast[0],
+                "\nV freq. first part =\t",
+                yfreqfirst[0],
+                "\nV freq. last part =\t",
+                yfreqlast[0],
+            )
 
             # metric
             xdiff = xfreqlast[0] - xfreqfirst[0]
             ydiff = yfreqlast[0] - yfreqfirst[0]
-            nudiff = 0.5*numpy.log10((xdiff*xdiff + ydiff*ydiff)/tns)
+            nudiff = 0.5 * numpy.log10((xdiff * xdiff + ydiff * ydiff) / tns)
             # min max diff
             if nudiff > -2:
                 nudiff = -2
             if nudiff < -10:
                 nudiff = -10
             # save diff
-            xy_nuxy_lognudiff_array = numpy.append(xy_nuxy_lognudiff_array,
-                                                   [ixarray[ix_index],
-                                                    iy,
-                                                    xfreqfirst[0],
-                                                    yfreqfirst[0],
-                                                    xdiff,
-                                                    ydiff,
-                                                    nudiff])
+            xy_nuxy_lognudiff_array = numpy.append(
+                xy_nuxy_lognudiff_array,
+                [
+                    ixarray[ix_index],
+                    iy,
+                    xfreqfirst[0],
+                    yfreqfirst[0],
+                    xdiff,
+                    ydiff,
+                    nudiff,
+                ],
+            )
 
     # first element is garbage
     xy_nuxy_lognudiff_array = numpy.delete(xy_nuxy_lognudiff_array, 0)
@@ -483,4 +510,6 @@ def fmap_parallel_track(ring,
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1, 7)
 
     return xy_nuxy_lognudiff_array, loss_map_array
+
+
 # the end
