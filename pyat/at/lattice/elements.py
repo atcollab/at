@@ -266,6 +266,7 @@ class Element(object):
                         T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
                         RApertures=lambda v: _array(v, (4,)),
+                        LRApertures=lambda v: _array(v, (4,)),
                         EApertures=lambda v: _array(v, (2,)),
                         KickAngle=lambda v: _array(v, (2,)),
                         PolynomB=_array, PolynomA=_array,
@@ -641,7 +642,7 @@ class SliceMoments(Element):
 
 
 class Aperture(Element):
-    """Aperture element"""
+    """Transverse aperture element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
@@ -651,13 +652,28 @@ class Aperture(Element):
         Args:
             family_name:    Name of the element
             limits:         (4,) array of physical aperture:
-              [xmin, xmax, zmin, zmax] [m]
-
+              [xmin, xmax, ymin, ymax]
         Default PassMethod: ``AperturePass``
         """
         kwargs.setdefault('PassMethod', 'AperturePass')
         super(Aperture, self).__init__(family_name, Limits=limits, **kwargs)
 
+class LongAperture(Element):
+    """Longitudinal aperture element"""
+
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
+    _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
+
+    def __init__(self, family_name, limits, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            limits:         (4,) array of physical aperture:
+              [dpmin, dpmax, ctmin, ctmax]
+        Default PassMethod: ``LongAperturePass``
+        """
+        kwargs.setdefault('PassMethod', 'LongAperturePass')
+        super(LongAperture, self).__init__(family_name, Limits=limits, **kwargs)
 
 class Drift(LongElement):
     """Drift space element"""
