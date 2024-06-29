@@ -10,18 +10,19 @@ from at.lattice import Lattice
 @pytest.mark.parametrize("lattice", ["dba_lattice", "hmba_lattice"])
 @pytest.mark.parametrize(
     "suffix, options",
-    [
+    (
         (".m", {}),
         (".repr", {}),
         (".mat", {"use": "abcd"}),
+        (".mat", {"mat_key": "efgh"}),
         (".json", {}),
-    ],
+    ) ,
 )
 def test_m(request, lattice, suffix, options):
     ring0 = request.getfixturevalue(lattice)
     fname = mktemp(suffix=suffix)
 
-    # Create a new .m or .repr file
+    # Create a new file
     ring0.save(fname, **options)
 
     # load the new file

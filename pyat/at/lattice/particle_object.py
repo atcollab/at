@@ -1,5 +1,5 @@
 """Description of particles"""
-from ..constants import e_mass, p_mass
+from ..constants import e_mass, p_mass, mu_mass
 import numpy
 from warnings import warn
 from typing import Optional, Dict
@@ -14,16 +14,19 @@ class Particle(object):
         relativistic=dict(rest_energy=0.0, charge=-1.0),
         electron=dict(rest_energy=e_mass, charge=-1.0),
         positron=dict(rest_energy=e_mass, charge=1.0),
-        proton=dict(rest_energy=p_mass, charge=1.0)
+        proton=dict(rest_energy=p_mass, charge=1.0),
+        antiproton=dict(rest_energy=mu_mass, charge=-1.0),
+        posmuon=dict(rest_energy=mu_mass, charge=1.0),
+        negmuon=dict(rest_energy=mu_mass, charge=-1.0),
     )
 
     def __init__(self, name: Optional[str] = 'relativistic', **kwargs):
         """
 
         Parameters:
-            name:   Particle name. 'electron', 'positron and 'proton' are
-              predefined. For other particles, the rest energy and charge
-              must be provided as keywords.
+            name:   Particle name. 'electron', 'positron', 'proton', 'posmuon',
+              'negmuon' are predefined. For other particles, the rest energy
+              and charge must be provided as keywords.
 
         Keyword Arguments:
             rest_energy:    Particle rest energy [ev]

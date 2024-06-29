@@ -10,7 +10,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath('../pyat'))
@@ -66,7 +65,6 @@ autodoc_default_options = {
         # Make sure that any autodoc declarations show the right members
         "members": True,
         "undoc-members": True,
-        "inherited-members": False,
         "show-inheritance": True,
         "member-order": "groupwise"
 }
