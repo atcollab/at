@@ -1,17 +1,65 @@
 """Global set of constants"""
-from ..cconfig import ismpi, isopenmp
-from numpy.random import Generator, PCG64, SeedSequence
-import os
+
+__all__ = ["test_mode", "set_test_mode", "DConstant", "random"]
+
 import multiprocessing
+import os
+from contextlib import contextmanager
+from contextvars import ContextVar
+
+from numpy.random import Generator, PCG64, SeedSequence
+
+from ..cconfig import ismpi, isopenmp
 
 if ismpi():
     from mpi4py import MPI
+
     _comm = MPI.COMM_WORLD
     _MPI_sz = _comm.Get_size()
     _MPI_rk = _comm.Get_rank()
 else:
     _MPI_sz = 1
     _MPI_rk = 0
+
+_test_mode: ContextVar[int] = ContextVar("test_mode", default=0)
+
+
+@contextmanager
+def set_test_mode(mode=1) -> None:
+    """Context manager to set a \"test mode\" integer value
+
+    Args:
+        mode:   a non-zero value which will be returned by the :py:func:`test_mode`
+          function.
+
+    Example:
+        >>> assert not test_mode(), "test mode should not be set"
+        >>> with set_test_mode():
+        ...     assert test_mode(), "test mode should be set"
+
+        Test mode contexts can be nested:
+
+        >>> with set_test_mode(1):
+        ...     assert test_mode() == 1, "outer context"
+        ...     with set_test_mode(2):
+        ...         assert test_mode() == 2, "inner context"
+        ...     assert test_mode() == 1, "back to outer context"
+    """
+    tok = _test_mode.set(mode)
+    try:
+        yield None
+    finally:
+        _test_mode.reset(tok)
+
+
+def test_mode() -> int:
+    """Return the test mode value
+
+    Returns:
+        test_mode:  0 outside a :py:func:`set_test_mode` context. Within such context,
+          return its non-zero value
+    """
+    return _test_mode.get()
 
 
 def _newgen(seed=12345):
@@ -22,19 +70,20 @@ def _newgen(seed=12345):
 
 class _Dst(object):
     """Set of constants for AT numerical analysis"""
+
     # optimized values:
     # see https://github.com/atcollab/at/pull/199#issuecomment-745420443
-    XYStep = 3.e-8           # Coordinate step for differentiation
-    DPStep = 3.e-6           # Momentum step for dispersion and chromaticity
-    OrbConvergence = 1.e-12  # Convergence criterion for orbit
-    OrbMaxIter = 20          # Max. number of iterations for orbit
-    omp_num_threads = int(os.environ.get('OMP_NUM_THREADS', '0'))
+    XYStep = 3.0e-8           # Coordinate step for differentiation
+    DPStep = 3.0e-6           # Momentum step for dispersion and chromaticity
+    OrbConvergence = 1.0e-12  # Convergence criterion for orbit
+    OrbMaxIter = 20           # Max. number of iterations for orbit
+    omp_num_threads = int(os.environ.get("OMP_NUM_THREADS", "0"))
     patpass_poolsize = multiprocessing.cpu_count()
     patpass_startmethod = None
-    _rank = _MPI_rk         # MPI rank
+    _rank = _MPI_rk           # MPI rank
 
     def __setattr__(self, name, value):
-        _ = getattr(self, name)     # make sure attribute exists
+        _ = getattr(self, name)  # make sure attribute exists
         object.__setattr__(self, name, value)
 
     def reset(self, name):
@@ -55,6 +104,7 @@ class _Dst(object):
 
 class _Random(object):
     """Random generators for AT"""
+
     def __init__(self):
         self.reset()
 
