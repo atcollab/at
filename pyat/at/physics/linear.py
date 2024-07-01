@@ -1141,8 +1141,6 @@ def avlinopt(ring, dp, refpts, **kwargs):
     def get_strength(elem):
         try:
             k = elem.PolynomB[1]
-            if k < 1.e-7:
-                k = 0.0
         except (AttributeError, IndexError):
             k = 0.0
         return k
@@ -1198,16 +1196,18 @@ def avlinopt(ring, dp, refpts, **kwargs):
 
     def sini(x, L):
         r = x.copy()
-        r[x > 0] = numpy.sin(numpy.sqrt(x[x > 0])*L[x > 0]
-                             )/numpy.sqrt(x[x > 0])
-        r[x < 0] = numpy.sinh(numpy.sqrt(-x[x < 0])*L[x < 0]
-                              )/numpy.sqrt(-x[x < 0])
+        xp = x >= 0
+        xm = x < 0
+        r[xp] = numpy.sin(numpy.sqrt(x[xp])*L[xp])/numpy.sqrt(x[xp])
+        r[xm] = numpy.sinh(numpy.sqrt(-x[xm])*L[xm])/numpy.sqrt(-x[xm])
         return r
 
     def cosi(x, L):
         r = x.copy()
-        r[x > 0] = numpy.cos(numpy.sqrt(x[x > 0])*L[x > 0])
-        r[x < 0] = numpy.cosh(numpy.sqrt(-x[x < 0])*L[x < 0])
+        xp = x >= 0
+        xm = x < 0
+        r[xp] = numpy.cos(numpy.sqrt(x[xp])*L[xp])
+        r[xm] = numpy.cosh(numpy.sqrt(-x[xm])*L[xm])
         return r
 
     def betadrift(beta0, alpha0, lg):
@@ -1263,22 +1263,21 @@ def avlinopt(ring, dp, refpts, **kwargs):
     avedisp = lindata.dispersion.copy()
     aves = lindata.s_pos.copy()
     ClosedOrbit = lindata.closed_orbit.copy()
+    dx0 = ClosedOrbit[:, 0]
 
     di = d_all[longi_refpts[all_refs]]
     df = d_all[longf_refpts[all_refs]]
 
     b_long = (L != 0.0)
-    b_foc = (K != 0.0)
+    dx0[b_long] = (di.closed_orbit[:, 0]+df.closed_orbit[:, 0])/2
+    irho[b_long] = ba[b_long]/L[b_long]
+    K = K*roll + 2*sext_strength*(dx0-dx)
+    b_foc = (abs(K) > 1.0e-7)
     b_foc_long = b_long & b_foc
     b_drf = b_long & (~b_foc)
 
-    dx0 = ClosedOrbit[:, 0]
-    dx0[b_long] = (di.closed_orbit[:, 0]+df.closed_orbit[:, 0])/2
-    K = K*roll + 2*sext_strength*(dx0-dx)
-
-    K2 = numpy.stack((K[b_foc_long], -K[b_foc_long]), axis=1)
+    K2 = numpy.stack((K[b_foc_long]+irho[b_foc_long]*irho[b_foc_long], -K[b_foc_long]), axis=1)
     fff = b_foc_long[b_long]
-    irho[b_long] = ba[b_long]/L[b_long]
     d_csi[b_long] = ba[b_long]*(gap[b_long]*Fint[b_long] *
                                 (1.0 + numpy.sin(e1[b_long])**2) /
                                 numpy.cos(e1[b_long])/L[b_long])
