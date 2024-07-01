@@ -257,7 +257,7 @@ OpenCLGPU::OpenCLGPU() {
 
         cl_device_id device_id[MAX_OCL_GPU];
         cl_uint deviceCount;
-        openCLCall(clGetDeviceIDs, platform[p], CL_DEVICE_TYPE_GPU, MAX_OCL_GPU, device_id, &deviceCount);
+        openCLCall(clGetDeviceIDs, platform[p], CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, MAX_OCL_GPU, device_id, &deviceCount);
 
         for (cl_uint i = 0; i < deviceCount; i++) {
 
