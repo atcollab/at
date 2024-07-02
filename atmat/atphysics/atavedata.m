@@ -61,31 +61,32 @@ if any(long)
     m=atgetfieldvalues(ringlong,'PolynomB',{3},'Default',0);
     R11=atgetfieldvalues(ringlong,'R2',{1,1},'Default',1);
     dx=(atgetfieldvalues(ringlong,'T2',{1},'Default',0)-atgetfieldvalues(ringlong,'T1',{1},'Default',0))/2;
-    ba=atgetfieldvalues(ringlong,'BendingAngle','Default',0);
-    irho=ba./L;
-    e1=atgetfieldvalues(ringlong,'EntranceAngle','Default',0);
-    Fint=atgetfieldvalues(ringlong,'Fint','Default',0);
-    gap=atgetfieldvalues(ringlong,'gap','Default',0);
     K = q.*R11 + 2*m.*(dx0-dx);
     foc = abs(K) > 1.e-7;
-    %Hard edge model on dipoles
-    % d_csi=ba.*gap.*Fint.*(1+sin(e1).^2)./cos(e1)./L;
-    % Cp=[ba.*tan(e1)./L -ba.*tan(e1-d_csi)./L];
-    % alpha0=alpha0-beta0.*Cp;
-    % for ii=1:2
-    %     disp0(:,2*ii)=disp0(:,2*ii)-disp0(:,2*ii-1).*Cp(:,ii);
-    % end
 
     if any(foc)
-        rqp=lg;
-        rqp(lg)=foc;
+        qp=lg;
+        qp(lg)=foc;
+        ringfoc=ringlong(foc);
+        ba=atgetfieldvalues(ringfoc,'BendingAngle','Default',0);
+        e1=atgetfieldvalues(ringfoc,'EntranceAngle','Default',0);
+        Fint=atgetfieldvalues(ringfoc,'Fint','Default',0);
+        gap=atgetfieldvalues(ringfoc,'gap','Default',0);
         kfoc = K(foc);
-        irhofoc = irho(foc);
-        K2 = [kfoc+irhofoc.*irhofoc -kfoc];
-        irho2 = [irhofoc zeros(size(irhofoc))];
+        lfoc = L(foc);
+        irho=ba./lfoc;
+        K2 = [kfoc+irho.*irho -kfoc];
+        irho2 = [irho zeros(size(irho))];
+        %Hard edge model on dipoles
+        d_csi=ba.*gap.*Fint.*(1+sin(e1).^2)./cos(e1)./lfoc;
+        Cp=[ba.*tan(e1)./L -ba.*tan(e1-d_csi)./lfoc];
+        alpha0(foc,:)=alpha0(foc,:)-beta0(foc,:).*Cp;
+        for ii=1:2
+            disp0(foc,2*ii)=disp0(foc,2*ii)-disp0(foc,2*ii-1).*Cp(:,ii);
+        end
         % Apply formulas
-        avebeta(rqp,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2,L2(foc,:));
-        avedisp(rqp,:)=dispfoc(disp0(foc,:),irho2,K2,L2(foc,:));
+        avebeta(qp,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2,L2(foc,:));
+        avedisp(qp,:)=dispfoc(disp0(foc,:),irho2,K2,L2(foc,:));
     end
     
 end
