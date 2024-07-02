@@ -109,7 +109,5 @@ end
         avedisp(:,[2 4])=(disp0(:,[2 4]).*(sin(sqrt(K).*L)./sqrt(K))-...
             disp0(:,[1 3]).*(1-cos(sqrt(K).*L))+...
             ir.*(1-cos(sqrt(K).*L))./K)./L;
-        disp([disp0 ir K L]);
-        disp(avedisp);
     end
 end

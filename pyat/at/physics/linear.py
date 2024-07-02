@@ -1228,8 +1228,6 @@ def avlinopt(ring, dp, refpts, **kwargs):
         avedisp[:, 1::2] = (disp0[:, 1::2]*(sini(k2, lg)) -
                             disp0[:, 0::2]*(1.0-cosi(k2, lg)) +
                             ir*(1.0-cosi(k2, lg))/k2)/lg
-        print(disp0, ir, k2, lg)
-        print(avedisp)
         return avedisp
 
     # selected list
@@ -1285,7 +1283,7 @@ def avlinopt(ring, dp, refpts, **kwargs):
                                 numpy.cos(e1[b_long])/L[b_long])
     L2 = numpy.stack((L[b_foc_long], L[b_foc_long]), axis=1)
     irho2 = irho[b_foc_long]
-    irho2 = numpy.stack(irho2, numpy.zeros(irho2.shape), axis=1)
+    irho2 = numpy.stack((irho2, numpy.zeros(irho2.shape)), axis=1)
     L = L.reshape((-1, 1))
 
     avemu[b_long] = 0.5 * (di.mu + df.mu)
