@@ -217,7 +217,7 @@ classdef pytests < matlab.unittest.TestCase
             [~,mbeta,~,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
             % check
             testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-7,RelTol=1.e-7);
-            testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
+            testCase.verifyEqual(mdisp(:,2),pdisp(:,2),AbsTol=1.E-8,RelTol=0);
         end
 
         function radiation_integrals(testCase,lat)

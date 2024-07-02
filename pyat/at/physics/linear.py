@@ -1222,12 +1222,14 @@ def avlinopt(ring, dp, refpts, **kwargs):
 
     def dispfoc(disp0, ir, k2, lg):
         avedisp = disp0.copy()
-        avedisp[:, 0::2] = (disp0[:, 0::2]*(sini(k2, lg)) +
+        avedisp[:, 0::2] = (disp0[:, 0::2]*sini(k2, lg) +
                             disp0[:, 1::2]*(1.0-cosi(k2, lg))/k2 +
                             ir*(lg-sini(k2, lg))/k2)/lg
-        avedisp[:, 1::2] = (disp0[:, 0::2]*(sini(k2, lg)) -
+        avedisp[:, 1::2] = (disp0[:, 1::2]*(sini(k2, lg)) -
                             disp0[:, 0::2]*(1.0-cosi(k2, lg)) +
-                            ir*(lg-cosi(k2, lg))/k2)/lg
+                            ir*(1.0-cosi(k2, lg))/k2)/lg
+        print(disp0, ir, k2, lg)
+        print(avedisp)
         return avedisp
 
     # selected list
@@ -1282,7 +1284,8 @@ def avlinopt(ring, dp, refpts, **kwargs):
                                 (1.0 + numpy.sin(e1[b_long])**2) /
                                 numpy.cos(e1[b_long])/L[b_long])
     L2 = numpy.stack((L[b_foc_long], L[b_foc_long]), axis=1)
-    irho = irho.reshape((-1, 1))
+    irho2 = irho[b_foc_long]
+    irho2 = numpy.stack(irho2, numpy.zeros(irho2.shape), axis=1)
     L = L.reshape((-1, 1))
 
     avemu[b_long] = 0.5 * (di.mu + df.mu)
@@ -1294,8 +1297,7 @@ def avlinopt(ring, dp, refpts, **kwargs):
     idx = numpy.ix_(~fff, [0, 2])
     avedisp[numpy.ix_(b_drf, [0, 2])] = (di.dispersion[idx] +
                                          df.dispersion[idx]) * 0.5
-    avedisp[b_foc_long, :] = dispfoc(di.dispersion[fff, :],
-                                     irho[b_foc_long], K2, L2)
+    avedisp[b_foc_long, :] = dispfoc(di.dispersion[fff, :], irho2, K2, L2)
 
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 

@@ -82,7 +82,7 @@ if any(long)
         kfoc = K(foc);
         irhofoc = irho(foc);
         K2 = [kfoc+irhofoc.*irhofoc -kfoc];
-        irho2 = [irhofoc irhofoc];
+        irho2 = [irhofoc zeros(size(irhofoc))];
         % Apply formulas
         avebeta(rqp,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2,L2(foc,:));
         avedisp(rqp,:)=dispfoc(disp0(foc,:),irho2,K2,L2(foc,:));
@@ -104,10 +104,12 @@ end
     function avedisp=dispfoc(disp0,ir,K,L)
         avedisp=disp0;
         avedisp(:,[1 3])=(disp0(:,[1 3]).*(sin(sqrt(K).*L)./sqrt(K))+...
-            disp0(:,[2 4]).*(1-cos(sqrt(K).*L))./K)./L+...
-            ir.*(L-sin(sqrt(K).*L)./sqrt(K))./K./L;
-        avedisp(:,[2 4])=(disp0(:,[2 3]).*(sin(sqrt(K).*L)./sqrt(K))-...
-            disp0(:,[1 3]).*(1-cos(sqrt(K).*L)))./L+...
-            ir.*(L-cos(sqrt(K).*L))./K./L;
+            disp0(:,[2 4]).*(1-cos(sqrt(K).*L))./K+...
+            ir.*(L-sin(sqrt(K).*L)./sqrt(K))./K)./L;
+        avedisp(:,[2 4])=(disp0(:,[2 4]).*(sin(sqrt(K).*L)./sqrt(K))-...
+            disp0(:,[1 3]).*(1-cos(sqrt(K).*L))+...
+            ir.*(1-cos(sqrt(K).*L))./K)./L;
+        disp([disp0 ir K L]);
+        disp(avedisp);
     end
 end
