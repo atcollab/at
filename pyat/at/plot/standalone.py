@@ -182,6 +182,8 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None,
     r"""Plot the resulting longitudinal Hamiltonian of a ring (defining the RF
     bucket). The Hamiltonian is calculated by summing all the cavities in the
     ring. Harmonic cavities are supported by the function.
+    A perfectly tuned lattice is assumed, the cavities' frequency is nominal
+    and the TimeLag is set in a way ensuring ct=0 for the synchronous phase.
 
     Parameters:
         ring: Lattice description
