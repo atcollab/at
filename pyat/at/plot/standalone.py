@@ -240,8 +240,8 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None, num_points=40
         HarmNumber = rfcav.HarmNumber
         TimeLag = rfcav.TimeLag
 
-        phi_s = TimeLag * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
-        phi = (numpy.pi - phi_s) + CT * 2 * numpy.pi * ring.get_revolution_frequency() * HarmNumber / ring.beta / clight
+        phi_s = TimeLag * 2 * numpy.pi * rfcav.Frequency / ring.beta / clight
+        phi = (numpy.pi - phi_s) + CT * 2 * numpy.pi * rfcav.Frequency / ring.beta / clight
 
         # Second term of the Hamiltonian
         U = Voltage / (2 * numpy.pi * HarmNumber) * \
