@@ -83,6 +83,7 @@ OpenCLContext::OpenCLContext(OCL_GPU_INFO *gpu)  {
 
   program = nullptr;
   kernel = nullptr;
+  mapkernel = nullptr;
 
 }
 
@@ -128,12 +129,14 @@ void OpenCLContext::compile(string& code) {
 
     AbstractGPU::outputCode(code);
 
-    size_t logSize;
+    size_t logSize = 0;
     clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, nullptr, &logSize);
-    char *log = new char[logSize+1];
-    clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, logSize + 1, log, nullptr);
-    std::cout << log << '\n';
-    delete[] log;
+    if( logSize>0 ) {
+      char *log = new char[logSize + 1];
+      clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, logSize + 1, log, nullptr);
+      std::cout << log << std::endl;
+      delete[] log;
+    }
 
     clReleaseProgram(program);
     program = nullptr;
