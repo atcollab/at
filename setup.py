@@ -118,6 +118,9 @@ else:
             raise RuntimeError('OCL_PATH environment variable not defined')
         opencl_cppflags = ['-I' + opencl_ocl_path + '\\include']
         opencl_lflags = ['/LIBPATH:'+opencl_ocl_path+'\\lib', "OpenCL.lib","cfgmgr32.lib","runtimeobject.lib","Advapi32.lib","ole32.lib"]
+    elif sys.platform.startswith('darwin'):
+        opencl_cppflags = ["-std=c++11"]
+        opencl_lflags = ['-Wl,-framework,OpenCL']
     else:
         if opencl_ocl_path is not None:
             # Private install
@@ -219,6 +222,7 @@ openclext = Extension(
     name='at.tracking.gpu',
     sources=gpusource + [join('atgpu', 'OpenCLGPU.cpp')],
     define_macros=macros + opencl_macros,
+    include_dirs=[numpy.get_include()],
     extra_compile_args=cppflags + opencl_cppflags,
     extra_link_args=opencl_lflags
 )
