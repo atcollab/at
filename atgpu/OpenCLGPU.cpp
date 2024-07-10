@@ -13,7 +13,7 @@ using namespace std;
 #define OPTIONS ""
 #else
 #define OPTIONS "-D__GNUC__"
-#endif /(__APPLE__*/)
+#endif /*__APPLE__*/
 
 #define openCLCall(funcName,...) { cl_int r = funcName(__VA_ARGS__);openCLCheckCall(#funcName,r); }
 
