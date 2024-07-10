@@ -8,6 +8,13 @@
 
 using namespace std;
 
+#ifdef __APPLE__
+#define clCreateCommandQueueWithProperties(ctxt,devid,xx,err) clCreateCommandQueue(ctxt,devid,0,err)
+#define OPTIONS ""
+#else
+#define OPTIONS "-D__GNUC__"
+#endif /(__APPLE__*/)
+
 #define openCLCall(funcName,...) { cl_int r = funcName(__VA_ARGS__);openCLCheckCall(#funcName,r); }
 
 static string getCLErrorString(cl_int r) {
@@ -123,7 +130,8 @@ void OpenCLContext::compile(string& code) {
   const char *progSrc = code.c_str();
   program = clCreateProgramWithSource(context, 1, &progSrc, nullptr, &err);
   openCLCheckCall("clCreateCommandQueue",err);
-  const char *opts = "-D__GNUC__"; // -D__GNUC__ for structure alignment (same directive as gcc)
+  // const char *opts = "-D__GNUC__"; // -D__GNUC__ for structure alignment (same directive as gcc)
+  const char *opts = OPTIONS;
   err = clBuildProgram(program, 1, &device_id, opts, nullptr, nullptr);
   if(err < 0) {
 
