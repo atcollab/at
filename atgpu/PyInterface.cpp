@@ -414,7 +414,8 @@ double *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<in
   }
 
   size_t nDim = PyArray_NDIM(array);
-  int64_t *dims = PyArray_SHAPE(array);
+//int64_t *dims = PyArray_SHAPE(array);
+  npy_intp *dims = PyArray_SHAPE(array);
 
   shape.resize(nDim);
   uint32_t nbItem = 1;
@@ -447,7 +448,8 @@ float *PyInterface::getNativeFloatArray(const std::string& name,std::vector<int6
   }
 
   size_t nDim = PyArray_NDIM(array);
-  int64_t *dims = PyArray_SHAPE(array);
+//int64_t *dims = PyArray_SHAPE(array);
+  npy_intp *dims = PyArray_SHAPE(array);
 
   shape.resize(nDim);
   uint32_t nbItem = 1;
