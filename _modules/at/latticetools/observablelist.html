@@ -1,0 +1,1091 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>at.latticetools.observablelist &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom_at.css?v=bc6ab313" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=99678979"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/at/latticetools/observablelist';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/AT.png" class="logo__image only-light" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/AT.png" class="logo__image only-dark" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../p/index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../p/index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">at.latticeto...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for at.latticetools.observablelist</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">:py:class:`ObservableList`\ (lattice, ...)</span>
+<span class="sd">    This container based on :py:class:`list` is in charge of optics</span>
+<span class="sd">    computations and provides each individual :py:class:`.Observable` with its</span>
+<span class="sd">    specific data.</span>
+
+<span class="sd">:py:class:`ObservableList` provides the :py:meth:`~ObservableList.evaluate`</span>
+<span class="sd">method and the following properties:</span>
+
+<span class="sd">- :py:attr:`~ObservableList.values`</span>
+<span class="sd">- :py:attr:`~ObservableList.flat_values`</span>
+<span class="sd">- :py:attr:`~ObservableList.weights`</span>
+<span class="sd">- :py:attr:`~ObservableList.flat_weights`</span>
+<span class="sd">- :py:attr:`~ObservableList.weighted_values`</span>
+<span class="sd">- :py:attr:`~ObservableList.flat_weighted_values`</span>
+<span class="sd">- :py:attr:`~ObservableList.deviations`</span>
+<span class="sd">- :py:attr:`~ObservableList.flat_deviations`</span>
+<span class="sd">- :py:attr:`~ObservableList.residuals`</span>
+<span class="sd">- :py:attr:`~ObservableList.sum_residuals`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ObservableList&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># noinspection PyProtectedMember</span>
+<span class="kn">from</span> <span class="nn">.observables</span> <span class="kn">import</span> <span class="n">Observable</span><span class="p">,</span> <span class="n">ElementObservable</span><span class="p">,</span> <span class="n">Need</span>
+<span class="kn">from</span> <span class="nn">..lattice</span> <span class="kn">import</span> <span class="n">AtError</span><span class="p">,</span> <span class="n">frequency_control</span>
+<span class="kn">from</span> <span class="nn">..lattice</span> <span class="kn">import</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">Orbit</span><span class="p">,</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">All</span>
+<span class="kn">from</span> <span class="nn">..physics</span> <span class="kn">import</span> <span class="n">linopt6</span>
+<span class="kn">from</span> <span class="nn">..tracking</span> <span class="kn">import</span> <span class="n">internal_lpass</span>
+
+
+<span class="k">def</span> <span class="nf">_flatten</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="ObservableList">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList">[docs]</a>
+<span class="k">class</span> <span class="nc">ObservableList</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handles a list of Observables to be evaluated together</span>
+
+<span class="sd">    :py:class:`ObservableList` supports all :py:class:`list` methods, like</span>
+<span class="sd">    appending, insertion or concatenation with the &quot;+&quot; operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">needs_ring</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">RING</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">ORBIT</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">GLOBALOPTICS</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">LOCALOPTICS</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">TRAJECTORY</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">EMITTANCE</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">GEOMETRY</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">needs_orbit</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">ORBIT</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">GLOBALOPTICS</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">LOCALOPTICS</span><span class="p">,</span>
+        <span class="n">Need</span><span class="o">.</span><span class="n">EMITTANCE</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">needs_optics</span> <span class="o">=</span> <span class="p">{</span><span class="n">Need</span><span class="o">.</span><span class="n">GLOBALOPTICS</span><span class="p">,</span> <span class="n">Need</span><span class="o">.</span><span class="n">LOCALOPTICS</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obsiter</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Observable</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">linopt6</span><span class="p">,</span>
+        <span class="n">orbit</span><span class="p">:</span> <span class="n">Orbit</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">twiss_in</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">r_in</span><span class="p">:</span> <span class="n">Orbit</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># noinspection PyUnresolvedReferences</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            obsiter:    Iterable of :py:class:`.Observable`\ s</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            orbit (Orbit):      Initial orbit. Avoids looking for the closed</span>
+<span class="sd">              orbit if it is already known. Used for</span>
+<span class="sd">              :py:class:`MatrixObservable` and :py:class:`LocalOpticsObservable`</span>
+<span class="sd">            twiss_in:           Initial conditions for transfer line optics.</span>
+<span class="sd">              See :py:func:`.get_optics`. Used for</span>
+<span class="sd">              :py:class:`LocalOpticsObservable`</span>
+<span class="sd">            method (Callable):  Method for linear optics. Used for</span>
+<span class="sd">              :py:class:`LocalOpticsObservable`.</span>
+<span class="sd">              Default: :py:obj:`~.linear.linopt6`</span>
+<span class="sd">            r_in (Orbit):       Initial trajectory, used for</span>
+<span class="sd">              :py:class:`TrajectoryObservable`, Default: zeros(6)</span>
+
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; obslist = ObservableList()</span>
+
+<span class="sd">            Create an empty Observable list</span>
+
+<span class="sd">            &gt;&gt;&gt; obslist.append(OrbitObservable(at.Monitor, plane=&#39;x&#39;))</span>
+<span class="sd">            &gt;&gt;&gt; obslist.append(GlobalOpticsObservable(&#39;tune&#39;))</span>
+<span class="sd">            &gt;&gt;&gt; obslist.append(EmittanceObservable(&#39;emittances&#39;, plane=&#39;h&#39;))</span>
+
+<span class="sd">            Add observables for horizontal closed orbit at Monitor locations,</span>
+<span class="sd">            tunes and horizontal emittance</span>
+
+<span class="sd">            &gt;&gt;&gt; obslist.evaluate(ring, initial=True)</span>
+
+<span class="sd">            Compute the values and mark them as the initial value</span>
+
+<span class="sd">            &gt;&gt;&gt; obslist.values</span>
+<span class="sd">            [array([-3.02189464e-09,  4.50695130e-07,  4.08205818e-07,</span>
+<span class="sd">                     2.37899969e-08, -1.31783561e-08,  2.47230794e-08,</span>
+<span class="sd">                     2.95310770e-08, -4.05598110e-07, -4.47398092e-07,</span>
+<span class="sd">                     2.24850671e-09]),</span>
+<span class="sd">            array([3.81563019e-01, 8.54376397e-01, 1.09060730e-04]),</span>
+<span class="sd">            1.320391045951568e-10]</span>
+
+<span class="sd">            &gt;&gt;&gt; obslist.get_flat_values(&#39;tune&#39;, &#39;emittances[h]&#39;)</span>
+<span class="sd">            array([3.815630e-01, 8.543764e-01, 1.090607e-04, 1.320391e-10])</span>
+
+<span class="sd">            Get a flattened array of tunes and horizontal emittance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orbitrefs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opticsrefs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">passrefs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrixrefs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orbit</span> <span class="o">=</span> <span class="n">orbit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">twiss_in</span> <span class="o">=</span> <span class="n">twiss_in</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r_in</span> <span class="o">=</span> <span class="n">r_in</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">obsiter</span><span class="p">)</span>
+
+    <span class="c1"># noinspection PyProtectedMember</span>
+    <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">):</span>
+        <span class="c1"># Compute the union of all needs</span>
+        <span class="n">needs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">needs</span> <span class="o">|=</span> <span class="n">obs</span><span class="o">.</span><span class="n">needs</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">ElementObservable</span><span class="p">):</span>
+                <span class="n">needs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Need</span><span class="o">.</span><span class="n">RING</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">needs</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_ring</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one Observable needs a ring argument&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="o">=</span> <span class="n">needs</span>
+        <span class="k">if</span> <span class="n">ring</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Initialise each observable</span>
+            <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">_setup</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Initialise each observable and make a summary all refpoints</span>
+            <span class="n">noref</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_bool_index</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">orbitrefs</span> <span class="o">=</span> <span class="n">opticsrefs</span> <span class="o">=</span> <span class="n">passrefs</span> <span class="o">=</span> <span class="n">matrixrefs</span> <span class="o">=</span> <span class="n">noref</span>
+            <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">_setup</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+                <span class="n">obsneeds</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">needs</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">ElementObservable</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">ORBIT</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                        <span class="n">orbitrefs</span> <span class="o">|=</span> <span class="n">obs</span><span class="o">.</span><span class="n">_boolrefs</span>
+                    <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">MATRIX</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                        <span class="n">matrixrefs</span> <span class="o">|=</span> <span class="n">obs</span><span class="o">.</span><span class="n">_boolrefs</span>
+                    <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">LOCALOPTICS</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">ALL_POINTS</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                            <span class="n">opticsrefs</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_bool_index</span><span class="p">(</span><span class="n">All</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">opticsrefs</span> <span class="o">|=</span> <span class="n">obs</span><span class="o">.</span><span class="n">_boolrefs</span>
+                    <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">TRAJECTORY</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                        <span class="n">passrefs</span> <span class="o">|=</span> <span class="n">obs</span><span class="o">.</span><span class="n">_boolrefs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">orbitrefs</span> <span class="o">=</span> <span class="n">orbitrefs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">opticsrefs</span> <span class="o">=</span> <span class="n">opticsrefs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">passrefs</span> <span class="o">=</span> <span class="n">passrefs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">matrixrefs</span> <span class="o">=</span> <span class="n">matrixrefs</span>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ObservableList</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ObservableList</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot add a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="si">}</span><span class="s2"> to an ObservableList&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ObservableList</span><span class="p">:</span>
+        <span class="n">nobs</span> <span class="o">=</span> <span class="n">ObservableList</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">nobs</span> <span class="o">+=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">nobs</span>
+
+<div class="viewcode-block" id="ObservableList.append">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.append">[docs]</a>
+    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Observable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">Observable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot append a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="si">}</span><span class="s2"> to an ObservableList&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.extend">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.extend">[docs]</a>
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obsiter</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Observable</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">obsiter</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.insert">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.insert">[docs]</a>
+    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Observable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">Observable</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot insert a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="si">}</span><span class="s2"> in an ObservableList&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span></div>
+
+
+    <span class="c1"># noinspection PyProtectedMember</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">_all_lines</span><span class="p">()</span> <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">Observable</span><span class="o">.</span><span class="n">_header</span><span class="p">(),</span> <span class="n">values</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ObservableList.evaluate">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.evaluate">[docs]</a>
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ring</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Lattice</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">dp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dct</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">initial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute all the :py:class:`Observable` values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ring:           Lattice used for evaluation</span>
+<span class="sd">            dp (float):     Momentum deviation. Defaults to :py:obj:`None`</span>
+<span class="sd">            dct (float):    Path lengthening. Defaults to :py:obj:`None`</span>
+<span class="sd">            df (float):     Deviation from the nominal RF frequency.</span>
+<span class="sd">              Defaults to :py:obj:`None`</span>
+<span class="sd">            initial:    If :py:obj:`True`, store the values as *initial values*</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            orbit (Orbit):  Initial orbit. Avoids looking for the closed</span>
+<span class="sd">              orbit if it is already known. Used for</span>
+<span class="sd">              :py:class:`.MatrixObservable` and :py:class:`.LocalOpticsObservable`</span>
+<span class="sd">            twiss_in:       Initial conditions for transfer line optics.</span>
+<span class="sd">              See :py:func:`.get_optics`. Used for</span>
+<span class="sd">              :py:class:`.LocalOpticsObservable`</span>
+<span class="sd">            method (Callable):  Method for linear optics. Used for</span>
+<span class="sd">              :py:class:`.LocalOpticsObservable`.</span>
+<span class="sd">              Default: :py:obj:`~.linear.linopt6`</span>
+<span class="sd">            r_in (Orbit):   Initial trajectory, used for</span>
+<span class="sd">              :py:class:`.TrajectoryObservable`, Default: zeros(6)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">obseval</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Evaluate a single observable&quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">check_error</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">refpts</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">data</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">AtError</span><span class="p">)</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="n">refpts</span><span class="p">]</span>
+
+            <span class="n">obsneeds</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">needs</span>
+            <span class="n">obsrefs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;_boolrefs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">RING</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">ORBIT</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">check_error</span><span class="p">(</span><span class="n">orbits</span><span class="p">,</span> <span class="n">obsrefs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">orbitrefs</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">MATRIX</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">check_error</span><span class="p">(</span><span class="n">mxdata</span><span class="p">,</span> <span class="n">obsrefs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">matrixrefs</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">GLOBALOPTICS</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rgdata</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">LOCALOPTICS</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">check_error</span><span class="p">(</span><span class="n">eldata</span><span class="p">,</span> <span class="n">obsrefs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">opticsrefs</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">TRAJECTORY</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trajs</span><span class="p">[</span><span class="n">obsrefs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">passrefs</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">EMITTANCE</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">emdata</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">GEOMETRY</span> <span class="ow">in</span> <span class="n">obsneeds</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">geodata</span><span class="p">[</span><span class="n">obsrefs</span><span class="p">])</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="n">initial</span><span class="p">)</span>
+
+        <span class="nd">@frequency_control</span>
+        <span class="k">def</span> <span class="nf">ringeval</span><span class="p">(</span>
+            <span class="n">ring</span><span class="p">,</span>
+            <span class="n">dp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">dct</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">df</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Optics computations&quot;&quot;&quot;</span>
+            <span class="n">trajs</span> <span class="o">=</span> <span class="n">orbits</span> <span class="o">=</span> <span class="n">rgdata</span> <span class="o">=</span> <span class="n">eldata</span> <span class="o">=</span> <span class="n">emdata</span> <span class="o">=</span> <span class="n">mxdata</span> <span class="o">=</span> <span class="n">geodata</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">o0</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">needs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs</span>
+
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">TRAJECTORY</span> <span class="ow">in</span> <span class="n">needs</span><span class="p">:</span>
+                <span class="c1"># Trajectory computation</span>
+                <span class="n">r_in</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;r_in&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_in</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">r_in</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">r_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+                <span class="n">r_out</span> <span class="o">=</span> <span class="n">internal_lpass</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">r_in</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">passrefs</span><span class="p">)</span>
+                <span class="n">trajs</span> <span class="o">=</span> <span class="n">r_out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+            <span class="k">if</span> <span class="n">needs</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_orbit</span><span class="p">:</span>
+                <span class="c1"># Closed orbit computation</span>
+                <span class="n">orbit0</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;orbit&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbit</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">o0</span><span class="p">,</span> <span class="n">orbits</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">find_orbit</span><span class="p">(</span>
+                        <span class="n">refpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orbitrefs</span><span class="p">,</span> <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span> <span class="n">dct</span><span class="o">=</span><span class="n">dct</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">orbit</span><span class="o">=</span><span class="n">orbit0</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="n">AtError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                    <span class="n">orbits</span> <span class="o">=</span> <span class="n">mxdata</span> <span class="o">=</span> <span class="n">rgdata</span> <span class="o">=</span> <span class="n">eldata</span> <span class="o">=</span> <span class="n">emdata</span> <span class="o">=</span> <span class="n">err</span>
+
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">MATRIX</span> <span class="ow">in</span> <span class="n">needs</span> <span class="ow">and</span> <span class="n">o0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Transfer matrix computation</span>
+                <span class="k">if</span> <span class="n">ring</span><span class="o">.</span><span class="n">is_6d</span><span class="p">:</span>
+                    <span class="c1"># noinspection PyUnboundLocalVariable</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">mxdata</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">find_m66</span><span class="p">(</span>
+                        <span class="n">refpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">matrixrefs</span><span class="p">,</span>
+                        <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span>
+                        <span class="n">dct</span><span class="o">=</span><span class="n">dct</span><span class="p">,</span>
+                        <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                        <span class="n">orbit</span><span class="o">=</span><span class="n">o0</span><span class="p">,</span>
+                        <span class="n">keep_lattice</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># noinspection PyUnboundLocalVariable</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">mxdata</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">find_m44</span><span class="p">(</span>
+                        <span class="n">refpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">matrixrefs</span><span class="p">,</span>
+                        <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span>
+                        <span class="n">dct</span><span class="o">=</span><span class="n">dct</span><span class="p">,</span>
+                        <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                        <span class="n">orbit</span><span class="o">=</span><span class="n">o0</span><span class="p">,</span>
+                        <span class="n">keep_lattice</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">needs</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_optics</span><span class="p">)</span> <span class="ow">and</span> <span class="n">o0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Linear optics computation</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">rgdata</span><span class="p">,</span> <span class="n">eldata</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span>
+                        <span class="n">refpts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">opticsrefs</span><span class="p">,</span>
+                        <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span>
+                        <span class="n">dct</span><span class="o">=</span><span class="n">dct</span><span class="p">,</span>
+                        <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                        <span class="n">orbit</span><span class="o">=</span><span class="n">o0</span><span class="p">,</span>
+                        <span class="n">keep_lattice</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">get_chrom</span><span class="o">=</span><span class="n">Need</span><span class="o">.</span><span class="n">CHROMATICITY</span> <span class="ow">in</span> <span class="n">needs</span><span class="p">,</span>
+                        <span class="n">get_w</span><span class="o">=</span><span class="n">Need</span><span class="o">.</span><span class="n">W_FUNCTIONS</span> <span class="ow">in</span> <span class="n">needs</span><span class="p">,</span>
+                        <span class="n">twiss_in</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;twiss_in&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">twiss_in</span><span class="p">),</span>
+                        <span class="n">method</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="n">AtError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                    <span class="n">rgdata</span> <span class="o">=</span> <span class="n">eldata</span> <span class="o">=</span> <span class="n">err</span>
+
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">EMITTANCE</span> <span class="ow">in</span> <span class="n">needs</span> <span class="ow">and</span> <span class="n">o0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Emittance computation</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">emdata</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">envelope_parameters</span><span class="p">(</span><span class="n">orbit</span><span class="o">=</span><span class="n">o0</span><span class="p">,</span> <span class="n">keep_lattice</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                    <span class="n">emdata</span> <span class="o">=</span> <span class="n">err</span>
+
+            <span class="k">if</span> <span class="n">Need</span><span class="o">.</span><span class="n">GEOMETRY</span> <span class="ow">in</span> <span class="n">needs</span><span class="p">:</span>
+                <span class="c1"># Geometry computation</span>
+                <span class="n">geodata</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_geometry</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">trajs</span><span class="p">,</span> <span class="n">orbits</span><span class="p">,</span> <span class="n">rgdata</span><span class="p">,</span> <span class="n">eldata</span><span class="p">,</span> <span class="n">emdata</span><span class="p">,</span> <span class="n">mxdata</span><span class="p">,</span> <span class="n">geodata</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">initial</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setup</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span>
+
+        <span class="n">trajs</span><span class="p">,</span> <span class="n">orbits</span><span class="p">,</span> <span class="n">rgdata</span><span class="p">,</span> <span class="n">eldata</span><span class="p">,</span> <span class="n">emdata</span><span class="p">,</span> <span class="n">mxdata</span><span class="p">,</span> <span class="n">geodata</span> <span class="o">=</span> <span class="n">ringeval</span><span class="p">(</span>
+            <span class="n">ring</span><span class="p">,</span> <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span> <span class="n">dct</span><span class="o">=</span><span class="n">dct</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">df</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">ob</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">obseval</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">ob</span><span class="p">)</span></div>
+
+
+    <span class="c1"># noinspection PyProtectedMember</span>
+<div class="viewcode-block" id="ObservableList.exclude">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.exclude">[docs]</a>
+    <span class="k">def</span> <span class="nf">exclude</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obsname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">excluded</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">):</span>
+        <span class="c1"># Set the excluded mask on the selected observable</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">obs</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">obsname</span><span class="p">:</span>
+                <span class="n">obs</span><span class="o">.</span><span class="n">_excluded</span> <span class="o">=</span> <span class="n">excluded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterable over selected observables&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">obsnames</span><span class="p">:</span>
+            <span class="n">sel</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">obsnames</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">obs</span> <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">obs</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">sel</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="o">*</span><span class="n">obsnames</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">attrname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">AtError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">err</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># noinspection PyProtectedMember</span>
+                    <span class="n">shp</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">_shape</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="p">()</span> <span class="k">if</span> <span class="n">shp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">shp</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">res</span>
+
+<div class="viewcode-block" id="ObservableList.get_shapes">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_shapes">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the shapes of all values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_flat_shape">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_flat_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_flat_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shape of the flattened values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">shp</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">shp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;_shape&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">vals</span><span class="p">),)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_values">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the values of observables</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_flat_values">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_flat_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_flat_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;F&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 1-D array of Observable values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_weighted_values">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_weighted_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_weighted_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the weighted values of observables</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;weighted_value&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_flat_weighted_values">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_flat_weighted_values">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_flat_weighted_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;F&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 1-D array of Observable weighted values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_flatten</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;weighted_value&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_deviations">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_deviations">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_deviations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the deviations from target values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;deviation&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_flat_deviations">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_flat_deviations">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_flat_deviations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;F&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 1-D array of deviations from target values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;deviation&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_weighted_deviations">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_weighted_deviations">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_weighted_deviations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the weighted deviations from target values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;weighted_deviation&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_flat_weighted_deviations">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_flat_weighted_deviations">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_flat_weighted_deviations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;F&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 1-D array of weighted deviations from target values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_flatten</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;weighted_deviation&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_weights">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_weights">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the weights of observables</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_flat_weights">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_flat_weights">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_flat_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;F&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 1-D array of Observable weights</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_residuals">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the residuals of observables</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;residual&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ObservableList.get_sum_residuals">
+<a class="viewcode-back" href="../../../p/api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.get_sum_residuals">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_sum_residuals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">err</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sum of residual values</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *obsnames: names of selected observables (Default all)</span>
+<span class="sd">            err: Default observable value to be used when the evaluation failed. By</span>
+<span class="sd">              default, an Exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="s2">&quot;residual&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">obsnames</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+    <span class="n">shapes</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_shapes</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Shapes of all values&quot;</span><span class="p">)</span>
+    <span class="n">flat_shape</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_flat_shape</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Shape of the flattened values&quot;</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_values</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;values of all observables&quot;</span><span class="p">)</span>
+    <span class="n">flat_values</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_flat_values</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;1-D array of Observable values&quot;</span><span class="p">)</span>
+    <span class="n">weighted_values</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span>
+        <span class="n">get_weighted_values</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Weighted values of all observables&quot;</span>
+    <span class="p">)</span>
+    <span class="n">flat_weighted_values</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span>
+        <span class="n">get_flat_weighted_values</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;1-D array of Observable weigthed values&quot;</span>
+    <span class="p">)</span>
+    <span class="n">deviations</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_deviations</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Deviations from target values&quot;</span><span class="p">)</span>
+    <span class="n">flat_deviations</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span>
+        <span class="n">get_flat_deviations</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;1-D array of deviations from target value&quot;</span>
+    <span class="p">)</span>
+    <span class="n">weighted_deviations</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span>
+        <span class="n">get_weighted_deviations</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Weighted deviations from target values&quot;</span>
+    <span class="p">)</span>
+    <span class="n">flat_weighted_deviations</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span>
+        <span class="n">get_flat_weighted_deviations</span><span class="p">,</span>
+        <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;1-D array of weighted deviations from target values&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">flat_weights</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_flat_weights</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;1-D array of Observable weights&quot;</span><span class="p">)</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_residuals</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Residuals of all observable&quot;</span><span class="p">)</span>
+    <span class="n">sum_residuals</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_sum_residuals</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s2">&quot;Sum of all residual values&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022, ATCollab.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

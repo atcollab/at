@@ -1,0 +1,1118 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Observables &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom_at.css?v=bc6ab313" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=99678979"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'p/notebooks/observables';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Parallel processing" href="../howto/multiprocessing.html" />
+    <link rel="prev" title="Variables" href="variables.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AT.png" class="logo__image only-light" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>
+    <script>document.write(`<img src="../../_static/AT.png" class="logo__image only-dark" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../howto/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/Primer.html">PyAT Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variables.html">Variables</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Observables</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../howto/multiprocessing.html">Parallel processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/CavityControl.html">Cavity Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/Collective.html">Collective</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Packages:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.lattice.html">at.lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.axisdef.html">at.lattice.axisdef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.cavity_access.html">at.lattice.cavity_access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.deprecated.html">at.lattice.deprecated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.elements.html">at.lattice.elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.idtable_element.html">at.lattice.idtable_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.lattice_object.html">at.lattice.lattice_object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.lattice_variables.html">at.lattice.lattice_variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.options.html">at.lattice.options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.particle_object.html">at.lattice.particle_object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.rectangular_bend.html">at.lattice.rectangular_bend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.utils.html">at.lattice.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.variable_elements.html">at.lattice.variable_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.lattice.variables.html">at.lattice.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.latticetools.html">at.latticetools</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.latticetools.observablelist.html">at.latticetools.observablelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.latticetools.observables.html">at.latticetools.observables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.tracking.html">at.tracking</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.tracking.atpass.html">at.tracking.atpass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.tracking.deprecated.html">at.tracking.deprecated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.tracking.particles.html">at.tracking.particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.tracking.track.html">at.tracking.track</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.tracking.utils.html">at.tracking.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.physics.html">at.physics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.amat.html">at.physics.amat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.diffmatrix.html">at.physics.diffmatrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.energy_loss.html">at.physics.energy_loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.fastring.html">at.physics.fastring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.frequency_maps.html">at.physics.frequency_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.harmonic_analysis.html">at.physics.harmonic_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.linear.html">at.physics.linear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.matrix.html">at.physics.matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.nonlinear.html">at.physics.nonlinear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.orbit.html">at.physics.orbit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.radiation.html">at.physics.radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.revolution.html">at.physics.revolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.physics.ring_parameters.html">at.physics.ring_parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.load.html">at.load</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.allfiles.html">at.load.allfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.elegant.html">at.load.elegant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.file_input.html">at.load.file_input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.json.html">at.load.json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.mad8.html">at.load.mad8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.madx.html">at.load.madx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.matfile.html">at.load.matfile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.reprfile.html">at.load.reprfile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.tracy.html">at.load.tracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.load.utils.html">at.load.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.matching.html">at.matching</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.matching.globalfit.html">at.matching.globalfit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.matching.matching.html">at.matching.matching</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.acceptance.html">at.acceptance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.acceptance.acceptance.html">at.acceptance.acceptance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.acceptance.boundary.html">at.acceptance.boundary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.acceptance.touschek.html">at.acceptance.touschek</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.collective.html">at.collective</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.collective.beam_loading.html">at.collective.beam_loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.collective.haissinski.html">at.collective.haissinski</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.collective.wake_elements.html">at.collective.wake_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.collective.wake_functions.html">at.collective.wake_functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.collective.wake_object.html">at.collective.wake_object</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/at.plot.html">at.plot</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.plot.generic.html">at.plot.generic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.plot.specific.html">at.plot.specific</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.plot.standalone.html">at.plot.standalone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/at.plot.synopt.html">at.plot.synopt</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/at.constants.html">at.constants</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Welcome to pyAT’s documentation!</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Observables</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="observables">
+<h1>Observables<a class="headerlink" href="#observables" title="Link to this heading">#</a></h1>
+<p>Observables provide a unified way to access a large quantity of figures resulting from various
+computations on lattices. They may be used in parameter scans, matching, response matrices…</p>
+<p>Observables values may be scalars or numpy arrays of any shape.</p>
+<p>AT provides a number of specific observables sharing a common interface, inherited from the
+<a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> base class. They are:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.RingObservable" title="at.latticetools.observables.RingObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">RingObservable</span></code></a>: Any user-defined property depending upon <em>ring</em></p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a>: Any user-defined property at a specific location along the lattice</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.OrbitObservable" title="at.latticetools.observables.OrbitObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">OrbitObservable</span></code></a>: <span class="math notranslate nohighlight">\(x_{co}\)</span>…,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.GlobalOpticsObservable" title="at.latticetools.observables.GlobalOpticsObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GlobalOpticsObservable</span></code></a>: tunes, damping times…,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.LocalOpticsObservable" title="at.latticetools.observables.LocalOpticsObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalOpticsObservable</span></code></a>: <span class="math notranslate nohighlight">\(\beta\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>…,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.MatrixObservable" title="at.latticetools.observables.MatrixObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixObservable</span></code></a>: <span class="math notranslate nohighlight">\(T_{ij}\)</span>…,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.TrajectoryObservable" title="at.latticetools.observables.TrajectoryObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectoryObservable</span></code></a>: <span class="math notranslate nohighlight">\(x, p_x\)</span>…,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.EmittanceObservable" title="at.latticetools.observables.EmittanceObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">EmittanceObservable</span></code></a>: <span class="math notranslate nohighlight">\(\epsilon_x\)</span>…,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.LatticeObservable" title="at.latticetools.observables.LatticeObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">LatticeObservable</span></code></a>: attributes of lattice elements,</p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.GeometryObservable" title="at.latticetools.observables.GeometryObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryObservable</span></code></a></p></li>
+</ul>
+<p>An Observable has optional <a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.target" title="at.latticetools.observables.Observable.target"><code class="xref py py-attr docutils literal notranslate"><span class="pre">target</span></code></a>, <a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.weight" title="at.latticetools.observables.Observable.weight"><code class="xref py py-attr docutils literal notranslate"><span class="pre">weight</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">bounds</span></code> attributes for matching. After evaluation, it has the following main properties:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.value" title="at.latticetools.observables.Observable.value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">value</span></code></a></p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.weighted_value" title="at.latticetools.observables.Observable.weighted_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">weighted_value</span></code></a>: <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">/</span> <span class="pre">weight</span></code></p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.deviation" title="at.latticetools.observables.Observable.deviation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">deviation</span></code></a>:  <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">-</span> <span class="pre">target</span></code></p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.weighted_deviation" title="at.latticetools.observables.Observable.weighted_deviation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">weighted_deviation</span></code></a>:  <code class="docutils literal notranslate"><span class="pre">(value</span> <span class="pre">-</span> <span class="pre">target)/weight</span></code></p></li>
+<li><p><a class="reference internal" href="../api/at.latticetools.observables.html#at.latticetools.observables.Observable.residual" title="at.latticetools.observables.Observable.residual"><code class="xref py py-attr docutils literal notranslate"><span class="pre">residual</span></code></a>:  <code class="docutils literal notranslate"><span class="pre">((value</span> <span class="pre">-</span> <span class="pre">target)/weight)**2</span></code></p></li>
+</ul>
+<p>Custom Observables may be created by providing the adequate evaluation function.</p>
+<p>For evaluation, observables must be grouped in an <a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a> which optimises the computation, avoiding redundant function calls. <a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a> provides the <a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.evaluate" title="at.latticetools.observablelist.ObservableList.evaluate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate()</span></code></a> method, and the
+<a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.values" title="at.latticetools.observablelist.ObservableList.values"><code class="xref py py-attr docutils literal notranslate"><span class="pre">values</span></code></a>, <a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.deviations" title="at.latticetools.observablelist.ObservableList.deviations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">deviations</span></code></a>,
+<a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.residuals" title="at.latticetools.observablelist.ObservableList.residuals"><code class="xref py py-attr docutils literal notranslate"><span class="pre">residuals</span></code></a> and <a class="reference internal" href="../api/at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList.sum_residuals" title="at.latticetools.observablelist.ObservableList.sum_residuals"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sum_residuals</span></code></a> properties, among others.</p>
+<p>This example shows how to declare various Observables, how to evaluate them and how to extract and display their values.</p>
+<section id="setup-the-environment">
+<h2>Setup the environment<a class="headerlink" href="#setup-the-environment" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">at</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">importlib.resources</span> <span class="kn">import</span> <span class="n">files</span><span class="p">,</span> <span class="n">as_file</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">at</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Observable</span><span class="p">,</span>
+    <span class="n">ObservableList</span><span class="p">,</span>
+    <span class="n">RingObservable</span><span class="p">,</span>
+    <span class="n">OrbitObservable</span><span class="p">,</span>
+    <span class="n">GlobalOpticsObservable</span><span class="p">,</span>
+    <span class="n">LocalOpticsObservable</span><span class="p">,</span>
+    <span class="n">MatrixObservable</span><span class="p">,</span>
+    <span class="n">TrajectoryObservable</span><span class="p">,</span>
+    <span class="n">EmittanceObservable</span><span class="p">,</span>
+    <span class="n">LatticeObservable</span><span class="p">,</span>
+    <span class="n">GeometryObservable</span><span class="p">,</span>
+    <span class="n">Need</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="load-a-test-lattice">
+<h2>Load a test lattice<a class="headerlink" href="#load-a-test-lattice" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s2">&quot;hmba.mat&quot;</span>
+<span class="k">with</span> <span class="n">as_file</span><span class="p">(</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;machine_data&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="n">fname</span><span class="p">)</span> <span class="k">as</span> <span class="n">path</span><span class="p">:</span>
+    <span class="n">hmba_lattice</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">load_lattice</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="create-observables">
+<h2>Create Observables<a class="headerlink" href="#create-observables" title="Link to this heading">#</a></h2>
+<p>Create an empty ObservableList:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">obs1</span> <span class="o">=</span> <span class="n">ObservableList</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Horizontal closed orbit on all Monitors:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">obs1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">OrbitObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Create a 2<sup>nd</sup> ObservableList:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">obs2</span> <span class="o">=</span> <span class="n">ObservableList</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Vertical <span class="math notranslate nohighlight">\(\beta\)</span> at all monitors, with a target and bounds.</p>
+<p>The vertical <span class="math notranslate nohighlight">\(\beta\)</span> is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>], so here [<em>-Infinity 7.0</em>]</p>
+<p>The residual will be zero within the interval.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">obs2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">LocalOpticsObservable</span><span class="p">(</span>
+        <span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>check the concatenation of ObservableLists:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span> <span class="o">=</span> <span class="n">obs1</span> <span class="o">+</span> <span class="n">obs2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Full transfer matrix to <code class="docutils literal notranslate"><span class="pre">BPM02</span></code>:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MatrixObservable</span><span class="p">(</span><span class="s2">&quot;BPM_02&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Maximum of vertical beta on monitors:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>First 4 coordinates of the closed orbit at Quadrupoles:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">LocalOpticsObservable</span><span class="p">(</span>
+        <span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">,</span> <span class="s2">&quot;closed_orbit&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">target</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0e-6</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Position along the lattice of all quadrupoles:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">,</span> <span class="s2">&quot;s_pos&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Phase advance between elements 33 and 101 in all planes:</p>
+<p>First, let’s define a custom evaluation function:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">phase_advance</span><span class="p">(</span><span class="n">elemdata</span><span class="p">):</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">elemdata</span><span class="o">.</span><span class="n">mu</span>
+    <span class="k">return</span> <span class="n">mu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Then create the Observable. The evaluation function should return one value per refpoint (2 here). Alternatively,
+it may return a single value (the difference, here), but then one must set <code class="docutils literal notranslate"><span class="pre">summary=True</span></code>. <code class="docutils literal notranslate"><span class="pre">all_points</span></code> is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to force the evaluation of the phase advance at all points, to avoid phase jumps.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">LocalOpticsObservable</span><span class="p">([</span><span class="mi">33</span><span class="p">,</span> <span class="mi">101</span><span class="p">],</span> <span class="n">phase_advance</span><span class="p">,</span> <span class="n">all_points</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Horizontal tune with the integer part:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s2">&quot;tune&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_integer</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Total phase advance at the end of the lattice (all planes):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">End</span><span class="p">,</span> <span class="s2">&quot;mu&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Horizontal W-function:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">,</span> <span class="s2">&quot;W&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Chromaticity in all planes:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s2">&quot;chromaticity&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Average of sextupole strengths:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LatticeObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Strengths of all sextupoles:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LatticeObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">,</span> <span class="s2">&quot;PolynomB&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Horizontal emittance:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EmittanceObservable</span><span class="p">(</span><span class="s2">&quot;emittances&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Ring circumference:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">circumference</span><span class="p">(</span><span class="n">ring</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_s_pos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ring</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RingObservable</span><span class="p">(</span><span class="n">circumference</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>p<sub>x</sub> component of the trajectory on all monitors:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TrajectoryObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;px&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GeometryObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="evaluation">
+<h2>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading">#</a></h2>
+<p>An input trajectory is required for the trajectory Observable</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">r_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">r_in</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">allobs</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">hmba_lattice</span><span class="o">.</span><span class="n">enable_6d</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">r_in</span><span class="o">=</span><span class="n">r_in</span><span class="p">,</span> <span class="n">dp</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="extract-a-single-observable-value">
+<h3>Extract a single Observable value<a class="headerlink" href="#extract-a-single-observable-value" title="Link to this heading">#</a></h3>
+<p>(phase advance between elements 3 and 101):</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>array([ 9.38969042e+00,  2.99742405e+00, -4.29831951e-15])
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="get-the-list-of-all-observable-values">
+<h3>Get the list of all Observable values:<a class="headerlink" href="#get-the-list-of-all-observable-values" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">allobs</span><span class="o">.</span><span class="n">values</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[array([-3.02197154e-09,  4.50706100e-07,  4.08215752e-07,  2.37905632e-08,
+        -1.31787026e-08,  2.47236653e-08, -2.95318224e-08, -4.05608197e-07,
+        -4.47409217e-07, -2.24856457e-09]),
+ array([5.30279703, 7.17604152, 6.55087808, 2.31448878, 3.40498444,
+        3.405044  , 2.3146451 , 6.55106241, 7.17614175, 5.30283837]),
+ array([[[-1.08194106e+00,  3.18809568e+00,  0.00000000e+00,
+           0.00000000e+00,  8.22407787e-02, -1.72158067e-05],
+         [-6.80522735e-01,  1.08099571e+00,  0.00000000e+00,
+           0.00000000e+00,  4.90131193e-02, -1.02601216e-05],
+         [ 0.00000000e+00,  0.00000000e+00,  7.55929650e-01,
+           3.87059271e+00,  0.00000000e+00,  0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -6.79279293e-01,
+          -2.15524755e+00,  0.00000000e+00,  0.00000000e+00],
+         [-1.13309291e-08, -1.08618451e-07,  0.00000000e+00,
+           0.00000000e+00,  9.99995907e-01, -2.09333332e-04],
+         [ 2.93742438e-03,  6.73567963e-02,  0.00000000e+00,
+           0.00000000e+00,  2.83582586e-04,  9.99999941e-01]]]),
+ np.float64(7.176141754884372),
+ array([[-3.02817765e-09, -1.45848774e-10,  0.00000000e+00,
+          0.00000000e+00],
+        [-1.78482705e-09,  2.17272051e-09,  0.00000000e+00,
+          0.00000000e+00],
+        [ 2.06043298e-07,  1.68974845e-07,  0.00000000e+00,
+          0.00000000e+00],
+        [ 4.63473231e-07,  2.65118678e-07,  0.00000000e+00,
+          0.00000000e+00],
+        [ 4.92858975e-07, -2.48835341e-09,  0.00000000e+00,
+          0.00000000e+00],
+        [ 2.39074030e-07, -2.69330095e-07,  0.00000000e+00,
+          0.00000000e+00],
+        [ 2.24952950e-08, -2.55618843e-08,  0.00000000e+00,
+          0.00000000e+00],
+        [-2.95810598e-08, -2.51349419e-08,  0.00000000e+00,
+          0.00000000e+00],
+        [ 3.86447213e-08,  4.66083373e-08,  0.00000000e+00,
+          0.00000000e+00],
+        [-1.14696048e-08, -5.89639322e-08,  0.00000000e+00,
+          0.00000000e+00],
+        [-1.92477071e-07, -1.36146237e-07,  0.00000000e+00,
+          0.00000000e+00],
+        [-4.58538826e-07, -2.67114037e-07,  0.00000000e+00,
+          0.00000000e+00],
+        [-4.90197685e-07, -2.06362953e-09,  0.00000000e+00,
+          0.00000000e+00],
+        [-2.42431088e-07,  2.63622248e-07,  0.00000000e+00,
+          0.00000000e+00],
+        [-8.04974095e-10, -1.24376478e-09,  0.00000000e+00,
+          0.00000000e+00],
+        [-1.92739962e-09, -1.83202802e-09,  0.00000000e+00,
+          0.00000000e+00]]),
+ array([ 2.693952  ,  3.4295565 ,  5.52309303,  6.52741246,  7.08941246,
+         8.14326589, 10.34278161, 11.93982486, 13.94182609, 15.63285034,
+        18.00333506, 19.05718849, 19.61918849, 20.67257592, 22.71704445,
+        23.36843995]),
+ array([ 9.38969042e+00,  2.99742405e+00, -4.29831951e-15]),
+ np.float64(2.3815630185939196),
+ array([[1.49638018e+01, 5.36820522e+00, 6.85246959e-04]]),
+ array([18.37111586, 25.91715269, 12.96214627,  9.66599267, 13.81023312,
+        24.25197581]),
+ array([1.79196882e-01, 1.22425551e-01, 1.70292084e-04]),
+ np.float64(-25.369212247139345),
+ array([-78.95535579,  77.03724443, -74.18952538, -74.18952538,
+         77.03724443, -78.95535579]),
+ np.float64(1.3203585666474837e-10),
+ np.float64(26.374287952316944),
+ array([ 0.00000000e+00, -6.94370475e-04,  6.07151650e-04,  2.38468289e-04,
+        -6.81824075e-04, -4.78921799e-04,  4.41491590e-04,  7.01582185e-04,
+        -6.05543948e-04, -9.78684826e-05]),
+ array([ 2.6514    ,  6.4783308 ,  7.51380991, 10.28830988, 12.71979153,
+        13.62739043, 16.04912109, 18.79203055, 19.81402164, 23.58054559])]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="get-a-pretty-output-of-all-observables">
+<h3>Get a pretty output of all Observables.<a class="headerlink" href="#get-a-pretty-output-of-all-observables" title="Link to this heading">#</a></h3>
+<p>As no variation was made, <em>Actual</em> values are always equal to <em>Initial</em> values.</p>
+<p>The residual is zero for all Observables for which no <em>target</em> was specified</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">allobs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    location              Initial            Actual         Low bound        High bound          residual 
+orbit[x]
+    BPM_01           -3.02197e-09      -3.02197e-09               -                 -                 0.0 
+    BPM_02            4.50706e-07       4.50706e-07               -                 -                 0.0 
+    BPM_03            4.08216e-07       4.08216e-07               -                 -                 0.0 
+    BPM_04            2.37906e-08       2.37906e-08               -                 -                 0.0 
+    BPM_05           -1.31787e-08      -1.31787e-08               -                 -                 0.0 
+    BPM_06            2.47237e-08       2.47237e-08               -                 -                 0.0 
+    BPM_07           -2.95318e-08      -2.95318e-08               -                 -                 0.0 
+    BPM_08           -4.05608e-07      -4.05608e-07               -                 -                 0.0 
+    BPM_09           -4.47409e-07      -4.47409e-07               -                 -                 0.0 
+    BPM_10           -2.24856e-09      -2.24856e-09               -                 -                 0.0 
+beta[y]
+    BPM_01                 5.3028            5.3028              -inf               7.0               0.0 
+    BPM_02                7.17604           7.17604              -inf               7.0         0.0309906 
+    BPM_03                6.55088           6.55088              -inf               7.0               0.0 
+    BPM_04                2.31449           2.31449              -inf               7.0               0.0 
+    BPM_05                3.40498           3.40498              -inf               7.0               0.0 
+    BPM_06                3.40504           3.40504              -inf               7.0               0.0 
+    BPM_07                2.31465           2.31465              -inf               7.0               0.0 
+    BPM_08                6.55106           6.55106              -inf               7.0               0.0 
+    BPM_09                7.17614           7.17614              -inf               7.0         0.0310259 
+    BPM_10                5.30284           5.30284              -inf               7.0               0.0 
+matrix
+    BPM_02       [-1.082     ...]  [-1.082     ...]               -                 -    [ 0.0       ...] 
+amax(beta[y])
+                          7.17614           7.17614               -                 -                 0.0 
+closed_orbit[slice(None, 4, None)]
+    QF1A         [-3.028e-09 ...]  [-3.028e-09 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 9.17e-06  ...] 
+    QD2A         [-1.785e-09 ...]  [-1.785e-09 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 3.186e-06 ...] 
+    QD3A         [ 2.06e-07  ...]  [ 2.06e-07  ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.04245   ...] 
+    QF4A         [ 4.635e-07 ...]  [ 4.635e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.2148    ...] 
+    QF4B         [ 4.929e-07 ...]  [ 4.929e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.2429    ...] 
+    QD5B         [ 2.391e-07 ...]  [ 2.391e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.05716   ...] 
+    QF6B         [ 2.25e-08  ...]  [ 2.25e-08  ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.000506  ...] 
+    QF8B         [-2.958e-08 ...]  [-2.958e-08 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.000875  ...] 
+    QF8D         [ 3.864e-08 ...]  [ 3.864e-08 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.001493  ...] 
+    QF6D         [-1.147e-08 ...]  [-1.147e-08 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.0001316 ...] 
+    QD5D         [-1.925e-07 ...]  [-1.925e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.03705   ...] 
+    QF4D         [-4.585e-07 ...]  [-4.585e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.2103    ...] 
+    QF4E         [-4.902e-07 ...]  [-4.902e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.2403    ...] 
+    QD3E         [-2.424e-07 ...]  [-2.424e-07 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 0.05877   ...] 
+    QD2E         [-8.05e-10  ...]  [-8.05e-10  ...]  [ 0.0       ...]  [ 0.0       ...]  [ 6.48e-07  ...] 
+    QF1E         [-1.927e-09 ...]  [-1.927e-09 ...]  [ 0.0       ...]  [ 0.0       ...]  [ 3.715e-06 ...] 
+s_pos
+    QF1A                  2.69395           2.69395               -                 -                 0.0 
+    QD2A                  3.42956           3.42956               -                 -                 0.0 
+    QD3A                  5.52309           5.52309               -                 -                 0.0 
+    QF4A                  6.52741           6.52741               -                 -                 0.0 
+    QF4B                  7.08941           7.08941               -                 -                 0.0 
+    QD5B                  8.14327           8.14327               -                 -                 0.0 
+    QF6B                  10.3428           10.3428               -                 -                 0.0 
+    QF8B                  11.9398           11.9398               -                 -                 0.0 
+    QF8D                  13.9418           13.9418               -                 -                 0.0 
+    QF6D                  15.6329           15.6329               -                 -                 0.0 
+    QD5D                  18.0033           18.0033               -                 -                 0.0 
+    QF4D                  19.0572           19.0572               -                 -                 0.0 
+    QF4E                  19.6192           19.6192               -                 -                 0.0 
+    QD3E                  20.6726           20.6726               -                 -                 0.0 
+    QD2E                   22.717            22.717               -                 -                 0.0 
+    QF1E                  23.3684           23.3684               -                 -                 0.0 
+phase_advance
+                 [ 9.39      ...]  [ 9.39      ...]               -                 -    [ 0.0       ...] 
+tune[x]
+                          2.38156           2.38156               -                 -                 0.0 
+mu
+    End          [ 14.96     ...]  [ 14.96     ...]               -                 -    [ 0.0       ...] 
+W[x]
+    SD1A                  18.3711           18.3711               -                 -                 0.0 
+    SF2A                  25.9172           25.9172               -                 -                 0.0 
+    SD1B                  12.9621           12.9621               -                 -                 0.0 
+    SD1D                  9.66599           9.66599               -                 -                 0.0 
+    SF2E                  13.8102           13.8102               -                 -                 0.0 
+    SD1E                   24.252            24.252               -                 -                 0.0 
+chromaticity
+                 [ 0.1792    ...]  [ 0.1792    ...]               -                 -    [ 0.0       ...] 
+mean(H)
+                         -25.3692          -25.3692               -                 -                 0.0 
+PolynomB[2]
+    SD1A                 -78.9554          -78.9554               -                 -                 0.0 
+    SF2A                  77.0372           77.0372               -                 -                 0.0 
+    SD1B                 -74.1895          -74.1895               -                 -                 0.0 
+    SD1D                 -74.1895          -74.1895               -                 -                 0.0 
+    SF2E                  77.0372           77.0372               -                 -                 0.0 
+    SD1E                 -78.9554          -78.9554               -                 -                 0.0 
+emittances[x]
+                      1.32036e-10       1.32036e-10               -                 -                 0.0 
+circumference
+                          26.3743           26.3743               -                 -                 0.0 
+trajectory[px]
+    BPM_01                    0.0               0.0               -                 -                 0.0 
+    BPM_02            -0.00069437       -0.00069437               -                 -                 0.0 
+    BPM_03            0.000607152       0.000607152               -                 -                 0.0 
+    BPM_04            0.000238468       0.000238468               -                 -                 0.0 
+    BPM_05           -0.000681824      -0.000681824               -                 -                 0.0 
+    BPM_06           -0.000478922      -0.000478922               -                 -                 0.0 
+    BPM_07            0.000441492       0.000441492               -                 -                 0.0 
+    BPM_08            0.000701582       0.000701582               -                 -                 0.0 
+    BPM_09           -0.000605544      -0.000605544               -                 -                 0.0 
+    BPM_10           -9.78685e-05      -9.78685e-05               -                 -                 0.0 
+geometry[x]
+    BPM_01                 2.6514            2.6514               -                 -                 0.0 
+    BPM_02                6.47833           6.47833               -                 -                 0.0 
+    BPM_03                7.51381           7.51381               -                 -                 0.0 
+    BPM_04                10.2883           10.2883               -                 -                 0.0 
+    BPM_05                12.7198           12.7198               -                 -                 0.0 
+    BPM_06                13.6274           13.6274               -                 -                 0.0 
+    BPM_07                16.0491           16.0491               -                 -                 0.0 
+    BPM_08                 18.792            18.792               -                 -                 0.0 
+    BPM_09                 19.814            19.814               -                 -                 0.0 
+    BPM_10                23.5805           23.5805               -                 -                 0.0 
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="variables.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Variables</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../howto/multiprocessing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Parallel processing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-the-environment">Setup the environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-a-test-lattice">Load a test lattice</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-observables">Create Observables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation">Evaluation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#extract-a-single-observable-value">Extract a single Observable value</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-list-of-all-observable-values">Get the list of all Observable values:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-a-pretty-output-of-all-observables">Get a pretty output of all Observables.</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022, ATCollab.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

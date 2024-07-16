@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>at.physics.energy_loss &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+    <title>at.latticetools &#8212; Accelerator Toolbox 0.6.2 documentation</title>
   
   
   
@@ -45,13 +45,11 @@
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=fd10adb8"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.physics.energy_loss';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.latticetools';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="at.physics.fastring" href="at.physics.fastring.html" />
-    <link rel="prev" title="at.physics.diffmatrix" href="at.physics.diffmatrix.html" />
+    <link rel="next" title="at.latticetools.observablelist" href="at.latticetools.observablelist.html" />
+    <link rel="prev" title="at.lattice.variables" href="at.lattice.variables.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -238,10 +236,6 @@ document.write(`
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
-      <span class="fa-solid fa-outdent"></span>
-    </button>
-  
 </div>
 
     </header>
@@ -365,7 +359,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.variables.html">at.lattice.variables</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="at.latticetools.html">at.latticetools</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">at.latticetools</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="at.latticetools.observablelist.html">at.latticetools.observablelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.latticetools.observables.html">at.latticetools.observables</a></li>
 </ul>
@@ -378,10 +372,10 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.tracking.utils.html">at.tracking.utils</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="at.physics.html">at.physics</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.physics.html">at.physics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.amat.html">at.physics.amat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.diffmatrix.html">at.physics.diffmatrix</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.physics.energy_loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.energy_loss.html">at.physics.energy_loss</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.fastring.html">at.physics.fastring</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.frequency_maps.html">at.physics.frequency_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.harmonic_analysis.html">at.physics.harmonic_analysis</a></li>
@@ -474,10 +468,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Welcome to pyAT’s documentation!</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="at.physics.html" class="nav-link">at.physics</a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page">at.physics.e...</li>
+    <li class="breadcrumb-item active" aria-current="page">at.latticetools</li>
   </ul>
 </nav>
 </div>
@@ -494,125 +485,21 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-at.physics.energy_loss">
-<span id="at-physics-energy-loss"></span><h1>at.physics.energy_loss<a class="headerlink" href="#module-at.physics.energy_loss" title="Link to this heading">#</a></h1>
-<p class="rubric">Functions</p>
+  <section id="module-at.latticetools">
+<span id="at-latticetools"></span><h1>at.latticetools<a class="headerlink" href="#module-at.latticetools" title="Link to this heading">#</a></h1>
+<p>Defines classes for modifying a lattice and observing its parameters</p>
+<p class="rubric">Modules</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.energy_loss.get_energy_loss" title="at.physics.energy_loss.get_energy_loss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_energy_loss</span></code></a>(ring[, method])</p></td>
-<td><p>Computes the energy loss per turn</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="at.latticetools.observablelist.html#module-at.latticetools.observablelist" title="at.latticetools.observablelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.latticetools.observablelist</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code>(lattice, ...)</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.physics.energy_loss.set_cavity_phase" title="at.physics.energy_loss.set_cavity_phase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_cavity_phase</span></code></a>(ring[, method, refpts, ...])</p></td>
-<td><p>Adjust the TimeLag attribute of RF cavities based on frequency, voltage and energy loss per turn, so that the synchronous phase is zero.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.energy_loss.get_timelag_fromU0" title="at.physics.energy_loss.get_timelag_fromU0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_timelag_fromU0</span></code></a>(ring[, method, cavpts, ...])</p></td>
-<td><p>Get the TimeLag attribute of RF cavities based on frequency, voltage and energy loss per turn, so that the synchronous phase is zero.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="at.latticetools.observables.html#module-at.latticetools.observables" title="at.latticetools.observables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.latticetools.observables</span></code></a></p></td>
+<td><p>Definition of <a class="reference internal" href="at.latticetools.observables.html#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> objects used in matching and response matrices</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p class="rubric">Classes</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELossMethod</span></code></a>(value)</p></td>
-<td><p>methods for the computation of energy losses</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py class">
-<dt class="sig sig-object py" id="at.physics.energy_loss.ELossMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ELossMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/energy_loss.html#ELossMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.energy_loss.ELossMethod" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
-<p>methods for the computation of energy losses</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="at.physics.energy_loss.ELossMethod.INTEGRAL">
-<span class="sig-name descname"><span class="pre">INTEGRAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.physics.energy_loss.ELossMethod.INTEGRAL" title="Link to this definition">#</a></dt>
-<dd><p>The losses are obtained from
-<span class="math notranslate nohighlight">\(E_{loss}=C_\gamma/2\pi . E^4 . I_2\)</span>.
-Takes into account bending magnets and wigglers.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="at.physics.energy_loss.ELossMethod.TRACKING">
-<span class="sig-name descname"><span class="pre">TRACKING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.physics.energy_loss.ELossMethod.TRACKING" title="Link to this definition">#</a></dt>
-<dd><p>The losses are obtained by tracking without cavities.
-Needs radiation ON, takes into account all radiating elements</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.energy_loss.get_energy_loss">
-<span class="sig-name descname"><span class="pre">get_energy_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.INTEGRAL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/energy_loss.html#get_energy_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.energy_loss.get_energy_loss" title="Link to this definition">#</a></dt>
-<dd><p>Computes the energy loss per turn</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>method</strong> (<a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><em>ELossMethod</em></a><em> | </em><em>None</em>) – Method for energy loss computation.
-See <a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">ELossMethod</span></code></a>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>eloss</strong> (<em>float</em>) – Energy loss per turn [eV]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.energy_loss.get_timelag_fromU0">
-<span class="sig-name descname"><span class="pre">get_timelag_fromU0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.TRACKING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/energy_loss.html#get_timelag_fromU0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.energy_loss.get_timelag_fromU0" title="Link to this definition">#</a></dt>
-<dd><p>Get the TimeLag attribute of RF cavities based on frequency,
-voltage and energy loss per turn, so that the synchronous phase is zero.
-An error occurs if all cavities do not have the same frequency.
-Used in set_cavity_phase()</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>method</strong> (<a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><em>ELossMethod</em></a><em> | </em><em>None</em>) – Method for energy loss computation.
-See <a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">ELossMethod</span></code></a>.</p></li>
-<li><p><strong>cavpts</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.12)"><em>Type</em></a><em>[</em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em>] </em><em>| </em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>] </em><em>| </em><em>RefptsCode</em>) – Cavity location. If None, use all cavities.
-This allows to ignore harmonic cavities.</p></li>
-<li><p><strong>divider</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – number of segments to search for ts</p></li>
-<li><p><strong>phis_tol</strong> – relative tolerance for ts calculation</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>timelag</strong> (<em>float</em>) – Timelag</p></li>
-<li><p><strong>ts</strong> (<em>float</em>) – Time difference with the present value</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.energy_loss.set_cavity_phase">
-<span class="sig-name descname"><span class="pre">set_cavity_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.TRACKING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/energy_loss.html#set_cavity_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.energy_loss.set_cavity_phase" title="Link to this definition">#</a></dt>
-<dd><p>Adjust the TimeLag attribute of RF cavities based on frequency,
-voltage and energy loss per turn, so that the synchronous phase is zero.
-An error occurs if all cavities do not have the same frequency.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This function changes the time reference, this should be avoided</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>method</strong> (<a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><em>ELossMethod</em></a>) – Method for energy loss computation.
-See <a class="reference internal" href="#at.physics.energy_loss.ELossMethod" title="at.physics.energy_loss.ELossMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">ELossMethod</span></code></a>.</p></li>
-<li><p><strong>cavpts</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.12)"><em>Type</em></a><em>[</em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em>] </em><em>| </em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>] </em><em>| </em><em>RefptsCode</em>) – Cavity location. If None, use all cavities.
-This allows to ignore harmonic cavities.</p></li>
-<li><p><strong>copy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If True, returns a shallow copy of ring with new
-cavity elements. Otherwise, modify ring in-place.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 
 
@@ -626,20 +513,20 @@ cavity elements. Otherwise, modify ring in-place.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="at.physics.diffmatrix.html"
+       href="at.lattice.variables.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">at.physics.diffmatrix</p>
+        <p class="prev-next-title">at.lattice.variables</p>
       </div>
     </a>
     <a class="right-next"
-       href="at.physics.fastring.html"
+       href="at.latticetools.observablelist.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">at.physics.fastring</p>
+        <p class="prev-next-title">at.latticetools.observablelist</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -649,30 +536,6 @@ cavity elements. Otherwise, modify ring in-place.</p></li>
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.energy_loss.ELossMethod"><code class="docutils literal notranslate"><span class="pre">ELossMethod</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.energy_loss.ELossMethod.INTEGRAL"><code class="docutils literal notranslate"><span class="pre">ELossMethod.INTEGRAL</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.energy_loss.ELossMethod.TRACKING"><code class="docutils literal notranslate"><span class="pre">ELossMethod.TRACKING</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.energy_loss.get_energy_loss"><code class="docutils literal notranslate"><span class="pre">get_energy_loss()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.energy_loss.get_timelag_fromU0"><code class="docutils literal notranslate"><span class="pre">get_timelag_fromU0()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.energy_loss.set_cavity_phase"><code class="docutils literal notranslate"><span class="pre">set_cavity_phase()</span></code></a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>

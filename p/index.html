@@ -339,6 +339,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="howto/Installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="howto/Primer.html">PyAT Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/observables.html">Observables</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">How to:</span></p>
 <ul class="nav bd-sidenav">
@@ -362,6 +363,11 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="api/at.lattice.utils.html">at.lattice.utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/at.lattice.variable_elements.html">at.lattice.variable_elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/at.lattice.variables.html">at.lattice.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/at.latticetools.html">at.latticetools</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/at.latticetools.observablelist.html">at.latticetools.observablelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/at.latticetools.observables.html">at.latticetools.observables</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="api/at.tracking.html">at.tracking</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -501,28 +507,31 @@ higher-level functions to provide physics results.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/at.lattice.html#module-at.lattice" title="at.lattice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.lattice</span></code></a></p></td>
 <td><p>Helper functions for working with AT lattices.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/at.tracking.html#module-at.tracking" title="at.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.tracking</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/at.latticetools.html#module-at.latticetools" title="at.latticetools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.latticetools</span></code></a></p></td>
+<td><p>Defines classes for modifying a lattice and observing its parameters</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/at.tracking.html#module-at.tracking" title="at.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.tracking</span></code></a></p></td>
 <td><p>Tracking functions</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/at.physics.html#module-at.physics" title="at.physics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.physics</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/at.physics.html#module-at.physics" title="at.physics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.physics</span></code></a></p></td>
 <td><p>Accelerator physics functions</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/at.load.html#module-at.load" title="at.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.load</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/at.load.html#module-at.load" title="at.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.load</span></code></a></p></td>
 <td><p>Import/export AT lattice from/to different formats: - .mat files - .m files</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/at.matching.html#module-at.matching" title="at.matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.matching</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/at.matching.html#module-at.matching" title="at.matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.matching</span></code></a></p></td>
 <td><p>matching functions</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/at.acceptance.html#module-at.acceptance" title="at.acceptance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.acceptance</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/at.acceptance.html#module-at.acceptance" title="at.acceptance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.acceptance</span></code></a></p></td>
 <td><p>Transverse and longitudinal acceptance of a ring</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/at.collective.html#module-at.collective" title="at.collective"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.collective</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/at.collective.html#module-at.collective" title="at.collective"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.collective</span></code></a></p></td>
 <td><p>Collective effects</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/at.plot.html#module-at.plot" title="at.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.plot</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/at.plot.html#module-at.plot" title="at.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.plot</span></code></a></p></td>
 <td><p>AT plotting functions</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/at.constants.html#module-at.constants" title="at.constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.constants</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/at.constants.html#module-at.constants" title="at.constants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at.constants</span></code></a></p></td>
 <td><p>Physical constants</p></td>
 </tr>
 </tbody>

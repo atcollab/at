@@ -1,0 +1,1374 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>at.latticetools.observables &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom_at.css?v=bc6ab313" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=99678979"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.latticetools.observables';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="at.tracking" href="at.tracking.html" />
+    <link rel="prev" title="at.latticetools.observablelist" href="at.latticetools.observablelist.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/AT.png" class="logo__image only-light" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>
+    <script>document.write(`<img src="../../_static/AT.png" class="logo__image only-dark" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Guides:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../howto/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/Primer.html">PyAT Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/variables.html">Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/observables.html">Observables</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../howto/multiprocessing.html">Parallel processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/CavityControl.html">Cavity Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/Collective.html">Collective</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Packages:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.lattice.html">at.lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.axisdef.html">at.lattice.axisdef</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.cavity_access.html">at.lattice.cavity_access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.deprecated.html">at.lattice.deprecated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.elements.html">at.lattice.elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.idtable_element.html">at.lattice.idtable_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.lattice_object.html">at.lattice.lattice_object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.lattice_variables.html">at.lattice.lattice_variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.options.html">at.lattice.options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.particle_object.html">at.lattice.particle_object</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.rectangular_bend.html">at.lattice.rectangular_bend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.utils.html">at.lattice.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.variable_elements.html">at.lattice.variable_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.variables.html">at.lattice.variables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="at.latticetools.html">at.latticetools</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="at.latticetools.observablelist.html">at.latticetools.observablelist</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.latticetools.observables</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.tracking.html">at.tracking</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.tracking.atpass.html">at.tracking.atpass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.tracking.deprecated.html">at.tracking.deprecated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.tracking.particles.html">at.tracking.particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.tracking.track.html">at.tracking.track</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.tracking.utils.html">at.tracking.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.physics.html">at.physics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.amat.html">at.physics.amat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.diffmatrix.html">at.physics.diffmatrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.energy_loss.html">at.physics.energy_loss</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.fastring.html">at.physics.fastring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.frequency_maps.html">at.physics.frequency_maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.harmonic_analysis.html">at.physics.harmonic_analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.linear.html">at.physics.linear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.matrix.html">at.physics.matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.nonlinear.html">at.physics.nonlinear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.orbit.html">at.physics.orbit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.radiation.html">at.physics.radiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.revolution.html">at.physics.revolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.ring_parameters.html">at.physics.ring_parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.load.html">at.load</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.load.allfiles.html">at.load.allfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.elegant.html">at.load.elegant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.file_input.html">at.load.file_input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.json.html">at.load.json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.mad8.html">at.load.mad8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.madx.html">at.load.madx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.matfile.html">at.load.matfile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.reprfile.html">at.load.reprfile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.tracy.html">at.load.tracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.utils.html">at.load.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.matching.html">at.matching</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.matching.globalfit.html">at.matching.globalfit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.matching.matching.html">at.matching.matching</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.acceptance.html">at.acceptance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.acceptance.acceptance.html">at.acceptance.acceptance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.acceptance.boundary.html">at.acceptance.boundary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.acceptance.touschek.html">at.acceptance.touschek</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.collective.html">at.collective</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.collective.beam_loading.html">at.collective.beam_loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.collective.haissinski.html">at.collective.haissinski</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.collective.wake_elements.html">at.collective.wake_elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.collective.wake_functions.html">at.collective.wake_functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.collective.wake_object.html">at.collective.wake_object</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.plot.html">at.plot</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="at.plot.generic.html">at.plot.generic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.plot.specific.html">at.plot.specific</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.plot.standalone.html">at.plot.standalone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.plot.synopt.html">at.plot.synopt</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="at.constants.html">at.constants</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Welcome to pyAT’s documentation!</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="at.latticetools.html" class="nav-link">at.latticetools</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">at.latticeto...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-at.latticetools.observables">
+<span id="at-latticetools-observables"></span><h1>at.latticetools.observables<a class="headerlink" href="#module-at.latticetools.observables" title="Link to this heading">#</a></h1>
+<p>Definition of <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> objects used in matching and
+response matrices</p>
+<p>Observables are ways to monitor various lattice parameters and use them in
+matching and correction procedures.</p>
+<section id="class-hierarchy">
+<h2>Class hierarchy<a class="headerlink" href="#class-hierarchy" title="Link to this heading">#</a></h2>
+<dl>
+<dt><a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>(evalfun, name, target, weight, bounds, …)</dt><dd><p><a class="reference internal" href="#at.latticetools.observables.RingObservable" title="at.latticetools.observables.RingObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">RingObservable</span></code></a>(fun, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.GlobalOpticsObservable" title="at.latticetools.observables.GlobalOpticsObservable"><code class="xref py py-func docutils literal notranslate"><span class="pre">GlobalOpticsObservable()</span></code></a>(attrname, plane, name, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.EmittanceObservable" title="at.latticetools.observables.EmittanceObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">EmittanceObservable</span></code></a>(attrname, plane, name, …)</p>
+<dl>
+<dt><a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a>(fun, …)</dt><dd><p><a class="reference internal" href="#at.latticetools.observables.OrbitObservable" title="at.latticetools.observables.OrbitObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">OrbitObservable</span></code></a>(refpts, axis, name, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.TrajectoryObservable" title="at.latticetools.observables.TrajectoryObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectoryObservable</span></code></a>(refpts, axis, name, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.MatrixObservable" title="at.latticetools.observables.MatrixObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixObservable</span></code></a>(refpts, axis, name, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.LocalOpticsObservable" title="at.latticetools.observables.LocalOpticsObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalOpticsObservable</span></code></a>(refpts, attrname, axis, name, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.LatticeObservable" title="at.latticetools.observables.LatticeObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">LatticeObservable</span></code></a>(refpts, attrname, index, name, …)</p>
+<p><a class="reference internal" href="#at.latticetools.observables.GeometryObservable" title="at.latticetools.observables.GeometryObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryObservable</span></code></a>(refpts, attrname, name, …)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p><a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>s are usually not evaluated directly, but through a
+container which performs the required optics computation and feeds each
+<a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> with its specific data. After evaluation, each
+<a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> provides the following properties:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#at.latticetools.observables.Observable.value" title="at.latticetools.observables.Observable.value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">value</span></code></a></p></li>
+<li><p><a class="reference internal" href="#at.latticetools.observables.Observable.weight" title="at.latticetools.observables.Observable.weight"><code class="xref py py-attr docutils literal notranslate"><span class="pre">weight</span></code></a></p></li>
+<li><p><a class="reference internal" href="#at.latticetools.observables.Observable.weighted_value" title="at.latticetools.observables.Observable.weighted_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">weighted_value</span></code></a>: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">/</span> <span class="n">weight</span></code></p></li>
+<li><p><a class="reference internal" href="#at.latticetools.observables.Observable.deviation" title="at.latticetools.observables.Observable.deviation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">deviation</span></code></a>:  <code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">-</span> <span class="n">target</span></code></p></li>
+<li><p><a class="reference internal" href="#at.latticetools.observables.Observable.residual" title="at.latticetools.observables.Observable.residual"><code class="xref py py-attr docutils literal notranslate"><span class="pre">residual</span></code></a>:  <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+</ul>
+</section>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.GlobalOpticsObservable" title="at.latticetools.observables.GlobalOpticsObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GlobalOpticsObservable</span></code></a>(param[, plane, name, ...])</p></td>
+<td><p>Observe a global optics parameter.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Observable</span></code></a>(fun, *args[, name, target, ...])</p></td>
+<td><p>Base class for Observables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.latticetools.observables.RingObservable" title="at.latticetools.observables.RingObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RingObservable</span></code></a>(fun[, name])</p></td>
+<td><p>Observe any user-defined property of a ring</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.EmittanceObservable" title="at.latticetools.observables.EmittanceObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EmittanceObservable</span></code></a>(param[, plane, name])</p></td>
+<td><p>Observe emittance-related parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementObservable</span></code></a>(fun, refpts[, name, ...])</p></td>
+<td><p>Base class for Observables linked to a position in the lattice</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.OrbitObservable" title="at.latticetools.observables.OrbitObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OrbitObservable</span></code></a>(refpts[, axis, name])</p></td>
+<td><p>Observe the transfer matrix at selected locations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.latticetools.observables.GeometryObservable" title="at.latticetools.observables.GeometryObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GeometryObservable</span></code></a>(refpts, param[, name])</p></td>
+<td><p>Observe the geometrical parameters of the reference trajectory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.LocalOpticsObservable" title="at.latticetools.observables.LocalOpticsObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LocalOpticsObservable</span></code></a>(refpts, param[, ...])</p></td>
+<td><p>Observe a local optics parameter at selected locations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.latticetools.observables.LatticeObservable" title="at.latticetools.observables.LatticeObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LatticeObservable</span></code></a>(refpts, attrname[, index, ...])</p></td>
+<td><p>Observe an attribute of selected lattice elements.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.MatrixObservable" title="at.latticetools.observables.MatrixObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MatrixObservable</span></code></a>(refpts[, axis, name])</p></td>
+<td><p>Observe the closed orbit at selected locations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.latticetools.observables.TrajectoryObservable" title="at.latticetools.observables.TrajectoryObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TrajectoryObservable</span></code></a>(refpts[, axis, name])</p></td>
+<td><p>Observe trajectory coordinates at selected locations</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Need</span></code></a>(value)</p></td>
+<td><p>Defines the computation requirements for an <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.ElementObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ElementObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statfun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#ElementObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.ElementObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a></p>
+<p>Base class for Observables linked to a position in the lattice</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <a class="reference internal" href="#base-eval"><span class="std std-ref">evaluation function</span></a></p></li>
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+<li><p><strong>statfun</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>) – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.EmittanceObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EmittanceObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#EmittanceObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.EmittanceObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a></p>
+<p>Observe emittance-related parameters.</p>
+<p>Process the output of <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Parameter name (see <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a>) or
+<a class="reference internal" href="#emittance-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
+<li><p><strong>plane</strong> (<em>AxisDef</em>) – One out of {0, ‘x’, ‘h’, ‘H’} for horizontal plane,
+one out of {1, ‘y’, ‘v’, ‘V’} for vertival plane or one out of
+{2, ‘z’, ‘l’, ‘L’} for longitudinal plane</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric" id="emittance-eval">User-defined evaluation function</p>
+<p>It is called as:</p>
+<p><code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">paramdata</span><span class="p">)</span></code></p>
+<p><em>paramdata</em> if the <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.RingParameters" title="at.physics.ring_parameters.RingParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">RingParameters</span></code></a> object returned by
+<a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a>.</p>
+<p><em>value</em> is the value of the Observable.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">EmittanceObservable</span><span class="p">(</span><span class="s1">&#39;emittances&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;h&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the horizontal emittance</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.GeometryObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GeometryObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#GeometryObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.GeometryObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
+<p>Observe the geometrical parameters of the reference trajectory.</p>
+<p>Process the <em>geomdata</em> output of <a class="reference internal" href="at.lattice.utils.html#at.lattice.utils.get_geometry" title="at.lattice.utils.get_geometry"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_geometry()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Geometry parameter name: one in {‘x’, ‘y’, ‘angle’}</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GeometryObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe x coordinate of monitors</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.LatticeObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LatticeObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Ellipsis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#LatticeObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.LatticeObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
+<p>Observe an attribute of selected lattice elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Elements to be observed
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>attrname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Attribute name</p></li>
+<li><p><strong>index</strong> (<em>AxisDef</em>) – Index in the attribute array. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+the whole array is specified</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LatticeObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">,</span> <span class="s1">&#39;KickAngle&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>                     <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the sum of horizontal kicks in Sextupoles</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.LocalOpticsObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LocalOpticsObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Ellipsis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#LocalOpticsObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.LocalOpticsObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
+<p>Observe a local optics parameter at selected locations.</p>
+<p>Process the local output of <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>param</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Callable</em><em>]</em>) – Optics parameter name (see <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>)
+or <a class="reference internal" href="#localoptics-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
+<li><p><strong>plane</strong> (<em>AxisDef</em>) – Index in the parameter array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+the whole array is specified</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+<li><p><strong>all_points</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Compute the local optics at all elements. This avoids
+discontinuities in phase advances. This is automatically set for the
+‘mu’ parameter, but may need to be specified for user-defined evaluation
+functions using the phase advance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>summary</strong> – Set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a> if the user-defined
+evaluation function returns a single item (see below)</p></li>
+<li><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric" id="localoptics-eval">User-defined evaluation function</p>
+<p>It is called as:</p>
+<p><code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">elemdata</span><span class="p">)</span></code></p>
+<ul class="simple">
+<li><p><em>elemdata</em> is the output of <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>, evaluated at the <em>refpts</em>
+of the observable,</p></li>
+<li><p><em>value</em> is the value of the Observable and must have one line per
+refpoint. Alternatively, it may be a single line, but then the
+<em>summary</em> keyword must be set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>.</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the beta in both planes at all <a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Monitor" title="at.lattice.elements.Monitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Monitor</span></code></a>
+locations</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                       <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the maximum vertical beta in Quadrupoles</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">phase_advance</span><span class="p">(</span><span class="n">elemdata</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">mu</span> <span class="o">=</span> <span class="n">elemdata</span><span class="o">.</span><span class="n">mu</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">mu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalOpticsObservable</span><span class="p">([</span><span class="mi">33</span><span class="p">,</span> <span class="mi">101</span><span class="p">],</span> <span class="n">phase_advance</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">all_points</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The user-defined evaluation function computes the phase-advance
+between the 1st and last given reference points, here the elements
+33 and 101 of the lattice</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.MatrixObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MatrixObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Ellipsis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#MatrixObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.MatrixObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
+<p>Observe the closed orbit at selected locations.</p>
+<p>Processs the result of calling <a class="reference internal" href="at.physics.matrix.html#at.physics.matrix.find_m44" title="at.physics.matrix.find_m44"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_m44()</span></code></a> or <a class="reference internal" href="at.physics.matrix.html#at.physics.matrix.find_m44" title="at.physics.matrix.find_m44"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_m44()</span></code></a>
+depending upon <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice.is_6d" title="at.lattice.lattice_object.Lattice.is_6d"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_6d()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the transfer matrix, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+the whole matrix is specified</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">MatrixObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Observe the transfer matrix from origin to monitor locations and
+extract T[0,1]</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Need</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#Need"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.Need" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>Defines the computation requirements for an <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.ALL_POINTS">
+<span class="sig-name descname"><span class="pre">ALL_POINTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#at.latticetools.observables.Need.ALL_POINTS" title="Link to this definition">#</a></dt>
+<dd><p>Associated with LOCALOPTICS, require local optics computation at all
+points: slower but avoids jumps in phase advance</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.CHROMATICITY">
+<span class="sig-name descname"><span class="pre">CHROMATICITY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#at.latticetools.observables.Need.CHROMATICITY" title="Link to this definition">#</a></dt>
+<dd><p>Associated with LOCALOPTICS, require the <em>get_chrom</em> keyword</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.EMITTANCE">
+<span class="sig-name descname"><span class="pre">EMITTANCE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#at.latticetools.observables.Need.EMITTANCE" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a> computation and provide its
+<em>params</em> output to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.GEOMETRY">
+<span class="sig-name descname"><span class="pre">GEOMETRY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#at.latticetools.observables.Need.GEOMETRY" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice.get_geometry" title="at.lattice.lattice_object.Lattice.get_geometry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_geometry()</span></code></a> computation and provide its ? output
+to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.GLOBALOPTICS">
+<span class="sig-name descname"><span class="pre">GLOBALOPTICS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#at.latticetools.observables.Need.GLOBALOPTICS" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a> computation and provide its <em>ringdata</em> output
+to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.LOCALOPTICS">
+<span class="sig-name descname"><span class="pre">LOCALOPTICS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#at.latticetools.observables.Need.LOCALOPTICS" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a> computation and provide its <em>elemdata</em> output
+to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.MATRIX">
+<span class="sig-name descname"><span class="pre">MATRIX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#at.latticetools.observables.Need.MATRIX" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.physics.matrix.html#at.physics.matrix.find_m44" title="at.physics.matrix.find_m44"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_m44()</span></code></a> or <a class="reference internal" href="at.physics.matrix.html#at.physics.matrix.find_m44" title="at.physics.matrix.find_m44"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_m44()</span></code></a> computation and
+provide its <em>m44</em> or <em>m66</em> output to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.ORBIT">
+<span class="sig-name descname"><span class="pre">ORBIT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.latticetools.observables.Need.ORBIT" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.physics.orbit.html#at.physics.orbit.find_orbit" title="at.physics.orbit.find_orbit"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_orbit()</span></code></a> computation and provide its <em>orbit</em> output
+to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.RING">
+<span class="sig-name descname"><span class="pre">RING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.latticetools.observables.Need.RING" title="Link to this definition">#</a></dt>
+<dd><p>Provides the <em>ring</em> data to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.TRAJECTORY">
+<span class="sig-name descname"><span class="pre">TRAJECTORY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#at.latticetools.observables.Need.TRAJECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Specify <a class="reference internal" href="at.tracking.deprecated.html#at.tracking.deprecated.lattice_pass" title="at.tracking.deprecated.lattice_pass"><code class="xref py py-func docutils literal notranslate"><span class="pre">lattice_pass()</span></code></a> computation and provide its <em>r_out</em>
+to the evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Need.W_FUNCTIONS">
+<span class="sig-name descname"><span class="pre">W_FUNCTIONS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#at.latticetools.observables.Need.W_FUNCTIONS" title="Link to this definition">#</a></dt>
+<dd><p>Associatef with LOCALOPTICS, require the <em>get_w</em> keyword</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Observable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#Observable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.Observable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for Observables. Can be used for user-defined observables</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <a class="reference internal" href="#base-eval"><span class="std std-ref">evaluation function</span></a></p></li>
+<li><p><strong>*args</strong> – Arguments provided to the evaluation function</p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+<li><p><strong>needs</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Set" title="(in Python v3.12)"><em>Set</em></a><em>[</em><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><em>Need</em></a><em>]</em>) – Set of requirements. This selects the data provided
+to the evaluation function. <em>needs</em> items are members of the
+<a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><code class="xref py py-class docutils literal notranslate"><span class="pre">Need</span></code></a> enumeration</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>**kwargs</strong> – Keyword arguments provided to the evaluation function</p>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric" id="base-eval">User-defined evaluation function</p>
+<p>The general form is:</p>
+<p><code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code></p>
+<ul class="simple">
+<li><p><em>data</em> depends on the <em>needs</em> argument, and by default is empty. If several
+needed values are specified, their order is: <em>ring</em>, <em>orbit</em>, <em>m44/m66</em>,
+<em>ringdata</em>, <em>elemdata</em>, <em>r_out</em>, <em>params</em>, <em>geomdata</em>,</p></li>
+<li><p><em>args</em> are the positional arguments provided to the observable constructor,</p></li>
+<li><p><em>kwargs</em> are the keyword arguments provided to the observable constructor,</p></li>
+<li><p><em>value</em> is the value of the observable.</p></li>
+</ul>
+<p>For user-defined evaluation functions using linear optics data or
+emittance data, it is recommended to use
+<a class="reference internal" href="#at.latticetools.observables.LocalOpticsObservable" title="at.latticetools.observables.LocalOpticsObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">LocalOpticsObservable</span></code></a>, <a class="reference internal" href="#at.latticetools.observables.GlobalOpticsObservable" title="at.latticetools.observables.GlobalOpticsObservable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GlobalOpticsObservable</span></code></a>
+or <a class="reference internal" href="#at.latticetools.observables.EmittanceObservable" title="at.latticetools.observables.EmittanceObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">EmittanceObservable</span></code></a> which provide the corresponding
+<em>data</em> argument.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#Observable.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.Observable.evaluate" title="Link to this definition">#</a></dt>
+<dd><p>Compute and store the value of the observable</p>
+<p>The direct evaluation of a single <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> is normally
+not used. This method is called by the <a class="reference internal" href="at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a>
+container which provides the <em>data</em> arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*data</strong> – Raw data, provided by <a class="reference internal" href="at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a> and
+sent to the evaluation function</p></li>
+<li><p><strong>initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – It <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, store the result as the initial
+value</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.deviation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deviation</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.deviation" title="Link to this definition">#</a></dt>
+<dd><p>Deviation from target value, computed as
+<code class="code highlight pycode python docutils literal highlight-python"><span class="n">deviation</span> <span class="o">=</span> <span class="n">value</span><span class="o">-</span><span class="n">target</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.fun">
+<span class="sig-name descname"><span class="pre">fun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#at.latticetools.observables.Observable.fun" title="Link to this definition">#</a></dt>
+<dd><p>Evaluation function</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#at.latticetools.observables.Observable.name" title="Link to this definition">#</a></dt>
+<dd><p>Observable name</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.needs">
+<span class="sig-name descname"><span class="pre">needs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Set" title="(in Python v3.12)"><span class="pre">Set</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><span class="pre">Need</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#at.latticetools.observables.Observable.needs" title="Link to this definition">#</a></dt>
+<dd><p>Set of requirements</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.residual">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">residual</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.residual" title="Link to this definition">#</a></dt>
+<dd><p>residual, computed as
+<code class="code highlight pycode python docutils literal highlight-python"><span class="n">residual</span> <span class="o">=</span> <span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.target" title="Link to this definition">#</a></dt>
+<dd><p>Target value</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.value" title="Link to this definition">#</a></dt>
+<dd><p>Value of the observable</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.weight">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weight</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.weight" title="Link to this definition">#</a></dt>
+<dd><p>Observable weight</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.weighted_deviation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighted_deviation</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.weighted_deviation" title="Link to this definition">#</a></dt>
+<dd><p><code class="code highlight pycode python docutils literal highlight-python"><span class="n">weighted_deviation</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span></code></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.latticetools.observables.Observable.weighted_value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighted_value</span></span><a class="headerlink" href="#at.latticetools.observables.Observable.weighted_value" title="Link to this definition">#</a></dt>
+<dd><p>Weighted value of the Observable, computed as
+<code class="code highlight pycode python docutils literal highlight-python"><span class="n">weighted_value</span> <span class="o">=</span> <span class="n">value</span><span class="o">/</span><span class="n">weight</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.OrbitObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OrbitObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#OrbitObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.OrbitObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
+<p>Observe the transfer matrix at selected locations.</p>
+<p>Process the <em>orbit</em> output of <a class="reference internal" href="at.physics.orbit.html#at.physics.orbit.find_orbit" title="at.physics.orbit.find_orbit"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_orbit()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the orbit vector, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>,
+the whole vector is specified</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">OrbitObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the horizontal closed orbit at monitor locations</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.RingObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RingObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#RingObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.RingObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a></p>
+<p>Observe any user-defined property of a ring</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <a class="reference internal" href="#ring-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric" id="ring-eval">User-defined evaluation function</p>
+<p>It is called as:</p>
+<p><code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span></code></p>
+<ul class="simple">
+<li><p><em>ring</em> is the lattice description,</p></li>
+<li><p><em>value</em> is the value of the Observable.</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">circumference</span><span class="p">(</span><span class="n">ring</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_s_pos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ring</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">RingObservable</span><span class="p">(</span><span class="n">circumference</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Defines an Observable for the ring circumference.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">momentum_compaction</span><span class="p">(</span><span class="n">ring</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_mcf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">RingObservable</span><span class="p">(</span><span class="n">momentum_compaction</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Defines an Observable for the momentum compaction factor.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.latticetools.observables.TrajectoryObservable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TrajectoryObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Ellipsis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#TrajectoryObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.TrajectoryObservable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
+<p>Observe trajectory coordinates at selected locations</p>
+<p>Process the <em>r_out</em> output if <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice.track" title="at.lattice.lattice_object.Lattice.track"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Lattice.track()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
+See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
+<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the orbit array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+the whole array is specified</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>statfun</strong> – Post-processing function called on the value of the
+observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.latticetools.observables.GlobalOpticsObservable">
+<span class="sig-name descname"><span class="pre">GlobalOpticsObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Ellipsis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_integer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#GlobalOpticsObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.GlobalOpticsObservable" title="Link to this definition">#</a></dt>
+<dd><p>Observe a global optics parameter.</p>
+<p>Process the <em>ringdata</em> output of <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Optics parameter name (see <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>)
+or <a class="reference internal" href="#globaloptics-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
+<li><p><strong>plane</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a><em> | </em><em>None</em><em> | </em><em>ellipsis</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><em>Tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a><em> | </em><em>None</em><em> | </em><em>ellipsis</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a><em> | </em><em>None</em><em> | </em><em>ellipsis</em><em>]</em>) – Index in the parameter array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+the whole array is specified</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+name will be generated</p></li>
+<li><p><strong>use_integer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – For <em>‘tune’</em> parameter: derive the tune from the
+phase advance to avoid skipping integers. Slower than looking only
+at the fractional part</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+(default), the residual will always be zero.</p></li>
+<li><p><strong>weight</strong> – Weight factor: the residual is
+<code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
+<li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
+is constrained in the interval
+[<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
+</ul>
+</dd>
+</dl>
+<p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
+shape of <em>value</em>.</p>
+<p class="rubric" id="globaloptics-eval">User-defined evaluation function</p>
+<p>It is called as:</p>
+<p><code class="code highlight pycode python docutils literal highlight-python"><span class="n">value</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">ringdata</span><span class="p">)</span></code></p>
+<ul class="simple">
+<li><p><em>ringdata</em> is the output of <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>,</p></li>
+<li><p><em>value</em> is the value of the Observable.</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s1">&#39;tune&#39;</span><span class="p">,</span> <span class="n">use_integer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the tune in both planes, including the integer part (slower)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s1">&#39;chromaticity&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Observe the vertical chromaticity</p>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="at.latticetools.observablelist.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">at.latticetools.observablelist</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="at.tracking.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">at.tracking</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#class-hierarchy">Class hierarchy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.ElementObservable"><code class="docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.EmittanceObservable"><code class="docutils literal notranslate"><span class="pre">EmittanceObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.GeometryObservable"><code class="docutils literal notranslate"><span class="pre">GeometryObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.LatticeObservable"><code class="docutils literal notranslate"><span class="pre">LatticeObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.LocalOpticsObservable"><code class="docutils literal notranslate"><span class="pre">LocalOpticsObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.MatrixObservable"><code class="docutils literal notranslate"><span class="pre">MatrixObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need"><code class="docutils literal notranslate"><span class="pre">Need</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.ALL_POINTS"><code class="docutils literal notranslate"><span class="pre">Need.ALL_POINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.CHROMATICITY"><code class="docutils literal notranslate"><span class="pre">Need.CHROMATICITY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.EMITTANCE"><code class="docutils literal notranslate"><span class="pre">Need.EMITTANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.GEOMETRY"><code class="docutils literal notranslate"><span class="pre">Need.GEOMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.GLOBALOPTICS"><code class="docutils literal notranslate"><span class="pre">Need.GLOBALOPTICS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.LOCALOPTICS"><code class="docutils literal notranslate"><span class="pre">Need.LOCALOPTICS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.MATRIX"><code class="docutils literal notranslate"><span class="pre">Need.MATRIX</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.ORBIT"><code class="docutils literal notranslate"><span class="pre">Need.ORBIT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.RING"><code class="docutils literal notranslate"><span class="pre">Need.RING</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.TRAJECTORY"><code class="docutils literal notranslate"><span class="pre">Need.TRAJECTORY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Need.W_FUNCTIONS"><code class="docutils literal notranslate"><span class="pre">Need.W_FUNCTIONS</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable"><code class="docutils literal notranslate"><span class="pre">Observable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.evaluate"><code class="docutils literal notranslate"><span class="pre">Observable.evaluate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.deviation"><code class="docutils literal notranslate"><span class="pre">Observable.deviation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.fun"><code class="docutils literal notranslate"><span class="pre">Observable.fun</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.name"><code class="docutils literal notranslate"><span class="pre">Observable.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.needs"><code class="docutils literal notranslate"><span class="pre">Observable.needs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.residual"><code class="docutils literal notranslate"><span class="pre">Observable.residual</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.target"><code class="docutils literal notranslate"><span class="pre">Observable.target</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.value"><code class="docutils literal notranslate"><span class="pre">Observable.value</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.weight"><code class="docutils literal notranslate"><span class="pre">Observable.weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.weighted_deviation"><code class="docutils literal notranslate"><span class="pre">Observable.weighted_deviation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.Observable.weighted_value"><code class="docutils literal notranslate"><span class="pre">Observable.weighted_value</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.OrbitObservable"><code class="docutils literal notranslate"><span class="pre">OrbitObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.RingObservable"><code class="docutils literal notranslate"><span class="pre">RingObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.TrajectoryObservable"><code class="docutils literal notranslate"><span class="pre">TrajectoryObservable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.latticetools.observables.GlobalOpticsObservable"><code class="docutils literal notranslate"><span class="pre">GlobalOpticsObservable()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022, ATCollab.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
