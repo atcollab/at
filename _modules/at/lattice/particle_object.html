@@ -376,7 +376,7 @@ document.write(`
                   
   <h1>Source code for at.lattice.particle_object</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Description of particles&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">..constants</span> <span class="kn">import</span> <span class="n">e_mass</span><span class="p">,</span> <span class="n">p_mass</span>
+<span class="kn">from</span> <span class="nn">..constants</span> <span class="kn">import</span> <span class="n">e_mass</span><span class="p">,</span> <span class="n">p_mass</span><span class="p">,</span> <span class="n">mu_mass</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span>
@@ -393,16 +393,19 @@ document.write(`
         <span class="n">relativistic</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">charge</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">),</span>
         <span class="n">electron</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">e_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">),</span>
         <span class="n">positron</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">e_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
-        <span class="n">proton</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">p_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">proton</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">p_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">antiproton</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">mu_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">posmuon</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">mu_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">negmuon</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">rest_energy</span><span class="o">=</span><span class="n">mu_mass</span><span class="p">,</span> <span class="n">charge</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">),</span>
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;relativistic&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            name:   Particle name. &#39;electron&#39;, &#39;positron and &#39;proton&#39; are</span>
-<span class="sd">              predefined. For other particles, the rest energy and charge</span>
-<span class="sd">              must be provided as keywords.</span>
+<span class="sd">            name:   Particle name. &#39;electron&#39;, &#39;positron&#39;, &#39;proton&#39;, &#39;posmuon&#39;,</span>
+<span class="sd">              &#39;negmuon&#39; are predefined. For other particles, the rest energy</span>
+<span class="sd">              and charge must be provided as keywords.</span>
 
 <span class="sd">        Keyword Arguments:</span>
 <span class="sd">            rest_energy:    Particle rest energy [ev]</span>
@@ -508,7 +511,7 @@ document.write(`
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4.
     <br/>
   </p>
 </div>

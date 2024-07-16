@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>at.lattice.idtable_element &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+    <title>at.load.mad8 &#8212; Accelerator Toolbox 0.6.2 documentation</title>
   
   
   
@@ -45,11 +45,11 @@
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=fd10adb8"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.lattice.idtable_element';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.load.mad8';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="at.lattice.lattice_object" href="at.lattice.lattice_object.html" />
-    <link rel="prev" title="at.lattice.elements" href="at.lattice.elements.html" />
+    <link rel="next" title="at.load.madx" href="at.load.madx.html" />
+    <link rel="prev" title="at.load.json" href="at.load.json.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -346,12 +346,12 @@ document.write(`
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Packages:</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="at.lattice.html">at.lattice</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.lattice.html">at.lattice</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.axisdef.html">at.lattice.axisdef</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.cavity_access.html">at.lattice.cavity_access</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.deprecated.html">at.lattice.deprecated</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.elements.html">at.lattice.elements</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.lattice.idtable_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.lattice.idtable_element.html">at.lattice.idtable_element</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.lattice_object.html">at.lattice.lattice_object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.lattice_variables.html">at.lattice.lattice_variables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.lattice.options.html">at.lattice.options</a></li>
@@ -386,12 +386,12 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.physics.ring_parameters.html">at.physics.ring_parameters</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="at.load.html">at.load</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="at.load.html">at.load</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="at.load.allfiles.html">at.load.allfiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.elegant.html">at.load.elegant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.file_input.html">at.load.file_input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.json.html">at.load.json</a></li>
-<li class="toctree-l2"><a class="reference internal" href="at.load.mad8.html">at.load.mad8</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.load.mad8</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.madx.html">at.load.madx</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.matfile.html">at.load.matfile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.reprfile.html">at.load.reprfile</a></li>
@@ -467,9 +467,9 @@ document.write(`
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Welcome to pyAT’s documentation!</a></li>
     
     
-    <li class="breadcrumb-item"><a href="at.lattice.html" class="nav-link">at.lattice</a></li>
+    <li class="breadcrumb-item"><a href="at.load.html" class="nav-link">at.load</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">at.lattice.i...</li>
+    <li class="breadcrumb-item active" aria-current="page">at.load.mad8</li>
   </ul>
 </nav>
 </div>
@@ -486,74 +486,188 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-at.lattice.idtable_element">
-<span id="at-lattice-idtable-element"></span><h1>at.lattice.idtable_element<a class="headerlink" href="#module-at.lattice.idtable_element" title="Link to this heading">#</a></h1>
+  <section id="module-at.load.mad8">
+<span id="at-load-mad8"></span><h1>at.load.mad8<a class="headerlink" href="#module-at.load.mad8" title="Link to this heading">#</a></h1>
+<p>Load a lattice from a MAD8 file.</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.load.mad8.load_mad8" title="at.load.mad8.load_mad8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_mad8</span></code></a>(*files[, use])</p></td>
+<td><p>Create a <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a>  from MAD8 files</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.idtable_element.InsertionDeviceKickMap" title="at.lattice.idtable_element.InsertionDeviceKickMap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InsertionDeviceKickMap</span></code></a>(family_name, *args, ...)</p></td>
-<td><p>Insertion Device Element.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.load.mad8.Mad8Parser" title="at.load.mad8.Mad8Parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mad8Parser</span></code></a>(**kwargs)</p></td>
+<td><p>MAD-X specific parser</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py class">
-<dt class="sig sig-object py" id="at.lattice.idtable_element.InsertionDeviceKickMap">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InsertionDeviceKickMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/idtable_element.html#InsertionDeviceKickMap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.idtable_element.InsertionDeviceKickMap" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></p>
-<p>Insertion Device Element. Valid for a parallel electron beam.</p>
-<blockquote>
-<div><dl class="simple">
-<dt>Pascale ELLEAUME, “A New Approach to the Electron Beam Dynamics in</dt><dd><p>Undulators and  Wigglers”. EPAC1992 0661.
-European Synchrotron Radiation Facility.
-BP 220, F-38043 Grenoble, France</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>family_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the element</p>
-</dd>
-</dl>
-<p>All keywords will be set as attributes of the element</p>
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mad8Parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#Mad8Parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.Mad8Parser" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_MadParser</span></code></p>
+<p>MAD-X specific parser</p>
+<p>The parser is a subclass of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> and is database containing all the
+MAD-X variables.</p>
+<p class="rubric">Example</p>
+<p>Parse a 1<sup>st</sup> file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Mad8Parser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;file1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Parse another file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;file2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the variable “vkick”</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="p">[</span><span class="s2">&quot;vkick&quot;</span><span class="p">]</span>
+<span class="go">0.003</span>
+</pre></div>
+</div>
+<p>Define a new variable:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="p">[</span><span class="s2">&quot;hkick&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.0024</span>
+</pre></div>
+</div>
+<p>Get the “qf1” element</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="p">[</span><span class="s2">&quot;qf1&quot;</span><span class="p">]</span>
+<span class="go">quadrupole(name=qf1, l=1.0, k1=0.5, tilt=0.001)</span>
+</pre></div>
+</div>
+<p>Generate an AT <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a> from the “ring” sequence</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">lattice</span><span class="p">(</span><span class="n">use</span><span class="o">=</span><span class="s2">&quot;ring&quot;</span><span class="p">)</span>  <span class="c1"># generate an AT Lattice</span>
+</pre></div>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="at.lattice.idtable_element.InsertionDeviceKickMap.from_text_file">
-<span class="sig-name descname"><span class="pre">from_text_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Nslice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Filename_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Energy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/idtable_element.html#InsertionDeviceKickMap.from_text_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.idtable_element.InsertionDeviceKickMap.from_text_file" title="Link to this definition">#</a></dt>
-<dd><p>This function creates an Insertion Device Kick Map
-from a Radia field map file.</p>
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.clear" title="Link to this definition">#</a></dt>
+<dd><p>Clean the database</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#Mad8Parser.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.Mad8Parser.evaluate" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate an expression using <em>self</em> as local namespace</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.expand">
+<span class="sig-name descname"><span class="pre">expand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.expand" title="Link to this definition">#</a></dt>
+<dd><p>iterator over AT objects generated by a source object</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.lattice">
+<span class="sig-name descname"><span class="pre">lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ring'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.lattice" title="Link to this definition">#</a></dt>
+<dd><p>Create a lattice from the selected sequence</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>family_name</strong> – family name</p></li>
-<li><p><strong>Nslice</strong> – number of slices in integrator</p></li>
-<li><p><strong>Filename_in</strong> – input filename</p></li>
-<li><p><strong>Energy</strong> – particle energy in GeV</p></li>
-</ul>
+<dd class="field-odd"><p><strong>use</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the MAD sequence or line containing the desired
+lattice. Default: <code class="docutils literal notranslate"><span class="pre">ring</span></code></p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>KickMap element</strong></p></li>
-<li><p><strong>Default PassMethod</strong> – <code class="docutils literal notranslate"><span class="pre">IdTablePass</span></code></p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the lattice. Default: MAD sequence name.</p></li>
+<li><p><strong>particle</strong> (<a class="reference internal" href="at.lattice.particle_object.html#at.lattice.particle_object.Particle" title="at.lattice.particle_object.Particle"><em>Particle</em></a>) – Circulating particle. Default: from MAD</p></li>
+<li><p><strong>energy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Energy of the lattice [eV], Default: from MAD</p></li>
+<li><p><strong>periodicity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of periods. Default: 1</p></li>
+<li><p><strong>*</strong> – All other keywords will be set as Lattice attributes</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="at.lattice.idtable_element.InsertionDeviceKickMap.get_PassMethod">
-<span class="sig-name descname"><span class="pre">get_PassMethod</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/idtable_element.html#InsertionDeviceKickMap.get_PassMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.idtable_element.InsertionDeviceKickMap.get_PassMethod" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.parse_files">
+<span class="sig-name descname"><span class="pre">parse_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">filenames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prolog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.parse_files" title="Link to this definition">#</a></dt>
+<dd><p>Process files and fill the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*filenames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Files to process</p></li>
+<li><p><strong>final</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, signals that the undefined variables may be set
+to the default value</p></li>
+<li><p><strong>prolog</strong> (<em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><em>None</em><em>]</em>)</p></li>
+<li><p><strong>epilog</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><em>None</em><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="at.lattice.idtable_element.InsertionDeviceKickMap.set_DriftPass">
-<span class="sig-name descname"><span class="pre">set_DriftPass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/idtable_element.html#InsertionDeviceKickMap.set_DriftPass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.idtable_element.InsertionDeviceKickMap.set_DriftPass" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.parse_lines">
+<span class="sig-name descname"><span class="pre">parse_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.parse_lines" title="Link to this definition">#</a></dt>
+<dd><p>Process input lines and fill the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lines</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.12)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Iterable of input lines</p></li>
+<li><p><strong>final</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, signals that the undefined variables may be set
+to the defalt value</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="at.lattice.idtable_element.InsertionDeviceKickMap.set_IdTablePass">
-<span class="sig-name descname"><span class="pre">set_IdTablePass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/idtable_element.html#InsertionDeviceKickMap.set_IdTablePass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.idtable_element.InsertionDeviceKickMap.set_IdTablePass" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.missing">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing</span></span><a class="headerlink" href="#at.load.mad8.Mad8Parser.missing" title="Link to this definition">#</a></dt>
+<dd><p>Set of missing definitions</p>
+</dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.sequences">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequences</span></span><a class="headerlink" href="#at.load.mad8.Mad8Parser.sequences" title="Link to this definition">#</a></dt>
+<dd><p>List of available sequences or lines</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.mad8.load_mad8">
+<span class="sig-name descname"><span class="pre">load_mad8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ring'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#load_mad8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.load_mad8" title="Link to this definition">#</a></dt>
+<dd><p>Create a <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a>  from MAD8 files</p>
+<ul class="simple">
+<li><p>The <em>energy</em> and <em>particle</em> of the generated lattice are taken from the MAD8
+<code class="docutils literal notranslate"><span class="pre">BEAM</span></code> object, using the MAD8 default parameters: positrons at 1 Gev.
+These parameters are overloaded by the value given in the <em>energy</em> and
+<em>particle</em> keyword arguments.</p></li>
+<li><p>The radiation state is given by the <code class="docutils literal notranslate"><span class="pre">RADIATE</span></code> flag of the <code class="docutils literal notranslate"><span class="pre">BEAM</span></code> object,
+using the AT defaults: RF cavities active, synchrotron radiation in dipoles and
+quadrupoles.</p></li>
+<li><p>Long elements are split according to the default AT value for <em>NumIntSteps</em> (10).</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Names of one or several MAD8 files</p></li>
+<li><p><strong>use</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the MAD8 sequence or line containing the desired
+lattice. Default: <code class="docutils literal notranslate"><span class="pre">ring</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the lattice. Default: MAD8 sequence name.</p></li>
+<li><p><strong>particle</strong> (<a class="reference internal" href="at.lattice.particle_object.html#at.lattice.particle_object.Particle" title="at.lattice.particle_object.Particle"><em>Particle</em></a>) – Circulating particle. Default: from MAD8</p></li>
+<li><p><strong>energy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Energy of the lattice [eV]. Default: from MAD8</p></li>
+<li><p><strong>periodicity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of periods. Default: 1</p></li>
+<li><p><strong>*</strong> – All other keywords will be set as Lattice attributes</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lattice</strong> (<em>Lattice</em>) – New <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a> object</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="at.load.allfiles.html#at.load.allfiles.load_lattice" title="at.load.allfiles.load_lattice"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_lattice()</span></code></a> for a generic lattice-loading function.</p>
+</div>
 </dd></dl>
 
 </section>
@@ -569,20 +683,20 @@ from a Radia field map file.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="at.lattice.elements.html"
+       href="at.load.json.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">at.lattice.elements</p>
+        <p class="prev-next-title">at.load.json</p>
       </div>
     </a>
     <a class="right-next"
-       href="at.lattice.lattice_object.html"
+       href="at.load.madx.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">at.lattice.lattice_object</p>
+        <p class="prev-next-title">at.load.madx</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -604,13 +718,18 @@ from a Radia field map file.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.idtable_element.InsertionDeviceKickMap"><code class="docutils literal notranslate"><span class="pre">InsertionDeviceKickMap</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.idtable_element.InsertionDeviceKickMap.from_text_file"><code class="docutils literal notranslate"><span class="pre">InsertionDeviceKickMap.from_text_file()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.idtable_element.InsertionDeviceKickMap.get_PassMethod"><code class="docutils literal notranslate"><span class="pre">InsertionDeviceKickMap.get_PassMethod()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.idtable_element.InsertionDeviceKickMap.set_DriftPass"><code class="docutils literal notranslate"><span class="pre">InsertionDeviceKickMap.set_DriftPass()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.idtable_element.InsertionDeviceKickMap.set_IdTablePass"><code class="docutils literal notranslate"><span class="pre">InsertionDeviceKickMap.set_IdTablePass()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser"><code class="docutils literal notranslate"><span class="pre">Mad8Parser</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.clear"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.clear()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.evaluate"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.evaluate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.expand"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.expand()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.lattice"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.lattice()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.parse_files"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.parse_files()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.parse_lines"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.parse_lines()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.missing"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.missing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.Mad8Parser.sequences"><code class="docutils literal notranslate"><span class="pre">Mad8Parser.sequences</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.load.mad8.load_mad8"><code class="docutils literal notranslate"><span class="pre">load_mad8()</span></code></a></li>
 </ul>
   </nav></div>
 

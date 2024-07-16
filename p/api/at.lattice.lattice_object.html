@@ -391,7 +391,10 @@ document.write(`
 <li class="toctree-l1 has-children"><a class="reference internal" href="at.load.html">at.load</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="at.load.allfiles.html">at.load.allfiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.elegant.html">at.load.elegant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.file_input.html">at.load.file_input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.json.html">at.load.json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.mad8.html">at.load.mad8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.madx.html">at.load.madx</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.matfile.html">at.load.matfile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.reprfile.html">at.load.reprfile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.tracy.html">at.load.tracy</a></li>
@@ -523,7 +526,7 @@ automatically imported.</p>
 <td><p>Lattice object.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.lattice_object.Filter" title="at.lattice.lattice_object.Filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter</span></code></a></p></td>
-<td><p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[..., <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>]]</p></td>
+<td><p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[...], <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>]]</p></td>
 </tr>
 </tbody>
 </table>
@@ -531,7 +534,7 @@ automatically imported.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Filter">
 <span class="sig-name descname"><span class="pre">Filter</span></span><a class="headerlink" href="#at.lattice.lattice_object.Filter" title="Link to this definition">#</a></dt>
-<dd><p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[…, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>]]</p>
+<dd><p>alias of <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>[[…], <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>]]</p>
 </dd></dl>
 
 <dl class="py class">
@@ -3244,6 +3247,8 @@ attributes</p></li>
 </dd>
 <dt>.json</dt><dd><p>JSON representation of a python AT Lattice. See <a class="reference internal" href="at.load.json.html#at.load.json.load_json" title="at.load.json.load_json"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_json()</span></code></a>.</p>
 </dd>
+<dt>.seq</dt><dd><p>MAD-X lattice description. See <a class="reference internal" href="at.load.madx.html#at.load.madx.load_madx" title="at.load.madx.load_madx"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_madx()</span></code></a>.</p>
+</dd>
 </dl>
 </div>
 </dd></dl>
@@ -4976,7 +4981,7 @@ Analyse elements for radiation state</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4.
     <br/>
   </p>
 </div>

@@ -389,7 +389,10 @@ document.write(`
 <li class="toctree-l1 has-children"><a class="reference internal" href="at.load.html">at.load</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="at.load.allfiles.html">at.load.allfiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.elegant.html">at.load.elegant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.file_input.html">at.load.file_input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.json.html">at.load.json</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.mad8.html">at.load.mad8</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.load.madx.html">at.load.madx</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.matfile.html">at.load.matfile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.reprfile.html">at.load.reprfile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.load.tracy.html">at.load.tracy</a></li>
@@ -660,21 +663,25 @@ each thread</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.DConstant"><code class="docutils literal notranslate"><span class="pre">DConstant</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.XYStep"><code class="docutils literal notranslate"><span class="pre">XYStep</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.DPStep"><code class="docutils literal notranslate"><span class="pre">DPStep</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.OrbConvergence"><code class="docutils literal notranslate"><span class="pre">OrbConvergence</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.OrbMaxIter"><code class="docutils literal notranslate"><span class="pre">OrbMaxIter</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.omp_num_threads"><code class="docutils literal notranslate"><span class="pre">omp_num_threads</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.patpass_poolsize"><code class="docutils literal notranslate"><span class="pre">patpass_poolsize</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.patpass_startmethod"><code class="docutils literal notranslate"><span class="pre">patpass_startmethod</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.mpi"><code class="docutils literal notranslate"><span class="pre">mpi</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.openmp"><code class="docutils literal notranslate"><span class="pre">openmp</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.reset"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.random"><code class="docutils literal notranslate"><span class="pre">random</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.common"><code class="docutils literal notranslate"><span class="pre">common</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.thread"><code class="docutils literal notranslate"><span class="pre">thread</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.DConstant"><code class="docutils literal notranslate"><span class="pre">DConstant</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.XYStep"><code class="docutils literal notranslate"><span class="pre">XYStep</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.DPStep"><code class="docutils literal notranslate"><span class="pre">DPStep</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.OrbConvergence"><code class="docutils literal notranslate"><span class="pre">OrbConvergence</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.OrbMaxIter"><code class="docutils literal notranslate"><span class="pre">OrbMaxIter</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.omp_num_threads"><code class="docutils literal notranslate"><span class="pre">omp_num_threads</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.patpass_poolsize"><code class="docutils literal notranslate"><span class="pre">patpass_poolsize</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.patpass_startmethod"><code class="docutils literal notranslate"><span class="pre">patpass_startmethod</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.mpi"><code class="docutils literal notranslate"><span class="pre">mpi</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.openmp"><code class="docutils literal notranslate"><span class="pre">openmp</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.reset"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.random"><code class="docutils literal notranslate"><span class="pre">random</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.common"><code class="docutils literal notranslate"><span class="pre">common</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.options.thread"><code class="docutils literal notranslate"><span class="pre">thread</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id0"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
@@ -712,7 +719,7 @@ each thread</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4.
     <br/>
   </p>
 </div>
