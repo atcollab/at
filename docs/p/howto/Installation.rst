@@ -17,12 +17,22 @@ Installation
 From PyPI
 ~~~~~~~~~
 
+PyPI maintains PyAT versions for Linux, MacOS and Windows, and python versions:
+
+- CPython 3.7, 3.8, 3.9, 3.10, 3.11, 3.12
+- PyPI does not support PyPy, because of the missing numpy and scipy libraries
+
 Install accelerator-toolbox from PyPI::
 
    $ pip install accelerator-toolbox
 
 From conda-forge
 ~~~~~~~~~~~~~~~~
+
+conda-forge maintains PyAT versions for Linux, MacOS and Windows, and python versions:
+
+- CPython 3.8, 3.9, 3.10, 3.11, 3.12
+- PyPy 3.9
 
 PyAT can be installed in a conda environment with::
 
