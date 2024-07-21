@@ -69,7 +69,13 @@ def test_missing_pass_method_raises_attribute_error(rin):
         atpass(lat, rin, 1)
 
 
-def test_missing_length_raises_attribute_error(rin):
+def test_missing_integrator_raises_runtime_error(rin):
+    lat = [elements.Drift('drift', 1.0, PassMethod="UnknownPass    ")]
+    with pytest.raises(RuntimeError):
+        atpass(lat, rin, 1)
+
+
+def test_integrator_error(rin):
     lat = [elements.Drift('drift', 1.0)]
     del lat[0].Length
     with pytest.raises(AttributeError):
