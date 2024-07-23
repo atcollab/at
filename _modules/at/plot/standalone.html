@@ -378,6 +378,9 @@ document.write(`
 <span></span><span class="sd">&quot;&quot;&quot;AT plotting functions&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 <span class="kn">from</span> <span class="nn">at.lattice</span> <span class="kn">import</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">axis_</span>
+<span class="kn">from</span> <span class="nn">at.lattice</span> <span class="kn">import</span> <span class="n">RFCavity</span>
+<span class="kn">from</span> <span class="nn">at.physics</span> <span class="kn">import</span> <span class="n">get_mcf</span>
+<span class="kn">from</span> <span class="nn">at.constants</span> <span class="kn">import</span> <span class="n">clight</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">matplotlib.axes</span> <span class="kn">import</span> <span class="n">Axes</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
@@ -559,8 +562,146 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="plot_RF_bucket_hamiltonian">
+<a class="viewcode-back" href="../../../p/api/at.plot.standalone.html#at.plot.standalone.plot_RF_bucket_hamiltonian">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_RF_bucket_hamiltonian</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">ct_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dp_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">num_points</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">num_levels</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span>
+                               <span class="n">plot_separatrix</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Plot the resulting longitudinal Hamiltonian of a ring (defining the RF</span>
+<span class="sd">    bucket). The Hamiltonian is calculated by summing all the cavities in the</span>
+<span class="sd">    ring. Harmonic cavities are supported by the function.</span>
+
+<span class="sd">    A perfectly tuned lattice is assumed, the cavities&#39; frequency is nominal</span>
+<span class="sd">    and the TimeLag is set in a way ensuring ct=0 for the synchronous phase</span>
+<span class="sd">    by using ring.set_cavity_phase().</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        ring: Lattice description</span>
+<span class="sd">        ct_range (tuple): Forced lower and upper ct values for the plot.</span>
+<span class="sd">        Default to :math:`\pm 1.1 \times C / (2h)`</span>
+<span class="sd">        dp_range (tuple): Forced lower and upper dp values for the plot.</span>
+<span class="sd">        Default to twice the RF acceptance of the bucket.</span>
+<span class="sd">        num_points (int): Number of points for 1D grid (ct/dp)</span>
+<span class="sd">        Default to 400.</span>
+<span class="sd">        num_levels (int): Number of levels for contour plot. Odd number of</span>
+<span class="sd">        levels allow to center the colorbar around 0.</span>
+<span class="sd">        Default to 41.</span>
+<span class="sd">        plot_separatrix (bool): Flag to plot the separatrix contour</span>
+<span class="sd">        (:math:`\mathcal{H}=0`).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CT:   (num_points,num_points) array: ct grid</span>
+<span class="sd">        DP:    (num_points,num_points) array: dp grid</span>
+<span class="sd">        hamiltonian:   (num_points,num_points) array: Hamiltonian values</span>
+<span class="sd">        along (CT,DP) grid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Momentum compaction/phase slip factors computed up to third order</span>
+    <span class="n">tmp_ring</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">disable_6d</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">get_mcf</span><span class="p">(</span><span class="n">tmp_ring</span><span class="p">,</span> <span class="n">fit_order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_step</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">eta</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+    <span class="n">eta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">eta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> \
+        <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">eta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">eta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">ring</span><span class="o">.</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> \
+        <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">eta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> \
+        <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># (ct, dp) grid calculation (defined around the main RF bucket)</span>
+    <span class="k">if</span> <span class="n">ct_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="o">-</span><span class="mf">0.55</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">circumference</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span><span class="p">,</span>
+            <span class="mf">0.55</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">circumference</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span><span class="p">,</span>
+            <span class="n">num</span><span class="o">=</span><span class="n">num_points</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ct_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ct_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">num_points</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dp_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">U0</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">energy_loss</span>
+        <span class="n">overvoltage</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">rf_voltage</span> <span class="o">/</span> <span class="n">U0</span>
+        <span class="n">rfa</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="n">U0</span> <span class="o">/</span>
+            <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">energy</span><span class="p">)</span> <span class="o">*</span>
+            <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">overvoltage</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">overvoltage</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">rfa</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rfa</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">num_points</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">dp_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dp_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">num_points</span><span class="p">)</span>
+    <span class="n">CT</span><span class="p">,</span> <span class="n">DP</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="n">dp</span><span class="p">)</span>
+
+    <span class="c1"># Hamiltonian (H=U+T) divided by harmonic number to have</span>
+    <span class="c1"># U = U(V_rf, h, phi_s)</span>
+    <span class="c1"># First term of the Hamiltonian</span>
+    <span class="n">eta_delta</span> <span class="o">=</span> <span class="n">eta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">eta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">DP</span> <span class="o">+</span> <span class="n">eta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">DP</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">energy</span> <span class="o">*</span> <span class="n">eta_delta</span> <span class="o">*</span> <span class="n">DP</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">hamiltonian</span> <span class="o">=</span> <span class="n">T</span>
+    <span class="c1"># Iteration over all lattice cavities</span>
+    <span class="k">for</span> <span class="n">rfcav</span> <span class="ow">in</span> <span class="n">ring</span><span class="p">[</span><span class="n">RFCavity</span><span class="p">]:</span>
+        <span class="n">Voltage</span> <span class="o">=</span> <span class="n">rfcav</span><span class="o">.</span><span class="n">Voltage</span>
+        <span class="n">HarmNumber</span> <span class="o">=</span> <span class="n">rfcav</span><span class="o">.</span><span class="n">HarmNumber</span>
+        <span class="n">TimeLag</span> <span class="o">=</span> <span class="n">rfcav</span><span class="o">.</span><span class="n">TimeLag</span>
+
+        <span class="n">phi_s</span> <span class="o">=</span> <span class="n">TimeLag</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">rfcav</span><span class="o">.</span><span class="n">Frequency</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span> <span class="o">/</span> <span class="n">clight</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">phi_s</span><span class="p">)</span> <span class="o">+</span>
+            <span class="n">CT</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">rfcav</span><span class="o">.</span><span class="n">Frequency</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span> <span class="o">/</span> <span class="n">clight</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Second term of the Hamiltonian</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">Voltage</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">HarmNumber</span><span class="p">)</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi_s</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">phi</span> <span class="o">-</span> <span class="n">phi_s</span><span class="p">)</span> <span class="o">*</span>
+             <span class="n">numpy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi_s</span><span class="p">))</span>
+        <span class="c1"># Add to total Hamiltonian</span>
+        <span class="n">hamiltonian</span> <span class="o">+=</span> <span class="n">U</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">lim_range</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                         <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                          <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+                         <span class="p">)</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">lim_range</span><span class="p">,</span> <span class="n">lim_range</span><span class="p">,</span> <span class="n">num_levels</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">co</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="n">DP</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="n">levels</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+    <span class="c1"># additional contour for visibility</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="n">DP</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="n">levels</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;coolwarm&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plot_separatrix</span><span class="p">:</span>
+        <span class="c1"># separatrix contour</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">CT</span><span class="p">,</span> <span class="n">DP</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Separatrix&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">cb</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">co</span><span class="p">)</span>
+    <span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mathcal</span><span class="si">{H}</span><span class="s1">(ct,\delta)$ [a.u.]&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;ct [m]&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\delta$&#39;</span><span class="p">)</span>
+
+    <span class="n">phi_s</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_rf_timelag</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> \
+        <span class="n">ring</span><span class="o">.</span><span class="n">get_revolution_frequency</span><span class="p">()</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span> <span class="o">/</span> \
+        <span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">beta</span> <span class="o">*</span> <span class="n">clight</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">ct_to_phi</span><span class="p">(</span><span class="n">ct</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">phi_s</span> <span class="o">+</span> <span class="n">ct</span> <span class="o">/</span> \
+               <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_revolution_frequency</span><span class="p">()</span> <span class="o">*</span>
+                <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span> <span class="o">/</span> <span class="n">clight</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">phi_to_ct</span><span class="p">(</span><span class="n">phase</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">phi_s</span> <span class="o">-</span> <span class="n">phase</span> <span class="o">*</span> \
+               <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_revolution_frequency</span><span class="p">()</span> <span class="o">*</span>
+                <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span> <span class="o">/</span> <span class="n">clight</span><span class="p">)</span>
+
+    <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">secondary_xaxis</span><span class="p">(</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">functions</span><span class="o">=</span><span class="p">(</span><span class="n">phi_to_ct</span><span class="p">,</span> <span class="n">ct_to_phi</span><span class="p">))</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\phi$ [rad]&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\phi_</span><span class="si">{RF}</span><span class="s1">$ &#39;</span><span class="o">+</span><span class="sa">rf</span><span class="s1">&#39;= $\pi -$ </span><span class="si">{</span><span class="n">phi_s</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CT</span><span class="p">,</span> <span class="n">DP</span><span class="p">,</span> <span class="n">hamiltonian</span></div>
+
+
+
 <span class="n">Lattice</span><span class="o">.</span><span class="n">plot_acceptance</span> <span class="o">=</span> <span class="n">plot_acceptance</span>
 <span class="n">Lattice</span><span class="o">.</span><span class="n">plot_geometry</span> <span class="o">=</span> <span class="n">plot_geometry</span>
+<span class="n">Lattice</span><span class="o">.</span><span class="n">plot_RF_bucket_hamiltonian</span> <span class="o">=</span> <span class="n">plot_RF_bucket_hamiltonian</span>
 </pre></div>
 
                 </article>

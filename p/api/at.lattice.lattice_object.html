@@ -3365,6 +3365,50 @@ following fields:</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.plot_RF_bucket_hamiltonian">
+<span class="sig-name descname"><span class="pre">plot_RF_bucket_hamiltonian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ct_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">41</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_separatrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.plot_RF_bucket_hamiltonian" title="Link to this definition">#</a></dt>
+<dd><p>Plot the resulting longitudinal Hamiltonian of a ring (defining the RF
+bucket). The Hamiltonian is calculated by summing all the cavities in the
+ring. Harmonic cavities are supported by the function.</p>
+<p>A perfectly tuned lattice is assumed, the cavities’ frequency is nominal
+and the TimeLag is set in a way ensuring ct=0 for the synchronous phase
+by using ring.set_cavity_phase().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – Lattice description</p></li>
+<li><p><strong>ct_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>) – Forced lower and upper ct values for the plot.</p></li>
+</ul>
+</dd>
+</dl>
+<p>:param Default to <span class="math notranslate nohighlight">\(\pm 1.1 \times C /:
+:type Default to :math:\)</span>pm 1.1 times C /: 2h
+:param dp_range: Forced lower and upper dp values for the plot.
+:type dp_range: tuple
+:param Default to twice the RF acceptance of the bucket.:
+:param num_points: Number of points for 1D grid (ct/dp)
+:type num_points: int
+:param Default to 400.:
+:param num_levels: Number of levels for contour plot. Odd number of
+:type num_levels: int
+:param levels allow to center the colorbar around 0.:
+:param Default to 41.:
+:param plot_separatrix: Flag to plot the separatrix contour
+:type plot_separatrix: bool
+:param (<span class="math notranslate nohighlight">\(\mathcal{H}=0\)</span>).:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>CT</strong> – (num_points,num_points) array: ct grid</p></li>
+<li><p><strong>DP</strong> – (num_points,num_points) array: dp grid</p></li>
+<li><p><strong>hamiltonian</strong> – (num_points,num_points) array: Hamiltonian values</p></li>
+<li><p><strong>along</strong> (<em>CT,DP</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.plot_acceptance">
 <span class="sig-name descname"><span class="pre">plot_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">planes</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.plot_acceptance" title="Link to this definition">#</a></dt>
 <dd><p>Plots the acceptance</p>
@@ -4879,6 +4923,7 @@ Analyse elements for radiation state</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.load"><code class="docutils literal notranslate"><span class="pre">Lattice.load()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.modify_elements"><code class="docutils literal notranslate"><span class="pre">Lattice.modify_elements()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.ohmi_envelope"><code class="docutils literal notranslate"><span class="pre">Lattice.ohmi_envelope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.plot_RF_bucket_hamiltonian"><code class="docutils literal notranslate"><span class="pre">Lattice.plot_RF_bucket_hamiltonian()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.plot_acceptance"><code class="docutils literal notranslate"><span class="pre">Lattice.plot_acceptance()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.plot_beta"><code class="docutils literal notranslate"><span class="pre">Lattice.plot_beta()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.lattice_object.Lattice.plot_geometry"><code class="docutils literal notranslate"><span class="pre">Lattice.plot_geometry()</span></code></a></li>
