@@ -6,12 +6,12 @@ struct elem {
     double *limits;
 };
 
-void AperturePass(double *r_in, double *limits, int num_particles)
+void LongAperturePass(double *r_in, double *limits, int num_particles)
 {
-    /* Checks X,Y of each input 6-vector and marks the corresponding element in
-     * lossflag array with 0 if X,Y are exceed the limits given by limits and limitslong
+    /* Checks CT,DP of each input 6-vector and marks the corresponding element in
+     * lossflag array with 0 if CT,DP are exceed the limits given by limits and limitslong
      * arrays
-     * limits has 4 elements: (MinX, MaxX, MinY, MaxY)
+     * limits has 4 elements: (MinDP, MaxDP, MinCT, MaxCT)
      */
     int c;
     double *r6;
@@ -20,7 +20,7 @@ void AperturePass(double *r_in, double *limits, int num_particles)
         if (!atIsNaN(r6[0]))
         {
             /*  check if this particle is already marked as lost */
-            checkiflostRectangularAp(r6, limits);
+            checkiflostLongRectangularAp(r6, limits);
         }
     }
 }
@@ -31,20 +31,20 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double *limits=atGetDoubleArray(ElemData,"Limits"); check_error();
-	Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->limits=limits;
-	}
-    AperturePass(r_in, Elem->limits, num_particles);
+        }
+    LongAperturePass(r_in, Elem->limits, num_particles);
 
     return Elem;
 }
 
-MODULE_DEF(AperturePass)        /* Dummy module initialisation */
+MODULE_DEF(LongAperturePass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)
-void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
         double *r_in;
@@ -55,7 +55,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        AperturePass(r_in,limits, num_particles);
+        LongAperturePass(r_in,limits, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
