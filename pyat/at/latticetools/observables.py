@@ -39,7 +39,7 @@ container which performs the required optics computation and feeds each
 - :py:attr:`~Observable.residual`:  :pycode:`((value - target)/weight)**2`
 """
 
-# ruff: noqa: D205, D415
+# ruff: noqa: D205, D415, D417
 
 from __future__ import annotations
 
@@ -253,6 +253,7 @@ class Observable:
         self.kwargs = kwargs
 
     def __str__(self):
+        """Return the string representation of the Observable."""
         return "\n".join((self._header(), self._all_lines()))
 
     @staticmethod
@@ -576,7 +577,7 @@ class GeometryObservable(ElementObservable):
 
 
 class OrbitObservable(ElementObservable):
-    """Observe the transfer matrix at selected locations.
+    """Observe the closed orbit coordinates at selected locations.
 
     Process the *orbit* output of :py:func:`.find_orbit`.
     """
