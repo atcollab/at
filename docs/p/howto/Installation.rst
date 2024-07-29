@@ -9,7 +9,7 @@ methods are used by higher-level functions to provide physics results.
 Requirements
 ------------
 
-pyAT supports Python 3.7 to 3.11.
+pyAT supports Python 3.7 to 3.12.
 
 Installation
 ------------
@@ -17,11 +17,28 @@ Installation
 From PyPI
 ~~~~~~~~~
 
+PyPI maintains PyAT versions for Linux, MacOS and Windows, and python versions:
+
+- CPython 3.7, 3.8, 3.9, 3.10, 3.11, 3.12
+- PyPI does not support PyPy, because of the missing numpy and scipy libraries
+
 Install accelerator-toolbox from PyPI::
 
    $ pip install accelerator-toolbox
 
-From GitHub
+From conda-forge
+~~~~~~~~~~~~~~~~
+
+conda-forge maintains PyAT versions for Linux, MacOS and Windows, and python versions:
+
+- CPython 3.8, 3.9, 3.10, 3.11, 3.12
+- PyPy 3.9
+
+PyAT can be installed in a conda environment with::
+
+   $ conda install -c conda-forge accelerator-toolbox
+
+From source
 ~~~~~~~~~~~
 
 1. Install git on your computer.

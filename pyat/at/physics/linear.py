@@ -2,22 +2,25 @@
 Coupled or non-coupled 4x4 linear motion
 """
 from __future__ import annotations
+
+import warnings
+from collections.abc import Callable
+from math import sqrt, pi, sin, cos, atan2
+
 import numpy
 import numpy as np
-from math import sqrt, pi, sin, cos, atan2
-from collections.abc import Callable
-import warnings
 from scipy.linalg import solve
-from ..constants import clight
-from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
-from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
-from ..lattice import AtError
-from ..lattice import frequency_control
-from ..tracking import internal_lpass
-from .orbit import find_orbit4, find_orbit6
-from .matrix import find_m44, find_m66
+
 from .amat import a_matrix, jmat, jmatswap
 from .harmonic_analysis import get_tunes_harmonic
+from .matrix import find_m44, find_m66
+from .orbit import find_orbit4, find_orbit6
+from ..constants import clight
+from ..lattice import AtError
+from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
+from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
+from ..lattice import frequency_control
+from ..tracking import internal_lpass
 
 __all__ = ['linopt', 'linopt2', 'linopt4', 'linopt6', 'avlinopt',
            'get_optics', 'get_tune', 'get_chrom']
@@ -139,9 +142,7 @@ def _analyze2(mt, ms):
     alp0_a, bet0_a, vp_a = _closure(A)
     alp0_b, bet0_b, vp_b = _closure(B)
     vps = numpy.array([vp_a, vp_b])
-    el0 = (numpy.array([alp0_a, alp0_b]),
-           numpy.array([bet0_a, bet0_b]),
-           0.0)
+    el0 = (numpy.array([alp0_a, alp0_b]), numpy.array([bet0_a, bet0_b]), 0.0)
     alpha_a, beta_a, mu_a = _twiss22(ms[:, :2, :2], alp0_a, bet0_a)
     alpha_b, beta_b, mu_b = _twiss22(ms[:, 2:, 2:], alp0_b, bet0_b)
     els = (numpy.stack((alpha_a, alpha_b), axis=1),
@@ -235,8 +236,7 @@ def _analyze6(mt, ms):
 
         ais = numpy.concatenate([mul2(slc) for slc in slices], axis=1)
         invai = solve(ai, ss.T)
-        ri = numpy.array(
-            [ais[:, sl] @ invai[sl, :] for sl in slices])
+        ri = numpy.array([ais[:, sl] @ invai[sl, :] for sl in slices])
         mui = numpy.array([get_phase(ai[sl, sl]) for sl in slices])
         return mui, ri, ai
 
@@ -410,10 +410,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             return data_out
 
         deltap = orbitup[4] - orbitdn[4]
-        *data_up, = off_momentum(ringup, orbitup, dp=0.5*deltap,
-                                 **kwargs)
-        *data_dn, = off_momentum(ringdn, orbitdn, dp=-0.5*deltap,
-                                 **kwargs)
+        (*data_up,) = off_momentum(ringup, orbitup, dp=0.5 * deltap, **kwargs)
+        (*data_dn,) = off_momentum(ringdn, orbitdn, dp=-0.5 * deltap, **kwargs)
         tunesup, el0up, elsup, d0up, dsup, wtype = data_up
         tunesdn, el0dn, elsdn, d0dn, dsdn, _ = data_dn
         has_r = len(wtype) == 7
@@ -479,8 +477,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         rgdn = ring
 
     # Propagate the closed orbit
-    orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
-                           keep_lattice=keep_lattice)
+    orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit, keep_lattice=keep_lattice)
     spos = ring.get_s_pos(refpts)
 
     nrefs = orbs.shape[0]
@@ -514,8 +511,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
     if get_w:
         dtype = dtype + wtype
-        chrom, ddata0, ddatas = chrom_w(rgup, rgdn, o0up, o0dn,
-                                        refpts, **kwargs)
+        chrom, ddata0, ddatas = chrom_w(rgup, rgdn, o0up, o0dn, refpts, **kwargs)
         data0 = data0 + ddata0
         datas = datas + ddatas
     elif get_chrom:
@@ -595,8 +591,10 @@ def linopt2(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by *refpts*,
+        elemdata:       Linear optics at the points referred to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
+
+    .. _linopt2_elemdata:
 
     **elemdata** is a record array with fields:
 
@@ -653,7 +651,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
 def linopt4(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a H/V coupled lattice
 
-    4D-analysis of coupled motion following Sagan/Rubin
+    4D-analysis of coupled motion following Sagan/Rubin [7]_
 
     Parameters:
         ring:   Lattice description.
@@ -705,6 +703,8 @@ def linopt4(ring: Lattice, *args, **kwargs):
         ringdata:       Lattice properties
         elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
+
+    .. _linopt4_elemdata:
 
     **elemdata** is a record array with fields:
 
@@ -825,6 +825,8 @@ def linopt6(ring: Lattice, *args, **kwargs):
         ringdata:       Lattice properties
         elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
+
+    .. _linopt6_elemdata:
 
     **elemdata** is a record array with fields:
 
@@ -976,6 +978,21 @@ def get_optics(ring: Lattice, refpts: Refpts = None,
         ringdata:       Lattice properties
         elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
+
+
+    **elemdata** is a record array, Its fields depend on the selected method. See
+    :ref:`linopt6 <linopt6_elemdata>`, :ref:`linopt4 <linopt4_elemdata>`,
+    :ref:`linopt2 <linopt2_elemdata>`
+
+    **ringdata** is a record array with fields:
+
+    =================   ======
+    **tune**            Fractional tunes
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
+                        :py:obj:`True`
+    **damping_time**    Damping times [s] (only if radiation is ON)
+    =================   ======
+
 
     Warning:
         The format of output record arrays depends on the selected method.
@@ -1358,10 +1375,10 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
             p1 -= numpy.mean(p1, axis=1, keepdims=True)
         p2 = solve(ld.A, p1[:nv, :])
         return numpy.conjugate(p2.T.view(dtype=complex).T)
-    get_integer = kwargs.pop('get_integer', False)
+
+    get_integer = kwargs.pop("get_integer", False)
     if get_integer:
-        assert method == 'linopt', \
-           'Integer tune only accessible with method=linopt'
+        assert method == 'linopt', 'Integer tune only accessible with method=linopt'
     if method == 'linopt':
         if get_integer:
             _, _, c = get_optics(ring, refpts=range(len(ring)+1),
@@ -1426,27 +1443,25 @@ def get_chrom(ring: Lattice, *, method: str = 'linopt',
 
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     if method == 'fft':
-        print('Warning fft method not accurate to get the ' +
-              'chromaticity')
+        print('Warning fft method not accurate to get the chromaticity')
 
     if ring.is_6d:
         f0 = ring.get_rf_frequency(cavpts=cavpts)
         df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
         rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
         o0up, _ = find_orbit6(rgup, **kwargs)
-        tune_up = get_tune(rgup,  method=method, orbit=o0up, **kwargs)
+        tune_up = get_tune(rgup, method=method, orbit=o0up, **kwargs)
         rgdn = ring.set_rf_frequency(f0 - 0.5 * df, cavpts=cavpts, copy=True)
         o0dn, _ = find_orbit6(rgdn, **kwargs)
-        tune_down = get_tune(rgdn,  method=method, orbit=o0dn, **kwargs)
+        tune_down = get_tune(rgdn, method=method, orbit=o0dn, **kwargs)
         dp_step = o0up[4] - o0dn[4]
     else:
         if dct is not None or df is not None:
             dp = find_orbit4(ring, dct=dct, df=df)[0][4]
         elif dp is None:
             dp = 0.0
-        tune_up = get_tune(ring, method=method, dp=dp + 0.5*dp_step, **kwargs)
-        tune_down = get_tune(ring, method=method,
-                             dp=dp - 0.5*dp_step, **kwargs)
+        tune_up = get_tune(ring, method=method, dp=dp + 0.5 * dp_step, **kwargs)
+        tune_down = get_tune(ring, method=method, dp=dp - 0.5 * dp_step, **kwargs)
 
     return (tune_up - tune_down) / dp_step
 
