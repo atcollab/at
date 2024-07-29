@@ -2,10 +2,10 @@
 
 import numpy as np
 from typing import List, Optional
-from at.lattice import Element, Particle
+from at.lattice import Element, Particle, Refpts
 
 def atpass(line: List[Element], r_in: np.ndarray, nturns: int,
-           refpts: np.ndarray,
+           refpts: Optional[Refpts] = [],
            turn: Optional[int] = None,
            energy: Optional[float] = None,
            particle: Optional[Particle] = None,
