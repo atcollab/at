@@ -497,19 +497,36 @@ code used in the AT ‘integrators’ into a Python extension. These pass
 methods are used by higher-level functions to provide physics results.</p>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
-<p>pyAT supports Python 3.7 to 3.11.</p>
+<p>pyAT supports Python 3.7 to 3.12.</p>
 </section>
 <section id="id1">
 <h2>Installation<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
 <section id="from-pypi">
 <h3>From PyPI<a class="headerlink" href="#from-pypi" title="Link to this heading">#</a></h3>
+<p>PyPI maintains PyAT versions for Linux, MacOS and Windows, and python versions:</p>
+<ul class="simple">
+<li><p>CPython 3.7, 3.8, 3.9, 3.10, 3.11, 3.12</p></li>
+<li><p>PyPI does not support PyPy, because of the missing numpy and scipy libraries</p></li>
+</ul>
 <p>Install accelerator-toolbox from PyPI:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install accelerator-toolbox
 </pre></div>
 </div>
 </section>
-<section id="from-github">
-<h3>From GitHub<a class="headerlink" href="#from-github" title="Link to this heading">#</a></h3>
+<section id="from-conda-forge">
+<h3>From conda-forge<a class="headerlink" href="#from-conda-forge" title="Link to this heading">#</a></h3>
+<p>conda-forge maintains PyAT versions for Linux, MacOS and Windows, and python versions:</p>
+<ul class="simple">
+<li><p>CPython 3.8, 3.9, 3.10, 3.11, 3.12</p></li>
+<li><p>PyPy 3.9</p></li>
+</ul>
+<p>PyAT can be installed in a conda environment with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ conda install -c conda-forge accelerator-toolbox
+</pre></div>
+</div>
+</section>
+<section id="from-source">
+<h3>From source<a class="headerlink" href="#from-source" title="Link to this heading">#</a></h3>
 <ol class="arabic">
 <li><p>Install git on your computer.</p></li>
 <li><p>Download the latest version of AT:</p>
@@ -615,7 +632,8 @@ methods are used by higher-level functions to provide physics results.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Installation</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-pypi">From PyPI</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-github">From GitHub</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-conda-forge">From conda-forge</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-source">From source</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parallel-computation">Parallel computation</a></li>
 </ul>
 </li>

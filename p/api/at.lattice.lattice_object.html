@@ -2159,6 +2159,25 @@ if refpts is <a class="reference external" href="https://docs.python.org/3/libra
 </ul>
 </dd>
 </dl>
+<p><strong>elemdata</strong> is a record array, Its fields depend on the selected method. See
+<a class="reference internal" href="at.physics.linear.html#linopt6-elemdata"><span class="std std-ref">linopt6</span></a>, <a class="reference internal" href="at.physics.linear.html#linopt4-elemdata"><span class="std std-ref">linopt4</span></a>,
+<a class="reference internal" href="at.physics.linear.html#linopt2-elemdata"><span class="std std-ref">linopt2</span></a></p>
+<p><strong>ringdata</strong> is a record array with fields:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>tune</strong></p></td>
+<td><p>Fractional tunes</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>chromaticity</strong></p></td>
+<td><p>Chromaticities, only computed if <em>get_chrom</em> is
+<a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>damping_time</strong></p></td>
+<td><p>Damping times [s] (only if radiation is ON)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The format of output record arrays depends on the selected method.
@@ -2788,12 +2807,12 @@ are ignored.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>elemdata0</strong> – Linear optics data at the entrance of the ring</p></li>
 <li><p><strong>ringdata</strong> – Lattice properties</p></li>
-<li><p><strong>elemdata</strong> – Linear optics at the points refered to by <em>refpts</em>,
+<li><p><strong>elemdata</strong> – Linear optics at the points referred to by <em>refpts</em>,
 if refpts is <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> an empty lindata structure is returned.</p></li>
 </ul>
 </dd>
 </dl>
-<p><strong>elemdata</strong> is a record array with fields:</p>
+<p id="linopt2-elemdata"><strong>elemdata</strong> is a record array with fields:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <tbody>
 <tr class="row-odd"><td><p><strong>s_pos</strong></p></td>
@@ -2885,7 +2904,7 @@ vol.2 (1999)</p>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.linopt4">
 <span class="sig-name descname"><span class="pre">linopt4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt4" title="Link to this definition">#</a></dt>
 <dd><p>Linear analysis of a H/V coupled lattice</p>
-<p>4D-analysis of coupled motion following Sagan/Rubin</p>
+<p>4D-analysis of coupled motion following Sagan/Rubin <a class="footnote-reference brackets" href="#id12" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p>
@@ -2913,7 +2932,7 @@ already known ((6,) array)</p></li>
 <li><p><strong>get_chrom</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Compute chromaticities. Needs computing
 the tune at 2 different momentum deviations around the central one.</p></li>
 <li><p><strong>get_w</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Computes chromatic amplitude functions
-(W) <a class="footnote-reference brackets" href="#id12" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a>. Needs to compute the optics at 2 different momentum
+(W) <a class="footnote-reference brackets" href="#id13" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a>. Needs to compute the optics at 2 different momentum
 deviations around the central one.</p></li>
 <li><p><strong>keep_lattice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Assume no lattice change since the
 previous tracking. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
@@ -2946,7 +2965,7 @@ if refpts is <a class="reference external" href="https://docs.python.org/3/libra
 </ul>
 </dd>
 </dl>
-<p><strong>elemdata</strong> is a record array with fields:</p>
+<p id="linopt4-elemdata"><strong>elemdata</strong> is a record array with fields:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <tbody>
 <tr class="row-odd"><td><p><strong>s_pos</strong></p></td>
@@ -2954,7 +2973,7 @@ if refpts is <a class="reference external" href="https://docs.python.org/3/libra
 </tr>
 <tr class="row-even"><td><p><strong>M</strong></p></td>
 <td><p>(4, 4) transfer matrix M from the beginning of ring
-to the entrance of the element <a class="footnote-reference brackets" href="#id10" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
+to the entrance of the element <a class="footnote-reference brackets" href="#id11" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>closed_orbit</strong></p></td>
 <td><p>(6,) closed orbit vector</p></td>
@@ -2974,7 +2993,7 @@ to the entrance of the element <a class="footnote-reference brackets" href="#id1
 </tr>
 <tr class="row-even"><td><p><strong>gamma</strong></p></td>
 <td><p>gamma parameter of the transformation to
-eigenmodes <a class="footnote-reference brackets" href="#id11" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a></p></td>
+eigenmodes <a class="footnote-reference brackets" href="#id12" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>W</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(\left[ W_x,W_y \right]\)</span> only if <em>get_w</em>
@@ -3023,17 +3042,18 @@ Field values can be obtained with either
 <p><strong>[5]</strong> D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888
 , 1973</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id10" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">6</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id11" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">6</a><span class="fn-bracket">]</span></span>
 <p>E.Courant, H.Snyder</p>
 </aside>
-<aside class="footnote brackets" id="id11" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">7</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id12" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id7">1</a>,<a role="doc-backlink" href="#id10">2</a>)</span>
 <p>D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
 vol.2 (1999)</p>
 </aside>
-<aside class="footnote brackets" id="id12" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">8</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id13" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">8</a><span class="fn-bracket">]</span></span>
 <p>Brian W. Montague Report LEP Note 165, CERN, 1979</p>
 </aside>
 </aside>
@@ -3080,7 +3100,7 @@ already known ((6,) array)</p></li>
 <li><p><strong>get_chrom</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Compute chromaticities. Needs computing
 the tune at 2 different momentum deviations around the central one.</p></li>
 <li><p><strong>get_w</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Computes chromatic amplitude functions
-(W) <a class="footnote-reference brackets" href="#id14" id="id13" role="doc-noteref"><span class="fn-bracket">[</span>11<span class="fn-bracket">]</span></a>. Needs to compute the optics at 2 different momentum
+(W) <a class="footnote-reference brackets" href="#id15" id="id14" role="doc-noteref"><span class="fn-bracket">[</span>11<span class="fn-bracket">]</span></a>. Needs to compute the optics at 2 different momentum
 deviations around the central one.</p></li>
 <li><p><strong>keep_lattice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Assume no lattice change since the
 previous tracking. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
@@ -3114,7 +3134,7 @@ if refpts is <a class="reference external" href="https://docs.python.org/3/libra
 </ul>
 </dd>
 </dl>
-<p><strong>elemdata</strong> is a record array with fields:</p>
+<p id="linopt6-elemdata"><strong>elemdata</strong> is a record array with fields:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <tbody>
 <tr class="row-odd"><td><p><strong>s_pos</strong></p></td>
@@ -3201,8 +3221,8 @@ Field values can be obtained with either
 <p><strong>[10]</strong> Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
 Published 3 February 2006</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id14" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">11</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id15" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id14">11</a><span class="fn-bracket">]</span></span>
 <p>Brian W. Montague Report LEP Note 165, CERN, 1979</p>
 </aside>
 </aside>
@@ -3287,7 +3307,7 @@ if copy is <a class="reference external" href="https://docs.python.org/3/library
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.ohmi_envelope">
 <span class="sig-name descname"><span class="pre">ohmi_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.ohmi_envelope" title="Link to this definition">#</a></dt>
 <dd><p>Calculates the equilibrium beam envelope</p>
-<p>Computation based on Ohmi’s beam envelope formalism <a class="footnote-reference brackets" href="#id16" id="id15" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
+<p>Computation based on Ohmi’s beam envelope formalism <a class="footnote-reference brackets" href="#id17" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -3357,8 +3377,8 @@ following fields:</p>
 </div>
 <p class="rubric">References</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id16" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">1</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id17" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id16">1</a><span class="fn-bracket">]</span></span>
 <p>K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)</p>
 </aside>
 </aside>
