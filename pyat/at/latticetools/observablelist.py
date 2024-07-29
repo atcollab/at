@@ -275,7 +275,7 @@ class ObservableList(list):
                 data.append(emdata)
             if Need.GEOMETRY in obsneeds:
                 data.append(geodata[obsrefs])
-            return obs.evaluate(*data, initial=initial)
+            obs.evaluate(*data, initial=initial)
 
         @frequency_control
         def ringeval(
@@ -285,13 +285,9 @@ class ObservableList(list):
             df: float | None = None,
         ):
             """Optics computations."""
-            keep_lattice = False
             trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = None
-            twiss_in = kwargs.get("twiss_in", self.twiss_in)
-            o0 = kwargs.get("orbit", self.orbit)
-            o0 = getattr(twiss_in, "closed_orbit", None) if o0 is None else o0
+            o0 = None
             needs = self.needs
-            needs_o0 = (needs & self.needs_orbit) and (o0 is None)
 
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
@@ -300,38 +296,39 @@ class ObservableList(list):
                     r_in = np.zeros(6)
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
                 trajs = r_out[:, 0, :, 0].T
-                keep_lattice = True
 
-            # if needs & self.needs_orbit:
-            if Need.ORBIT in needs or needs_o0:
+            if needs & self.needs_orbit:
                 # Closed orbit computation
+                orbit0 = kwargs.get("orbit", self.orbit)
                 try:
                     o0, orbits = ring.find_orbit(
-                        refpts=self.orbitrefs,
+                        refpts=self.orbitrefs, dp=dp, dct=dct, df=df, orbit=orbit0
+                    )
+                except AtError as err:
+                    orbits = mxdata = rgdata = eldata = emdata = err
+
+            if Need.MATRIX in needs and o0 is not None:
+                # Transfer matrix computation
+                if ring.is_6d:
+                    # noinspection PyUnboundLocalVariable
+                    _, mxdata = ring.find_m66(
+                        refpts=self.matrixrefs,
                         dp=dp,
                         dct=dct,
                         df=df,
                         orbit=o0,
-                        keep_lattice=keep_lattice,
+                        keep_lattice=True,
                     )
-                except AtError as err:
-                    orbits = mxdata = rgdata = eldata = emdata = err
                 else:
-                    keep_lattice = True
-
-            if Need.MATRIX in needs and o0 is not None:
-                # Transfer matrix computation
-                find_m = ring.find_m66 if ring.is_6d else ring.find_m44
-                # noinspection PyUnboundLocalVariable
-                _, mxdata = find_m(
-                    refpts=self.matrixrefs,
-                    dp=dp,
-                    dct=dct,
-                    df=df,
-                    orbit=o0,
-                    keep_lattice=keep_lattice,
-                )
-                keep_lattice = True
+                    # noinspection PyUnboundLocalVariable
+                    _, mxdata = ring.find_m44(
+                        refpts=self.matrixrefs,
+                        dp=dp,
+                        dct=dct,
+                        df=df,
+                        orbit=o0,
+                        keep_lattice=True,
+                    )
 
             if (needs & self.needs_optics) and o0 is not None:
                 # Linear optics computation
@@ -342,23 +339,19 @@ class ObservableList(list):
                         dct=dct,
                         df=df,
                         orbit=o0,
-                        keep_lattice=keep_lattice,
+                        keep_lattice=True,
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
-                        twiss_in=twiss_in,
+                        twiss_in=kwargs.get("twiss_in", self.twiss_in),
                         method=kwargs.get("method", self.method),
                     )
                 except AtError as err:
                     rgdata = eldata = err
-                else:
-                    keep_lattice = True
 
             if Need.EMITTANCE in needs and o0 is not None:
                 # Emittance computation
                 try:
-                    emdata = ring.envelope_parameters(
-                        orbit=o0, keep_lattice=keep_lattice
-                    )
+                    emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
                 except Exception as err:
                     emdata = err
 
@@ -374,7 +367,8 @@ class ObservableList(list):
         trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
             ring, dp=dp, dct=dct, df=df
         )
-        return [obseval(ring, ob) for ob in self]
+        for ob in self:
+            obseval(ring, ob)
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
