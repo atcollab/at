@@ -6,6 +6,8 @@ try:
     from .generic import *
     from .specific import *
     from .standalone import *
+    from .observables import *
+    from .response_matrix import *
 except (ImportError, RuntimeError) as exc:
     print(exc)
     print('Plotting is disabled')
