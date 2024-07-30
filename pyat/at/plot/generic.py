@@ -108,9 +108,7 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
     rg = ring.slice(slices=slices)
 
     # get the data for the plot
-    pout = plot_function(rg, rg.i_range, *args, **kwargs)
-    title = pout[0]
-    plots = pout[1:]
+    title, *plots = plot_function(rg, rg.i_range, *args, **kwargs)
 
     # prepare the axes
     if axes is None:
