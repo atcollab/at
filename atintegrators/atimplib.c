@@ -8,7 +8,6 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
-#define _I _Complex_I
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
