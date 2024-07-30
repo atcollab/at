@@ -387,7 +387,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
     double omr = TWOPI*freq;
-    double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
+    double complex vbeamc = vbeam[0]*cexp(_Complex_I*vbeam[1]);
     double complex vbeamkc = 0.0;
     double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
