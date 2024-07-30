@@ -8,6 +8,7 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
+
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if ((upper-lower)<=1){
@@ -297,7 +298,7 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
 
     int rank=0;
     int size=1;
-    int i,ii,ib,loopstart,loopend;
+    int i,ii,ib;
     double ds,wi,wii;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
@@ -375,7 +376,8 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
 static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
                           double normfact, double *kz,double freq, double qfactor,
                           double rshunt, double *vbeam, double circumference,
-                          double energy, double beta, double *vbeamk, double *vbunch){  
+                          double energy, double beta, double *vbeamk, double *vbunch){ 
+                          
     #ifndef _MSC_VER  
     int i,ib,is;
     double wi;
