@@ -743,10 +743,13 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
+    num_particles = (PyArray_SIZE(rin)/6);
+    if (num_particles != 1) {
+        return PyErr_Format(PyExc_ValueError, "Number of particles should be 1");
+    }
 
     set_energy_particle(NULL, energy, particle, &param);
 
-    num_particles = (PyArray_SIZE(rin)/6);
     drin = (const double *)PyArray_DATA(rin);
     for (int i=0; i<6; i++) orb[i] = drin[i];
 

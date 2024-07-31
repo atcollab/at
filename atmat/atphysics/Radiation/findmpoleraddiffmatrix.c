@@ -14,21 +14,10 @@
 #include "atlalib.c"
 #include "atconstants.h"
 
-/* Physical constants used in the calculations */
-
-#define M0C2      5.1099895e5				/* Electron rest mass [eV]       */
-#define LAMBDABAR 3.86159323e-13			/* Compton wavelength/2pi [m]    */
-#define CER   		2.81794092e-15			/* Classical electron radius [m] */
-#define CU        1.323094366892892			/* 55/(24*sqrt(3)) factor        */
-
-#define ROOT_3 1.7320508075688772
-#define HBAR_C    197.3269804e-18            /* reduced Planck constant x c [GeV.m] */
-const double CCCC = 55.0/24.0/ROOT_3 * HBAR_C / __E0 * __RE;    /* [m^2] */
-
 #define SQR(X) ((X)*(X))
 
-
-
+/* Physical constants used in the calculations */
+const double M0C2 = 1.0e9*__E0;				/* Electron rest mass [eV] */
 
 static void edgefringeB(double* r, double *B, double inv_rho, double edge_angle, double fint, double gap)
 {   double fx, fy, psi;
@@ -283,7 +272,7 @@ static void thinkickB(double* orbit_in, double* A, double* B, double L,
 								orbit_in[2] , orbit_in[3]*p_norm );
 	B3P = B2P*sqrt(B2P);
 
-	BB = CCCC *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
+	BB = DIF_CONST *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
 				(1+orbit_in[0]*irho + (SQR(orbit_in[1])+SQR(orbit_in[3]))*p_norm2/2);
 
 	
