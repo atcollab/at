@@ -1,4 +1,6 @@
-"""Global set of constants"""
+"""Global set of constants."""
+
+from __future__ import annotations
 
 __all__ = ["test_mode", "set_test_mode", "DConstant", "random"]
 
@@ -25,8 +27,8 @@ _test_mode: ContextVar[int] = ContextVar("test_mode", default=0)
 
 
 @contextmanager
-def set_test_mode(mode=1) -> None:
-    """Context manager to set a \"test mode\" integer value
+def set_test_mode(mode: int = 1) -> None:
+    r"""Context manager to set a \"test mode\" integer value.
 
     Args:
         mode:   a non-zero value which will be returned by the :py:func:`test_mode`
@@ -53,7 +55,7 @@ def set_test_mode(mode=1) -> None:
 
 
 def test_mode() -> int:
-    """Return the test mode value
+    """Return the test mode value.
 
     Returns:
         test_mode:  0 outside a :py:func:`set_test_mode` context. Within such context,
@@ -68,42 +70,42 @@ def _newgen(seed=12345):
     return Generator(PCG64(seeds[0])), Generator(PCG64(seeds[_MPI_rk + 1]))
 
 
-class _Dst(object):
-    """Set of constants for AT numerical analysis"""
+class _Dst:
+    """Set of constants for AT numerical analysis."""
 
     # optimized values:
     # see https://github.com/atcollab/at/pull/199#issuecomment-745420443
-    XYStep = 3.0e-8           # Coordinate step for differentiation
-    DPStep = 3.0e-6           # Momentum step for dispersion and chromaticity
-    OrbConvergence = 1.0e-12  # Convergence criterion for orbit
-    OrbMaxIter = 20           # Max. number of iterations for orbit
-    omp_num_threads = int(os.environ.get("OMP_NUM_THREADS", "0"))
-    patpass_poolsize = multiprocessing.cpu_count()
-    patpass_startmethod = None
-    _rank = _MPI_rk           # MPI rank
+    XYStep: float = 3.0e-8  # Coordinate step for differentiation
+    DPStep: float = 3.0e-6  # Momentum step for dispersion and chromaticity
+    OrbConvergence: float = 1.0e-12  # Convergence criterion for orbit
+    OrbMaxIter: int = 20  # Max. number of iterations for orbit
+    omp_num_threads: int = int(os.environ.get("OMP_NUM_THREADS", "0"))
+    patpass_poolsize: int = multiprocessing.cpu_count()
+    patpass_startmethod: str | None = None
+    _rank: int = _MPI_rk  # MPI rank
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value):
         _ = getattr(self, name)  # make sure attribute exists
         object.__setattr__(self, name, value)
 
-    def reset(self, name):
+    def reset(self, name: str) -> None:
         delattr(self, name)
 
     @property
-    def mpi(self):
+    def mpi(self) -> bool:
         return ismpi()
 
     @property
-    def openmp(self):
+    def openmp(self) -> bool:
         return isopenmp()
 
     @property
-    def rank(self):
+    def rank(self) -> int:
         return self._rank
 
 
-class _Random(object):
-    """Random generators for AT"""
+class _Random:
+    """Random generators for AT."""
 
     def __init__(self):
         self.reset()
