@@ -76,38 +76,42 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
         >>> ring.plot_acceptance(planes, npoints, amplitudes)
         >>> plt.show()
     """
-    obspt = kwargs.pop('obspt', None)
-    block = kwargs.pop('block', False)
-    acceptance = kwargs.pop('acceptance', None)
+    obspt = kwargs.pop("obspt", None)
+    block = kwargs.pop("block", False)
+    acceptance = kwargs.pop("acceptance", None)
     if obspt is not None:
-        assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
-    kwargs['refpts'] = obspt
+        assert numpy.isscalar(obspt), "Scalar value needed for obspt"
+    kwargs["refpts"] = obspt
     if acceptance is None:
         boundary, survived, grid = ring.get_acceptance(planes, *args, **kwargs)
     else:
         boundary, survived, grid = acceptance
     plt.figure()
-    plt.plot(*grid, '.', label='Tracked particles')
-    plt.plot(*survived, '.', label='Survived particles')
+    plt.plot(*grid, ".", label="Tracked particles")
+    plt.plot(*survived, ".", label="Survived particles")
     if len(planes) == 1:
         pl0 = axis_(planes[0])
-        plt.plot(boundary, numpy.zeros(2), label='Acceptance')
-        plt.title('1D {0} acceptance'.format(pl0['label']))
-        plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
+        plt.plot(boundary, numpy.zeros(2), label="Acceptance")
+        plt.title("1D {0} acceptance".format(pl0["label"]))
+        plt.xlabel("{0}{1}".format(pl0["label"], pl0["unit"]))
     else:
         pl0, pl1 = axis_(planes)
-        plt.plot(*boundary, label='Acceptance')
-        plt.title('2D {0}-{1} acceptance'.format(pl0['label'], pl1['label']))
-        plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
-        plt.xlabel('{0}{1}'.format(pl1['label'], pl1['unit']))
+        plt.plot(*boundary, label="Acceptance")
+        plt.title("2D {0}-{1} acceptance".format(pl0["label"], pl1["label"]))
+        plt.xlabel("{0}{1}".format(pl0["label"], pl0["unit"]))
+        plt.xlabel("{0}{1}".format(pl1["label"], pl1["unit"]))
     plt.legend()
     plt.show(block=block)
     return boundary, survived, grid
 
 
-def plot_geometry(ring: Lattice,
-                  start_coordinates: tuple[float, float, float] = (0, 0, 0),
-                  centered: bool = False, ax: Axes = None, **kwargs):
+def plot_geometry(
+    ring: Lattice,
+    start_coordinates: tuple[float, float, float] = (0, 0, 0),
+    centered: bool = False,
+    ax: Axes = None,
+    **kwargs,
+):
     """Compute and plot the 2D ring geometry in cartesian coordinates.
 
     Parameters:
@@ -129,20 +133,30 @@ def plot_geometry(ring: Lattice,
     """
     if not ax:
         fig, ax = plt.subplots()
-    geom, radius = ring.get_geometry(start_coordinates=start_coordinates,
-                                     centered=centered)
-    ax.plot(geom['x'], geom['y'], 'o:',
-            linewidth=kwargs.pop('linewidth', 0.5),
-            markersize=kwargs.pop('markersize', 2),
-            **kwargs)
-    ax.set_xlabel('x [m]')
-    ax.set_ylabel('y [m]')
-    ax.set_aspect('equal', 'box')
+    geom, radius = ring.get_geometry(
+        start_coordinates=start_coordinates, centered=centered
+    )
+    ax.plot(
+        geom["x"],
+        geom["y"],
+        "o:",
+        linewidth=kwargs.pop("linewidth", 0.5),
+        markersize=kwargs.pop("markersize", 2),
+        **kwargs,
+    )
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax.set_aspect("equal", "box")
     return geom, radius, ax
 
 
-def plot_sigma(sigma, axis: tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
-               ax: Axes = None, **kwargs):
+def plot_sigma(
+    sigma,
+    axis: tuple[str, str] = ("x", "xp"),
+    scale: float = 1.0,
+    ax: Axes = None,
+    **kwargs,
+):
     r"""Plot the projection of the phase space defined by a
     :math:`\Sigma`-matrix on the selected plane.
 
@@ -160,25 +174,30 @@ def plot_sigma(sigma, axis: tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
     if not ax:
         fig, ax = plt.subplots()
     ax1, ax2 = axis_(axis)
-    axid = axis_(axis, key='index')
+    axid = axis_(axis, key="index")
     sig22 = sigma[numpy.ix_(axid, axid)]
     eps = sqrt(sig22[0, 0] * sig22[1, 1] - sig22[1, 0] * sig22[0, 1])
     sigx = sqrt(sig22[0, 0])
-    tr = numpy.array([[sigx, 0.0],
-                      [sig22[0, 1] / sigx, eps / sigx]])
+    tr = numpy.array([[sigx, 0.0], [sig22[0, 1] / sigx, eps / sigx]])
     loop = 2.0 * numpy.pi * numpy.arange(0.0, 1.0, 0.001)
     normcoord = numpy.vstack((numpy.cos(loop), numpy.sin(loop)))
     coord = tr @ normcoord
-    line = ax.plot(scale*coord[0, :], scale*coord[1, :], **kwargs)
-    ax.set_title('{0}-{1} phase space'.format(ax1['label'], ax2['label']))
-    ax.set_xlabel('{0}{1}'.format(ax1['label'], ax1['unit']))
-    ax.set_ylabel('{0}{1}'.format(ax2['label'], ax2['unit']))
+    line = ax.plot(scale * coord[0, :], scale * coord[1, :], **kwargs)
+    ax.set_title("{0}-{1} phase space".format(ax1["label"], ax2["label"]))
+    ax.set_xlabel("{0}{1}".format(ax1["label"], ax1["unit"]))
+    ax.set_ylabel("{0}{1}".format(ax2["label"], ax2["unit"]))
     return line
 
 
-def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None,
-                               num_points=400, num_levels=41,
-                               plot_separatrix=True, **kwargs):
+def plot_RF_bucket_hamiltonian(
+    ring,
+    ct_range=None,
+    dp_range=None,
+    num_points=400,
+    num_levels=41,
+    plot_separatrix=True,
+    **kwargs,
+):
     r"""Plot the resulting longitudinal Hamiltonian of a ring (defining the RF
     bucket). The Hamiltonian is calculated by summing all the cavities in the
     ring. Harmonic cavities are supported by the function.
@@ -213,19 +232,22 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None,
 
     eta = numpy.zeros(len(alpha))
     eta[0] = alpha[0] - 1 / ring.gamma**2
-    eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + \
-        alpha[1] - alpha[0] * eta[0]
-    eta[2] = -ring.beta**2 * (5 * ring.beta**2 - 1) / (2 * ring.gamma**2) + \
-        alpha[2] - 2 * alpha[0] * alpha[1] + alpha[1] / \
-        ring.gamma**2 + alpha[0]**2 * eta[0] - \
-        (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
+    eta[1] = 3 * ring.beta**2 / 2 / ring.gamma**2 + alpha[1] - alpha[0] * eta[0]
+    eta[2] = (
+        -ring.beta**2 * (5 * ring.beta**2 - 1) / (2 * ring.gamma**2)
+        + alpha[2]
+        - 2 * alpha[0] * alpha[1]
+        + alpha[1] / ring.gamma**2
+        + alpha[0] ** 2 * eta[0]
+        - (3 * ring.beta**2 * alpha[0]) / (2 * ring.gamma**2)
+    )
 
     # (ct, dp) grid calculation (defined around the main RF bucket)
     if ct_range is None:
         ct = numpy.linspace(
             -0.55 * ring.circumference / ring.harmonic_number,
             0.55 * ring.circumference / ring.harmonic_number,
-            num=num_points
+            num=num_points,
         )
     else:
         ct = numpy.linspace(ct_range[0], ct_range[1], num=num_points)
@@ -233,9 +255,10 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None,
         U0 = ring.energy_loss
         overvoltage = ring.rf_voltage / U0
         rfa = numpy.sqrt(
-            2 * U0 /
-            (numpy.pi * alpha[0] * ring.harmonic_number * ring.energy) *
-            (numpy.sqrt(overvoltage**2 - 1) - numpy.arccos(1 / overvoltage))
+            2
+            * U0
+            / (numpy.pi * alpha[0] * ring.harmonic_number * ring.energy)
+            * (numpy.sqrt(overvoltage**2 - 1) - numpy.arccos(1 / overvoltage))
         )
         dp = numpy.linspace(-2 * rfa, 2 * rfa, num=num_points)
     else:
@@ -257,55 +280,76 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None,
 
         phi_s = TimeLag * 2 * numpy.pi * rfcav.Frequency / ring.beta / clight
         phi = (
-            (numpy.pi - phi_s) +
-            CT * 2 * numpy.pi * rfcav.Frequency / ring.beta / clight
-        )
+            numpy.pi - phi_s
+        ) + CT * 2 * numpy.pi * rfcav.Frequency / ring.beta / clight
 
         # Second term of the Hamiltonian
-        U = Voltage / (2 * numpy.pi * HarmNumber) * \
-            (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) *
-             numpy.sin(phi_s))
+        U = (
+            Voltage
+            / (2 * numpy.pi * HarmNumber)
+            * (numpy.cos(phi) - numpy.cos(phi_s) + (phi - phi_s) * numpy.sin(phi_s))
+        )
         # Add to total Hamiltonian
         hamiltonian += U
 
     fig, ax = plt.subplots(1)
-    lim_range = numpy.max(
-                         (numpy.abs(hamiltonian).min(),
-                          numpy.abs(hamiltonian).max())
-                         )
+    lim_range = numpy.max((numpy.abs(hamiltonian).min(), numpy.abs(hamiltonian).max()))
     levels = numpy.linspace(-lim_range, lim_range, num_levels, endpoint=True)
-    co = ax.contourf(CT, DP, hamiltonian, levels, cmap='coolwarm', alpha=0.7)
+    co = ax.contourf(CT, DP, hamiltonian, levels, cmap="coolwarm", alpha=0.7)
     # additional contour for visibility
-    ax.contour(CT, DP, hamiltonian, levels, cmap='coolwarm')
+    ax.contour(CT, DP, hamiltonian, levels, cmap="coolwarm")
     if plot_separatrix:
         # separatrix contour
-        ax.contour(CT, DP, hamiltonian, [0], colors='black')
-        plt.plot([], [], color='black', label='Separatrix')
+        ax.contour(CT, DP, hamiltonian, [0], colors="black")
+        plt.plot([], [], color="black", label="Separatrix")
         ax.legend()
     cb = fig.colorbar(co)
-    cb.set_label(r'$\mathcal{H}(ct,\delta)$ [a.u.]', fontsize=18)
+    cb.set_label(r"$\mathcal{H}(ct,\delta)$ [a.u.]", fontsize=18)
 
-    ax.set_xlabel(r'ct [m]')
-    ax.set_ylabel(r'$\delta$')
+    ax.set_xlabel(r"ct [m]")
+    ax.set_ylabel(r"$\delta$")
 
-    phi_s = ring.get_rf_timelag() * 2 * numpy.pi * \
-        ring.get_revolution_frequency() * ring.harmonic_number / \
-        (ring.beta * clight)
+    phi_s = (
+        ring.get_rf_timelag()
+        * 2
+        * numpy.pi
+        * ring.get_revolution_frequency()
+        * ring.harmonic_number
+        / (ring.beta * clight)
+    )
 
     def ct_to_phi(ct):
-        return numpy.pi - phi_s + ct / \
-               (2 * numpy.pi * ring.get_revolution_frequency() *
-                ring.harmonic_number / clight)
+        return (
+            numpy.pi
+            - phi_s
+            + ct
+            / (
+                2
+                * numpy.pi
+                * ring.get_revolution_frequency()
+                * ring.harmonic_number
+                / clight
+            )
+        )
 
     def phi_to_ct(phase):
-        return numpy.pi - phi_s - phase * \
-               (2 * numpy.pi * ring.get_revolution_frequency() *
-                ring.harmonic_number / clight)
+        return (
+            numpy.pi
+            - phi_s
+            - phase
+            * (
+                2
+                * numpy.pi
+                * ring.get_revolution_frequency()
+                * ring.harmonic_number
+                / clight
+            )
+        )
 
     ax2 = ax.secondary_xaxis("top", functions=(phi_to_ct, ct_to_phi))
-    ax2.set_xlabel(r'$\phi$ [rad]')
+    ax2.set_xlabel(r"$\phi$ [rad]")
 
-    plt.title(r'$\phi_{RF}$ '+rf'= $\pi -$ {phi_s:.2f}', fontsize=18)
+    plt.title(r"$\phi_{RF}$ " + rf"= $\pi -$ {phi_s:.2f}", fontsize=18)
 
     return CT, DP, hamiltonian
 
