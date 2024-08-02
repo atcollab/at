@@ -118,7 +118,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
+        /*Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();*/
+        Energy=Param->energy;
         /*optional fields*/
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();

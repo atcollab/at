@@ -211,7 +211,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
             Elem->KickAngle, Elem->Scaling,
-            Elem->Energy, Param->thread_rng, num_particles);
+            Param->energy, Param->thread_rng, num_particles);
     return Elem;
 }
 
