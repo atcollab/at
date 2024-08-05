@@ -6,6 +6,7 @@ try:
     from .generic import *
     from .specific import *
     from .standalone import *
+    from .resonances import *
 except (ImportError, RuntimeError) as exc:
     print(exc)
     print('Plotting is disabled')
