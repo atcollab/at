@@ -2,21 +2,27 @@
 Radiation and equilibrium emittances
 """
 from __future__ import annotations
-from math import sin, cos, tan, sqrt, sinh, cosh, pi
-import numpy
-from typing import Union
-from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import Lattice, check_radiation, Refpts, All
-from at.lattice import Dipole, Wiggler, DConstant, test_mode
-from at.lattice import Quadrupole, Multipole, QuantumDiffusion
-from at.lattice import frequency_control, set_value_refpts
-from at.tracking import internal_lpass, diffusion_matrix
-from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
-from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
-from at.physics import ELossMethod
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
            'gen_quantdiff_elem', 'tapering']
+
+from math import sin, cos, tan, sqrt, sinh, cosh, pi
+
+import numpy
+import numpy as np
+from scipy.linalg import inv, det, solve_sylvester
+
+from ..lattice import Dipole, Wiggler, DConstant, test_mode
+from ..lattice import Lattice, Element, check_radiation, Refpts, All
+from ..lattice import Quadrupole, Multipole, QuantumDiffusion
+from ..lattice import frequency_control, set_value_refpts
+from . import ELossMethod
+from . import find_mpole_raddiff_matrix, get_tunes_damp
+from . import find_orbit6, find_m66, find_elem_m66, Orbit
+from ..tracking import internal_lpass, diffusion_matrix
+
+_new_methods = {"BndMPoleSymplectic4RadPass", "StrMPoleSymplectic4RadPass",
+                "ExactMultipoleRadPass"}
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -29,6 +35,8 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('orbit6', numpy.float64, (6,)),
                   ('emitXY', numpy.float64, (2,)),
                   ('emitXYZ', numpy.float64, (3,))]
+
+_b0 = np.zeros((6, 6), dtype=np.float64)
 
 
 def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
@@ -46,6 +54,16 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
             cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
+    def elem_diffusion(elem: Element, elemorb):
+        passmethod = elem.PassMethod
+        if passmethod.endswith("RadPass"):
+            if not test_mode() and (passmethod in _new_methods):
+                return diffusion_matrix(elem, elemorb, energy=energy)
+            else:
+                return find_mpole_raddiff_matrix(elem, elemorb, energy)
+        else:
+            return _b0
+
     energy = ring.energy
 
     if orbit is None:
@@ -55,21 +73,9 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
     orbs = numpy.squeeze(
         internal_lpass(ring, orbit.copy(order='K'), refpts=All,
                        keep_lattice=keep_lattice), axis=(1, 3)).T
-    b0 = numpy.zeros((6, 6))
-    if test_mode():
-        print("Using find_mpole_raddiff_matrix")
-        bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
-              if elem.PassMethod.endswith("RadPass")
-              else b0
-              for elem, elemorb in zip(ring, orbs)
-        ]
-    else:
-        print("Using diffusion_matrix")
-        bb = [diffusion_matrix(elem, elemorb, energy=energy)
-              if elem.PassMethod.endswith("RadPass")
-              else b0
-              for elem, elemorb in zip(ring, orbs)
-    ]
+
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
+
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
@@ -235,7 +241,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         i5 (float): :math:`I_5 \quad [m^{-1}]`
     """
 
-    def element_radiation(elem: Union[Dipole, Quadrupole], vini, vend):
+    def element_radiation(elem: Dipole | Quadrupole, vini, vend):
         """Analytically compute the radiation integrals in dipoles"""
         beta0 = vini.beta[0]
         alpha0 = vini.alpha[0]
@@ -363,8 +369,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         _, _, twiss = ring.get_optics(refpts=range(len(ring) + 1), dp=dp,
                                       get_chrom=True, **kwargs)
     elif len(twiss) != len(ring) + 1:
-        raise ValueError('length of Twiss data should be {0}'
-                         .format(len(ring) + 1))
+        raise ValueError(f'length of Twiss data should be {len(ring) + 1}')
     for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
         if isinstance(el, (Dipole, Quadrupole)):
             integrals += element_radiation(el, vini, vend)
@@ -446,7 +451,7 @@ def tapering(ring: Lattice, multipoles: bool = True,
     multin = ring.get_bool_index(Multipole) & ~dipin
     multout = numpy.roll(multin, 1)
 
-    for i in range(niter):
+    for _i in range(niter):
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step, method=method)
         dpps = (o6[dipin, 4] + o6[dipout, 4]) / 2.0

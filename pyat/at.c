@@ -704,16 +704,15 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 
 static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = {"element", "rin",
-                             "energy", "particle", NULL};
+    static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
     PyObject *element;
     PyObject *energy;
     PyObject *particle;
     PyArrayObject *rin;
-    PyObject *PyPassMethod;
     npy_uint32 num_particles;
     track_function integrator;
     PyObject *pyintegrator;
+    PyObject *PyPassMethod;
     const double *drin;
     double orb[6];
     struct parameters param;
@@ -765,6 +764,7 @@ static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
     if (!PyPassMethod) return NULL;
     LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
     Py_DECREF(PyPassMethod);
+
     if (!LibraryListPtr) return NULL;
     integrator = LibraryListPtr->FunctionHandle;
     pyintegrator = LibraryListPtr->PyFunctionHandle;
