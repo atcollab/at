@@ -1,16 +1,16 @@
-"""AT plotting functions"""
-#from __future__ import annotations
+"""AT plotting functions relatedto resonances"""
 import matplotlib.pyplot as plt
 import numpy
 from fractions import Fraction
 
+from ..lattice.utils import AtError, AtWarning
 
 __all__ = ['farey_sequence','plot_tune2D_resonances']
 
 
 def farey_sequence(nthorder, verbose=False):
     """
-    returns the Farey sequency, and the resonance sequence of nth order.
+    Returns the Farey sequency, and the resonance sequence of nth order.
 
     Arguments:
         nthorder: natural number bigger than 0
@@ -55,12 +55,12 @@ def farey_sequence(nthorder, verbose=False):
 def plot_tune2D_resonances(
     orders=[1, 2, 3],
     period=1,
-    window=numpy.array([0, 1, 0, 1]),
+    window=[0, 1, 0, 1],
     verbose=False,
     **kwargs,
 ):
     """
-    This function plot the tune 2D resonances for a given order, period and window.
+    This function plots the tune 2D resonances for a given order, period and window.
 
     # the resonance equation
     # int_the_res[0]*nux + int_the_res[1]*nuy = int_res
@@ -70,43 +70,51 @@ def plot_tune2D_resonances(
 
     # verboseprint to check flag only once
     verboseprint = print if verbose else lambda *a, **k: None
+
+    # print debugging output, equivalent to extra verbose
+    debugverbose = kwargs.pop("debugverbose", False)
+    debugprint = print if debugverbose  else lambda *a, **k: None
+
+    # block the standard output in terminal when plotting
     block = kwargs.pop("block", False)
 
+    # orders could be a single int
+    if isinstance(orders,int):
+        orders = [orders]
     listresonancestoplot = list(numpy.array(orders) - 1)
+    # check that all are larger than 0
+    if sum(n < 0 for n in listresonancestoplot):
+        AtError("Negative resonances are not allowed")
+
     theperiod = period
     verboseprint(f"The period is {theperiod}")
     verboseprint(f"The window is {window}")
 
-    if sum(n < 0 for n in listresonancestoplot):
-        print("Error, list includes negative resonances")
-
     # check the window
-    if window[0] == window[1]:
-        print("horizontal coordinates must be different")
-        exit()
-    if window[2] == window[3]:
-        print("vertical coordinates must be different")
-        exit()
-    if window[1] < window[0]:
-        print("Swapping horizontal coordinates")
-        window[0], window[1] = window[1], window[0]
-    if window[3] < window[2]:
-        print("Swapping vertical coordinates")
-        window[2], window[3] = window[3], window[2]
+    windowa = numpy.array(window)
+    if windowa[0] == windowa[1]:
+        AtError("horizontal coordinates must be different")
+    if windowa[2] == windowa[3]:
+        AtError("vertical coordinates must be different")
+    if windowa[1] < windowa[0]:
+        AtWarning("Swapping horizontal coordinates")
+        windowa[0], windowa[1] = windowa[1], windowa[0]
+    if windowa[3] < windowa[2]:
+        AtWarning("Swapping vertical coordinates")
+        windowa[2], windowa[3] = windowa[3], windowa[2]
     # get xlimits and ylimits
-    the_axeslims = window.reshape((2, 2))
+    the_axeslims = windowa.reshape((2, 2))
 
     # horizontal and vertical borders
     borders = numpy.eye(2)
 
     maxreson2calc = numpy.max(listresonancestoplot) + 1
-    theorder = maxreson2calc  # ??? unnecessary
-    verboseprint(f"Farey max order={theorder}")
+    verboseprint(f"Farey max order={maxreson2calc}")
 
-    # get the Farey collection
+    # get the Farey collection, i.e., a list of farey sequences, one per order
     fareycollectionfloat = []
     fareycollectionfrac = []
-    for nthorder in range(1, theorder + 1):
+    for nthorder in range(1,maxreson2calc + 1):
         farey, fracfarey = farey_sequence(nthorder)
         fareycollectionfloat.append(farey.copy())
         fareycollectionfrac.append(fracfarey.copy())
@@ -422,7 +430,5 @@ def plot_tune2D_resonances(
     plt.ylabel(r"$\nu_y$")
     plt.show(block=block)
 
+    return fig
 
-Lattice.plot_acceptance = plot_acceptance
-Lattice.plot_geometry = plot_geometry
-Lattice.plot_RF_bucket_hamiltonian = plot_RF_bucket_hamiltonian
