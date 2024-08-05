@@ -21,6 +21,12 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 %   Returns in addition the 6x6 transfer matrices and the closed orbit
 %   from FINDM66
 
+newmethods = {'BndMPoleSYmplectc4RadPass', ...
+              'StrMPoleSYmplectc4RadPass', ...
+              'ExactMultipoleRadPass'};
+
+zr=zeros(6,6);
+
 NumElements = length(ring);
 if nargin<3, refpts=1; end
 
@@ -28,18 +34,13 @@ if nargin<3, refpts=1; end
 mt=squeeze(num2cell(ms,[1 2]));
 orb=num2cell(orbit,1)';
 
-zr={zeros(6,6)};
-B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
-
-% calculate Radiation-Diffusion matrix B for elements with radiation
-B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-    ring(radindex),orb(radindex),'UniformOutput',false);
-
+% calculate Radiation-Diffusion matrix B for elements
+B=cellfun(@elem_diffusion,ring,orb(1:end-1),'UniformOutput',false);
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
 % Batbeg{i} is the cumulative diffusion matrix from
 % 0 to the beginning of the i-th element
-Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
+Batbeg=[{zr};cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
@@ -79,11 +80,27 @@ if nout>=1, varargout{1}=mring; end
         btx=BCUM;
     end
 
+    function bdiff=elem_diffusion(elem,orbit)
+        passm = elem.PassMethod;
+        if ~endsWith(passm, 'RadPass')
+            bdiff = zr;
+        elseif ~getoption('test_mode') && any(strcmp(elem.PassMethod, newmethods))
+            bdiff = diffmatrix(elem,orbit);
+        else
+            bdiff = findmpoleraddiffmatrix(elem,orbit);
+        end
+        
+    end
+
     function [r,tilt,sigma]=propag(m,cumb)
         r=m*R*m'+cumb;
         [u,dr] = eig(r([1 3],[1 3]));
         tilt = asin((u(2,1)-u(1,2))/2);
         sigma=sqrt([dr(1,1);dr(2,2)]);
+    end
+
+    function difm=diffmatrix(elem,orbit)
+        difm=diffusion_matrix(elem,orbit,energy,particle,cell_length,0.0);
     end
 
 end
