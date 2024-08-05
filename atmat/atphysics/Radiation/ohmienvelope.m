@@ -21,34 +21,26 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 %   Returns in addition the 6x6 transfer matrices and the closed orbit
 %   from FINDM66
 
+newmethods = {'BndMPoleSYmplectc4RadPass', ...
+              'StrMPoleSYmplectc4RadPass', ...
+              'ExactMultipoleRadPass'};
+
+zr=zeros(6,6);
+
 NumElements = length(ring);
 if nargin<3, refpts=1; end
-radindex = atgetcells(ring,'PassMethod','.*RadPass');
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
 orb=num2cell(orbit,1)';
 
-zr={zeros(6,6)};
-B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
-
-% calculate Radiation-Diffusion matrix B for elements with radiation
-if getoption('test_mode')
-    fprintf('diffusion_matrix\n');
-    [energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
-    B(radindex)=cellfun(@diffmatrix,...
-        ring(radindex),orb(radindex),'UniformOutput',false);
-else
-    fprintf('findmpoleraddiffmatrix\n');
-    B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-        ring(radindex),orb(radindex),'UniformOutput',false);
-end
-
+% calculate Radiation-Diffusion matrix B for elements
+B=cellfun(@elem_diffusion,ring,orb(1:end-1),'UniformOutput',false);
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
 % Batbeg{i} is the cumulative diffusion matrix from
 % 0 to the beginning of the i-th element
-Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
+Batbeg=[{zr};cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
@@ -86,6 +78,18 @@ if nout>=1, varargout{1}=mring; end
         % Cumulative diffusion matrix of the entire ring
         BCUM = m*BCUM*m' + b;
         btx=BCUM;
+    end
+
+    function bdiff=elem_diffusion(elem,orbit)
+        passm = elem.PassMethod;
+        if ~endsWith(passm, 'RadPass')
+            bdiff = zr;
+        elseif ~getoption('test_mode') && any(strcmp(elem.PassMethod, newmethods))
+            bdiff = diffmatrix(elem,orbit);
+        else
+            bdiff = findmpoleraddiffmatrix(elem,orbit);
+        end
+        
     end
 
     function [r,tilt,sigma]=propag(m,cumb)
