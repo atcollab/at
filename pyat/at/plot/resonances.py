@@ -1,82 +1,87 @@
 """AT plotting functions related to resonances."""
 
 from fractions import Fraction
+
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy
+from matplotlib.figure import Figure
 
 from ..lattice.utils import AtError, AtWarning
 
-__all__ = ["farey_sequence", "plot_tune2D_resonances"]
+__all__ = ["farey_sequence", "plot_tune2d_resonances"]
 
 
-def farey_sequence(nthorder: int, verbose: bool = False):
+def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     """
-    Returns the Farey sequence, and the resonance sequence of nth order.
+    Return the Farey sequence, and the resonance sequence of nth order.
 
-    Arguments:
+    Parameters:
         nthorder: natural number bigger than 0
+
     Options:
         verbose: prints extra info. Default: False
+
     Returns:
         fareyseqfloat: list of elements with the Farey sequence in Float format.
             See Eqs.(1,2,3) of [1].
         fareyseqfrac: list of elements with the Farey sequence in Fraction format.
             See Eqs.(1,2,3) of [1].
 
-    [1] R.Tomas. 'From Farey sequences to resonance diagrams. Phys.Rev.Acc.Beams 17, 014001 (2014)'
+    [1] R.Tomas. 'From Farey sequences to resonance diagrams.
+            Phys.Rev.Acc.Beams 17, 014001 (2014)'
     """
     verboseprint = print if verbose else lambda *a, **k: None
     verboseprint(f"nthorder={nthorder}")
 
     farey = []
     fracfarey = []
-    af = 0
-    bf = 1
-    cf = 1
-    df = nthorder
+    afarey = 0
+    bfarey = 1
+    cfarey = 1
+    dfarey = nthorder
     farey.append(0)
-    farey.append(1 / df)
+    farey.append(1 / dfarey)
     fracfarey.append(Fraction(0))
-    fracfarey.append(Fraction(1, df))
+    fracfarey.append(Fraction(1, dfarey))
     idx = 0
     while (farey[-1] < 1) and (idx < 100):
         idx += 1
-        caux = numpy.floor((nthorder + bf) / df) * cf - af
-        daux = numpy.floor((nthorder + bf) / df) * df - bf
-        af = cf
-        bf = df
-        cf = int(caux)
-        df = int(daux)
-        farey.append(cf / df)
-        fracfarey.append(Fraction(cf, df))
+        caux = numpy.floor((nthorder + bfarey) / dfarey) * cfarey - afarey
+        daux = numpy.floor((nthorder + bfarey) / dfarey) * dfarey - bfarey
+        afarey = cfarey
+        bfarey = dfarey
+        cfarey = int(caux)
+        dfarey = int(daux)
+        farey.append(cfarey / dfarey)
+        fracfarey.append(Fraction(cfarey, dfarey))
     verboseprint(f"farey_float{nthorder}= {farey}")
     verboseprint(f"farey_frac{nthorder} = {fracfarey}")
     return farey, fracfarey
 
 
-def plot_tune2D_resonances(
+def plot_tune2d_resonances(
     orders: any = [1, 2, 3],
     period: int = 1,
     window: list = [0, 1, 0, 1],
     verbose: bool = False,
     **kwargs: dict[any],
-):
+) -> Figure:
     r"""
-    This function plots the tune 2D resonances for a given order, period and window.
+    Plot the tune 2D resonances for a given order, period and window.
 
     Options:
-    orders: integer or list of integers larger than zero. Default: [1,2,3]
-    period: integer larger than zero; periodicity of the machine. Default: 1
-    window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the tune minimum
-      and maximum window. Default:[0,1,0,1]
-    verbose: print verbose output
-    includelegend: print legend on the plot. Default: False
-    onlyns: if 'n' plots only normal resonances.
-            if 's' plots only skew resonances.
-            Otherwise ignored.
-    custom_linesty: use it to pass a dictionary with custom line styles. See notes
-      below.
+        orders: integer or list of integers larger than zero. Default: [1,2,3]
+        period: integer larger than zero; periodicity of the machine. Default: 1
+        window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the tune minimum
+            and maximum window. Default:[0,1,0,1]
+        verbose: print verbose output
+        includelegend: print legend on the plot. Default: False
+        onlyns: if 'n' plots only normal resonances.
+                if 's' plots only skew resonances.
+                 Otherwise ignored.
+        custom_linesty: use it to pass a dictionary with custom line styles. See notes
+            below.
 
     NOTES:
     The resonance equation is:
@@ -158,9 +163,6 @@ def plot_tune2D_resonances(
     # get xlimits and ylimits
     the_axeslims = windowa.reshape((2, 2))
 
-    # horizontal and vertical borders
-    borders = numpy.eye(2)
-
     maxreson2calc = numpy.max(listresonancestoplot) + 1
     verboseprint(f"Farey max order={maxreson2calc}")
 
@@ -189,7 +191,6 @@ def plot_tune2D_resonances(
     maxy = numpy.ceil(the_axeslims[1, 1])
     maxy = maxy + theperiod - numpy.mod(maxy, theperiod)
     minmaxydist = maxy - miny
-    minmaxdist = max([minmaxxdist, minmaxydist])
 
     # dictionary with line properties
     widthmod = 5  # ??? maybe a variable
