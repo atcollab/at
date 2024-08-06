@@ -10,6 +10,8 @@ from matplotlib.figure import Figure
 
 __all__ = ["farey_sequence", "plot_tune2d_resonances"]
 
+# 2024jul31 oblanco at ALBA CELLS
+
 
 def farey_sequence(nthorder: int, **kwargs: dict[str, any]) -> tuple[list, list]:
     """
@@ -64,14 +66,16 @@ def plot_tune2d_resonances(
     Parameters:
         kwargs:
             * orders: integer or list of integers larger than zero. Default: [1,2,3]
-            * period: integer larger than zero; periodicity of the machine. Default: 1
+            * period: integer larger than zero; periodicity of the machine. Default: 1.
             * window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the
-                tune minimum and maximum window. Default:[0,1,0,1]
+                tune minimum and maximum window. Default:[0,1,0,1].
             * verbose: print verbose output.
             * includelegend: print legend on the plot. Default: False.
+            * block: passed to plot.show(). Default: False.
+            * debugverbose: extra output to check line construction. Default: False.
             * onlyns: if 'n' plots only normal resonances.
-                    if 's' plots only skew resonances.
-                    Otherwise ignored.
+                      if 's' plots only skew resonances.
+                      Otherwise ignored.
             * custom_linesty: use it to pass a dictionary with custom line styles.
                 See notes below.
 
@@ -112,8 +116,6 @@ def plot_tune2d_resonances(
     Raises:
         ValueError: if given resonances are lower than 0, or window is zero.
     """
-    # 2024jul31 oblanco at ALBA CELLS
-
     # verboseprint to check flag only once
     verbose = kwargs.pop("verbose", False)
     verboseprint = print if verbose else lambda *a, **k: None
@@ -178,11 +180,6 @@ def plot_tune2d_resonances(
         fareycollectionfrac.append(fracfarey.copy())
     verboseprint(f"the Farey collection is {fareycollectionfloat}")
 
-    # plot configuration
-    fig = plt.figure()
-    # window min/max,horizontal and vertical
-    plt.xlim(the_axeslims[0, :])
-    plt.ylim(the_axeslims[1, :])
     # min/max to plot lines with slopes
     minx = numpy.floor(the_axeslims[0, 0])
     minx = minx - theperiod - numpy.mod(minx, theperiod)
@@ -438,6 +435,11 @@ def plot_tune2d_resonances(
     # we only need to points to define a line
     nauxpoints = 2
 
+    # plot configuration
+    fig = plt.figure()
+    # window min/max,horizontal and vertical
+    plt.xlim(the_axeslims[0, :])
+    plt.ylim(the_axeslims[1, :])
     # start to check the Farey collection, starting with 0
     collectaux1 = [0]
     for nthorder in range(maxreson2calc):
