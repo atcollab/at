@@ -1,5 +1,6 @@
 """AT plotting functions related to resonances."""
 
+import warnings
 from fractions import Fraction
 
 import matplotlib.lines as mlines
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy
 from matplotlib.figure import Figure
 
-from ..lattice.utils import AtError, AtWarning
+from ..lattice.utils import AtError
 
 __all__ = ["farey_sequence", "plot_tune2d_resonances"]
 
@@ -34,16 +35,12 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     verboseprint = print if verbose else lambda *a, **k: None
     verboseprint(f"nthorder={nthorder}")
 
-    farey = []
-    fracfarey = []
     afarey = 0
     bfarey = 1
     cfarey = 1
     dfarey = nthorder
-    farey.append(0)
-    farey.append(1 / dfarey)
-    fracfarey.append(Fraction(0))
-    fracfarey.append(Fraction(1, dfarey))
+    farey = [0, 1 / dfarey]
+    fracfarey = [Fraction(0), Fraction(1, dfarey)]
     idx = 0
     while (farey[-1] < 1) and (idx < 100):
         idx += 1
@@ -61,11 +58,7 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
 
 
 def plot_tune2d_resonances(
-    orders: any = [1, 2, 3],
-    period: int = 1,
-    window: list = [0, 1, 0, 1],
-    verbose: bool = False,
-    **kwargs: dict[any],
+    **kwargs: dict[int, any],
 ) -> Figure:
     r"""
     Plot the tune 2D resonances for a given order, period and window.
@@ -79,7 +72,7 @@ def plot_tune2d_resonances(
         includelegend: print legend on the plot. Default: False
         onlyns: if 'n' plots only normal resonances.
                 if 's' plots only skew resonances.
-                 Otherwise ignored.
+                Otherwise ignored.
         custom_linesty: use it to pass a dictionary with custom line styles. See notes
             below.
 
@@ -108,14 +101,16 @@ def plot_tune2d_resonances(
 
     Custom Style:
     You could pass a custom line style in a dictionary as
-      custum_linesty = mydictionary
+      custom_linesty = mydictionary
     where mydictionary should contain two entries, dict(0: prop_normal, 1: prop_skew)
       where prop_normal and prop_skew are also dictionaries starting at zero,
-      i.e. the_nth_order-1. Each entry contains the line properties of the nth-1 resonance to plot.
+      i.e. the_nth_order-1. Each entry contains the line properties of the nth-1
+      resonance to plot.
     """
     # 2024jul31 oblanco at ALBA CELLS
 
     # verboseprint to check flag only once
+    verbose = kwargs.pop("verbose", False)
     verboseprint = print if verbose else lambda *a, **k: None
 
     # print debugging output, equivalent to extra verbose
@@ -137,29 +132,32 @@ def plot_tune2d_resonances(
         normalskew = [1]
 
     # orders could be a single int
-    if isinstance(orders, int):
-        orders = [orders]
-    listresonancestoplot = list(numpy.array(orders) - 1)
+    theorders = kwargs.pop("orders", [1, 2, 3])
+    if isinstance(theorders, int):
+        theorders = [theorders]
+    listresonancestoplot = list(numpy.array(theorders) - 1)
     # check that all are larger than 0
     if sum(n < 0 for n in listresonancestoplot):
-        AtError("Negative resonances are not allowed")
+        raise AtError("Negative resonances are not allowed")
 
-    theperiod = period
+    theperiod = kwargs.pop("period", 1)
     verboseprint(f"The period is {theperiod}")
+
+    window = kwargs.pop("window", [0, 1, 0, 1])
     verboseprint(f"The window is {window}")
 
     # check the window
     windowa = numpy.array(window)
     if windowa[0] == windowa[1]:
-        AtError("horizontal coordinates must be different")
+        raise AtError("horizontal coordinates must be different")
     if windowa[2] == windowa[3]:
-        AtError("vertical coordinates must be different")
+        raise AtError("vertical coordinates must be different")
     if windowa[1] < windowa[0]:
-        AtWarning("Swapping horizontal coordinates")
         windowa[0], windowa[1] = windowa[1], windowa[0]
+        warnings.warn("Swapping horizontal coordinates", stacklevel=1)
     if windowa[3] < windowa[2]:
-        AtWarning("Swapping vertical coordinates")
         windowa[2], windowa[3] = windowa[3], windowa[2]
+        warnings.warn("Swapping vertical coordinates", stacklevel=1)
     # get xlimits and ylimits
     the_axeslims = windowa.reshape((2, 2))
 
@@ -213,186 +211,186 @@ def plot_tune2d_resonances(
         15: (0.6, 0.6, 0.6),
     }
     mypalettestyle = {0: "-", 1: "--"}
-    prop1n = dict(
-        color=mypalettecolor[0],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(4, widthmod),
-        label="1n",
-    )
-    prop2n = dict(
-        color=mypalettecolor[1],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(3, widthmod),
-        label="2n",
-    )
-    prop3n = dict(
-        color=mypalettecolor[2],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(2, widthmod),
-        label="3n",
-    )
-    prop4n = dict(
-        color=mypalettecolor[3],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(2, widthmod),
-        label="4n",
-    )
-    prop5n = dict(
-        color=mypalettecolor[4],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="5n",
-    )
-    prop6n = dict(
-        color=mypalettecolor[5],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="6n",
-    )
-    prop7n = dict(
-        color=mypalettecolor[6],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="7n",
-    )
-    prop8n = dict(
-        color=mypalettecolor[7],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="8n",
-    )
-    prop9n = dict(
-        color=mypalettecolor[8],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="9n",
-    )
-    prop10n = dict(
-        color=mypalettecolor[9],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="10n",
-    )
-    prop11n = dict(
-        color=mypalettecolor[10],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="11n",
-    )
-    prop12n = dict(
-        color=mypalettecolor[11],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="12n",
-    )
-    prop13n = dict(
-        color=mypalettecolor[12],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="13n",
-    )
-    prop14n = dict(
-        color=mypalettecolor[13],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="14n",
-    )
-    prop15n = dict(
-        color=mypalettecolor[14],
-        linestyle=mypalettestyle[0],
-        linewidth=numpy.mod(1, widthmod),
-        label="15n",
-    )
-    prop1s = dict(
-        color=mypalettecolor[0],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(4, widthmod),
-        label="1s",
-    )
-    prop2s = dict(
-        color=mypalettecolor[1],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(3, widthmod),
-        label="2s",
-    )
-    prop3s = dict(
-        color=mypalettecolor[2],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(2, widthmod),
-        label="3s",
-    )
-    prop4s = dict(
-        color=mypalettecolor[3],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(2, widthmod),
-        label="4s",
-    )
-    prop5s = dict(
-        color=mypalettecolor[4],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="5s",
-    )
-    prop6s = dict(
-        color=mypalettecolor[5],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="6s",
-    )
-    prop7s = dict(
-        color=mypalettecolor[6],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="7s",
-    )
-    prop8s = dict(
-        color=mypalettecolor[7],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="8s",
-    )
-    prop9s = dict(
-        color=mypalettecolor[8],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="9s",
-    )
-    prop10s = dict(
-        color=mypalettecolor[9],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="10s",
-    )
-    prop11s = dict(
-        color=mypalettecolor[10],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="11s",
-    )
-    prop12s = dict(
-        color=mypalettecolor[11],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="12s",
-    )
-    prop13s = dict(
-        color=mypalettecolor[12],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="13s",
-    )
-    prop14s = dict(
-        color=mypalettecolor[13],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="14s",
-    )
-    prop15s = dict(
-        color=mypalettecolor[14],
-        linestyle=mypalettestyle[1],
-        linewidth=numpy.mod(1, widthmod),
-        label="15s",
-    )
+    prop1n = {
+        "color": mypalettecolor[0],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(4, widthmod),
+        "label": "1n",
+    }
+    prop2n = {
+        "color": mypalettecolor[1],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(3, widthmod),
+        "label": "2n",
+    }
+    prop3n = {
+        "color": mypalettecolor[2],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(2, widthmod),
+        "label": "3n",
+    }
+    prop4n = {
+        "color": mypalettecolor[3],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(2, widthmod),
+        "label": "4n",
+    }
+    prop5n = {
+        "color": mypalettecolor[4],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "5n",
+    }
+    prop6n = {
+        "color": mypalettecolor[5],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "6n",
+    }
+    prop7n = {
+        "color": mypalettecolor[6],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "7n",
+    }
+    prop8n = {
+        "color": mypalettecolor[7],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "8n",
+    }
+    prop9n = {
+        "color": mypalettecolor[8],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "9n",
+    }
+    prop10n = {
+        "color": mypalettecolor[9],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "10n",
+    }
+    prop11n = {
+        "color": mypalettecolor[10],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "11n",
+    }
+    prop12n = {
+        "color": mypalettecolor[11],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "12n",
+    }
+    prop13n = {
+        "color": mypalettecolor[12],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "13n",
+    }
+    prop14n = {
+        "color": mypalettecolor[13],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "14n",
+    }
+    prop15n = {
+        "color": mypalettecolor[14],
+        "linestyle": mypalettestyle[0],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "15n",
+    }
+    prop1s = {
+        "color": mypalettecolor[0],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(4, widthmod),
+        "label": "1s",
+    }
+    prop2s = {
+        "color": mypalettecolor[1],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(3, widthmod),
+        "label": "2s",
+    }
+    prop3s = {
+        "color": mypalettecolor[2],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(2, widthmod),
+        "label": "3s",
+    }
+    prop4s = {
+        "color": mypalettecolor[3],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(2, widthmod),
+        "label": "4s",
+    }
+    prop5s = {
+        "color": mypalettecolor[4],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "5s",
+    }
+    prop6s = {
+        "color": mypalettecolor[5],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "6s",
+    }
+    prop7s = {
+        "color": mypalettecolor[6],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "7s",
+    }
+    prop8s = {
+        "color": mypalettecolor[7],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "8s",
+    }
+    prop9s = {
+        "color": mypalettecolor[8],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "9s",
+    }
+    prop10s = {
+        "color": mypalettecolor[9],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "10s",
+    }
+    prop11s = {
+        "color": mypalettecolor[10],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "11s",
+    }
+    prop12s = {
+        "color": mypalettecolor[11],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "12s",
+    }
+    prop13s = {
+        "color": mypalettecolor[12],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "13s",
+    }
+    prop14s = {
+        "color": mypalettecolor[13],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "14s",
+    }
+    prop15s = {
+        "color": mypalettecolor[14],
+        "linestyle": mypalettestyle[1],
+        "linewidth": numpy.mod(1, widthmod),
+        "label": "15s",
+    }
     # assemble default dictionary by normal or skew
     propn = {
         0: prop1n.copy(),
@@ -437,7 +435,7 @@ def plot_tune2d_resonances(
 
     # start to check the Farey collection, starting with 0
     collectaux1 = [0]
-    for nthorder in range(0, maxreson2calc):
+    for nthorder in range(maxreson2calc):
         debugprint(f"nthorder={nthorder}")
         collectaux2 = fareycollectionfloat[nthorder]
         thesteps = list(set(collectaux2) - set(collectaux1))
@@ -445,9 +443,7 @@ def plot_tune2d_resonances(
         chosenstep = min(thesteps)
         debugprint(f"chosenstep={chosenstep}")
         collectaux1 = collectaux2
-        if not (nthorder in listresonancestoplot):
-            continue
-        else:
+        if nthorder in listresonancestoplot:
             # increase step by the period in straight resonances
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
@@ -467,18 +463,20 @@ def plot_tune2d_resonances(
                 debugprint(f"chosen slope={chosenslope}")
                 debugprint(f"chosen diagstep={diagstep}")
                 # get the vertical limits with diagonals
-                a1 = (
+                a1aux = (
                     -numpy.ceil(2 * (minmaxxdist + minmaxydist) / (-chosenslope)) + miny
                 )
-                a2 = numpy.ceil(2 * (minmaxxdist + minmaxydist) / (-chosenslope)) + maxy
+                a2aux = (
+                    numpy.ceil(2 * (minmaxxdist + minmaxydist) / (-chosenslope)) + maxy
+                )
                 debugprint(f"minx={minx},maxx={maxx},minmaxxdist={minmaxxdist}")
                 debugprint(f"miny={miny},maxy={maxy},minmaxydist={minmaxydist}")
-                debugprint(f"a1={a1},a2={a2}")
+                debugprint(f"a1aux={a1aux},a2aux={a2aux}")
                 xaux = numpy.linspace(minx, maxx, nauxpoints)
                 debugprint(f"xaux={xaux}")
                 nsaux = numpy.mod(beq, 2)
                 if nsaux in normalskew:
-                    for istep in numpy.arange(0, a2 - a1 + 0.0001, diagstep):
+                    for istep in numpy.arange(0, a2aux - a1aux + 0.0001, diagstep):
                         y1line = chosenslope * (xaux - minx) + theperiod * istep + miny
                         y2line = -chosenslope * (xaux - minx) - theperiod * istep + maxy
                         debugprint(f"y1line={y1line},y2line={y2line}")
