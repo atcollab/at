@@ -11,15 +11,13 @@ from matplotlib.figure import Figure
 __all__ = ["farey_sequence", "plot_tune2d_resonances"]
 
 
-def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
+def farey_sequence(nthorder: int, **kwargs: dict[str, any]) -> tuple[list, list]:
     """
     Return the Farey sequence, and the resonance sequence of nth order.
 
     Parameters:
-        nthorder: natural number bigger than 0
-
-    Options:
-        verbose: prints extra info. Default: False
+        nthorder: natural number bigger than 0.
+        kwargs: verbose. prints extra info. Default: False.
 
     Returns:
         fareyseqfloat: list of elements with the Farey sequence in Float format.
@@ -30,6 +28,8 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     [1] R.Tomas. 'From Farey sequences to resonance diagrams.
             Phys.Rev.Acc.Beams 17, 014001 (2014)'
     """
+    # verboseprint to check flag only once
+    verbose = kwargs.pop("verbose", False)
     verboseprint = print if verbose else lambda *a, **k: None
     verboseprint(f"nthorder={nthorder}")
 
@@ -56,27 +56,30 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
 
 
 def plot_tune2d_resonances(
-    **kwargs: dict[int, any],
+    **kwargs: dict[str, any],
 ) -> Figure:
     r"""
     Plot the tune 2D resonances for a given order, period and window.
 
-    Options:
-        orders: integer or list of integers larger than zero. Default: [1,2,3]
-        period: integer larger than zero; periodicity of the machine. Default: 1
-        window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the tune minimum
-            and maximum window. Default:[0,1,0,1]
-        verbose: print verbose output
-        includelegend: print legend on the plot. Default: False
-        onlyns: if 'n' plots only normal resonances.
-                if 's' plots only skew resonances.
-                Otherwise ignored.
-        custom_linesty: use it to pass a dictionary with custom line styles. See notes
-            below.
+    Parameters:
+        kwargs:
+            * orders: integer or list of integers larger than zero. Default: [1,2,3]
+            * period: integer larger than zero; periodicity of the machine. Default: 1
+            * window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the
+                tune minimum and maximum window. Default:[0,1,0,1]
+            * verbose: print verbose output.
+            * includelegend: print legend on the plot. Default: False.
+            * onlyns: if 'n' plots only normal resonances.
+                    if 's' plots only skew resonances.
+                    Otherwise ignored.
+            * custom_linesty: use it to pass a dictionary with custom line styles.
+                See notes below.
+
+    Returns:
+        Figure object
 
     NOTES:
-    The resonance equation is:
-      :math:`a\nu_x + b\nu_y = c`
+    The resonance equation is :math:`a\nu_x + b\nu_y = c`
     with :math:`a,b` and :math:`c` integers. The order :math:`N=abs(a)+abs(b)`.
 
     Normal and Skew convention:
@@ -99,14 +102,15 @@ def plot_tune2d_resonances(
 
     Custom Style:
     You could pass a custom line style in a dictionary as
-      custom_linesty = mydictionary
-    where mydictionary should contain two entries, dict(0: prop_normal, 1: prop_skew)
-      where prop_normal and prop_skew are also dictionaries starting at zero,
-      i.e. the_nth_order-1. Each entry contains the line properties of the nth-1
-      resonance to plot.
+    custom_linesty = mydictionary,
+    where mydictionary should contain two entries
+    dict(0: prop_normal, 1: prop_skew).
+    prop_normal and prop_skew are also dictionaries starting at zero,
+    i.e. the_nth_order-1. Each entry contains the line properties of the nth-1
+    resonance to plot.
 
     Raises:
-        ValueError: if given numrical values are not valid.
+        ValueError: if given resonances are lower than 0, or window is zero.
     """
     # 2024jul31 oblanco at ALBA CELLS
 
