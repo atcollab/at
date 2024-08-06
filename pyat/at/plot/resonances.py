@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import numpy
 from matplotlib.figure import Figure
 
-from ..lattice.utils import AtError
-
 __all__ = ["farey_sequence", "plot_tune2d_resonances"]
 
 
@@ -106,6 +104,9 @@ def plot_tune2d_resonances(
       where prop_normal and prop_skew are also dictionaries starting at zero,
       i.e. the_nth_order-1. Each entry contains the line properties of the nth-1
       resonance to plot.
+
+    Raises:
+        ValueError: if given numrical values are not valid.
     """
     # 2024jul31 oblanco at ALBA CELLS
 
@@ -138,7 +139,7 @@ def plot_tune2d_resonances(
     listresonancestoplot = list(numpy.array(theorders) - 1)
     # check that all are larger than 0
     if sum(n < 0 for n in listresonancestoplot):
-        raise AtError("Negative resonances are not allowed")
+        raise ValueError("Negative resonances are not allowed")
 
     theperiod = kwargs.pop("period", 1)
     verboseprint(f"The period is {theperiod}")
@@ -149,9 +150,9 @@ def plot_tune2d_resonances(
     # check the window
     windowa = numpy.array(window)
     if windowa[0] == windowa[1]:
-        raise AtError("horizontal coordinates must be different")
+        raise ValueError("horizontal coordinates must be different")
     if windowa[2] == windowa[3]:
-        raise AtError("vertical coordinates must be different")
+        raise ValueError("vertical coordinates must be different")
     if windowa[1] < windowa[0]:
         windowa[0], windowa[1] = windowa[1], windowa[0]
         warnings.warn("Swapping horizontal coordinates", stacklevel=1)
