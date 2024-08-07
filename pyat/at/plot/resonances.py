@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy
 from matplotlib.figure import Figure
 
-__all__ = ["farey_sequence", "plot_tune2d_resonances"]
+__all__ = ["farey_sequence", "plot_tune_diagram"]
 
 # 2024jul31 oblanco at ALBA CELLS
 
@@ -297,7 +297,7 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     return farey, fracfarey
 
 
-def plot_tune2d_resonances(
+def plot_tune_diagram(
     orders: int or list = [1, 2, 3],
     period: int = 1,
     window: list = [0, 1, 0, 1],
@@ -308,7 +308,7 @@ def plot_tune2d_resonances(
     **kwargs: dict[str, any],
 ) -> Figure:
     r"""
-    Plot the tune 2D resonances for a given order, period and window.
+    Plot the tune diagram and resonance lines for a given order, period and window.
 
     Parameters:
         orders: integer or list of integers larger than zero. Default: [1,2,3]
@@ -458,34 +458,31 @@ def plot_tune2d_resonances(
             if nsaux in normalskew:
                 for iaux in numpy.arange(miny, maxy + 0.000001, period * chosenstep):
                     plt.axhline(y=iaux, **lprop[nsaux][nthorder])
-            for iaux in range(1, nthorder):
-                debugprint(f"enter plotting diagonals {iaux}")
-                aeq = iaux
+            # aeq*nux + beq*nuy = nthorder
+            for aeq in range(1, nthorder):
+                debugprint(f"enter plotting diagonals {aeq}")
                 beq = nthorder - aeq
-                chosenslope = 1.0*aeq / beq
-                diagstep = 1.0 / beq
+                chosenslope = 1.0 * aeq / beq
+                ystep = 1.0 / beq
                 debugprint(f"chosen slope={chosenslope}")
-                debugprint(f"chosen diagstep={diagstep}")
-                # get the vertical limits with diagonals
-                a1aux = (
-                    -numpy.ceil(minmaxxdist*chosenslope + minmaxydist*diagstep)  + miny
-                )
-                a2aux = (
-                    numpy.ceil(minmaxxdist*chosenslope + minmaxydist*diagstep) + maxy
-                )
+                debugprint(f"chosen ystep={ystep}")
+                # calculate the variation on the vertical direction from window size
+                yyaux = numpy.ceil(minmaxxdist * chosenslope + minmaxydist * ystep)
+                y1aux = -yyaux + miny
+                y2aux = yyaux + maxy
                 # adapt to period
-                a1aux = period * numpy.floor(a1aux/period)
-                a2aux = period * numpy.ceil(a2aux/period)
+                y1aux = period * numpy.floor(y1aux / period)
+                y2aux = period * numpy.ceil(y2aux / period)
                 debugprint(f"minx={minx},maxx={maxx},minmaxxdist={minmaxxdist}")
                 debugprint(f"miny={miny},maxy={maxy},minmaxydist={minmaxydist}")
-                debugprint(f"a1aux={a1aux},a2aux={a2aux}")
+                debugprint(f"y1aux={y1aux},y2aux={y2aux}")
                 xaux = numpy.linspace(minx, maxx, nauxpoints)
                 debugprint(f"xaux={xaux}")
                 nsaux = numpy.mod(beq, 2)
                 if nsaux in normalskew:
-                    for istep in numpy.arange(0, a2aux - a1aux + 0.0001, diagstep):
-                        y1line = -chosenslope * (xaux - minx) + a2aux - period * istep
-                        y2line =  chosenslope * (xaux - minx) + a1aux + period * istep
+                    for istep in numpy.arange(0, y2aux - y1aux + 0.0001, ystep):
+                        y1line = -chosenslope * (xaux - minx) + y2aux - period * istep
+                        y2line = chosenslope * (xaux - minx) + y1aux + period * istep
                         debugprint(f"y1line={y1line},y2line={y2line}")
                         plt.plot(xaux, y1line, **lprop[nsaux][nthorder])
                         plt.plot(xaux, y2line, **lprop[nsaux][nthorder])
