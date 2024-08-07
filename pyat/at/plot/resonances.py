@@ -13,7 +13,7 @@ __all__ = ["farey_sequence", "plot_tune_diagram"]
 # 2024jul31 oblanco at ALBA CELLS
 
 # create default dictionary with line properties
-widthmod = 5  # should it be a variable??? it limits the linewidth
+WIDTHMOD = 5  # should it be a variable??? it limits the linewidth
 mypalettecolor = {
     1: "k",
     2: "b",
@@ -35,181 +35,181 @@ mypalettestyle = {"normal": "-", "skew": "--"}
 prop1n = {
     "color": mypalettecolor[1],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(4, widthmod),
+    "linewidth": numpy.mod(4, WIDTHMOD),
     "label": "1n",
 }
 prop2n = {
     "color": mypalettecolor[2],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(3, widthmod),
+    "linewidth": numpy.mod(3, WIDTHMOD),
     "label": "2n",
 }
 prop3n = {
     "color": mypalettecolor[3],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(2, widthmod),
+    "linewidth": numpy.mod(2, WIDTHMOD),
     "label": "3n",
 }
 prop4n = {
     "color": mypalettecolor[4],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(2, widthmod),
+    "linewidth": numpy.mod(2, WIDTHMOD),
     "label": "4n",
 }
 prop5n = {
     "color": mypalettecolor[5],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "5n",
 }
 prop6n = {
     "color": mypalettecolor[6],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "6n",
 }
 prop7n = {
     "color": mypalettecolor[7],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "7n",
 }
 prop8n = {
     "color": mypalettecolor[8],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "8n",
 }
 prop9n = {
     "color": mypalettecolor[9],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "9n",
 }
 prop10n = {
     "color": mypalettecolor[10],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "10n",
 }
 prop11n = {
     "color": mypalettecolor[11],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "11n",
 }
 prop12n = {
     "color": mypalettecolor[12],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "12n",
 }
 prop13n = {
     "color": mypalettecolor[13],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "13n",
 }
 prop14n = {
     "color": mypalettecolor[14],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "14n",
 }
 prop15n = {
     "color": mypalettecolor[15],
     "linestyle": mypalettestyle["normal"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "15n",
 }
 prop1s = {
     "color": mypalettecolor[1],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(4, widthmod),
+    "linewidth": numpy.mod(4, WIDTHMOD),
     "label": "1s",
 }
 prop2s = {
     "color": mypalettecolor[2],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(3, widthmod),
+    "linewidth": numpy.mod(3, WIDTHMOD),
     "label": "2s",
 }
 prop3s = {
     "color": mypalettecolor[3],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(2, widthmod),
+    "linewidth": numpy.mod(2, WIDTHMOD),
     "label": "3s",
 }
 prop4s = {
     "color": mypalettecolor[4],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(2, widthmod),
+    "linewidth": numpy.mod(2, WIDTHMOD),
     "label": "4s",
 }
 prop5s = {
     "color": mypalettecolor[5],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "5s",
 }
 prop6s = {
     "color": mypalettecolor[6],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "6s",
 }
 prop7s = {
     "color": mypalettecolor[7],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "7s",
 }
 prop8s = {
     "color": mypalettecolor[8],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "8s",
 }
 prop9s = {
     "color": mypalettecolor[9],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "9s",
 }
 prop10s = {
     "color": mypalettecolor[10],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "10s",
 }
 prop11s = {
     "color": mypalettecolor[11],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "11s",
 }
 prop12s = {
     "color": mypalettecolor[12],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "12s",
 }
 prop13s = {
     "color": mypalettecolor[13],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "13s",
 }
 prop14s = {
     "color": mypalettecolor[14],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "14s",
 }
 prop15s = {
     "color": mypalettecolor[15],
     "linestyle": mypalettestyle["skew"],
-    "linewidth": numpy.mod(1, widthmod),
+    "linewidth": numpy.mod(1, WIDTHMOD),
     "label": "15s",
 }
 # assemble default dictionary by normal or skew
@@ -265,6 +265,9 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
         fareyseqfrac: list of elements with the Farey sequence in Fraction format.
             See Eqs.(1,2,3) of [1].
 
+    Raises:
+        ValueError: if given resonances are lower than 0, or window is zero.
+
     [1] R.Tomas. 'From Farey sequences to resonance diagrams.
             Phys.Rev.Acc.Beams 17, 014001 (2014)'
     """
@@ -298,9 +301,9 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
 
 
 def plot_tune_diagram(
-    orders: int or list = [1, 2, 3],
+    orders: int or tuple = (1, 2, 3),
     period: int = 1,
-    window: list = [0, 1, 0, 1],
+    window: list = (0, 1, 0, 1),
     verbose: bool = False,
     legend: bool = False,
     block: bool = False,
@@ -311,14 +314,14 @@ def plot_tune_diagram(
     Plot the tune diagram and resonance lines for a given order, period and window.
 
     Parameters:
-        orders: integer or list of integers larger than zero. Default: [1,2,3]
-        period: integer larger than zero; periodicity of the machine. Default: 1.
+        orders: integer or list of integers larger than zero. Default [1,2,3]
+        period: integer larger than zero; periodicity of the machine. Default 1.
         window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the
-                tune minimum and maximum window. Default:[0,1,0,1].
+                tune minimum and maximum window. Default [0,1,0,1].
         verbose: print verbose output.
-        legend: print legend on the plot. Default: False.
+        legend: print legend on the plot. Default False.
         block: passed to plot.show(). Default: False.
-        debug: extra output to check line construction. Default: False.
+        debug: extra output to check line construction. Default False.
         kwargs:
             * onlyns: if 'n' plots only normal resonances.
                       if 's' plots only skew resonances.
