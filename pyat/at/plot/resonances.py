@@ -248,7 +248,7 @@ props = {
     15: prop15s,
 }
 # assemble final dict
-defaultlprop = {0: propn, 1: props}
+defaultlprop = {"normal": propn, "skew": props}
 
 
 def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
@@ -323,8 +323,8 @@ def plot_tune_diagram(
         block: passed to plot.show(). Default: False.
         debug: extra output to check line construction. Default: False.
         kwargs:
-            * onlyns: if 'n' plots only normal resonances.
-                      if 's' plots only skew resonances.
+            * only: if 'normal' plots only normal resonances.
+                      if 'skew' plots only skew resonances.
                       Otherwise ignored.
             * linestyle: use it to pass a dictionary with custom line styles.
                 See notes below.
@@ -373,10 +373,10 @@ def plot_tune_diagram(
 
     # only plot normal or skew
     normalskew = [0, 1]
-    onlyns = kwargs.pop("onlyns", False)
-    if onlyns == "n":
+    onlyns = kwargs.pop("only", False)
+    if onlyns == "normal":
         normalskew = [0]
-    if onlyns == "s":
+    if onlyns == "skew":
         normalskew = [1]
 
     # orders could be a single int
@@ -442,6 +442,7 @@ def plot_tune_diagram(
     plt.ylim(the_axeslims[1, :])
     # start to check the Farey collection, starting with 0
     collectaux1 = [0]
+    idxtotype = {0: "normal", 1: "skew"}
     for nthorder in range(1, maxreson2calc + 1):
         debugprint(f"nthorder={nthorder}")
         collectaux2 = fareycollectionfloat[nthorder]
@@ -455,12 +456,12 @@ def plot_tune_diagram(
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
                 for iaux in numpy.arange(minx, maxx + 0.000001, period * chosenstep):
-                    plt.axvline(x=iaux, **lprop[0][nthorder])
+                    plt.axvline(x=iaux, **lprop["normal"][nthorder])
             debugprint("enter plotting vertical straight lines")
             nsaux = numpy.mod(nthorder, 2)
             if nsaux in normalskew:
                 for iaux in numpy.arange(miny, maxy + 0.000001, period * chosenstep):
-                    plt.axhline(y=iaux, **lprop[nsaux][nthorder])
+                    plt.axhline(y=iaux, **lprop[idxtotype[nsaux]][nthorder])
             # aeq*nux + beq*nuy = nthorder
             for aeq in range(1, nthorder):
                 debugprint(f"enter plotting diagonals {aeq}")
@@ -487,8 +488,8 @@ def plot_tune_diagram(
                         y1line = -chosenslope * (xaux - minx) + y2aux - period * istep
                         y2line = chosenslope * (xaux - minx) + y1aux + period * istep
                         debugprint(f"y1line={y1line},y2line={y2line}")
-                        plt.plot(xaux, y1line, **lprop[nsaux][nthorder])
-                        plt.plot(xaux, y2line, **lprop[nsaux][nthorder])
+                        plt.plot(xaux, y1line, **lprop[idxtotype[nsaux]][nthorder])
+                        plt.plot(xaux, y2line, **lprop[idxtotype[nsaux]][nthorder])
     # include labels
     plt.xlabel(r"$\nu_x$")
     plt.ylabel(r"$\nu_y$")
