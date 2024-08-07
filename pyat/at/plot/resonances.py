@@ -314,14 +314,14 @@ def plot_tune_diagram(
     Plot the tune diagram and resonance lines for a given order, period and window.
 
     Parameters:
-        orders: integer or list of integers larger than zero. Default [1,2,3]
-        period: integer larger than zero; periodicity of the machine. Default 1.
-        window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the
-                tune minimum and maximum window. Default [0,1,0,1].
+        orders: integer or tuple of integers larger than zero. Default ([1,2,3)
+        period: periodicity of the machine, integer larger than zero. Default: 1.
+        window: (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
+            tune minimum and maximum window. Default: (0,1,0,1).
         verbose: print verbose output.
-        legend: print legend on the plot. Default False.
+        legend: print legend on the plot. Default: False.
         block: passed to plot.show(). Default: False.
-        debug: extra output to check line construction. Default False.
+        debug: extra output to check line construction. Default: False.
         kwargs:
             * onlyns: if 'n' plots only normal resonances.
                       if 's' plots only skew resonances.
