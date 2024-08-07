@@ -324,8 +324,8 @@ def plot_tune_diagram(
         debug: extra output to check line construction. Default: False.
         kwargs:
             * only: if 'normal' plots only normal resonances.
-                      if 'skew' plots only skew resonances.
-                      Otherwise ignored.
+                    if 'skew' plots only skew resonances.
+                    Otherwise ignored.
             * linestyle: use it to pass a dictionary with custom line styles.
                 See notes below.
 
