@@ -358,9 +358,9 @@ def plot_tune_diagram(
     You could pass a custom line style in a dictionary as
     linestyle = mydictionary,
     where mydictionary should contain two entries
-    dict(0: normal, 1: skew).
-    normal and skew are also dictionaries, each entry contains as key the resonance
-    order and as value the line properties to use in the plot.
+    dict("normal": normald, "skew": skewd).
+    normald and skewd are also dictionaries, each entry contains as key
+    the resonance order and as value the line properties to use in the plot.
 
     Raises:
         ValueError: if given resonances are lower than 0, or window is zero.
