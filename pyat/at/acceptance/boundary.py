@@ -4,7 +4,7 @@ calculate the loss boundary for different
 grid definitions
 """
 
-from at.lattice import Lattice, AtError, AtWarning
+from at.lattice import Lattice, AtError, AtWarning, Refpts
 from typing import Optional, Sequence
 from enum import Enum
 import numpy
@@ -285,34 +285,58 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     """
     Search for the boundary by tracking a grid
     """
-    offset, newring = set_ring_orbit(ring, dp, obspt,
-                                     offset)
     config = grid_configuration(planes, npoints, amplitudes,
                                 grid_mode, bounds=bounds,
                                 shift_zero=shift_zero)
 
     if verbose:
         print('\nRunning grid boundary search:')
-        if obspt is None:
-            print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
+        if len(obspt) == 1:
+            if obspt[0] is None:
+                print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
+            else:
+                print('Element {0}, obspt={1}'.format(ring[obspt].FamName,
+                                                      obspt))
         else:
-            print('Element {0}, obspt={1}'.format(ring[obspt].FamName,
-                                                  obspt))
+            print('Elements {0}, obspt={1}'.format([e.FamName for e in ring[obspt]],
+                                                   obspt))
         print('The grid mode is {0}'.format(config.mode))
         print('The planes are {0}'.format(config.planes))
         print('Number of steps are {0}'.format(config.shape))
         print('The maximum amplitudes are {0}'.format(config.amplitudes))
         print('The maximum boundaries are {0}'.format(config.bounds))
-        print('The initial offset is {0} with dp={1}'.format(offset, dp))
+
 
     t0 = time.time()
-    parts, grid = get_parts(config, offset)
-    mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
-    survived = grid.grid[:, mask]
-    boundary = get_grid_boundary(mask, grid, config)
+    allparts = []
+    grids = []
+    survived = []
+    boundary = []
+    offsets = []
+
+    for r, o in zip(obspt, offset):
+        offset, newring = set_ring_orbit(ring, dp, r, o)
+        parts, grid = get_parts(config, offset)
+        o = 0 if o is None else o
+        newring[:len(ring)-o].track(parts, use_mp=use_mp, in_place=True, **kwargs)
+        allparts. append(parts)
+        grids.append(grid)
+        offsets.append(offset)
+    if verbose:
+        print('The initial offset is {0} with dp={1}'.format(offsets, dp))
+    allparts = numpy.concatenate(allparts, axis=1)
+    mask = get_survived(allparts, ring, nturns, use_mp, **kwargs)
+    mask = numpy.split(mask, len(grids))
+    for g, m in zip(grids, mask):
+        survived.append(g.grid[:, m])
+        boundary.append(get_grid_boundary(m, g, config))
+    grids = [g.grid for g in grids]
     if verbose:
         print('Calculation took {0}'.format(time.time()-t0))
-    return boundary, survived, grid.grid
+    if len(obspt) == 1:
+        return boundary[0], survived[0], grids[0]
+    else:
+        return boundary, survived, grids
 
 
 def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
@@ -408,7 +432,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 def boundary_search(ring: Lattice, planes, npoints, amplitudes,
                     nturns: Optional[int] = 1024,
-                    obspt: Optional[int] = None, dp: Optional[float] = None,
+                    obspt: Optional[Refpts] = None, dp: Optional[float] = None,
                     offset: Sequence[float] = None, bounds=None,
                     grid_mode: Optional[GridMode] = GridMode.RADIAL,
                     use_mp: Optional[bool] = False,
@@ -418,18 +442,44 @@ def boundary_search(ring: Lattice, planes, npoints, amplitudes,
     """
     Computes the loss boundary at a single point in the machine
     """
+    if obspt is not None:
+        rp = ring.uint32_refpts(obspt)
+    else:
+        rp = numpy.atleast_1d(obspt)
+    if offset is not None:
+        try:
+            offset = numpy.broadcast_to(offset, (len(rp), 6))
+        except ValueError:
+            msg = ('offset and refpts have incoherent '
+                   'shapes: {0}, {1}'.format(numpy.shape(offset),
+                                             numpy.shape(obspt)))
+            raise AtError(msg)
+    else:
+        offset=[None for _ in rp]
+
     divider = kwargs.pop('divider', 2)
     if grid_mode is GridMode.RECURSIVE:
-        result = recursive_boundary_search(ring, planes, npoints, amplitudes,
-                                           nturns=nturns, obspt=obspt, dp=dp,
-                                           offset=offset, bounds=bounds,
-                                           use_mp=use_mp, verbose=verbose,
-                                           divider=divider,
-                                           shift_zero=shift_zero,
-                                           **kwargs)
+        boundary = []
+        survived = []
+        grid = []
+        for r, o in zip(rp, offset):
+            b, s, g = recursive_boundary_search(ring, planes, npoints, amplitudes,
+                                                nturns=nturns, obspt=r, dp=dp,
+                                                offset=o, bounds=bounds,
+                                                use_mp=use_mp, verbose=verbose,
+                                                divider=divider,
+                                                shift_zero=shift_zero,
+                                                **kwargs)
+            boundary.append(b)
+            survived.append(s)
+            grid.append(g)
+        if len(rp) == 1:
+            result = (boundary[0], survived[0], grid[0])
+        else:
+            result = (boundary, survived, grid)
     else:
         result = grid_boundary_search(ring, planes, npoints, amplitudes,
-                                      nturns=nturns, obspt=obspt, dp=dp,
+                                      nturns=nturns, obspt=rp, dp=dp,
                                       offset=offset, bounds=bounds,
                                       grid_mode=grid_mode, use_mp=use_mp,
                                       verbose=verbose, shift_zero=shift_zero,

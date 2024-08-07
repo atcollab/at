@@ -131,37 +131,13 @@ def get_acceptance(
             print('The estimated load for recursive mode is {0}'.format(rpp))
             print('{0} is recommended'.format(GridMode.RECURSIVE))
 
-    boundary = []
-    survived = []
-    grid = []
-    if refpts is not None:
-        rp = ring.uint32_refpts(refpts)
-    else:
-        rp = numpy.atleast_1d(refpts)
-    if offset is not None:
-        try:
-            offset = numpy.broadcast_to(offset, (len(rp), 6))
-        except ValueError:
-            msg = ('offset and refpts have incoherent '
-                   'shapes: {0}, {1}'.format(numpy.shape(offset),
-                                             numpy.shape(refpts)))
-            raise AtError(msg)
-    else:
-        offset=[None for _ in rp]
-    for r, o in zip(rp, offset):
-        b, s, g = boundary_search(ring, planes, npoints, amplitudes,
-                                  nturns=nturns, obspt=r, dp=dp,
-                                  offset=o, bounds=bounds,
-                                  grid_mode=grid_mode, use_mp=use_mp,
-                                  verbose=verbose, divider=divider,
-                                  shift_zero=shift_zero, **kwargs)
-        boundary.append(b)
-        survived.append(s)
-        grid.append(g)
-    if len(rp) == 1:
-        return boundary[0], survived[0], grid[0]
-    else:
-        return boundary, survived, grid
+    b, s, g = boundary_search(ring, planes, npoints, amplitudes,
+                              nturns=nturns, obspt=refpts, dp=dp,
+                              offset=offset, bounds=bounds,
+                              grid_mode=grid_mode, use_mp=use_mp,
+                              verbose=verbose, divider=divider,
+                              shift_zero=shift_zero, **kwargs)
+    return b, s, g
 
 
 def get_1d_acceptance(
