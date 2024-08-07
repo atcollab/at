@@ -266,7 +266,7 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
             See Eqs.(1,2,3) of [1].
 
     Raises:
-        ValueError: if given resonances are lower than 0, or window is zero.
+        ValueError: if given order is lower than 0, or window is zero.
 
     [1] R.Tomas. 'From Farey sequences to resonance diagrams.
             Phys.Rev.Acc.Beams 17, 014001 (2014)'
@@ -314,7 +314,7 @@ def plot_tune_diagram(
     Plot the tune diagram and resonance lines for a given order, period and window.
 
     Parameters:
-        orders: integer or tuple of integers larger than zero. Default ([1,2,3)
+        orders: integer or tuple of integers larger than zero. Default (1,2,3).
         period: periodicity of the machine, integer larger than zero. Default: 1.
         window: (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
             tune minimum and maximum window. Default: (0,1,0,1).
@@ -330,7 +330,7 @@ def plot_tune_diagram(
                 See notes below.
 
     Returns:
-        Figure object
+        Figure object from matplotlib.figure from matplotlib.figure
 
     NOTES:
     The resonance equation is :math:`a\nu_x + b\nu_y = c`
@@ -359,8 +359,8 @@ def plot_tune_diagram(
     linestyle = mydictionary,
     where mydictionary should contain two entries
     dict(0: normal, 1: skew).
-    normal and skew are also dictionaries, each entry contains the
-    line properties of the nth resonance to plot.
+    normal and skew are also dictionaries, each entry contains as key the resonance
+    order and as value the line properties to use in the plot.
 
     Raises:
         ValueError: if given resonances are lower than 0, or window is zero.
