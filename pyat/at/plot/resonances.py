@@ -31,184 +31,184 @@ mypalettecolor = {
     14: (0.4, 0.4, 0.4),
     15: (0.5, 0.5, 0.5),
 }
-mypalettestyle = {'normal': "-", 'skew': "--"}
+mypalettestyle = {"normal": "-", "skew": "--"}
 prop1n = {
     "color": mypalettecolor[1],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(4, widthmod),
     "label": "1n",
 }
 prop2n = {
     "color": mypalettecolor[2],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(3, widthmod),
     "label": "2n",
 }
 prop3n = {
     "color": mypalettecolor[3],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(2, widthmod),
     "label": "3n",
 }
 prop4n = {
     "color": mypalettecolor[4],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(2, widthmod),
     "label": "4n",
 }
 prop5n = {
     "color": mypalettecolor[5],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "5n",
 }
 prop6n = {
     "color": mypalettecolor[6],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "6n",
 }
 prop7n = {
     "color": mypalettecolor[7],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "7n",
 }
 prop8n = {
     "color": mypalettecolor[8],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "8n",
 }
 prop9n = {
     "color": mypalettecolor[9],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "9n",
 }
 prop10n = {
     "color": mypalettecolor[10],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "10n",
 }
 prop11n = {
     "color": mypalettecolor[11],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "11n",
 }
 prop12n = {
     "color": mypalettecolor[12],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "12n",
 }
 prop13n = {
     "color": mypalettecolor[13],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "13n",
 }
 prop14n = {
     "color": mypalettecolor[14],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "14n",
 }
 prop15n = {
     "color": mypalettecolor[15],
-    "linestyle": mypalettestyle['normal'],
+    "linestyle": mypalettestyle["normal"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "15n",
 }
 prop1s = {
     "color": mypalettecolor[1],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(4, widthmod),
     "label": "1s",
 }
 prop2s = {
     "color": mypalettecolor[2],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(3, widthmod),
     "label": "2s",
 }
 prop3s = {
     "color": mypalettecolor[3],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(2, widthmod),
     "label": "3s",
 }
 prop4s = {
     "color": mypalettecolor[4],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(2, widthmod),
     "label": "4s",
 }
 prop5s = {
     "color": mypalettecolor[5],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "5s",
 }
 prop6s = {
     "color": mypalettecolor[6],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "6s",
 }
 prop7s = {
     "color": mypalettecolor[7],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "7s",
 }
 prop8s = {
     "color": mypalettecolor[8],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "8s",
 }
 prop9s = {
     "color": mypalettecolor[9],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "9s",
 }
 prop10s = {
     "color": mypalettecolor[10],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "10s",
 }
 prop11s = {
     "color": mypalettecolor[11],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "11s",
 }
 prop12s = {
     "color": mypalettecolor[12],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "12s",
 }
 prop13s = {
     "color": mypalettecolor[13],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "13s",
 }
 prop14s = {
     "color": mypalettecolor[14],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "14s",
 }
 prop15s = {
     "color": mypalettecolor[15],
-    "linestyle": mypalettestyle['skew'],
+    "linestyle": mypalettestyle["skew"],
     "linewidth": numpy.mod(1, widthmod),
     "label": "15s",
 }
@@ -249,6 +249,7 @@ props = {
 }
 # assemble final dict
 defaultlprop = {0: propn, 1: props}
+
 
 def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     """
