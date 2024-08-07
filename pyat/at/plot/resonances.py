@@ -270,6 +270,9 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     """
     # verboseprint to check flag only once
     verboseprint = print if verbose else lambda *a, **k: None
+
+    if nthorder < 1:
+        raise ValueError("The order must be a positive integer larger than zero.")
     verboseprint(f"nthorder={nthorder}")
 
     afarey = 0
@@ -376,9 +379,8 @@ def plot_tune2d_resonances(
     # orders could be a single int
     if isinstance(orders, int):
         orders = [orders]
-    listresonancestoplot = list(numpy.array(orders) - 1)
     # check that all are larger than 0
-    if sum(n < 0 for n in listresonancestoplot):
+    if sum(n < 1 for n in orders):
         raise ValueError("Negative resonances are not allowed.")
 
     if period < 1:
@@ -401,7 +403,7 @@ def plot_tune2d_resonances(
     # get xlimits and ylimits
     the_axeslims = windowa.reshape((2, 2))
 
-    maxreson2calc = numpy.max(listresonancestoplot) + 1
+    maxreson2calc = numpy.max(orders)
     verboseprint(f"Farey max order={maxreson2calc}")
 
     # get the Farey collection, i.e., a list of farey sequences, one per order
@@ -435,6 +437,8 @@ def plot_tune2d_resonances(
     # window min/max,horizontal and vertical
     plt.xlim(the_axeslims[0, :])
     plt.ylim(the_axeslims[1, :])
+    # substract one to start the cycle at zero
+    listresonancestoplot = list(numpy.array(orders) - 1)
     # start to check the Farey collection, starting with 0
     collectaux1 = [0]
     for nthorder in range(maxreson2calc):
