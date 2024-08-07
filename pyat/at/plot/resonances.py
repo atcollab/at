@@ -13,13 +13,13 @@ __all__ = ["farey_sequence", "plot_tune2d_resonances"]
 # 2024jul31 oblanco at ALBA CELLS
 
 
-def farey_sequence(nthorder: int, **kwargs: dict[str, any]) -> tuple[list, list]:
+def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     """
     Return the Farey sequence, and the resonance sequence of nth order.
 
     Parameters:
         nthorder: natural number bigger than 0.
-        kwargs: verbose. prints extra info. Default: False.
+        verbose: prints extra info. Default: False.
 
     Returns:
         fareyseqfloat: list of elements with the Farey sequence in Float format.
@@ -31,7 +31,6 @@ def farey_sequence(nthorder: int, **kwargs: dict[str, any]) -> tuple[list, list]
             Phys.Rev.Acc.Beams 17, 014001 (2014)'
     """
     # verboseprint to check flag only once
-    verbose = kwargs.pop("verbose", False)
     verboseprint = print if verbose else lambda *a, **k: None
     verboseprint(f"nthorder={nthorder}")
 
@@ -58,25 +57,32 @@ def farey_sequence(nthorder: int, **kwargs: dict[str, any]) -> tuple[list, list]
 
 
 def plot_tune2d_resonances(
+    orders: int or list = [1, 2, 3],
+    period: int = 1,
+    window: list = [0, 1, 0, 1],
+    verbose: bool = False,
+    legend: bool = False,
+    block: bool = False,
+    debug: bool = False,
     **kwargs: dict[str, any],
 ) -> Figure:
     r"""
     Plot the tune 2D resonances for a given order, period and window.
 
     Parameters:
-        kwargs:
-            * orders: integer or list of integers larger than zero. Default: [1,2,3]
-            * period: integer larger than zero; periodicity of the machine. Default: 1.
-            * window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the
+        orders: integer or list of integers larger than zero. Default: [1,2,3]
+        period: integer larger than zero; periodicity of the machine. Default: 1.
+        window: [min_nux,max_nux,min_nuy,max_nuy] list of 4 values for the
                 tune minimum and maximum window. Default:[0,1,0,1].
-            * verbose: print verbose output.
-            * includelegend: print legend on the plot. Default: False.
-            * block: passed to plot.show(). Default: False.
-            * debugverbose: extra output to check line construction. Default: False.
+        verbose: print verbose output.
+        legend: print legend on the plot. Default: False.
+        block: passed to plot.show(). Default: False.
+        debug: extra output to check line construction. Default: False.
+        kwargs:
             * onlyns: if 'n' plots only normal resonances.
                       if 's' plots only skew resonances.
                       Otherwise ignored.
-            * custom_linesty: use it to pass a dictionary with custom line styles.
+            * linestyle: use it to pass a dictionary with custom line styles.
                 See notes below.
 
     Returns:
@@ -106,29 +112,20 @@ def plot_tune2d_resonances(
 
     Custom Style:
     You could pass a custom line style in a dictionary as
-    custom_linesty = mydictionary,
+    linestyle = mydictionary,
     where mydictionary should contain two entries
-    dict(0: prop_normal, 1: prop_skew).
-    prop_normal and prop_skew are also dictionaries starting at zero,
-    i.e. the_nth_order-1. Each entry contains the line properties of the nth-1
-    resonance to plot.
+    dict(0: normal, 1: skew).
+    normal and skew are also dictionaries, each entry contains the
+    line properties of the nth resonance to plot.
 
     Raises:
         ValueError: if given resonances are lower than 0, or window is zero.
     """
     # verboseprint to check flag only once
-    verbose = kwargs.pop("verbose", False)
     verboseprint = print if verbose else lambda *a, **k: None
 
     # print debugging output, equivalent to extra verbose
-    debugverbose = kwargs.pop("debugverbose", False)
-    debugprint = print if debugverbose else lambda *a, **k: None
-
-    # block the standard output in terminal when plotting
-    block = kwargs.pop("block", False)
-
-    # plot with legend
-    includelegend = kwargs.pop("includelegend", False)
+    debugprint = print if debug else lambda *a, **k: None
 
     # only plot normal or skew
     normalskew = [0, 1]
@@ -139,20 +136,18 @@ def plot_tune2d_resonances(
         normalskew = [1]
 
     # orders could be a single int
-    theorders = kwargs.pop("orders", [1, 2, 3])
-    if isinstance(theorders, int):
-        theorders = [theorders]
-    listresonancestoplot = list(numpy.array(theorders) - 1)
+    if isinstance(orders, int):
+        orders = [orders]
+    listresonancestoplot = list(numpy.array(orders) - 1)
     # check that all are larger than 0
     if sum(n < 0 for n in listresonancestoplot):
-        raise ValueError("Negative resonances are not allowed")
+        raise ValueError("Negative resonances are not allowed.")
 
-    theperiod = kwargs.pop("period", 1)
-    verboseprint(f"The period is {theperiod}")
+    if period < 1:
+        raise ValueError("Period must be a positive integer.")
+    verboseprint(f"The period is {period}")
 
-    window = kwargs.pop("window", [0, 1, 0, 1])
     verboseprint(f"The window is {window}")
-
     # check the window
     windowa = numpy.array(window)
     if windowa[0] == windowa[1]:
@@ -182,14 +177,14 @@ def plot_tune2d_resonances(
 
     # min/max to plot lines with slopes
     minx = numpy.floor(the_axeslims[0, 0])
-    minx = minx - theperiod - numpy.mod(minx, theperiod)
+    minx = minx - period - numpy.mod(minx, period)
     maxx = numpy.ceil(the_axeslims[0, 1])
-    maxx = maxx + theperiod - numpy.mod(maxx, theperiod)
+    maxx = maxx + period - numpy.mod(maxx, period)
     minmaxxdist = maxx - minx
     miny = numpy.floor(the_axeslims[1, 0])
-    miny = miny - theperiod - numpy.mod(miny, theperiod)
+    miny = miny - period - numpy.mod(miny, period)
     maxy = numpy.ceil(the_axeslims[1, 1])
-    maxy = maxy + theperiod - numpy.mod(maxy, theperiod)
+    maxy = maxy + period - numpy.mod(maxy, period)
     minmaxydist = maxy - miny
 
     # dictionary with line properties
@@ -430,7 +425,7 @@ def plot_tune2d_resonances(
     }
     # assemble final dict
     defaultlprop = {0: propn.copy(), 1: props.copy()}
-    lprop = kwargs.pop("customlinesty", defaultlprop)
+    lprop = kwargs.pop("linestyle", defaultlprop)
 
     # we only need to points to define a line
     nauxpoints = 2
@@ -454,12 +449,12 @@ def plot_tune2d_resonances(
             # increase step by the period in straight resonances
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
-                for iaux in numpy.arange(minx, maxx + 0.000001, theperiod * chosenstep):
+                for iaux in numpy.arange(minx, maxx + 0.000001, period * chosenstep):
                     plt.axvline(x=iaux, **lprop[0][nthorder].copy())
             debugprint("enter plotting vertical straight lines")
             nsaux = numpy.mod(nthorder + 1, 2)
             if nsaux in normalskew:
-                for iaux in numpy.arange(miny, maxy + 0.000001, theperiod * chosenstep):
+                for iaux in numpy.arange(miny, maxy + 0.000001, period * chosenstep):
                     plt.axhline(y=iaux, **lprop[nsaux][nthorder].copy())
             for iaux in range(nthorder):
                 debugprint(f"enter plotting diagonals {iaux}")
@@ -484,8 +479,8 @@ def plot_tune2d_resonances(
                 nsaux = numpy.mod(beq, 2)
                 if nsaux in normalskew:
                     for istep in numpy.arange(0, a2aux - a1aux + 0.0001, diagstep):
-                        y1line = chosenslope * (xaux - minx) + theperiod * istep + miny
-                        y2line = -chosenslope * (xaux - minx) - theperiod * istep + maxy
+                        y1line = chosenslope * (xaux - minx) + period * istep + miny
+                        y2line = -chosenslope * (xaux - minx) - period * istep + maxy
                         debugprint(f"y1line={y1line},y2line={y2line}")
                         plt.plot(xaux, y1line, **lprop[nsaux][nthorder])
                         plt.plot(xaux, y2line, **lprop[nsaux][nthorder])
@@ -494,12 +489,12 @@ def plot_tune2d_resonances(
     plt.ylabel(r"$\nu_y$")
     # printing legend if necessary
     myleghandles = []
-    if includelegend:
+    if legend:
         for nthorder in listresonancestoplot:
             for nsaux in normalskew:
                 dictaux = lprop[nsaux][nthorder].copy()
                 myleghandles.append(mlines.Line2D([], [], **dictaux))
-    plt.legend(handles=myleghandles, frameon=includelegend)
+    plt.legend(handles=myleghandles, frameon=legend)
     plt.show(block=block)
 
     return fig
