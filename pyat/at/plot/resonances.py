@@ -473,6 +473,9 @@ def plot_tune2d_resonances(
                 a2aux = (
                     numpy.ceil(minmaxxdist*chosenslope + minmaxydist*diagstep) + maxy
                 )
+                # adapt to period
+                a1aux = period * numpy.floor(a1aux/period)
+                a2aux = period * numpy.ceil(a2aux/period)
                 debugprint(f"minx={minx},maxx={maxx},minmaxxdist={minmaxxdist}")
                 debugprint(f"miny={miny},maxy={maxy},minmaxydist={minmaxydist}")
                 debugprint(f"a1aux={a1aux},a2aux={a2aux}")
