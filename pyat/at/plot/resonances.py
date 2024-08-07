@@ -437,11 +437,9 @@ def plot_tune2d_resonances(
     # window min/max,horizontal and vertical
     plt.xlim(the_axeslims[0, :])
     plt.ylim(the_axeslims[1, :])
-    # substract one to start the cycle at zero
-    listresonancestoplot = list(numpy.array(orders) - 1)
     # start to check the Farey collection, starting with 0
     collectaux1 = [0]
-    for nthorder in range(maxreson2calc):
+    for nthorder in range(1, maxreson2calc + 1):
         debugprint(f"nthorder={nthorder}")
         collectaux2 = fareycollectionfloat[nthorder]
         thesteps = list(set(collectaux2) - set(collectaux1))
@@ -449,23 +447,23 @@ def plot_tune2d_resonances(
         chosenstep = min(thesteps)
         debugprint(f"chosenstep={chosenstep}")
         collectaux1 = collectaux2
-        if nthorder in listresonancestoplot:
+        if nthorder in orders:
             # increase step by the period in straight resonances
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
                 for iaux in numpy.arange(minx, maxx + 0.000001, period * chosenstep):
-                    plt.axvline(x=iaux, **lprop[0][nthorder].copy())
+                    plt.axvline(x=iaux, **lprop[0][nthorder])
             debugprint("enter plotting vertical straight lines")
-            nsaux = numpy.mod(nthorder + 1, 2)
+            nsaux = numpy.mod(nthorder, 2)
             if nsaux in normalskew:
                 for iaux in numpy.arange(miny, maxy + 0.000001, period * chosenstep):
-                    plt.axhline(y=iaux, **lprop[nsaux][nthorder].copy())
-            for iaux in range(nthorder):
+                    plt.axhline(y=iaux, **lprop[nsaux][nthorder])
+            for iaux in range(1, nthorder):
                 debugprint(f"enter plotting diagonals {iaux}")
-                aeq = iaux + 1
-                beq = nthorder + 1 - aeq
+                aeq = iaux
+                beq = nthorder - aeq
                 chosenslope = -aeq / beq
-                diagstep = 1 / beq
+                diagstep = 1.0 / beq
                 debugprint(f"chosen slope={chosenslope}")
                 debugprint(f"chosen diagstep={diagstep}")
                 # get the vertical limits with diagonals
@@ -494,9 +492,9 @@ def plot_tune2d_resonances(
     # printing legend if necessary
     myleghandles = []
     if legend:
-        for nthorder in listresonancestoplot:
+        for nthorder in orders:
             for nsaux in normalskew:
-                dictaux = lprop[nsaux][nthorder].copy()
+                dictaux = lprop[nsaux][nthorder]
                 myleghandles.append(mlines.Line2D([], [], **dictaux))
     plt.legend(handles=myleghandles, frameon=legend)
     plt.show(block=block)
