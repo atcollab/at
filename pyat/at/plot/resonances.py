@@ -12,6 +12,243 @@ __all__ = ["farey_sequence", "plot_tune2d_resonances"]
 
 # 2024jul31 oblanco at ALBA CELLS
 
+# create default dictionary with line properties
+widthmod = 5  # should it be a variable??? it limits the linewidth
+mypalettecolor = {
+    1: "k",
+    2: "b",
+    3: "r",
+    4: "g",
+    5: "m",
+    6: "c",
+    7: "y",
+    8: "darkcyan",
+    9: "lightgreen",
+    10: (0.1, 0.1, 0.1),
+    11: (0.1, 0.1, 0.1),
+    12: (0.2, 0.2, 0.2),
+    13: (0.3, 0.3, 0.3),
+    14: (0.4, 0.4, 0.4),
+    15: (0.5, 0.5, 0.5),
+}
+mypalettestyle = {'normal': "-", 'skew': "--"}
+prop1n = {
+    "color": mypalettecolor[1],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(4, widthmod),
+    "label": "1n",
+}
+prop2n = {
+    "color": mypalettecolor[2],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(3, widthmod),
+    "label": "2n",
+}
+prop3n = {
+    "color": mypalettecolor[3],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(2, widthmod),
+    "label": "3n",
+}
+prop4n = {
+    "color": mypalettecolor[4],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(2, widthmod),
+    "label": "4n",
+}
+prop5n = {
+    "color": mypalettecolor[5],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "5n",
+}
+prop6n = {
+    "color": mypalettecolor[6],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "6n",
+}
+prop7n = {
+    "color": mypalettecolor[7],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "7n",
+}
+prop8n = {
+    "color": mypalettecolor[8],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "8n",
+}
+prop9n = {
+    "color": mypalettecolor[9],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "9n",
+}
+prop10n = {
+    "color": mypalettecolor[10],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "10n",
+}
+prop11n = {
+    "color": mypalettecolor[11],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "11n",
+}
+prop12n = {
+    "color": mypalettecolor[12],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "12n",
+}
+prop13n = {
+    "color": mypalettecolor[13],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "13n",
+}
+prop14n = {
+    "color": mypalettecolor[14],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "14n",
+}
+prop15n = {
+    "color": mypalettecolor[15],
+    "linestyle": mypalettestyle['normal'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "15n",
+}
+prop1s = {
+    "color": mypalettecolor[1],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(4, widthmod),
+    "label": "1s",
+}
+prop2s = {
+    "color": mypalettecolor[2],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(3, widthmod),
+    "label": "2s",
+}
+prop3s = {
+    "color": mypalettecolor[3],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(2, widthmod),
+    "label": "3s",
+}
+prop4s = {
+    "color": mypalettecolor[4],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(2, widthmod),
+    "label": "4s",
+}
+prop5s = {
+    "color": mypalettecolor[5],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "5s",
+}
+prop6s = {
+    "color": mypalettecolor[6],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "6s",
+}
+prop7s = {
+    "color": mypalettecolor[7],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "7s",
+}
+prop8s = {
+    "color": mypalettecolor[8],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "8s",
+}
+prop9s = {
+    "color": mypalettecolor[9],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "9s",
+}
+prop10s = {
+    "color": mypalettecolor[10],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "10s",
+}
+prop11s = {
+    "color": mypalettecolor[11],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "11s",
+}
+prop12s = {
+    "color": mypalettecolor[12],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "12s",
+}
+prop13s = {
+    "color": mypalettecolor[13],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "13s",
+}
+prop14s = {
+    "color": mypalettecolor[14],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "14s",
+}
+prop15s = {
+    "color": mypalettecolor[15],
+    "linestyle": mypalettestyle['skew'],
+    "linewidth": numpy.mod(1, widthmod),
+    "label": "15s",
+}
+# assemble default dictionary by normal or skew
+propn = {
+    1: prop1n,
+    2: prop2n,
+    3: prop3n,
+    4: prop4n,
+    5: prop5n,
+    6: prop6n,
+    7: prop7n,
+    8: prop8n,
+    9: prop9n,
+    10: prop10n,
+    11: prop11n,
+    12: prop12n,
+    13: prop13n,
+    14: prop14n,
+    15: prop15n,
+}
+props = {
+    1: prop1s,
+    2: prop2s,
+    3: prop3s,
+    4: prop4s,
+    5: prop5s,
+    6: prop6s,
+    7: prop7s,
+    8: prop8s,
+    9: prop9s,
+    10: prop10s,
+    11: prop11s,
+    12: prop12s,
+    13: prop13s,
+    14: prop14s,
+    15: prop15s,
+}
+# assemble final dict
+defaultlprop = {0: propn, 1: props}
 
 def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     """
@@ -187,244 +424,6 @@ def plot_tune2d_resonances(
     maxy = maxy + period - numpy.mod(maxy, period)
     minmaxydist = maxy - miny
 
-    # dictionary with line properties
-    widthmod = 5  # ??? maybe a variable
-    mypalettecolor = {
-        0: "k",
-        1: "b",
-        2: "r",
-        3: "g",
-        4: "m",
-        5: "c",
-        6: "y",
-        7: "darkcyan",
-        8: "lightgreen",
-        9: (0.1, 0.1, 0.1),
-        10: (0.1, 0.1, 0.1),
-        11: (0.2, 0.2, 0.2),
-        12: (0.3, 0.3, 0.3),
-        13: (0.4, 0.4, 0.4),
-        14: (0.5, 0.5, 0.5),
-        15: (0.6, 0.6, 0.6),
-    }
-    mypalettestyle = {0: "-", 1: "--"}
-    prop1n = {
-        "color": mypalettecolor[0],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(4, widthmod),
-        "label": "1n",
-    }
-    prop2n = {
-        "color": mypalettecolor[1],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(3, widthmod),
-        "label": "2n",
-    }
-    prop3n = {
-        "color": mypalettecolor[2],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(2, widthmod),
-        "label": "3n",
-    }
-    prop4n = {
-        "color": mypalettecolor[3],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(2, widthmod),
-        "label": "4n",
-    }
-    prop5n = {
-        "color": mypalettecolor[4],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "5n",
-    }
-    prop6n = {
-        "color": mypalettecolor[5],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "6n",
-    }
-    prop7n = {
-        "color": mypalettecolor[6],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "7n",
-    }
-    prop8n = {
-        "color": mypalettecolor[7],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "8n",
-    }
-    prop9n = {
-        "color": mypalettecolor[8],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "9n",
-    }
-    prop10n = {
-        "color": mypalettecolor[9],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "10n",
-    }
-    prop11n = {
-        "color": mypalettecolor[10],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "11n",
-    }
-    prop12n = {
-        "color": mypalettecolor[11],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "12n",
-    }
-    prop13n = {
-        "color": mypalettecolor[12],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "13n",
-    }
-    prop14n = {
-        "color": mypalettecolor[13],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "14n",
-    }
-    prop15n = {
-        "color": mypalettecolor[14],
-        "linestyle": mypalettestyle[0],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "15n",
-    }
-    prop1s = {
-        "color": mypalettecolor[0],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(4, widthmod),
-        "label": "1s",
-    }
-    prop2s = {
-        "color": mypalettecolor[1],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(3, widthmod),
-        "label": "2s",
-    }
-    prop3s = {
-        "color": mypalettecolor[2],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(2, widthmod),
-        "label": "3s",
-    }
-    prop4s = {
-        "color": mypalettecolor[3],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(2, widthmod),
-        "label": "4s",
-    }
-    prop5s = {
-        "color": mypalettecolor[4],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "5s",
-    }
-    prop6s = {
-        "color": mypalettecolor[5],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "6s",
-    }
-    prop7s = {
-        "color": mypalettecolor[6],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "7s",
-    }
-    prop8s = {
-        "color": mypalettecolor[7],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "8s",
-    }
-    prop9s = {
-        "color": mypalettecolor[8],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "9s",
-    }
-    prop10s = {
-        "color": mypalettecolor[9],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "10s",
-    }
-    prop11s = {
-        "color": mypalettecolor[10],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "11s",
-    }
-    prop12s = {
-        "color": mypalettecolor[11],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "12s",
-    }
-    prop13s = {
-        "color": mypalettecolor[12],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "13s",
-    }
-    prop14s = {
-        "color": mypalettecolor[13],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "14s",
-    }
-    prop15s = {
-        "color": mypalettecolor[14],
-        "linestyle": mypalettestyle[1],
-        "linewidth": numpy.mod(1, widthmod),
-        "label": "15s",
-    }
-    # assemble default dictionary by normal or skew
-    propn = {
-        0: prop1n.copy(),
-        1: prop2n.copy(),
-        2: prop3n.copy(),
-        3: prop4n.copy(),
-        4: prop5n.copy(),
-        5: prop6n.copy(),
-        6: prop7n.copy(),
-        7: prop8n.copy(),
-        8: prop9n.copy(),
-        9: prop10n.copy(),
-        10: prop11n.copy(),
-        11: prop12n.copy(),
-        12: prop13n.copy(),
-        13: prop14n.copy(),
-        14: prop15n.copy(),
-    }
-    props = {
-        0: prop1s.copy(),
-        1: prop2s.copy(),
-        2: prop3s.copy(),
-        3: prop4s.copy(),
-        4: prop5s.copy(),
-        5: prop6s.copy(),
-        6: prop7s.copy(),
-        7: prop8s.copy(),
-        8: prop9s.copy(),
-        9: prop10s.copy(),
-        10: prop11s.copy(),
-        11: prop12s.copy(),
-        12: prop13s.copy(),
-        13: prop14s.copy(),
-        14: prop15s.copy(),
-    }
-    # assemble final dict
-    defaultlprop = {0: propn.copy(), 1: props.copy()}
     lprop = kwargs.pop("linestyle", defaultlprop)
 
     # we only need to points to define a line
