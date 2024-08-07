@@ -462,16 +462,16 @@ def plot_tune2d_resonances(
                 debugprint(f"enter plotting diagonals {iaux}")
                 aeq = iaux
                 beq = nthorder - aeq
-                chosenslope = -aeq / beq
+                chosenslope = 1.0*aeq / beq
                 diagstep = 1.0 / beq
                 debugprint(f"chosen slope={chosenslope}")
                 debugprint(f"chosen diagstep={diagstep}")
                 # get the vertical limits with diagonals
                 a1aux = (
-                    -numpy.ceil(2 * (minmaxxdist + minmaxydist) / (-chosenslope)) + miny
+                    -numpy.ceil(minmaxxdist*chosenslope + minmaxydist*diagstep)  + miny
                 )
                 a2aux = (
-                    numpy.ceil(2 * (minmaxxdist + minmaxydist) / (-chosenslope)) + maxy
+                    numpy.ceil(minmaxxdist*chosenslope + minmaxydist*diagstep) + maxy
                 )
                 debugprint(f"minx={minx},maxx={maxx},minmaxxdist={minmaxxdist}")
                 debugprint(f"miny={miny},maxy={maxy},minmaxydist={minmaxydist}")
@@ -481,8 +481,8 @@ def plot_tune2d_resonances(
                 nsaux = numpy.mod(beq, 2)
                 if nsaux in normalskew:
                     for istep in numpy.arange(0, a2aux - a1aux + 0.0001, diagstep):
-                        y1line = chosenslope * (xaux - minx) + period * istep + miny
-                        y2line = -chosenslope * (xaux - minx) - period * istep + maxy
+                        y1line = -chosenslope * (xaux - minx) + a2aux - period * istep
+                        y2line =  chosenslope * (xaux - minx) + a1aux + period * istep
                         debugprint(f"y1line={y1line},y2line={y2line}")
                         plt.plot(xaux, y1line, **lprop[nsaux][nthorder])
                         plt.plot(xaux, y2line, **lprop[nsaux][nthorder])
