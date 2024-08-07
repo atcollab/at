@@ -407,12 +407,12 @@ def plot_tune2d_resonances(
     verboseprint(f"Farey max order={maxreson2calc}")
 
     # get the Farey collection, i.e., a list of farey sequences, one per order
-    fareycollectionfloat = []
-    fareycollectionfrac = []
+    fareycollectionfloat = {}
+    fareycollectionfrac = {}
     for nthorder in range(1, maxreson2calc + 1):
         farey, fracfarey = farey_sequence(nthorder)
-        fareycollectionfloat.append(farey.copy())
-        fareycollectionfrac.append(fracfarey.copy())
+        fareycollectionfloat[nthorder] = farey
+        fareycollectionfrac[nthorder] = fracfarey
     verboseprint(f"the Farey collection is {fareycollectionfloat}")
 
     # min/max to plot lines with slopes
