@@ -170,7 +170,7 @@ def plot_tune_diagram(
     debug: bool = False,
     axes: matplotlib.axes.Axes = None,
     **kwargs: dict[str, any],
-) -> matplotlib.axes.Axes:
+) -> tuple[matplotlib.axes.Axes, list, list]:
     r"""
     Plot the tune diagram and resonance lines for a given order, periodicity and window.
 
