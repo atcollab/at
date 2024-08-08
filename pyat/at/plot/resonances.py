@@ -244,6 +244,9 @@ def plot_tune_diagram(
     dict("normal": normald, "skew": skewd).
     normald and skewd are also dictionaries, each entry contains as key
     the resonance order and as value the line properties to use in the plot.
+    The default dictionary is created with :pyt:func:`create_linepalette`
+      mydictionary = at.plot.resonances.create_linepalette()
+    you could edit the needed entries.
 
     Raises:
         ValueError: if given resonances are lower than 0, or window is zero.
