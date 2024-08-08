@@ -187,14 +187,14 @@ def plot_tune_diagram(
         block: passed to plot.show(). Default: False.
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
-            resonances. If :py:obj:`None`, a new figure will be created. Otherwise,
-            a new axes object sharing the same x-axis as the given one is created.
-            window is ignored if acces are given.
+            resonances. If :py:obj:`None`, a new figure will be created.
+             Note that if axes are given then window is ignored.
         kwargs:
             * only: if 'normal' plots only normal resonances.
                     if 'skew' plots only skew resonances.
                     Otherwise ignored.
-            * linestyle: use it to pass a dictionary with custom line styles.
+                    See the notes on Normal and Skew convention.
+            * linedict: use it to pass a dictionary with custom line styles.
                 See notes below.
             * linewidth = integer width to be used for all resonances.
                 Default: See Color and Width below
@@ -202,12 +202,12 @@ def plot_tune_diagram(
                 If 'dots' is given it will use dashdot and dotted for normal
                     and skew resonances, respectively.
                 A dictionary could be passed containing
-                    mystyle = {"normal": style1, "skew":style2}
+                    {"normal": style1, "skew":style2}
                     to plot using style1 and style2.
                 Default: uses "-" and "--". See Normal and Skew convention.
             * linecolor: sets a single color for all the resonances.
                 By default a custom palette is used. See Lines Color and Width.
-            * addtolabel: adds a string to the line label, i.e. for the fourth
+            * addtolabel: adds a string to the line label, e.g. for the fourth
                 order normal resonance "4n"+addtolabel
 
     Returns:
@@ -239,7 +239,7 @@ def plot_tune_diagram(
 
     Custom Style:
     You could pass a custom line style in a dictionary as
-    linestyle = mydictionary,
+    linedict = mydictionary,
     where mydictionary should contain two entries
     dict("normal": normald, "skew": skewd).
     normald and skewd are also dictionaries, each entry contains as key
@@ -330,7 +330,7 @@ def plot_tune_diagram(
         linewidth=linewidth,
         addtolabel=addtolabel,
     )
-    lprop = kwargs.pop("linestyle", defaultlprop)
+    lprop = kwargs.pop("linedict", defaultlprop)
 
     # we only need to points to define a line
     nauxpoints = 2
