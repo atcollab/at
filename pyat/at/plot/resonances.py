@@ -165,6 +165,7 @@ def plot_tune_diagram(
     window: list = (0, 1, 0, 1),
     verbose: bool = False,
     legend: bool = False,
+    show: bool = True,
     block: bool = False,
     debug: bool = False,
     axes: matplotlib.axes.Axes = None,
@@ -180,6 +181,7 @@ def plot_tune_diagram(
             tune minimum and maximum window. Default: (0,1,0,1).
         verbose: print verbose output.
         legend: print legend on the plot. Default: False.
+        show: show plot. Default: True.
         block: passed to plot.show(). Default: False.
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
@@ -406,6 +408,7 @@ def plot_tune_diagram(
     myleglabels = [labelall[idx] for idx in idxunique]
     if legend:
         axes.legend(handles=myleghandles, labels=myleglabels, frameon=legend)
-    plt.show(block=block)
+    if show:
+        plt.show(block=block)
 
     return axes, myleghandles, myleglabels
