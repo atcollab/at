@@ -116,67 +116,67 @@ def create_linepalette(
     prop5n = {
         "color": mypalettecolor[5],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[5],
         "label": "5n",
     }
     prop6n = {
         "color": mypalettecolor[6],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[6],
         "label": "6n",
     }
     prop7n = {
         "color": mypalettecolor[7],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[7],
         "label": "7n",
     }
     prop8n = {
         "color": mypalettecolor[8],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[8],
         "label": "8n",
     }
     prop9n = {
         "color": mypalettecolor[9],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[9],
         "label": "9n",
     }
     prop10n = {
         "color": mypalettecolor[10],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[10],
         "label": "10n",
     }
     prop11n = {
         "color": mypalettecolor[11],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[11],
         "label": "11n",
     }
     prop12n = {
         "color": mypalettecolor[12],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[12],
         "label": "12n",
     }
     prop13n = {
         "color": mypalettecolor[13],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[13],
         "label": "13n",
     }
     prop14n = {
         "color": mypalettecolor[14],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[14],
         "label": "14n",
     }
     prop15n = {
         "color": mypalettecolor[15],
         "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
+        "linewidth": mylinewidth[15],
         "label": "15n",
     }
     prop1s = {
