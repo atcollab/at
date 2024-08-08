@@ -15,7 +15,7 @@ __all__ = ["farey_sequence", "plot_tune_diagram"]
 
 
 def create_linepalette(
-    linestyle: str = "default",
+    linestyle: str or dict = "default",
     linecolor: str = "default",
     linewidth: int or str = "default",
 ) -> dict[str, any]:
@@ -71,30 +71,15 @@ def create_linepalette(
         14: 1,
         15: 1,
     }
-    mypalettewidth_alternative = {
-        1: 1,
-        2: 1,
-        3: 1,
-        4: 1,
-        5: 1,
-        6: 1,
-        7: 1,
-        8: 1,
-        9: 1,
-        10: 1,
-        11: 1,
-        12: 1,
-        13: 1,
-        14: 1,
-        15: 1,
-    }
-
     mypalettestyle_main = {"normal": "-", "skew": "--"}
     mypalettestyle_alternative = {"normal": "dashdot", "skew": "dotted"}
     if linestyle == "alternative":
         mypalettestyle = mypalettestyle_alternative
     else:
-        mypalettestyle = mypalettestyle_main
+        if isinstance(linestyle, dict):
+            mypalettestyle = linestyle
+        else:
+            mypalettestyle = mypalettestyle_main
     if linecolor == "black":
         mypalettecolor = mypalettecolor2
     else:
@@ -102,14 +87,10 @@ def create_linepalette(
     if linewidth == "default":
         mylinewidth = mypalettewidth_main
     else:
-        #        print(type(linewidth))
-        #print(linewidth)
         if isinstance(linewidth, int) and linewidth > 0:
-            print('here')
             mylinewidth = {}
             for lsize in range(1, 16):
                 mylinewidth[lsize] = linewidth
-    print(mylinewidth)
     prop1n = {
         "color": mypalettecolor[1],
         "linestyle": mypalettestyle["normal"],
@@ -389,7 +370,7 @@ def plot_tune_diagram(
     debug: bool = False,
     axes: matplotlib.axes.Axes = None,
     **kwargs: dict[str, any],
-) -> Figure:
+) -> matplotlib.axes.Axes:
     r"""
     Plot the tune diagram and resonance lines for a given order, period and window.
 
@@ -413,7 +394,7 @@ def plot_tune_diagram(
                 See notes below.
 
     Returns:
-        Figure object from matplotlib.figure from matplotlib.figure
+        Axes object from matplotlib.axes._axes
 
     NOTES:
     The resonance equation is :math:`a\nu_x + b\nu_y = c`
@@ -501,6 +482,15 @@ def plot_tune_diagram(
         fareycollectionfrac[nthorder] = fracfarey
     verboseprint(f"the Farey collection is {fareycollectionfloat}")
 
+    # plot configuration
+    myleghandles = []
+    if axes is None:
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+        verboseprint(f"Axes already exist, ignore window")
+        the_axeslims = numpy.array([axes.get_xlim(), axes.get_ylim()])
+        handler, labeler = axes.get_legend_handles_labels()
+        myleghandles = handler
     # min/max to plot lines with slopes
     minx = numpy.floor(the_axeslims[0, 0])
     minx = minx - period - numpy.mod(minx, period)
@@ -524,13 +514,9 @@ def plot_tune_diagram(
     # we only need to points to define a line
     nauxpoints = 2
 
-    # plot configuration
-    if axes is None:
-        fig = plt.figure()
-        axes = fig.add_subplot(111)
     # window min/max,horizontal and vertical
-    plt.xlim(the_axeslims[0, :])
-    plt.ylim(the_axeslims[1, :])
+    axes.set_xlim(the_axeslims[0, :])
+    axes.set_ylim(the_axeslims[1, :])
     # start to check the Farey collection, starting with 0
     collectaux1 = [0]
     idxtotype = {0: "normal", 1: "skew"}
@@ -547,12 +533,12 @@ def plot_tune_diagram(
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
                 for iaux in numpy.arange(minx, maxx + 0.000001, period * chosenstep):
-                    plt.axvline(x=iaux, **lprop["normal"][nthorder])
+                    axes.axvline(x=iaux, **lprop["normal"][nthorder])
             debugprint("enter plotting vertical straight lines")
             nsaux = numpy.mod(nthorder, 2)
             if nsaux in normalskew:
                 for iaux in numpy.arange(miny, maxy + 0.000001, period * chosenstep):
-                    plt.axhline(y=iaux, **lprop[idxtotype[nsaux]][nthorder])
+                    axes.axhline(y=iaux, **lprop[idxtotype[nsaux]][nthorder])
             # aeq*nux + beq*nuy = nthorder
             for aeq in range(1, nthorder):
                 debugprint(f"enter plotting diagonals {aeq}")
@@ -579,19 +565,20 @@ def plot_tune_diagram(
                         y1line = -chosenslope * (xaux - minx) + y2aux - period * istep
                         y2line = chosenslope * (xaux - minx) + y1aux + period * istep
                         debugprint(f"y1line={y1line},y2line={y2line}")
-                        plt.plot(xaux, y1line, **lprop[idxtotype[nsaux]][nthorder])
-                        plt.plot(xaux, y2line, **lprop[idxtotype[nsaux]][nthorder])
+                        axes.plot(xaux, y1line, **lprop[idxtotype[nsaux]][nthorder])
+                        axes.plot(xaux, y2line, **lprop[idxtotype[nsaux]][nthorder])
     # include labels
-    plt.xlabel(r"$\nu_x$")
-    plt.ylabel(r"$\nu_y$")
+    axes.set_xlabel(r"$\nu_x$")
+    axes.set_ylabel(r"$\nu_y$")
     # printing legend if necessary
     myleghandles = []
+    myleglabels = []
     if legend:
-        for nthorder in orders:
-            for nsaux in normalskew:
-                dictaux = lprop[nsaux][nthorder]
-                myleghandles.append(mlines.Line2D([], [], **dictaux))
-    plt.legend(handles=myleghandles, frameon=legend)
+        handleall, labelall = axes.get_legend_handles_labels()
+        myleglabels = sorted(list(set(labelall)))
+        idxunique = [labelall.index(mylab) for mylab in myleglabels]
+        myleghandles = [handleall[idx] for idx in idxunique]
+    axes.legend(handles=myleghandles,labels=myleglabels, frameon=legend)
     plt.show(block=block)
 
     return axes
