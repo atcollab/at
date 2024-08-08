@@ -207,6 +207,8 @@ def plot_tune_diagram(
 
     Returns:
         Axes object from matplotlib.axes._axes
+        List of handles for the legend
+        List of labels for the legend
 
     NOTES:
     The resonance equation is :math:`a\nu_x + b\nu_y = c`
@@ -406,4 +408,4 @@ def plot_tune_diagram(
         axes.legend(handles=myleghandles, labels=myleglabels, frameon=legend)
     plt.show(block=block)
 
-    return axes
+    return axes, myleghandles, myleglabels
