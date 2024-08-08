@@ -7,7 +7,7 @@ import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy
 
-__all__ = ["farey_sequence", "plot_tune_diagram"]
+__all__ = ["farey_sequence", "plot_tune_diagram", "create_linepalette"]
 
 # 2024jul31 oblanco at ALBA CELLS
 
