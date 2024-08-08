@@ -179,14 +179,16 @@ def plot_tune_diagram(
         periodicity: periodicity of the machine, integer larger than zero. Default: 1.
         window: (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
             tune minimum and maximum window. Default: (0,1,0,1).
+            window is ignored if the parameter axes is given.
         verbose: print verbose output.
         legend: print legend on the plot. Default: False.
         show: show plot. Default: True.
         block: passed to plot.show(). Default: False.
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
-            synoptic. If :py:obj:`None`, a new figure will be created. Otherwise,
+            resonances. If :py:obj:`None`, a new figure will be created. Otherwise,
             a new axes object sharing the same x-axis as the given one is created.
+            window is ignored if acces are given.
         kwargs:
             * only: if 'normal' plots only normal resonances.
                     if 'skew' plots only skew resonances.
