@@ -21,18 +21,18 @@ def create_linepalette(
     """
         Create a line palette to plot resonance lines.
 
-        Arguments:
-            linestyle: str or dictionary.
-                If 'dots' it uses dotted styles as linestyles
-                    {"normal": "dashdot", "skew": "dotted"}
-                If a dictionary is passed, it should contain
-                    {"normal": style1, "skew": style2}
-                Default: {"normal": '-', "skew": '--'}
-            linecolor: defines one color to be used. e.g. 'k'.
-                Default: custom values. See :py:func:`plot_tune_diagram`
-            linewidth: defines one integer value for the line width, e.g. 1.
-                Default: custom values. See :py:func:`plot_tune_diagram`
-            addtolabel: adds a string to the line label
+    Parameters:
+        linestyle: str or dictionary.
+            If 'dots' it uses dotted styles as linestyles
+                {"normal": "dashdot", "skew": "dotted"}
+            If a dictionary is passed, it should contain
+                {"normal": style1, "skew": style2}
+            Default: {"normal": '-', "skew": '--'}
+        linecolor: defines one color to be used. e.g. 'k'.
+            Default: custom values. See :py:func:`plot_tune_diagram`
+        linewidth: defines one integer value for the line width, e.g. 1.
+            Default: custom values. See :py:func:`plot_tune_diagram`
+        addtolabel: adds a string to the line label
 
     Returns:
             Dict dictionary contaning the line properties for resonance plots.
