@@ -16,24 +16,26 @@ def create_linepalette(
     linestyle: str or dict = None,
     linecolor: str = None,
     linewidth: int = None,
+    addtolabel: str = None,
 ) -> dict[str, any]:
     """
-    Create a line palette to plot resonance lines.
+        Create a line palette to plot resonance lines.
 
-    Arguments:
-        linestyle: str or dictionary.
-            If 'dots' it uses dotted styles as linestyles
-                {"normal": "dashdot", "skew": "dotted"}
-            If a dictionary is passed, it should contain
-                {"normal": style1, "skew": style2}
-            Default: {"normal": '-', "skew": '--'}
-        linecolor: defines one color to be used. e.g. 'k'.
-            Default: custom values. See :py:func:`plot_tune_diagram`
-        linewidth: defines one integer value for the line width, e.g. 1.
-            Default: custom values. See :py:func:`plot_tune_diagram`
+        Arguments:
+            linestyle: str or dictionary.
+                If 'dots' it uses dotted styles as linestyles
+                    {"normal": "dashdot", "skew": "dotted"}
+                If a dictionary is passed, it should contain
+                    {"normal": style1, "skew": style2}
+                Default: {"normal": '-', "skew": '--'}
+            linecolor: defines one color to be used. e.g. 'k'.
+                Default: custom values. See :py:func:`plot_tune_diagram`
+            linewidth: defines one integer value for the line width, e.g. 1.
+                Default: custom values. See :py:func:`plot_tune_diagram`
+            addtolabel: adds a string to the line label
 
     Returns:
-        Dict dictionary contaning the line properties for resonance plots.
+            Dict dictionary contaning the line properties for resonance plots.
     """
     # create default dictionary with line properties
     mypalettecolor1 = {
@@ -88,224 +90,24 @@ def create_linepalette(
     if isinstance(linewidth, int) and linewidth > 0:
         for lsize in range(1, 16):
             mylinewidth[lsize] = linewidth
+    # add to label
+    if addtolabel is None:
+        addtolabel = ""
     # set the dictionary
-    prop1n = {
-        "color": mypalettecolor[1],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[1],
-        "label": "1n",
-    }
-    prop2n = {
-        "color": mypalettecolor[2],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[2],
-        "label": "2n",
-    }
-    prop3n = {
-        "color": mypalettecolor[3],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[3],
-        "label": "3n",
-    }
-    prop4n = {
-        "color": mypalettecolor[4],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[4],
-        "label": "4n",
-    }
-    prop5n = {
-        "color": mypalettecolor[5],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[5],
-        "label": "5n",
-    }
-    prop6n = {
-        "color": mypalettecolor[6],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[6],
-        "label": "6n",
-    }
-    prop7n = {
-        "color": mypalettecolor[7],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[7],
-        "label": "7n",
-    }
-    prop8n = {
-        "color": mypalettecolor[8],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[8],
-        "label": "8n",
-    }
-    prop9n = {
-        "color": mypalettecolor[9],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[9],
-        "label": "9n",
-    }
-    prop10n = {
-        "color": mypalettecolor[10],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[10],
-        "label": "10n",
-    }
-    prop11n = {
-        "color": mypalettecolor[11],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[11],
-        "label": "11n",
-    }
-    prop12n = {
-        "color": mypalettecolor[12],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[12],
-        "label": "12n",
-    }
-    prop13n = {
-        "color": mypalettecolor[13],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[13],
-        "label": "13n",
-    }
-    prop14n = {
-        "color": mypalettecolor[14],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[14],
-        "label": "14n",
-    }
-    prop15n = {
-        "color": mypalettecolor[15],
-        "linestyle": mypalettestyle["normal"],
-        "linewidth": mylinewidth[15],
-        "label": "15n",
-    }
-    prop1s = {
-        "color": mypalettecolor[1],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[1],
-        "label": "1s",
-    }
-    prop2s = {
-        "color": mypalettecolor[2],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[2],
-        "label": "2s",
-    }
-    prop3s = {
-        "color": mypalettecolor[3],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[3],
-        "label": "3s",
-    }
-    prop4s = {
-        "color": mypalettecolor[4],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[4],
-        "label": "4s",
-    }
-    prop5s = {
-        "color": mypalettecolor[5],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[5],
-        "label": "5s",
-    }
-    prop6s = {
-        "color": mypalettecolor[6],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[6],
-        "label": "6s",
-    }
-    prop7s = {
-        "color": mypalettecolor[7],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[7],
-        "label": "7s",
-    }
-    prop8s = {
-        "color": mypalettecolor[8],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[8],
-        "label": "8s",
-    }
-    prop9s = {
-        "color": mypalettecolor[9],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[9],
-        "label": "9s",
-    }
-    prop10s = {
-        "color": mypalettecolor[10],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[10],
-        "label": "10s",
-    }
-    prop11s = {
-        "color": mypalettecolor[11],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[11],
-        "label": "11s",
-    }
-    prop12s = {
-        "color": mypalettecolor[12],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[12],
-        "label": "12s",
-    }
-    prop13s = {
-        "color": mypalettecolor[13],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[14],
-        "label": "13s",
-    }
-    prop14s = {
-        "color": mypalettecolor[14],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[14],
-        "label": "14s",
-    }
-    prop15s = {
-        "color": mypalettecolor[15],
-        "linestyle": mypalettestyle["skew"],
-        "linewidth": mylinewidth[15],
-        "label": "15s",
-    }
-    # assemble default dictionary by normal or skew
-    propn = {
-        1: prop1n,
-        2: prop2n,
-        3: prop3n,
-        4: prop4n,
-        5: prop5n,
-        6: prop6n,
-        7: prop7n,
-        8: prop8n,
-        9: prop9n,
-        10: prop10n,
-        11: prop11n,
-        12: prop12n,
-        13: prop13n,
-        14: prop14n,
-        15: prop15n,
-    }
-    props = {
-        1: prop1s,
-        2: prop2s,
-        3: prop3s,
-        4: prop4s,
-        5: prop5s,
-        6: prop6s,
-        7: prop7s,
-        8: prop8s,
-        9: prop9s,
-        10: prop10s,
-        11: prop11s,
-        12: prop12s,
-        13: prop13s,
-        14: prop14s,
-        15: prop15s,
-    }
-    # assemble final dict
-    return {"normal": propn, "skew": props}
+    linepropdict = {}
+    resontypes = ["normal", "skew"]
+    for resontype in resontypes:
+        linepropdict[resontype] = {}
+    for resontype in resontypes:
+        for idx in range(1, 16):
+            propaux = {
+                "color": mypalettecolor[idx],
+                "linestyle": mypalettestyle[resontype],
+                "linewidth": mylinewidth[idx],
+                "label": str(idx) + resontype[0] + addtolabel,
+            }
+            linepropdict[resontype][idx] = propaux
+    return linepropdict
 
 
 def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
@@ -400,6 +202,8 @@ def plot_tune_diagram(
                 Default: uses "-" and "--". See Normal and Skew convention.
             * linecolor: sets a single color for all the resonances.
                 By default a custom palette is used. See Lines Color and Width.
+            * addtolabel: adds a string to the line label, i.e. for the fourth
+                order normal resonance "4n"+addtolabel
 
     Returns:
         Axes object from matplotlib.axes._axes
@@ -512,8 +316,12 @@ def plot_tune_diagram(
     linestyle = kwargs.pop("linestyle", None)
     linecolor = kwargs.pop("linecolor", None)
     linewidth = kwargs.pop("linewidth", None)
+    addtolabel = kwargs.pop("addtolabel", None)
     defaultlprop = create_linepalette(
-        linestyle=linestyle, linecolor=linecolor, linewidth=linewidth
+        linestyle=linestyle,
+        linecolor=linecolor,
+        linewidth=linewidth,
+        addtolabel=addtolabel,
     )
     lprop = kwargs.pop("linestyle", defaultlprop)
 
@@ -588,9 +396,12 @@ def plot_tune_diagram(
     myleghandles = []
     myleglabels = []
     handleall, labelall = axes.get_legend_handles_labels()
-    myleglabels = sorted(set(labelall))
-    idxunique = [labelall.index(mylab) for mylab in myleglabels]
+    hstyle = [hline._linestyle for hline in handleall]
+    joinlabelstyle = [i + j for i, j in zip(labelall, hstyle)]
+    uniquelabelstyle = sorted(set(joinlabelstyle))
+    idxunique = [joinlabelstyle.index(uniqele) for uniqele in uniquelabelstyle]
     myleghandles = [handleall[idx] for idx in idxunique]
+    myleglabels = [labelall[idx] for idx in idxunique]
     if legend:
         axes.legend(handles=myleghandles, labels=myleglabels, frameon=legend)
     plt.show(block=block)
