@@ -183,6 +183,7 @@ def plot_tune_diagram(
         verbose: print verbose output.
         legend: print legend on the plot. Default: False.
         show: show plot. Default: True.
+            Set to False to prevent spurious plots in JupyterLab.
         block: passed to plot.show(). Default: False.
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
