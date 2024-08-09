@@ -222,8 +222,71 @@ def _computeDrivingTerms(
 
     if second_order:
         assert nperiods == 1, 'Second order available only for nperiods=1'
-        if(RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
-            pass
+
+        if (RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
+            nelem = sum(mask_b3l)
+            b3lm = b3l[mask_b3l]
+            betaxm = betax[mask_b3l]
+            betaym = betay[mask_b3l]
+            rbetaxm = rbetax[mask_b3l]
+            rbetaym = rbetay[mask_b3l]
+            phixm = phix[mask_b3l]
+            phiym = phiy[mask_b3l]
+            pxm = px[mask_b3l]
+            pym = py[mask_b3l]
+            nux = tune[0]
+            nuy = tune[1]
+            for i, j in itertools.product(range(nelem), range(nelem)):
+                termsign = numpy.sign(s[i] - s[j])
+                if termsign:
+                    rdts.h22000 += ((1. / 64) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaxm[i] * betaxm[j] *
+                                    (pxm[i]*pxm[i]*pxm[i] * numpy.conj(pxm[j]*pxm[j]*pxm[j]) +
+                                     3 * pxm[i] * numpy.conj(pxm[j])))
+                    rdts.h31000 += ((1. / 32) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaxm[i] * betaxm[j] *
+                                    pxm[i]*pxm[i]*pxm[i] * numpy.conj(pxm[j]))
+                    t1 = numpy.conj(pxm[i]) * pxm[j]
+                    rdts.h11110 += ((1. / 16) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                     rbetaxm[i] * rbetaxm[j] *  betaym[i] *
+                                    (betaxm[j] * (t1 - numpy.conj(t1)) +
+                                     betaym[j] * pym[i] * pym[i] *
+                                     numpy.conj(pym[j] * pym[j]) * (numpy.conj(t1) + t1)))
+                    t1 = numpy.exp(-1j * (phixm[i] - phixm[j]))
+                    t2 = numpy.conj(t1)
+                    rdts.h11200 += ((1. / 32) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] *  betaym[i] *
+                                    numpy.exp(1j * (2 * phiym[i])) *
+                                    (betaxm[j] * (t1 - t2) + 2 * betaym[j] * (t2 + t1)))
+                    rdts.h40000 += ((1. / 64) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaxm[i] * betaxm[j] *
+                                    pxm[i]*pxm[i]*pxm[i] * pxm[j])
+                    rdts.h20020 += ((1. / 64) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaym[i] *
+                                    (betaxm[j] * numpy.conj(pxm[i] * pym[i]* pym[i]) *
+                                     pxm[j]*pxm[j]*pxm[j] - (betaxm[j] + 4 * betaym[j]) *
+                                     pxm[i] * pxm[j] * numpy.conj(pym[i]*pym[i])))
+                    rdts.h20110 += ((1. / 32) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaym[i] *
+                                    (betaxm[j] * (numpy.conj(pxm[i]) * pxm[j]*pxm[j]*pxm[j] - pxm[i] * pxm[j]) +
+                                     2 * betaym[j] * pxm[i] * pxm[j] * pym[i]* pym[i] * numpy.conj(pym[j]* pym[j])))
+                    rdts.h20200 += ((1. / 64) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaym[i] *
+                                    (betaxm[j] * numpy.conj(pxm[i]) * pxm[j]*pxm[j]*pxm[j] * pym[i]*pym[i]
+                                     - (betaxm[j] - 4 * betaym[j]) * pxm[i] * pxm[j] * pym[i]*pym[i]))
+                    rdts.h00220 += ((1. / 64) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaym[i] * betaym[j] *
+                                    (pxm[i] * pym[i] * numpy.conj(pxm[j] * pym[j]*pym[j]) +
+                                     4 * pxm[i] * numpy.conj(pxm[j]) - numpy.conj(pxm[i] * pym[j]*pym[j]) *
+                                     pxm[j] * pym[i]*pym[i]))
+                    rdts.h00310 += ((1. / 32) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaym[i] * betaym[j] *
+                                    pym[i]*pym[i] * pxm[i] * numpy.conj(pxm[j]) -
+                                    pxm[j] * numpy.conj(pxm[i]))
+                    rdts.h00400 += ((1. / 64) * termsign * 1j * b3lm[i] * b3lm[j] *
+                                    rbetaxm[i] * rbetaxm[j] * betaym[i] * betaym[j] *
+                                    pxm[i] * numpy.conj(pxm[j]) *  pym[i]*pym[i] *  pym[j]*pym[j])
+
         if (RDTType.TUNESHIFT in rdttype) or (RDTType.ALL in rdttype):
             nelem = sum(mask_b3l)
             b3lm = b3l[mask_b3l]
@@ -258,7 +321,6 @@ def _computeDrivingTerms(
                                    numpy.cos(abs(phixm[i] - phixm[j]) - 2 * abs(phiym[i] - phiym[j]) -
                                              numpy.pi * (nux - 2 * nuy)) /
                                    numpy.sin(numpy.pi * (nux - 2 * nuy))))
-
 
     return rdts
 
