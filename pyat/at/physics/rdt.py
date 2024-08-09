@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import itertools
+
 import numpy
 from ..lattice import Lattice, Refpts, Multipole, All
 from enum import Enum
@@ -84,6 +87,7 @@ def _computeDrivingTerms(
     rdttype,
     nperiods,
     refpt,
+    second_order
 ):
     """
     Original implementation from ELEGANT
@@ -216,10 +220,51 @@ def _computeDrivingTerms(
             b4lm * betaym * betaym / 64 * pym * pym * pym * pym * PF(0, 4)
         )
 
+    if second_order:
+        assert nperiods == 1, 'Second order available only for nperiods=1'
+        if(RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
+            pass
+        if (RDTType.TUNESHIFT in rdttype) or (RDTType.ALL in rdttype):
+            nelem = sum(mask_b3l)
+            b3lm = b3l[mask_b3l]
+            betaxm = betax[mask_b3l]
+            betaym = betay[mask_b3l]
+            phixm = phix[mask_b3l]
+            phiym = phiy[mask_b3l]
+            nux = tune[0]
+            nuy = tune[1]
+            for i, j in itertools.product(range(nelem), range(nelem)):
+                rdts.dnux_dJx += (b3lm[i] * b3lm[j] / (-16 * numpy.pi) * (betaxm[i] * betaxm[j])**1.5 *
+                                  (3 * numpy.cos(abs(phixm[i] - phixm[j]) - numpy.pi * nux) /
+                                   numpy.sin(numpy.pi * nux) +
+                                   numpy.cos(abs(3 * (phixm[i] - phixm[j])) - 3 * numpy.pi * nux) /
+                                   numpy.sin(3 * numpy.pi * nux)))
+                rdts.dnux_dJy += (b3lm[i] * b3lm[j] / (8 * numpy.pi) *
+                                  numpy.sqrt(betaxm[i] * betaxm[j]) * betaym[i] *
+                                  (2 * betaxm[j] * numpy.cos(abs(phixm[i] - phixm[j]) - numpy.pi * nux) /
+                                   numpy.sin(numpy.pi * nux) - betaym[j] *
+                                   numpy.cos(abs(phixm[i] - phixm[j]) + 2 * abs(phiym[i] - phiym[j]) -
+                                             numpy.pi * (nux + 2 * nuy)) /
+                                   numpy.sin(numpy.pi * (nux + 2 * nuy)) + betaym[j] *
+                                   numpy.cos(abs(phixm[i] - phixm[j]) - 2 * abs(phiym[i] - phiym[j]) -
+                                             numpy.pi * (nux - 2 * nuy)) /
+                                   numpy.sin(numpy.pi * (nux - 2 * nuy))))
+                rdts.dnuy_dJy += (b3lm[i] * b3lm[j] / (-16 * numpy.pi) *
+                                  numpy.sqrt(betaxm[i] * betaxm[j]) * betaym[i] * betaym[j] *
+                                  (4 * numpy.cos(abs(phixm[i] - phixm[j]) - numpy.pi * nux) /
+                                   numpy.sin(numpy.pi * nux) +
+                                   numpy.cos(abs(phixm[i] - phixm[j]) + 2 * abs(phiym[i] - phiym[j]) -
+                                             numpy.pi * (nux + 2 * nuy)) / numpy.sin(numpy.pi * (nux + 2 * nuy)) +
+                                   numpy.cos(abs(phixm[i] - phixm[j]) - 2 * abs(phiym[i] - phiym[j]) -
+                                             numpy.pi * (nux - 2 * nuy)) /
+                                   numpy.sin(numpy.pi * (nux - 2 * nuy))))
+
+
     return rdts
 
 
-def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTType):
+def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTType,
+             second_order: bool = False):
     """
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
     from ELEGANT.
@@ -234,6 +279,9 @@ def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTTyp
         refpts: Element refpts at which the RDTs are calculated
         rdt_type: Type of RDTs to be calculated. The type can be
         :code:`Sequence[at.RDTType] | at.RDTType`.
+
+    Keyword Args:
+        second_order: Compute second order terms (default: False)
 
     Returns:
         rdts: rdt data (complex) at refpts
@@ -279,6 +327,8 @@ def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTTyp
     """
     rdt_type = numpy.atleast_1d(rdt_type)
     nperiods = ring.periodicity
+    if second_order:
+        assert nperiods == 1, 'Second order available only for ring.periodicity=1'
 
     refpts = ring.uint32_refpts(refpts)
     lo, avebeta, avemu, avedisp, *_ = ring.avlinopt(refpts=All)
@@ -322,23 +372,11 @@ def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTTyp
         b3l_rot = numpy.concatenate((b3l[start_idx:], b3l[:start_idx]))
         b4l_rot = numpy.concatenate((b4l[start_idx:], b4l[:start_idx]))
         rdtlist.append(
-            _computeDrivingTerms(
-                s_rot,
-                betax_rot,
-                betay_rot,
-                phix_rot,
-                phiy_rot,
-                etax_rot,
-                a2l_rot,
-                b2l_rot,
-                b3l_rot,
-                b4l_rot,
-                tune,
-                rdt_type,
-                nperiods,
-                ii,
-            )
-        )
+            _computeDrivingTerms(s_rot, betax_rot, betay_rot,
+                                 phix_rot, phiy_rot, etax_rot,
+                                 a2l_rot, b2l_rot, b3l_rot,
+                                 b4l_rot, tune, rdt_type,
+                                 nperiods, ii, second_order))
     rdts = _RDT()
     for k in rdts.__annotations__.keys():
         val = [getattr(rdt, k) for rdt in rdtlist]
