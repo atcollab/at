@@ -6,11 +6,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 
-__all__ = ['get_rdts', 'RDTType']
+__all__ = ["get_rdts", "RDTType"]
 
 
 class RDTType(Enum):
     """Enum class for RDT type"""
+
     ALL = 0
     FOCUSING = 1
     COUPLING = 2
@@ -24,25 +25,37 @@ class RDTType(Enum):
 class _RDT:
     # Location
     refpts: Sequence[int] | int = None
-    #Normal quadrupoles rdts
+    # Normal quadrupoles rdts
     h20000: Sequence[complex] | complex = None
     h00200: Sequence[complex] | complex = None
-    #linear coupling rdts
+    # linear coupling rdts
     h10010: Sequence[complex] | complex = None
     h10100: Sequence[complex] | complex = None
-    #chromatic rdts
+    # chromatic rdts
     h11001: Sequence[complex] | complex = None
     h00111: Sequence[complex] | complex = None
     h20001: Sequence[complex] | complex = None
     h00201: Sequence[complex] | complex = None
     h10002: Sequence[complex] | complex = None
-    #geometric rdts
+    # sextupole geometric rdts
     h21000: Sequence[complex] | complex = None
     h30000: Sequence[complex] | complex = None
     h10110: Sequence[complex] | complex = None
     h10020: Sequence[complex] | complex = None
     h10200: Sequence[complex] | complex = None
-    #Detuning
+    # octupole geometric rdts
+    h22000: Sequence[complex] | complex = None
+    h11110: Sequence[complex] | complex = None
+    h00220: Sequence[complex] | complex = None
+    h31000: Sequence[complex] | complex = None
+    h40000: Sequence[complex] | complex = None
+    h20110: Sequence[complex] | complex = None
+    h11200: Sequence[complex] | complex = None
+    h20020: Sequence[complex] | complex = None
+    h20200: Sequence[complex] | complex = None
+    h00310: Sequence[complex] | complex = None
+    h00400: Sequence[complex] | complex = None
+    # Detuning
     dnux_dJx: Sequence[float] | float = None
     dnux_dJy: Sequence[float] | float = None
     dnuy_dJy: Sequence[float] | float = None
@@ -56,25 +69,41 @@ def _get_polynom(elem, attr, index):
         return 0
 
 
-def _computeDrivingTerms(s, betax, betay, phix, phiy, etax, a2l, b2l, b3l, b4l, tune,
-                        rdttype, nperiods, refpt):
+def _computeDrivingTerms(
+    s,
+    betax,
+    betay,
+    phix,
+    phiy,
+    etax,
+    a2l,
+    b2l,
+    b3l,
+    b4l,
+    tune,
+    rdttype,
+    nperiods,
+    refpt,
+):
     """
     Original implementation from ELEGANT
     Based on J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
     Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
     """
-    periodicfactor = numpy.ones((9,9))
+    periodicfactor = numpy.ones((9, 9))
     rdts = _RDT()
 
     def PF(i, j):
-        return periodicfactor[4+i][4+j]
+        return periodicfactor[4 + i][4 + j]
 
     if nperiods != 1:
         for i in range(9):
             for j in range(9):
-                a1 = numpy.pi*2 * (tune[0] * (i-4)+tune[1] * (j-4))
-                a2 = a1/nperiods
-                periodicfactor[i][j] = (numpy.exp(1j * a1)-1.0) / (numpy.exp(1j * a2)-1.0)
+                a1 = numpy.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
+                a2 = a1 / nperiods
+                periodicfactor[i][j] = (numpy.exp(1j * a1) - 1.0) / (
+                    numpy.exp(1j * a2) - 1.0
+                )
 
     rbetax = numpy.sqrt(betax)
     rbetay = numpy.sqrt(betay)
@@ -95,7 +124,6 @@ def _computeDrivingTerms(s, betax, betay, phix, phiy, etax, a2l, b2l, b3l, b4l, 
         pym = py[mask_b2l]
         rdts.h20000 = sum((b2lm / 8) * betaxm * pxm * pxm * PF(2, 0))
         rdts.h00200 = sum((b2lm / 8) * betaym * pym * pym * PF(0, 2))
-
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
         a2lm = a2l[mask_a2l]
@@ -118,9 +146,18 @@ def _computeDrivingTerms(s, betax, betay, phix, phiy, etax, a2l, b2l, b3l, b4l, 
         pym = py[mask_b23l]
         rdts.h11001 = sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) * nperiods)
         rdts.h00111 = sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) * nperiods)
-        rdts.h20001 = sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) / 2 * pxm * pxm * PF(2, 0))
-        rdts.h00201 = sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) / 2 * pym * pym * PF(0, 2))
-        rdts.h10002 = sum((b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm) / 2 * pxm * PF(1, 0))
+        rdts.h20001 = sum(
+            (b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) / 2 * pxm * pxm * PF(2, 0)
+        )
+        rdts.h00201 = sum(
+            (b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) / 2 * pym * pym * PF(0, 2)
+        )
+        rdts.h10002 = sum(
+            (b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm)
+            / 2
+            * pxm
+            * PF(1, 0)
+        )
 
     if (RDTType.GEOMETRIC1 in rdttype) or (RDTType.ALL in rdttype):
         b3lm = b3l[mask_b3l]
@@ -130,9 +167,11 @@ def _computeDrivingTerms(s, betax, betay, phix, phiy, etax, a2l, b2l, b3l, b4l, 
         pxm = px[mask_b3l]
         pym = py[mask_b3l]
         rdts.h21000 = sum(b3lm * rbetaxm * betaxm / 8 * pxm * PF(1, 0))
-        rdts.h30000 = sum(b3lm * rbetaxm * betaxm / 24 * pxm*pxm*pxm * PF(3, 0))
+        rdts.h30000 = sum(b3lm * rbetaxm * betaxm / 24 * pxm * pxm * pxm * PF(3, 0))
         rdts.h10110 = sum(-b3lm * rbetaxm * betaxm / 4 * pxm * PF(1, 0))
-        rdts.h10020 = sum(-b3lm * rbetaxm * betaym / 8 * pxm * numpy.conj(pym * pym) * PF(1, -2))
+        rdts.h10020 = sum(
+            -b3lm * rbetaxm * betaym / 8 * pxm * numpy.conj(pym * pym) * PF(1, -2)
+        )
         rdts.h10200 = sum(-b3lm * rbetaxm * betaym / 8 * pxm * pym * pym * PF(1, 2))
 
     if (RDTType.TUNESHIFT in rdttype) or (RDTType.ALL in rdttype):
@@ -153,26 +192,99 @@ def _computeDrivingTerms(s, betax, betay, phix, phiy, etax, a2l, b2l, b3l, b4l, 
         rdts.h11110 = sum(-3 * b4lm * betaxm * betaym / 8 * nperiods)
         rdts.h00220 = sum(3 * b4lm * betaym * betaym / 32 * nperiods)
         rdts.h31000 = sum(b4lm * betaxm * betaxm / 16 * pxm * pxm * PF(2, 0))
-        rdts.h40000 = sum(b4lm * betaxm * betaxm / 64 * pxm * pxm * pxm * pxm * PF(4, 0))
+        rdts.h40000 = sum(
+            b4lm * betaxm * betaxm / 64 * pxm * pxm * pxm * pxm * PF(4, 0)
+        )
         rdts.h20110 = sum(-3 * b4lm * betaxm * betaym / 16 * pxm * pxm * PF(2, 0))
         rdts.h11200 = sum(-3 * b4lm * betaxm * betaym / 16 * pym * pym * PF(0, 2))
-        rdts.h20020 = sum(-3 * b4lm * betaxm * betaym / 32 * pxm * pxm * numpy.conj(pym * pym) * PF(2, -2))
-        rdts.h20200 = sum(-3 * b4lm * betaxm * betaym / 32 * pxm * pxm * pym * pym * PF(2, 2))
+        rdts.h20020 = sum(
+            -3
+            * b4lm
+            * betaxm
+            * betaym
+            / 32
+            * pxm
+            * pxm
+            * numpy.conj(pym * pym)
+            * PF(2, -2)
+        )
+        rdts.h20200 = sum(
+            -3 * b4lm * betaxm * betaym / 32 * pxm * pxm * pym * pym * PF(2, 2)
+        )
         rdts.h00310 = sum(b4lm * betaym * betaym / 16 * pym * pym * PF(0, 2))
-        rdts.h00400 = sum(b4lm * betaym * betaym / 64 * pym * pym * pym * pym * PF(0, 4))
+        rdts.h00400 = sum(
+            b4lm * betaym * betaym / 64 * pym * pym * pym * pym * PF(0, 4)
+        )
 
     return rdts
 
 
-def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTType, nperiods=1):
+def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTType):
+    """
+    :py:func:`get_rdts` computes the ring RDTs based on the original implementation
+    from ELEGANT.
+    J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
+    Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
 
+    Usage:
+      >>> ring.get_rdts(reftps, [at.RDTType.COUPLING, at.RDTType.CHROMATIC])
+
+    Parameters:
+        ring: :code:`at.Lattice` object
+        refpts: Element refpts at which the RDTs are calculated
+        rdt_type: Type of RDTs to be calculated. The type can be
+        :code:`Sequence[at.RDTType] | at.RDTType`.
+
+    Returns:
+        rdts: rdt data (complex) at refpts
+
+        **rdts** is a dataclass with fields:
+        =================   ======
+        **refts**           location of the rdt
+
+        **h20000**          Normal quadrupole RDTS
+        **h00200**
+
+        **h10010**          Coupling RDTs
+        **h10100**
+
+        **h11001**          Chromatic RDTs
+        **h00111**
+        **h20001**
+        **h00201**
+        **h10002**
+
+        **h21000**          Sextupole geometric RDTs
+        **h30000**
+        **h10110**
+        **h10020**
+        **h10200**
+
+        **h22000**          Octupole geometric RDTs
+        **h11110**
+        **h00220**
+        **h31000**
+        **h40000**
+        **h20110**
+        **h11200**
+        **h20020**
+        **h20200**
+        **h00310**
+        **h00400**
+
+        **dnux_dJx**        Detuning terms from octupoles
+        **dnux_dJy**
+        **dnuy_dJy**
+        =================   ======
+    """
     rdt_type = numpy.atleast_1d(rdt_type)
+    nperiods = ring.periodicity
 
     refpts = ring.uint32_refpts(refpts)
     lo, avebeta, avemu, avedisp, *_ = ring.avlinopt(refpts=All)
     idx_mag = ring.get_uint32_index(Multipole)
 
-    sall =  ring.get_s_pos(All)
+    sall = ring.get_s_pos(All)
     smag = sall[idx_mag]
     betax = avebeta[idx_mag, 0]
     betay = avebeta[idx_mag, 1]
@@ -180,10 +292,10 @@ def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTTyp
     phix = avemu[idx_mag, 0]
     phiy = avemu[idx_mag, 1]
 
-    a2l = [_get_polynom(e, 'PolynomA', 1)*e.Length for e in ring[idx_mag]]
-    b2l = [_get_polynom(e, 'PolynomB', 1)*e.Length for e in ring[idx_mag]]
-    b3l = [_get_polynom(e, 'PolynomB', 2)*e.Length for e in ring[idx_mag]]
-    b4l = [_get_polynom(e, 'PolynomB', 3)*e.Length for e in ring[idx_mag]]
+    a2l = [_get_polynom(e, "PolynomA", 1) * e.Length for e in ring[idx_mag]]
+    b2l = [_get_polynom(e, "PolynomB", 1) * e.Length for e in ring[idx_mag]]
+    b3l = [_get_polynom(e, "PolynomB", 2) * e.Length for e in ring[idx_mag]]
+    b4l = [_get_polynom(e, "PolynomB", 3) * e.Length for e in ring[idx_mag]]
 
     mux = lo[-1].mu[0]
     muy = lo[-1].mu[1]
@@ -195,21 +307,44 @@ def get_rdts(ring: Lattice, refpts: Refpts, rdt_type: Sequence[RDTType] | RDTTyp
         betax_rot = numpy.concatenate((betax[start_idx:], betax[:start_idx]))
         betay_rot = numpy.concatenate((betay[start_idx:], betay[:start_idx]))
         etax_rot = numpy.concatenate((etax[start_idx:], etax[:start_idx]))
-        phix_rot = numpy.concatenate((phix[start_idx:], phix[:start_idx] + mux)) - avemu[ii, 0]
-        phiy_rot = numpy.concatenate((phiy[start_idx:], phiy[:start_idx] + muy)) - avemu[ii, 1]
-        s_rot = numpy.concatenate((smag[start_idx:], smag[: start_idx] + sall[-1]))- sall[ii]
+        phix_rot = (
+            numpy.concatenate((phix[start_idx:], phix[:start_idx] + mux)) - avemu[ii, 0]
+        )
+        phiy_rot = (
+            numpy.concatenate((phiy[start_idx:], phiy[:start_idx] + muy)) - avemu[ii, 1]
+        )
+        s_rot = (
+            numpy.concatenate((smag[start_idx:], smag[:start_idx] + sall[-1]))
+            - sall[ii]
+        )
         a2l_rot = numpy.concatenate((a2l[start_idx:], a2l[:start_idx]))
         b2l_rot = numpy.concatenate((b2l[start_idx:], b2l[:start_idx]))
         b3l_rot = numpy.concatenate((b3l[start_idx:], b3l[:start_idx]))
         b4l_rot = numpy.concatenate((b4l[start_idx:], b4l[:start_idx]))
-        rdtlist.append(_computeDrivingTerms(s_rot, betax_rot, betay_rot, phix_rot, phiy_rot,
-                                            etax_rot, a2l_rot, b2l_rot, b3l_rot,
-                                            b4l_rot, tune, rdt_type, nperiods, ii))
+        rdtlist.append(
+            _computeDrivingTerms(
+                s_rot,
+                betax_rot,
+                betay_rot,
+                phix_rot,
+                phiy_rot,
+                etax_rot,
+                a2l_rot,
+                b2l_rot,
+                b3l_rot,
+                b4l_rot,
+                tune,
+                rdt_type,
+                nperiods,
+                ii,
+            )
+        )
     rdts = _RDT()
     for k in rdts.__annotations__.keys():
         val = [getattr(rdt, k) for rdt in rdtlist]
         if val[0] != None:
             setattr(rdts, k, val)
     return rdts
+
 
 Lattice.get_rdts = get_rdts
