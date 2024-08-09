@@ -12,17 +12,21 @@ __all__ = ['get_rdts', 'RDTType']
 class RDTType(Enum):
     """Enum class for RDT type"""
     ALL = 0
-    CHROMATIC = 1
+    FOCUSING = 1
     COUPLING = 2
-    GEOMETRIC1 = 3
-    GEOMETRIC2 = 4
-    TUNESHIFT = 5
+    CHROMATIC = 3
+    GEOMETRIC1 = 4
+    GEOMETRIC2 = 5
+    TUNESHIFT = 6
 
 
 @dataclass
 class _RDT:
     # Location
     refpts: Sequence[int] | int = None
+    #Normal quadrupoles rdts
+    h20000: Sequence[complex] | complex = None
+    h00200: Sequence[complex] | complex = None
     #linear coupling rdts
     h10010: Sequence[complex] | complex = None
     h10100: Sequence[complex] | complex = None
@@ -82,6 +86,15 @@ def _computeDrivingTerms(s, betax, betay, phix, phiy, etax, a2l, b2l, b3l, b4l, 
     mask_b2l = numpy.absolute(b2l) > 1.0e-6
     mask_b3l = numpy.absolute(b3l) > 1.0e-6
     mask_b4l = numpy.absolute(b4l) > 1.0e-6
+
+    if (RDTType.FOCUSING in rdttype) or (RDTType.ALL in rdttype):
+        b2lm = b2l[mask_b2l]
+        betaxm = betax[mask_b2l]
+        betaym = betay[mask_b2l]
+        pxm = px[mask_b2l]
+        pym = py[mask_b2l]
+        rdts.h20000 = sum((b2lm / 8) * betaxm * pxm * pxm * PF(2, 0))
+        rdts.h00200 = sum((b2lm / 8) * betaym * pym * pym * PF(0, 2))
 
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
