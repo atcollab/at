@@ -8,7 +8,6 @@ from collections.abc import Callable
 from math import sqrt, pi, sin, cos, atan2
 
 import numpy
-import numpy as np
 from scipy.linalg import solve
 
 from .amat import a_matrix, jmat, jmatswap
@@ -1214,12 +1213,12 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
         return k
 
     def foctrigo(k2, lg):
-        sqkl = np.sqrt(k2) * lg
-        return np.sin(sqkl) / sqkl, 1.0 - np.cos(sqkl)
+        sqkl = numpy.sqrt(k2) * lg
+        return numpy.sin(sqkl) / sqkl, 1.0 - numpy.cos(sqkl)
 
     def defoctrigo(k2, lg):
-        sqkl = np.sqrt(-k2) * lg
-        return np.sinh(sqkl) / sqkl, 1.0 - np.cosh(sqkl)
+        sqkl = numpy.sqrt(-k2) * lg
+        return numpy.sinh(sqkl) / sqkl, 1.0 - numpy.cosh(sqkl)
 
     def betadrift(beta0, alpha0, lg):
         gamma0 = (alpha0 * alpha0 + 1.0) / beta0
@@ -1235,10 +1234,10 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
         ) / 2.0
 
     def betalong(beta0, alpha0, k2, lg):
-        r = np.empty_like(beta0)
+        r = numpy.empty_like(beta0)
         kp = k2 >= 1.0e-7
         km = k2 <= -1.0e-7
-        k0 = np.logical_not(kp | km)
+        k0 = numpy.logical_not(kp | km)
         r[kp] = betafoc(foctrigo, beta0[kp], alpha0[kp], k2[kp], lg[kp])
         r[km] = betafoc(defoctrigo, beta0[km], alpha0[km], k2[km], lg[km])
         r[k0] = betadrift(beta0[k0], alpha0[k0], lg[k0])
@@ -1248,18 +1247,18 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
         sini, cosi = func(k2, lg)
         eta = disp0[:, 0] * sini + disp0[:, 1] * cosi / k2 / lg + ir * (1.0 - sini) / k2
         etap = disp0[:, 1] * sini - disp0[:, 0] * cosi / lg + ir * cosi / k2 / lg
-        return np.stack((eta, etap), axis=1)
+        return numpy.stack((eta, etap), axis=1)
 
     def dispdrift(disp0, ir, lg):
         eta = disp0[:, 0] + disp0[:, 1] * lg / 2.0 + lg * lg * ir / 6.0
         etap = disp0[:, 1] + lg * ir / 2.0
-        return np.stack((eta, etap), axis=1)
+        return numpy.stack((eta, etap), axis=1)
 
     def displong(disp0, ir, k2, lg):
-        r = np.empty_like(disp0)
+        r = numpy.empty_like(disp0)
         kp = k2 >= 1.0e-7
         km = k2 <= -1.0e-7
-        k0 = np.logical_not(kp | km)
+        k0 = numpy.logical_not(kp | km)
         r[kp] = dispfoc(foctrigo, disp0[kp], ir[kp], k2[kp], lg[kp])
         r[km] = dispfoc(defoctrigo, disp0[km], ir[km], k2[km], lg[km])
         r[k0] = dispdrift(disp0[k0], ir[k0], lg[k0])
@@ -1267,14 +1266,14 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
 
     # selected list
     boolrefs = get_bool_index(ring, refpts)
-    L = np.array([el.Length for el in ring[boolrefs[:-1]]])
+    L = numpy.array([el.Length for el in ring[boolrefs[:-1]]])
     longelem = boolrefs[:-1].copy()
     longelem[longelem] = L != 0.0
 
-    longi_refpts = np.append(longelem, [False])
-    longf_refpts = np.roll(longi_refpts, 1)
+    longi_refpts = numpy.append(longelem, [False])
+    longf_refpts = numpy.roll(longi_refpts, 1)
     all_refs = boolrefs | longf_refpts
-    _, bd, d_all = linopt4(ring, refpts=all_refs, dp=dp, get_chrom=True, **kwargs)
+    _, bd, d_all = get_optics(ring, refpts=all_refs, dp=dp, get_chrom=True, **kwargs)
     lindata = d_all[boolrefs[all_refs]]  # Optics at entrance of selected elements
 
     avebeta = lindata.beta.copy()
@@ -1290,34 +1289,34 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
     df = d_all[longf_refpts[all_refs]]  # Optics at exit of long elements
 
     dx0 = (di.closed_orbit[:, 0] + df.closed_orbit[:, 0]) / 2
-    K = np.array([get_strength(el) for el in ring_long])
-    sext_strength = np.array([get_sext_strength(el) for el in ring_long])
-    roll = np.array([get_roll(el) for el in ring_long])
-    ba = np.array([get_bendingangle(el) for el in ring_long])
-    dx = np.array([get_dx(el) for el in ring_long])
+    K = numpy.array([get_strength(el) for el in ring_long])
+    sext_strength = numpy.array([get_sext_strength(el) for el in ring_long])
+    roll = numpy.array([get_roll(el) for el in ring_long])
+    ba = numpy.array([get_bendingangle(el) for el in ring_long])
+    dx = numpy.array([get_dx(el) for el in ring_long])
     irho = ba / L
     K = K * roll + 2 * sext_strength * (dx0 - dx)
     Kx = K + irho * irho
     Ky = -K
-    Kxy = np.stack((Kx, Ky), axis=1)
-    Lxy = np.stack((L, L), axis=1)
+    Kxy = numpy.stack((Kx, Ky), axis=1)
+    Lxy = numpy.stack((L, L), axis=1)
 
     # Hard edge model on dipoles
     bend = irho != 0.0
-    e1 = np.array([get_e1(el) for el in ring_long[bend]])
-    Fint = np.array([get_fint(el) for el in ring_long[bend]])
-    gap = np.array([get_gap(el) for el in ring_long[bend]])
-    d_csi = irho[bend] * gap * Fint * (1.0 + np.sin(e1) ** 2) / np.cos(e1)
-    Cp = np.stack((irho[bend] * np.tan(e1), -irho[bend] * np.tan(e1 - d_csi)), axis=1)
+    e1 = numpy.array([get_e1(el) for el in ring_long[bend]])
+    Fint = numpy.array([get_fint(el) for el in ring_long[bend]])
+    gap = numpy.array([get_gap(el) for el in ring_long[bend]])
+    d_csi = irho[bend] * gap * Fint * (1.0 + numpy.sin(e1) ** 2) / numpy.cos(e1)
+    Cp = numpy.stack((irho[bend] * numpy.tan(e1), -irho[bend] * numpy.tan(e1 - d_csi)), axis=1)
     di.alpha[bend] -= di.beta[bend] * Cp
-    di.dispersion[np.ix_(bend, [1, 3])] -= di.dispersion[np.ix_(bend, [0, 2])] * Cp
+    di.dispersion[numpy.ix_(bend, [1, 3])] -= di.dispersion[numpy.ix_(bend, [0, 2])] * Cp
 
     avemu[b_long] = 0.5 * (di.mu + df.mu)
     aves[b_long] = 0.5 * (df.s_pos + di.s_pos)
     avebeta[b_long] = betalong(di.beta, di.alpha, Kxy, Lxy)
     avedx = displong(di.dispersion[:, :2], irho, Kx, L)
-    avedy = displong(di.dispersion[:, 2:], np.zeros_like(irho), Ky, L)
-    avedisp[b_long] = np.concat((avedx, avedy), axis=1)
+    avedy = displong(di.dispersion[:, 2:], numpy.zeros_like(irho), Ky, L)
+    avedisp[b_long] = numpy.concatenate((avedx, avedy), axis=1)
 
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
