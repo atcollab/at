@@ -37,26 +37,27 @@ functions can be enabled later by simply installing `matplotlib <https://matplot
 
 ::
 
-   $ pip install accelerator-toolbox[plot]
+   $ pip install "accelerator-toolbox[plot]"
 
-This installs in addition the `matplotlib <https://matplotlib.org>`_ package and its dependencies, and enables all
-plotting functions.
+This installs in addition the `matplotlib <https://matplotlib.org>`_ package and its
+dependencies, which enables all plotting functions.
 
 *Optional dependencies:*
 ........................
 
 In addition to ``[plot]``, other modifiers are available for specific purposes:
 
-``accelerator-toolbox[dev]``
+``"accelerator-toolbox[dev]"``
     Installs the test framework: `pytest <https://docs.pytest.org/en/stable/>`_,
     `pytest-cov <https://pypi.org/project/pytest-cov/>`_ and
     `flake8 <https://flake8.pycqa.org/en/latest/>`_. This allows to run locally
     the test sequence executed on GitHub.
 
-``accelerator-toolbox[doc]``
+``"accelerator-toolbox[doc]"``
     Installs `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_ and its
     utilities, allowing the generate locally the HTML documentation.
 
+These modifiers may be combined. Example: ``pip install "accelerator-toolbox[plot,dev]"``
 
 From conda-forge
 ~~~~~~~~~~~~~~~~
