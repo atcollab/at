@@ -11,3 +11,4 @@ else:
     from .generic import *
     from .specific import *
     from .standalone import *
+    from .resonances import *
