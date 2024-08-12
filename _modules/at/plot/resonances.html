@@ -1,0 +1,880 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>at.plot.resonances &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom_at.css?v=bc6ab313" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=99678979"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/at/plot/resonances';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/AT.png" class="logo__image only-light" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/AT.png" class="logo__image only-dark" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../p/index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../p/index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">at.plot.resonances</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for at.plot.resonances</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;AT plotting functions related to resonances.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.axes</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;farey_sequence&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_tune_diagram&quot;</span><span class="p">,</span> <span class="s2">&quot;create_linepalette&quot;</span><span class="p">]</span>
+
+<span class="c1"># 2024jul31 oblanco at ALBA CELLS</span>
+
+
+<div class="viewcode-block" id="create_linepalette">
+<a class="viewcode-back" href="../../../p/api/at.plot.resonances.html#at.plot.resonances.create_linepalette">[docs]</a>
+<span class="k">def</span> <span class="nf">create_linepalette</span><span class="p">(</span>
+    <span class="n">linestyle</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">linecolor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">linewidth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">addtolabel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a line palette to plot resonance lines.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        linestyle: str or dictionary.</span>
+<span class="sd">            If &#39;dots&#39; it uses dotted styles as linestyles</span>
+<span class="sd">                {&quot;normal&quot;: &quot;dashdot&quot;, &quot;skew&quot;: &quot;dotted&quot;}</span>
+<span class="sd">            If a dictionary is passed, it should contain</span>
+<span class="sd">                {&quot;normal&quot;: style1, &quot;skew&quot;: style2}</span>
+<span class="sd">            Default: {&quot;normal&quot;: &#39;-&#39;, &quot;skew&quot;: &#39;--&#39;}</span>
+<span class="sd">        linecolor: defines one color to be used. e.g. &#39;k&#39;.</span>
+<span class="sd">            Default: custom values. See :py:func:`plot_tune_diagram`</span>
+<span class="sd">        linewidth: defines one integer value for the line width, e.g. 1.</span>
+<span class="sd">            Default: custom values. See :py:func:`plot_tune_diagram`</span>
+<span class="sd">        addtolabel: adds a string to the line label</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">            Dict dictionary contaning the line properties for resonance plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># create default dictionary with line properties</span>
+    <span class="n">mypalettecolor1</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+        <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span>
+        <span class="mi">7</span><span class="p">:</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span>
+        <span class="mi">8</span><span class="p">:</span> <span class="s2">&quot;darkcyan&quot;</span><span class="p">,</span>
+        <span class="mi">9</span><span class="p">:</span> <span class="s2">&quot;lightgreen&quot;</span><span class="p">,</span>
+        <span class="mi">10</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+        <span class="mi">11</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+        <span class="mi">12</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+        <span class="mi">13</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span>
+        <span class="mi">14</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span>
+        <span class="mi">15</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">mypalettewidth_main</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">6</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">7</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">8</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">9</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">10</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">11</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">12</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">13</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">14</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="mi">15</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">mypalettestyle_main</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;skew&quot;</span><span class="p">:</span> <span class="s2">&quot;--&quot;</span><span class="p">}</span>
+    <span class="n">mypalettestyle_withdots</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;normal&quot;</span><span class="p">:</span> <span class="s2">&quot;dashdot&quot;</span><span class="p">,</span> <span class="s2">&quot;skew&quot;</span><span class="p">:</span> <span class="s2">&quot;dotted&quot;</span><span class="p">}</span>
+    <span class="c1"># set the line style</span>
+    <span class="n">mypalettestyle</span> <span class="o">=</span> <span class="n">mypalettestyle_main</span>
+    <span class="k">if</span> <span class="n">linestyle</span> <span class="o">==</span> <span class="s2">&quot;dots&quot;</span><span class="p">:</span>
+        <span class="n">mypalettestyle</span> <span class="o">=</span> <span class="n">mypalettestyle_withdots</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">linestyle</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">mypalettestyle</span> <span class="o">=</span> <span class="n">linestyle</span>
+    <span class="c1"># set the line color</span>
+    <span class="n">mypalettecolor</span> <span class="o">=</span> <span class="n">mypalettecolor1</span>
+    <span class="k">if</span> <span class="n">linecolor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">lsize</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">):</span>
+            <span class="n">mypalettecolor</span><span class="p">[</span><span class="n">lsize</span><span class="p">]</span> <span class="o">=</span> <span class="n">linecolor</span>
+    <span class="c1"># set the line width</span>
+    <span class="n">mylinewidth</span> <span class="o">=</span> <span class="n">mypalettewidth_main</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">linewidth</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">linewidth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">lsize</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">):</span>
+            <span class="n">mylinewidth</span><span class="p">[</span><span class="n">lsize</span><span class="p">]</span> <span class="o">=</span> <span class="n">linewidth</span>
+    <span class="c1"># add to label</span>
+    <span class="k">if</span> <span class="n">addtolabel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">addtolabel</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># set the dictionary</span>
+    <span class="n">linepropdict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">resontypes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;skew&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">resontype</span> <span class="ow">in</span> <span class="n">resontypes</span><span class="p">:</span>
+        <span class="n">linepropdict</span><span class="p">[</span><span class="n">resontype</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">resontype</span> <span class="ow">in</span> <span class="n">resontypes</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">):</span>
+            <span class="n">propaux</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">mypalettecolor</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                <span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="n">mypalettestyle</span><span class="p">[</span><span class="n">resontype</span><span class="p">],</span>
+                <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="n">mylinewidth</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="n">resontype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">addtolabel</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">linepropdict</span><span class="p">[</span><span class="n">resontype</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">propaux</span>
+    <span class="k">return</span> <span class="n">linepropdict</span></div>
+
+
+
+<div class="viewcode-block" id="farey_sequence">
+<a class="viewcode-back" href="../../../p/api/at.plot.resonances.html#at.plot.resonances.farey_sequence">[docs]</a>
+<span class="k">def</span> <span class="nf">farey_sequence</span><span class="p">(</span><span class="n">nthorder</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the Farey sequence, and the resonance sequence of nth order.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        nthorder: natural number bigger than 0.</span>
+<span class="sd">        verbose: prints extra info. Default: False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        fareyseqfloat: list of elements with the Farey sequence in Float format.</span>
+<span class="sd">            See Eqs.(1,2,3) of [1].</span>
+<span class="sd">        fareyseqfrac: list of elements with the Farey sequence in Fraction format.</span>
+<span class="sd">            See Eqs.(1,2,3) of [1].</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if given order is lower than 0, or window is zero.</span>
+
+<span class="sd">    [1] R.Tomas. &#39;From Farey sequences to resonance diagrams.</span>
+<span class="sd">            Phys.Rev.Acc.Beams 17, 014001 (2014)&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># verboseprint to check flag only once</span>
+    <span class="n">verboseprint</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">nthorder</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The order must be a positive integer larger than zero.&quot;</span><span class="p">)</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;nthorder=</span><span class="si">{</span><span class="n">nthorder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">afarey</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">bfarey</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">cfarey</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dfarey</span> <span class="o">=</span> <span class="n">nthorder</span>
+    <span class="n">farey</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">dfarey</span><span class="p">]</span>
+    <span class="n">fracfarey</span> <span class="o">=</span> <span class="p">[</span><span class="n">Fraction</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">Fraction</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dfarey</span><span class="p">)]</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">farey</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">caux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">nthorder</span> <span class="o">+</span> <span class="n">bfarey</span><span class="p">)</span> <span class="o">/</span> <span class="n">dfarey</span><span class="p">)</span> <span class="o">*</span> <span class="n">cfarey</span> <span class="o">-</span> <span class="n">afarey</span>
+        <span class="n">daux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">nthorder</span> <span class="o">+</span> <span class="n">bfarey</span><span class="p">)</span> <span class="o">/</span> <span class="n">dfarey</span><span class="p">)</span> <span class="o">*</span> <span class="n">dfarey</span> <span class="o">-</span> <span class="n">bfarey</span>
+        <span class="n">afarey</span> <span class="o">=</span> <span class="n">cfarey</span>
+        <span class="n">bfarey</span> <span class="o">=</span> <span class="n">dfarey</span>
+        <span class="n">cfarey</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">caux</span><span class="p">)</span>
+        <span class="n">dfarey</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">daux</span><span class="p">)</span>
+        <span class="n">farey</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cfarey</span> <span class="o">/</span> <span class="n">dfarey</span><span class="p">)</span>
+        <span class="n">fracfarey</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Fraction</span><span class="p">(</span><span class="n">cfarey</span><span class="p">,</span> <span class="n">dfarey</span><span class="p">))</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;farey_float</span><span class="si">{</span><span class="n">nthorder</span><span class="si">}</span><span class="s2">= </span><span class="si">{</span><span class="n">farey</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;farey_frac</span><span class="si">{</span><span class="n">nthorder</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">fracfarey</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">farey</span><span class="p">,</span> <span class="n">fracfarey</span></div>
+
+
+
+<div class="viewcode-block" id="plot_tune_diagram">
+<a class="viewcode-back" href="../../../p/api/at.plot.resonances.html#at.plot.resonances.plot_tune_diagram">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_tune_diagram</span><span class="p">(</span>
+    <span class="n">orders</span><span class="p">:</span> <span class="nb">int</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="n">periodicity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">legend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">block</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">axes</span><span class="p">:</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">Axes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">linestyle</span><span class="p">:</span> <span class="nb">dict</span> <span class="ow">or</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">linecolor</span><span class="p">:</span> <span class="nb">str</span> <span class="ow">or</span> <span class="nb">any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">linewidth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">addtolabel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the tune diagram and resonance lines for a given order, periodicity and window.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        orders: integer or tuple of integers larger than zero. Default (1,2,3).</span>
+<span class="sd">        periodicity: periodicity of the machine, integer larger than zero. Default: 1.</span>
+<span class="sd">        window: (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the</span>
+<span class="sd">            tune minimum and maximum window. Default: (0,1,0,1).</span>
+<span class="sd">            window is ignored if the parameter axes is given.</span>
+<span class="sd">        verbose: print verbose output.</span>
+<span class="sd">        legend: print legend on the plot. Default: False.</span>
+<span class="sd">        show: show plot. Default: True.</span>
+<span class="sd">        block: passed to plot.show(). Default: False.</span>
+<span class="sd">        debug: extra output to check line construction. Default: False.</span>
+<span class="sd">        axes: :py:class:`~matplotlib.axes.Axes` for plotting the</span>
+<span class="sd">            resonances. If :py:obj:`None`, a new figure will be created.</span>
+<span class="sd">             Note that if axes are given then window is ignored.</span>
+<span class="sd">        linestyle: sets the line style for normal and skew resonances.</span>
+<span class="sd">            If &#39;dots&#39; is given it will use dashdot and dotted for normal</span>
+<span class="sd">            and skew resonances, respectively.</span>
+<span class="sd">            A dictionary could be passed containing</span>
+<span class="sd">               {&quot;normal&quot;: style1, &quot;skew&quot;:style2}</span>
+<span class="sd">            to plot using style1 and style2.</span>
+<span class="sd">            Default: uses &quot;-&quot; and &quot;--&quot;. See Normal and Skew convention.</span>
+<span class="sd">        linecolor: sets a single color for all the resonances.</span>
+<span class="sd">            By default a custom palette is used. See Lines Color and Width.</span>
+<span class="sd">        linewidth = integer width to be used for all resonances.</span>
+<span class="sd">            Default: See Color and Width below</span>
+<span class="sd">        addtolabel: adds a string to the line label, e.g. for the fourth</span>
+<span class="sd">            order normal resonance &quot;4n&quot;+addtolabel</span>
+<span class="sd">        kwargs:</span>
+<span class="sd">            * only: if &#39;normal&#39; plots only normal resonances.</span>
+<span class="sd">                    if &#39;skew&#39; plots only skew resonances.</span>
+<span class="sd">                    Otherwise ignored.</span>
+<span class="sd">                    See the notes on Normal and Skew convention.</span>
+<span class="sd">            * linedict: use it to pass a dictionary with custom line styles.</span>
+<span class="sd">                See notes below.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Axes object from matplotlib.axes._axes</span>
+<span class="sd">        List of handles for the legend</span>
+<span class="sd">        List of labels for the legend</span>
+
+<span class="sd">    NOTES:</span>
+<span class="sd">    The resonance equation is :math:`a\nu_x + b\nu_y = c`</span>
+<span class="sd">    with :math:`a,b` and :math:`c` integers. The order :math:`N=abs(a)+abs(b)`.</span>
+
+<span class="sd">    Normal and Skew convention:</span>
+<span class="sd">    Line style is similar to reson.m from Matlab Middle Layer, MML, by L. Nadolski.</span>
+<span class="sd">    Normal resonances are plotted with a continuous line.</span>
+<span class="sd">    Skew resonances, i.e. N-abs(a) is odd, are plotted in dashed lines.</span>
+
+<span class="sd">    Lines Color and Width:</span>
+<span class="sd">    Line style is similar to reson.m from Matlab Middle Layer, MML, by L. Nadolski.</span>
+<span class="sd">    1st: black, width 4</span>
+<span class="sd">    2nd: blue, width 3</span>
+<span class="sd">    3rd: red, width 2</span>
+<span class="sd">    4th: green, width 1</span>
+<span class="sd">    5th: magenta, witdh 1</span>
+<span class="sd">    6th: cyan, width 1</span>
+<span class="sd">    7th: yellow, width 1</span>
+<span class="sd">    8th: darkcyan, width 1</span>
+<span class="sd">    9th: &#39;lightgreen&#39;, width 1</span>
+<span class="sd">    10th to 15th: RGB increased in steps of 0.1, width 1</span>
+
+<span class="sd">    Custom Style:</span>
+<span class="sd">    You could pass a custom line style in a dictionary as</span>
+<span class="sd">    linedict = mydictionary,</span>
+<span class="sd">    where mydictionary should contain two entries</span>
+<span class="sd">    dict(&quot;normal&quot;: normald, &quot;skew&quot;: skewd).</span>
+<span class="sd">    normald and skewd are also dictionaries, each entry contains as key</span>
+<span class="sd">    the resonance order and as value the line properties to use in the plot.</span>
+<span class="sd">    The default dictionary is created with :pyt:func:`create_linepalette`</span>
+<span class="sd">      mydictionary = at.plot.resonances.create_linepalette()</span>
+<span class="sd">    you could edit the needed entries.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: if given resonances are lower than 0, or window is zero.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># verboseprint to check flag only once</span>
+    <span class="n">verboseprint</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="c1"># print debugging output, equivalent to extra verbose</span>
+    <span class="n">debugprint</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">debug</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="c1"># only plot normal or skew</span>
+    <span class="n">normalskew</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">onlyns</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;only&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">onlyns</span> <span class="o">==</span> <span class="s2">&quot;normal&quot;</span><span class="p">:</span>
+        <span class="n">normalskew</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">onlyns</span> <span class="o">==</span> <span class="s2">&quot;skew&quot;</span><span class="p">:</span>
+        <span class="n">normalskew</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># orders could be a single int</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">orders</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">orders</span> <span class="o">=</span> <span class="p">[</span><span class="n">orders</span><span class="p">]</span>
+    <span class="c1"># check that all are larger than 0</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">orders</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Negative resonances are not allowed.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">periodicity</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Period must be a positive integer.&quot;</span><span class="p">)</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The periodicity is </span><span class="si">{</span><span class="n">periodicity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The window is </span><span class="si">{</span><span class="n">window</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># check the window</span>
+    <span class="n">windowa</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;horizontal coordinates must be different&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;vertical coordinates must be different&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">windowa</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Swapping horizontal coordinates&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="n">windowa</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">windowa</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Swapping vertical coordinates&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># get xlimits and ylimits</span>
+    <span class="n">the_axeslims</span> <span class="o">=</span> <span class="n">windowa</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">maxreson2calc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Farey max order=</span><span class="si">{</span><span class="n">maxreson2calc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># get the Farey collection, i.e., a list of farey sequences, one per order</span>
+    <span class="n">fareycollectionfloat</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">fareycollectionfrac</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">nthorder</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxreson2calc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">farey</span><span class="p">,</span> <span class="n">fracfarey</span> <span class="o">=</span> <span class="n">farey_sequence</span><span class="p">(</span><span class="n">nthorder</span><span class="p">)</span>
+        <span class="n">fareycollectionfloat</span><span class="p">[</span><span class="n">nthorder</span><span class="p">]</span> <span class="o">=</span> <span class="n">farey</span>
+        <span class="n">fareycollectionfrac</span><span class="p">[</span><span class="n">nthorder</span><span class="p">]</span> <span class="o">=</span> <span class="n">fracfarey</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the Farey collection is </span><span class="si">{</span><span class="n">fareycollectionfloat</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># plot configuration</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">verboseprint</span><span class="p">(</span><span class="s2">&quot;Axes already exist, ignore window&quot;</span><span class="p">)</span>
+        <span class="n">the_axeslims</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">axes</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">(),</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()])</span>
+    <span class="c1"># min/max to plot lines with slopes</span>
+    <span class="n">minx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">the_axeslims</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">minx</span> <span class="o">=</span> <span class="n">minx</span> <span class="o">-</span> <span class="n">periodicity</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">)</span>
+    <span class="n">maxx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">the_axeslims</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">maxx</span> <span class="o">=</span> <span class="n">maxx</span> <span class="o">+</span> <span class="n">periodicity</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">maxx</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">)</span>
+    <span class="n">minmaxxdist</span> <span class="o">=</span> <span class="n">maxx</span> <span class="o">-</span> <span class="n">minx</span>
+    <span class="n">miny</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">the_axeslims</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">miny</span> <span class="o">=</span> <span class="n">miny</span> <span class="o">-</span> <span class="n">periodicity</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">miny</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">)</span>
+    <span class="n">maxy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">the_axeslims</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">maxy</span> <span class="o">=</span> <span class="n">maxy</span> <span class="o">+</span> <span class="n">periodicity</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">maxy</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">)</span>
+    <span class="n">minmaxydist</span> <span class="o">=</span> <span class="n">maxy</span> <span class="o">-</span> <span class="n">miny</span>
+
+    <span class="n">lprop</span> <span class="o">=</span> <span class="n">create_linepalette</span><span class="p">(</span>
+        <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyle</span><span class="p">,</span>
+        <span class="n">linecolor</span><span class="o">=</span><span class="n">linecolor</span><span class="p">,</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">,</span>
+        <span class="n">addtolabel</span><span class="o">=</span><span class="n">addtolabel</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">userprop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;linedict&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">userprop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+    <span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;skew&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">userprop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skew&quot;</span><span class="p">,</span> <span class="p">{}))</span>
+
+    <span class="c1"># we only need to points to define a line</span>
+    <span class="n">nauxpoints</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="c1"># window min/max,horizontal and vertical</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">the_axeslims</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">the_axeslims</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+    <span class="c1"># start to check the Farey collection, starting with 0</span>
+    <span class="n">collectaux1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">idxtotype</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;skew&quot;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">nthorder</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxreson2calc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;nthorder=</span><span class="si">{</span><span class="n">nthorder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">collectaux2</span> <span class="o">=</span> <span class="n">fareycollectionfloat</span><span class="p">[</span><span class="n">nthorder</span><span class="p">]</span>
+        <span class="n">thesteps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">collectaux2</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">collectaux1</span><span class="p">))</span>
+        <span class="n">debugprint</span><span class="p">(</span><span class="n">thesteps</span><span class="p">)</span>
+        <span class="n">chosenstep</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">thesteps</span><span class="p">)</span>
+        <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;chosenstep=</span><span class="si">{</span><span class="n">chosenstep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">collectaux1</span> <span class="o">=</span> <span class="n">collectaux2</span>
+        <span class="k">if</span> <span class="n">nthorder</span> <span class="ow">in</span> <span class="n">orders</span><span class="p">:</span>
+            <span class="c1"># increase step by the periodicity in straight resonances</span>
+            <span class="n">debugprint</span><span class="p">(</span><span class="s2">&quot;enter plotting horizontal straight lines&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">normalskew</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">iaux</span> <span class="ow">in</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                    <span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span> <span class="o">+</span> <span class="mf">0.000001</span><span class="p">,</span> <span class="n">periodicity</span> <span class="o">*</span> <span class="n">chosenstep</span>
+                <span class="p">):</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">iaux</span><span class="p">,</span> <span class="o">**</span><span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;normal&quot;</span><span class="p">][</span><span class="n">nthorder</span><span class="p">])</span>
+            <span class="n">debugprint</span><span class="p">(</span><span class="s2">&quot;enter plotting vertical straight lines&quot;</span><span class="p">)</span>
+            <span class="n">nsaux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">nthorder</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nsaux</span> <span class="ow">in</span> <span class="n">normalskew</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">iaux</span> <span class="ow">in</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                    <span class="n">miny</span><span class="p">,</span> <span class="n">maxy</span> <span class="o">+</span> <span class="mf">0.000001</span><span class="p">,</span> <span class="n">periodicity</span> <span class="o">*</span> <span class="n">chosenstep</span>
+                <span class="p">):</span>
+                    <span class="n">axes</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">iaux</span><span class="p">,</span> <span class="o">**</span><span class="n">lprop</span><span class="p">[</span><span class="n">idxtotype</span><span class="p">[</span><span class="n">nsaux</span><span class="p">]][</span><span class="n">nthorder</span><span class="p">])</span>
+            <span class="c1"># aeq*nux + beq*nuy = nthorder</span>
+            <span class="k">for</span> <span class="n">aeq</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nthorder</span><span class="p">):</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;enter plotting diagonals </span><span class="si">{</span><span class="n">aeq</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">beq</span> <span class="o">=</span> <span class="n">nthorder</span> <span class="o">-</span> <span class="n">aeq</span>
+                <span class="n">chosenslope</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">aeq</span> <span class="o">/</span> <span class="n">beq</span>
+                <span class="n">ystep</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">beq</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;chosen slope=</span><span class="si">{</span><span class="n">chosenslope</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;chosen ystep=</span><span class="si">{</span><span class="n">ystep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># calculate the variation on the vertical direction from window size</span>
+                <span class="n">yyaux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">minmaxxdist</span> <span class="o">*</span> <span class="n">chosenslope</span> <span class="o">+</span> <span class="n">minmaxydist</span> <span class="o">*</span> <span class="n">ystep</span><span class="p">)</span>
+                <span class="n">y1aux</span> <span class="o">=</span> <span class="o">-</span><span class="n">yyaux</span> <span class="o">+</span> <span class="n">miny</span>
+                <span class="n">y2aux</span> <span class="o">=</span> <span class="n">yyaux</span> <span class="o">+</span> <span class="n">maxy</span>
+                <span class="c1"># adapt to periodicity</span>
+                <span class="n">y1aux</span> <span class="o">=</span> <span class="n">periodicity</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">y1aux</span> <span class="o">/</span> <span class="n">periodicity</span><span class="p">)</span>
+                <span class="n">y2aux</span> <span class="o">=</span> <span class="n">periodicity</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">y2aux</span> <span class="o">/</span> <span class="n">periodicity</span><span class="p">)</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;minx=</span><span class="si">{</span><span class="n">minx</span><span class="si">}</span><span class="s2">,maxx=</span><span class="si">{</span><span class="n">maxx</span><span class="si">}</span><span class="s2">,minmaxxdist=</span><span class="si">{</span><span class="n">minmaxxdist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;miny=</span><span class="si">{</span><span class="n">miny</span><span class="si">}</span><span class="s2">,maxy=</span><span class="si">{</span><span class="n">maxy</span><span class="si">}</span><span class="s2">,minmaxydist=</span><span class="si">{</span><span class="n">minmaxydist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;y1aux=</span><span class="si">{</span><span class="n">y1aux</span><span class="si">}</span><span class="s2">,y2aux=</span><span class="si">{</span><span class="n">y2aux</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">xaux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">minx</span><span class="p">,</span> <span class="n">maxx</span><span class="p">,</span> <span class="n">nauxpoints</span><span class="p">)</span>
+                <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;xaux=</span><span class="si">{</span><span class="n">xaux</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">nsaux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">beq</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">nsaux</span> <span class="ow">in</span> <span class="n">normalskew</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">istep</span> <span class="ow">in</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">y2aux</span> <span class="o">-</span> <span class="n">y1aux</span> <span class="o">+</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="n">ystep</span><span class="p">):</span>
+                        <span class="n">y1line</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="o">-</span><span class="n">chosenslope</span> <span class="o">*</span> <span class="p">(</span><span class="n">xaux</span> <span class="o">-</span> <span class="n">minx</span><span class="p">)</span> <span class="o">+</span> <span class="n">y2aux</span> <span class="o">-</span> <span class="n">periodicity</span> <span class="o">*</span> <span class="n">istep</span>
+                        <span class="p">)</span>
+                        <span class="n">y2line</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">chosenslope</span> <span class="o">*</span> <span class="p">(</span><span class="n">xaux</span> <span class="o">-</span> <span class="n">minx</span><span class="p">)</span> <span class="o">+</span> <span class="n">y1aux</span> <span class="o">+</span> <span class="n">periodicity</span> <span class="o">*</span> <span class="n">istep</span>
+                        <span class="p">)</span>
+                        <span class="n">debugprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;y1line=</span><span class="si">{</span><span class="n">y1line</span><span class="si">}</span><span class="s2">,y2line=</span><span class="si">{</span><span class="n">y2line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xaux</span><span class="p">,</span> <span class="n">y1line</span><span class="p">,</span> <span class="o">**</span><span class="n">lprop</span><span class="p">[</span><span class="n">idxtotype</span><span class="p">[</span><span class="n">nsaux</span><span class="p">]][</span><span class="n">nthorder</span><span class="p">])</span>
+                        <span class="n">axes</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xaux</span><span class="p">,</span> <span class="n">y2line</span><span class="p">,</span> <span class="o">**</span><span class="n">lprop</span><span class="p">[</span><span class="n">idxtotype</span><span class="p">[</span><span class="n">nsaux</span><span class="p">]][</span><span class="n">nthorder</span><span class="p">])</span>
+    <span class="c1"># include labels</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\nu_x$&quot;</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;$\nu_y$&quot;</span><span class="p">)</span>
+    <span class="c1"># printing legend if necessary</span>
+    <span class="n">myleghandles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">myleglabels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">handleall</span><span class="p">,</span> <span class="n">labelall</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>
+    <span class="n">hstyle</span> <span class="o">=</span> <span class="p">[</span><span class="n">hline</span><span class="o">.</span><span class="n">_linestyle</span> <span class="k">for</span> <span class="n">hline</span> <span class="ow">in</span> <span class="n">handleall</span><span class="p">]</span>
+    <span class="n">joinlabelstyle</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">labelall</span><span class="p">,</span> <span class="n">hstyle</span><span class="p">)]</span>
+    <span class="n">uniquelabelstyle</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">joinlabelstyle</span><span class="p">))</span>
+    <span class="n">idxunique</span> <span class="o">=</span> <span class="p">[</span><span class="n">joinlabelstyle</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">uniqele</span><span class="p">)</span> <span class="k">for</span> <span class="n">uniqele</span> <span class="ow">in</span> <span class="n">uniquelabelstyle</span><span class="p">]</span>
+    <span class="n">myleghandles</span> <span class="o">=</span> <span class="p">[</span><span class="n">handleall</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxunique</span><span class="p">]</span>
+    <span class="n">myleglabels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labelall</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxunique</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">myleghandles</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">myleglabels</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="n">legend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">axes</span><span class="p">,</span> <span class="n">myleghandles</span><span class="p">,</span> <span class="n">myleglabels</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022, ATCollab.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
