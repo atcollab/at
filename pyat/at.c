@@ -525,9 +525,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             Py_DECREF(PyPassMethod);
             if (!LibraryListPtr) return print_error(elem_index, rout);  /* No trackFunction for the given PassMethod: RuntimeError */
             pylength = PyObject_GetAttrString(el, "Length");
-            length = PyFloat_AsDouble(pylength);
-            Py_XDECREF(pylength);
-            if (PyErr_Occurred()) {
+            if (pylength) {
+                length = PyFloat_AsDouble(pylength);
+                Py_XDECREF(pylength);
+            }
+            else {
                 length = 0.0;
                 PyErr_Clear();
             }

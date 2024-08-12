@@ -9,9 +9,9 @@ classdef pytests < matlab.unittest.TestCase
     
     properties(TestParameter)
         dp = {0., -0.01, 0.01};
-        lat = struct("hmba", "hmba","dba","dba","spear3","spear3");
         rad = struct("radoff","ring4","radon","ring6");
-        lat2 = struct("hmba", "hmba","spear3","spear3");
+        lat = {"hmba","dba","spear3"};  % All lattices
+        lat2 = {"hmba","spear3"};       % lattices with cavities
     end
     
     properties
@@ -59,7 +59,7 @@ classdef pytests < matlab.unittest.TestCase
         % These tests may run in GitHub actions
 
         function lattice_pass(testCase,lat,rad)
-            % Test ob basic tracking
+            % Test of basic tracking
             lattice=testCase.(rad).(lat);
             rin=1.e-6*eye(6);
             pin=py.numpy.asfortranarray(rin);
@@ -202,6 +202,21 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-9,RelTol=1.e-9);
             testCase.verifyEqual(mtunes,ptunes,AbsTol=1.E-9);
             testCase.verifyEqual(mchrom,pchrom,AbsTol=2.E-5);
+        end
+
+        function avlin1(testCase, lat, dp)
+            lattice=testCase.ring4.(lat);
+            mrefs=true(1,length(lattice.m));
+            prefs=py.numpy.array(mrefs);
+            % python
+            a=cell(lattice.p.avlinopt(dp, prefs));
+            pbeta = double(a{2});
+            pdisp = double(a{4});
+            % Matlab
+            [~,mbeta,~,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
+            % check
+            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-7,RelTol=1.e-7);
+            testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
         end
 
         function radiation_integrals(testCase,lat)

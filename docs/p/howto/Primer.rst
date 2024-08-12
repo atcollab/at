@@ -49,14 +49,14 @@ the function **Quadrupole**
 .. parsed-literal::
 
     Quadrupole:
-    	FamName : QF
-    	Length : 0.5
-    	PassMethod : StrMPoleSymplectic4Pass
-    	NumIntSteps : 10
-    	MaxOrder : 1
-    	PolynomA : [0. 0.]
-    	PolynomB : [0.  1.2]
-    	K : 1.2
+        FamName : QF
+        Length : 0.5
+        PassMethod : StrMPoleSymplectic4Pass
+        NumIntSteps : 10
+        MaxOrder : 1
+        PolynomA : [0. 0.]
+        PolynomB : [0.  1.2]
+        K : 1.2
 
 
 We note that the family name of this quadrupole is ’QF’ and the pass
@@ -248,23 +248,23 @@ selected elements:
 .. parsed-literal::
 
     Quadrupole:
-    	FamName : QF
-    	Length : 0.5
-    	PassMethod : StrMPoleSymplectic4Pass
-    	NumIntSteps : 10
-    	MaxOrder : 1
-    	PolynomA : [0. 0.]
-    	PolynomB : [0.  1.2]
-    	K : 1.2
+        FamName : QF
+        Length : 0.5
+        PassMethod : StrMPoleSymplectic4Pass
+        NumIntSteps : 10
+        MaxOrder : 1
+        PolynomA : [0. 0.]
+        PolynomB : [0.  1.2]
+        K : 1.2
     Quadrupole:
-    	FamName : QD
-    	Length : 0.5
-    	PassMethod : StrMPoleSymplectic4Pass
-    	NumIntSteps : 10
-    	MaxOrder : 1
-    	PolynomA : [0. 0.]
-    	PolynomB : [ 0.  -1.2]
-    	K : -1.2
+        FamName : QD
+        Length : 0.5
+        PassMethod : StrMPoleSymplectic4Pass
+        NumIntSteps : 10
+        MaxOrder : 1
+        PolynomA : [0. 0.]
+        PolynomB : [ 0.  -1.2]
+        K : -1.2
 
 
 Extracting attribute values
@@ -753,14 +753,14 @@ the function **set_cavity** as follows
 .. parsed-literal::
 
     RFCavity:
-    	FamName : RFC
-    	Length : 0.0
-    	PassMethod : IdentityPass
-    	Voltage : 500000.0
-    	Frequency : 299792457.9999997
-    	HarmNumber : 1
-    	Energy : 1000000000.0
-    	TimeLag : 0.0
+        FamName : RFC
+        Length : 0.0
+        PassMethod : IdentityPass
+        Voltage : 500000.0
+        Frequency : 299792457.9999997
+        HarmNumber : 1
+        Energy : 1000000000.0
+        TimeLag : 0.0
 
 
 which says that the each of the 20 RF cavities has a voltage of 25 kV.

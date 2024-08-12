@@ -21,79 +21,52 @@ else
     refs=false(lr,1); % lr
     refs(refpts)=true;
 end
+
 long=atgetcells(ring,'Length',@(elem,lg) lg>0) & refs(1:end-1); %lr-1
 needed=refs | [false;long]; %lr
-[lind,nu,xsi]=atlinopt(ring,dpp,find(needed),varargin{:}); %needed
+initial=[long(needed(1:end-1));false]; %needed
+final=[false;initial(1:end-1)]; %needed
+[lind,nu,xsi]=atlinopt(ring,dpp,needed,varargin{:}); %needed
 
 lindata=lind(refs(needed)); %refpts
 avebeta=cat(1,lindata.beta); %refpts
 avemu=cat(1,lindata.mu); %refpts
 avedisp=cat(2,lindata.Dispersion)'; %refpts
-ClosedOrbit=cat(2,lindata.ClosedOrbit)'; %refpts
 
+ringlong = ring(long);
+lin0 = lind(initial);
+lin1 = lind(final);
 
-if any(long)
-    initial=[long(needed(1:end-1));false]; %needed
-    final=[false;initial(1:end-1)]; %needed
+lg=initial(refs(needed)); % refpts
 
-    lg=initial(refs(needed)); % refpts
-    L=atgetfieldvalues(ring(long),'Length'); %long
-    
-    beta0=avebeta(lg,:); %long
-    alpha0=cat(1,lind(initial).alpha); %long
-    mu0=avemu(lg,:); %long
-    disp0=avedisp(lg,:); %long
-    ClosedOrbit0=ClosedOrbit(lg,:); %long
-    
-    mu1=cat(1,lind(final).mu); %long
-    disp1=cat(2,lind(final).Dispersion)'; %long
-    ClosedOrbit1=cat(2,lind(final).ClosedOrbit)'; %long
-    
-    L2=[L L]; %long
-    avebeta(lg,:)=betadrift(beta0,alpha0,L2);
-    avemu(lg,:)=0.5*(mu0+mu1);
-    avedisp(lg,[1 3])=(disp1(:,[1 3])+disp0(:,[1 3]))*0.5;
-    avedisp(lg,[2 4])=(disp1(:,[1 3])-disp0(:,[1 3]))./L2;
-    foc=atgetcells(ring(long),'PolynomB',@(el,polb) ...
-        (el.MaxOrder>=1 && polb(2)~=0) ||(el.MaxOrder>=2 && polb(3)~=0)); %long
-    if any(foc)
-        qp=false(size(lg));
-        qp(lg)=foc;
+beta0=avebeta(lg,:); %long
+alpha0=cat(1,lin0.alpha); %long
+mu0=avemu(lg);
+disp0=avedisp(lg,:); %long
 
-        %Extract element parameters
-        reng_selection=ring(refpts(qp));
-        L=atgetfieldvalues(reng_selection,'Length','Default',0);
-        q=eps()+atgetfieldvalues(reng_selection,'PolynomB',{2},'Default',0);
-        m=atgetfieldvalues(reng_selection,'PolynomB',{3},'Default',0);
-        R11=atgetfieldvalues(reng_selection,'R2',{1,1},'Default',1);
-        dx=(atgetfieldvalues(reng_selection,'T2',{1},'Default',0)-atgetfieldvalues(reng_selection,'T1',{1},'Default',0))/2;
-        ba=atgetfieldvalues(reng_selection,'BendingAngle','Default',0);
-        irho=ba./L;
-        e1=atgetfieldvalues(reng_selection,'EntranceAngle','Default',0);
-        Fint=atgetfieldvalues(reng_selection,'Fint','Default',0);
-        gap=atgetfieldvalues(reng_selection,'gap','Default',0);
-        
-        %Hard edge model on dipoles
-        d_csi=ba.*gap.*Fint.*(1+sin(e1).^2)./cos(e1)./L;
-        Cp=[ba.*tan(e1)./L -ba.*tan(e1-d_csi)./L];
-        for ii=1:2
-            alpha0(foc,ii)=alpha0(foc,ii)-beta0(foc,ii).*Cp(:,ii);
-            disp0(foc,2+(ii-1)*2)=disp0(foc,2+(ii-1)*2)-disp0(foc,1+(ii-1)*2).*Cp(:,ii);
-        end
-        
-        % Additional components
-        dx0=(ClosedOrbit0(foc,1)+ClosedOrbit1(foc,1))/2;
-        K=q.*R11+2*m.*(dx0-dx);
-        K2=[K -K]; %long
-        K2(:,1)=K2(:,1)+irho.^2;
-        irho2=[irho 0*irho];
+mu1=cat(1,lin1.mu); %long
+ClosedOrbit0=cat(2,lin0.ClosedOrbit)'; %long
+ClosedOrbit1=cat(2,lin1.ClosedOrbit)'; %long
+dx0=(ClosedOrbit0(:,1)+ClosedOrbit1(:,1))/2;
 
-        % Apply formulas
-        avebeta(qp,:)=betafoc(beta0(foc,:),alpha0(foc,:),K2,L2(foc,:));
-        avedisp(qp,:)=dispfoc(disp0(foc,:),irho2,K2,L2(foc,:));
-    end
-    
-end
+[L,q,m,ba,R11,dx] = getparams(ringlong, @longparams);
+irho=ba./L;
+K = q.*R11 + 2*m.*(dx0-dx);
+Kx = K+irho.*irho;
+Ky = -K;
+bend = (irho ~= 0.0);
+
+% Hard edge model on dipoles
+[e1,Fint,gap] = getparams(ringlong(bend), @focparams);
+d_csi=irho(bend).*gap.*Fint.*(1+sin(e1).^2)./cos(e1);
+Cp=[irho(bend).*tan(e1) -irho(bend).*tan(e1-d_csi)];
+alpha0(bend,:)=alpha0(bend,:)-beta0(bend,:).*Cp;
+disp0(bend,[2 4])=disp0(bend,[2 4])-disp0(bend,[1 3]).*Cp;
+
+avemu(lg,:)=0.5*(mu0+mu1);
+avebeta(lg,:) = betalong(beta0,alpha0,[Kx Ky],[L L]);
+avedisp(lg,1:2)=displong(disp0(:,1:2),irho,Kx,L);
+avedisp(lg,3:4)=displong(disp0(:,3:4),zeros(size(irho)),Ky,L);
 
     function avebeta=betadrift(beta0,alpha0,L)
         gamma0=(alpha0.*alpha0+1)./beta0;
@@ -106,13 +79,67 @@ end
             (cos(2.0*sqrt(K).*L)-1.0).*alpha0./K)./L/2.0;
     end
 
-    function avedisp=dispfoc(disp0,ir,K,L)
-        avedisp=disp0;
-        avedisp(:,[1 3])=(disp0(:,[1 3]).*(sin(sqrt(K).*L)./sqrt(K))+...
-            disp0(:,[2 4]).*(1-cos(sqrt(K).*L))./K)./L+...
-            ir.*(L-sin(sqrt(K).*L)./sqrt(K))./K./L;
-        avedisp(:,[2 4])=(disp0(:,[2 3]).*(sin(sqrt(K).*L)./sqrt(K))-...
-            disp0(:,[1 3]).*(1-cos(sqrt(K).*L)))./L+...
-            ir.*(L-cos(sqrt(K).*L))./K./L;
+    function avebeta=betalong(beta0,alpha0,K,L)
+        avebeta=zeros(size(beta0));
+        kp = abs(K) >= 1.0e-7;
+        k0 = ~kp;
+        avebeta(kp) = betafoc(beta0(kp),alpha0(kp),K(kp),L(kp));
+        avebeta(k0) = betadrift(beta0(k0),alpha0(k0),L(k0));
     end
+
+
+    function avedisp=dispfoc(disp0,ir,K,L)
+        eta=(disp0(:,1).*(sin(sqrt(K).*L)./sqrt(K))+...
+            disp0(:,2).*(1-cos(sqrt(K).*L))./K+...
+            ir.*(L-sin(sqrt(K).*L)./sqrt(K))./K)./L;
+        etap=(disp0(:,2).*(sin(sqrt(K).*L)./sqrt(K))-...
+            disp0(:,1).*(1-cos(sqrt(K).*L))+...
+            ir.*(1-cos(sqrt(K).*L))./K)./L;
+        avedisp=[eta etap];
+    end
+
+    function avedisp=dispdrift(disp0,ir,L)
+        eta=disp0(:,1)+disp0(:,2).*L/2+ir.*L.*L./6.0;
+        etap=disp0(:,2)+ir.*L/2.0;
+        avedisp=[eta etap];
+    end
+
+    function avedisp=displong(disp0,ir,K,L)
+        avedisp=zeros(size(disp0));
+        kp = abs(K) >= 1.0e-7;
+        k0 = ~kp;
+        avedisp(kp,:) = dispfoc(disp0(kp,:),ir(kp),K(kp),L(kp));
+        avedisp(k0,:) = dispdrift(disp0(k0,:),ir(k0),L(k0));
+    end
+
+    function [L,q,m,ba,R11,dx] = longparams(elem)
+        m = 0;
+        q = 0;
+        if isfield(elem, 'PolynomB')
+            pb = elem.PolynomB;
+            if length(pb) >= 3
+                m = pb(3);
+                q = pb(2);
+            elseif length(pb) >= 2
+                q = pb(2);
+            end
+        end
+        if isfield(elem, 'Length'), L = elem.Length; else, L = 0; end
+        if isfield(elem, 'BendingAngle'), ba = elem.BendingAngle; else, ba = 0; end
+        if isfield(elem, 'R2'), R11 = elem.R2(1,1); else, R11 = 1; end
+        if isfield(elem, 'T1'), x1 = elem.T1(1); else, x1 = 0; end
+        if isfield(elem, 'T2'), x2 = elem.T2(1); else, x2 = 0; end
+        dx = (x2 - x1)/2;
+    end
+
+    function [e1,Fint, gap] = focparams(elem)
+        if isfield(elem, 'EntranceAngle'), e1 = elem.EntranceAngle; else, e1 = 0; end
+        if isfield(elem, 'Fint'), Fint = elem.Fint; else, Fint = 0; end
+        if isfield(elem, 'gap'), gap = elem.gap; else, gap = 0; end
+    end
+
+    function varargout = getparams(ring, func)
+        [varargout{1:nargout}] = cellfun(func, ring);
+    end
+
 end
