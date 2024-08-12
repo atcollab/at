@@ -658,7 +658,7 @@ class Aperture(Element):
         kwargs.setdefault('PassMethod', 'AperturePass')
         super(Aperture, self).__init__(family_name, Limits=limits, **kwargs)
 
-class LongAperture(Element):
+class LongtAperture(Element):
     """Longitudinal aperture element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
@@ -670,9 +670,9 @@ class LongAperture(Element):
             family_name:    Name of the element
             limits:         (4,) array of physical aperture:
               [dpmin, dpmax, ctmin, ctmax]
-        Default PassMethod: ``LongAperturePass``
+        Default PassMethod: ``LongtAperturePass``
         """
-        kwargs.setdefault('PassMethod', 'LongAperturePass')
+        kwargs.setdefault('PassMethod', 'LongtAperturePass')
         super(LongAperture, self).__init__(family_name, Limits=limits, **kwargs)
 
 class Drift(LongElement):
