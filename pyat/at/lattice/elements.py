@@ -673,7 +673,7 @@ class LongtAperture(Element):
         Default PassMethod: ``LongtAperturePass``
         """
         kwargs.setdefault('PassMethod', 'LongtAperturePass')
-        super(LongAperture, self).__init__(family_name, Limits=limits, **kwargs)
+        super(LongtAperture, self).__init__(family_name, Limits=limits, **kwargs)
 
 class Drift(LongElement):
     """Drift space element"""
