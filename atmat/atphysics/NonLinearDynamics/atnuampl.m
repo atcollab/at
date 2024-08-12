@@ -42,7 +42,7 @@ if isempty(orbit)
         dp=orbit(5);
     else
         dp=0.0;
-        [~, orbit]=findorbit4(ring, dp);
+        [~, orbit]=findorbit4(ring, dp, 'strict', -1);
     end
 end
 

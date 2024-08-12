@@ -1,6 +1,7 @@
 import at
 import numpy
 import pytest
+import warnings
 from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
@@ -13,7 +14,7 @@ _issorted = lambda a: numpy.all(a[:-1] <= a[1:])
 
 
 def test_fillpattern(hmba_lattice):
-    ring = hmba_lattice.radiation_on(copy=True)
+    ring = hmba_lattice.enable_6d(copy=True)
     nbunch = 16
     current = 0.2
     ring.set_fillpattern(nbunch)
@@ -55,7 +56,7 @@ def test_wake_object():
     
     
 def test_wake_element(hmba_lattice):
-    ring = hmba_lattice.radiation_on(copy=True)
+    ring = hmba_lattice.enable_6d(copy=True)
     srange = Wake.build_srange(0.0, 0.36, 1.0e-5, 1.0e-2, 844, 844) 
     long_res =  Wake.long_resonator(srange, 1.0e9, 1.0, 1.0e3, 1.0) 
     welem = WakeElement('WELEM', ring, long_res)
@@ -68,32 +69,30 @@ def test_wake_element(hmba_lattice):
     
     
 def test_resonator_element(hmba_lattice):
-    ring = hmba_lattice.radiation_on(copy=True)
+    ring = hmba_lattice.enable_6d(copy=True)
     srange = Wake.build_srange(0.0, 0.36, 1.0e-5, 1.0e-2, 844, 844)
     welem = ResonatorElement('WELEM', ring, srange, WakeComponent.Z, 1.0e9, 1.0, 1.0e3)  
     assert welem.ResFrequency == 1.0e9
     assert welem.Qfactor == 1
     assert welem.Rshunt == 1.0e3
-    print(welem.WakeZ[[0,1]])
     assert_close(welem.WakeZ[[0,1]], [3.14159265e+12, 6.28318531e+12], rtol = 1e-8)
     welem.ResFrequency += 100
     assert welem.ResFrequency == 1.0e9 + 100
     
     
 def test_resistive_wall_element(hmba_lattice):
-    ring = hmba_lattice.radiation_on(copy=True)
+    ring = hmba_lattice.enable_6d(copy=True)
     srange = Wake.build_srange(0.0, 0.36, 1.0e-5, 1.0e-2, 844, 844)
     welem = ResWallElement('WELEM', ring, srange, WakeComponent.DX, 1.0, 1.0e-2, 1.0e6)  
     assert welem.RWLength == 1.0
     assert welem.Conductivity == 1.0e6
-    print(welem.WakeDX[[0,1]])
     assert_close(welem.WakeDX[[0,1]], [ 0.0000000e+00, -1.0449877e+24], rtol = 1e-8)
     welem.Conductivity += 100
     assert welem.Conductivity == 1.0e6 + 100
     
     
 def test_beamloading(hmba_lattice):
-    ring = hmba_lattice.radiation_on(copy=True)
+    ring = hmba_lattice.enable_6d(copy=True)
     with pytest.raises(Exception):
         add_beamloading(ring, 44e3, 400, cavpts=range(len(ring)))
     add_beamloading(ring, 44e3, 400)
@@ -117,7 +116,7 @@ def test_beamloading(hmba_lattice):
 
 @pytest.mark.parametrize('func', (lattice_track, lattice_pass))
 def test_track_beamloading(hmba_lattice, func):
-    ring = hmba_lattice.radiation_on(copy=True)
+    ring = hmba_lattice.enable_6d(copy=True)
     rin0 = numpy.zeros(6)
     func(ring, rin0, refpts=[])
     add_beamloading(ring, 44e3, 400, blmode=BLMode.WAKE)
@@ -138,4 +137,42 @@ def test_track_beamloading(hmba_lattice, func):
                                         0.000000e+00,  0.000000e+00,
                                         -1.313306e-05, -1.443748e-08]
                                         ), atol=5e-10)
-    
+ 
+
+def test_buffers(hmba_lattice):
+    ring = hmba_lattice.enable_6d(copy=True)
+    ring.periodicity = 1
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ring.harmonic_number = 32
+    nturns = 11
+    nbunch = 4
+    nslice = 51
+    ns = nbunch*nslice
+    ls = ns*ring.circumference/ring.periodicity
+    add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
+                    buffersize=nturns, blmode=BLMode.WAKE)
+    ring.set_fillpattern(nbunch)
+    ring.beam_current = 0.2
+    rin = numpy.zeros((6, nbunch)) + 1.0e-6
+    bl_elem = ring.get_elements('*_BL')[0]
+    th = numpy.zeros((nturns, ) + bl_elem.TurnHistory.shape)
+    vbh = numpy.zeros((nturns, ) + bl_elem.Vbeam_buffer.shape)
+    vgh = numpy.zeros((nturns, ) + bl_elem.Vgen_buffer.shape)
+    vbbh = numpy.zeros((nturns, ) + bl_elem.Vbunch_buffer.shape)
+    for i in numpy.arange(nturns):
+        ring.track(rin, nturns=1, refpts=None, in_place=True)
+        th[i] = bl_elem.TurnHistory
+        vbh[i] = bl_elem.Vbeam_buffer
+        vgh[i] = bl_elem.Vgen_buffer
+        vbbh[i] = bl_elem.Vbunch_buffer
+    for i in numpy.arange(1, nturns):
+        dth = numpy.sum(th[i-1, (nturns-i)*ns:]
+                        - th[i, (nturns-i-1)*ns:(nturns-1)*ns]) - i*ls
+        dvbh = numpy.sum(vbh[i-1, :, (nturns-i):]
+                         - vbh[i, :, (nturns-i-1):(nturns-1)])
+        dvgh = numpy.sum(vgh[i-1, :, (nturns-i):]
+                         - vgh[i, :, (nturns-i-1):(nturns-1)])
+        dvbbh = numpy.sum(vbbh[i-1, :, (nturns-i):]
+                          - vbbh[i, :, (nturns-i-1):(nturns-1)])
+    assert_close([dth, dvbh, dvgh, dvbbh], numpy.zeros(4), atol=1e-9)

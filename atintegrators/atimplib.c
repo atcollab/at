@@ -38,23 +38,35 @@ static double getTableWake(double *waketable,double *waketableT,double distance,
 };
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
-    int i;
-    if(nturns > 1){
-        memmove(turnhistory, turnhistory + nslice, 4*nslice*nturns*sizeof(double));
-        double *z = turnhistory+nslice*nturns*2;
-        for(i=0; i<nslice*nturns; i++){
-            z[i] += -circumference;
+
+    double *xtmp,*xtmp0;
+    double *ytmp,*ytmp0;
+    double *ztmp,*ztmp0;
+    double *wtmp,*wtmp0;
+    double *t0;
+    int i, ii;    
+    for (i=0;i<nturns-1;i++){
+        xtmp0 = turnhistory + i*nslice;
+        xtmp = turnhistory + (i+1)*nslice;
+        ytmp0 = turnhistory + (i+nturns)*nslice;
+        ytmp = turnhistory + (i+nturns+1)*nslice;
+        ztmp0 = turnhistory + (i+2*nturns)*nslice;
+        ztmp = turnhistory + (i+2*nturns+1)*nslice;
+        wtmp0 = turnhistory + (i+3*nturns)*nslice;
+        wtmp = turnhistory + (i+3*nturns+1)*nslice;
+        for(ii=0;ii<nslice;ii++){
+            xtmp0[ii]=xtmp[ii];
+            ytmp0[ii]=ytmp[ii];
+            ztmp0[ii]=ztmp[ii]-circumference;
+            wtmp0[ii]=wtmp[ii];
         }
     }
-    double *x0 = turnhistory + (nturns-1)*nslice;
-    double *y0 = turnhistory + (2*nturns-1)*nslice;
-    double *z0 = turnhistory + (3*nturns-1)*nslice;
-    double *w0 = turnhistory + (4*nturns-1)*nslice;
-    for(i=0; i<nslice; i++){
-        x0[i] = 0.0;
-        y0[i] = 0.0;
-        z0[i] = 0.0;
-        w0[i] = 0.0;
+    
+    for(ii=1;ii<5; ii++){ 
+        t0 = turnhistory + (ii*nturns-1)*nslice;
+        for(i=0; i<nslice; i++){
+            t0[i] = 0.0;
+        }
     }
 };
 
@@ -373,7 +385,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
     double omr = TWOPI*freq;
-    double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
+    double complex vbeamc = vbeam[0]*cexp(_Complex_I*vbeam[1]);
     double complex vbeamkc = 0.0;
     double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
@@ -404,7 +416,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             /* This is dt between each slice*/
             dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
         }
-        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+        vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
         /*vbeamkc is average kick i.e. average vbeam*/   
         vbeamkc += (vbeamc+selfkick)*wi;
         totalW += wi;
@@ -418,7 +430,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     /*This takes the vbeam backwards in time to effectively store the
     final slice position */
     dt = -turnhistoryZ[sliceperturn*nturns-1]/bc;    
-    vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+    vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
     vbeam[0] = cabs(vbeamc);
     vbeam[1] = carg(vbeamc);

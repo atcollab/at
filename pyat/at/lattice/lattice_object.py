@@ -93,7 +93,7 @@ class Lattice(list):
     _excluded_attributes = ('nbunch', )
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
-                       '_cell_harmnumber', '_radiation', 'beam_current',
+                       '_cell_harmnumber', '_radiation', '_beam_current',
                        '_fillpattern')
 
     # noinspection PyUnusedLocal

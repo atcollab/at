@@ -18,11 +18,13 @@
 #include <float.h>
 #include <atrandom.c>
 
+#define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
-
-#define NUMPY_IMPORT_ARRAY_RETVAL NULL
-#define NUMPY_IMPORT_ARRAY_TYPE void *
+#if NPY_ABI_VERSION < 0x02000000
+    #define NPY_RAVEL_AXIS 32
+#endif
 
 typedef PyObject atElem;
 
@@ -306,11 +308,11 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
 void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
                              struct parameters *param){ 
     if(bcurrents != NULL){
-        PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_MAXDIMS, 
+        PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_RAVEL_AXIS,
                                             PyArray_DESCR(bcurrents)->type_num,
-                                            NULL); 
+                                            NULL);
         param->beam_current = PyFloat_AsDouble(bcurrentsum);
-        Py_DECREF(bcurrentsum);    
+        Py_DECREF(bcurrentsum);
         param->nbunch = PyArray_SIZE(bspos);
         param->bunch_spos = PyArray_DATA(bspos);
         param->bunch_currents = PyArray_DATA(bcurrents); 
@@ -319,7 +321,7 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
         param->nbunch=1;
         param->bunch_spos = (double[1]){0.0};
         param->bunch_currents = (double[1]){0.0};
-    }   
+    }
 }
 
 /*
@@ -415,7 +417,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     else
         param.nturn = counter;
 
-    set_energy_particle(lattice, energy, particle, &param);   
+    set_energy_particle(lattice, energy, particle, &param);
     set_current_fillpattern(bspos, bcurrents, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
@@ -523,9 +525,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             Py_DECREF(PyPassMethod);
             if (!LibraryListPtr) return print_error(elem_index, rout);  /* No trackFunction for the given PassMethod: RuntimeError */
             pylength = PyObject_GetAttrString(el, "Length");
-            length = PyFloat_AsDouble(pylength);
-            Py_XDECREF(pylength);
-            if (PyErr_Occurred()) {
+            if (pylength) {
+                length = PyFloat_AsDouble(pylength);
+                Py_XDECREF(pylength);
+            }
+            else {
                 length = 0.0;
                 PyErr_Clear();
             }
