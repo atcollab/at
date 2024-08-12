@@ -509,10 +509,37 @@ methods are used by higher-level functions to provide physics results.</p>
 <li><p>CPython 3.7, 3.8, 3.9, 3.10, 3.11, 3.12</p></li>
 <li><p>PyPI does not support PyPy, because of the missing numpy and scipy libraries</p></li>
 </ul>
-<p>Install accelerator-toolbox from PyPI:</p>
+<section id="installation-with-minimal-dependencies">
+<h4><em>Installation with minimal dependencies:</em><a class="headerlink" href="#installation-with-minimal-dependencies" title="Link to this heading">#</a></h4>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install accelerator-toolbox
 </pre></div>
 </div>
+<p>This minimal installation disables all plotting functions. Note that the plotting
+functions can be enabled later by simply installing <a class="reference external" href="https://matplotlib.org">matplotlib</a>.</p>
+</section>
+<section id="standard-installation">
+<h4><em>Standard installation:</em><a class="headerlink" href="#standard-installation" title="Link to this heading">#</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install &quot;accelerator-toolbox[plot]&quot;
+</pre></div>
+</div>
+<p>This installs in addition the <a class="reference external" href="https://matplotlib.org">matplotlib</a> package and its
+dependencies, which enables all plotting functions.</p>
+</section>
+<section id="optional-dependencies">
+<h4><em>Optional dependencies:</em><a class="headerlink" href="#optional-dependencies" title="Link to this heading">#</a></h4>
+<p>In addition to <code class="docutils literal notranslate"><span class="pre">[plot]</span></code>, other modifiers are available for specific purposes:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;accelerator-toolbox[dev]&quot;</span></code></dt><dd><p>Installs the test framework: <a class="reference external" href="https://docs.pytest.org/en/stable/">pytest</a>,
+<a class="reference external" href="https://pypi.org/project/pytest-cov/">pytest-cov</a> and
+<a class="reference external" href="https://flake8.pycqa.org/en/latest/">flake8</a>. This allows to run locally
+the test sequence executed on GitHub.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;accelerator-toolbox[doc]&quot;</span></code></dt><dd><p>Installs <a class="reference external" href="https://www.sphinx-doc.org/en/master/index.html">Sphinx</a> and its
+utilities, allowing the generate locally the HTML documentation.</p>
+</dd>
+</dl>
+<p>These modifiers may be combined. Example: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;accelerator-toolbox[plot,dev]&quot;</span></code></p>
+</section>
 </section>
 <section id="from-conda-forge">
 <h3>From conda-forge<a class="headerlink" href="#from-conda-forge" title="Link to this heading">#</a></h3>
@@ -632,7 +659,12 @@ methods are used by higher-level functions to provide physics results.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Installation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-pypi">From PyPI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-pypi">From PyPI</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-with-minimal-dependencies"><em>Installation with minimal dependencies:</em></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#standard-installation"><em>Standard installation:</em></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-dependencies"><em>Optional dependencies:</em></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-conda-forge">From conda-forge</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-source">From source</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parallel-computation">Parallel computation</a></li>
