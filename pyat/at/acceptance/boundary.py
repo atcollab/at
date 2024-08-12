@@ -329,14 +329,14 @@ def grid_boundary_search(
     grids = []
     offsets = []
 
-    for r, o in zip(obspt, offset):
-        offset, newring = set_ring_orbit(ring, dp, r, o)
-        parts, grid = get_parts(config, offset)
-        o = 0 if o is None else o
-        newring[: len(ring) - o].track(parts, use_mp=use_mp, in_place=True, **kwargs)
+    for obs, orbit in zip(obspt, offset):
+        orbit, newring = set_ring_orbit(ring, dp, obs, orbit)
+        parts, grid = get_parts(config, orbit)
+        obs = 0 if obs is None else obs
+        newring[: len(ring) - obs].track(parts, use_mp=use_mp, in_place=True, **kwargs)
         allparts.append(parts)
         grids.append(grid)
-        offsets.append(offset)
+        offsets.append(orbit)
     if verbose:
         print("The initial offset is {0} with dp={1}".format(offsets, dp))
     allparts = numpy.concatenate(allparts, axis=1)
