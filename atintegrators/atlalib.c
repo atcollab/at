@@ -174,7 +174,7 @@ static void checkiflostRectangularAp(double *r6, const double *limits)
     else if (r6[2]<limits[2] || r6[2]>limits[3]) markaslost(r6,5);
 }
 
-static void checkiflostLongRectangularAp(double *r6, const double *limits)
+static void checkiflostLongtRectangularAp(double *r6, const double *limits)
 {
         /* check limits for DP position */
     if (r6[4]<limits[0] || r6[4]>limits[1]) markaslost(r6,5);

@@ -6,7 +6,7 @@ struct elem {
     double *limits;
 };
 
-void LongAperturePass(double *r_in, double *limits, int num_particles)
+void LongtAperturePass(double *r_in, double *limits, int num_particles)
 {
     /* Checks CT,DP of each input 6-vector and marks the corresponding element in
      * lossflag array with 0 if CT,DP are exceed the limits given by limits and limitslong
@@ -20,7 +20,7 @@ void LongAperturePass(double *r_in, double *limits, int num_particles)
         if (!atIsNaN(r6[0]))
         {
             /*  check if this particle is already marked as lost */
-            checkiflostLongRectangularAp(r6, limits);
+            checkiflostLongtRectangularAp(r6, limits);
         }
     }
 }
@@ -34,12 +34,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->limits=limits;
         }
-    LongAperturePass(r_in, Elem->limits, num_particles);
+    LongtAperturePass(r_in, Elem->limits, num_particles);
 
     return Elem;
 }
 
-MODULE_DEF(LongAperturePass)        /* Dummy module initialisation */
+MODULE_DEF(LongtAperturePass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -55,7 +55,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        LongAperturePass(r_in,limits, num_particles);
+        LongtAperturePass(r_in,limits, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
