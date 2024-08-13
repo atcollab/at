@@ -254,6 +254,17 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         ma: momentum aperture (len(refpts), 2) array
         refpts: refpts used for momentum aperture calculation
                 (len(refpts), ) array
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     interpolate = kwargs.pop('interpolate', True)
     epsabs = kwargs.pop('epsabs', 1.0e-16)

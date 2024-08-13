@@ -102,6 +102,11 @@ def get_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     kwargs = {}
     if start_method is not None:
@@ -231,6 +236,11 @@ def get_1d_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     if not use_mp:
         grid_mode = GridMode.RECURSIVE
@@ -316,6 +326,11 @@ def get_horizontal_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     return get_1d_acceptance(ring, "x", resolution, amplitude, *args, **kwargs)
 
@@ -375,6 +390,11 @@ def get_vertical_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     return get_1d_acceptance(ring, "y", resolution, amplitude, *args, **kwargs)
 
@@ -434,6 +454,11 @@ def get_momentum_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     return get_1d_acceptance(ring, "dp", resolution, amplitude, *args, **kwargs)
 
