@@ -498,7 +498,7 @@ def get_rdts(
     rdts = _RDT()
     for k in rdts.__annotations__.keys():
         val = [getattr(rdt, k) for rdt in rdtlist]
-        if val[0] != None:
+        if val[0] is not None:
             setattr(rdts, k, val)
     return rdts
 
