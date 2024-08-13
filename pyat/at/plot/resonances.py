@@ -193,7 +193,7 @@ def plot_tune_diagram(
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
             resonances. If :py:obj:`None`, a new figure will be created.
-             Note that if axes are given then window is ignored.
+            Note that if axes are given then window is ignored.
         linestyle: sets the line style for normal and skew resonances.
             If 'dots' is given it will use dashdot and dotted for normal
             and skew resonances, respectively.
