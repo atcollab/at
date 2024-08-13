@@ -164,8 +164,15 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
-    _, _, td = ring.track(parts, nturns=nturns, losses=True, use_mp=use_mp,
-                          refpts=None, in_place=True, **kwargs)
+    _, _, td = ring.track(
+        parts,
+        nturns=nturns,
+        losses=True,
+        use_mp=use_mp,
+        refpts=None,
+        in_place=True,
+        **kwargs,
+    )
     return numpy.invert(td["loss_map"].islost)
 
 
@@ -315,9 +322,12 @@ def grid_boundary_search(
                 print("Element {0}, obspt={1}".format(ring[obspt].FamName, obspt))
         else:
             print(
-                "{0} Elements from {1}, obspt={2} to {3}, obspt={4}".
-                format(len(obspt), ring[obspt[0]].FamName, obspt[0],
-                       ring[obspt[-1]].FamName, obspt[-1]
+                "{0} Elements from {1}, obspt={2} to {3}, obspt={4}".format(
+                    len(obspt),
+                    ring[obspt[0]].FamName,
+                    obspt[0],
+                    ring[obspt[-1]].FamName,
+                    obspt[-1],
                 )
             )
         print("The grid mode is {0}".format(config.mode))
@@ -337,14 +347,20 @@ def grid_boundary_search(
         obs = 0 if obs is None else obs
         dpp = 0.0 if dp is None else dp
         if verbose:
-            print("\r{4}/{5}: Projecting obs=({0}, {1}) to the start of the ring, "
-                  "the initial offset is {2} with dp={3}".
-                  format(ring[obs].FamName, obs, orbit, dpp, i+1, len(obspt)))
-        newring[: len(ring) - obs].track(parts, use_mp=use_mp, in_place=True,
-                                         refpts=None, **kwargs)
+            print(
+                "\r{4}/{5}: Projecting obs=({0}, {1}) to the start of the ring, "
+                "the initial offset is {2} with dp={3}".format(
+                    ring[obs].FamName, obs, orbit, dpp, i + 1, len(obspt)
+                )
+            )
+        newring[: len(ring) - obs].track(
+            parts, use_mp=use_mp, in_place=True, refpts=None, **kwargs
+        )
         allparts.append(parts)
         grids.append(grid)
         offsets.append(orbit)
+    if verbose:
+        print("Starting the multi-turn tracking...")
     allparts = numpy.concatenate(allparts, axis=1)
     mask = get_survived(allparts, ring, nturns, use_mp, **kwargs)
     mask = numpy.split(mask, len(grids))
