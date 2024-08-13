@@ -29,7 +29,7 @@ class GridMode(Enum):
 
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
-    """ "
+    """
     Returns an object that defines the grid configuration
     """
     bounds = numpy.atleast_2d(bounds)
@@ -48,7 +48,7 @@ def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
 
 
 def grid(grid, offset):
-    """ "
+    """
     Returns a grid object
     """
     d = {"grid": numpy.atleast_2d(grid), "offset": numpy.atleast_1d(offset)}
