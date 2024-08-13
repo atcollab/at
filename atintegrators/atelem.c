@@ -6,6 +6,7 @@
 #define ATELEM_C
 
 #include "atcommon.h"
+#include "attypes.h"
 
 /*----------------------------------------------------*/
 /*            For the integrator code                 */
@@ -167,6 +168,14 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
     return atGetOptionalDoubleArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
+static double atEnergy(double elvalue, struct parameters *prm)
+{
+    double energy;
+    if (prm->energy == 0.0) energy = elvalue;
+    else energy = prm->energy;
+    return energy;
+}
+
 #endif /* MATLAB_MEX_FILE */
 
 /*----------------------------------------------------*/
@@ -180,6 +189,7 @@ typedef PyObject atElem;
 #define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
+#define atEnergy(elvalue,prm) (prm->energy)
 
 static int array_imported = 0;
 
@@ -327,7 +337,6 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 #endif /* defined(PYAT) */
 
 #if defined(PYAT) || defined(MATLAB_MEX_FILE)
-#include "attypes.h"
 
 #ifdef __cplusplus
 #define C_LINK extern "C"

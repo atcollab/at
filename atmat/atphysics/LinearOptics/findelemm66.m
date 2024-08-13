@@ -14,7 +14,10 @@ function M66 = findelemm66(ELEM, varargin)
 
 [XYStep,varargs]=getoption(varargin,'XYStep');
 [R0,varargs]=getoption(varargs,'orbit',zeros(6,1));
+[energy,varargs]=getoption(varargs,'Energy',0.0);
+[particle,varargs]=getoption(varargs,'Particle',atparticle('relativistic'));
 [MethodName,R0]=getargs(varargs,ELEM.PassMethod,R0);
+particle=atparticle.loadobj(particle);  % Convert class object into struct (for C access)
 
 % Build a diagonal matrix of initial conditions
 %scaling=2*XYStep*[1 0.1 1 0.1 1 1];
@@ -23,6 +26,6 @@ D6 = 0.5*diag(scaling);
 % Add to the orbit_in
 RIN = R0 + [D6, -D6];
 % Propagate through the element
-ROUT = feval(MethodName,ELEM,RIN);
+ROUT = feval(MethodName,ELEM,RIN,energy,particle);
 % Calculate numerical derivative
 M66 = (ROUT(:,1:6)-ROUT(:,7:12))./scaling;
