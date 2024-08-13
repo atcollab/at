@@ -201,7 +201,6 @@ end
                 if any(radindex)
                     jmt=jmat(3);
                     lindata=cellfun(@process,{envelope.R},reshape(num2cell(T,[1 2]),1,[]),num2cell(lindata));
-                    disp('step3');
                 else
                     lindata=arrayfun(@deflt,lindata);
                 end

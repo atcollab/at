@@ -35,8 +35,6 @@ check_6d(ring,true,'strict',0);
 NumElements = length(ring);
 if nargin<4, energy=atGetRingProperties(ring, 'Energy'); end
 if nargin<3, refpts=1; end
-ringrad=ring(radindex);
-energy=num2cell(energy(ones(size(ringrad))));
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
@@ -46,8 +44,8 @@ zr={zeros(6,6)};
 B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
 
 % calculate Radiation-Diffusion matrix B for elements with radiation
-B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-    ringrad,orb(radindex),energy,'UniformOutput',false);
+B(radindex)=cellfun(@diffmatrix,...
+    ring(radindex),orb(radindex),'UniformOutput',false);
 
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
@@ -84,10 +82,14 @@ if nout>=3, varargout{3}=orbit(:,refpts); end
 if nout>=2, varargout{2}=ms(:,:,refpts); end
 if nout>=1, varargout{1}=mring; end
 
+    function diff=diffmatrix(elem,orbit)
+        diff=findmpoleraddiffmatrix(elem, orbit, energy);
+    end
+
     function btx=cumulb(elem,orbit,b)
         % Calculate 6-by-6 linear transfer matrix in each element
         % near the equilibrium orbit
-        m=findelemm66(elem,elem.PassMethod,orbit);
+        m=findelemm66(elem,elem.PassMethod,'orbit',orbit,'Energy',energy);
         % Cumulative diffusion matrix of the entire ring
         BCUM = m*BCUM*m' + b;
         btx=BCUM;
