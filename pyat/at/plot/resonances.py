@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from fractions import Fraction
-from typing import Dict
 
 import matplotlib.axes
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ def create_linepalette(
     linecolor: str = None,
     linewidth: int = None,
     addtolabel: str = None,
-) -> Dict[str, any]:
+) -> dict[str, any]:
     """
         Create a line palette to plot resonance lines.
 
@@ -176,7 +175,7 @@ def plot_tune_diagram(
     linecolor: str or any = None,
     linewidth: int = None,
     addtolabel: str = None,
-    **kwargs: Dict[str, any],
+    **kwargs: dict[str, any],
 ) -> tuple[matplotlib.axes.Axes, list, list]:
     r"""
     Plot the tune diagram and resonance lines for a given order, periodicity and window.
