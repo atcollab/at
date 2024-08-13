@@ -37,11 +37,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     int nturn=Param->nturn;
     double T0=Param->T0;
+    double energy;
     if (!Elem) {
         double Length, Voltage, Energy, Frequency, TimeLag, PhaseLag;
         Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
-        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
@@ -54,7 +55,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->TimeLag=TimeLag;
         Elem->PhaseLag=PhaseLag;
     }
-    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
+    if (Param->energy == 0.0) energy = Elem->Energy;
+    else energy = Param->energy;
+    RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
                  Elem->PhaseLag, nturn, T0, num_particles);
     return Elem;
 }
@@ -67,8 +70,7 @@ MODULE_DEF(RFCavityPass)        /* Dummy module initialisation */
 
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 { 	
-  if(nrhs == 2)
-    {
+  if (nrhs >= 2) {
       double *r_in;
       const mxArray *ElemData = prhs[0];
       int num_particles = mxGetN(prhs[1]);

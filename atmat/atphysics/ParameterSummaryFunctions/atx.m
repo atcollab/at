@@ -192,7 +192,7 @@ end
         
         if has_cavity
             try
-                [envelope,espread,blength,m,T]=ohmienvelope(ron,radindex,refpts);
+                [envelope,espread,blength,m,T]=ohmienvelope(ron,radindex,refpts,energy);
                 [tns,chi]=atdampingrates(m);
                 fs=abs(tns(3))*cell_revfreq;
                 alpha=chi*cell_revfreq;
@@ -201,6 +201,7 @@ end
                 if any(radindex)
                     jmt=jmat(3);
                     lindata=cellfun(@process,{envelope.R},reshape(num2cell(T,[1 2]),1,[]),num2cell(lindata));
+                    disp('step3');
                 else
                     lindata=arrayfun(@deflt,lindata);
                 end

@@ -1,4 +1,4 @@
-function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
+function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts,energy)
 %OHMIENVELOPE calculates equilibrium beam envelope in a
 % circular accelerator using Ohmi's beam envelope formalism [1].
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
@@ -33,12 +33,10 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
+if nargin<4, energy=atGetRingProperties(ring, 'Energy'); end
 if nargin<3, refpts=1; end
-
-% Erase wigglers from the radiative element list.
-% Diffusion matrix to be computed with separate FDW function.
-Wig=atgetcells(ring,'Bmax');
-radindex = radindex & ~Wig;
+ringrad=ring(radindex);
+energy=num2cell(energy(ones(size(ringrad))));
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
@@ -49,9 +47,7 @@ B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
 
 % calculate Radiation-Diffusion matrix B for elements with radiation
 B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-    ring(radindex),orb(radindex),'UniformOutput',false);
-B(Wig)=cellfun(@FDW,...
-    ring(Wig),orb(Wig),'UniformOutput',false);
+    ringrad,orb(radindex),energy,'UniformOutput',false);
 
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
@@ -63,7 +59,7 @@ Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
 % We rewrite it in the form of Sylvester-Lyapunov equation
-% to use MATLAB's SYLVERTER function:
+% to use MATLAB's SYLVESTER function:
 %            AA*R + R*BB = CC
 % where
 %				AA = inv(MRING)
@@ -77,7 +73,7 @@ CC = AA*BCUM;
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
-rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
 
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
