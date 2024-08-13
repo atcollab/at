@@ -9,7 +9,7 @@ struct elem {
 void LongtAperturePass(double *r_in, double *limits, int num_particles)
 {
     /* Checks CT,DP of each input 6-vector and marks the corresponding element in
-     * lossflag array with 0 if CT,DP are exceed the limits given by limits and limitslong
+     * lossflag array with 0 if CT,DP are exceed the limits given by limits
      * arrays
      * limits has 4 elements: (MinDP, MaxDP, MinCT, MaxCT)
      */
