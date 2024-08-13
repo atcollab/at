@@ -268,7 +268,7 @@ MODULE_DEF(BeamLoadingCavityPass)       /* Dummy module initialisation */
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 { 	
-  if(nrhs == 2)
+  if(nrhs >= 2)
   {
   
       double *r_in;

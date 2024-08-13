@@ -220,7 +220,7 @@ MODULE_DEF(BendLinearPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2 ) {
+    if (nrhs >= 2) {
         double Length, BendingAngle, EntranceAngle, ExitAngle, K, ByError, FringeInt1, FringeInt2, FullGap;
         double *R1, *R2, *T1, *T2;
         double *r_in;
