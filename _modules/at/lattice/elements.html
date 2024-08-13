@@ -1095,7 +1095,7 @@ document.write(`
 <div class="viewcode-block" id="Aperture">
 <a class="viewcode-back" href="../../../p/api/at.lattice.elements.html#at.lattice.elements.Aperture">[docs]</a>
 <span class="k">class</span> <span class="nc">Aperture</span><span class="p">(</span><span class="n">Element</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aperture element&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transverse aperture element&quot;&quot;&quot;</span>
 
     <span class="n">_BUILD_ATTRIBUTES</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">_BUILD_ATTRIBUTES</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;Limits&#39;</span><span class="p">]</span>
     <span class="n">_conversions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Element</span><span class="o">.</span><span class="n">_conversions</span><span class="p">,</span> <span class="n">Limits</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,)))</span>
@@ -1105,13 +1105,31 @@ document.write(`
 <span class="sd">        Args:</span>
 <span class="sd">            family_name:    Name of the element</span>
 <span class="sd">            limits:         (4,) array of physical aperture:</span>
-<span class="sd">              [xmin, xmax, zmin, zmax] [m]</span>
-
+<span class="sd">              [xmin, xmax, ymin, ymax]</span>
 <span class="sd">        Default PassMethod: ``AperturePass``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;PassMethod&#39;</span><span class="p">,</span> <span class="s1">&#39;AperturePass&#39;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Aperture</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">family_name</span><span class="p">,</span> <span class="n">Limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="LongtAperture">
+<a class="viewcode-back" href="../../../p/api/at.lattice.elements.html#at.lattice.elements.LongtAperture">[docs]</a>
+<span class="k">class</span> <span class="nc">LongtAperture</span><span class="p">(</span><span class="n">Element</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Longitudinal aperture element&quot;&quot;&quot;</span>
+
+    <span class="n">_BUILD_ATTRIBUTES</span> <span class="o">=</span> <span class="n">Element</span><span class="o">.</span><span class="n">_BUILD_ATTRIBUTES</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;Limits&#39;</span><span class="p">]</span>
+    <span class="n">_conversions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Element</span><span class="o">.</span><span class="n">_conversions</span><span class="p">,</span> <span class="n">Limits</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">_array</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,)))</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">family_name</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            family_name:    Name of the element</span>
+<span class="sd">            limits:         (4,) array of physical aperture:</span>
+<span class="sd">              [dpmin, dpmax, ctmin, ctmax]</span>
+<span class="sd">        Default PassMethod: ``LongtAperturePass``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;PassMethod&#39;</span><span class="p">,</span> <span class="s1">&#39;LongtAperturePass&#39;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LongtAperture</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">family_name</span><span class="p">,</span> <span class="n">Limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Drift">

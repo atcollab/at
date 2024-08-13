@@ -515,7 +515,7 @@ responsibility to ensure that the appropriate attributes are present.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Aperture" title="at.lattice.elements.Aperture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Aperture</span></code></a>(family_name, limits, **kwargs)</p></td>
-<td><p>Aperture element</p></td>
+<td><p>Transverse aperture element</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.BeamMoments" title="at.lattice.elements.BeamMoments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BeamMoments</span></code></a>(family_name, **kwargs)</p></td>
 <td><p>Element to compute bunches mean and std</p></td>
@@ -547,52 +547,55 @@ responsibility to ensure that the appropriate attributes are present.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.LongElement" title="at.lattice.elements.LongElement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LongElement</span></code></a>(family_name, length, *args, **kwargs)</p></td>
 <td><p>Base class for long elements</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.LongtMotion" title="at.lattice.elements.LongtMotion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LongtMotion</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.LongtAperture" title="at.lattice.elements.LongtAperture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LongtAperture</span></code></a>(family_name, limits, **kwargs)</p></td>
+<td><p>Longitudinal aperture element</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.LongtMotion" title="at.lattice.elements.LongtMotion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LongtMotion</span></code></a>()</p></td>
 <td><p>Abstract Base class for all Element classes whose instances may modify the particle momentum</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.M66" title="at.lattice.elements.M66"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M66</span></code></a>(family_name[, m66])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.M66" title="at.lattice.elements.M66"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M66</span></code></a>(family_name[, m66])</p></td>
 <td><p>Linear (6, 6) transfer matrix</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Marker" title="at.lattice.elements.Marker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Marker</span></code></a>(family_name, **kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Marker" title="at.lattice.elements.Marker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Marker</span></code></a>(family_name, **kwargs)</p></td>
 <td><p>Marker element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Monitor" title="at.lattice.elements.Monitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Monitor</span></code></a>(family_name, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Monitor" title="at.lattice.elements.Monitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Monitor</span></code></a>(family_name, **kwargs)</p></td>
 <td><p>Monitor element</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Multipole" title="at.lattice.elements.Multipole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Multipole</span></code></a>(family_name, length, poly_a, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Multipole" title="at.lattice.elements.Multipole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Multipole</span></code></a>(family_name, length, poly_a, ...)</p></td>
 <td><p>Multipole element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Octupole" title="at.lattice.elements.Octupole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Octupole</span></code></a>(family_name, length, poly_a, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Octupole" title="at.lattice.elements.Octupole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Octupole</span></code></a>(family_name, length, poly_a, ...)</p></td>
 <td><p>Octupole element, with no changes from multipole at present</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Quadrupole" title="at.lattice.elements.Quadrupole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quadrupole</span></code></a>(FamName, Length[, Strength])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Quadrupole" title="at.lattice.elements.Quadrupole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quadrupole</span></code></a>(FamName, Length[, Strength])</p></td>
 <td><p>Quadrupole element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.QuantumDiffusion" title="at.lattice.elements.QuantumDiffusion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuantumDiffusion</span></code></a>(family_name, lmatp, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.QuantumDiffusion" title="at.lattice.elements.QuantumDiffusion"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuantumDiffusion</span></code></a>(family_name, lmatp, **kwargs)</p></td>
 <td><p>Quantum diffusion element</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.RFCavity" title="at.lattice.elements.RFCavity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RFCavity</span></code></a>(family_name, length, voltage, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.RFCavity" title="at.lattice.elements.RFCavity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RFCavity</span></code></a>(family_name, length, voltage, ...)</p></td>
 <td><p>RF cavity element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Radiative" title="at.lattice.elements.Radiative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Radiative</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Radiative" title="at.lattice.elements.Radiative"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Radiative</span></code></a>()</p></td>
 <td><p>Mixin class for default radiating elements (<a class="reference internal" href="#at.lattice.elements.Dipole" title="at.lattice.elements.Dipole"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dipole</span></code></a>, <a class="reference internal" href="#at.lattice.elements.Quadrupole" title="at.lattice.elements.Quadrupole"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quadrupole</span></code></a>, <a class="reference internal" href="#at.lattice.elements.Wiggler" title="at.lattice.elements.Wiggler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Wiggler</span></code></a>)</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Sextupole" title="at.lattice.elements.Sextupole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sextupole</span></code></a>(family_name, length[, h])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Sextupole" title="at.lattice.elements.Sextupole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sextupole</span></code></a>(family_name, length[, h])</p></td>
 <td><p>Sextupole element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.SimpleQuantDiff" title="at.lattice.elements.SimpleQuantDiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimpleQuantDiff</span></code></a>(family_name[, betax, betay, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.SimpleQuantDiff" title="at.lattice.elements.SimpleQuantDiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimpleQuantDiff</span></code></a>(family_name[, betax, betay, ...])</p></td>
 <td><p>Linear tracking element for a simplified quantum diffusion, radiation damping and energy loss.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.SimpleRadiation" title="at.lattice.elements.SimpleRadiation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimpleRadiation</span></code></a>(family_name[, taux, tauy, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.SimpleRadiation" title="at.lattice.elements.SimpleRadiation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimpleRadiation</span></code></a>(family_name[, taux, tauy, ...])</p></td>
 <td><p>Simple radiation damping and energy loss</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.SliceMoments" title="at.lattice.elements.SliceMoments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SliceMoments</span></code></a>(family_name, nslice, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.SliceMoments" title="at.lattice.elements.SliceMoments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SliceMoments</span></code></a>(family_name, nslice, **kwargs)</p></td>
 <td><p>Element to compute slices mean and std</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.ThinMultipole" title="at.lattice.elements.ThinMultipole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ThinMultipole</span></code></a>(family_name, poly_a, poly_b, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.ThinMultipole" title="at.lattice.elements.ThinMultipole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ThinMultipole</span></code></a>(family_name, poly_a, poly_b, ...)</p></td>
 <td><p>Thin multipole element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.elements.Wiggler" title="at.lattice.elements.Wiggler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Wiggler</span></code></a>(family_name, length, wiggle_period, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.elements.Wiggler" title="at.lattice.elements.Wiggler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Wiggler</span></code></a>(family_name, length, wiggle_period, ...)</p></td>
 <td><p>Wiggler element</p></td>
 </tr>
 </tbody>
@@ -602,13 +605,13 @@ responsibility to ensure that the appropriate attributes are present.</p>
 <dt class="sig sig-object py" id="at.lattice.elements.Aperture">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Aperture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/elements.html#Aperture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.elements.Aperture" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></p>
-<p>Aperture element</p>
+<p>Transverse aperture element</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>family_name</strong> – Name of the element</p></li>
 <li><p><strong>limits</strong> – (4,) array of physical aperture:
-[xmin, xmax, zmin, zmax] [m]</p></li>
+[xmin, xmax, ymin, ymax]</p></li>
 </ul>
 </dd>
 </dl>
@@ -1139,6 +1142,23 @@ initial length. <code class="docutils literal notranslate"><span class="pre">sum
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.lattice.elements.LongtAperture">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LongtAperture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limits</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/elements.html#LongtAperture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.elements.LongtAperture" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></p>
+<p>Longitudinal aperture element</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>family_name</strong> – Name of the element</p></li>
+<li><p><strong>limits</strong> – (4,) array of physical aperture:
+[dpmin, dpmax, ctmin, ctmax]</p></li>
+</ul>
+</dd>
+</dl>
+<p>Default PassMethod: <code class="docutils literal notranslate"><span class="pre">LongtAperturePass</span></code></p>
 </dd></dl>
 
 <dl class="py class">
@@ -1787,6 +1807,7 @@ array-like object</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.elements.LongElement.merge"><code class="docutils literal notranslate"><span class="pre">LongElement.merge()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.elements.LongtAperture"><code class="docutils literal notranslate"><span class="pre">LongtAperture</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.elements.LongtMotion"><code class="docutils literal notranslate"><span class="pre">LongtMotion</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#at.lattice.elements.LongtMotion.set_longt_motion"><code class="docutils literal notranslate"><span class="pre">LongtMotion.set_longt_motion()</span></code></a></li>
 </ul>
