@@ -1,14 +1,16 @@
 """
 Non-linear optics
 """
-import numpy
 from typing import Optional, Sequence
-from scipy.special import factorial
+
+import numpy
+from scipy.special import comb, factorial
+
 from ..lattice import Element, Lattice
 from ..tracking import internal_lpass
-from .orbit import Orbit, find_orbit
-from .linear import get_tune, get_chrom, linopt6
 from .harmonic_analysis import get_tunes_harmonic
+from .linear import get_chrom, get_tune, linopt6
+from .orbit import Orbit, find_orbit
 
 __all__ = [
     "detuning",
