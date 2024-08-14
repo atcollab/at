@@ -279,7 +279,7 @@ def feeddown_polynomba(
         Dictionary with PolynomB and PolynomA feeddown components.
 
     Raises:
-        ValueError: if non of the two polynoms is passed.
+        ValueError: if none of the two polynoms is passed.
     """
     # check debug and verbose flags only once
     debugprint = print if debug else lambda *a, **k: None
