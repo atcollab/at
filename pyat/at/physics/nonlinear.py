@@ -280,6 +280,9 @@ def feeddown_polynomba(
 
     Raises:
         ValueError: if none of the two polynoms is passed.
+
+    Note:
+        If only one polynom is passed, it is assumed to be PolynomB.
     """
     # check debug and verbose flags only once
     debugprint = print if debug else lambda *a, **k: None
