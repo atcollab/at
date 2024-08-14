@@ -10,7 +10,14 @@ from .orbit import Orbit, find_orbit
 from .linear import get_tune, get_chrom, linopt6
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ["detuning", "chromaticity", "gen_detuning_elem", "tunes_vs_amp"]
+__all__ = [
+    "detuning",
+    "chromaticity",
+    "gen_detuning_elem",
+    "tunes_vs_amp",
+    "feed_down_polynomba",
+    "feed_down_from_nth_ordera",
+]
 
 
 def tunes_vs_amp(
@@ -242,3 +249,105 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
         T2=orbit,
     )
     return nonlin_elem
+
+
+def feed_down_polynomba(
+    polb: numpy.ndarray = numpy.zeros(0),
+    pola: numpy.ndarray = numpy.zeros(0),
+    x0: float = 0,
+    y0: float = 0,
+    verbose=False,
+    debug=False,
+) -> dict[str, numpy.ndarray]:
+    # check debug and verbose flags only once
+    debugprint = print if debug else lambda *a, **k: None
+    verboseprint = print if verbose else lambda *a, **k: None
+
+    if pola is None and polb is None:
+        print("At least one polynom is needed")
+
+    # verify polynoms length
+    maxorda = 0
+    maxordb = 0
+    if pola is not None:
+        maxorda = len(pola)
+    if polb is not None:
+        maxordb = len(polb)
+    maxord = max(maxorda, maxordb)
+    debugprint(f"maxord={maxord},maxorda={maxorda},maxordb={maxordb}")
+
+    polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
+    polapad = numpy.pad(pola, (0, maxord - maxorda), "constant", constant_values=(0, 0))
+    debugprint(f"polbpad={polbpad}, polapad={polapad}")
+
+    verboseprint(f"polb={polb},pola={pola}")
+    verboseprint(f"x0={x0},y0={y0}")
+    polasum = numpy.zeros(maxord - 1)
+    polbsum = numpy.zeros(maxord - 1)
+    debugprint(f"ith=1, first order nothing to do")
+    for ith in range(2, maxord + 1):
+        polbaux_b, polaaux_b = feed_down_from_nth_order(
+            ith, polbpad[ith - 1], x0, y0, magtype="normal"
+        )
+        polbaux_a, polaaux_a = feed_down_from_nth_order(
+            ith, polapad[ith - 1], x0, y0, magtype="skew"
+        )
+        polbshort = polbaux_b + polbaux_a
+        polashort = polaaux_b + polaaux_a
+        polbsum = polbsum + numpy.pad(
+            polbshort, (0, maxord - ith), "constant", constant_values=(0, 0)
+        )
+        polasum = polasum + numpy.pad(
+            polashort, (0, maxord - ith), "constant", constant_values=(0, 0)
+        )
+        debugprint(f"ith={ith},polbsum={polbsum},polasum={polasum}")
+    poldict = {"PolynomB": polbsum, "PolynomA": polasum}
+    verboseprint(f"poldict={poldict}")
+    return poldict
+
+
+def feed_down_from_nth_order(
+    nthorder: int,
+    nthfieldcomp: float,
+    x0: float,
+    y0: float,
+    magtype: str = "normal",
+    debug: bool = False,
+    verbose=False,
+):
+    # print debugging output, equivalent to extra verbose
+    debugprint = print if debug else lambda *a, **k: None
+    verboseprint = print if verbose else lambda *a, **k: None
+    verboseprint(f"nthorder={nthorder},nthfieldcomp={nthfieldcomp},magtype={magtype}")
+    verboseprint(f"x0={x0},y0={y0}")
+    fakeimag = {0: 1, 1: 0, 2: -1, 3: 0}
+    polbaux = numpy.zeros(nthorder - 1)
+    polaaux = numpy.zeros(nthorder - 1)
+    for k in range(1, nthorder):
+        debugprint(f"nthorder={nthorder}, k={k}, nthfieldcomp={nthfieldcomp}")
+        ichoosek = comb(nthorder - 1, k)
+        debugprint(f"ichoosek={ichoosek}")
+        pascalsn = comb(k, numpy.arange(k + 1))
+        debugprint(f"pascalsn={pascalsn}")
+        powk = numpy.arange(k + 1)
+        powkflip = numpy.arange(k, -1, -1)
+        debugprint(f"powk={powk}")
+        debugprint(f"powkflip={powkflip}")
+        recoefs = numpy.array(list(map(lambda x: fakeimag[x], numpy.mod(powk, 4))))
+        imcoefs = numpy.array(list(map(lambda x: fakeimag[x], numpy.mod(powk + 3, 4))))
+        debugprint(f"recoefs={recoefs}, imcoefs={imcoefs}")
+        commonfactor = nthfieldcomp * ichoosek * (-1) ** k
+        debugprint(f"commonfactor={commonfactor}")
+        repart = recoefs * commonfactor * (pascalsn * (x0**powkflip * y0**powk))
+        impart = imcoefs * commonfactor * (pascalsn * (x0**powkflip * y0**powk))
+        debugprint(f"repart={repart}")
+        debugprint(f"impart={impart}")
+        polbaux[nthorder - k - 1] = polbaux[nthorder - k - 1] + repart.sum()
+        polaaux[nthorder - k - 1] = polaaux[nthorder - k - 1] + impart.sum()
+    verboseprint(f"polbaux={polbaux},polaaux={polaaux}")
+    polbout, polaout = polbaux, polaaux
+    # skew components swap the imaginary and real feed-down and change the sign
+    # of the real part, i.e. j*j = -1
+    if magtype == "skew":
+        polbout, polaout = -1 * polaaux, polbaux
+    return polbout, polaout
