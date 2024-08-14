@@ -42,8 +42,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Length, Voltage, Energy, Frequency, TimeLag, PhaseLag;
         Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
-        Energy=atGetOptionalDouble(ElemData,"Energy",energy); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        /*optional fields*/
+        Energy=atGetOptionalDouble(ElemData,"Energy",energy); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
