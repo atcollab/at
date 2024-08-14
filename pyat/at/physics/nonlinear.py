@@ -17,8 +17,8 @@ __all__ = [
     "chromaticity",
     "gen_detuning_elem",
     "tunes_vs_amp",
-    "feed_down_polynomba",
-    "feed_down_from_nth_ordera",
+    "feeddown_polynomba",
+    "feeddown_from_nth_ordera",
 ]
 
 
@@ -253,7 +253,7 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
     return nonlin_elem
 
 
-def feed_down_polynomba(
+def feeddown_polynomba(
     polb: numpy.ndarray = numpy.zeros(0),
     pola: numpy.ndarray = numpy.zeros(0),
     x0: float = 0,
@@ -288,10 +288,10 @@ def feed_down_polynomba(
     polbsum = numpy.zeros(maxord - 1)
     debugprint(f"ith=1, first order nothing to do")
     for ith in range(2, maxord + 1):
-        polbaux_b, polaaux_b = feed_down_from_nth_order(
+        polbaux_b, polaaux_b = feeddown_from_nth_order(
             ith, polbpad[ith - 1], x0, y0, magtype="normal"
         )
-        polbaux_a, polaaux_a = feed_down_from_nth_order(
+        polbaux_a, polaaux_a = feeddown_from_nth_order(
             ith, polapad[ith - 1], x0, y0, magtype="skew"
         )
         polbshort = polbaux_b + polbaux_a
@@ -308,7 +308,7 @@ def feed_down_polynomba(
     return poldict
 
 
-def feed_down_from_nth_order(
+def feeddown_from_nth_order(
     nthorder: int,
     nthfieldcomp: float,
     x0: float,
