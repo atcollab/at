@@ -6,10 +6,6 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
- * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
- *              Adding rotations and translations to wiggler.
- *				Bug fix in wiggler initialisation.
- *				Energy parameter bug fix.
  * .02  2003-06-18     J. Li
  *				Cleanup the code
  *
@@ -127,7 +123,7 @@ void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
 
 #define second 2
 #define fourth 4
-void GWigSymplecticRadPass(double *r, double Energy, double Ltot, double Lw,
+void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             double *By, double *Bx, double *T1, double *T2,
             double *R1, double *R2, int num_particles)
@@ -145,13 +141,11 @@ void GWigSymplecticRadPass(double *r, double Energy, double Ltot, double Lw,
     zEndPointV[0] = 0;
     zEndPointV[1] = Ltot;
 
+    GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, zEndPointH, zEndPointV, By, Bx, T1, T2, R1, R2);
+
     for(c = 0;c<num_particles;c++) {
-		GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, zEndPointH, zEndPointV, By, Bx, T1, T2, R1, R2);
         r6 = r+c*6;
         if(!atIsNaN(r6[0])) {
-			/* Misalignment at entrance */
-			if (T1) ATaddvv(r6,T1);
-            if (R1) ATmultmv(r6,R1);
             switch (Nmeth) {
                 case second:
                     GWigPass_2nd(&Wig, r6);
@@ -163,9 +157,6 @@ void GWigSymplecticRadPass(double *r, double Energy, double Ltot, double Lw,
                     printf("Invalid wiggler integration method %d.\n", Nmeth);
                     break;
             }
-			/* Misalignment at exit */
-            if (R2) ATmultmv(r6,R2);
-            if (T2) ATaddvv(r6,T2);
         }
     }
 }
@@ -178,6 +169,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 
 {
+    double energy;
     if (!Elem) {
         double *R1, *R2, *T1, *T2;
         double *By, *Bx;
@@ -185,7 +177,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int Nstep, Nmeth;
         int NHharm, NVharm;
 
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
@@ -196,6 +187,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
         /* Optional fields */
+        Energy = atGetOptionalDouble(ElemData, "Energy",Param->energy); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
@@ -218,7 +210,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    GWigSymplecticRadPass(r_in, Elem->Energy, Elem->Length, Elem->Lw,
+    energy = atEnergy(Param->energy, Elem->Energy);
+
+    GWigSymplecticRadPass(r_in, energy, Elem->Length, Elem->Lw,
             Elem->Bmax, Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
             Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             num_particles);
@@ -237,6 +231,8 @@ MODULE_DEF(GWigSymplecticRadPass)        /* Dummy module initialisation */
 void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs >= 2) {
+        double rest_energy = 0.0;
+        double charge = -1.0;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -245,8 +241,8 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         double Ltot, Lw, Bmax, Energy;
         int Nstep, Nmeth;
         int NHharm, NVharm;
+        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
@@ -257,11 +253,13 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
         /* Optional fields */
+        Energy = atGetOptionalDouble(ElemData, "Energy",0.0); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
