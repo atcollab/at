@@ -71,6 +71,8 @@ typedef mxArray atElem;
 #define atError(...) mexErrMsgIdAndTxt("AT:PassError", __VA_ARGS__)
 #define atWarning(...) mexWarnMsgIdAndTxt("AT:PassWarning", __VA_ARGS__)
 #define atPrintf(...) mexPrintf(__VA_ARGS__)
+#define atEnergy(ringenergy,elemenergy) ((ringenergy)==0.0 ? (elemenergy) : (ringenergy))
+#include "ringproperties.c"
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
@@ -168,47 +170,6 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
     return atGetOptionalDoubleArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
-static double atEnergy(double elvalue, struct parameters *prm)
-{
-    double energy;
-    if (prm->energy == 0.0) energy = elvalue;
-    else energy = prm->energy;
-    return energy;
-}
-
-static double atGetOptionalDoubleProp(const mxArray *obj, const char *fieldname, double default_value)
-{
-    mxArray *field=mxGetProperty(obj, 0, fieldname);
-    return (field) ? mxGetScalar(field) : default_value;
-}
-
-static void atParticle(const mxArray *opts, double *rest_energy, double *charge)
-{
-    const mxArray *part = mxGetField(opts, 0, "Particle");
-    if (part) {
-        if (mxIsClass(part, "atparticle")) {  /* OK */
-            *rest_energy = atGetOptionalDoubleProp(part, "rest_energy", 0.0);
-            *charge = atGetOptionalDoubleProp(part, "charge", -1.0);
-        }
-        else {                              /* particle is not a Particle object */
-            mexErrMsgIdAndTxt("Atpass:WrongParameter","Particle must be an 'atparticle' object");
-        }
-    }
-}
-
-static void atProperties(const mxArray *opts, double *energy, double *rest_energy, double *charge)
-{
-    mxArray *field;
-    if (!mxIsStruct(opts)) {
-        mexErrMsgIdAndTxt("Atpass:WrongParameter","ring properties must be a struct");
-    }
-    field = mxGetField(opts, 0, "Energy");
-    if (field) {
-        *energy = mxGetScalar(field);
-        atParticle(opts, rest_energy, charge);
-    }
-}
-
 #endif /* MATLAB_MEX_FILE */
 
 /*----------------------------------------------------*/
@@ -222,7 +183,7 @@ typedef PyObject atElem;
 #define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
-#define atEnergy(elvalue,prm) (prm->energy)
+#define atEnergy(ringenergy,elemenergy) (ringenergy)
 
 static int array_imported = 0;
 

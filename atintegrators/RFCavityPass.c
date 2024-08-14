@@ -56,6 +56,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->PhaseLag=PhaseLag;
     }
     if (energy == 0.0) energy = Elem->Energy;
+
     RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
                  Elem->PhaseLag, nturn, T0, num_particles);
     return Elem;
