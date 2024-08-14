@@ -20,8 +20,8 @@ function M66 = findelemm66(ELEM, varargin)
 
 [XYStep,varargs]=getoption(varargin,'XYStep');
 [R0,varargs]=getoption(varargs,'orbit',zeros(6,1));
-[props.Energy,varargs]=getoption(varargs,'Energy',0.0);
-[props.Particle,varargs]=getoption(varargs,'Particle',atparticle('relativistic'));
+[energy,varargs]=getoption(varargs,'Energy',0.0);
+[particle,varargs]=getoption(varargs,'Particle',[]);
 [MethodName,R0]=getargs(varargs,ELEM.PassMethod,R0);
 
 % Build a diagonal matrix of initial conditions
@@ -31,6 +31,6 @@ D6 = 0.5*diag(scaling);
 % Add to the orbit_in
 RIN = R0 + [D6, -D6];
 % Propagate through the element
-ROUT = feval(MethodName,ELEM,RIN,props);
+ROUT=elempass(ELEM,RIN,'PassMethod',MethodName,'Energy',energy,'Particle',particle);
 % Calculate numerical derivative
 M66 = (ROUT(:,1:6)-ROUT(:,7:12))./scaling;

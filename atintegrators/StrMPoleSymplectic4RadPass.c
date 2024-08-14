@@ -109,6 +109,7 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
+    double energy;
     if (!Elem) {
         double Length, Energy, Scaling;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
@@ -118,8 +119,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         /*optional fields*/
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -154,13 +155,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
+    energy = atEnergy(Param->energy, Elem->Energy);
+
     StrMPoleSymplectic4RadPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps,
             Elem->FringeQuadEntrance, Elem->FringeQuadExit,
             Elem->fringeIntM0, Elem->fringeIntP0,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, Elem->Energy, num_particles);
+            Elem->KickAngle, Elem->Scaling, energy, num_particles);
     return Elem;
 }
 
@@ -172,13 +175,12 @@ MODULE_DEF(StrMPoleSymplectic4RadPass)        /* Dummy module initialisation */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs >= 2) {
-        double Energy = 0.0;
         double rest_energy = 0.0;
         double charge = -1.0;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length, Scaling;
+        double Length, Scaling, Energy;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
         double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
@@ -189,7 +191,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         /*optional fields*/
-        Energy=atGetOptionalDouble(ElemData,"Energy",Energy); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
