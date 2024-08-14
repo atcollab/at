@@ -21,7 +21,7 @@ __all__ = [
     "gen_detuning_elem",
     "tunes_vs_amp",
     "feeddown_polynomba",
-    "feeddown_from_nth_ordera",
+    "feeddown_from_nth_order",
 ]
 
 
