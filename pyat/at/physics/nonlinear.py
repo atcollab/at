@@ -334,7 +334,7 @@ def feeddown_from_nth_order(
     verbose: bool = False,
 ) -> tuple[numpy.ndarray, numpy.ndarray]:
     """
-    Return the PolynomB and PolynomA from a magnet transverse offset.
+    Return the feeddown polynoms from an nth-order magnet component transverse offset.
 
     Parameters:
         nthorder: integer order of the magnet component, e.g. 1 for dipole,
