@@ -257,30 +257,43 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
 
 
 def feeddown_polynomba(
-    polb: numpy.ndarray = numpy.zeros(0),
-    pola: numpy.ndarray = numpy.zeros(0),
+    polb: numpy.ndarray or tuple = (),
+    pola: numpy.ndarray or tuple = (),
     xoffset: float = 0,
     yoffset: float = 0,
-    verbose=False,
-    debug=False,
+    verbose: bool = False,
+    debug: bool = False,
 ) -> dict[str, numpy.ndarray]:
+    """
+    Return the feeddown due to a transverse offset.
+
+    Parameters:
+        polb: numpy array. PolynomB.
+        pola: numpy array. PolynomA.
+        xoffset: float. Default zero. Horizontal offset in meters.
+        yoffset: float. Default zero. Vertical offset in meters.
+        verbose: prints additional info.
+        debug: prints information about the feeddown polynom construction.
+
+    Returns:
+        Dictionary with PolynomB and PolynomA feeddown components.
+
+    Raises:
+        ValueError: if non of the two polynoms is passed.
+    """
     # check debug and verbose flags only once
     debugprint = print if debug else lambda *a, **k: None
     verboseprint = print if verbose else lambda *a, **k: None
 
-    if pola is None and polb is None:
-        print("At least one polynom is needed")
-
     # verify polynoms length
-    maxorda = 0
-    maxordb = 0
-    if pola is not None:
-        maxorda = len(pola)
-    if polb is not None:
-        maxordb = len(polb)
+    maxorda = len(pola)
+    maxordb = len(polb)
+    if maxorda == 0 and maxordb == 0:
+        raise ValueError("At least one polynom is needed")
     maxord = max(maxorda, maxordb)
     debugprint(f"maxord={maxord},maxorda={maxorda},maxordb={maxordb}")
 
+    debugprint("Padding polynoms")
     polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
     polapad = numpy.pad(pola, (0, maxord - maxorda), "constant", constant_values=(0, 0))
     debugprint(f"polbpad={polbpad}, polapad={polapad}")
@@ -289,7 +302,7 @@ def feeddown_polynomba(
     verboseprint(f"xoffset={xoffset},yoffset={yoffset}")
     polasum = numpy.zeros(maxord - 1)
     polbsum = numpy.zeros(maxord - 1)
-    debugprint(f"ith=1, first order nothing to do")
+    debugprint("ith=1, first order nothing to do")
     for ith in range(2, maxord + 1):
         polbaux_b, polaaux_b = feeddown_from_nth_order(
             ith, polbpad[ith - 1], xoffset, yoffset, poltype="B"
@@ -321,15 +334,15 @@ def feeddown_from_nth_order(
     verbose: bool = False,
 ) -> tuple[numpy.ndarray, numpy.ndarray]:
     """
-    Return the PolynomB and PolynomA from a magnet offset.
+    Return the PolynomB and PolynomA from a magnet transverse offset.
 
     Parameters:
         nthorder: integer order of the magnet component, e.g. 1 for dipole,
             2 for quadrupoles, 3 for sextupoles, etc.
         nthpolcomp: float. nth component of the polynom, i.e. the value of
-            PolynomA/B[nthorder-1]
-        xoffset: float. Horizontal offset
-        yoffset: float. Vertical offset.
+            PolynomA/B[nthorder-1].
+        xoffset: float. Horizontal offset in meters.
+        yoffset: float. Vertical offset in meters.
         poltype: Default 'B'. Could be 'B' or 'A', otherwise ignored.
         debug: print info on the feeddown polynom construction.
         verbose: print info on input and output parameters.
