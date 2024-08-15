@@ -90,7 +90,7 @@ class RingParam(elt.Element):
         Energy=float,
         Periodicity=int,
         Particle=_particle,
-        cell_harmnumber=int,
+        cell_harmnumber=float,
     )
 
     # noinspection PyPep8Naming

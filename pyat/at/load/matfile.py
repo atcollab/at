@@ -11,6 +11,7 @@ import os
 from os.path import abspath, basename, splitext
 from typing import Any
 from collections.abc import Sequence, Generator
+from math import isfinite
 from warnings import warn
 
 import numpy as np
@@ -147,7 +148,8 @@ def ringparam_filter(
             for k, v in elem.items():
                 k2 = _m2p.get(k, k)
                 if k2 is not None:
-                    params.setdefault(k2, v)
+                    if k2 != "cell_harmnumber" or isfinite(v):
+                        params.setdefault(k2, v)
             if keep_all:
                 pars = vars(elem).copy()
                 name = pars.pop("FamName")
