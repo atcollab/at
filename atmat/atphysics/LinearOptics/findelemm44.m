@@ -12,10 +12,19 @@ function M44 = findelemm44(ELEM, varargin)
 %                   The transverse matrix is momentum-dependent,
 %                   the 5-th component of ORBITIN is used as the DP value
 %
+%  M66=FINDELEMM44(...,'Energy',ENERGY)
+%     Use ENERGY and ignore the 'Energy' field of elements
+%
+%  M66=FINDELEMM44(...,'Particle',PARTICLE)
+%     Use PARTICLE (default is relativistic)
+%
+%
 % See also FINDELEMM66
 
 [XYStep,varargs]=getoption(varargin,'XYStep');
 [R0,varargs]=getoption(varargs,'orbit',zeros(6,1));
+[energy,varargs]=getoption(varargs,'Energy',0.0);
+[particle,varargs]=getoption(varargs,'Particle',[]);
 [MethodName,R0]=getargs(varargs,ELEM.PassMethod,R0);
 
 % Build a diagonal matrix of initial conditions
@@ -25,6 +34,6 @@ D4 = [0.5*diag(scaling);zeros(2,4)];
 % Add to the orbit_in
 RIN = R0 + [D4 -D4];
 % Propagate through the element
-ROUT = feval(MethodName,ELEM,RIN);
+ROUT=elempass(ELEM,RIN,'PassMethod',MethodName,'Energy',energy,'Particle',particle);
 % Calculate numerical derivative
 M44 = ((ROUT(1:4,1:4)-ROUT(1:4,5:8))./scaling);
