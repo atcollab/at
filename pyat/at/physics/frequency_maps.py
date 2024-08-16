@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import multiprocessing
+import psutil
 import time
 from typing import Optional, Sequence
 from warnings import warn
@@ -39,6 +40,27 @@ _pdict = {"x": 0, "xp": 1, "y": 2, "yp": 3, "dp": 4, "ct": 5}
 __all__ = ["fmap_parallel_track", "get_freqmap"]
 
 
+def get_ram_info():
+    ram = psutil.virtual_memory()
+
+    total_ram = ram.total # total installed RAM
+    available_ram = ram.available # RAM available for processes
+    used_ram = ram.used # RAM used by processes
+    free_ram = ram.free # RAM not being used
+    percent_used = ram.percent # percentage of RAM used
+
+    return total_ram, available_ram, used_ram, free_ram, percent_used
+def get_swap_info():
+    swap = psutil.swap_memory()
+
+    total_swap = swap.total # total installed RAM
+    used_swap = swap.used # RAM used by processes
+    free_swap = swap.free # RAM not being used
+    percent_used = swap.percent # percentage of RAM used
+
+    return total_swap, used_swap, free_swap, percent_used
+
+
 def get_freqmap(
     ring: Lattice,
     planes: list,
@@ -58,6 +80,7 @@ def get_freqmap(
 ) -> list:
     # noinspection PyUnresolvedReferences
     r"""Computes the frequency map at ``repfts`` observation points.
+
     Parameters:
         ring:           Lattice definition
         planes:         max. dimension 2, Plane(s) to scan for the acceptance.
@@ -168,6 +191,7 @@ def get_freqmap(
         offset[:, planesi[0]] = offset[:, planesi[0]] + 1e-9
         offset[:, planesi[1]] = offset[:, planesi[1]] + 1e-9
     dataobs = []
+
     t00 = time.time()
     for obspt, offset0 in zip(rps, offset):
         offset, newring = set_ring_orbit(ring, deltap, obspt, offset0)
@@ -185,9 +209,45 @@ def get_freqmap(
             print(f"Number of turns is {nturns}")
             print(f"The initial offset is {offset} with deltap={deltap}")
         parts, grid = get_parts(config, offset)
-        rout, _, tdl = ring.track(
-            parts, nturns=2 * nturns, losses=True, use_mp=use_mp, **kwargs
-        )
+        maxparts = parts.shape[1]
+        print(f'Max number of particles to track : {maxparts}')
+        needed_totmem = 8*6*parts.shape[1]*len(refpts)*nturns*2 # twice turns
+        print(f"Turn by turn data memory: {needed_totmem/1024/1024} MB")
+        tracked = 0
+        remaining_parts = maxparts
+        while remaining_parts > 0:
+            # estimate memory usage
+            floatsize = 8 # bytes in python
+            needed_mem = 8*6*parts[:,tracked:remaining_parts].shape[1]*len(refpts)*nturns*2
+            print(f"Estimated memory for tracking: {needed_mem/1024/1024} MB")
+            # estimate memory resources
+            ramtot,_,_,ramfree,_ = get_ram_info()
+            swaptot,_,swapfree,_ = get_swap_info()
+            onehundredmegabytes = 100*1024*1024
+            safe_margin = min(onehundredmegabytes,1/32*ramtot,1/4*swaptot)
+            print(f'memory safe margin set to: {safe_margin/1024/1024} MB')
+            estimated_freemem = ramfree + swapfree
+            #estimated_freemem = 1024**3
+            print(f'Estimated free memory : {estimated_freemem/1024/1024} MB')
+            if needed_mem < estimated_freemem and tracked == 0:
+                rout, _, tdl = ring.track(
+                    parts, nturns=2 * nturns, losses=True, use_mp=use_mp, **kwargs
+                )
+                remaining_parts = 0
+                tracked = maxparts
+            else:
+                print('Parallel tracking will be splitted due to memory requirements')
+                npartschunk = int((estimated_freemem - safe_margin)/len(refpts)/nturns/6/2/8)
+                print(f'Tracking chunk of {npartschunk} particles')
+                routchunk,_,tdl = ring.track(
+                        parts[:,tracked:tracked+npartschunk], nturns=2 * nturns, losses=True, use_mp=use_mp, **kwargs
+                )
+                if tracked == 0:
+                    rout = routchunk
+                else:
+                    rout = numpy.concatenate((rout,routchunk),axis=1)
+                remaining_parts = remaining_parts - npartschunk
+                tracked =  tracked + npartschunk
 
         mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
         survived = grid.grid[:, mask]
