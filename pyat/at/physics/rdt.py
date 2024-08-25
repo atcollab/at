@@ -361,8 +361,23 @@ def _computedrivingterms(
             # fmt: on
     return rdts
 
-def _get_rdtlist(idx_mag, beta, etax, phi, avemu, mu, smag, sall, pols,
-                 rdt_type, tune, nperiods, second_order, refpts):
+
+def _get_rdtlist(
+    idx_mag,
+    beta,
+    etax,
+    phi,
+    avemu,
+    mu,
+    smag,
+    sall,
+    pols,
+    rdt_type,
+    tune,
+    nperiods,
+    second_order,
+    refpts,
+):
     rdtlist = []
     for i, ii in enumerate(refpts):
         start_idx = sum(idx_mag < ii)
@@ -394,13 +409,14 @@ def _get_rdtlist(idx_mag, beta, etax, phi, avemu, mu, smag, sall, pols,
         )
     return rdtlist
 
+
 def get_rdts(
     ring: Lattice,
     refpts: Refpts,
     rdt_type: Sequence[RDTType] | RDTType,
     second_order: bool = False,
     use_mp: bool = False,
-    pool_size: int = None
+    pool_size: int = None,
 ):
     """
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
@@ -479,17 +495,34 @@ def get_rdts(
     beta = avebeta[idx_mag]
     etax = avedisp[idx_mag, 0]
     phi = avemu[idx_mag]
-    pols = [[_get_polynom(e, "PolynomA", 1) * e.Length,
-             _get_polynom(e, "PolynomB", 1) * e.Length,
-             _get_polynom(e, "PolynomB", 2) * e.Length,
-             _get_polynom(e, "PolynomB", 3) * e.Length]
-            for e in ring[idx_mag]]
+    pols = [
+        [
+            _get_polynom(e, "PolynomA", 1) * e.Length,
+            _get_polynom(e, "PolynomB", 1) * e.Length,
+            _get_polynom(e, "PolynomB", 2) * e.Length,
+            _get_polynom(e, "PolynomB", 3) * e.Length,
+        ]
+        for e in ring[idx_mag]
+    ]
 
     mu = lo[-1].mu
     tune = mu / 2.0 / numpy.pi
-    fun = partial(_get_rdtlist, idx_mag, beta, etax, phi,
-                  avemu, mu, smag, sall, pols, rdt_type,
-                  tune, nperiods, second_order)
+    fun = partial(
+        _get_rdtlist,
+        idx_mag,
+        beta,
+        etax,
+        phi,
+        avemu,
+        mu,
+        smag,
+        sall,
+        pols,
+        rdt_type,
+        tune,
+        nperiods,
+        second_order,
+    )
     if use_mp:
         if pool_size is None:
             pool_size = multiprocessing.cpu_count()
