@@ -10,7 +10,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath('../pyat'))
@@ -40,8 +39,9 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.intersphinx',
               'sphinx.ext.githubpages',
               'sphinx.ext.viewcode',
-              'myst_parser',
+              'myst_nb',
               'sphinx_copybutton',
+              'sphinx_design',
               ]
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
@@ -56,7 +56,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["README.rst", "**/*.so"]
+exclude_patterns = ["README.rst", "**/*.so", "_build/*"]
 rst_prolog = """
 .. role:: pycode(code)
    :language: python
@@ -65,7 +65,6 @@ autodoc_default_options = {
         # Make sure that any autodoc declarations show the right members
         "members": True,
         "undoc-members": True,
-        "inherited-members": False,
         "show-inheritance": True,
         "member-order": "groupwise"
 }
@@ -92,6 +91,8 @@ myst_enable_extensions = [
     "deflist"
 ]
 myst_heading_anchors = 3
+nb_execution_mode = "auto"
+nb_execution_allow_errors = True
 
 # -- Options for HTML output -------------------------------------------------
 

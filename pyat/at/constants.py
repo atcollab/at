@@ -2,15 +2,16 @@
 """
 
 from math import sqrt as _sqrt, pi
-# noinspection PyUnresolvedReferences
-from scipy.constants import c as clight
+from scipy.constants import c as clight  # noqa: F401
 from scipy.constants import physical_constants as _cst
-from scipy.constants import e as qe
+from scipy.constants import e as qe  # noqa: F401
 
 #: Electron mass [eV]
 e_mass = 1.0e+06 * _cst['electron mass energy equivalent in MeV'][0]  # eV
 #: Proton mass [eV]
 p_mass = 1.0e+06 * _cst['proton mass energy equivalent in MeV'][0]    # eV
+#: Muon mass [eV]
+mu_mass = 1.0e+06 * _cst["muon mass energy equivalent in MeV"][0]  # eV
 
 _e_radius = _cst['classical electron radius'][0]
 _hbar_c = _cst['reduced Planck constant times c in MeV fm'][0]

@@ -64,7 +64,7 @@ markers=atgetcells(ring,'FamName','xbeg|xend');
 ringrad=atradon(ring);
 
 orbit4=zeros(6,sum(markers));
-orbit4(1:5,:)=findsyncorbit(ring,0,markers);
+orbit4(1:5,:)=findsyncorbit(ring,0,markers,'strict',-1);
 orbit4=num2cell(orbit4,1);
 r1=detuning(ring,gamma,xm,zm,orbit4(:,1))/nper;
 

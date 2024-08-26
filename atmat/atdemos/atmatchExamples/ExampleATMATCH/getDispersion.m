@@ -7,11 +7,11 @@ function [dx,dy]=getDispersion(THERING,bpmindx)
 
 DE=0.001;
 
-Op=findorbit4(THERING,DE,bpmindx);
+Op=findorbit4(THERING,DE,bpmindx, 'strict', -1);
 Opx=Op(1,:);
 Opy=Op(3,:);
 
-Om=findorbit4(THERING,-DE,bpmindx);
+Om=findorbit4(THERING,-DE,bpmindx, 'strict', -1);
 Omx=Om(1,:);
 Omy=Om(3,:);
 

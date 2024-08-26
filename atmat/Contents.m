@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.5.0 (atcollab) 06-Nov-2023
+% Version 2.6.0 (atcollab) 20-Jun-2024
 % 
 %   Contents file for ATMAT and its subfolders.
 %   

@@ -33,7 +33,7 @@ from . import elements as elt
 from .elements import Element
 from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
-from .utils import get_s_pos, get_elements,get_value_refpts, set_value_refpts
+from .utils import get_s_pos, get_elements, get_value_refpts, set_value_refpts
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
 from .utils import refpts_iterator, checktype, set_shift, set_tilt, get_geometry
@@ -93,7 +93,7 @@ class Lattice(list):
     _excluded_attributes = ('nbunch', )
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
-                       '_cell_harmnumber', '_radiation', 'beam_current',
+                       '_cell_harmnumber', '_radiation', '_beam_current',
                        '_fillpattern')
 
     # noinspection PyUnusedLocal
@@ -296,11 +296,11 @@ class Lattice(list):
         if cavities and not hasattr(self, '_cell_harmnumber'):
             cavities.sort(key=lambda el: el.Frequency)
             try:
-                self._cell_harmnumber = getattr(cavities[0], 'HarmNumber')
+                self._cell_harmnumber = cavities[0].HarmNumber
             except AttributeError:
                 length += self.get_s_pos(len(self))[0]
                 rev = self.beta * clight / length
-                frequency = getattr(cavities[0], 'Frequency')
+                frequency = cavities[0].Frequency
                 self._cell_harmnumber = int(round(frequency / rev))
         self._radiation |= params.pop('_radiation')
 
@@ -314,13 +314,13 @@ class Lattice(list):
                                  If :py:obj:`True` a deep copy of elem
                                  is used.
         """
-        # noinspection PyUnusedLocal
         # scan the new element to update it
-        elist = list(self._addition_filter([elem],
+        elist = list(self._addition_filter([elem],  # noqa: F841
                      copy_elements=copy_elements))
         super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element], copy_elements=False):
+        # noinspection PyUnresolvedReferences
         r"""This method adds all the elements of `elems` to the end of the
         lattice. The behavior is the same as for a :py:obj:`list`
 
@@ -343,6 +343,7 @@ class Lattice(list):
         super().extend(elems)
 
     def append(self, elem: Element, copy_elements=False):
+        # noinspection PyUnresolvedReferences
         r"""This method overwrites the inherited method :py:meth:`list.append()`,
         its behavior is changed, it accepts only AT lattice elements
         :py:obj:`Element` as input argument.
@@ -361,6 +362,7 @@ class Lattice(list):
         self.extend([elem], copy_elements=copy_elements)
 
     def repeat(self, n: int, copy_elements: bool = True):
+        # noinspection SpellCheckingInspection,PyUnresolvedReferences,PyRedeclaration
         r"""This method allows to repeat the lattice `n` times.
         If `n` does not divide `ring.periodicity`, the new ring
         periodicity is set to 1, otherwise  it is set to
@@ -405,6 +407,7 @@ class Lattice(list):
 
     def concatenate(self, *lattices: Iterable[Element],
                     copy_elements=False, copy=False):
+        # noinspection PyUnresolvedReferences,SpellCheckingInspection,PyRedeclaration
         """Concatenate several `Iterable[Element]` with the lattice
 
         Equivalent syntaxes:
@@ -439,6 +442,7 @@ class Lattice(list):
         return lattice if copy else None
 
     def reverse(self, copy=False):
+        # noinspection PyUnresolvedReferences
         r"""Reverse the order of the lattice and swapt the faces
         of elements. Alignment errors are not swapped
 
@@ -516,7 +520,7 @@ class Lattice(list):
     def deepcopy(self) -> Lattice:
         """Returns a deep copy of the lattice"""
         return copy.deepcopy(self)
-        
+
     def slice_elements(self, refpts: Refpts, slices: int = 1) -> Lattice:
         """Create a new lattice by slicing the elements at refpts
 
@@ -538,7 +542,7 @@ class Lattice(list):
                 else:
                     yield el
 
-        return Lattice(slice_generator, iterator=self.attrs_filter)        
+        return Lattice(slice_generator, iterator=self.attrs_filter)
 
     def slice(self, size: Optional[float] = None, slices: Optional[int] = 1) \
             -> Lattice:
@@ -635,8 +639,8 @@ class Lattice(list):
     def energy(self, energy: float):
         # Set the Energy attribute of radiating elements
         for elem in self:
-            if (isinstance(elem, (elt.RFCavity, elt.Wiggler)) or
-                    elem.PassMethod.endswith('RadPass')):
+            if (isinstance(elem, (elt.RFCavity, elt.Wiggler))
+                    or elem.PassMethod.endswith('RadPass')):
                 elem.Energy = energy
         # Set the energy attribute of the Lattice
         # Use a numpy scalar to allow division by zero
@@ -1471,7 +1475,7 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
     cavities = []
     cell_length = 0
 
-    for idx, elem in enumerate(elem_filter(params, *args)):
+    for elem in elem_filter(params, *args):
         if isinstance(elem, elt.RFCavity):
             cavities.append(elem)
         elif hasattr(elem, 'Energy'):
