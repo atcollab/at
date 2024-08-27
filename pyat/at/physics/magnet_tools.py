@@ -1,5 +1,5 @@
 """
-Non-linear optics
+Magnet tools
 """
 
 from __future__ import annotations
@@ -85,7 +85,6 @@ def feeddown_from_nth_order(
     xoffset: float,
     yoffset: float,
     poltype: str = "B",
-    debug: bool = False,
     verbose: bool = False,
 ) -> tuple[numpy.ndarray, numpy.ndarray]:
     """
@@ -99,14 +98,11 @@ def feeddown_from_nth_order(
         xoffset: float. Horizontal offset in meters.
         yoffset: float. Vertical offset in meters.
         poltype: Default 'B'. Could be 'B' or 'A', otherwise ignored.
-        debug: print info on the feeddown polynom construction.
         verbose: print info on input and output parameters.
 
     Returns:
         Tuple of two numpy arrays with PolynomB and PolynomA from feeddown.
     """
-    # print debugging output, equivalent to extra verbose
-    debugprint = print if debug else lambda *a, **k: None
     verboseprint = print if verbose else lambda *a, **k: None
     verboseprint(f"nthorder={nthorder},nthpolcomp={nthpolcomp},poltype={poltype}")
     verboseprint(f"xoffset={xoffset},yoffset={yoffset}")
@@ -114,20 +110,13 @@ def feeddown_from_nth_order(
     polbaux = numpy.zeros(nthorder - 1)
     polaaux = numpy.zeros(nthorder - 1)
     for kterm in range(1, nthorder):
-        debugprint(f"nthorder={nthorder}, kterm={kterm}, nthpolcomp={nthpolcomp}")
         ichoosek = comb(nthorder - 1, kterm)
-        debugprint(f"ichoosek={ichoosek}")
         pascalsn = comb(kterm, numpy.arange(kterm + 1))
-        debugprint(f"pascalsn={pascalsn}")
         powk = numpy.arange(kterm + 1)
         powkflip = numpy.arange(kterm, -1, -1)
-        debugprint(f"powk={powk}")
-        debugprint(f"powkflip={powkflip}")
         recoefs = numpy.array([fakeimag[numpy.mod(idx, 4)] for idx in powk])
         imcoefs = numpy.array([fakeimag[numpy.mod(idx + 3, 4)] for idx in powk])
-        debugprint(f"recoefs={recoefs}, imcoefs={imcoefs}")
         commonfactor = nthpolcomp * ichoosek * (-1) ** kterm
-        debugprint(f"commonfactor={commonfactor}")
         repart = (
             recoefs
             * commonfactor
@@ -138,8 +127,6 @@ def feeddown_from_nth_order(
             * commonfactor
             * (pascalsn * (xoffset**powkflip * yoffset**powk))
         )
-        debugprint(f"repart={repart}")
-        debugprint(f"impart={impart}")
         polbaux[nthorder - kterm - 1] = polbaux[nthorder - kterm - 1] + repart.sum()
         polaaux[nthorder - kterm - 1] = polaaux[nthorder - kterm - 1] + impart.sum()
     verboseprint(f"polbaux={polbaux},polaaux={polaaux}")
