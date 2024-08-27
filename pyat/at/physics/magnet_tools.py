@@ -7,6 +7,8 @@ from typing import Sequence
 import numpy
 from scipy.special import comb
 
+from ..lattice.elements import Element
+
 __all__ = [
     "feeddown_polynomba",
     "feeddown_from_nth_order",
@@ -14,30 +16,54 @@ __all__ = [
 ]
 
 
-def feeddown_pol_from_element(ele,verbose: bool=False):
+def feeddown_pol_from_element(
+    ele: Element, verbose: bool = False, **kwargs: dict[str, any]
+) -> dict[str, numpy.ndarray]:
     """
     Return the feed down polynoms due to a transverse offset on an element.
 
     Parameters:
-        element: a ring element.
-        polb: PolynomB.
-        pola: PolynomA.
-        xoffset: Default zero. Horizontal offset in meters.
+        ele: a ring element.
+        verbose: prints additional info. Default: False.
+        kwargs:
+            offset:(x,y) horizontal and vertical offset in meters.
+                Default taken from T2 or T1. Otherwise, zero.
 
     Returns:
         Dictionary with PolynomB and PolynomA feeddown components.
 
-    Note: Thin lengs approxiamtion, T2=-T1.
+    Note: Thin lens approximation, T2=-T1.
           Bending angles are ignored.
     """
     # check verbose flags only once
     verboseprint = print if verbose else lambda *a, **k: None
     # handle cases where polynom a and b are not defined
-    # get polynoms
-    # check if element has T1 and T2. Use one.
-    # Return the polynoms
+    polb = numpy.array([])
+    pola = numpy.array([])
+    if hasattr(ele, "PolynomB"):
+        polb = ele.PolynomB
+    else:
+        verboseprint(f"Element {ele.FamName} has no PolynomB")
+    if hasattr(ele, "PolynomA"):
+        pola = ele.PolynomA
+        verboseprint(f"Element {ele.FamName} has no PolynomA")
 
-    return 0
+    # check if user has set offsets
+    xoffset, yoffset = kwargs.get("offset", (0, 0))
+    # check if element has T1 and T2. Use one.
+    if "offset" not in kwargs:
+        if hasattr(ele, "T2"):
+            xoffset = ele.T2[0]
+            yoffset = ele.T2[2]
+        elif hasattr(ele, "T1"):
+            xoffset = -ele.T1[0]
+            yoffset = -ele.T1[2]
+        else:
+            verboseprint("Element has no T1 or T2.")
+    verboseprint(f"Using offsets xoffset={xoffset}, yoffset={yoffset}.")
+    # Return the polynoms
+    return feeddown_polynomba(polb=polb, pola=pola, xoffset=xoffset, yoffset=yoffset)
+
 
 def feeddown_polynomba(
     polb: Sequence[float],
