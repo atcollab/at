@@ -46,13 +46,17 @@ def feeddown_polynomba(
     maxorda = len(pola)
     maxordb = len(polb)
     maxord = max(maxorda, maxordb)
-    polasum = numpy.zeros(max(0,maxord - 1))
-    polbsum = numpy.zeros(max(0,maxord - 1))
+    polasum = numpy.zeros(max(0, maxord - 1))
+    polbsum = numpy.zeros(max(0, maxord - 1))
     if maxorda == 0 and maxordb == 0:
         verboseprint("Both polynoms are zero.")
     else:
-        polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
-        polapad = numpy.pad(pola, (0, maxord - maxorda), "constant", constant_values=(0, 0))
+        polbpad = numpy.pad(
+            polb, (0, maxord - maxordb), "constant", constant_values=(0, 0)
+        )
+        polapad = numpy.pad(
+            pola, (0, maxord - maxorda), "constant", constant_values=(0, 0)
+        )
 
         verboseprint(f"polb={polb},pola={pola}")
         verboseprint(f"xoffset={xoffset},yoffset={yoffset}")
