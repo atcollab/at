@@ -376,34 +376,45 @@ document.write(`
                   
   <h1>Source code for at.acceptance.acceptance</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Acceptance computation&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">.boundary</span> <span class="kn">import</span> <span class="n">GridMode</span>
+
 <span class="c1"># noinspection PyProtectedMember</span>
 <span class="kn">from</span> <span class="nn">.boundary</span> <span class="kn">import</span> <span class="n">boundary_search</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
-<span class="kn">from</span> <span class="nn">..lattice</span> <span class="kn">import</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">frequency_control</span><span class="p">,</span> <span class="n">AtError</span>
+<span class="kn">from</span> <span class="nn">..lattice</span> <span class="kn">import</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">frequency_control</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get_acceptance&#39;</span><span class="p">,</span> <span class="s1">&#39;get_1d_acceptance&#39;</span><span class="p">,</span> <span class="s1">&#39;get_horizontal_acceptance&#39;</span><span class="p">,</span>
-           <span class="s1">&#39;get_vertical_acceptance&#39;</span><span class="p">,</span> <span class="s1">&#39;get_momentum_acceptance&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;get_acceptance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_1d_acceptance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_horizontal_acceptance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_vertical_acceptance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_momentum_acceptance&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <div class="viewcode-block" id="get_acceptance">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.acceptance.html#at.acceptance.acceptance.get_acceptance">[docs]</a>
 <span class="nd">@frequency_control</span>
 <span class="k">def</span> <span class="nf">get_acceptance</span><span class="p">(</span>
-        <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">,</span>
-        <span class="n">nturns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
-        <span class="n">refpts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Refpts</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">offset</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">grid_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GridMode</span><span class="p">]</span> <span class="o">=</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span><span class="p">,</span>
-        <span class="n">use_mp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">divider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="n">shift_zero</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0e-6</span><span class="p">,</span>
-        <span class="n">start_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span>
+    <span class="n">planes</span><span class="p">,</span>
+    <span class="n">npoints</span><span class="p">,</span>
+    <span class="n">amplitudes</span><span class="p">,</span>
+    <span class="n">nturns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="n">refpts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Refpts</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">grid_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GridMode</span><span class="p">]</span> <span class="o">=</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span><span class="p">,</span>
+    <span class="n">use_mp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">divider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">shift_zero</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0e-6</span><span class="p">,</span>
+    <span class="n">start_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the acceptance at ``repfts`` observation points</span>
@@ -470,95 +481,89 @@ document.write(`
 <span class="sd">       * When``use_mp=True`` all the available CPUs will be used.</span>
 <span class="sd">         This behavior can be changed by setting</span>
 <span class="sd">         ``at.DConstant.patpass_poolsize`` to the desired value</span>
+<span class="sd">       * When multiple ``refpts`` are provided particles are first</span>
+<span class="sd">         projected to the beginning of the ring with tracking. Then,</span>
+<span class="sd">         all particles are tracked up to ``nturns``. This allows to</span>
+<span class="sd">         do most of the work in a single function call and allows for</span>
+<span class="sd">         full parallelization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">start_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;start_method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_method</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;start_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_method</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="n">nproc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{0}</span><span class="s1"> cpu found for acceptance calculation&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nproc</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{0}</span><span class="s2"> cpu found for acceptance calculation&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nproc</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">use_mp</span><span class="p">:</span>
             <span class="n">nprocu</span> <span class="o">=</span> <span class="n">nproc</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Multi-process acceptance calculation selected...&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multi-process acceptance calculation selected...&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nproc</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Consider use_mp=False for single core computations&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Consider use_mp=False for single core computations&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">nprocu</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Single process acceptance calculation selected...&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Single process acceptance calculation selected...&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Consider use_mp=True for parallelized computations&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Consider use_mp=True for parallelized computations&quot;</span><span class="p">)</span>
         <span class="n">np</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">npoints</span><span class="p">)</span>
         <span class="n">na</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">na</span> <span class="o">=</span> <span class="n">np</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">npp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">npoints</span><span class="p">)</span>
-        <span class="n">rpp</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">np</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">na</span><span class="o">/</span><span class="n">nprocu</span><span class="p">)</span>
-        <span class="n">mpp</span> <span class="o">=</span> <span class="n">npp</span><span class="o">/</span><span class="n">nprocu</span>
+        <span class="n">rpp</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">np</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">na</span> <span class="o">/</span> <span class="n">nprocu</span><span class="p">)</span>
+        <span class="n">mpp</span> <span class="o">=</span> <span class="n">npp</span> <span class="o">/</span> <span class="n">nprocu</span>
         <span class="k">if</span> <span class="n">rpp</span> <span class="o">&gt;</span> <span class="n">mpp</span><span class="p">:</span>
-            <span class="n">cond</span> <span class="o">=</span> <span class="p">(</span><span class="n">grid_mode</span> <span class="ow">is</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span> <span class="ow">or</span>
-                    <span class="n">grid_mode</span> <span class="ow">is</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">CARTESIAN</span><span class="p">)</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">grid_mode</span> <span class="ow">is</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span> <span class="ow">or</span> <span class="n">grid_mode</span> <span class="ow">is</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">CARTESIAN</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cond</span> <span class="o">=</span> <span class="n">grid_mode</span> <span class="ow">is</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RECURSIVE</span>
         <span class="k">if</span> <span class="n">rpp</span> <span class="o">&gt;</span> <span class="n">mpp</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cond</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The estimated load for grid mode is </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpp</span><span class="p">))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The estimated load for recursive mode is </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rpp</span><span class="p">))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> or </span><span class="si">{1}</span><span class="s1"> is recommended&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span><span class="p">,</span>
-                                                     <span class="n">GridMode</span><span class="o">.</span><span class="n">CARTESIAN</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The estimated load for grid mode is </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpp</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The estimated load for recursive mode is </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rpp</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> or </span><span class="si">{1}</span><span class="s2"> is recommended&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span><span class="p">,</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">CARTESIAN</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">rpp</span> <span class="o">&lt;</span> <span class="n">mpp</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cond</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The estimated load for grid mode is </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpp</span><span class="p">))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The estimated load for recursive mode is </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rpp</span><span class="p">))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> is recommended&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">GridMode</span><span class="o">.</span><span class="n">RECURSIVE</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The estimated load for grid mode is </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpp</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The estimated load for recursive mode is </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rpp</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> is recommended&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">GridMode</span><span class="o">.</span><span class="n">RECURSIVE</span><span class="p">))</span>
 
-    <span class="n">boundary</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">survived</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">grid</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">refpts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">rp</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">uint32_refpts</span><span class="p">(</span><span class="n">refpts</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">rp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">refpts</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">offset</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rp</span><span class="p">),</span> <span class="mi">6</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;offset and refpts have incoherent &#39;</span>
-                   <span class="s1">&#39;shapes: </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">offset</span><span class="p">),</span>
-                                             <span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">refpts</span><span class="p">)))</span>
-            <span class="k">raise</span> <span class="n">AtError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">offset</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">rp</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rp</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">boundary_search</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">planes</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">,</span>
-                                  <span class="n">nturns</span><span class="o">=</span><span class="n">nturns</span><span class="p">,</span> <span class="n">obspt</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span>
-                                  <span class="n">offset</span><span class="o">=</span><span class="n">o</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
-                                  <span class="n">grid_mode</span><span class="o">=</span><span class="n">grid_mode</span><span class="p">,</span> <span class="n">use_mp</span><span class="o">=</span><span class="n">use_mp</span><span class="p">,</span>
-                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">divider</span><span class="o">=</span><span class="n">divider</span><span class="p">,</span>
-                                  <span class="n">shift_zero</span><span class="o">=</span><span class="n">shift_zero</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">boundary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-        <span class="n">survived</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-        <span class="n">grid</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">boundary</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">survived</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">boundary</span><span class="p">,</span> <span class="n">survived</span><span class="p">,</span> <span class="n">grid</span></div>
+    <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">boundary_search</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span>
+        <span class="n">planes</span><span class="p">,</span>
+        <span class="n">npoints</span><span class="p">,</span>
+        <span class="n">amplitudes</span><span class="p">,</span>
+        <span class="n">nturns</span><span class="o">=</span><span class="n">nturns</span><span class="p">,</span>
+        <span class="n">obspt</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span>
+        <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+        <span class="n">grid_mode</span><span class="o">=</span><span class="n">grid_mode</span><span class="p">,</span>
+        <span class="n">use_mp</span><span class="o">=</span><span class="n">use_mp</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="n">divider</span><span class="o">=</span><span class="n">divider</span><span class="p">,</span>
+        <span class="n">shift_zero</span><span class="o">=</span><span class="n">shift_zero</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">g</span></div>
 
 
 
 <div class="viewcode-block" id="get_1d_acceptance">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.acceptance.html#at.acceptance.acceptance.get_1d_acceptance">[docs]</a>
 <span class="k">def</span> <span class="nf">get_1d_acceptance</span><span class="p">(</span>
-        <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">nturns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
-        <span class="n">refpts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Refpts</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">dp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">offset</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grid_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GridMode</span><span class="p">]</span> <span class="o">=</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span><span class="p">,</span>
-        <span class="n">use_mp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">divider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="n">shift_zero</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0e-6</span><span class="p">,</span>
-        <span class="n">start_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-
+    <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span>
+    <span class="n">plane</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">nturns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+    <span class="n">refpts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Refpts</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">grid_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GridMode</span><span class="p">]</span> <span class="o">=</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RADIAL</span><span class="p">,</span>
+    <span class="n">use_mp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">divider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">shift_zero</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0e-6</span><span class="p">,</span>
+    <span class="n">start_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the 1D acceptance at ``refpts`` observation points</span>
 
@@ -613,32 +618,47 @@ document.write(`
 <span class="sd">       * When``use_mp=True`` all the available CPUs will be used.</span>
 <span class="sd">         This behavior can be changed by setting</span>
 <span class="sd">         ``at.DConstant.patpass_poolsize`` to the desired value</span>
+<span class="sd">       * When multiple ``refpts`` are provided particles are first</span>
+<span class="sd">         projected to the beginning of the ring with tracking. Then,</span>
+<span class="sd">         all particles are tracked up to ``nturns``. This allows to</span>
+<span class="sd">         do most of the work in a single function call and allows for</span>
+<span class="sd">         full parallelization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">use_mp</span><span class="p">:</span>
         <span class="n">grid_mode</span> <span class="o">=</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RECURSIVE</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">plane</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> \
-        <span class="s1">&#39;1D acceptance: single plane required&#39;</span>
-    <span class="k">assert</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">resolution</span><span class="p">),</span> <span class="s1">&#39;1D acceptance: scalar args required&#39;</span>
-    <span class="k">assert</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">amplitude</span><span class="p">),</span> <span class="s1">&#39;1D acceptance: scalar args required&#39;</span>
-    <span class="n">npoint</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">amplitude</span><span class="o">/</span><span class="n">resolution</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">plane</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;1D acceptance: single plane required&quot;</span>
+    <span class="k">assert</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">resolution</span><span class="p">),</span> <span class="s2">&quot;1D acceptance: scalar args required&quot;</span>
+    <span class="k">assert</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">amplitude</span><span class="p">),</span> <span class="s2">&quot;1D acceptance: scalar args required&quot;</span>
+    <span class="n">npoint</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">amplitude</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">grid_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">GridMode</span><span class="o">.</span><span class="n">RECURSIVE</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">npoint</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> \
-            <span class="s1">&#39;Grid has only one point: increase amplitude or reduce resolution&#39;</span>
-    <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">get_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">plane</span><span class="p">,</span> <span class="n">npoint</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span>
-                             <span class="n">nturns</span><span class="o">=</span><span class="n">nturns</span><span class="p">,</span> <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span>
-                             <span class="n">grid_mode</span><span class="o">=</span><span class="n">grid_mode</span><span class="p">,</span> <span class="n">use_mp</span><span class="o">=</span><span class="n">use_mp</span><span class="p">,</span>
-                             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">start_method</span><span class="o">=</span><span class="n">start_method</span><span class="p">,</span>
-                             <span class="n">divider</span><span class="o">=</span><span class="n">divider</span><span class="p">,</span> <span class="n">shift_zero</span><span class="o">=</span><span class="n">shift_zero</span><span class="p">,</span>
-                             <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">npoint</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">&quot;Grid has only one point: increase amplitude or reduce resolution&quot;</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">get_acceptance</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span>
+        <span class="n">plane</span><span class="p">,</span>
+        <span class="n">npoint</span><span class="p">,</span>
+        <span class="n">amplitude</span><span class="p">,</span>
+        <span class="n">nturns</span><span class="o">=</span><span class="n">nturns</span><span class="p">,</span>
+        <span class="n">dp</span><span class="o">=</span><span class="n">dp</span><span class="p">,</span>
+        <span class="n">refpts</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span>
+        <span class="n">grid_mode</span><span class="o">=</span><span class="n">grid_mode</span><span class="p">,</span>
+        <span class="n">use_mp</span><span class="o">=</span><span class="n">use_mp</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="n">start_method</span><span class="o">=</span><span class="n">start_method</span><span class="p">,</span>
+        <span class="n">divider</span><span class="o">=</span><span class="n">divider</span><span class="p">,</span>
+        <span class="n">shift_zero</span><span class="o">=</span><span class="n">shift_zero</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">s</span><span class="p">,</span> <span class="n">g</span></div>
 
 
 
 <div class="viewcode-block" id="get_horizontal_acceptance">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.acceptance.html#at.acceptance.acceptance.get_horizontal_acceptance">[docs]</a>
-<span class="k">def</span> <span class="nf">get_horizontal_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span>
-                              <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-                              <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_horizontal_acceptance</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the 1D horizontal acceptance at ``refpts`` observation points</span>
 
 <span class="sd">    See :py:func:`get_acceptance`</span>
@@ -691,16 +711,21 @@ document.write(`
 <span class="sd">       * When``use_mp=True`` all the available CPUs will be used.</span>
 <span class="sd">         This behavior can be changed by setting</span>
 <span class="sd">         ``at.DConstant.patpass_poolsize`` to the desired value</span>
+<span class="sd">       * When multiple ``refpts`` are provided particles are first</span>
+<span class="sd">         projected to the beginning of the ring with tracking. Then,</span>
+<span class="sd">         all particles are tracked up to ``nturns``. This allows to</span>
+<span class="sd">         do most of the work in a single function call and allows for</span>
+<span class="sd">         full parallelization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">get_1d_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">get_1d_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="get_vertical_acceptance">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.acceptance.html#at.acceptance.acceptance.get_vertical_acceptance">[docs]</a>
-<span class="k">def</span> <span class="nf">get_vertical_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span>
-                            <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-                            <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_vertical_acceptance</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the 1D vertical acceptance at refpts observation points</span>
 
 <span class="sd">    See :py:func:`get_acceptance`</span>
@@ -753,16 +778,21 @@ document.write(`
 <span class="sd">       * When``use_mp=True`` all the available CPUs will be used.</span>
 <span class="sd">         This behavior can be changed by setting</span>
 <span class="sd">         ``at.DConstant.patpass_poolsize`` to the desired value</span>
+<span class="sd">       * When multiple ``refpts`` are provided particles are first</span>
+<span class="sd">         projected to the beginning of the ring with tracking. Then,</span>
+<span class="sd">         all particles are tracked up to ``nturns``. This allows to</span>
+<span class="sd">         do most of the work in a single function call and allows for</span>
+<span class="sd">         full parallelization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">get_1d_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">get_1d_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="get_momentum_acceptance">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.acceptance.html#at.acceptance.acceptance.get_momentum_acceptance">[docs]</a>
-<span class="k">def</span> <span class="nf">get_momentum_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span>
-                            <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-                            <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_momentum_acceptance</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">:</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the 1D momentum acceptance at refpts observation points</span>
 
 <span class="sd">    See :py:func:`get_acceptance`</span>
@@ -815,9 +845,13 @@ document.write(`
 <span class="sd">       * When``use_mp=True`` all the available CPUs will be used.</span>
 <span class="sd">         This behavior can be changed by setting</span>
 <span class="sd">         ``at.DConstant.patpass_poolsize`` to the desired value</span>
+<span class="sd">       * When multiple ``refpts`` are provided particles are first</span>
+<span class="sd">         projected to the beginning of the ring with tracking. Then,</span>
+<span class="sd">         all particles are tracked up to ``nturns``. This allows to</span>
+<span class="sd">         do most of the work in a single function call and allows for</span>
+<span class="sd">         full parallelization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">get_1d_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="s1">&#39;dp&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span>
-                             <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">get_1d_acceptance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="s2">&quot;dp&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 

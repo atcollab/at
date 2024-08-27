@@ -389,7 +389,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">..constants</span> <span class="kn">import</span> <span class="n">qe</span><span class="p">,</span> <span class="n">clight</span><span class="p">,</span> <span class="n">_e_radius</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get_bunch_length_espread&#39;</span><span class="p">,</span> <span class="s1">&#39;get_lifetime&#39;</span><span class="p">,</span> <span class="s1">&#39;get_scattering_rate&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_bunch_length_espread&quot;</span><span class="p">,</span> <span class="s2">&quot;get_lifetime&quot;</span><span class="p">,</span> <span class="s2">&quot;get_scattering_rate&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="get_bunch_length_espread">
@@ -413,8 +413,9 @@ document.write(`
 <span class="sd">    Returns:</span>
 <span class="sd">        Bunch length, energy spread</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">haissinski</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cst</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="n">x</span><span class="o">-</span><span class="n">cst</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span> <span class="o">-</span> <span class="n">cst</span>
 
     <span class="n">ep</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">envelope_parameters</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">radiation_on</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
     <span class="n">bl0</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">sigma_l</span>
@@ -423,29 +424,34 @@ document.write(`
     <span class="k">if</span> <span class="n">zn</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bunch_curr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">bl</span> <span class="o">=</span> <span class="n">bl0</span>
     <span class="k">elif</span> <span class="n">zn</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">bunch_curr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">AtError</span><span class="p">(</span><span class="s1">&#39;Please provide both current and Z/n for bunch &#39;</span>
-                      <span class="s1">&#39;length calculation&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">AtError</span><span class="p">(</span>
+            <span class="s2">&quot;Please provide both current and Z/n for bunch &quot;</span> <span class="s2">&quot;length calculation&quot;</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">vrf</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_rf_voltage</span><span class="p">()</span>
         <span class="n">h</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">harmonic_number</span>
         <span class="n">etac</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_slip_factor</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">radiation_off</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="n">cs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ep</span><span class="o">.</span><span class="n">phi_s</span><span class="p">)</span>
-        <span class="n">nus</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">f_s</span><span class="o">/</span><span class="n">ring</span><span class="o">.</span><span class="n">revolution_frequency</span>
-        <span class="n">cst</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">bunch_curr</span> <span class="o">*</span> <span class="n">zn</span> <span class="o">/</span>
-               <span class="p">(</span><span class="n">vrf</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="n">cs</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">etac</span><span class="p">)</span> <span class="o">*</span> <span class="n">espread</span> <span class="o">/</span> <span class="n">nus</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span>
-        <span class="n">bl</span> <span class="o">=</span> <span class="n">bl0</span><span class="o">*</span><span class="n">fsolve</span><span class="p">(</span><span class="n">haissinski</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]),</span> <span class="n">args</span><span class="o">=</span><span class="n">cst</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nus</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">f_s</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">revolution_frequency</span>
+        <span class="n">cst</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="o">-</span><span class="mf">0.5</span>
+            <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">bunch_curr</span>
+            <span class="o">*</span> <span class="n">zn</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">vrf</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="n">cs</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">etac</span><span class="p">)</span> <span class="o">*</span> <span class="n">espread</span> <span class="o">/</span> <span class="n">nus</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">bl</span> <span class="o">=</span> <span class="n">bl0</span> <span class="o">*</span> <span class="n">fsolve</span><span class="p">(</span><span class="n">haissinski</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]),</span> <span class="n">args</span><span class="o">=</span><span class="n">cst</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">bl</span><span class="p">,</span> <span class="n">espread</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">get_beam_sizes</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_beam_sizes</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">zn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">bunch_curr</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">sigs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sigp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">sigsi</span><span class="p">,</span> <span class="n">sigpi</span> <span class="o">=</span> <span class="n">get_bunch_length_espread</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span>
-                                                <span class="n">bunch_curr</span><span class="o">=</span><span class="n">bunch_curr</span><span class="p">,</span>
-                                                <span class="n">espread</span><span class="o">=</span><span class="n">sigp</span><span class="p">)</span>
+        <span class="n">sigsi</span><span class="p">,</span> <span class="n">sigpi</span> <span class="o">=</span> <span class="n">get_bunch_length_espread</span><span class="p">(</span>
+            <span class="n">ring</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="o">=</span><span class="n">bunch_curr</span><span class="p">,</span> <span class="n">espread</span><span class="o">=</span><span class="n">sigp</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">sigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sigs</span> <span class="o">=</span> <span class="n">sigsi</span>
         <span class="k">if</span> <span class="n">sigp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -464,77 +470,127 @@ document.write(`
 <span class="sd">    is substituted by its exponential approximation:</span>
 <span class="sd">    :math:`I_0(x)~\frac{\exp(x)}{\sqrt{2 \pi x}}`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-    <span class="n">tm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">km</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-    <span class="n">fact</span> <span class="o">=</span> <span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="n">tm</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">t</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">t</span> <span class="o">+</span> <span class="n">t</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">t</span><span class="o">*</span><span class="n">tm</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">t</span><span class="p">))</span> <span class="o">-</span>
-            <span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="p">))</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">t</span><span class="o">/</span><span class="n">tm</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">t</span><span class="p">)))</span>
-    <span class="k">if</span> <span class="n">B2</span><span class="o">*</span><span class="n">t</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
-        <span class="n">intp</span> <span class="o">=</span> <span class="n">fact</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B1</span><span class="o">*</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">iv</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">B2</span><span class="o">*</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">tm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">km</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">fact</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="n">tm</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span>
+        <span class="o">+</span> <span class="n">t</span>
+        <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">t</span> <span class="o">*</span> <span class="n">tm</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">))</span>
+        <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">))</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="n">tm</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">B2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
+        <span class="n">intp</span> <span class="o">=</span> <span class="n">fact</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">B1</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">iv</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">B2</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">intp</span> <span class="o">=</span> <span class="n">fact</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">B2</span><span class="o">*</span><span class="n">t</span><span class="o">-</span><span class="n">B1</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="o">/</span> \
-             <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">B2</span><span class="o">*</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">intp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">fact</span>
+            <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">B2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">-</span> <span class="n">B1</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+            <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">B2</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">intp</span>
 
 
-<span class="k">def</span> <span class="nf">_get_vals</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">rp</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">emity</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-              <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epsabs</span><span class="o">=</span><span class="mf">1.0e-16</span><span class="p">,</span>
-              <span class="n">epsrel</span><span class="o">=</span><span class="mf">1.0e-12</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_vals</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">,</span>
+    <span class="n">rp</span><span class="p">,</span>
+    <span class="n">ma</span><span class="p">,</span>
+    <span class="n">emity</span><span class="p">,</span>
+    <span class="n">bunch_curr</span><span class="p">,</span>
+    <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">epsabs</span><span class="o">=</span><span class="mf">1.0e-16</span><span class="p">,</span>
+    <span class="n">epsrel</span><span class="o">=</span><span class="mf">1.0e-12</span><span class="p">,</span>
+<span class="p">):</span>
 
-    <span class="n">emitx</span><span class="p">,</span> <span class="n">sigs</span><span class="p">,</span> <span class="n">sigp</span> <span class="o">=</span> <span class="n">get_beam_sizes</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span>
-                                       <span class="n">emitx</span><span class="o">=</span><span class="n">emitx</span><span class="p">,</span> <span class="n">sigs</span><span class="o">=</span><span class="n">sigs</span><span class="p">,</span>
-                                       <span class="n">sigp</span><span class="o">=</span><span class="n">sigp</span><span class="p">)</span>
+    <span class="n">emitx</span><span class="p">,</span> <span class="n">sigs</span><span class="p">,</span> <span class="n">sigp</span> <span class="o">=</span> <span class="n">get_beam_sizes</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="n">emitx</span><span class="p">,</span> <span class="n">sigs</span><span class="o">=</span><span class="n">sigs</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="n">sigp</span>
+    <span class="p">)</span>
 
-    <span class="n">nc</span> <span class="o">=</span> <span class="n">bunch_curr</span><span class="o">/</span><span class="n">ring</span><span class="o">.</span><span class="n">revolution_frequency</span><span class="o">/</span><span class="n">qe</span>
-    <span class="n">beta2</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span><span class="o">*</span><span class="n">ring</span><span class="o">.</span><span class="n">beta</span>
-    <span class="n">gamma2</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span><span class="o">*</span><span class="n">ring</span><span class="o">.</span><span class="n">gamma</span>
+    <span class="n">nc</span> <span class="o">=</span> <span class="n">bunch_curr</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">revolution_frequency</span> <span class="o">/</span> <span class="n">qe</span>
+    <span class="n">beta2</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">beta</span>
+    <span class="n">gamma2</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">ring</span><span class="o">.</span><span class="n">gamma</span>
 
     <span class="n">emit</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">emitx</span><span class="p">,</span> <span class="n">emity</span><span class="p">])</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">ld</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">refpts</span><span class="o">=</span><span class="n">rp</span><span class="p">)</span>
     <span class="n">bxy</span> <span class="o">=</span> <span class="n">ld</span><span class="o">.</span><span class="n">beta</span>
-    <span class="n">bxy2</span> <span class="o">=</span> <span class="n">bxy</span><span class="o">*</span><span class="n">bxy</span>
+    <span class="n">bxy2</span> <span class="o">=</span> <span class="n">bxy</span> <span class="o">*</span> <span class="n">bxy</span>
     <span class="n">axy</span> <span class="o">=</span> <span class="n">ld</span><span class="o">.</span><span class="n">alpha</span>
     <span class="n">dxy</span> <span class="o">=</span> <span class="n">ld</span><span class="o">.</span><span class="n">dispersion</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
-    <span class="n">dxy2</span> <span class="o">=</span> <span class="n">dxy</span><span class="o">*</span><span class="n">dxy</span>
+    <span class="n">dxy2</span> <span class="o">=</span> <span class="n">dxy</span> <span class="o">*</span> <span class="n">dxy</span>
     <span class="n">dpxy</span> <span class="o">=</span> <span class="n">ld</span><span class="o">.</span><span class="n">dispersion</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
-    <span class="n">sigb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bxy</span><span class="o">*</span><span class="n">emit</span><span class="p">)</span>
-    <span class="n">sigb2</span> <span class="o">=</span> <span class="n">sigb</span><span class="o">*</span><span class="n">sigb</span>
-    <span class="n">sigp2</span> <span class="o">=</span> <span class="n">sigp</span><span class="o">*</span><span class="n">sigp</span>
-    <span class="n">sig</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sigb2</span><span class="o">+</span><span class="n">sigp2</span><span class="o">*</span><span class="n">dxy2</span><span class="p">)</span>
-    <span class="n">sig2</span> <span class="o">=</span> <span class="n">sig</span><span class="o">*</span><span class="n">sig</span>
-    <span class="n">dt</span> <span class="o">=</span> <span class="n">dxy</span><span class="o">*</span><span class="n">axy</span><span class="o">+</span><span class="n">dpxy</span><span class="o">*</span><span class="n">bxy</span>
-    <span class="n">dt2</span> <span class="o">=</span> <span class="n">dt</span><span class="o">*</span><span class="n">dt</span>
-    <span class="n">sigh2</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sigp2</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">dxy2</span><span class="o">+</span><span class="n">dt2</span><span class="p">)</span><span class="o">/</span><span class="n">sigb2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">sigb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bxy</span> <span class="o">*</span> <span class="n">emit</span><span class="p">)</span>
+    <span class="n">sigb2</span> <span class="o">=</span> <span class="n">sigb</span> <span class="o">*</span> <span class="n">sigb</span>
+    <span class="n">sigp2</span> <span class="o">=</span> <span class="n">sigp</span> <span class="o">*</span> <span class="n">sigp</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sigb2</span> <span class="o">+</span> <span class="n">sigp2</span> <span class="o">*</span> <span class="n">dxy2</span><span class="p">)</span>
+    <span class="n">sig2</span> <span class="o">=</span> <span class="n">sig</span> <span class="o">*</span> <span class="n">sig</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">dxy</span> <span class="o">*</span> <span class="n">axy</span> <span class="o">+</span> <span class="n">dpxy</span> <span class="o">*</span> <span class="n">bxy</span>
+    <span class="n">dt2</span> <span class="o">=</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span>
+    <span class="n">sigh2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">sigp2</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">dxy2</span> <span class="o">+</span> <span class="n">dt2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigb2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-    <span class="n">bs</span> <span class="o">=</span> <span class="n">bxy2</span><span class="o">/</span><span class="n">sigb2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="n">sigh2</span><span class="o">*</span><span class="p">(</span><span class="n">dt2</span><span class="o">/</span><span class="n">sigb2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">bg2i</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">beta2</span><span class="o">*</span><span class="n">gamma2</span><span class="p">)</span>
-    <span class="n">B1</span> <span class="o">=</span> <span class="n">bg2i</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">B2sq</span> <span class="o">=</span> <span class="n">bg2i</span><span class="o">*</span><span class="n">bg2i</span><span class="o">*</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
-                      <span class="mi">4</span><span class="o">*</span><span class="n">sigh2</span><span class="o">*</span><span class="n">sigh2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">bxy2</span><span class="o">*</span><span class="n">dt2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span>
-                      <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sigb2</span><span class="o">*</span><span class="n">sigb2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">bs</span> <span class="o">=</span> <span class="n">bxy2</span> <span class="o">/</span> <span class="n">sigb2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">sigh2</span> <span class="o">*</span> <span class="p">(</span><span class="n">dt2</span> <span class="o">/</span> <span class="n">sigb2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">bg2i</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">beta2</span> <span class="o">*</span> <span class="n">gamma2</span><span class="p">)</span>
+    <span class="n">B1</span> <span class="o">=</span> <span class="n">bg2i</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">B2sq</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">bg2i</span>
+        <span class="o">*</span> <span class="n">bg2i</span>
+        <span class="o">*</span> <span class="p">(</span>
+            <span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="o">+</span> <span class="mi">4</span>
+            <span class="o">*</span> <span class="n">sigh2</span>
+            <span class="o">*</span> <span class="n">sigh2</span>
+            <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">bxy2</span> <span class="o">*</span> <span class="n">dt2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sigb2</span> <span class="o">*</span> <span class="n">sigb2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">B2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">B2sq</span><span class="p">))</span>
 
     <span class="n">val</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rp</span><span class="p">)))</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
         <span class="n">dpp</span> <span class="o">=</span> <span class="n">ma</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
-        <span class="n">um</span> <span class="o">=</span> <span class="n">beta2</span><span class="o">*</span><span class="n">dpp</span><span class="o">*</span><span class="n">dpp</span>
+        <span class="n">um</span> <span class="o">=</span> <span class="n">beta2</span> <span class="o">*</span> <span class="n">dpp</span> <span class="o">*</span> <span class="n">dpp</span>
         <span class="n">km</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">um</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rp</span><span class="p">)):</span>
             <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">km</span><span class="p">[</span><span class="n">ii</span><span class="p">],</span> <span class="n">B1</span><span class="p">[</span><span class="n">ii</span><span class="p">],</span> <span class="n">B2</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
-            <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">ii</span><span class="p">],</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="n">int_piwinski</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
-                                            <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">epsabs</span><span class="o">=</span><span class="n">epsabs</span><span class="p">,</span>
-                                            <span class="n">epsrel</span><span class="o">=</span><span class="n">epsrel</span><span class="p">)</span>
+            <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">ii</span><span class="p">],</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+                <span class="n">int_piwinski</span><span class="p">,</span>
+                <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                <span class="n">epsabs</span><span class="o">=</span><span class="n">epsabs</span><span class="p">,</span>
+                <span class="n">epsrel</span><span class="o">=</span><span class="n">epsrel</span><span class="p">,</span>
+            <span class="p">)</span>
 
-        <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="p">(</span><span class="n">_e_radius</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">clight</span><span class="o">*</span><span class="n">nc</span> <span class="o">/</span>
-                   <span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">gamma2</span><span class="o">*</span><span class="n">sigs</span> <span class="o">*</span>
-                    <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sig2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
-                               <span class="n">sigp2</span><span class="o">*</span><span class="n">sigp2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dxy2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span> <span class="o">*</span>
-                   <span class="mi">2</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">B1</span><span class="o">*</span><span class="n">B1</span><span class="o">-</span><span class="n">B2</span><span class="o">*</span><span class="n">B2</span><span class="p">)))</span>
+        <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="p">(</span>
+            <span class="n">_e_radius</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">*</span> <span class="n">clight</span>
+            <span class="o">*</span> <span class="n">nc</span>
+            <span class="o">/</span> <span class="p">(</span>
+                <span class="mi">8</span>
+                <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+                <span class="o">*</span> <span class="n">gamma2</span>
+                <span class="o">*</span> <span class="n">sigs</span>
+                <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sig2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">sigp2</span> <span class="o">*</span> <span class="n">sigp2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dxy2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">*</span> <span class="mi">2</span>
+            <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">B1</span> <span class="o">*</span> <span class="n">B1</span> <span class="o">-</span> <span class="n">B2</span> <span class="o">*</span> <span class="n">B2</span><span class="p">))</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">val</span>
 
 
-<span class="k">def</span> <span class="nf">_init_ma_rp</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_init_ma_rp</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">,</span>
+    <span class="n">refpts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">momap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">check_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="k">if</span> <span class="n">refpts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">refpts</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_uint32_index</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">All</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -544,13 +600,15 @@ document.write(`
         <span class="k">try</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">refpts</span><span class="p">),</span> <span class="mi">6</span><span class="p">))</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;offset and refpts have incoherent &#39;</span>
-                   <span class="s1">&#39;shapes: </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">refpts</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;offset and refpts have incoherent &quot;</span> <span class="s2">&quot;shapes: </span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">offset</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">refpts</span><span class="o">.</span><span class="n">shape</span>
+            <span class="p">)</span>
             <span class="k">raise</span> <span class="n">AtError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">momap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">momap</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">refpts</span><span class="p">),</span> \
-            <span class="s1">&#39;Input momap and refpts have different lengths&#39;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">momap</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">refpts</span>
+        <span class="p">),</span> <span class="s2">&quot;Input momap and refpts have different lengths&quot;</span>
 
     <span class="k">if</span> <span class="n">check_zero</span><span class="p">:</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="p">[</span><span class="n">ring</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">Length</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">refpts</span><span class="p">]</span>
@@ -558,8 +616,7 @@ document.write(`
         <span class="n">mask</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">refpts</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
-        <span class="n">zerolength_warning</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;zero-length elements removed &#39;</span>
-                              <span class="s1">&#39;from lifetime calculation&#39;</span><span class="p">)</span>
+        <span class="n">zerolength_warning</span> <span class="o">=</span> <span class="s2">&quot;zero-length elements removed &quot;</span> <span class="s2">&quot;from lifetime calculation&quot;</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">AtWarning</span><span class="p">(</span><span class="n">zerolength_warning</span><span class="p">))</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">refpts</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">,</span> \
             <span class="s1">&#39;After removing zero-length elements: len(refpts)&lt;2&#39;</span>
@@ -569,19 +626,18 @@ document.write(`
         <span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">momap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">resolution</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;resolution&#39;</span><span class="p">,</span> <span class="mf">1.0e-3</span><span class="p">)</span>
-        <span class="n">amplitude</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;amplitude&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;refpts&#39;</span><span class="p">:</span> <span class="n">refpts</span><span class="p">})</span>
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="n">offset</span><span class="p">})</span>
-        <span class="n">momap</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_momentum_acceptance</span><span class="p">(</span><span class="n">resolution</span><span class="p">,</span>
-                                                   <span class="n">amplitude</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">,</span> <span class="mf">1.0e-3</span><span class="p">)</span>
+        <span class="n">amplitude</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;amplitude&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;refpts&quot;</span><span class="p">:</span> <span class="n">refpts</span><span class="p">})</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="n">offset</span><span class="p">})</span>
+        <span class="n">momap</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_momentum_acceptance</span><span class="p">(</span><span class="n">resolution</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">momap</span> <span class="o">=</span> <span class="n">momap</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">interpolate</span><span class="p">:</span>
-        <span class="n">refpts_all</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">refpts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                                                   <span class="n">refpts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-                                  <span class="k">if</span> <span class="n">ring</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">refpts_all</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">refpts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">refpts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">ring</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
         <span class="n">spos</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">get_s_pos</span><span class="p">(</span><span class="n">refpts</span><span class="p">))</span>
         <span class="n">spos_all</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">get_s_pos</span><span class="p">(</span><span class="n">refpts_all</span><span class="p">))</span>
         <span class="n">momp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">spos_all</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">momap</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
@@ -595,8 +651,19 @@ document.write(`
 
 <div class="viewcode-block" id="get_lifetime">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.touschek.html#at.acceptance.touschek.get_lifetime">[docs]</a>
-<span class="k">def</span> <span class="nf">get_lifetime</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">emity</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_lifetime</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">,</span>
+    <span class="n">emity</span><span class="p">,</span>
+    <span class="n">bunch_curr</span><span class="p">,</span>
+    <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">momap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">refpts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Touschek lifetime calculation</span>
 
 <span class="sd">    Computes the touschek lifetime using the Piwinski formula</span>
@@ -638,27 +705,63 @@ document.write(`
 <span class="sd">        ma: momentum aperture (len(refpts), 2) array</span>
 <span class="sd">        refpts: refpts used for momentum aperture calculation</span>
 <span class="sd">                (len(refpts), ) array</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">       * When``use_mp=True`` all the available CPUs will be used.</span>
+<span class="sd">         This behavior can be changed by setting</span>
+<span class="sd">         ``at.DConstant.patpass_poolsize`` to the desired value</span>
+<span class="sd">       * When multiple ``refpts`` are provided particles are first</span>
+<span class="sd">         projected to the beginning of the ring with tracking. Then,</span>
+<span class="sd">         all particles are tracked up to ``nturns``. This allows to</span>
+<span class="sd">         do most of the work in a single function call and allows for</span>
+<span class="sd">         full parallelization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">interpolate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-    <span class="n">epsabs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;epsabs&#39;</span><span class="p">,</span> <span class="mf">1.0e-16</span><span class="p">)</span>
-    <span class="n">epsrel</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;epsrel&#39;</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)</span>
-    <span class="n">ma</span><span class="p">,</span> <span class="n">rp</span> <span class="o">=</span> <span class="n">_init_ma_rp</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
-                         <span class="n">momap</span><span class="o">=</span><span class="n">momap</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="n">interpolate</span><span class="p">,</span>
-                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">interpolate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;interpolate&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">epsabs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;epsabs&quot;</span><span class="p">,</span> <span class="mf">1.0e-16</span><span class="p">)</span>
+    <span class="n">epsrel</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;epsrel&quot;</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)</span>
+    <span class="n">ma</span><span class="p">,</span> <span class="n">rp</span> <span class="o">=</span> <span class="n">_init_ma_rp</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span>
+        <span class="n">refpts</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+        <span class="n">momap</span><span class="o">=</span><span class="n">momap</span><span class="p">,</span>
+        <span class="n">interpolate</span><span class="o">=</span><span class="n">interpolate</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">length_all</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e</span><span class="o">.</span><span class="n">Length</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ring</span><span class="p">[</span><span class="n">rp</span><span class="p">]])</span>
-    <span class="n">vals</span> <span class="o">=</span> <span class="n">_get_vals</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">rp</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">emity</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="n">emitx</span><span class="p">,</span>
-                     <span class="n">sigs</span><span class="o">=</span><span class="n">sigs</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="n">sigp</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span> <span class="n">epsabs</span><span class="o">=</span><span class="n">epsabs</span><span class="p">,</span>
-                     <span class="n">epsrel</span><span class="o">=</span><span class="n">epsrel</span><span class="p">)</span>
-    <span class="n">tl</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="o">*</span><span class="n">length_all</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">length_all</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">])</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">_get_vals</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span>
+        <span class="n">rp</span><span class="p">,</span>
+        <span class="n">ma</span><span class="p">,</span>
+        <span class="n">emity</span><span class="p">,</span>
+        <span class="n">bunch_curr</span><span class="p">,</span>
+        <span class="n">emitx</span><span class="o">=</span><span class="n">emitx</span><span class="p">,</span>
+        <span class="n">sigs</span><span class="o">=</span><span class="n">sigs</span><span class="p">,</span>
+        <span class="n">sigp</span><span class="o">=</span><span class="n">sigp</span><span class="p">,</span>
+        <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span>
+        <span class="n">epsabs</span><span class="o">=</span><span class="n">epsabs</span><span class="p">,</span>
+        <span class="n">epsrel</span><span class="o">=</span><span class="n">epsrel</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">tl</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">length_all</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">length_all</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">tl</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">rp</span></div>
 
 
 
 <div class="viewcode-block" id="get_scattering_rate">
 <a class="viewcode-back" href="../../../p/api/at.acceptance.touschek.html#at.acceptance.touschek.get_scattering_rate">[docs]</a>
-<span class="k">def</span> <span class="nf">get_scattering_rate</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">emity</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_scattering_rate</span><span class="p">(</span>
+    <span class="n">ring</span><span class="p">,</span>
+    <span class="n">emity</span><span class="p">,</span>
+    <span class="n">bunch_curr</span><span class="p">,</span>
+    <span class="n">emitx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">zn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">momap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">refpts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Touschek scattering rate calculation</span>
 
 <span class="sd">    Computes the touschek scattering using the Piwinski formula</span>
@@ -701,17 +804,34 @@ document.write(`
 <span class="sd">        refpts: refpts used for momentum aperture calculation</span>
 <span class="sd">                (len(refpts), ) array</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">interpolate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;interpolate&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-    <span class="n">epsabs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;epsabs&#39;</span><span class="p">,</span> <span class="mf">1.0e-16</span><span class="p">)</span>
-    <span class="n">epsrel</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;epsrel&#39;</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)</span>
-    <span class="n">ma</span><span class="p">,</span> <span class="n">rp</span> <span class="o">=</span> <span class="n">_init_ma_rp</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span> <span class="n">momap</span><span class="o">=</span><span class="n">momap</span><span class="p">,</span>
-                         <span class="n">interpolate</span><span class="o">=</span><span class="n">interpolate</span><span class="p">,</span> <span class="n">check_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                         <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="n">vals</span> <span class="o">=</span> <span class="n">_get_vals</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">rp</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">emity</span><span class="p">,</span> <span class="n">bunch_curr</span><span class="p">,</span> <span class="n">emitx</span><span class="o">=</span><span class="n">emitx</span><span class="p">,</span>
-                     <span class="n">sigs</span><span class="o">=</span><span class="n">sigs</span><span class="p">,</span> <span class="n">sigp</span><span class="o">=</span><span class="n">sigp</span><span class="p">,</span> <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span> <span class="n">epsabs</span><span class="o">=</span><span class="n">epsabs</span><span class="p">,</span>
-                     <span class="n">epsrel</span><span class="o">=</span><span class="n">epsrel</span><span class="p">)</span>
-    <span class="n">scattering_rate</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">bunch_curr</span> <span class="o">/</span>
-                       <span class="n">ring</span><span class="o">.</span><span class="n">revolution_frequency</span> <span class="o">/</span> <span class="n">qe</span><span class="p">)</span>
+    <span class="n">interpolate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;interpolate&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">epsabs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;epsabs&quot;</span><span class="p">,</span> <span class="mf">1.0e-16</span><span class="p">)</span>
+    <span class="n">epsrel</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;epsrel&quot;</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)</span>
+    <span class="n">ma</span><span class="p">,</span> <span class="n">rp</span> <span class="o">=</span> <span class="n">_init_ma_rp</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span>
+        <span class="n">refpts</span><span class="o">=</span><span class="n">refpts</span><span class="p">,</span>
+        <span class="n">momap</span><span class="o">=</span><span class="n">momap</span><span class="p">,</span>
+        <span class="n">interpolate</span><span class="o">=</span><span class="n">interpolate</span><span class="p">,</span>
+        <span class="n">check_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">_get_vals</span><span class="p">(</span>
+        <span class="n">ring</span><span class="p">,</span>
+        <span class="n">rp</span><span class="p">,</span>
+        <span class="n">ma</span><span class="p">,</span>
+        <span class="n">emity</span><span class="p">,</span>
+        <span class="n">bunch_curr</span><span class="p">,</span>
+        <span class="n">emitx</span><span class="o">=</span><span class="n">emitx</span><span class="p">,</span>
+        <span class="n">sigs</span><span class="o">=</span><span class="n">sigs</span><span class="p">,</span>
+        <span class="n">sigp</span><span class="o">=</span><span class="n">sigp</span><span class="p">,</span>
+        <span class="n">zn</span><span class="o">=</span><span class="n">zn</span><span class="p">,</span>
+        <span class="n">epsabs</span><span class="o">=</span><span class="n">epsabs</span><span class="p">,</span>
+        <span class="n">epsrel</span><span class="o">=</span><span class="n">epsrel</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">scattering_rate</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">numpy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">bunch_curr</span> <span class="o">/</span> <span class="n">ring</span><span class="o">.</span><span class="n">revolution_frequency</span> <span class="o">/</span> <span class="n">qe</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">scattering_rate</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">rp</span></div>
 
 
