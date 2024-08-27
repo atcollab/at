@@ -561,6 +561,8 @@ document.write(`
         <span class="n">zerolength_warning</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;zero-length elements removed &#39;</span>
                               <span class="s1">&#39;from lifetime calculation&#39;</span><span class="p">)</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">AtWarning</span><span class="p">(</span><span class="n">zerolength_warning</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">refpts</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">,</span> \
+            <span class="s1">&#39;After removing zero-length elements: len(refpts)&lt;2&#39;</span>
 
     <span class="n">refpts</span> <span class="o">=</span> <span class="n">refpts</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
