@@ -46,8 +46,8 @@ def feeddown_polynomba(
     maxorda = len(pola)
     maxordb = len(polb)
     maxord = max(maxorda, maxordb)
-    polasum = numpy.zeros(maxord - 1)
-    polbsum = numpy.zeros(maxord - 1)
+    polasum = numpy.zeros(max(0,maxord - 1))
+    polbsum = numpy.zeros(max(0,maxord - 1))
     if maxorda == 0 and maxordb == 0:
         verboseprint("Both polynoms are zero.")
     else:
