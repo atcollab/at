@@ -36,9 +36,6 @@ def feeddown_polynomba(
     Returns:
         Dictionary with PolynomB and PolynomA feeddown components.
 
-    Raises:
-        ValueError: if none of the two polynoms is passed.
-
     Note:
         If only one polynom is passed, it is assumed to be PolynomB.
     """
@@ -49,7 +46,8 @@ def feeddown_polynomba(
     maxorda = len(pola)
     maxordb = len(polb)
     if maxorda == 0 and maxordb == 0:
-        raise ValueError("At least one polynom is needed")
+        verboseprint("Both polynoms are zero.")
+        return numpy.array([])
     maxord = max(maxorda, maxordb)
 
     polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
