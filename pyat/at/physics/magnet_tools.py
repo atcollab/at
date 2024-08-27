@@ -1,10 +1,8 @@
-"""
-Magnet tools
-"""
+"""Magnet tools."""
 
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Sequence
 
 import numpy
 from scipy.special import comb
@@ -21,7 +19,6 @@ def feeddown_polynomba(
     xoffset: float = 0,
     yoffset: float = 0,
     verbose: bool = False,
-    debug: bool = False,
 ) -> dict[str, numpy.ndarray]:
     """
     Return the feeddown due to a transverse offset.
