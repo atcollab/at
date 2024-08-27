@@ -59,7 +59,7 @@ def feeddown_pol_from_element(
             xoffset = -ele.T1[0]
             yoffset = -ele.T1[2]
         else:
-            verboseprint("Element has no T1 or T2.")
+            verboseprint(f"Element {ele.FamName} has no T1 or T2.")
     verboseprint(f"Using offsets xoffset={xoffset}, yoffset={yoffset}.")
     # Return the polynoms
     return feeddown_polynomba(polb=polb, pola=pola, xoffset=xoffset, yoffset=yoffset)
