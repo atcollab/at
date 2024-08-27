@@ -10,8 +10,34 @@ from scipy.special import comb
 __all__ = [
     "feeddown_polynomba",
     "feeddown_from_nth_order",
+    "feeddown_pol_from_element",
 ]
 
+
+def feeddown_pol_from_element(ele):
+    """
+    Return the feed down polynoms due to a transverse offset on an element.
+
+    Parameters:
+        element: a ring element.
+        polb: PolynomB.
+        pola: PolynomA.
+        xoffset: Default zero. Horizontal offset in meters.
+
+    Returns:
+        Dictionary with PolynomB and PolynomA feeddown components.
+
+    Note: Thin lengs approxiamtion, T2=-T1.
+          Bending angles are ignored.
+    """
+    # check verbose flags only once
+    verboseprint = print if verbose else lambda *a, **k: None
+    # handle cases where polynom a and b are not defined
+    # get polynoms
+    # check if element has T1 and T2. Use one.
+    # Return the polynoms
+
+    return 0
 
 def feeddown_polynomba(
     polb: Sequence[float],
@@ -36,7 +62,7 @@ def feeddown_polynomba(
     Note:
         If only one polynom is passed, it is assumed to be PolynomB.
     """
-    # check and verbose flags only once
+    # check verbose flags only once
     verboseprint = print if verbose else lambda *a, **k: None
 
     # verify polynoms length
