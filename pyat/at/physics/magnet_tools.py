@@ -32,7 +32,6 @@ def feeddown_polynomba(
         xoffset: Default zero. Horizontal offset in meters.
         yoffset: Default zero. Vertical offset in meters.
         verbose: prints additional info.
-        debug: prints information about the feeddown polynom construction.
 
     Returns:
         Dictionary with PolynomB and PolynomA feeddown components.
@@ -43,8 +42,7 @@ def feeddown_polynomba(
     Note:
         If only one polynom is passed, it is assumed to be PolynomB.
     """
-    # check debug and verbose flags only once
-    debugprint = print if debug else lambda *a, **k: None
+    # check and verbose flags only once
     verboseprint = print if verbose else lambda *a, **k: None
 
     # verify polynoms length
@@ -53,18 +51,14 @@ def feeddown_polynomba(
     if maxorda == 0 and maxordb == 0:
         raise ValueError("At least one polynom is needed")
     maxord = max(maxorda, maxordb)
-    debugprint(f"maxord={maxord},maxorda={maxorda},maxordb={maxordb}")
 
-    debugprint("Padding polynoms")
     polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
     polapad = numpy.pad(pola, (0, maxord - maxorda), "constant", constant_values=(0, 0))
-    debugprint(f"polbpad={polbpad}, polapad={polapad}")
 
     verboseprint(f"polb={polb},pola={pola}")
     verboseprint(f"xoffset={xoffset},yoffset={yoffset}")
     polasum = numpy.zeros(maxord - 1)
     polbsum = numpy.zeros(maxord - 1)
-    debugprint("ith=1, first order nothing to do")
     for ith in range(2, maxord + 1):
         polbaux_b, polaaux_b = feeddown_from_nth_order(
             ith, polbpad[ith - 1], xoffset, yoffset, poltype="B"
@@ -80,7 +74,6 @@ def feeddown_polynomba(
         polasum = polasum + numpy.pad(
             polashort, (0, maxord - ith), "constant", constant_values=(0, 0)
         )
-        debugprint(f"ith={ith},polbsum={polbsum},polasum={polasum}")
     poldict = {"PolynomB": polbsum, "PolynomA": polasum}
     verboseprint(f"poldict={poldict}")
     return poldict
