@@ -45,33 +45,32 @@ def feeddown_polynomba(
     # verify polynoms length
     maxorda = len(pola)
     maxordb = len(polb)
-    if maxorda == 0 and maxordb == 0:
-        verboseprint("Both polynoms are zero.")
-        return numpy.array([])
     maxord = max(maxorda, maxordb)
-
-    polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
-    polapad = numpy.pad(pola, (0, maxord - maxorda), "constant", constant_values=(0, 0))
-
-    verboseprint(f"polb={polb},pola={pola}")
-    verboseprint(f"xoffset={xoffset},yoffset={yoffset}")
     polasum = numpy.zeros(maxord - 1)
     polbsum = numpy.zeros(maxord - 1)
-    for ith in range(2, maxord + 1):
-        polbaux_b, polaaux_b = feeddown_from_nth_order(
-            ith, polbpad[ith - 1], xoffset, yoffset, poltype="B"
-        )
-        polbaux_a, polaaux_a = feeddown_from_nth_order(
-            ith, polapad[ith - 1], xoffset, yoffset, poltype="A"
-        )
-        polbshort = polbaux_b + polbaux_a
-        polashort = polaaux_b + polaaux_a
-        polbsum = polbsum + numpy.pad(
-            polbshort, (0, maxord - ith), "constant", constant_values=(0, 0)
-        )
-        polasum = polasum + numpy.pad(
-            polashort, (0, maxord - ith), "constant", constant_values=(0, 0)
-        )
+    if maxorda == 0 and maxordb == 0:
+        verboseprint("Both polynoms are zero.")
+    else:
+        polbpad = numpy.pad(polb, (0, maxord - maxordb), "constant", constant_values=(0, 0))
+        polapad = numpy.pad(pola, (0, maxord - maxorda), "constant", constant_values=(0, 0))
+
+        verboseprint(f"polb={polb},pola={pola}")
+        verboseprint(f"xoffset={xoffset},yoffset={yoffset}")
+        for ith in range(2, maxord + 1):
+            polbaux_b, polaaux_b = feeddown_from_nth_order(
+                ith, polbpad[ith - 1], xoffset, yoffset, poltype="B"
+            )
+            polbaux_a, polaaux_a = feeddown_from_nth_order(
+                ith, polapad[ith - 1], xoffset, yoffset, poltype="A"
+            )
+            polbshort = polbaux_b + polbaux_a
+            polashort = polaaux_b + polaaux_a
+            polbsum = polbsum + numpy.pad(
+                polbshort, (0, maxord - ith), "constant", constant_values=(0, 0)
+            )
+            polasum = polasum + numpy.pad(
+                polashort, (0, maxord - ith), "constant", constant_values=(0, 0)
+            )
     poldict = {"PolynomB": polbsum, "PolynomA": polasum}
     verboseprint(f"poldict={poldict}")
     return poldict
