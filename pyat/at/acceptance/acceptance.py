@@ -1,30 +1,41 @@
 """Acceptance computation"""
+
 import numpy
 from .boundary import GridMode
+
 # noinspection PyProtectedMember
 from .boundary import boundary_search
 from typing import Optional, Sequence
 import multiprocessing
-from ..lattice import Lattice, Refpts, frequency_control, AtError
+from ..lattice import Lattice, Refpts, frequency_control
 
 
-__all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
-           'get_vertical_acceptance', 'get_momentum_acceptance']
+__all__ = [
+    "get_acceptance",
+    "get_1d_acceptance",
+    "get_horizontal_acceptance",
+    "get_vertical_acceptance",
+    "get_momentum_acceptance",
+]
 
 
 @frequency_control
 def get_acceptance(
-        ring: Lattice, planes, npoints, amplitudes,
-        nturns: Optional[int] = 1024,
-        refpts: Optional[Refpts] = None,
-        dp: Optional[float] = None,
-        offset: Sequence[float] = None, bounds=None,
-        grid_mode: Optional[GridMode] = GridMode.RADIAL,
-        use_mp: Optional[bool] = False,
-        verbose: Optional[bool] = True,
-        divider: Optional[int] = 2,
-        shift_zero: Optional[float] = 1.0e-6,
-        start_method: Optional[str] = None,
+    ring: Lattice,
+    planes,
+    npoints,
+    amplitudes,
+    nturns: Optional[int] = 1024,
+    refpts: Optional[Refpts] = None,
+    dp: Optional[float] = None,
+    offset: Sequence[float] = None,
+    bounds=None,
+    grid_mode: Optional[GridMode] = GridMode.RADIAL,
+    use_mp: Optional[bool] = False,
+    verbose: Optional[bool] = True,
+    divider: Optional[int] = 2,
+    shift_zero: Optional[float] = 1.0e-6,
+    start_method: Optional[str] = None,
 ):
     # noinspection PyUnresolvedReferences
     r"""Computes the acceptance at ``repfts`` observation points
@@ -91,92 +102,86 @@ def get_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     kwargs = {}
     if start_method is not None:
-        kwargs['start_method'] = start_method
+        kwargs["start_method"] = start_method
 
     if verbose:
         nproc = multiprocessing.cpu_count()
-        print('\n{0} cpu found for acceptance calculation'.format(nproc))
+        print("\n{0} cpu found for acceptance calculation".format(nproc))
         if use_mp:
             nprocu = nproc
-            print('Multi-process acceptance calculation selected...')
+            print("Multi-process acceptance calculation selected...")
             if nproc == 1:
-                print('Consider use_mp=False for single core computations')
+                print("Consider use_mp=False for single core computations")
         else:
             nprocu = 1
-            print('Single process acceptance calculation selected...')
+            print("Single process acceptance calculation selected...")
             if nproc > 1:
-                print('Consider use_mp=True for parallelized computations')
+                print("Consider use_mp=True for parallelized computations")
         np = numpy.atleast_1d(npoints)
         na = 2
         if len(np) == 2:
             na = np[1]
         npp = numpy.prod(npoints)
-        rpp = 2*numpy.ceil(numpy.log2(np[0]))*numpy.ceil(na/nprocu)
-        mpp = npp/nprocu
+        rpp = 2 * numpy.ceil(numpy.log2(np[0])) * numpy.ceil(na / nprocu)
+        mpp = npp / nprocu
         if rpp > mpp:
-            cond = (grid_mode is GridMode.RADIAL or
-                    grid_mode is GridMode.CARTESIAN)
+            cond = grid_mode is GridMode.RADIAL or grid_mode is GridMode.CARTESIAN
         else:
             cond = grid_mode is GridMode.RECURSIVE
         if rpp > mpp and not cond:
-            print('The estimated load for grid mode is {0}'.format(mpp))
-            print('The estimated load for recursive mode is {0}'.format(rpp))
-            print('{0} or {1} is recommended'.format(GridMode.RADIAL,
-                                                     GridMode.CARTESIAN))
+            print("The estimated load for grid mode is {0}".format(mpp))
+            print("The estimated load for recursive mode is {0}".format(rpp))
+            print(
+                "{0} or {1} is recommended".format(GridMode.RADIAL, GridMode.CARTESIAN)
+            )
         elif rpp < mpp and not cond:
-            print('The estimated load for grid mode is {0}'.format(mpp))
-            print('The estimated load for recursive mode is {0}'.format(rpp))
-            print('{0} is recommended'.format(GridMode.RECURSIVE))
+            print("The estimated load for grid mode is {0}".format(mpp))
+            print("The estimated load for recursive mode is {0}".format(rpp))
+            print("{0} is recommended".format(GridMode.RECURSIVE))
 
-    boundary = []
-    survived = []
-    grid = []
-    if refpts is not None:
-        rp = ring.uint32_refpts(refpts)
-    else:
-        rp = numpy.atleast_1d(refpts)
-    if offset is not None:
-        try:
-            offset = numpy.broadcast_to(offset, (len(rp), 6))
-        except ValueError:
-            msg = ('offset and refpts have incoherent '
-                   'shapes: {0}, {1}'.format(numpy.shape(offset),
-                                             numpy.shape(refpts)))
-            raise AtError(msg)
-    else:
-        offset=[None for _ in rp]
-    for r, o in zip(rp, offset):
-        b, s, g = boundary_search(ring, planes, npoints, amplitudes,
-                                  nturns=nturns, obspt=r, dp=dp,
-                                  offset=o, bounds=bounds,
-                                  grid_mode=grid_mode, use_mp=use_mp,
-                                  verbose=verbose, divider=divider,
-                                  shift_zero=shift_zero, **kwargs)
-        boundary.append(b)
-        survived.append(s)
-        grid.append(g)
-    if len(rp) == 1:
-        return boundary[0], survived[0], grid[0]
-    else:
-        return boundary, survived, grid
+    b, s, g = boundary_search(
+        ring,
+        planes,
+        npoints,
+        amplitudes,
+        nturns=nturns,
+        obspt=refpts,
+        dp=dp,
+        offset=offset,
+        bounds=bounds,
+        grid_mode=grid_mode,
+        use_mp=use_mp,
+        verbose=verbose,
+        divider=divider,
+        shift_zero=shift_zero,
+        **kwargs,
+    )
+    return b, s, g
 
 
 def get_1d_acceptance(
-        ring: Lattice, plane: str, resolution: float, amplitude: float,
-        nturns: Optional[int] = 1024,
-        refpts: Optional[Refpts] = None,
-        dp: Optional[float] = None,
-        offset: Sequence[float] = None,
-        grid_mode: Optional[GridMode] = GridMode.RADIAL,
-        use_mp: Optional[bool] = False,
-        verbose: Optional[bool] = False,
-        divider: Optional[int] = 2,
-        shift_zero: Optional[float] = 1.0e-6,
-        start_method: Optional[str] = None,
-
+    ring: Lattice,
+    plane: str,
+    resolution: float,
+    amplitude: float,
+    nturns: Optional[int] = 1024,
+    refpts: Optional[Refpts] = None,
+    dp: Optional[float] = None,
+    offset: Sequence[float] = None,
+    grid_mode: Optional[GridMode] = GridMode.RADIAL,
+    use_mp: Optional[bool] = False,
+    verbose: Optional[bool] = False,
+    divider: Optional[int] = 2,
+    shift_zero: Optional[float] = 1.0e-6,
+    start_method: Optional[str] = None,
 ):
     r"""Computes the 1D acceptance at ``refpts`` observation points
 
@@ -231,29 +236,44 @@ def get_1d_acceptance(
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
     if not use_mp:
         grid_mode = GridMode.RECURSIVE
-    assert len(numpy.atleast_1d(plane)) == 1, \
-        '1D acceptance: single plane required'
-    assert numpy.isscalar(resolution), '1D acceptance: scalar args required'
-    assert numpy.isscalar(amplitude), '1D acceptance: scalar args required'
-    npoint = numpy.ceil(amplitude/resolution)
+    assert len(numpy.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
+    assert numpy.isscalar(resolution), "1D acceptance: scalar args required"
+    assert numpy.isscalar(amplitude), "1D acceptance: scalar args required"
+    npoint = numpy.ceil(amplitude / resolution)
     if grid_mode is not GridMode.RECURSIVE:
-        assert npoint > 1, \
-            'Grid has only one point: increase amplitude or reduce resolution'
-    b, s, g = get_acceptance(ring, plane, npoint, amplitude,
-                             nturns=nturns, dp=dp, refpts=refpts,
-                             grid_mode=grid_mode, use_mp=use_mp,
-                             verbose=verbose, start_method=start_method,
-                             divider=divider, shift_zero=shift_zero,
-                             offset=offset)
+        assert (
+            npoint > 1
+        ), "Grid has only one point: increase amplitude or reduce resolution"
+    b, s, g = get_acceptance(
+        ring,
+        plane,
+        npoint,
+        amplitude,
+        nturns=nturns,
+        dp=dp,
+        refpts=refpts,
+        grid_mode=grid_mode,
+        use_mp=use_mp,
+        verbose=verbose,
+        start_method=start_method,
+        divider=divider,
+        shift_zero=shift_zero,
+        offset=offset,
+    )
     return numpy.squeeze(b), s, g
 
 
-def get_horizontal_acceptance(ring: Lattice,
-                              resolution: float, amplitude: float,
-                              *args, **kwargs):
+def get_horizontal_acceptance(
+    ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
+):
     r"""Computes the 1D horizontal acceptance at ``refpts`` observation points
 
     See :py:func:`get_acceptance`
@@ -306,13 +326,18 @@ def get_horizontal_acceptance(ring: Lattice,
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
-    return get_1d_acceptance(ring, 'x', resolution, amplitude, *args, **kwargs)
+    return get_1d_acceptance(ring, "x", resolution, amplitude, *args, **kwargs)
 
 
-def get_vertical_acceptance(ring: Lattice,
-                            resolution: float, amplitude: float,
-                            *args, **kwargs):
+def get_vertical_acceptance(
+    ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
+):
     r"""Computes the 1D vertical acceptance at refpts observation points
 
     See :py:func:`get_acceptance`
@@ -365,13 +390,18 @@ def get_vertical_acceptance(ring: Lattice,
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
-    return get_1d_acceptance(ring, 'y', resolution, amplitude, *args, **kwargs)
+    return get_1d_acceptance(ring, "y", resolution, amplitude, *args, **kwargs)
 
 
-def get_momentum_acceptance(ring: Lattice,
-                            resolution: float, amplitude: float,
-                            *args, **kwargs):
+def get_momentum_acceptance(
+    ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
+):
     r"""Computes the 1D momentum acceptance at refpts observation points
 
     See :py:func:`get_acceptance`
@@ -424,9 +454,13 @@ def get_momentum_acceptance(ring: Lattice,
        * When``use_mp=True`` all the available CPUs will be used.
          This behavior can be changed by setting
          ``at.DConstant.patpass_poolsize`` to the desired value
+       * When multiple ``refpts`` are provided particles are first
+         projected to the beginning of the ring with tracking. Then,
+         all particles are tracked up to ``nturns``. This allows to
+         do most of the work in a single function call and allows for
+         full parallelization.
     """
-    return get_1d_acceptance(ring, 'dp', resolution, amplitude,
-                             *args, **kwargs)
+    return get_1d_acceptance(ring, "dp", resolution, amplitude, *args, **kwargs)
 
 
 Lattice.get_acceptance = get_acceptance
