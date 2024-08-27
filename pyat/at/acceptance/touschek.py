@@ -181,6 +181,8 @@ def _init_ma_rp(ring, refpts=None, offset=None, momap=None,
         zerolength_warning = ('zero-length elements removed '
                               'from lifetime calculation')
         warnings.warn(AtWarning(zerolength_warning))
+        assert len(refpts[mask]) > 2, \
+            'After removing zero-length elements: len(refpts)<2'
 
     refpts = refpts[mask]
     if offset is not None:
