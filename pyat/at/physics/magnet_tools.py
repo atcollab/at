@@ -46,6 +46,7 @@ def feeddown_pol_from_element(
         verboseprint(f"Element {ele.FamName} has no PolynomB")
     if hasattr(ele, "PolynomA"):
         pola = ele.PolynomA
+    else:
         verboseprint(f"Element {ele.FamName} has no PolynomA")
 
     # check if user has set offsets
