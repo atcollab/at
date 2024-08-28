@@ -160,26 +160,27 @@ def feeddown_from_nth_order(
     fakeimag = {0: 1, 1: 0, 2: -1, 3: 0}
     polbaux = numpy.zeros(nthorder - 1)
     polaaux = numpy.zeros(nthorder - 1)
-    for kterm in range(1, nthorder):
-        ichoosek = comb(nthorder - 1, kterm)
-        pascalsn = comb(kterm, numpy.arange(kterm + 1))
-        powk = numpy.arange(kterm + 1)
-        powkflip = numpy.arange(kterm, -1, -1)
-        recoefs = numpy.array([fakeimag[numpy.mod(idx, 4)] for idx in powk])
-        imcoefs = numpy.array([fakeimag[numpy.mod(idx + 3, 4)] for idx in powk])
-        commonfactor = nthpolcomp * ichoosek * (-1) ** kterm
-        repart = (
-            recoefs
-            * commonfactor
-            * (pascalsn * (xoffset**powkflip * yoffset**powk))
-        )
-        impart = (
-            imcoefs
-            * commonfactor
-            * (pascalsn * (xoffset**powkflip * yoffset**powk))
-        )
-        polbaux[nthorder - kterm - 1] = polbaux[nthorder - kterm - 1] + repart.sum()
-        polaaux[nthorder - kterm - 1] = polaaux[nthorder - kterm - 1] + impart.sum()
+    if nthpolcomp != 0:
+        for kterm in range(1, nthorder):
+            ichoosek = comb(nthorder - 1, kterm)
+            pascalsn = comb(kterm, numpy.arange(kterm + 1))
+            powk = numpy.arange(kterm + 1)
+            powkflip = numpy.arange(kterm, -1, -1)
+            recoefs = numpy.array([fakeimag[numpy.mod(idx, 4)] for idx in powk])
+            imcoefs = numpy.array([fakeimag[numpy.mod(idx + 3, 4)] for idx in powk])
+            commonfactor = nthpolcomp * ichoosek * (-1) ** kterm
+            repart = (
+                recoefs
+                * commonfactor
+                * (pascalsn * (xoffset**powkflip * yoffset**powk))
+            )
+            impart = (
+                imcoefs
+                * commonfactor
+                * (pascalsn * (xoffset**powkflip * yoffset**powk))
+            )
+            polbaux[nthorder - kterm - 1] = polbaux[nthorder - kterm - 1] + repart.sum()
+            polaaux[nthorder - kterm - 1] = polaaux[nthorder - kterm - 1] + impart.sum()
     verboseprint(f"polbaux={polbaux},polaaux={polaaux}")
     polbout, polaout = polbaux, polaaux
     # skew components swap the imaginary and real feed-down and change the sign
