@@ -519,6 +519,45 @@ perpendicular to the output trajectory. Use 0 for a sector magnet,
 </dd>
 </dl>
 </section>
+<section id="gwigsymplecticpass">
+<span id="id4"></span><h2><code class="docutils literal notranslate"><span class="pre">GWigSymplecticPass</span></code><a class="headerlink" href="#gwigsymplecticpass" title="Link to this heading">#</a></h2>
+<p>2 <sup>nd</sup> and 4<sup>th</sup> order Forest-Wu-Robin integrator for wigglers without radiation.</p>
+<dl class="simple myst">
+<dt>Length</dt><dd><p>Length <span class="math notranslate nohighlight">\(L\)</span> of the element.</p>
+</dd>
+<dt>MaxOrder, NumIntSteps</dt><dd><p>see <a class="reference internal" href="#strmpolesymplectic4pass"><span class="std std-ref">StrMPoleSymplectic4Pass</span></a>.</p>
+</dd>
+<dt>Period</dt><dd><p>Wiggler period <span class="math notranslate nohighlight">\(L_w\)</span>.</p>
+</dd>
+<dt>Peak magnetic field, B_0</dt><dd><p>Maximum magnetic field <span class="math notranslate nohighlight">\(B_0\)</span> of the wiggler.</p>
+</dd>
+<dt>Nmeth</dt><dd><p>Indicates the integration method: 2nd or 4th order integrator.</p>
+</dd>
+<dt>NHharm</dt><dd><p>Number of horizontal harmonics of the wiggler.</p>
+</dd>
+<dt>NVharm</dt><dd><p>Number of vertical harmonics of the wiggler.</p>
+</dd>
+<dt>By</dt><dd><p>6 x NHharm array containing the following quantities. row 1: Horizontal
+harmonic counter; row 2: relative amplitudes of wiggler harmonics; row 3: <span class="math notranslate nohighlight">\(k_x*L_w/2\pi\)</span>;
+row 4: <span class="math notranslate nohighlight">\(k_y*L_w/2\pi\)</span>; row 5: <span class="math notranslate nohighlight">\(k_z*L_w/2\pi\)</span>; row 6: <span class="math notranslate nohighlight">\(\theta_n\)</span>, the relative
+phase of the n<sup>th</sup> wiggler harmonic. <span class="math notranslate nohighlight">\(k_x\)</span>, <span class="math notranslate nohighlight">\(k_y\)</span> and <span class="math notranslate nohighlight">\(k_z\)</span> are defined in <a class="footnote-reference brackets" href="#wu" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+</dd>
+<dt>Bx</dt><dd><p>6 x NVharm array containing the following quantities. row 1: Vertical
+harmonic counter; row 2: relative amplitudes of wiggler harmonics; row 3: <span class="math notranslate nohighlight">\(k_x*L_w/2\pi\)</span>;
+row 4: <span class="math notranslate nohighlight">\(k_y*L_w/2\pi\)</span>; row 5: <span class="math notranslate nohighlight">\(k_z*L_w/2\pi\)</span>; row 6: <span class="math notranslate nohighlight">\(\theta_n\)</span>, the relative
+phase of the n<sup>th</sup> wiggler harmonic. <span class="math notranslate nohighlight">\(k_x\)</span>, <span class="math notranslate nohighlight">\(k_y\)</span> and <span class="math notranslate nohighlight">\(k_z\)</span> are defined in <a class="footnote-reference brackets" href="#wu" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+</dd>
+</dl>
+<hr class="footnotes docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="wu" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id5">1</a>,<a role="doc-backlink" href="#id6">2</a>)</span>
+<p>Y. K. Wu, E. Forest, and D. S. Robin, <em>Explicit symplectic integrator for s-dependent static magnetic
+field</em>, Phys. Rev. E, 68:046502, Oct 2003.</p>
+</aside>
+</aside>
+</section>
 </section>
 
 
@@ -575,6 +614,7 @@ perpendicular to the output trajectory. Use 0 for a sector magnet,
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thinmpolepass"><code class="docutils literal notranslate"><span class="pre">ThinMPolePass</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quadlinearpass"><code class="docutils literal notranslate"><span class="pre">QuadLinearPass</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bendlinearpass"><code class="docutils literal notranslate"><span class="pre">BendLinearPass</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gwigsymplecticpass"><code class="docutils literal notranslate"><span class="pre">GWigSymplecticPass</span></code></a></li>
 </ul>
   </nav></div>
 
