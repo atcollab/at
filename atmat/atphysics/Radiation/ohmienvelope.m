@@ -24,6 +24,11 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 NumElements = length(ring);
 if nargin<3, refpts=1; end
 
+% Erase wigglers from the radiative element list.
+% Diffusion matrix to be computed with separate FDW function.
+Wig=atgetcells(ring,'Bmax');
+radindex = radindex & ~Wig;
+
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
 orb=num2cell(orbit,1)';
@@ -34,6 +39,8 @@ B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
 % calculate Radiation-Diffusion matrix B for elements with radiation
 B(radindex)=cellfun(@findmpoleraddiffmatrix,...
     ring(radindex),orb(radindex),'UniformOutput',false);
+B(Wig)=cellfun(@FDW,...
+    ring(Wig),orb(Wig),'UniformOutput',false);
 
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
@@ -59,7 +66,7 @@ CC = AA*BCUM;
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
-rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
 
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);

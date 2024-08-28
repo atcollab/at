@@ -6,6 +6,11 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
+ *              Adding rotations and translations to wiggler.
+ *				Bug fix in wiggler initialisation.
+ *				Energy parameter bug fix.
+ *				
  * .02  2003-06-18     J. Li
  *				Cleanup the code
  *
@@ -123,11 +128,13 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
     /* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
     Energy = Energy / 1e9;
 
-    GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, T1, T2, R1, R2);
-
     for (c = 0;c<num_particles;c++) {
+		GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, T1, T2, R1, R2);
         r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
+			/* Misalignment at entrance */
+			if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             switch (Nmeth) {
                 case second:
                     GWigPass_2nd(&Wig, r6);
@@ -139,6 +146,9 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
                     printf("Invalid wiggler integration method %d.\n", Nmeth);
                     break;
             }
+			/* Misalignment at exit */
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
 }
@@ -158,7 +168,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int Nstep, Nmeth;
         int NHharm, NVharm;
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
