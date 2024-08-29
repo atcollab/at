@@ -71,8 +71,18 @@ typedef mxArray atElem;
 #define atError(...) mexErrMsgIdAndTxt("AT:PassError", __VA_ARGS__)
 #define atWarning(...) mexWarnMsgIdAndTxt("AT:PassWarning", __VA_ARGS__)
 #define atPrintf(...) mexPrintf(__VA_ARGS__)
-#define atEnergy(ringenergy,elemenergy) ((ringenergy)==0.0 ? (elemenergy) : (ringenergy))
 #include "ringproperties.c"
+
+double atEnergy(double ringenergy, double elemenergy)
+{
+    if (ringenergy!=0.0)
+        return ringenergy;
+    else
+        if (elemenergy!=0.0)
+            return elemenergy;
+        else
+            atError("Energy not defined.");
+}
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
