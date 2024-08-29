@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>at.physics.revolution &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+    <title>at.physics.magnet_tools &#8212; Accelerator Toolbox 0.6.2 documentation</title>
   
   
   
@@ -45,13 +45,11 @@
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=fd10adb8"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.physics.revolution';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.physics.magnet_tools';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="at.physics.ring_parameters" href="at.physics.ring_parameters.html" />
-    <link rel="prev" title="at.physics.radiation" href="at.physics.radiation.html" />
+    <link rel="next" title="at.physics.matrix" href="at.physics.matrix.html" />
+    <link rel="prev" title="at.physics.linear" href="at.physics.linear.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -386,12 +384,12 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.physics.frequency_maps.html">at.physics.frequency_maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.harmonic_analysis.html">at.physics.harmonic_analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.linear.html">at.physics.linear</a></li>
-<li class="toctree-l2"><a class="reference internal" href="at.physics.magnet_tools.html">at.physics.magnet_tools</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.physics.magnet_tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.matrix.html">at.physics.matrix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.nonlinear.html">at.physics.nonlinear</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.orbit.html">at.physics.orbit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.radiation.html">at.physics.radiation</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.physics.revolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.physics.revolution.html">at.physics.revolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.ring_parameters.html">at.physics.ring_parameters</a></li>
 </ul>
 </details></li>
@@ -479,7 +477,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="at.physics.html" class="nav-link">at.physics</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">at.physics.r...</li>
+    <li class="breadcrumb-item active" aria-current="page">at.physics.m...</li>
   </ul>
 </nav>
 </div>
@@ -496,129 +494,95 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-at.physics.revolution">
-<span id="at-physics-revolution"></span><h1>at.physics.revolution<a class="headerlink" href="#module-at.physics.revolution" title="Link to this heading">#</a></h1>
+  <section id="module-at.physics.magnet_tools">
+<span id="at-physics-magnet-tools"></span><h1>at.physics.magnet_tools<a class="headerlink" href="#module-at.physics.magnet_tools" title="Link to this heading">#</a></h1>
+<p>Magnet tools.</p>
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.revolution.get_mcf" title="at.physics.revolution.get_mcf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_mcf</span></code></a>(ring[, dp, keep_lattice, fit_order, ...])</p></td>
-<td><p>Compute the momentum compaction factor <span class="math notranslate nohighlight">\(\alpha\)</span></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.magnet_tools.feeddown_polynomba" title="at.physics.magnet_tools.feeddown_polynomba"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feeddown_polynomba</span></code></a>(polb, pola[, xoffset, ...])</p></td>
+<td><p>Return the feeddown due to a transverse offset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.physics.revolution.get_slip_factor" title="at.physics.revolution.get_slip_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_slip_factor</span></code></a>(ring, **kwargs)</p></td>
-<td><p>Compute the slip factor <span class="math notranslate nohighlight">\(\eta\)</span></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.physics.magnet_tools.feeddown_from_nth_order" title="at.physics.magnet_tools.feeddown_from_nth_order"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feeddown_from_nth_order</span></code></a>(nthorder, ...[, ...])</p></td>
+<td><p>Return the feeddown polynoms from an nth-order magnet component transverse offset.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.revolution.get_revolution_frequency" title="at.physics.revolution.get_revolution_frequency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_revolution_frequency</span></code></a>(ring[, dp, dct, df])</p></td>
-<td><p>Compute the revolution frequency of the full ring [Hz]</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.physics.revolution.set_rf_frequency" title="at.physics.revolution.set_rf_frequency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_rf_frequency</span></code></a>(ring[, frequency, dp, dct, df])</p></td>
-<td><p>Set the RF frequency</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.magnet_tools.feeddown_pol_from_element" title="at.physics.magnet_tools.feeddown_pol_from_element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feeddown_pol_from_element</span></code></a>(ele[, verbose])</p></td>
+<td><p>Return the feed down polynoms due to a transverse offset on an element.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py function">
-<dt class="sig sig-object py" id="at.physics.revolution.get_mcf">
-<span class="sig-name descname"><span class="pre">get_mcf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/revolution.html#get_mcf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.revolution.get_mcf" title="Link to this definition">#</a></dt>
-<dd><p>Compute the momentum compaction factor <span class="math notranslate nohighlight">\(\alpha\)</span></p>
+<dt class="sig sig-object py" id="at.physics.magnet_tools.feeddown_from_nth_order">
+<span class="sig-name descname"><span class="pre">feeddown_from_nth_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nthorder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nthpolcomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xoffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yoffset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poltype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'B'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/magnet_tools.html#feeddown_from_nth_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.magnet_tools.feeddown_from_nth_order" title="Link to this definition">#</a></dt>
+<dd><p>Return the feeddown polynoms from an nth-order magnet component transverse offset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description (<code class="code highlight pycode python docutils literal highlight-python"><span class="n">ring</span><span class="o">.</span><span class="n">is_6d</span></code> must be
-<a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>)</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Momentum deviation. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>keep_lattice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Assume no lattice change since the previous tracking.
-Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
-<li><p><strong>fit_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Maximum momentum compaction factor order to be fitted.
-Default to 1, corresponding to the first-order momentum compaction factor.</p></li>
-<li><p><strong>n_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of different calculated momentum deviations to be fitted
-with a polynomial.
-Default to 2.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>DPStep</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – Momentum step size.
-Default: <a class="reference internal" href="at.lattice.options.html#at.lattice.options.DConstant" title="at.lattice.options.DConstant"><code class="xref py py-data docutils literal notranslate"><span class="pre">DConstant.DPStep</span></code></a></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mcf</strong> (<em>float/array</em>) – Momentum compaction factor <span class="math notranslate nohighlight">\(\alpha\)</span>
-up to the order fit_order. Returns a float if fit_order=1 otherwise
-returns an array.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.revolution.get_revolution_frequency">
-<span class="sig-name descname"><span class="pre">get_revolution_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/revolution.html#get_revolution_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.revolution.get_revolution_frequency" title="Link to this definition">#</a></dt>
-<dd><p>Compute the revolution frequency of the full ring [Hz]</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Momentum deviation. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Path lengthening. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>df</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Deviation of RF frequency. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><strong>nthorder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – integer order of the magnet component, e.g. 1 for dipole,
+2 for quadrupoles, 3 for sextupoles, etc.</p></li>
+<li><p><strong>nthpolcomp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – float. nth component of the polynom, i.e. the value of
+PolynomA/B[nthorder-1].</p></li>
+<li><p><strong>xoffset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – float. Horizontal offset in meters.</p></li>
+<li><p><strong>yoffset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – float. Vertical offset in meters.</p></li>
+<li><p><strong>poltype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Default ‘B’. Could be ‘B’ or ‘A’, otherwise ignored.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – print info on input and output parameters.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>frev</strong> – Revolution frequency [Hz]</p>
+<dd class="field-even"><p><strong>Tuple of two numpy arrays with PolynomB and PolynomA from feeddown.</strong></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="at.physics.revolution.get_slip_factor">
-<span class="sig-name descname"><span class="pre">get_slip_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/revolution.html#get_slip_factor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.revolution.get_slip_factor" title="Link to this definition">#</a></dt>
-<dd><p>Compute the slip factor <span class="math notranslate nohighlight">\(\eta\)</span></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description (<code class="code highlight pycode python docutils literal highlight-python"><span class="n">ring</span><span class="o">.</span><span class="n">is_6d</span></code> must be
-<a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>)</p>
-</dd>
-<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Momentum deviation</p></li>
-<li><p><strong>DPStep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Momentum step size.
-Default: <a class="reference internal" href="at.lattice.options.html#at.lattice.options.DConstant" title="at.lattice.options.DConstant"><code class="xref py py-data docutils literal notranslate"><span class="pre">DConstant.DPStep</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>eta</strong> (<em>float</em>) – Slip factor <span class="math notranslate nohighlight">\(\eta\)</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.revolution.set_rf_frequency">
-<span class="sig-name descname"><span class="pre">set_rf_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/revolution.html#set_rf_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.revolution.set_rf_frequency" title="Link to this definition">#</a></dt>
-<dd><p>Set the RF frequency</p>
+<dt class="sig sig-object py" id="at.physics.magnet_tools.feeddown_pol_from_element">
+<span class="sig-name descname"><span class="pre">feeddown_pol_from_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ele</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/magnet_tools.html#feeddown_pol_from_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.magnet_tools.feeddown_pol_from_element" title="Link to this definition">#</a></dt>
+<dd><p>Return the feed down polynoms due to a transverse offset on an element.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – RF frequency [Hz]. Default: nominal frequency.</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Momentum deviation. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Path lengthening. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>df</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Deviation of RF frequency. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-</ul>
-</dd>
-<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>cavpts</strong> (<em>Optional</em><em>[</em><em>Refpts</em><em>]</em>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, look for ring.cavpts, or
-otherwise take all cavities.</p></li>
-<li><p><strong>array</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>]</em>) – <p>If <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a> (default), <em>frequency</em>
-is applied to the selected cavities with the lowest frequency. The
-frequency of all the other selected cavities is scaled by the same
-ratio.</p>
-<p>If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, directly apply <em>frequency</em> to the selected
-cavities. The value must be broadcastable to the number of cavities.</p>
-</p></li>
-<li><p><strong>copy</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>]</em>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, returns a shallow copy of
-<em>ring</em> with new cavity elements. Otherwise (default), modify
-<em>ring</em> in-place</p></li>
-</ul>
+<li><p><strong>ele</strong> (<a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a>) – a ring element.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – prints additional info. Default: False.</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>any</em><em>]</em>) – <dl class="simple">
+<dt>offset:(x,y) horizontal and vertical offset in meters.</dt><dd><p>Default taken from T2 or T1. Otherwise, zero.</p>
 </dd>
 </dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Dictionary with PolynomB and PolynomA feeddown components.</strong></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Note: Thin lens approximation, T2=-T1.</dt><dd><p>Bending angles are ignored.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.physics.magnet_tools.feeddown_polynomba">
+<span class="sig-name descname"><span class="pre">feeddown_polynomba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pola</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xoffset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yoffset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/magnet_tools.html#feeddown_polynomba"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.magnet_tools.feeddown_polynomba" title="Link to this definition">#</a></dt>
+<dd><p>Return the feeddown due to a transverse offset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>polb</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – PolynomB.</p></li>
+<li><p><strong>pola</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – PolynomA.</p></li>
+<li><p><strong>xoffset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Default zero. Horizontal offset in meters.</p></li>
+<li><p><strong>yoffset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Default zero. Vertical offset in meters.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – prints additional info.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Dictionary with PolynomB and PolynomA feeddown components.</strong></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If only one polynom is passed, it is assumed to be PolynomB.</p>
+</div>
 </dd></dl>
 
 </section>
@@ -634,20 +598,20 @@ cavities. The value must be broadcastable to the number of cavities.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="at.physics.radiation.html"
+       href="at.physics.linear.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">at.physics.radiation</p>
+        <p class="prev-next-title">at.physics.linear</p>
       </div>
     </a>
     <a class="right-next"
-       href="at.physics.ring_parameters.html"
+       href="at.physics.matrix.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">at.physics.ring_parameters</p>
+        <p class="prev-next-title">at.physics.matrix</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -669,10 +633,9 @@ cavities. The value must be broadcastable to the number of cavities.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.revolution.get_mcf"><code class="docutils literal notranslate"><span class="pre">get_mcf()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.revolution.get_revolution_frequency"><code class="docutils literal notranslate"><span class="pre">get_revolution_frequency()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.revolution.get_slip_factor"><code class="docutils literal notranslate"><span class="pre">get_slip_factor()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.revolution.set_rf_frequency"><code class="docutils literal notranslate"><span class="pre">set_rf_frequency()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.magnet_tools.feeddown_from_nth_order"><code class="docutils literal notranslate"><span class="pre">feeddown_from_nth_order()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.magnet_tools.feeddown_pol_from_element"><code class="docutils literal notranslate"><span class="pre">feeddown_pol_from_element()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.magnet_tools.feeddown_polynomba"><code class="docutils literal notranslate"><span class="pre">feeddown_polynomba()</span></code></a></li>
 </ul>
   </nav></div>
 

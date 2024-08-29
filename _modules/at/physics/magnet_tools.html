@@ -1,0 +1,649 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>at.physics.magnet_tools &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom_at.css?v=bc6ab313" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=99678979"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/at/physics/magnet_tools';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/AT.png" class="logo__image only-light" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/AT.png" class="logo__image only-dark" alt="Accelerator Toolbox 0.6.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../p/index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../common/indx.html">
+    AT basics
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../p/index.html">
+    Python
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../m/index.html">
+    Matlab
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/atcollab/at" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">at.physics.m...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for at.physics.magnet_tools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Magnet tools.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">comb</span>
+
+<span class="kn">from</span> <span class="nn">..lattice.elements</span> <span class="kn">import</span> <span class="n">Element</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;feeddown_polynomba&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feeddown_from_nth_order&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;feeddown_pol_from_element&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="feeddown_pol_from_element">
+<a class="viewcode-back" href="../../../p/api/at.physics.magnet_tools.html#at.physics.magnet_tools.feeddown_pol_from_element">[docs]</a>
+<span class="k">def</span> <span class="nf">feeddown_pol_from_element</span><span class="p">(</span>
+    <span class="n">ele</span><span class="p">:</span> <span class="n">Element</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the feed down polynoms due to a transverse offset on an element.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        ele: a ring element.</span>
+<span class="sd">        verbose: prints additional info. Default: False.</span>
+<span class="sd">        kwargs:</span>
+<span class="sd">            offset:(x,y) horizontal and vertical offset in meters.</span>
+<span class="sd">                Default taken from T2 or T1. Otherwise, zero.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with PolynomB and PolynomA feeddown components.</span>
+
+<span class="sd">    Note: Thin lens approximation, T2=-T1.</span>
+<span class="sd">          Bending angles are ignored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check verbose flags only once</span>
+    <span class="n">verboseprint</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span>
+    <span class="c1"># handle cases where polynom a and b are not defined</span>
+    <span class="n">polb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">pola</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;PolynomB&quot;</span><span class="p">):</span>
+        <span class="n">polb</span> <span class="o">=</span> <span class="n">ele</span><span class="o">.</span><span class="n">PolynomB</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element </span><span class="si">{</span><span class="n">ele</span><span class="o">.</span><span class="n">FamName</span><span class="si">}</span><span class="s2"> has no PolynomB&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;PolynomA&quot;</span><span class="p">):</span>
+        <span class="n">pola</span> <span class="o">=</span> <span class="n">ele</span><span class="o">.</span><span class="n">PolynomA</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element </span><span class="si">{</span><span class="n">ele</span><span class="o">.</span><span class="n">FamName</span><span class="si">}</span><span class="s2"> has no PolynomA&quot;</span><span class="p">)</span>
+
+    <span class="c1"># check if user has set offsets</span>
+    <span class="n">xoffset</span><span class="p">,</span> <span class="n">yoffset</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;offset&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="c1"># check if element has T1 and T2. Use one.</span>
+    <span class="k">if</span> <span class="s2">&quot;offset&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;T2&quot;</span><span class="p">):</span>
+            <span class="n">xoffset</span> <span class="o">=</span> <span class="n">ele</span><span class="o">.</span><span class="n">T2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">yoffset</span> <span class="o">=</span> <span class="n">ele</span><span class="o">.</span><span class="n">T2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;T1&quot;</span><span class="p">):</span>
+            <span class="n">xoffset</span> <span class="o">=</span> <span class="o">-</span><span class="n">ele</span><span class="o">.</span><span class="n">T1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">yoffset</span> <span class="o">=</span> <span class="o">-</span><span class="n">ele</span><span class="o">.</span><span class="n">T1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Element </span><span class="si">{</span><span class="n">ele</span><span class="o">.</span><span class="n">FamName</span><span class="si">}</span><span class="s2"> has no T1 or T2.&quot;</span><span class="p">)</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using offsets xoffset=</span><span class="si">{</span><span class="n">xoffset</span><span class="si">}</span><span class="s2">, yoffset=</span><span class="si">{</span><span class="n">yoffset</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="c1"># Return the polynoms</span>
+    <span class="k">return</span> <span class="n">feeddown_polynomba</span><span class="p">(</span><span class="n">polb</span><span class="o">=</span><span class="n">polb</span><span class="p">,</span> <span class="n">pola</span><span class="o">=</span><span class="n">pola</span><span class="p">,</span> <span class="n">xoffset</span><span class="o">=</span><span class="n">xoffset</span><span class="p">,</span> <span class="n">yoffset</span><span class="o">=</span><span class="n">yoffset</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="feeddown_polynomba">
+<a class="viewcode-back" href="../../../p/api/at.physics.magnet_tools.html#at.physics.magnet_tools.feeddown_polynomba">[docs]</a>
+<span class="k">def</span> <span class="nf">feeddown_polynomba</span><span class="p">(</span>
+    <span class="n">polb</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">pola</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">xoffset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">yoffset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the feeddown due to a transverse offset.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        polb: PolynomB.</span>
+<span class="sd">        pola: PolynomA.</span>
+<span class="sd">        xoffset: Default zero. Horizontal offset in meters.</span>
+<span class="sd">        yoffset: Default zero. Vertical offset in meters.</span>
+<span class="sd">        verbose: prints additional info.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary with PolynomB and PolynomA feeddown components.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        If only one polynom is passed, it is assumed to be PolynomB.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check verbose flags only once</span>
+    <span class="n">verboseprint</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="c1"># verify polynoms length</span>
+    <span class="n">maxorda</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pola</span><span class="p">)</span>
+    <span class="n">maxordb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">polb</span><span class="p">)</span>
+    <span class="n">maxord</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxorda</span><span class="p">,</span> <span class="n">maxordb</span><span class="p">)</span>
+    <span class="n">polasum</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">polbsum</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">maxorda</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">maxordb</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">verboseprint</span><span class="p">(</span><span class="s2">&quot;Both polynoms are zero.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">polbpad</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+            <span class="n">polb</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">-</span> <span class="n">maxordb</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">constant_values</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">polapad</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+            <span class="n">pola</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">-</span> <span class="n">maxorda</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">constant_values</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;polb=</span><span class="si">{</span><span class="n">polb</span><span class="si">}</span><span class="s2">,pola=</span><span class="si">{</span><span class="n">pola</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;xoffset=</span><span class="si">{</span><span class="n">xoffset</span><span class="si">}</span><span class="s2">,yoffset=</span><span class="si">{</span><span class="n">yoffset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ith</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">polbaux_b</span><span class="p">,</span> <span class="n">polaaux_b</span> <span class="o">=</span> <span class="n">feeddown_from_nth_order</span><span class="p">(</span>
+                <span class="n">ith</span><span class="p">,</span> <span class="n">polbpad</span><span class="p">[</span><span class="n">ith</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xoffset</span><span class="p">,</span> <span class="n">yoffset</span><span class="p">,</span> <span class="n">poltype</span><span class="o">=</span><span class="s2">&quot;B&quot;</span>
+            <span class="p">)</span>
+            <span class="n">polbaux_a</span><span class="p">,</span> <span class="n">polaaux_a</span> <span class="o">=</span> <span class="n">feeddown_from_nth_order</span><span class="p">(</span>
+                <span class="n">ith</span><span class="p">,</span> <span class="n">polapad</span><span class="p">[</span><span class="n">ith</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xoffset</span><span class="p">,</span> <span class="n">yoffset</span><span class="p">,</span> <span class="n">poltype</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
+            <span class="p">)</span>
+            <span class="n">polbshort</span> <span class="o">=</span> <span class="n">polbaux_b</span> <span class="o">+</span> <span class="n">polbaux_a</span>
+            <span class="n">polashort</span> <span class="o">=</span> <span class="n">polaaux_b</span> <span class="o">+</span> <span class="n">polaaux_a</span>
+            <span class="n">polbsum</span> <span class="o">=</span> <span class="n">polbsum</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+                <span class="n">polbshort</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">-</span> <span class="n">ith</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">constant_values</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">polasum</span> <span class="o">=</span> <span class="n">polasum</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
+                <span class="n">polashort</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxord</span> <span class="o">-</span> <span class="n">ith</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">constant_values</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">)</span>
+    <span class="n">poldict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;PolynomB&quot;</span><span class="p">:</span> <span class="n">polbsum</span><span class="p">,</span> <span class="s2">&quot;PolynomA&quot;</span><span class="p">:</span> <span class="n">polasum</span><span class="p">}</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;poldict=</span><span class="si">{</span><span class="n">poldict</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">poldict</span></div>
+
+
+
+<div class="viewcode-block" id="feeddown_from_nth_order">
+<a class="viewcode-back" href="../../../p/api/at.physics.magnet_tools.html#at.physics.magnet_tools.feeddown_from_nth_order">[docs]</a>
+<span class="k">def</span> <span class="nf">feeddown_from_nth_order</span><span class="p">(</span>
+    <span class="n">nthorder</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">nthpolcomp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">xoffset</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">yoffset</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">poltype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the feeddown polynoms from an nth-order magnet component transverse offset.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        nthorder: integer order of the magnet component, e.g. 1 for dipole,</span>
+<span class="sd">            2 for quadrupoles, 3 for sextupoles, etc.</span>
+<span class="sd">        nthpolcomp: float. nth component of the polynom, i.e. the value of</span>
+<span class="sd">            PolynomA/B[nthorder-1].</span>
+<span class="sd">        xoffset: float. Horizontal offset in meters.</span>
+<span class="sd">        yoffset: float. Vertical offset in meters.</span>
+<span class="sd">        poltype: Default &#39;B&#39;. Could be &#39;B&#39; or &#39;A&#39;, otherwise ignored.</span>
+<span class="sd">        verbose: print info on input and output parameters.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of two numpy arrays with PolynomB and PolynomA from feeddown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verboseprint</span> <span class="o">=</span> <span class="nb">print</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">None</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;nthorder=</span><span class="si">{</span><span class="n">nthorder</span><span class="si">}</span><span class="s2">,nthpolcomp=</span><span class="si">{</span><span class="n">nthpolcomp</span><span class="si">}</span><span class="s2">,poltype=</span><span class="si">{</span><span class="n">poltype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;xoffset=</span><span class="si">{</span><span class="n">xoffset</span><span class="si">}</span><span class="s2">,yoffset=</span><span class="si">{</span><span class="n">yoffset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">fakeimag</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">polbaux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nthorder</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">polaaux</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nthorder</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nthpolcomp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">kterm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nthorder</span><span class="p">):</span>
+            <span class="n">ichoosek</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">nthorder</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">kterm</span><span class="p">)</span>
+            <span class="n">pascalsn</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">kterm</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">kterm</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">powk</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">kterm</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">powkflip</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">kterm</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">recoefs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">fakeimag</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">powk</span><span class="p">])</span>
+            <span class="n">imcoefs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">fakeimag</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">powk</span><span class="p">])</span>
+            <span class="n">commonfactor</span> <span class="o">=</span> <span class="n">nthpolcomp</span> <span class="o">*</span> <span class="n">ichoosek</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">kterm</span>
+            <span class="n">repart</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">recoefs</span>
+                <span class="o">*</span> <span class="n">commonfactor</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">pascalsn</span> <span class="o">*</span> <span class="p">(</span><span class="n">xoffset</span><span class="o">**</span><span class="n">powkflip</span> <span class="o">*</span> <span class="n">yoffset</span><span class="o">**</span><span class="n">powk</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">impart</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">imcoefs</span>
+                <span class="o">*</span> <span class="n">commonfactor</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">pascalsn</span> <span class="o">*</span> <span class="p">(</span><span class="n">xoffset</span><span class="o">**</span><span class="n">powkflip</span> <span class="o">*</span> <span class="n">yoffset</span><span class="o">**</span><span class="n">powk</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">polbaux</span><span class="p">[</span><span class="n">nthorder</span> <span class="o">-</span> <span class="n">kterm</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">polbaux</span><span class="p">[</span><span class="n">nthorder</span> <span class="o">-</span> <span class="n">kterm</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">repart</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">polaaux</span><span class="p">[</span><span class="n">nthorder</span> <span class="o">-</span> <span class="n">kterm</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">polaaux</span><span class="p">[</span><span class="n">nthorder</span> <span class="o">-</span> <span class="n">kterm</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">impart</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">verboseprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;polbaux=</span><span class="si">{</span><span class="n">polbaux</span><span class="si">}</span><span class="s2">,polaaux=</span><span class="si">{</span><span class="n">polaaux</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">polbout</span><span class="p">,</span> <span class="n">polaout</span> <span class="o">=</span> <span class="n">polbaux</span><span class="p">,</span> <span class="n">polaaux</span>
+    <span class="c1"># skew components swap the imaginary and real feed-down and change the sign</span>
+    <span class="c1"># of the real part, i.e. j*j = -1</span>
+    <span class="k">if</span> <span class="n">poltype</span> <span class="o">==</span> <span class="s2">&quot;A&quot;</span><span class="p">:</span>
+        <span class="n">polbout</span><span class="p">,</span> <span class="n">polaout</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">polaaux</span><span class="p">,</span> <span class="n">polbaux</span>
+    <span class="k">return</span> <span class="n">polbout</span><span class="p">,</span> <span class="n">polaout</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022, ATCollab.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
