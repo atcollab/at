@@ -301,7 +301,7 @@ def _computedrivingterms(
                 for i in range(nelem)]
             )
             rdts["h00310"] += (1.0 / 32) * numpy.sum([
-                rbxy[i] * betaym * pym2[i] * pxm[i] * cpxm - pxm * cpxm[i]
+                rbxy[i] * betaym * pym2[i] * (pxm[i] * cpxm - pxm * cpxm[i])
                 for i in range(nelem)]
             )
             rdts["h00400"] += (1.0 / 64) * numpy.sum([
