@@ -379,12 +379,13 @@ def _get_rdtlist(
     refpts,
 ):
     rdtlist = []
-    for i, ii in enumerate(refpts):
+    for ii in refpts:
         start_idx = sum(idx_mag < ii)
         beta_rot = numpy.roll(beta, -start_idx, axis=0)
         etax_rot = numpy.roll(etax, -start_idx)
-        phi_rot = numpy.roll(phi, -start_idx, axis=0) + avemu[ii]
-        phi_rot[-start_idx:] += mu
+        phi_rot = numpy.roll(phi, -start_idx, axis=0) - avemu[ii]
+        if start_idx > 0:
+            phi_rot[-start_idx:] += mu
         s_rot = numpy.roll(smag, -start_idx) - sall[ii]
         s_rot[-start_idx:] += sall[-1]
         pols_rot = numpy.roll(pols, -start_idx, axis=0)
