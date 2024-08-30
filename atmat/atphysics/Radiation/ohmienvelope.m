@@ -83,7 +83,11 @@ if nout>=2, varargout{2}=ms(:,:,refpts); end
 if nout>=1, varargout{1}=mring; end
 
     function diff=diffmatrix(elem,orbit)
-        diff=findmpoleraddiffmatrix(elem, orbit, energy);
+        if isfield(elem,'Bmax')
+            diff=FDW(elem,orbit,energy);  % For wigglers
+        else
+            diff=findmpoleraddiffmatrix(elem, orbit, energy);  % For other elements
+        end
     end
 
     function btx=cumulb(elem,orbit,b)
