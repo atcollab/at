@@ -2,18 +2,21 @@
 Radiation and equilibrium emittances
 """
 from __future__ import annotations
+
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
-import numpy
 from typing import Union
+
+import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import Lattice, check_radiation, Refpts, All
+
 from at.lattice import Dipole, Wiggler, DConstant
+from at.lattice import Lattice, check_radiation, Refpts, All
 from at.lattice import Quadrupole, Multipole, QuantumDiffusion
 from at.lattice import frequency_control, set_value_refpts
-from at.tracking import internal_lpass
-from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
-from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
 from at.physics import ELossMethod
+from at.physics import find_mpole_raddiff_matrix, FDW, get_tunes_damp
+from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
+from at.tracking import internal_lpass
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
            'gen_quantdiff_elem', 'tapering']
@@ -46,6 +49,15 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
             cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
+    def diffusion_matrix(elem, orbit, energy):
+        if elem.PassMethod.endswith('RadPass'):
+            if hasattr(elem, "Bmax"):
+                return FDW(elem, orbit, energy)
+            else:
+                return find_mpole_raddiff_matrix(elem, orbit, energy)
+        else:
+            return b0
+
     energy = ring.energy
 
     if orbit is None:
@@ -56,9 +68,7 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         internal_lpass(ring, orbit.copy(order='K'), refpts=All,
                        keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
-          if elem.PassMethod.endswith('RadPass') else b0
-          for elem, elemorb in zip(ring, orbs)]
+    bb = [diffusion_matrix(elem, elemorb, energy) for elem, elemorb in zip(ring, orbs)]
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
