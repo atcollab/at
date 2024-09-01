@@ -80,8 +80,10 @@ double atEnergy(double ringenergy, double elemenergy)
     else
         if (elemenergy!=0.0)
             return elemenergy;
-        else
+        else {
             atError("Energy not defined.");
+            return 0.0;   /* Never reached but makes the compiler happy */
+        }
 }
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
