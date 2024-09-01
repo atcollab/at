@@ -124,7 +124,6 @@ static void GWigPass_4th(struct gwigR *pWig, double *X)
   double dl, dl1, dl0;
   double B[3];
   double ax, ay, axpy, aypx;
-  double factorvect;
 
   Nstep = pWig->PN*(pWig->Nw);
   dl = pWig->Lw/(pWig->PN);
@@ -450,7 +449,7 @@ static void GWigB(struct gwigR *pWig, double *Xvec, double *B)
 {
   int    i;
   double x, y, z;
-  double kx, ky, kz, tz, kw;
+  double kx, ky, kz, tz;
   double cx, sx, chx, shx;
   double cy, sy, chy, shy;
   double cz, sz;
@@ -460,8 +459,6 @@ static void GWigB(struct gwigR *pWig, double *Xvec, double *B)
   x = Xvec[0];
   y = Xvec[2];
   z = pWig->Zw;
-
-  kw   = 2e0*PI/(pWig->Lw);
 
   B[0] = 0;
   B[1] = 0;
@@ -596,9 +593,9 @@ static void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxy, doubl
 static void Hessian(struct gwigR *pWig, double *Xvec, double *H2)
 {
 	int i,j,k;
-	double x,px,y,py,D;
-	double ax,axx,axxx,axy,axyy,axxy;
-	double ay, ayx, ayxx, ayy, ayyy, ayxy;
+	double px, py,D;
+	double ax,axx,axxx,axy,axxy;
+	double ay, ayx, ayxx, ayy, ayxy;
 	double Pax[6];
 	double Pay[6];
 	double H[6][6];
@@ -610,19 +607,15 @@ static void Hessian(struct gwigR *pWig, double *Xvec, double *H2)
 	axx =Pax[1];
 	axxx=Pax[2];
 	axy =Pax[3];
-	axyy=Pax[4];
 	axxy=Pax[5];
 
 	ay  =Pay[0];
 	ayx =Pay[1];
 	ayxx=Pay[2];
 	ayy =Pay[3];
-	ayyy=Pay[4];
 	ayxy=Pay[5];
 
-	x =Xvec[0];
 	px=Xvec[1];
-	y =Xvec[2];
 	py=Xvec[3];
 	D =Xvec[4];
 
