@@ -212,10 +212,12 @@ classdef pytests < matlab.unittest.TestCase
             a=cell(lattice.p.avlinopt(dp, prefs));
             pbeta = double(a{2});
             pdisp = double(a{4});
+            pmu = double(a{3});
             % Matlab
-            [~,mbeta,~,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
+            [~,mbeta,mmu,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
             % check
-            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-7,RelTol=1.e-7);
+            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=1.e-8);
+            testCase.verifyEqual(mmu,pmu,AbsTol=1.E-8,RelTol=0);
             testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
         end
 
