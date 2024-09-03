@@ -554,11 +554,12 @@ class _MadParser(UnorderedParser):
     _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
     _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
 
-    def __init__(self, *args, strict: bool = True, **kwargs):
+    def __init__(self, env: dict, *args, strict: bool = True, **kwargs):
         """"""
         if not strict:
             kwargs.update(none=0.0)
         super().__init__(
+            env,
             *args,
             delimiter=";",
             linecomment=("!", "//"),
@@ -768,6 +769,7 @@ class MadxParser(_MadParser):
         Args:
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
+            **kwargs:   Initial variable definitions
         """
         super().__init__(
             globals(),
@@ -824,9 +826,8 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     """
     parser = MadxParser(strict=strict)
     absfiles = tuple(abspath(file) for file in files)
-    kwargs.setdefault("in_file", absfiles)
     parser.parse_files(*absfiles)
-    return parser.lattice(use=use, **kwargs)
+    return parser.lattice(use=use, in_file=absfiles, **kwargs)
 
 
 register_format(

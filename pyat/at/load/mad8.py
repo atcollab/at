@@ -100,6 +100,7 @@ class Mad8Parser(_MadParser):
         Args:
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
+            **kwargs:   Initial variable definitions
         """
         super().__init__(
             globals(),

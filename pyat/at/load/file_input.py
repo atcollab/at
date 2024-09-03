@@ -438,14 +438,17 @@ class BaseParser(DictNoDot):
         self,
         lines: Iterable[str],
         final: bool = True,
+        **kwargs,
     ) -> None:
         """Process input lines and fill the database
 
         Args:
             lines: Iterable of input lines
             final: If :py:obj:`True`, signals that the undefined variables may be set
-              to the defalt value
+              to the default value
+            **kwargs:   Initial variable definitions
         """
+        self.update(**kwargs)
         buffer = []
         in_comment: bool = False
         ok: bool = True
@@ -504,6 +507,7 @@ class BaseParser(DictNoDot):
         final: bool = True,
         prolog: None | int | Callable[..., None] = None,
         epilog: Callable[..., None] | None = None,
+        **kwargs,
     ) -> None:
         """Process files and fill the database
 
@@ -513,7 +517,9 @@ class BaseParser(DictNoDot):
               to the default value
             prolog:
             epilog:
+            **kwargs:   Initial variable definitions
         """
+        self.update(**kwargs)
         last = len(filenames) - 1
         for nf, fn in enumerate(filenames):
             fn = normpath(join(self.bases[-1], fn))
@@ -544,7 +550,7 @@ class UnorderedParser(BaseParser):
     of failures is constant (hopefully zero)
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, env: dict, *args, **kwargs):
         """
         Args:
             env: global namespace
@@ -557,7 +563,7 @@ class UnorderedParser(BaseParser):
             *args: dict initializer
             **kwargs: dict initializer
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(env, *args, **kwargs)
         self.delayed = []
 
     def clear(self):
