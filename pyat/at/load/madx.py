@@ -788,8 +788,10 @@ class MadxParser(_MadParser):
         return super().evaluate(expr)
 
 
-def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from MAD-X files
+def load_madx(
+    *files: str, use: str = "ring", strict: bool = True, verbose=False, **kwargs
+) -> Lattice:
+    """Create a :py:class:`.Lattice` from MAD-X files
 
     - The *energy* and *particle* of the generated lattice are taken from the MAD-X
       ``BEAM`` object, using the MAD-X default parameters: positrons at 1 Gev.
@@ -801,22 +803,18 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     - Long elements are split according to the default AT value for *NumIntSteps* (10).
 
     Parameters:
-        files:              Names of one or several MAD8 files
-        use:                Name of the MAD8 sequence or line containing the desired
-          lattice. Default: ``ring``
-
-    Parameters:
         files:              Names of one or several MAD-X files
         strict:             If :py:obj:`False`, assign 0 to undefined variables
         use:                Name of the MADX sequence or line containing the desired
           lattice. Default: ``ring``
+        verbose:            If :py:obj:`True`, print details on the processing
 
     Keyword Args:
         name (str):         Name of the lattice. Default: MADX sequence name.
         particle(Particle): Circulating particle. Default: from MADX
         energy (float):     Energy of the lattice [eV]. Default: from MADX
         periodicity(int):   Number of periods. Default: 1
-        *:                  All other keywords will be set as Lattice attributes
+        *:                  Other keywords will be used as initial variable definitions
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
@@ -824,10 +822,15 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
-    parser = MadxParser(strict=strict)
+    parser = MadxParser(strict=strict, verbose=verbose)
     absfiles = tuple(abspath(file) for file in files)
-    parser.parse_files(*absfiles)
-    return parser.lattice(use=use, in_file=absfiles, **kwargs)
+    params = {
+        key: kwargs.pop(key)
+        for key in ("name", "particle", "energy", "periodicity")
+        if key in kwargs
+    }
+    parser.parse_files(*absfiles, **kwargs)
+    return parser.lattice(use=use, in_file=absfiles, **params)
 
 
 register_format(

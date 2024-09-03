@@ -584,7 +584,8 @@ class UnorderedParser(BaseParser):
     def _finalise(self, final: bool = True) -> None:
         """Loop on evaluation of the pending statements"""
         nend = len(self.delayed)
-        self._print(f"\nDelayed evaluation of {nend} statements\n")
+        if nend > 0:
+            self._print(f"\nDelayed evaluation of {nend} statements\n")
         while nend > 0:
             statements = self.delayed
             self.delayed = []
