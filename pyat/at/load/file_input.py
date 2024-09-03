@@ -17,7 +17,6 @@ import re
 import abc
 from itertools import repeat
 from collections.abc import Callable, Iterable, Generator, Mapping
-from typing import Union, Optional
 
 from .utils import split_ignoring_parentheses, protect, restore
 from ..lattice import Element, Lattice, params_filter
@@ -53,7 +52,6 @@ def _default_arg_parser(parser: BaseParser, argstr: str):
 
 
 class DictNoDot(dict):
-
     @staticmethod
     def _no_dot(expr):
         def repl(match):
@@ -83,10 +81,10 @@ class AnyDescr(abc.ABC):
     def __neg__(self):
         return self.inverted(copy=True)
 
-    def __call__(self, *args, copy: bool = True, **kwargs) -> Optional[AnyDescr]:
+    def __call__(self, *args, copy: bool = True, **kwargs) -> AnyDescr | None:
         """Create a copy of the element with updated fields"""
         if copy:
-            b = dict((key, kwargs.pop(key, value)) for key, value in vars(self).items())
+            b = {key: kwargs.pop(key, value) for key, value in vars(self).items()}
             b.update(kwargs)
             # b.update(madclass=self.name)
             return type(self)(self, *args, **b)
@@ -199,11 +197,12 @@ class BaseParser(DictNoDot):
         self,
         env: dict,
         *args,
-        delimiter: Optional[str] = None,
+        delimiter: str | None = None,
         continuation: str = "\\",
-        linecomment: Union[str, tuple[str], None] = "#",
-        blockcomment: Optional[tuple[str, str]] = None,
-        endfile: Optional[str] = None,
+        linecomment: str | tuple[str] | None = "#",
+        blockcomment: tuple[str, str] | None = None,
+        endfile: str | None = None,
+        verbose: bool = False,
         **kwargs,
     ):
         """
@@ -214,6 +213,7 @@ class BaseParser(DictNoDot):
             linecomment: Line comment character
             blockcomment: Block comment delimiter
             endfile: "End of input" marker
+            verbose: If True, print detail on the processing
             *args: dict initializer
             **kwargs: dict initializer
         """
@@ -262,11 +262,16 @@ class BaseParser(DictNoDot):
         self.delimiter = delimiter
         self.continuation = continuation
         self.endfile = endfile
+        self._verbose = verbose
         self.env = env
         self.bases = [getcwd()]
         self.kwargs = kwargs
 
         super().__init__(*args, **kwargs)
+
+    def _print(self, *args, **kwargs):
+        if self._verbose:
+            print(*args, **kwargs)
 
     def clear(self):
         """Clean the database"""
@@ -279,7 +284,7 @@ class BaseParser(DictNoDot):
 
     def _eval_cmd(self, cmdname: str, no_global: bool = False) -> Callable:
         """Evaluate a command"""
-        cmd: Optional[Callable] = self.get(cmdname, None)
+        cmd: Callable | None = self.get(cmdname, None)
         if cmd is not None:
             return cmd
         else:
@@ -323,7 +328,7 @@ class BaseParser(DictNoDot):
 
     def _raw_command(
         self,
-        label: Optional[str],
+        label: str | None,
         cmdname: str,
         *argnames: str,
         no_global: bool = False,
@@ -445,7 +450,6 @@ class BaseParser(DictNoDot):
         in_comment: bool = False
         ok: bool = True
         for line_number, contents in enumerate(lines):
-
             # Handle comments
             while contents:
                 in_comment, contents = self.skip_comments(buffer, contents, in_comment)
@@ -498,8 +502,8 @@ class BaseParser(DictNoDot):
         self,
         *filenames: str,
         final: bool = True,
-        prolog: Union[None, int, Callable[..., None]] = None,
-        epilog: Optional[Callable[..., None]] = None,
+        prolog: None | int | Callable[..., None] = None,
+        epilog: Callable[..., None] | None = None,
     ) -> None:
         """Process files and fill the database
 
@@ -516,7 +520,7 @@ class BaseParser(DictNoDot):
             self.bases.append(dirname(fn))
             print("Processing", fn)
             try:
-                with open(fn, "rt") as f:
+                with open(fn) as f:
                     if callable(prolog):
                         prolog(f)
                     elif isinstance(prolog, int):
@@ -549,6 +553,7 @@ class UnorderedParser(BaseParser):
             linecomment: Line comment character
             blockcomment: Block comment delimiter
             endfile: End of input marker
+            verbose: If True, print detail on the processing
             *args: dict initializer
             **kwargs: dict initializer
         """
@@ -573,11 +578,12 @@ class UnorderedParser(BaseParser):
     def _finalise(self, final: bool = True) -> None:
         """Loop on evaluation of the pending statements"""
         nend = len(self.delayed)
+        self._print(f"\nDelayed evaluation of {nend} statements\n")
         while nend > 0:
             statements = self.delayed
             self.delayed = []
             nstart = nend
-            for reason, *args in statements:
+            for _reason, *args in statements:
                 self._decode(*args)
             nend = len(self.delayed)
             if nend == nstart:

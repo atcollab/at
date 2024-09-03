@@ -95,10 +95,16 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    def __init__(self, **kwargs):
-        """"""
+    def __init__(self, *, strict: bool = True, verbose: bool = False, **kwargs):
+        """
+        Args:
+            strict:     If :py:obj:`False`, assign 0 to undefined variables
+            verbose:    If :py:obj:`True`, print details on the processing
+        """
         super().__init__(
             globals(),
+            strict=strict,
+            verbose=verbose,
             continuation="&",
             blockcomment=("comment", "endcomment"),
             **kwargs,
