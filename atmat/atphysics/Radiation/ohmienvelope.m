@@ -4,6 +4,10 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
 %
 % [ENVELOPE, RMSDP, RMSBL] = ONMIENVELOPE(RING,RADELEMINDEX,REFPTS)
+% RING    - an AT ring
+% RADELEMEINDEX - index of elements with radiative PassMethod,
+%                 typically they finish in '...Rad'
+% REFPTS  - Reference points along the RING
 %
 % ENVELOPE is a structure with fields
 % Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along
@@ -21,13 +25,17 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 %   Returns in addition the 6x6 transfer matrices and the closed orbit
 %   from FINDM66
 
+check_6d(ring, true, 'strict', 0);
+
 NumElements = length(ring);
 if nargin<3, refpts=1; end
 
 % Erase wigglers from the radiative element list.
 % Diffusion matrix to be computed with separate FDW function.
 Wig=atgetcells(ring,'Bmax');
-radindex = radindex & ~Wig;
+[~,ia,~]= intersect(radindex, find(Wig));
+radindex(ia) = [];
+
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
