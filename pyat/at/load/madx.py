@@ -13,6 +13,7 @@ from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
 from os.path import abspath
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
+import re
 
 import numpy as np
 
@@ -24,6 +25,10 @@ from . import register_format
 from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
 from .utils import protect, restore
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
+
+_kconst = re.compile("^ *const +")
+_kreal = re.compile("^ *real +")
+_kint = re.compile("^ *int +")
 
 _default_beam = {
     "particle": "positron",
@@ -627,6 +632,8 @@ class _MadParser(UnorderedParser):
 
     def _format_statement(self, line: str) -> str:
         line, matches = protect(line, fence=('"', '"'))
+        # Remove the MAD const, real, int keywords
+        line = _kint.sub("", _kreal.sub("", _kconst.sub("", line)))
         line = "".join(line.split())  # Remove all spaces
         line = line.replace("{", "(").replace("}", ")")
         line = line.replace(":=", "=")  # since we evaluate only once

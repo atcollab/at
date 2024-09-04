@@ -48,6 +48,7 @@ _p2m.update(_drop_attrs)
 # Python to Matlab type translation
 _mattype_map = {
     int: float,
+    tuple: list,
     np.ndarray: lambda attr: np.asanyarray(attr),
     Particle: lambda attr: attr.to_dict(),
 }
@@ -492,10 +493,12 @@ def _mat_file(ring):
         in_file = ring.in_file
     except AttributeError:
         raise AttributeError("'Lattice' object has no attribute 'mat_file'")
-    else:
+    if isinstance(in_file, str):
         _, ext = os.path.splitext(in_file)
         if ext != ".mat":
             raise AttributeError("'Lattice' object has no attribute 'mat_file'")
+    else:
+        raise AttributeError("'Lattice' object has no attribute 'mat_file'")
     return in_file
 
 
