@@ -1,9 +1,16 @@
 function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
 %OHMIENVELOPE calculates equilibrium beam envelope in a
-% circular accelerator using Ohmi's beam envelope formalism [1]
+% circular accelerator using Ohmi's beam envelope formalism [1].
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
 %
-% [ENVELOPE, RMSDP, RMSBL] = ONMIENVELOPE(RING,RADELEMINDEX,REFPTS)
+% [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX)
+% [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX,REFPTS)
+%
+% RING    - an AT ring.
+% RADELEMINDEX - array of length equal to length(RING) filled with ones at
+%           indexes of radiative ring elements, otherwise, zeros.
+%           See the output of atenable_6d.
+% REFPTS  - reference points along the ring. Default: 1.
 %
 % ENVELOPE is a structure with fields
 % Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along
@@ -20,6 +27,10 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 % [ENVELOPE, RMSDP, RMSBL, M66, T, ORBIT] = OHMIENVELOPE(...)
 %   Returns in addition the 6x6 transfer matrices and the closed orbit
 %   from FINDM66
+%
+% See also ATENABLE_6D FINDM66
+
+check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
 if nargin<3, refpts=1; end
