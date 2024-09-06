@@ -1301,17 +1301,16 @@ class Wiggler(Radiative, LongElement):
     See atwiggler.m
     """
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Lw', 'Bmax',
-                                                         'Energy']
-    _conversions = dict(Element._conversions, Lw=float, Bmax=float,
-                        Energy=float,
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Lw', 'Bmax']
+    _conversions = dict(Element._conversions, Lw=_float, Bmax=_float,
+                        Energy=_float,
                         Bx=lambda v: _array(v, (6, -1)),
                         By=lambda v: _array(v, (6, -1)),
                         Nstep=int, Nmeth=int, NHharm=int, NVharm=int)
 
     # noinspection PyPep8Naming
     def __init__(self, family_name: str, length: float, wiggle_period: float,
-                 b_max: float, energy: float, Nstep: Optional[int] = 5,
+                 b_max: float, energy: float = 0.0, *, Nstep: Optional[int] = 5,
                  Nmeth: Optional[int] = 4,
                  By=(1, 1, 0, 1, 1, 0), Bx=(), **kwargs):
         """
