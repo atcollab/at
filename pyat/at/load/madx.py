@@ -11,9 +11,9 @@ import warnings
 from math import pi, e, sqrt, exp, log, log10, sin, cos, tan  # noqa: F401
 from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
 from os.path import abspath
-from typing import Optional
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
+import re
 
 import numpy as np
 
@@ -26,13 +26,17 @@ from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
 from .utils import protect, restore
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
-_default_beam = dict(
-    particle="positron",
-    energy=1.0,  # GeV
-    bcurrent=0.0,
-    kbunch=1,
-    radiate=False,
-)
+_kconst = re.compile("^ *const +")
+_kreal = re.compile("^ *real +")
+_kint = re.compile("^ *int +")
+
+_default_beam = {
+    "particle": "positron",
+    "energy": 1.0,  # GeV
+    "bcurrent": 0.0,
+    "kbunch": 1,
+    "radiate": False,
+}
 
 # Constants known by MAD-X
 true = True
@@ -252,7 +256,13 @@ class vkicker(_MadElement):
 class rfcavity(_MadElement):
     @staticmethod
     def convert(
-        name, l=0.0, volt=0.0, freq=np.nan, lag=0.0, harmon=0, **params  # noqa: E741
+        name,
+        l=0.0,
+        volt=0.0,
+        freq=np.nan,
+        lag=0.0,
+        harmon=0,
+        **params,  # noqa: E741
     ):
         cavity = elt.RFCavity(
             name,
@@ -298,7 +308,6 @@ class instrument(monitor):
 
 
 class _Ignored(_MadElement):
-
     report = True
 
     def __init__(self, *args, **kwargs):
@@ -403,9 +412,9 @@ class _Sequence(SequenceDescr):
         *args,
         l: float = 0,
         refer: str = "centre",
-        refpos: Optional[str] = None,
+        refpos: str | None = None,
         at: float = 0.0,
-        frm: Optional[str] = None,
+        frm: str | None = None,
         valid: int = 1,
         **kwargs,  # noqa: E741
     ):
@@ -496,7 +505,6 @@ class _BeamDescr(ElementDescr):
         return []
 
     def expand(self, parser: MadxParser) -> dict:
-
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             atparticle = Particle(
@@ -535,14 +543,14 @@ class _BeamDescr(ElementDescr):
         # beta = betagamma / gamma
         # brho = 1.0e09 * pc / abs(charge) / clight
 
-        return dict(
-            particle=atparticle,
-            energy=1.0e09 * energy,  # [eV]
-            beam_current=self["bcurrent"],
-            nbunch=self["kbunch"],
-            periodicity=1,
-            radiate=self["radiate"],
-        )
+        return {
+            "particle": atparticle,
+            "energy": 1.0e09 * energy,  # [eV]
+            "beam_current": self["bcurrent"],
+            "nbunch": self["kbunch"],
+            "periodicity": 1,
+            "radiate": self["radiate"],
+        }
 
 
 class _MadParser(UnorderedParser):
@@ -551,11 +559,12 @@ class _MadParser(UnorderedParser):
     _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
     _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
 
-    def __init__(self, *args, strict: bool = True, **kwargs):
+    def __init__(self, env: dict, *args, strict: bool = True, **kwargs):
         """"""
         if not strict:
             kwargs.update(none=0.0)
         super().__init__(
+            env,
             *args,
             delimiter=";",
             linecomment=("!", "//"),
@@ -591,7 +600,7 @@ class _MadParser(UnorderedParser):
 
         beamobj.update(**kwargs)
 
-    def _command(self, label: Optional[str], cmdname: str, *argnames: str, **kwargs):
+    def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         res = None
         if self.current_sequence is None:
             try:
@@ -623,6 +632,8 @@ class _MadParser(UnorderedParser):
 
     def _format_statement(self, line: str) -> str:
         line, matches = protect(line, fence=('"', '"'))
+        # Remove the MAD const, real, int keywords
+        line = _kint.sub("", _kreal.sub("", _kconst.sub("", line)))
         line = "".join(line.split())  # Remove all spaces
         line = line.replace("{", "(").replace("}", ")")
         line = line.replace(":=", "=")  # since we evaluate only once
@@ -640,7 +651,8 @@ class _MadParser(UnorderedParser):
         if final:
             try:
                 default_value = self["none"]
-                for var in self._missing(verbose=True):
+                for var in self._missing(verbose=False):
+                    self._print(f"Set {var} to {default_value}")
                     self[var] = default_value
                 super()._finalise()
             except KeyError:
@@ -759,10 +771,20 @@ class MadxParser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    def __init__(self, **kwargs):
-        """"""
+    def __init__(self, *, strict: bool = True, verbose: bool = False, **kwargs):
+        """
+        Args:
+            strict:     If :py:obj:`False`, assign 0 to undefined variables
+            verbose:    If :py:obj:`True`, print details on the processing
+            **kwargs:   Initial variable definitions
+        """
         super().__init__(
-            globals(), continuation=None, blockcomment=("/*", "*/"), **kwargs
+            globals(),
+            strict=strict,
+            verbose=verbose,
+            continuation=None,
+            blockcomment=("/*", "*/"),
+            **kwargs,
         )
 
     def evaluate(self, expr):
@@ -773,8 +795,10 @@ class MadxParser(_MadParser):
         return super().evaluate(expr)
 
 
-def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from MAD-X files
+def load_madx(
+    *files: str, use: str = "ring", strict: bool = True, verbose=False, **kwargs
+) -> Lattice:
+    """Create a :py:class:`.Lattice` from MAD-X files
 
     - The *energy* and *particle* of the generated lattice are taken from the MAD-X
       ``BEAM`` object, using the MAD-X default parameters: positrons at 1 Gev.
@@ -786,22 +810,18 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     - Long elements are split according to the default AT value for *NumIntSteps* (10).
 
     Parameters:
-        files:              Names of one or several MAD8 files
-        use:                Name of the MAD8 sequence or line containing the desired
-          lattice. Default: ``ring``
-
-    Parameters:
         files:              Names of one or several MAD-X files
         strict:             If :py:obj:`False`, assign 0 to undefined variables
         use:                Name of the MADX sequence or line containing the desired
           lattice. Default: ``ring``
+        verbose:            If :py:obj:`True`, print details on the processing
 
     Keyword Args:
         name (str):         Name of the lattice. Default: MADX sequence name.
         particle(Particle): Circulating particle. Default: from MADX
         energy (float):     Energy of the lattice [eV]. Default: from MADX
         periodicity(int):   Number of periods. Default: 1
-        *:                  All other keywords will be set as Lattice attributes
+        *:                  Other keywords will be used as initial variable definitions
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
@@ -809,11 +829,15 @@ def load_madx(*files: str, use: str = "ring", strict: bool = True, **kwargs) -> 
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
-    parser = MadxParser(strict=strict)
+    parser = MadxParser(strict=strict, verbose=verbose)
     absfiles = tuple(abspath(file) for file in files)
-    kwargs.setdefault("in_file", absfiles)
-    parser.parse_files(*absfiles)
-    return parser.lattice(use=use, **kwargs)
+    params = {
+        key: kwargs.pop(key)
+        for key in ("name", "particle", "energy", "periodicity")
+        if key in kwargs
+    }
+    parser.parse_files(*absfiles, **kwargs)
+    return parser.lattice(use=use, in_file=absfiles, **params)
 
 
 register_format(

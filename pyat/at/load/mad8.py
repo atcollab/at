@@ -95,10 +95,17 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    def __init__(self, **kwargs):
-        """"""
+    def __init__(self, *, strict: bool = True, verbose: bool = False, **kwargs):
+        """
+        Args:
+            strict:     If :py:obj:`False`, assign 0 to undefined variables
+            verbose:    If :py:obj:`True`, print details on the processing
+            **kwargs:   Initial variable definitions
+        """
         super().__init__(
             globals(),
+            strict=strict,
+            verbose=verbose,
             continuation="&",
             blockcomment=("comment", "endcomment"),
             **kwargs,
@@ -112,8 +119,10 @@ class Mad8Parser(_MadParser):
         return super().evaluate(expr)
 
 
-def load_mad8(*files: str, use: str = "ring", **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from MAD8 files
+def load_mad8(
+    *files: str, use: str = "ring", strict: bool = True, verbose=False, **kwargs
+) -> Lattice:
+    """Create a :py:class:`.Lattice` from MAD8 files
 
     - The *energy* and *particle* of the generated lattice are taken from the MAD8
       ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
@@ -126,15 +135,17 @@ def load_mad8(*files: str, use: str = "ring", **kwargs) -> Lattice:
 
     Parameters:
         files:              Names of one or several MAD8 files
+        strict:             If :py:obj:`False`, assign 0 to undefined variables
         use:                Name of the MAD8 sequence or line containing the desired
           lattice. Default: ``ring``
+        verbose:            If :py:obj:`True`, print details on the processing
 
     Keyword Args:
         name (str):         Name of the lattice. Default: MAD8 sequence name.
         particle(Particle): Circulating particle. Default: from MAD8
         energy (float):     Energy of the lattice [eV]. Default: from MAD8
         periodicity(int):   Number of periods. Default: 1
-        *:                  All other keywords will be set as Lattice attributes
+        *:                  Other keywords will be used as initial variable definitions
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
@@ -142,8 +153,12 @@ def load_mad8(*files: str, use: str = "ring", **kwargs) -> Lattice:
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
-    parser = Mad8Parser()
+    parser = Mad8Parser(strict=strict, verbose=verbose)
     absfiles = tuple(abspath(file) for file in files)
-    kwargs.setdefault("in_file", absfiles)
-    parser.parse_files(*absfiles)
-    return parser.lattice(use=use, **kwargs)
+    params = {
+        key: kwargs.pop(key)
+        for key in ("name", "particle", "energy", "periodicity")
+        if key in kwargs
+    }
+    parser.parse_files(*absfiles, **kwargs)
+    return parser.lattice(use=use, in_file=absfiles, **params)
