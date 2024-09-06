@@ -713,7 +713,7 @@ class _MadParser(UnorderedParser):
             if cavities:
                 cavities.sort(key=lambda el: el.Frequency)
                 c0 = cavities[0]
-                params["_harmnumber"] = getattr(c0, "HarmNumber", np.nan)
+                params["_cell_harmnumber"] = getattr(c0, "HarmNumber", np.nan)
 
         part = kwargs.get("particle", None)
         if isinstance(part, str):
