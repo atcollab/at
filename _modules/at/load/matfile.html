@@ -425,6 +425,7 @@ document.write(`
 <span class="c1"># Python to Matlab type translation</span>
 <span class="n">_mattype_map</span> <span class="o">=</span> <span class="p">{</span>
     <span class="nb">int</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="nb">tuple</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">attr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">attr</span><span class="p">),</span>
     <span class="n">Particle</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">attr</span><span class="p">:</span> <span class="n">attr</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
 <span class="p">}</span>
@@ -884,10 +885,12 @@ document.write(`
         <span class="n">in_file</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">in_file</span>
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;&#39;Lattice&#39; object has no attribute &#39;mat_file&#39;&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s2">&quot;.mat&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;&#39;Lattice&#39; object has no attribute &#39;mat_file&#39;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;&#39;Lattice&#39; object has no attribute &#39;mat_file&#39;&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">in_file</span>
 
 

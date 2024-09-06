@@ -474,10 +474,17 @@ document.write(`
 <span class="sd">        &gt;&gt;&gt; ring = parser.lattice(use=&quot;ring&quot;)  # generate an AT Lattice</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            strict:     If :py:obj:`False`, assign 0 to undefined variables</span>
+<span class="sd">            verbose:    If :py:obj:`True`, print details on the processing</span>
+<span class="sd">            **kwargs:   Initial variable definitions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="nb">globals</span><span class="p">(),</span>
+            <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
             <span class="n">continuation</span><span class="o">=</span><span class="s2">&quot;&amp;&quot;</span><span class="p">,</span>
             <span class="n">blockcomment</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;comment&quot;</span><span class="p">,</span> <span class="s2">&quot;endcomment&quot;</span><span class="p">),</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -497,8 +504,10 @@ document.write(`
 
 <div class="viewcode-block" id="load_mad8">
 <a class="viewcode-back" href="../../../p/api/at.load.mad8.html#at.load.mad8.load_mad8">[docs]</a>
-<span class="k">def</span> <span class="nf">load_mad8</span><span class="p">(</span><span class="o">*</span><span class="n">files</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ring&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Lattice</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a :py:class:`.Lattice`  from MAD8 files</span>
+<span class="k">def</span> <span class="nf">load_mad8</span><span class="p">(</span>
+    <span class="o">*</span><span class="n">files</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ring&quot;</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Lattice</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a :py:class:`.Lattice` from MAD8 files</span>
 
 <span class="sd">    - The *energy* and *particle* of the generated lattice are taken from the MAD8</span>
 <span class="sd">      ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.</span>
@@ -511,15 +520,17 @@ document.write(`
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        files:              Names of one or several MAD8 files</span>
+<span class="sd">        strict:             If :py:obj:`False`, assign 0 to undefined variables</span>
 <span class="sd">        use:                Name of the MAD8 sequence or line containing the desired</span>
 <span class="sd">          lattice. Default: ``ring``</span>
+<span class="sd">        verbose:            If :py:obj:`True`, print details on the processing</span>
 
 <span class="sd">    Keyword Args:</span>
 <span class="sd">        name (str):         Name of the lattice. Default: MAD8 sequence name.</span>
 <span class="sd">        particle(Particle): Circulating particle. Default: from MAD8</span>
 <span class="sd">        energy (float):     Energy of the lattice [eV]. Default: from MAD8</span>
 <span class="sd">        periodicity(int):   Number of periods. Default: 1</span>
-<span class="sd">        *:                  All other keywords will be set as Lattice attributes</span>
+<span class="sd">        *:                  Other keywords will be used as initial variable definitions</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        lattice (Lattice):  New :py:class:`.Lattice` object</span>
@@ -527,11 +538,15 @@ document.write(`
 <span class="sd">    See Also:</span>
 <span class="sd">        :py:func:`.load_lattice` for a generic lattice-loading function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">Mad8Parser</span><span class="p">()</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">Mad8Parser</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">absfiles</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">abspath</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">)</span>
-    <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;in_file&quot;</span><span class="p">,</span> <span class="n">absfiles</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">parse_files</span><span class="p">(</span><span class="o">*</span><span class="n">absfiles</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">lattice</span><span class="p">(</span><span class="n">use</span><span class="o">=</span><span class="n">use</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;particle&quot;</span><span class="p">,</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span> <span class="s2">&quot;periodicity&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span>
+    <span class="p">}</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">parse_files</span><span class="p">(</span><span class="o">*</span><span class="n">absfiles</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">lattice</span><span class="p">(</span><span class="n">use</span><span class="o">=</span><span class="n">use</span><span class="p">,</span> <span class="n">in_file</span><span class="o">=</span><span class="n">absfiles</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div>
 
 </pre></div>
 

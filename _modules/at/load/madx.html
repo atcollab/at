@@ -388,9 +388,9 @@ document.write(`
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">log10</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">asin</span><span class="p">,</span> <span class="n">acos</span><span class="p">,</span> <span class="n">atan</span><span class="p">,</span> <span class="n">sinh</span><span class="p">,</span> <span class="n">cosh</span><span class="p">,</span> <span class="n">tanh</span><span class="p">,</span> <span class="n">erf</span><span class="p">,</span> <span class="n">erfc</span>  <span class="c1"># noqa: F401</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">abspath</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
 <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -403,13 +403,17 @@ document.write(`
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">protect</span><span class="p">,</span> <span class="n">restore</span>
 <span class="kn">from</span> <span class="nn">..lattice</span> <span class="kn">import</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Filter</span><span class="p">,</span> <span class="n">elements</span> <span class="k">as</span> <span class="n">elt</span><span class="p">,</span> <span class="n">tilt_elem</span>
 
-<span class="n">_default_beam</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-    <span class="n">particle</span><span class="o">=</span><span class="s2">&quot;positron&quot;</span><span class="p">,</span>
-    <span class="n">energy</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># GeV</span>
-    <span class="n">bcurrent</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">kbunch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">radiate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="n">_kconst</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^ *const +&quot;</span><span class="p">)</span>
+<span class="n">_kreal</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^ *real +&quot;</span><span class="p">)</span>
+<span class="n">_kint</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^ *int +&quot;</span><span class="p">)</span>
+
+<span class="n">_default_beam</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;particle&quot;</span><span class="p">:</span> <span class="s2">&quot;positron&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># GeV</span>
+    <span class="s2">&quot;bcurrent&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;kbunch&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">&quot;radiate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">}</span>
 
 <span class="c1"># Constants known by MAD-X</span>
 <span class="n">true</span> <span class="o">=</span> <span class="kc">True</span>
@@ -629,7 +633,13 @@ document.write(`
 <span class="k">class</span> <span class="nc">rfcavity</span><span class="p">(</span><span class="n">_MadElement</span><span class="p">):</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span>
-        <span class="n">name</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">volt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">lag</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">harmon</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span>  <span class="c1"># noqa: E741</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">l</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">volt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">freq</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+        <span class="n">lag</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">harmon</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">params</span><span class="p">,</span>  <span class="c1"># noqa: E741</span>
     <span class="p">):</span>
         <span class="n">cavity</span> <span class="o">=</span> <span class="n">elt</span><span class="o">.</span><span class="n">RFCavity</span><span class="p">(</span>
             <span class="n">name</span><span class="p">,</span>
@@ -675,7 +685,6 @@ document.write(`
 
 
 <span class="k">class</span> <span class="nc">_Ignored</span><span class="p">(</span><span class="n">_MadElement</span><span class="p">):</span>
-
     <span class="n">report</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -780,9 +789,9 @@ document.write(`
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="n">l</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">refer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;centre&quot;</span><span class="p">,</span>
-        <span class="n">refpos</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">refpos</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">frm</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">frm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">valid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>  <span class="c1"># noqa: E741</span>
     <span class="p">):</span>
@@ -873,7 +882,6 @@ document.write(`
         <span class="k">return</span> <span class="p">[]</span>
 
     <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">:</span> <span class="n">MadxParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">)</span>
             <span class="n">atparticle</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span>
@@ -912,14 +920,14 @@ document.write(`
         <span class="c1"># beta = betagamma / gamma</span>
         <span class="c1"># brho = 1.0e09 * pc / abs(charge) / clight</span>
 
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
-            <span class="n">particle</span><span class="o">=</span><span class="n">atparticle</span><span class="p">,</span>
-            <span class="n">energy</span><span class="o">=</span><span class="mf">1.0e09</span> <span class="o">*</span> <span class="n">energy</span><span class="p">,</span>  <span class="c1"># [eV]</span>
-            <span class="n">beam_current</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;bcurrent&quot;</span><span class="p">],</span>
-            <span class="n">nbunch</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;kbunch&quot;</span><span class="p">],</span>
-            <span class="n">periodicity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">radiate</span><span class="o">=</span><span class="bp">self</span><span class="p">[</span><span class="s2">&quot;radiate&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;particle&quot;</span><span class="p">:</span> <span class="n">atparticle</span><span class="p">,</span>
+            <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="mf">1.0e09</span> <span class="o">*</span> <span class="n">energy</span><span class="p">,</span>  <span class="c1"># [eV]</span>
+            <span class="s2">&quot;beam_current&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;bcurrent&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;nbunch&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;kbunch&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;periodicity&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;radiate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;radiate&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
 
 
 <span class="k">class</span> <span class="nc">_MadParser</span><span class="p">(</span><span class="n">UnorderedParser</span><span class="p">):</span>
@@ -928,11 +936,12 @@ document.write(`
     <span class="n">_str_arguments</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="s2">&quot;refer&quot;</span><span class="p">,</span> <span class="s2">&quot;refpos&quot;</span><span class="p">,</span> <span class="s2">&quot;sequence&quot;</span><span class="p">,</span> <span class="s2">&quot;frm&quot;</span><span class="p">}</span>
     <span class="n">_argument_parser</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">_value_arg_parser</span><span class="p">,</span> <span class="s2">&quot;show&quot;</span><span class="p">:</span> <span class="n">_value_arg_parser</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">strict</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">none</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">env</span><span class="p">,</span>
             <span class="o">*</span><span class="n">args</span><span class="p">,</span>
             <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span>
             <span class="n">linecomment</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;!&quot;</span><span class="p">,</span> <span class="s2">&quot;//&quot;</span><span class="p">),</span>
@@ -968,7 +977,7 @@ document.write(`
 
         <span class="n">beamobj</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">cmdname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">argnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cmdname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">argnames</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">res</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_sequence</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -1000,6 +1009,8 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_format_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">line</span><span class="p">,</span> <span class="n">matches</span> <span class="o">=</span> <span class="n">protect</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">fence</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">))</span>
+        <span class="c1"># Remove the MAD const, real, int keywords</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">_kint</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_kreal</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_kconst</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)))</span>
         <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>  <span class="c1"># Remove all spaces</span>
         <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">,</span> <span class="s2">&quot;(&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;)&quot;</span><span class="p">)</span>
         <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;:=&quot;</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">)</span>  <span class="c1"># since we evaluate only once</span>
@@ -1017,7 +1028,8 @@ document.write(`
         <span class="k">if</span> <span class="n">final</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">default_value</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">default_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="bp">self</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_value</span>
                 <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_finalise</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -1138,10 +1150,20 @@ document.write(`
 <span class="sd">        &gt;&gt;&gt; ring = parser.lattice(use=&quot;ring&quot;)  # generate an AT Lattice</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            strict:     If :py:obj:`False`, assign 0 to undefined variables</span>
+<span class="sd">            verbose:    If :py:obj:`True`, print details on the processing</span>
+<span class="sd">            **kwargs:   Initial variable definitions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="nb">globals</span><span class="p">(),</span> <span class="n">continuation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">blockcomment</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;/*&quot;</span><span class="p">,</span> <span class="s2">&quot;*/&quot;</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="nb">globals</span><span class="p">(),</span>
+            <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">continuation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">blockcomment</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;/*&quot;</span><span class="p">,</span> <span class="s2">&quot;*/&quot;</span><span class="p">),</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="MadxParser.evaluate">
@@ -1158,8 +1180,10 @@ document.write(`
 
 <div class="viewcode-block" id="load_madx">
 <a class="viewcode-back" href="../../../p/api/at.load.madx.html#at.load.madx.load_madx">[docs]</a>
-<span class="k">def</span> <span class="nf">load_madx</span><span class="p">(</span><span class="o">*</span><span class="n">files</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ring&quot;</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Lattice</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a :py:class:`.Lattice`  from MAD-X files</span>
+<span class="k">def</span> <span class="nf">load_madx</span><span class="p">(</span>
+    <span class="o">*</span><span class="n">files</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ring&quot;</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Lattice</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a :py:class:`.Lattice` from MAD-X files</span>
 
 <span class="sd">    - The *energy* and *particle* of the generated lattice are taken from the MAD-X</span>
 <span class="sd">      ``BEAM`` object, using the MAD-X default parameters: positrons at 1 Gev.</span>
@@ -1171,22 +1195,18 @@ document.write(`
 <span class="sd">    - Long elements are split according to the default AT value for *NumIntSteps* (10).</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        files:              Names of one or several MAD8 files</span>
-<span class="sd">        use:                Name of the MAD8 sequence or line containing the desired</span>
-<span class="sd">          lattice. Default: ``ring``</span>
-
-<span class="sd">    Parameters:</span>
 <span class="sd">        files:              Names of one or several MAD-X files</span>
 <span class="sd">        strict:             If :py:obj:`False`, assign 0 to undefined variables</span>
 <span class="sd">        use:                Name of the MADX sequence or line containing the desired</span>
 <span class="sd">          lattice. Default: ``ring``</span>
+<span class="sd">        verbose:            If :py:obj:`True`, print details on the processing</span>
 
 <span class="sd">    Keyword Args:</span>
 <span class="sd">        name (str):         Name of the lattice. Default: MADX sequence name.</span>
 <span class="sd">        particle(Particle): Circulating particle. Default: from MADX</span>
 <span class="sd">        energy (float):     Energy of the lattice [eV]. Default: from MADX</span>
 <span class="sd">        periodicity(int):   Number of periods. Default: 1</span>
-<span class="sd">        *:                  All other keywords will be set as Lattice attributes</span>
+<span class="sd">        *:                  Other keywords will be used as initial variable definitions</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        lattice (Lattice):  New :py:class:`.Lattice` object</span>
@@ -1194,11 +1214,15 @@ document.write(`
 <span class="sd">    See Also:</span>
 <span class="sd">        :py:func:`.load_lattice` for a generic lattice-loading function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">MadxParser</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">MadxParser</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">absfiles</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">abspath</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">)</span>
-    <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;in_file&quot;</span><span class="p">,</span> <span class="n">absfiles</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">parse_files</span><span class="p">(</span><span class="o">*</span><span class="n">absfiles</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">lattice</span><span class="p">(</span><span class="n">use</span><span class="o">=</span><span class="n">use</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;particle&quot;</span><span class="p">,</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span> <span class="s2">&quot;periodicity&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span>
+    <span class="p">}</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">parse_files</span><span class="p">(</span><span class="o">*</span><span class="n">absfiles</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">lattice</span><span class="p">(</span><span class="n">use</span><span class="o">=</span><span class="n">use</span><span class="p">,</span> <span class="n">in_file</span><span class="o">=</span><span class="n">absfiles</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></div>
 
 
 

@@ -500,8 +500,8 @@ document.write(`
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.load.mad8.load_mad8" title="at.load.mad8.load_mad8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_mad8</span></code></a>(*files[, use])</p></td>
-<td><p>Create a <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a>  from MAD8 files</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.load.mad8.load_mad8" title="at.load.mad8.load_mad8"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_mad8</span></code></a>(*files[, use, strict, verbose])</p></td>
+<td><p>Create a <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a> from MAD8 files</p></td>
 </tr>
 </tbody>
 </table>
@@ -509,7 +509,7 @@ document.write(`
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.load.mad8.Mad8Parser" title="at.load.mad8.Mad8Parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mad8Parser</span></code></a>(**kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.load.mad8.Mad8Parser" title="at.load.mad8.Mad8Parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mad8Parser</span></code></a>(*[, strict, verbose])</p></td>
 <td><p>MAD-X specific parser</p></td>
 </tr>
 </tbody>
@@ -517,7 +517,7 @@ document.write(`
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.load.mad8.Mad8Parser">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mad8Parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#Mad8Parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.Mad8Parser" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mad8Parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#Mad8Parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.Mad8Parser" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_MadParser</span></code></p>
 <p>MAD-X specific parser</p>
 <p>The parser is a subclass of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> and is database containing all the
@@ -550,6 +550,15 @@ MAD-X variables.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">lattice</span><span class="p">(</span><span class="n">use</span><span class="o">=</span><span class="s2">&quot;ring&quot;</span><span class="p">)</span>  <span class="c1"># generate an AT Lattice</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strict</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>, assign 0 to undefined variables</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, print details on the processing</p></li>
+<li><p><strong>**kwargs</strong> – Initial variable definitions</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.clear" title="Link to this definition">#</a></dt>
@@ -593,7 +602,7 @@ lattice. Default: <code class="docutils literal notranslate"><span class="pre">r
 
 <dl class="py method">
 <dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.parse_files">
-<span class="sig-name descname"><span class="pre">parse_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">filenames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prolog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.parse_files" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">parse_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">filenames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prolog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epilog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.parse_files" title="Link to this definition">#</a></dt>
 <dd><p>Process files and fill the database</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -601,8 +610,9 @@ lattice. Default: <code class="docutils literal notranslate"><span class="pre">r
 <li><p><strong>*filenames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Files to process</p></li>
 <li><p><strong>final</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, signals that the undefined variables may be set
 to the default value</p></li>
-<li><p><strong>prolog</strong> (<em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><em>None</em><em>]</em>)</p></li>
-<li><p><strong>epilog</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><em>None</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>prolog</strong> (<em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>Callable</em><em>[</em><em>...</em><em>, </em><em>None</em><em>]</em>)</p></li>
+<li><p><strong>epilog</strong> (<em>Callable</em><em>[</em><em>...</em><em>, </em><em>None</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>**kwargs</strong> – Initial variable definitions</p></li>
 </ul>
 </dd>
 </dl>
@@ -610,14 +620,15 @@ to the default value</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="at.load.mad8.Mad8Parser.parse_lines">
-<span class="sig-name descname"><span class="pre">parse_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.parse_lines" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">parse_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.mad8.Mad8Parser.parse_lines" title="Link to this definition">#</a></dt>
 <dd><p>Process input lines and fill the database</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lines</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.12)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Iterable of input lines</p></li>
 <li><p><strong>final</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, signals that the undefined variables may be set
-to the defalt value</p></li>
+to the default value</p></li>
+<li><p><strong>**kwargs</strong> – Initial variable definitions</p></li>
 </ul>
 </dd>
 </dl>
@@ -639,8 +650,8 @@ to the defalt value</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.load.mad8.load_mad8">
-<span class="sig-name descname"><span class="pre">load_mad8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ring'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#load_mad8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.load_mad8" title="Link to this definition">#</a></dt>
-<dd><p>Create a <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a>  from MAD8 files</p>
+<span class="sig-name descname"><span class="pre">load_mad8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ring'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/load/mad8.html#load_mad8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.load.mad8.load_mad8" title="Link to this definition">#</a></dt>
+<dd><p>Create a <a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lattice</span></code></a> from MAD8 files</p>
 <ul class="simple">
 <li><p>The <em>energy</em> and <em>particle</em> of the generated lattice are taken from the MAD8
 <code class="docutils literal notranslate"><span class="pre">BEAM</span></code> object, using the MAD8 default parameters: positrons at 1 Gev.
@@ -655,8 +666,10 @@ quadrupoles.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>files</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Names of one or several MAD8 files</p></li>
+<li><p><strong>strict</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a>, assign 0 to undefined variables</p></li>
 <li><p><strong>use</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of the MAD8 sequence or line containing the desired
 lattice. Default: <code class="docutils literal notranslate"><span class="pre">ring</span></code></p></li>
+<li><p><strong>verbose</strong> – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, print details on the processing</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
@@ -665,7 +678,7 @@ lattice. Default: <code class="docutils literal notranslate"><span class="pre">r
 <li><p><strong>particle</strong> (<a class="reference internal" href="at.lattice.particle_object.html#at.lattice.particle_object.Particle" title="at.lattice.particle_object.Particle"><em>Particle</em></a>) – Circulating particle. Default: from MAD8</p></li>
 <li><p><strong>energy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Energy of the lattice [eV]. Default: from MAD8</p></li>
 <li><p><strong>periodicity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of periods. Default: 1</p></li>
-<li><p><strong>*</strong> – All other keywords will be set as Lattice attributes</p></li>
+<li><p><strong>*</strong> – Other keywords will be used as initial variable definitions</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
