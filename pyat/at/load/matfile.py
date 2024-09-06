@@ -48,8 +48,8 @@ _p2m.update(_drop_attrs)
 # Python to Matlab type translation
 _mattype_map = {
     int: float,
-    tuple: list,
-    np.ndarray: lambda attr: np.asanyarray(attr),
+    list: lambda attr: np.array(attr, dtype=object),
+    tuple: lambda attr: np.array(attr, dtype=object),
     Particle: lambda attr: attr.to_dict(),
 }
 # Matlab constructor function
@@ -422,17 +422,25 @@ def _element_to_m(elem: Element) -> str:
 
         def convert_array(arr):
             if arr.ndim > 1:
-                lns = (str(list(ln)).replace(",", "")[1:-1] for ln in arr)
-                return "".join(("[", "; ".join(lns), "]"))
+                return np.array2string(arg).replace("\n", ";")
             elif arr.ndim > 0:
-                return str(list(arr)).replace(",", "")
+                return np.array2string(arg)
             else:
                 return str(arr)
 
+        def convert_list(lst):
+            return f"{{{{{str(lst)[1:-1]}}}}}"
+
         if isinstance(arg, np.ndarray):
             return convert_array(arg)
+        elif isinstance(arg, np.number):
+            return str(arg)
         elif isinstance(arg, dict):
             return convert_dict(arg)
+        elif isinstance(arg, tuple):
+            return convert_list(arg)
+        elif isinstance(arg, list):
+            return convert_list(arg)
         elif isinstance(arg, Particle):
             return convert_dict(arg.to_dict())
         else:
@@ -483,6 +491,8 @@ def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
             [funcname, _] = splitext(basename(filename))
             print("function ring = {0}()".format(funcname), file=mfile)
             save(mfile)
+            print("    function v=False()\n        v=false;\n    end", file=mfile)
+            print("    function v=True()\n        v=true;\n    end", file=mfile)
             print("end", file=mfile)
 
 
