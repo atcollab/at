@@ -601,7 +601,7 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">set_fillpattern</span><span class="p">(</span><span class="n">bunches</span><span class="o">=</span><span class="n">fp</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">set_fillpattern</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ring_h</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">((</span><span class="n">ring_h</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ring_h</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cell_harmnumber</span> <span class="o">=</span> <span class="n">ring_h</span> <span class="o">/</span> <span class="n">periodicity</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
