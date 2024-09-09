@@ -222,7 +222,7 @@ class Lattice(list):
                 self.set_fillpattern(bunches=fp)
             except AssertionError:
                 self.set_fillpattern()
-        elif not math.isnan(ring_h):
+        elif not ((ring_h is None) or math.isnan(ring_h)):
             self._cell_harmnumber = ring_h / periodicity
 
     def __getitem__(self, key):
