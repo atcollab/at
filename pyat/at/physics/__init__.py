@@ -12,6 +12,7 @@ from .orbit import *
 from .matrix import *
 from .linear import *
 from .diffmatrix import find_mpole_raddiff_matrix
+from .wiggdiffmatrix import FDW
 from .radiation import *
 from .ring_parameters import *
 from .nonlinear import *

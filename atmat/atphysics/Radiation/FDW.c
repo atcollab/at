@@ -23,12 +23,10 @@
  * Journal of Instrumentation, May 2021.
  */
 
-#include "atlalib.c"
 #include "atelem.c"
+#include "atlalib.c"
 #include "gwigR.c"
 #include <math.h>
-#include "mex.h"
-#include "matrix.h"
 #include "gwig.h"
 
 /* Fourth order-symplectic integrator constants */
@@ -121,13 +119,11 @@ static void wigglerB(struct gwigR *pWig, double* orbit_in, double L, double *B66
 	double Bxyz[3];
 	double p_norm = 1/(1+orbit_in[4]);
 	double p_norm2 = SQR(p_norm);
-	double x,px,y,py,D;
+	double px,py,D;
 	double DLDS;
   int i;
 
-	x = orbit_in[0];
 	px= orbit_in[1];
-	y = orbit_in[2];
 	py= orbit_in[3];
 	D = orbit_in[4];
 	GWigAx(pWig, orbit_in, &ax, &axpy);
@@ -204,7 +200,6 @@ static void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
 	double ax,ay,axpy,aypx;
 	double B[3];
 	double E0G;
-	double factorvect;
   struct gwigR pWig;
   int flag;
 
@@ -327,7 +322,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	const mxArray *mxElem, *mxOrbit;
 	double *bdiff;
 	double orb[6];
-    double energy;
+    double energy = mxGetNaN(); /* Default energy value */
     int i, m, n;
 
 	if (nrhs < 2)
@@ -349,11 +344,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    if (!(mxIsDouble(mxEnergy) && mxIsScalar(mxEnergy)))
 	        mexErrMsgIdAndTxt("AT:WrongArg", "Energy must be a double scalar");
 	    energy=mxGetScalar(mxEnergy);
-		}
+	}
 
-    else {
-        energy=mxGetNaN();
-    }
 	/* ALLOCATE memory for the output array */
 	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
 	bdiff = mxGetDoubles(plhs[0]);
@@ -374,7 +366,7 @@ static PyObject *compute_wiggdiffmatrix(PyObject *self, PyObject *args) {
     PyArrayObject *pyOrbit;
     double *orb0, *bdiff, *retval;
     double orb[6];
-    double energy;
+    double energy = NAN; /* Default energy value */
     npy_intp outdims[2] = {6, 6};
     int i;
 
