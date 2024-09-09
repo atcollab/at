@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>at.plot.synopt &#8212; Accelerator Toolbox 0.6.2 documentation</title>
+    <title>at.physics.wiggdiffmatrix &#8212; Accelerator Toolbox 0.6.2 documentation</title>
   
   
   
@@ -45,11 +45,11 @@
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=fd10adb8"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.plot.synopt';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'p/api/at.physics.wiggdiffmatrix';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="at.constants" href="at.constants.html" />
-    <link rel="prev" title="at.plot.standalone" href="at.plot.standalone.html" />
+    <link rel="next" title="at.load" href="at.load.html" />
+    <link rel="prev" title="at.physics.ring_parameters" href="at.physics.ring_parameters.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -376,7 +376,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.tracking.utils.html">at.tracking.utils</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="at.physics.html">at.physics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="at.physics.html">at.physics</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="at.physics.amat.html">at.physics.amat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.diffmatrix.html">at.physics.diffmatrix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.energy_loss.html">at.physics.energy_loss</a></li>
@@ -391,7 +391,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.physics.radiation.html">at.physics.radiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.revolution.html">at.physics.revolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.physics.ring_parameters.html">at.physics.ring_parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="at.physics.wiggdiffmatrix.html">at.physics.wiggdiffmatrix</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.physics.wiggdiffmatrix</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="at.load.html">at.load</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -426,12 +426,12 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="at.collective.wake_object.html">at.collective.wake_object</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="at.plot.html">at.plot</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="at.plot.html">at.plot</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="at.plot.generic.html">at.plot.generic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.plot.resonances.html">at.plot.resonances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.plot.specific.html">at.plot.specific</a></li>
 <li class="toctree-l2"><a class="reference internal" href="at.plot.standalone.html">at.plot.standalone</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">at.plot.synopt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="at.plot.synopt.html">at.plot.synopt</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="at.constants.html">at.constants</a></li>
@@ -476,9 +476,9 @@ document.write(`
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Welcome to pyAT’s documentation!</a></li>
     
     
-    <li class="breadcrumb-item"><a href="at.plot.html" class="nav-link">at.plot</a></li>
+    <li class="breadcrumb-item"><a href="at.physics.html" class="nav-link">at.physics</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">at.plot.synopt</li>
+    <li class="breadcrumb-item active" aria-current="page">at.physics.w...</li>
   </ul>
 </nav>
 </div>
@@ -495,42 +495,45 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-at.plot.synopt">
-<span id="at-plot-synopt"></span><h1>at.plot.synopt<a class="headerlink" href="#module-at.plot.synopt" title="Link to this heading">#</a></h1>
-<p>Lattice synoptics</p>
+  <section id="module-at.physics.wiggdiffmatrix">
+<span id="at-physics-wiggdiffmatrix"></span><h1>at.physics.wiggdiffmatrix<a class="headerlink" href="#module-at.physics.wiggdiffmatrix" title="Link to this heading">#</a></h1>
+<p>Computation of the radiation diffusion matrix for a wiggler</p>
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.plot.synopt.plot_synopt" title="at.plot.synopt.plot_synopt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_synopt</span></code></a>(ring[, axes, dipole, ...])</p></td>
-<td><p>Plots a synoptic of a lattice</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.wiggdiffmatrix.FDW" title="at.physics.wiggdiffmatrix.FDW"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FDW</span></code></a>(element, orbit, energy)</p></td>
+<td><p>Computes the radiation diffusion matrix B defined in <a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> for wiggler elements</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py function">
-<dt class="sig sig-object py" id="at.plot.synopt.plot_synopt">
-<span class="sig-name descname"><span class="pre">plot_synopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dipole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadrupole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sextupole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multipole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/plot/synopt.html#plot_synopt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.plot.synopt.plot_synopt" title="Link to this definition">#</a></dt>
-<dd><p>Plots a synoptic of a lattice</p>
+<dt class="sig sig-object py" id="at.physics.wiggdiffmatrix.FDW">
+<span class="sig-name descname"><span class="pre">FDW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.wiggdiffmatrix.FDW" title="Link to this definition">#</a></dt>
+<dd><p>Computes the radiation diffusion matrix B defined in <a class="footnote-reference brackets" href="#id3" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>
+for wiggler elements</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p></li>
-<li><p><strong>axes</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><em>Axes</em></a><em> | </em><em>None</em>) – <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a> for plotting the
-synoptic. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, a new figure will be created. Otherwise,
-a new axes object sharing the same x-axis as the given one is created.</p></li>
-<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.12)"><em>Type</em></a><em>[</em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em>] </em><em>| </em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>] </em><em>| </em><em>RefptsCode</em>) – display the name of selected elements.</p></li>
-<li><p><strong>dipole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Dictionary of properties overloading the default
-properties. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, dipoles will not be shown.</p></li>
-<li><p><strong>quadrupole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
-<li><p><strong>sextupole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
-<li><p><strong>multipole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
-<li><p><strong>monitor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
+<li><p><strong>element</strong> – Lattice element</p></li>
+<li><p><strong>orbit</strong> – (6,) closed orbit at the entrance of <code class="docutils literal notranslate"><span class="pre">element</span></code></p></li>
+<li><p><strong>energy</strong> – particle energy</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>synopt_axes</strong> (<em>Axes</em>) – Synoptic axes</p>
+<dd class="field-even"><p><strong>diffmatrix</strong> – The radiation diffusion matrix of the wiggler</p>
 </dd>
 </dl>
+<p class="rubric">References</p>
+<p><strong>[1]</strong> M.Sands, <em>The Physics of Electron Storage Rings</em></p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>)</span>
+<p>Ohmi, Kirata, Oide, <em>From the beam-envelope matrix to synchrotron
+radiation integrals</em>, Phys.Rev.E  Vol.49 p.751 (1994)</p>
+</aside>
+</aside>
 </dd></dl>
 
 </section>
@@ -546,20 +549,20 @@ properties. If <a class="reference external" href="https://docs.python.org/3/lib
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="at.plot.standalone.html"
+       href="at.physics.ring_parameters.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">at.plot.standalone</p>
+        <p class="prev-next-title">at.physics.ring_parameters</p>
       </div>
     </a>
     <a class="right-next"
-       href="at.constants.html"
+       href="at.load.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">at.constants</p>
+        <p class="prev-next-title">at.load</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -581,7 +584,7 @@ properties. If <a class="reference external" href="https://docs.python.org/3/lib
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.plot.synopt.plot_synopt"><code class="docutils literal notranslate"><span class="pre">plot_synopt()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at.physics.wiggdiffmatrix.FDW"><code class="docutils literal notranslate"><span class="pre">FDW()</span></code></a></li>
 </ul>
   </nav></div>
 
