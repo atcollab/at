@@ -100,7 +100,7 @@ def _computedrivingterms(
     Based on J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
     Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
     """
-    periodicfactor = numpy.ones((9, 9))
+    periodicfactor = numpy.ones((9, 9), dtype=complex)
     rdts = {}
 
     def pf(i, j):
