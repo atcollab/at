@@ -11,6 +11,7 @@ from dataclasses import dataclass, asdict
 
 __all__ = ["get_rdts", "RDTType"]
 
+_PERIODICFACTOR = numpy.ones((9, 9), dtype=complex)
 
 class RDTType(Enum):
     """Enum class for RDT type"""
@@ -78,6 +79,18 @@ def _get_polynom(elem, attr, index):
         return 0
 
 
+def _compute_pf(tune, nperiods):
+    "This uses the formula Sum(x^k, k=1->p) = x(x^p-1)/(x-1)"
+    if nperiods != 1:
+        for i in range(9):
+            for j in range(9):
+                a1 = numpy.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
+                a2 = a1 / nperiods
+                _PERIODICFACTOR[i][j] = (numpy.exp(1j * a1) - 1.0) / (
+                    numpy.exp(1j * a2) - 1.0
+                )
+
+
 def _computedrivingterms(
     s,
     betax,
@@ -100,21 +113,10 @@ def _computedrivingterms(
     Based on J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
     Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
     """
-    periodicfactor = numpy.ones((9, 9), dtype=complex)
-    rdts = {}
-
     def pf(i, j):
-        return periodicfactor[4 + i][4 + j]
+        return _PERIODICFACTOR[4 + i][4 + j]
 
-    if nperiods != 1:
-        for i in range(9):
-            for j in range(9):
-                a1 = numpy.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
-                a2 = a1 / nperiods
-                periodicfactor[i][j] = (numpy.exp(1j * a1) - 1.0) / (
-                    numpy.exp(1j * a2) - 1.0
-                )
-
+    rdts = {}
     rbetax = numpy.sqrt(betax)
     rbetay = numpy.sqrt(betay)
     px = numpy.exp(1j * phix)
@@ -379,6 +381,7 @@ def _get_rdtlist(
     refpts,
 ):
     rdtlist = []
+    _compute_pf(tune, nperiods)
     for ii in refpts:
         start_idx = sum(idx_mag < ii)
         beta_rot = numpy.roll(beta, -start_idx, axis=0)
