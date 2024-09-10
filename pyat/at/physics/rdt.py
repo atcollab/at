@@ -507,7 +507,7 @@ def get_rdts(
     ]
 
     mu = lo[-1].mu
-    tune = mu / 2.0 / numpy.pi
+    tune = mu / 2.0 / numpy.pi * nperiods
     fun = partial(
         _get_rdtlist,
         idx_mag,
