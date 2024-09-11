@@ -123,6 +123,7 @@ def _computedrivingterms(
     Original implementation from ELEGANT
     Based on J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
     Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
+    A. Franchi et al. arxiv 1711.06589, PRAB 17.074001
     """
 
     def pf(i, j):
@@ -147,7 +148,7 @@ def _computedrivingterms(
         pxm = px[mask_b2l]
         pym = py[mask_b2l]
         rdts["h20000"] = sum((b2lm / 8) * betaxm * pxm * pxm * pf(2, 0))
-        rdts["h00200"] = sum((b2lm / 8) * betaym * pym * pym * pf(0, 2))
+        rdts["h00200"] = -sum((b2lm / 8) * betaym * pym * pym * pf(0, 2))
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
         a2lm = a2l[mask_a2l]
@@ -451,8 +452,8 @@ def get_rdts(
         Possible RDT types are:
             at.RDTType.ALL: all available RDTs
             at.RDTType.FOCUSING: Normal quadrupole RDTs
-            at.RDTType.COUPLING: Linear coupling RDTs
-            at.RDTType.CHROMATIC: Chromatic RDTs
+            at.RDTType.COUPLING: Linear coupling RDTs from skew quadrupoles
+            at.RDTType.CHROMATIC: Chromatic RDTs from sextupoles and normal quadrupoles
             at.RDTType.GEOMETRIC1: Geometric RDTs from sextupoles
             at.RDTType.GEOMETRIC2: Geometric RDTs from octupoles
               the second order contribution of sextupoles is added when
