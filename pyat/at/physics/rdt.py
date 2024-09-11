@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import numpy
+import numpy as np
 import multiprocessing
 from functools import partial
 from ..lattice import Lattice, Refpts, Multipole, All
@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 
 __all__ = ["get_rdts", "RDTType"]
 
-_PERIODICFACTOR = numpy.ones((9, 9), dtype=complex)
+_PERIODICFACTOR = np.ones((9, 9), dtype=complex)
 
 
 class RDTType(Enum):
@@ -95,10 +95,10 @@ def _compute_pf(tune, nperiods):
     if nperiods != 1:
         for i in range(9):
             for j in range(9):
-                a1 = numpy.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
+                a1 = np.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
                 a2 = a1 / nperiods
-                _PERIODICFACTOR[i][j] = (numpy.exp(1j * a1) - 1.0) / (
-                    numpy.exp(1j * a2) - 1.0
+                _PERIODICFACTOR[i][j] = (np.exp(1j * a1) - 1.0) / (
+                    np.exp(1j * a2) - 1.0
                 )
 
 
@@ -130,16 +130,16 @@ def _computedrivingterms(
         return _PERIODICFACTOR[4 + i][4 + j]
 
     rdts = {}
-    rbetax = numpy.sqrt(betax)
-    rbetay = numpy.sqrt(betay)
-    px = numpy.exp(1j * phix)
-    py = numpy.exp(1j * phiy)
+    rbetax = np.sqrt(betax)
+    rbetay = np.sqrt(betay)
+    px = np.exp(1j * phix)
+    py = np.exp(1j * phiy)
 
     rdts["refpts"] = refpt
-    mask_a2l = numpy.absolute(a2l) > 1.0e-6
-    mask_b2l = numpy.absolute(b2l) > 1.0e-6
-    mask_b3l = numpy.absolute(b3l) > 1.0e-6
-    mask_b4l = numpy.absolute(b4l) > 1.0e-6
+    mask_a2l = np.absolute(a2l) > 1.0e-6
+    mask_b2l = np.absolute(b2l) > 1.0e-6
+    mask_b3l = np.absolute(b3l) > 1.0e-6
+    mask_b4l = np.absolute(b4l) > 1.0e-6
 
     if (RDTType.FOCUSING in rdttype) or (RDTType.ALL in rdttype):
         b2lm = b2l[mask_b2l]
@@ -195,7 +195,7 @@ def _computedrivingterms(
         rdts["h30000"] = sum(b3lm * rbetaxm * betaxm / 24 * pxm * pxm * pxm * pf(3, 0))
         rdts["h10110"] = sum(-b3lm * rbetaxm * betaym / 4 * pxm * pf(1, 0))
         rdts["h10020"] = sum(
-            -b3lm * rbetaxm * betaym / 8 * pxm * numpy.conj(pym * pym) * pf(1, -2)
+            -b3lm * rbetaxm * betaym / 8 * pxm * np.conj(pym * pym) * pf(1, -2)
         )
         rdts["h10200"] = sum(-b3lm * rbetaxm * betaym / 8 * pxm * pym * pym * pf(1, 2))
 
@@ -203,9 +203,9 @@ def _computedrivingterms(
         b4lm = b4l[mask_b4l]
         betaxm = betax[mask_b4l]
         betaym = betay[mask_b4l]
-        rdts["dnux_dJx"] = sum(3 * b4lm * betaxm * betaxm / (8 * numpy.pi) * nperiods)
-        rdts["dnux_dJy"] = sum(-3 * b4lm * betaxm * betaym / (4 * numpy.pi) * nperiods)
-        rdts["dnuy_dJy"] = sum(3 * b4lm * betaym * betaym / (8 * numpy.pi) * nperiods)
+        rdts["dnux_dJx"] = sum(3 * b4lm * betaxm * betaxm / (8 * np.pi) * nperiods)
+        rdts["dnux_dJy"] = sum(-3 * b4lm * betaxm * betaym / (4 * np.pi) * nperiods)
+        rdts["dnuy_dJy"] = sum(3 * b4lm * betaym * betaym / (8 * np.pi) * nperiods)
 
     if (RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
         b4lm = b4l[mask_b4l]
@@ -225,7 +225,7 @@ def _computedrivingterms(
         # fmt: off
         rdts["h20020"] = sum(
             -3 * b4lm * betaxm * betaym / 32 * pxm * pxm
-            * numpy.conj(pym * pym) * pf(2, -2)
+            * np.conj(pym * pym) * pf(2, -2)
         )
         # fmt: on
         rdts["h20200"] = sum(
@@ -252,74 +252,73 @@ def _computedrivingterms(
             pxm = px[mask_b3l]
             pxm2 = pxm * pxm
             pxm3 = pxm2 * pxm
-            cpxm = numpy.conj(pxm)
-            cpxm3 = numpy.conj(pxm3)
+            cpxm = np.conj(pxm)
+            cpxm3 = np.conj(pxm3)
             pym = py[mask_b3l]
             pym2 = pym * pym
-            cpym2 = numpy.conj(pym2)
-            cpxym2 = numpy.conj(pxm * pym2)
+            cpym2 = np.conj(pym2)
+            cpxym2 = np.conj(pxm * pym2)
             # fmt: off
-            bsign = numpy.array([numpy.sign(sm[i] - sm) * 1j * b3lm[i] * b3lm
-                     for i in range(nelem)])
-            rbbx = numpy.array([bsign[i] * rbbetaxm[i] * rbbetaxm
-                                for i in range(nelem)])
-            rbxy = numpy.array([bsign[i] * rbetaxm[i] * rbetaxm * betaym[i]
-                                for i in range(nelem)])
-            ppxm = numpy.array([pxm[i] * pxm for i in range(nelem)])
+            bsign = np.array([np.sign(sm[i] - sm) * 1j * b3lm[i] * b3lm
+                              for i in range(nelem)])
+            rbbx = np.array([bsign[i] * rbbetaxm[i] * rbbetaxm
+                             for i in range(nelem)])
+            rbxy = np.array([bsign[i] * rbetaxm[i] * rbetaxm * betaym[i]
+                             for i in range(nelem)])
+            ppxm = np.array([pxm[i] * pxm for i in range(nelem)])
 
-            rdts["h22000"] += (1.0 / 64) * numpy.sum([
+            rdts["h22000"] += (1.0 / 64) * np.sum([
                 rbbx[i] * (pxm3[i] * cpxm3 + 3 * pxm[i] * cpxm)
                 for i in range(nelem)]
             )
-            rdts["h31000"] += (1.0 / 32) * numpy.sum([
+            rdts["h31000"] += (1.0 / 32) * np.sum([
                 rbbx[i] * pxm3[i] * cpxm
                 for i in range(nelem)]
             )
-            t1 = numpy.array([numpy.conj(pxm[i]) * pxm for i in range(nelem)])
-            t2 = numpy.conj(t1)
-            rdts["h11110"] += (1.0 / 16) * numpy.sum([
+            t1 = np.array([np.conj(pxm[i]) * pxm for i in range(nelem)])
+            t2 = np.conj(t1)
+            rdts["h11110"] += (1.0 / 16) * np.sum([
                 rbxy[i] * (betaxm * (t1[i] - t2[i]) + betaym * pym2[i]
                            * cpym2 * (t2[i] + t1[i]))
                 for i in range(nelem)]
             )
-            t1 = numpy.array([numpy.exp(-1j * (phixm[i] - phixm))
-                              for i in range(nelem)])
-            t2 = numpy.conj(t1)
-            rdts["h11200"] += (1.0 / 32) * numpy.sum([
-                rbxy[i] * numpy.exp(1j * (2 * phiym[i]))
+            t1 = np.array([np.exp(-1j * (phixm[i] - phixm))
+                           for i in range(nelem)])
+            t2 = np.conj(t1)
+            rdts["h11200"] += (1.0 / 32) * np.sum([
+                rbxy[i] * np.exp(1j * (2 * phiym[i]))
                 * (betaxm * (t1[i] - t2[i]) + 2 * betaym * (t2[i] + t1[i]))
                 for i in range(nelem)]
             )
-            rdts["h40000"] += (1.0 / 64) * numpy.sum([
-                rbbx[i] * pxm3[i] * pxm
-                for i in range(nelem)]
+            rdts["h40000"] += (1.0 / 64) * np.sum([
+                rbbx[i] * pxm3[i] * pxm for i in range(nelem)]
             )
-            rdts["h20020"] += (1.0 / 64) * numpy.sum([
+            rdts["h20020"] += (1.0 / 64) * np.sum([
                 rbxy[i] * (betaxm * cpxym2[i] * pxm3 - (betaxm + 4 * betaym)
                            * ppxm[i] * cpym2[i])
                 for i in range(nelem)]
             )
-            rdts["h20110"] += (1.0 / 32) * numpy.sum([
+            rdts["h20110"] += (1.0 / 32) * np.sum([
                 rbxy[i] * (betaxm * (cpxm[i] * pxm3 - ppxm[i])
                            + 2 * betaym * ppxm[i] * pym2[i] * cpym2)
                 for i in range(nelem)]
             )
-            rdts["h20200"] += (1.0 / 64) * numpy.sum([
+            rdts["h20200"] += (1.0 / 64) * np.sum([
                 rbxy[i] * (betaxm * cpxm[i] * pxm3 * pym2[i]
                            - (betaxm - 4 * betaym)
                            * ppxm[i] * pym2[i])
                 for i in range(nelem)]
             )
-            rdts["h00220"] += (1.0 / 64) * numpy.sum([
+            rdts["h00220"] += (1.0 / 64) * np.sum([
                 rbxy[i] * betaym * (pxm[i] * pym2[i] * cpxym2 + 4 * pxm[i] * cpxm
-                                    - numpy.conj(pxm[i] * pym2) * pxm * pym2[i])
+                                    - np.conj(pxm[i] * pym2) * pxm * pym2[i])
                 for i in range(nelem)]
             )
-            rdts["h00310"] += (1.0 / 32) * numpy.sum([
+            rdts["h00310"] += (1.0 / 32) * np.sum([
                 rbxy[i] * betaym * pym2[i] * (pxm[i] * cpxm - pxm * cpxm[i])
                 for i in range(nelem)]
             )
-            rdts["h00400"] += (1.0 / 64) * numpy.sum([
+            rdts["h00400"] += (1.0 / 64) * np.sum([
                 rbxy[i] * betaym * pxm[i] * cpxm * pym2[i] * pym2
                 for i in range(nelem)]
             )
@@ -335,42 +334,41 @@ def _computedrivingterms(
             nux = tune[0]
             nuy = tune[1]
             # fmt: off
-            b3f = [b3lm[i] * b3lm / numpy.pi for i in range(nelem)]
-            sqbx = [numpy.sqrt(betaxm[i] * betaxm) for i in range(nelem)]
+            b3f = [b3lm[i] * b3lm / np.pi for i in range(nelem)]
+            sqbx = [np.sqrt(betaxm[i] * betaxm) for i in range(nelem)]
             bbx = [betaxm[i] * betaxm for i in range(nelem)]
             bby = [betaym[i] * betaym for i in range(nelem)]
             dphix = [abs(phixm[i] - phixm) for i in range(nelem)]
             dphiy = [abs(phiym[i] - phiym) for i in range(nelem)]
-            rdts["dnux_dJx"] += numpy.sum([
+            rdts["dnux_dJx"] += np.sum([
                 -b3f[i] / 16 * sqbx[i]  * bbx[i]
-                * (3 * numpy.cos(dphix[i] - numpy.pi * nux)
-                   / numpy.sin(numpy.pi * nux)
-                   + numpy.cos(3 * dphix[i] - 3 * numpy.pi * nux)
-                   / numpy.sin(3 * numpy.pi * nux))
+                * (3 * np.cos(dphix[i] - np.pi * nux) / np.sin(np.pi * nux)
+                   + np.cos(3 * dphix[i] - 3 * np.pi * nux)
+                   / np.sin(3 * np.pi * nux))
                 for i in range(nelem)]
             )
-            rdts["dnux_dJy"] += numpy.sum([
+            rdts["dnux_dJy"] += np.sum([
                 b3f[i]  / 8 * sqbx[i]  * betaym[i]
-                * (2 * betaxm * numpy.cos(dphix[i]  - numpy.pi * nux)
-                   / numpy.sin(numpy.pi * nux)
-                   - betaym * numpy.cos(dphix[i]  + 2 * dphiy[i]
-                                        - numpy.pi * (nux + 2 * nuy))
-                   / numpy.sin(numpy.pi * (nux + 2 * nuy))
-                   + betaym * numpy.cos(dphix[i]  - 2 * dphiy[i]
-                                        - numpy.pi * (nux - 2 * nuy))
-                   / numpy.sin(numpy.pi * (nux - 2 * nuy)))
+                * (2 * betaxm * np.cos(dphix[i]  - np.pi * nux)
+                   / np.sin(np.pi * nux)
+                   - betaym * np.cos(dphix[i]  + 2 * dphiy[i]
+                                     - np.pi * (nux + 2 * nuy))
+                   / np.sin(np.pi * (nux + 2 * nuy))
+                   + betaym * np.cos(dphix[i]  - 2 * dphiy[i]
+                                     - np.pi * (nux - 2 * nuy))
+                   / np.sin(np.pi * (nux - 2 * nuy)))
                 for i in range(nelem)]
             )
-            rdts["dnuy_dJy"] += numpy.sum([
-                -b3f[i]  / 16 * sqbx[i]  * bby[i]
-                * (4 * numpy.cos(dphix[i]  - numpy.pi * nux)
-                   / numpy.sin(numpy.pi * nux)
-                   + numpy.cos(dphix[i]  + 2 * dphiy[i]
-                               - numpy.pi * (nux + 2 * nuy))
-                   / numpy.sin(numpy.pi * (nux + 2 * nuy))
-                   + numpy.cos(dphix[i]  - 2 * dphiy[i]
-                               - numpy.pi * (nux - 2 * nuy))
-                   / numpy.sin(numpy.pi * (nux - 2 * nuy)))
+            rdts["dnuy_dJy"] += np.sum([
+                -b3f[i] / 16 * sqbx[i] * bby[i]
+                * (4 * np.cos(dphix[i] - np.pi * nux)
+                   / np.sin(np.pi * nux)
+                   + np.cos(dphix[i] + 2 * dphiy[i]
+                            - np.pi * (nux + 2 * nuy))
+                   / np.sin(np.pi * (nux + 2 * nuy))
+                   + np.cos(dphix[i] - 2 * dphiy[i]
+                            - np.pi * (nux - 2 * nuy))
+                   / np.sin(np.pi * (nux - 2 * nuy)))
                 for i in range(nelem)]
             )
             # fmt: on
@@ -397,14 +395,14 @@ def _get_rdtlist(
     _compute_pf(tune, nperiods)
     for ii in refpts:
         start_idx = sum(idx_mag < ii)
-        beta_rot = numpy.roll(beta, -start_idx, axis=0)
-        etax_rot = numpy.roll(etax, -start_idx)
-        phi_rot = numpy.roll(phi, -start_idx, axis=0) - avemu[ii]
+        beta_rot = np.roll(beta, -start_idx, axis=0)
+        etax_rot = np.roll(etax, -start_idx)
+        phi_rot = np.roll(phi, -start_idx, axis=0) - avemu[ii]
         if start_idx > 0:
             phi_rot[-start_idx:] += mu
-        s_rot = numpy.roll(smag, -start_idx) - sall[ii]
+        s_rot = np.roll(smag, -start_idx) - sall[ii]
         s_rot[-start_idx:] += sall[-1]
-        pols_rot = numpy.roll(pols, -start_idx, axis=0)
+        pols_rot = np.roll(pols, -start_idx, axis=0)
         rdtlist.append(
             _computedrivingterms(
                 s_rot,
@@ -510,7 +508,7 @@ def get_rdts(
         **dnuy_dJy**
         =================   ======
     """
-    rdt_type = numpy.atleast_1d(rdt_type)
+    rdt_type = np.atleast_1d(rdt_type)
     nperiods = ring.periodicity
     if second_order:
         assert nperiods == 1, "Second order available only for ring.periodicity=1"
@@ -535,7 +533,7 @@ def get_rdts(
     ]
 
     mu = lo[-1].mu
-    tune = mu / 2.0 / numpy.pi * nperiods
+    tune = mu / 2.0 / np.pi * nperiods
     fun = partial(
         _get_rdtlist,
         idx_mag,
@@ -556,10 +554,10 @@ def get_rdts(
         if pool_size is None:
             pool_size = multiprocessing.cpu_count()
         ctx = multiprocessing.get_context()
-        refs = numpy.array_split(refpts, pool_size)
+        refs = np.array_split(refpts, pool_size)
         with ctx.Pool(pool_size) as pool:
             rdtlist = pool.map(fun, refs)
-            rdtlist = numpy.concatenate(rdtlist)
+            rdtlist = np.concatenate(rdtlist)
     else:
         rdtlist = fun(refpts)
     rdts = _RDT()
