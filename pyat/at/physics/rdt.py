@@ -13,8 +13,19 @@ __all__ = ["get_rdts", "RDTType"]
 
 _PERIODICFACTOR = numpy.ones((9, 9), dtype=complex)
 
+
 class RDTType(Enum):
-    """Enum class for RDT type"""
+    """Enum class for RDT type
+    RDTType.ALL: all available RDTs
+    RDTType.FOCUSING: Normal quadrupole RDTs
+    RDTType.COUPLING: Linear coupling RDTs
+    RDTType.CHROMATIC: Chromatic RDTs
+    RDTType.GEOMETRIC1: Geometric RDTs from sextupoles
+    RDTType.GEOMETRIC2: Geometric RDTs from octupoles
+    optionally includes the second order contribution of sextupoles
+    RDTType.TUNESHIFT: Amplitude detuning coefficients
+    optionally includes the second order contribution of sextupoles
+    """
 
     ALL = 0
     FOCUSING = 1
@@ -29,25 +40,25 @@ class RDTType(Enum):
 class _RDT:
     # Location
     refpts: Sequence[int] | int = None
-    # Normal quadrupoles rdts
+    # RDTtype.FOCUSING
     h20000: Sequence[complex] | complex = None
     h00200: Sequence[complex] | complex = None
-    # linear coupling rdts
+    # RDTtype.COUPLING
     h10010: Sequence[complex] | complex = None
     h10100: Sequence[complex] | complex = None
-    # chromatic rdts
+    # RDTtype.CHROMATIC
     h11001: Sequence[complex] | complex = None
     h00111: Sequence[complex] | complex = None
     h20001: Sequence[complex] | complex = None
     h00201: Sequence[complex] | complex = None
     h10002: Sequence[complex] | complex = None
-    # sextupole geometric rdts
+    # RDTtype.GEOMETRIC1
     h21000: Sequence[complex] | complex = None
     h30000: Sequence[complex] | complex = None
     h10110: Sequence[complex] | complex = None
     h10020: Sequence[complex] | complex = None
     h10200: Sequence[complex] | complex = None
-    # octupole geometric rdts
+    # RDTtype.GEOMETRIC2
     h22000: Sequence[complex] | complex = None
     h11110: Sequence[complex] | complex = None
     h00220: Sequence[complex] | complex = None
@@ -59,7 +70,7 @@ class _RDT:
     h20200: Sequence[complex] | complex = None
     h00310: Sequence[complex] | complex = None
     h00400: Sequence[complex] | complex = None
-    # Detuning
+    # RDTtype.DETUNING
     dnux_dJx: Sequence[float] | float = None
     dnux_dJy: Sequence[float] | float = None
     dnuy_dJy: Sequence[float] | float = None
@@ -113,6 +124,7 @@ def _computedrivingterms(
     Based on J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
     Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
     """
+
     def pf(i, j):
         return _PERIODICFACTOR[4 + i][4 + j]
 
@@ -436,6 +448,18 @@ def get_rdts(
         refpts: Element refpts at which the RDTs are calculated
         rdt_type: Type of RDTs to be calculated. The type can be
         :code:`Sequence[at.RDTType] | at.RDTType`.
+        Possible RDT types are:
+            at.RDTType.ALL: all available RDTs
+            at.RDTType.FOCUSING: Normal quadrupole RDTs
+            at.RDTType.COUPLING: Linear coupling RDTs
+            at.RDTType.CHROMATIC: Chromatic RDTs
+            at.RDTType.GEOMETRIC1: Geometric RDTs from sextupoles
+            at.RDTType.GEOMETRIC2: Geometric RDTs from octupoles
+              the second order contribution of sextupoles is added when
+              :code:`second_order = True`
+            at.RDTType.TUNESHIFT: Amplitude detuning coefficients
+              the second order contribution of sextupoles is added when
+              :code:`second_order = True`
 
     Keyword Args:
         second_order: Compute second order terms (default: False).
@@ -450,25 +474,25 @@ def get_rdts(
         =================   ======
         **refts**           location of the rdt
 
-        **h20000**          Normal quadrupole RDTS
+        **h20000**          at.RDTType.FOCUSING
         **h00200**
 
-        **h10010**          Coupling RDTs
+        **h10010**          at.RDTType.COUPLING
         **h10100**
 
-        **h11001**          Chromatic RDTs
+        **h11001**          at.RDTType.CHROMATIC
         **h00111**
         **h20001**
         **h00201**
         **h10002**
 
-        **h21000**          Sextupole geometric RDTs
+        **h21000**          at.RDTType.GEOMETRIC1
         **h30000**
         **h10110**
         **h10020**
         **h10200**
 
-        **h22000**          Octupole geometric RDTs
+        **h22000**          at.RDTType.GEOMETRIC2
         **h11110**
         **h00220**
         **h31000**
@@ -480,7 +504,7 @@ def get_rdts(
         **h00310**
         **h00400**
 
-        **dnux_dJx**        Detuning terms from octupoles
+        **dnux_dJx**        at.RDTType.DETUNING
         **dnux_dJy**
         **dnuy_dJy**
         =================   ======
