@@ -439,6 +439,10 @@ def get_rdts(
     J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
     Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
 
+    The periodicity property of the lattice is automatically taken into account in the rdt
+    calculation, however to calculation of the second order contribution to the GEOMETRIC2
+    and DETUNING RDT types can only be derived for periodicity=1 (i.e. full ring provided)
+
     Usage:
       >>> get_rdts(ring, reftps, [RDTType.COUPLING, RDTType.CHROMATIC])
 
