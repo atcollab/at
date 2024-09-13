@@ -1317,7 +1317,7 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
     avebeta[b_long] = betalong(di.beta, di.alpha, Kxy, Lxy)
     avedx = displong(di.dispersion[:, :2], irho, Kx, L)
     avedy = displong(di.dispersion[:, 2:], np.zeros_like(irho), Ky, L)
-    avedisp[b_long] = np.concat((avedx, avedy), axis=1)
+    avedisp[b_long] = np.concatenate((avedx, avedy), axis=1)
 
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
