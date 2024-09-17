@@ -7,7 +7,6 @@ import warnings
 from collections.abc import Callable
 from math import sqrt, pi, sin, cos, atan2
 
-import numpy
 import numpy as np
 from scipy.linalg import solve
 
@@ -26,67 +25,67 @@ __all__ = ['linopt', 'linopt2', 'linopt4', 'linopt6', 'avlinopt',
            'get_optics', 'get_tune', 'get_chrom']
 
 _S = jmat(1)
-_S2 = numpy.array([[0, 1], [-1, 0]], dtype=numpy.float64)
+_S2 = np.array([[0, 1], [-1, 0]], dtype=np.float64)
 
 # dtype for structured array containing linopt parameters
-_DATA2_DTYPE = [('alpha', numpy.float64, (2,)),
-                ('beta', numpy.float64, (2,)),
-                ('mu', numpy.float64, (2,))
+_DATA2_DTYPE = [('alpha', np.float64, (2,)),
+                ('beta', np.float64, (2,)),
+                ('mu', np.float64, (2,))
                 ]
 
-_DATA4_DTYPE = [('alpha', numpy.float64, (2,)),
-                ('beta', numpy.float64, (2,)),
-                ('mu', numpy.float64, (2,)),
-                ('gamma', numpy.float64),
-                ('A', numpy.float64, (2, 2)),
-                ('B', numpy.float64, (2, 2)),
-                ('C', numpy.float64, (2, 2))
+_DATA4_DTYPE = [('alpha', np.float64, (2,)),
+                ('beta', np.float64, (2,)),
+                ('mu', np.float64, (2,)),
+                ('gamma', np.float64),
+                ('A', np.float64, (2, 2)),
+                ('B', np.float64, (2, 2)),
+                ('C', np.float64, (2, 2))
                 ]
 
-_DATA6_DTYPE = [('alpha', numpy.float64, (2,)),
-                ('beta', numpy.float64, (2,)),
-                ('mu', numpy.float64, (3,)),
-                ('R', numpy.float64, (3, 6, 6)),
-                ('A', numpy.float64, (6, 6)),
-                ('dispersion', numpy.float64, (4,)),
+_DATA6_DTYPE = [('alpha', np.float64, (2,)),
+                ('beta', np.float64, (2,)),
+                ('mu', np.float64, (3,)),
+                ('R', np.float64, (3, 6, 6)),
+                ('A', np.float64, (6, 6)),
+                ('dispersion', np.float64, (4,)),
                 ]
 
-_DATAX_DTYPE = [('alpha', numpy.float64, (2,)),
-                ('beta', numpy.float64, (2,)),
-                ('mu', numpy.float64, (2,)),
-                ('R', numpy.float64, (2, 4, 4)),
-                ('A', numpy.float64, (4, 4)),
+_DATAX_DTYPE = [('alpha', np.float64, (2,)),
+                ('beta', np.float64, (2,)),
+                ('mu', np.float64, (2,)),
+                ('R', np.float64, (2, 4, 4)),
+                ('A', np.float64, (4, 4)),
                 ]
 
-_W24_DTYPE = [('W', numpy.float64, (2,)),
-              ('Wp', numpy.float64, (2,)),
-              ('dalpha', numpy.float64, (2,)),
-              ('dbeta', numpy.float64, (2,)),
-              ('dmu', numpy.float64, (2,)),
-              ('ddispersion', numpy.float64, (4,)),
+_W24_DTYPE = [('W', np.float64, (2,)),
+              ('Wp', np.float64, (2,)),
+              ('dalpha', np.float64, (2,)),
+              ('dbeta', np.float64, (2,)),
+              ('dmu', np.float64, (2,)),
+              ('ddispersion', np.float64, (4,)),
               ]
 
 
-_W6_DTYPE = [('W', numpy.float64, (2,)),
-             ('Wp', numpy.float64, (2,)),
-             ('dalpha', numpy.float64, (2,)),
-             ('dbeta', numpy.float64, (2,)),
-             ('dmu', numpy.float64, (3,)),
-             ('dR', numpy.float64, (3, 6, 6)),
-             ('ddispersion', numpy.float64, (4,)),
+_W6_DTYPE = [('W', np.float64, (2,)),
+             ('Wp', np.float64, (2,)),
+             ('dalpha', np.float64, (2,)),
+             ('dbeta', np.float64, (2,)),
+             ('dmu', np.float64, (3,)),
+             ('dR', np.float64, (3, 6, 6)),
+             ('ddispersion', np.float64, (4,)),
              ]
 
-_WX_DTYPE = [('W', numpy.float64, (2,)),
-             ('Wp', numpy.float64, (2,)),
-             ('dalpha', numpy.float64, (2,)),
-             ('dbeta', numpy.float64, (2,)),
-             ('dmu', numpy.float64, (2,)),
-             ('dR', numpy.float64, (2, 4, 4)),
-             ('ddispersion', numpy.float64, (4,)),
+_WX_DTYPE = [('W', np.float64, (2,)),
+             ('Wp', np.float64, (2,)),
+             ('dalpha', np.float64, (2,)),
+             ('dbeta', np.float64, (2,)),
+             ('dmu', np.float64, (2,)),
+             ('dR', np.float64, (2, 4, 4)),
+             ('ddispersion', np.float64, (4,)),
              ]
 
 
-_IDX_DTYPE = [('idx', numpy.uint32)]
+_IDX_DTYPE = [('idx', np.uint32)]
 
 
 def _twiss22(t12, alpha0, beta0):
@@ -96,24 +95,24 @@ def _twiss22(t12, alpha0, beta0):
     beta = (aaa * aaa + bbb * bbb) / beta0
     alpha = -(aaa * (t12[:, 1, 0] * beta0 - t12[:, 1, 1] * alpha0) +
               bbb * t12[:, 1, 1]) / beta0
-    mu = numpy.arctan2(bbb, aaa)
+    mu = np.arctan2(bbb, aaa)
     # Unwrap negative jumps in betatron phase advance
-    # dmu = numpy.diff(numpy.append([0], mu))
+    # dmu = np.diff(np.append([0], mu))
     # jumps = dmu < -1.0e-3
-    # mu += numpy.cumsum(jumps) * 2.0 * numpy.pi
+    # mu += np.cumsum(jumps) * 2.0 * np.pi
     return alpha, beta, mu
 
 
 def _closure(m22):
     diff = (m22[0, 0] - m22[1, 1]) / 2.0
     try:
-        sinmu = numpy.sign(m22[0, 1]) * sqrt(-m22[0, 1]*m22[1, 0] - diff*diff)
-        cosmu = 0.5 * numpy.trace(m22)
+        sinmu = np.sign(m22[0, 1]) * sqrt(-m22[0, 1]*m22[1, 0] - diff*diff)
+        cosmu = 0.5 * np.trace(m22)
         alpha = diff / sinmu
         beta = m22[0, 1] / sinmu
         return alpha, beta, cosmu + sinmu*1j
     except ValueError:          # Unstable motion
-        return numpy.nan, numpy.nan, numpy.nan
+        return np.nan, np.nan, np.nan
 
 
 # noinspection PyShadowingNames,PyPep8Naming
@@ -127,11 +126,11 @@ def _tunes(ring, **kwargs):
         mt, _ = find_m44(ring, **kwargs)
     try:
         _, vps = a_matrix(mt)
-        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+        tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
     except AtError:
         warnings.warn(AtWarning('Unstable ring'))
-        tunes = numpy.empty(nd)
-        tunes[:] = numpy.nan
+        tunes = np.empty(nd)
+        tunes[:] = np.nan
     return tunes
 
 
@@ -141,13 +140,13 @@ def _analyze2(mt, ms):
     B = mt[2:, 2:]
     alp0_a, bet0_a, vp_a = _closure(A)
     alp0_b, bet0_b, vp_b = _closure(B)
-    vps = numpy.array([vp_a, vp_b])
-    el0 = (numpy.array([alp0_a, alp0_b]), numpy.array([bet0_a, bet0_b]), 0.0)
+    vps = np.array([vp_a, vp_b])
+    el0 = (np.array([alp0_a, alp0_b]), np.array([bet0_a, bet0_b]), 0.0)
     alpha_a, beta_a, mu_a = _twiss22(ms[:, :2, :2], alp0_a, bet0_a)
     alpha_b, beta_b, mu_b = _twiss22(ms[:, 2:, 2:], alp0_b, bet0_b)
-    els = (numpy.stack((alpha_a, alpha_b), axis=1),
-           numpy.stack((beta_a, beta_b), axis=1),
-           numpy.stack((mu_a, mu_b), axis=1))
+    els = (np.stack((alpha_a, alpha_b), axis=1),
+           np.stack((beta_a, beta_b), axis=1),
+           np.stack((mu_a, mu_b), axis=1))
     return vps, _DATA2_DTYPE, el0, els, _W24_DTYPE
 
 
@@ -159,7 +158,7 @@ def _analyze4(mt, ms):
         m = t12[:2, 2:]
         n = t12[2:, :2]
         ff = n @ C + g * N
-        gamma = sqrt(numpy.linalg.det(ff))
+        gamma = sqrt(np.linalg.det(ff))
         e12 = (g * M - m @ _S @ C.T @ _S.T) / gamma
         f12 = ff / gamma
         a12 = e12 @ A @ _S @ e12.T @ _S.T
@@ -172,43 +171,43 @@ def _analyze4(mt, ms):
     m = mt[:2, 2:]
     n = mt[2:, :2]
     H = m + _S @ n.T @ _S.T
-    detH = numpy.linalg.det(H)
+    detH = np.linalg.det(H)
     if detH == 0.0:
         g = 1.0
         C = -H
         A = M
         B = N
     else:
-        t = numpy.trace(M - N)
+        t = np.trace(M - N)
         t2 = t * t
         t2h = t2 + 4.0 * detH
         g2 = (1.0 + sqrt(t2 / t2h)) / 2
         g = sqrt(g2)
-        C = -H * numpy.sign(t) / (g * sqrt(t2h))
+        C = -H * np.sign(t) / (g * sqrt(t2h))
         A = g2 * M - g * (m @ _S @ C.T @ _S.T + C @ n) + \
             C @ N @ _S @ C.T @ _S.T
         B = g2 * N + g * (_S @ C.T @ _S.T @ m + n @ C) + \
             _S @ C.T @ _S.T @ M @ C
     alp0_a, bet0_a, vp_a = _closure(A)
     alp0_b, bet0_b, vp_b = _closure(B)
-    vps = numpy.array([vp_a, vp_b])
-    el0 = (numpy.array([alp0_a, alp0_b]),
-           numpy.array([bet0_a, bet0_b]),
+    vps = np.array([vp_a, vp_b])
+    el0 = (np.array([alp0_a, alp0_b]),
+           np.array([bet0_a, bet0_b]),
            0.0, g, A, B, C)
     if ms.shape[0] > 0:
         e, f, g, ai, bi, ci = zip(*[propagate(mi) for mi in ms])
-        alp_a, bet_a, mu_a = _twiss22(numpy.array(e), alp0_a, bet0_a)
-        alp_b, bet_b, mu_b = _twiss22(numpy.array(f), alp0_b, bet0_b)
-        els = (numpy.stack((alp_a, alp_b), axis=1),
-               numpy.stack((bet_a, bet_b), axis=1),
-               numpy.stack((mu_a, mu_b), axis=1), numpy.array(g),
-               numpy.stack(ai, axis=0), numpy.stack(bi, axis=0),
-               numpy.stack(ci, axis=0))
+        alp_a, bet_a, mu_a = _twiss22(np.array(e), alp0_a, bet0_a)
+        alp_b, bet_b, mu_b = _twiss22(np.array(f), alp0_b, bet0_b)
+        els = (np.stack((alp_a, alp_b), axis=1),
+               np.stack((bet_a, bet_b), axis=1),
+               np.stack((mu_a, mu_b), axis=1), np.array(g),
+               np.stack(ai, axis=0), np.stack(bi, axis=0),
+               np.stack(ci, axis=0))
     else:
-        els = (numpy.empty((0, 2)), numpy.empty((0, 2)),
-               numpy.empty((0, 2)), numpy.empty((0,)),
-               numpy.empty((0, 2, 2)), numpy.empty((0, 2, 2)),
-               numpy.empty((0, 2, 2)))
+        els = (np.empty((0, 2)), np.empty((0, 2)),
+               np.empty((0, 2)), np.empty((0,)),
+               np.empty((0, 2, 2)), np.empty((0, 2, 2)),
+               np.empty((0, 2, 2)))
     return vps, _DATA4_DTYPE, el0, els, _W24_DTYPE
 
 
@@ -225,29 +224,29 @@ def _analyze6(mt, ms):
             rot = -get_phase(aa[slc, slc])
             cs = cos(rot)
             sn = sin(rot)
-            return aa[:, slc] @ numpy.array([[cs, sn], [-sn, cs]])
+            return aa[:, slc] @ np.array([[cs, sn], [-sn, cs]])
 
-        return numpy.concatenate([rot2(slc) for slc in slcs], axis=1)
+        return np.concatenate([rot2(slc) for slc in slcs], axis=1)
 
     def r_matrices(ai):
         # Rk = A * S * Ik * inv(A) * S.T
         def mul2(slc):
             return ai[:, slc] @ tt[slc, slc]
 
-        ais = numpy.concatenate([mul2(slc) for slc in slices], axis=1)
+        ais = np.concatenate([mul2(slc) for slc in slices], axis=1)
         invai = solve(ai, ss.T)
-        ri = numpy.array([ais[:, sl] @ invai[sl, :] for sl in slices])
-        mui = numpy.array([get_phase(ai[sl, sl]) for sl in slices])
+        ri = np.array([ais[:, sl] @ invai[sl, :] for sl in slices])
+        mui = np.array([get_phase(ai[sl, sl]) for sl in slices])
         return mui, ri, ai
 
     def propagate4(ri, phi, ai):
-        betai = numpy.stack((ri[..., 0, 0, 0], ri[..., 1, 2, 2]), axis=-1)
-        alphai = -numpy.stack((ri[..., 0, 1, 0], ri[..., 1, 3, 2]), axis=-1)
+        betai = np.stack((ri[..., 0, 0, 0], ri[..., 1, 2, 2]), axis=-1)
+        alphai = -np.stack((ri[..., 0, 1, 0], ri[..., 1, 3, 2]), axis=-1)
         return alphai, betai, phi, ri, ai
 
     def propagate6(ri, phi, ai):
         alphai, betai, phi, ri, ai = propagate4(ri, phi, ai)
-        dispersion = ri[..., 2, :4, 4] / ri[..., 2, 4, 4, numpy.newaxis]
+        dispersion = ri[..., 2, :4, 4] / ri[..., 2, 4, 4, np.newaxis]
         return alphai, betai, phi, ri, ai, dispersion
 
     nv = mt.shape[0]
@@ -270,16 +269,16 @@ def _analyze6(mt, ms):
     el0 = propagate(r0, phi0, astd)
     if ms.shape[0] > 0:
         ps, rs, aas = zip(*[r_matrices(mi @ astd) for mi in ms])
-        els = propagate(numpy.array(rs), numpy.array(ps), numpy.array(aas))
+        els = propagate(np.array(rs), np.array(ps), np.array(aas))
     elif dms >= 3:
-        els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
-               numpy.empty((0, dms)),
-               numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)),
-               numpy.empty((0, 4)))
+        els = (np.empty((0, dms)), np.empty((0, dms)),
+               np.empty((0, dms)),
+               np.empty((0, dms, nv, nv)), np.empty((0, nv, nv)),
+               np.empty((0, 4)))
     else:
-        els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
-               numpy.empty((0, dms)),
-               numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)))
+        els = (np.empty((0, dms)), np.empty((0, dms)),
+               np.empty((0, dms)),
+               np.empty((0, dms, nv, nv)), np.empty((0, nv, nv)))
     return vps, dtype, el0, els, wtype
 
 
@@ -294,7 +293,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         try:
             d0 = twiss_in['dispersion']
         except (ValueError, KeyError):  # record arrays throw ValueError !
-            d0 = numpy.zeros((4,))
+            d0 = np.zeros((4,))
 
         try:
             rmat = twiss_in['R']
@@ -305,15 +304,15 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             alphas = twiss_in['alpha']
             betas = twiss_in['beta']
         except (ValueError, KeyError):  # record arrays throw ValueError !
-            alphas = numpy.zeros((2,))
-            betas = numpy.ones((2,))
+            alphas = np.zeros((2,))
+            betas = np.ones((2,))
 
-        dorbit = numpy.hstack((d0, 1.0, 0.0))
+        dorbit = np.hstack((d0, 1.0, 0.0))
         if orbit is None:
             try:
                 orbit = twiss_in['closed_orbit']
             except (ValueError, KeyError):  # record arrays throw ValueError !
-                orbit = numpy.zeros((6,))
+                orbit = np.zeros((6,))
             if dp is not None:
                 orbit = orbit + dorbit * dp
 
@@ -332,8 +331,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
                        "with 'get_w' activated")
                 raise AtError(msg)
 
-            orbit = orbit + numpy.hstack((dd0, 1.0, 0.0)) * dp * dp
-            dorbit = numpy.hstack((d0+dd0*dp, 1.0, 0.0))
+            orbit = orbit + np.hstack((dd0, 1.0, 0.0)) * dp * dp
+            dorbit = np.hstack((d0+dd0*dp, 1.0, 0.0))
 
             if (rmat is not None) and (drmat is not None):
                 rmat = rmat + drmat * dp
@@ -346,14 +345,14 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             sigm = rmat[0, ...]+10.0*rmat[1, ...]
             if rmat.shape[0] >= 3:
                 sigm = sigm+0.1*rmat[2, ...]
-                dorbit = rmat[2, :, 4] / rmat[2, 4, 4, numpy.newaxis]
+                dorbit = rmat[2, :, 4] / rmat[2, 4, 4, np.newaxis]
         else:
             slices = [slice(2 * i, 2 * (i + 1)) for i in range(2)]
-            ab = numpy.stack((alphas, betas), axis=1)
-            sigm = numpy.zeros((4, 4))
+            ab = np.stack((alphas, betas), axis=1)
+            sigm = np.zeros((4, 4))
             for slc, (alpha, beta) in zip(slices, ab):
                 gamma = (1.0+alpha*alpha)/beta
-                sigm[slc, slc] = numpy.array([[beta, -alpha], [-alpha, gamma]])
+                sigm[slc, slc] = np.array([[beta, -alpha], [-alpha, gamma]])
 
         return orbit, sigm, dorbit
 
@@ -384,7 +383,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
                                   orbit=o0dn, **kwargs)
             d0 = (o0up - o0dn)[:4] / dp_step
-            ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
+            ds = np.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
             return tunes, el0, els, d0, ds, wtype
 
         def wget(ddp, elup, eldn, has_r):
@@ -393,20 +392,20 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             *data_dn, = eldn
             alpha_up, beta_up, mu_up = data_up[:3]
             alpha_dn, beta_dn, mu_dn = data_dn[:3]
-            db = numpy.array(beta_up - beta_dn) / ddp
+            db = np.array(beta_up - beta_dn) / ddp
             mb = (beta_up + beta_dn) / 2
-            da = numpy.array(alpha_up - alpha_dn) / ddp
+            da = np.array(alpha_up - alpha_dn) / ddp
             ma = (alpha_up + alpha_dn) / 2
             wa = da - ma / mb * db
             wb = db / mb
-            ww = numpy.sqrt(wa ** 2 + wb ** 2)
-            wp = numpy.arctan2(wa, wb)
-            dmu = numpy.array(mu_up - mu_dn) / ddp
+            ww = np.sqrt(wa ** 2 + wb ** 2)
+            wp = np.arctan2(wa, wb)
+            dmu = np.array(mu_up - mu_dn) / ddp
             data_out = (ww, wp, da, db, dmu)
             if has_r:
                 r_up = data_up[3]
                 r_dn = data_dn[3]
-                data_out += (numpy.array(r_up - r_dn) / ddp, )
+                data_out += (np.array(r_up - r_dn) / ddp, )
             return data_out
 
         deltap = orbitup[4] - orbitdn[4]
@@ -417,8 +416,8 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         has_r = len(wtype) == 7
         # in 6D, dp comes out of find_orbit6
         chrom = (tunesup-tunesdn) / deltap
-        dd0 = numpy.array(d0up - d0dn) / deltap
-        dds = numpy.array(dsup - dsdn) / deltap
+        dd0 = np.array(d0up - d0dn) / deltap
+        dds = np.array(dsup - dsdn) / deltap
         data0 = wget(deltap, el0up, el0dn, has_r)
         datas = wget(deltap, elsup, elsdn, has_r)
         data0 = data0 + (dd0,)
@@ -427,10 +426,10 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
     def unwrap(mu):
         """Remove the phase jumps"""
-        dmu = numpy.diff(numpy.concatenate((numpy.zeros((1, dms)),
+        dmu = np.diff(np.concatenate((np.zeros((1, dms)),
                                             mu)), axis=0)
         jumps = dmu < -1.e-3
-        mu += numpy.cumsum(jumps, axis=0) * 2.0 * numpy.pi
+        mu += np.cumsum(jumps, axis=0) * 2.0 * np.pi
 
     dp_step = kwargs.get('DPStep', DConstant.DPStep)
     addtype = kwargs.pop('addtype', [])
@@ -483,13 +482,13 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
     nrefs = orbs.shape[0]
     dms = vps.size
     if dms >= 3:            # 6D processing
-        dtype = dtype + [('closed_orbit', numpy.float64, (6,)),
-                         ('M', numpy.float64, (2*dms, 2*dms)),
-                         ('s_pos', numpy.float64)]
-        data0 = (orb0, numpy.identity(2*dms), 0.0)
+        dtype = dtype + [('closed_orbit', np.float64, (6,)),
+                         ('M', np.float64, (2*dms, 2*dms)),
+                         ('s_pos', np.float64)]
+        data0 = (orb0, np.identity(2*dms), 0.0)
         datas = (orbs, ms, spos)
         length = ring.get_s_pos(len(ring))[0]
-        damping_rates = -numpy.log(numpy.absolute(vps))
+        damping_rates = -np.log(np.absolute(vps))
         damping_times = length / clight / damping_rates
     else:               # 4D processing
         kwargs['keep_lattice'] = True
@@ -500,14 +499,14 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
                               orbit=o0dn, **kwargs)
         d0 = (o0up - o0dn)[:4] / dp_step
-        ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
-        dtype = dtype + [('dispersion', numpy.float64, (4,)),
-                         ('closed_orbit', numpy.float64, (6,)),
-                         (mname, numpy.float64, (2*dms, 2*dms)),
-                         ('s_pos', numpy.float64)]
+        ds = np.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
+        dtype = dtype + [('dispersion', np.float64, (4,)),
+                         ('closed_orbit', np.float64, (6,)),
+                         (mname, np.float64, (2*dms, 2*dms)),
+                         ('s_pos', np.float64)]
         data0 = (d0, orb0, mt, get_s_pos(ring, len(ring))[0])
         datas = (ds, orbs, ms, spos)
-        damping_times = numpy.nan
+        damping_times = np.nan
 
     if get_w:
         dtype = dtype + wtype
@@ -520,19 +519,19 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
         deltap = o0up[4] - o0dn[4]
         chrom = (tunesup - tunesdn) / deltap
     else:
-        chrom = numpy.nan
+        chrom = np.nan
 
-    beamdata = numpy.array((tunes, chrom, damping_times),
-                           dtype=[('tune', numpy.float64, (dms,)),
-                                  ('chromaticity', numpy.float64, (dms,)),
-                                  ('damping_time', numpy.float64, (dms,))
-                                  ]).view(numpy.recarray)
+    beamdata = np.array((tunes, chrom, damping_times),
+                           dtype=[('tune', np.float64, (dms,)),
+                                  ('chromaticity', np.float64, (dms,)),
+                                  ('damping_time', np.float64, (dms,))
+                                  ]).view(np.recarray)
 
     dtype = dtype + addtype
-    elemdata0 = numpy.array(el0+data0+add0, dtype=dtype).view(numpy.recarray)
-    elemdata = numpy.recarray((nrefs,), dtype=dtype)
+    elemdata0 = np.array(el0+data0+add0, dtype=dtype).view(np.recarray)
+    elemdata = np.recarray((nrefs,), dtype=dtype)
     if nrefs > 0:
-        for name, value in zip(numpy.dtype(dtype).names, els+datas+adds):
+        for name, value in zip(np.dtype(dtype).names, els+datas+adds):
             elemdata[name] = value
         unwrap(elemdata.mu)
     return elemdata0, beamdata, elemdata
@@ -1081,7 +1080,7 @@ def linopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None,
     analyze = _analyze4 if kwargs.pop('coupled', True) else _analyze2
     eld0, bd, eld = _linopt(ring, analyze, refpts, dp=dp, get_chrom=get_chrom,
                             add0=(0,), adds=(get_uint32_index(ring, refpts),),
-                            addtype=[('idx', numpy.uint32)],
+                            addtype=[('idx', np.uint32)],
                             mname='m44', **kwargs)
     return eld0, bd.tune, bd.chromaticity, eld
 
@@ -1370,11 +1369,11 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         p0[2] += ampl
         if nv >= 6:
             p0[4] += ampl
-        p1 = numpy.squeeze(internal_lpass(ring, p0, nturns, len(ring)))
+        p1 = np.squeeze(internal_lpass(ring, p0, nturns, len(ring)))
         if remove_dc:
-            p1 -= numpy.mean(p1, axis=1, keepdims=True)
+            p1 -= np.mean(p1, axis=1, keepdims=True)
         p2 = solve(ld.A, p1[:nv, :])
-        return numpy.conjugate(p2.T.view(dtype=complex).T)
+        return np.conjugate(p2.T.view(dtype=complex).T)
 
     get_integer = kwargs.pop("get_integer", False)
     if get_integer:
@@ -1383,10 +1382,10 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         if get_integer:
             _, _, c = get_optics(ring, refpts=range(len(ring)+1),
                                  dp=dp, dct=dct, df=df, orbit=orbit)
-            tunes = c.mu[-1]/(2*numpy.pi) * ring.peridicity
+            tunes = c.mu[-1]/(2*np.pi) * ring.peridicity
         else:
             tunes = _tunes(ring, dp=dp, dct=dct, df=df, orbit=orbit)
-            tunes, _ = numpy.modf(tunes * ring.periodicity)
+            tunes, _ = np.modf(tunes * ring.periodicity)
     else:
         nturns = kwargs.pop('nturns', 512)
         ampl = kwargs.pop('ampl', 1.0e-6)
@@ -1394,7 +1393,7 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         ld, _, _ = linopt6(ring, dp=dp, dct=dct, df=df, orbit=orbit)
         cents = gen_centroid(ring, ampl, nturns, remove_dc, ld)
         tunes = get_tunes_harmonic(cents, method=method, **kwargs)
-        tunes, _ = numpy.modf(tunes*ring.periodicity)
+        tunes, _ = np.modf(tunes*ring.periodicity)
     return tunes
 
 @frequency_control
