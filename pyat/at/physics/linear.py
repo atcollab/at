@@ -1383,9 +1383,10 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         if get_integer:
             _, _, c = get_optics(ring, refpts=range(len(ring)+1),
                                  dp=dp, dct=dct, df=df, orbit=orbit)
-            tunes = c.mu[-1]/(2*numpy.pi)
+            tunes = c.mu[-1]/(2*numpy.pi) * ring.peridicity
         else:
             tunes = _tunes(ring, dp=dp, dct=dct, df=df, orbit=orbit)
+            tunes, _ = numpy.modf(tunes * ring.periodicity)
     else:
         nturns = kwargs.pop('nturns', 512)
         ampl = kwargs.pop('ampl', 1.0e-6)
@@ -1393,8 +1394,8 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
         ld, _, _ = linopt6(ring, dp=dp, dct=dct, df=df, orbit=orbit)
         cents = gen_centroid(ring, ampl, nturns, remove_dc, ld)
         tunes = get_tunes_harmonic(cents, method=method, **kwargs)
+        tunes, _ = numpy.modf(tunes*ring.periodicity)
     return tunes
-
 
 @frequency_control
 def get_chrom(ring: Lattice, *, method: str = 'linopt',
