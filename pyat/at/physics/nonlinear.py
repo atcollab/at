@@ -124,8 +124,10 @@ def detuning(
                       ``[[dQx/dJx, dQy/dJx], [dQx/dJy, dQy/dJy]]``
         x (ndarray): x amplitudes (npoints, )
         q_dx (ndarray): qx, qy tunes as a function of x amplitude (npoints, 2)
+                        Only the fractional parts are returned
         y (ndarray): y amplitudes (npoints, )
         q_dy (ndarray): qx, qy tunes as a function of y amplitude (npoints, 2)
+                        Only the fractional parts are returned
     """
     lindata0, _, _ = linopt6(ring)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
@@ -137,6 +139,8 @@ def detuning(
 
     q_dx = tunes_vs_amp(ring, amp=x, dim=0, nturns=nturns, **kwargs)
     q_dy = tunes_vs_amp(ring, amp=y, dim=2, nturns=nturns, **kwargs)
+    q_dx, _ = np.modf(q_dx * ring.periodicity)
+    q_dy, _ = np.modf(q_dy * ring.periodicity)
 
     idx = np.isfinite(q_dx[:, 0]) & np.isfinite(q_dx[:, 1])
     idy = np.isfinite(q_dy[:, 0]) & np.isfinite(q_dy[:, 1])
@@ -144,16 +148,12 @@ def detuning(
     fx = np.polyfit(x2[idx], q_dx[idx], 1)
     fy = np.polyfit(y2[idy], q_dy[idy], 1)
 
-    q0 = np.array([[fx[1, 0], fx[1, 1]], [fy[1, 0], fy[1, 1]]]) * ring.periodicity
-    q0, _ = np.modf(q0)
-    q1 = (
-        np.array(
-            [
-                [2 * fx[0, 0] / gamma[0], 2 * fx[0, 1] / gamma[0]],
-                [2 * fy[0, 0] / gamma[1], 2 * fy[0, 1] / gamma[1]],
-            ]
-        )
-        * ring.periodicity
+    q0 = np.array([[fx[1, 0], fx[1, 1]], [fy[1, 0], fy[1, 1]]])
+    q1 = np.array(
+        [
+            [2 * fx[0, 0] / gamma[0], 2 * fx[0, 1] / gamma[0]],
+            [2 * fy[0, 0] / gamma[1], 2 * fy[0, 1] / gamma[1]],
+        ]
     )
 
     return q0, q1, x, q_dx, y, q_dy
