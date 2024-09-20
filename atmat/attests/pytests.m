@@ -168,7 +168,7 @@ classdef pytests < matlab.unittest.TestCase
             [mtune,mchrom]=tunechrom(lattice.m,'get_chrom',dp=dp);
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
-            testCase.verifyEqual(mtune*periodicity,ptune,AbsTol=2.e-9);
+            testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=2.e-9);
             testCase.verifyEqual(mchrom*periodicity,pchrom,AbsTol=3.e-4);
         end
 
@@ -181,7 +181,7 @@ classdef pytests < matlab.unittest.TestCase
             [mtune,mchrom]=tunechrom(mlat,'get_chrom');
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
-            testCase.verifyEqual(mtune*periodicity,ptune,AbsTol=1.e-9);
+            testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=1.e-9);
             testCase.verifyEqual(mchrom*periodicity,pchrom,AbsTol=2.e-4);
         end
 
