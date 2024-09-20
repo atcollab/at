@@ -1471,7 +1471,7 @@ def get_tune(
             _, _, c = get_optics(
                 ring, refpts=range(len(ring) + 1), dp=dp, dct=dct, df=df, orbit=orbit
             )
-            tunes = c.mu[-1] / (2 * np.pi) * ring.peridicity
+            tunes = c.mu[-1] / (2 * np.pi) * ring.periodicity
         else:
             tunes = _tunes(ring, dp=dp, dct=dct, df=df, orbit=orbit)
             tunes, _ = np.modf(tunes * ring.periodicity)
