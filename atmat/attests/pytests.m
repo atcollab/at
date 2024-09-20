@@ -165,7 +165,7 @@ classdef pytests < matlab.unittest.TestCase
             % test on and off-momentum tunes of 4D lattices
             lattice=testCase.ring4.(lat);
             periodicity = atGetRingProperties(lattice.m,'Periodicity');
-            [mtune,mchrom]=tunechrom(lattice,'get_chrom',dp=dp);
+            [mtune,mchrom]=tunechrom(lattice.m,'get_chrom',dp=dp);
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
             testCase.verifyEqual(mtune*periodicity,ptune,AbsTol=2.e-9);
