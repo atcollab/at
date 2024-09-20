@@ -290,6 +290,23 @@ def test_nl_detuning_chromaticity(hmba_lattice):
                  atol=1e-12, rtol=1e-5)
 
 
+def test_periodicity(hmba_lattice):
+    q32 = at.linear.get_tune(hmba_lattice)
+    qp32 = at.linear.get_chrom(hmba_lattice)
+    dq32, *_ = at.nonlinear.detuning(hmba_lattice)
+    dqp32, *_ = at.nonlinear.chromaticity(hmba_lattice, npoints=11)
+    hmba_lattice.periodicity = 1
+    hmba_lattice = hmba_lattice.repeat(32)
+    q1 = at.linear.get_tune(hmba_lattice)
+    qp1 = at.linear.get_chrom(hmba_lattice)
+    dq1, *_ = at.nonlinear.detuning(hmba_lattice)
+    dqp1, *_ = at.nonlinear.chromaticity(hmba_lattice, npoints=11)
+    assert_close(q32, q1, atol=1e-12)
+    assert_close(qp32, qp1, atol=1e-12)
+    assert_close(dq32, dq1, atol=1e-7)
+    assert_close(dqp32, dqp1, atol=1e-7)
+
+
 def test_quantdiff(hmba_lattice):
     hmba_lattice = hmba_lattice.radiation_on(copy=True)
     dmat = physics.radiation.quantdiffmat(hmba_lattice)
