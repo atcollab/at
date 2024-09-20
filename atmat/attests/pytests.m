@@ -164,8 +164,8 @@ classdef pytests < matlab.unittest.TestCase
         function tunechrom4(testCase,lat,dp)
             % test on and off-momentum tunes of 4D lattices
             lattice=testCase.ring4.(lat);
-            periodicity = atGetRingProperties(lattice,'Periodicity');
-            [mtune,mchrom]=tunechrom(lattice.m,'get_chrom',dp=dp);
+            periodicity = atGetRingProperties(lattice.m,'Periodicity');
+            [mtune,mchrom]=tunechrom(lattice,'get_chrom',dp=dp);
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
             testCase.verifyEqual(mtune*periodicity,ptune,AbsTol=2.e-9);
@@ -175,7 +175,7 @@ classdef pytests < matlab.unittest.TestCase
         function tunechrom6(testCase,lat2,dp)
             % test on and off-momentum tunes of 6D lattices
             lattice=testCase.ring6.(lat2);
-            periodicity = atGetRingProperties(lattice,'Periodicity');
+            periodicity = atGetRingProperties(lattice.m,'Periodicity');
             mlat=atsetcavity(lattice.m,frequency='nominal',dp=dp);
             plat=lattice.p.set_rf_frequency(pyargs(dp=dp,copy=true));
             [mtune,mchrom]=tunechrom(mlat,'get_chrom');
