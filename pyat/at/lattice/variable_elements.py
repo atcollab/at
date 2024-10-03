@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import IntEnum
-from typing import Optional, Union
 
 import numpy as np
 
@@ -9,7 +10,7 @@ from .utils import AtError
 
 
 class ACMode(IntEnum):
-    """Class to define the excitation types"""
+    """Class to define the excitation types."""
 
     SINE = 0
     WHITENOISE = 1
@@ -17,7 +18,7 @@ class ACMode(IntEnum):
 
 
 class VariableMultipole(Element):
-    """Class to generate an AT variable thin multipole element"""
+    """Class to generate an AT variable thin multipole element."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(
@@ -38,15 +39,18 @@ class VariableMultipole(Element):
         Periodic=bool,
     )
 
-    def __init__(self, family_name, *args, **kwargs):
+    def __init__(self, family_name: str, **kwargs: dict[str, any]):
         # noinspection PyUnresolvedReferences
         r"""
+        Create VariableMultipole.
+
         Parameters:
             family_name(str):    Element name
-
         Keyword Arguments:
-            AmplitudeA(list,float): Amplitude of the excitation for PolynomA. Default None
-            AmplitudeB(list,float): Amplitude of the excitation for PolynomB. Default None
+            AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
+                Default None
+            AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
+                Default None
             mode(ACMode): defines the evaluation grid. Default ACMode.SINE
 
               * :py:attr:`.ACMode.SINE`: sine function
@@ -62,8 +66,8 @@ class VariableMultipole(Element):
             FuncA(list): User defined tbt kick list for PolynomA
             FuncB(list): User defined tbt kick list for PolynomB
             Periodic(bool): If True (default) the user defined kick is repeated
-            Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
-                         of the excitation
+            Ramps(list): Vector (t0, t1, t2, t3) in turn number to define
+                        the ramping of the excitation
 
               * ``t<t0``: excitation amplitude is zero
               * ``t0<t<t1``: exciation amplitude is linearly ramped up
@@ -109,9 +113,9 @@ class VariableMultipole(Element):
             if ramps is not None:
                 assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
                 self.Ramps = ramps
-        super(VariableMultipole, self).__init__(family_name, **kwargs)
+        super().__init__(family_name, **kwargs)
 
-    def _setmaxorder(self, ampa, ampb):
+    def _setmaxorder(self, ampa: np.ndarray, ampb: np.ndarray):
         mxa, mxb = 0, 0
         if ampa is not None:
             mxa = np.max(np.append(np.nonzero(ampa), 0))
@@ -122,14 +126,14 @@ class VariableMultipole(Element):
             delta = self.MaxOrder - len(ampa)
             if delta > 0:
                 ampa = np.pad(ampa, (0, delta))
-            setattr(self, "AmplitudeA", ampa)
+            self.AmplitudeA = ampa
         if ampb is not None:
             delta = self.MaxOrder + 1 - len(ampb)
             if delta > 0:
                 ampb = np.pad(ampb, (0, delta))
-            setattr(self, "AmplitudeB", ampb)
+            self.AmplitudeB = ampb
 
-    def _set_params(self, amplitude, mode, ab, **kwargs):
+    def _set_params(self, amplitude: np.ndarray, mode, ab, **kwargs: dict[str, any]):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
@@ -140,14 +144,14 @@ class VariableMultipole(Element):
                 self._set_arb(ab, **kwargs)
         return amplitude
 
-    def _set_sine(self, ab, **kwargs):
+    def _set_sine(self, ab, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + ab, None)
         phase = kwargs.pop("Phase" + ab, 0)
         assert frequency is not None, "Please provide a value for Frequency" + ab
         setattr(self, "Frequency" + ab, frequency)
         setattr(self, "Phase" + ab, phase)
 
-    def _set_arb(self, ab, **kwargs):
+    def _set_arb(self, ab, **kwargs: dict[str, any]):
         func = kwargs.pop("Func" + ab, None)
         nsamp = len(func)
         assert func is not None, "Please provide a value for Func" + ab
