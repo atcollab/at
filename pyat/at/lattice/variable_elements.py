@@ -1,9 +1,11 @@
+from datetime import datetime
+from enum import IntEnum
+from typing import Optional, Union
+
 import numpy as np
+
 from .elements import Element, _array
 from .utils import AtError
-from typing import Optional, Union
-from enum import IntEnum
-from datetime import datetime
 
 
 class ACMode(IntEnum):
