@@ -18,17 +18,17 @@ function elem=atvariablemultipole(fname,varargin)
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
-%	 MAXORDER       Order of the multipole for a scalar amplitude
+%    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
 %    PERIODIC       If true (default) the user input kick list is repeated
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
 %                   * t<t0: excitation amlpitude is zero
-%                   * t0<t<t1: exciation amplitude is linearly ramped up
-%                   * t1<t<t2: exciation amplitude is constant             
-%                   * t2<t<t3: exciation amplitude is linearly ramped down
-%                   * t3<t: exciation amplitude is zero 
+%                   * t0<t<t1: excitation amplitude is linearly ramped up
+%                   * t1<t<t2: excitation amplitude is constant
+%                   * t2<t<t3: excitation amplitude is linearly ramped down
+%                   * t3<t:    excitation amplitude is zero
 %
 %  OUTPUTS
 %  1. ELEM - Structure with the AT element
@@ -108,15 +108,21 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
     function rsrc = setmaxorder(rsrc)
         if isfield(rsrc,'AmplitudeA')
             mxa=find(abs(rsrc.AmplitudeA)>0,1,'last');
+            if isempty(mxa)
+                mxa=1;
+            end
         else
             mxa=0;
         end
         if isfield(rsrc,'AmplitudeB')
             mxb=find(abs(rsrc.AmplitudeB)>0,1,'last');
+            if isempty(mxb)
+                mxb=1;
+            end
         else
             mxb=0;
         end
-        mxab=max([mxa,mxb,rsrc.MaxOrder-1]);
+        mxab=max([mxa,mxb,rsrc.MaxOrder+1]);
         rsrc.MaxOrder=mxab-1;
         if isfield(rsrc,'AmplitudeA')
             rsrc.AmplitudeA(mxa+1:mxab)=0;
