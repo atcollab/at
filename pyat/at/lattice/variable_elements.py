@@ -97,8 +97,15 @@ class VariableMultipole(Element):
             if not "AmplitudeA" in kwargs and not "AmplitudeB" in kwargs:
                 raise AtError("Please provide at least one amplitude for A or B")
             # start setting up Amplitudes and modes
-            mode = kwargs.pop("mode", ACMode.SINE)
+            # fist modes are called differently
+            modepyatinput = kwargs.pop("mode", ACMode.SINE)
+            modefromdict = kwargs.pop("Mode", None)
+            if modefromdict is not None:
+                mode = modefromdict  # matlab class
+            else:
+                mode = modepyatinput
             self.Mode = int(mode)
+            # MaxOrder is later overwritten by lenth of amplitudes
             self.MaxOrder = kwargs.get("MaxOrder", 0)
             amplitudea = None
             amplitudeb = None
@@ -149,7 +156,7 @@ class VariableMultipole(Element):
             self.AmplitudeB = ampb
 
     def _set_params(
-        self, amplitude: int or str, mode: int, ab: str, **kwargs: dict[str, any]
+        self, amplitude: int or str, mode, ab: str, **kwargs: dict[str, any]
     ):
         if amplitude is not None:
             if np.isscalar(amplitude):
