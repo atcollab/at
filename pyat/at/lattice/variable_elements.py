@@ -93,6 +93,7 @@ class VariableMultipole(Element):
               ``Amplitude(A,B)`` has to be provided.
         """
         if len(kwargs) > 0:
+            self.FamName = family_name
             if not "AmplitudeA" in kwargs and not "AmplitudeB" in kwargs:
                 raise AtError("Please provide at least one amplitude for A or B")
             # start setting up Amplitudes and modes
