@@ -109,7 +109,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if isfield(rsrc,'AmplitudeA')
             mxa=find(abs(rsrc.AmplitudeA)>0,1,'last');
             if isempty(mxa)
-                mxa=0;
+                mxa=1;
             end
         else
             mxa=0;
@@ -117,7 +117,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if isfield(rsrc,'AmplitudeB')
             mxb=find(abs(rsrc.AmplitudeB)>0,1,'last');
             if isempty(mxb)
-                mxb=0;
+                mxb=1;
             end
         else
             mxb=0;
