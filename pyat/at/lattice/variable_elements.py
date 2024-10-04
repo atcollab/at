@@ -156,30 +156,30 @@ class VariableMultipole(Element):
             self.AmplitudeB = ampb
 
     def _set_params(
-        self, amplitude: int or str, mode, ab: str, **kwargs: dict[str, any]
+        self, amplitude: int or str, mode, a_b: str, **kwargs: dict[str, any]
     ):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
                 amplitude = np.append(amp, amplitude)
             if mode == ACMode.SINE:
-                self._set_sine(ab, **kwargs)
+                self._set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
-                self._set_arb(ab, **kwargs)
+                self._set_arb(a_b, **kwargs)
         return amplitude
 
-    def _set_sine(self, ab: str, **kwargs: dict[str, any]):
-        frequency = kwargs.pop("Frequency" + ab, None)
-        phase = kwargs.pop("Phase" + ab, 0)
+    def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
+        frequency = kwargs.pop("Frequency" + a_b, None)
+        phase = kwargs.pop("Phase" + a_b, 0)
         if frequency is None:
-            raise AtError("Please provide a value for Frequency" + ab)
-        setattr(self, "Frequency" + ab, frequency)
-        setattr(self, "Phase" + ab, phase)
+            raise AtError("Please provide a value for Frequency" + a_b)
+        setattr(self, "Frequency" + a_b, frequency)
+        setattr(self, "Phase" + a_b, phase)
 
-    def _set_arb(self, ab: str, **kwargs: dict[str, any]):
-        func = kwargs.pop("Func" + ab, None)
+    def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
+        func = kwargs.pop("Func" + a_b, None)
         nsamp = len(func)
         if func is None:
-            raise AtError("Please provide a value for Func" + ab)
-        setattr(self, "Func" + ab, func)
-        setattr(self, "NSamples" + ab, nsamp)
+            raise AtError("Please provide a value for Func" + a_b)
+        setattr(self, "Func" + a_b, func)
+        setattr(self, "NSamples" + a_b, nsamp)
