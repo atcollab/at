@@ -107,16 +107,16 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
 
     function rsrc = setmaxorder(rsrc)
         if isfield(rsrc,'AmplitudeA')
-            mxa=find(abs(rsrc.AmplitudeA)>0,1,'last');
+            [~,mxa]=max(abs(rsrc.AmplitudeA));
         else
             mxa=0;
         end
         if isfield(rsrc,'AmplitudeB')
-            mxb=find(abs(rsrc.AmplitudeB)>0,1,'last');
+            [~,mxb]=max(abs(rsrc.AmplitudeB));
         else
             mxb=0;
         end
-        mxab=max([mxa,mxb,rsrc.MaxOrder-1]);
+        mxab=max([mxa,mxb,rsrc.MaxOrder+1]);
         rsrc.MaxOrder=mxab-1;
         if isfield(rsrc,'AmplitudeA')
             rsrc.AmplitudeA(mxa+1:mxab)=0;
