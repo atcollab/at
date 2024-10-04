@@ -74,6 +74,12 @@ class VariableMultipole(Element):
               * ``t1<t<t2``: exciation amplitude is constant
               * ``t2<t<t3``: exciation amplitude is linearly ramped down
               * ``t3<t``: exciation amplitude is zero
+        Raises:
+            AtError if none of AmplitudeA or AmplitudeB is passed.
+            AtError if ramp is not vector of length 4 when using Ramps
+            AtError when Frequency is not defined if using Mode SINE
+            AtError when Funct is not defined if using Mode ARBITRARY
+
 
         Examples:
 
@@ -94,7 +100,7 @@ class VariableMultipole(Element):
         """
         if len(kwargs) > 0:
             self.FamName = family_name
-            if not "AmplitudeA" in kwargs and not "AmplitudeB" in kwargs:
+            if "AmplitudeA" not in kwargs and "AmplitudeB" not in kwargs:
                 raise AtError("Please provide at least one amplitude for A or B")
             # start setting up Amplitudes and modes
             # fist modes are called differently
