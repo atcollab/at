@@ -52,7 +52,6 @@ class VariableMultipole(Element):
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
                 Default None
             mode(ACMode): defines the evaluation grid. Default ACMode.SINE
-
               * :py:attr:`.ACMode.SINE`: sine function
               * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
               * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
@@ -61,6 +60,7 @@ class VariableMultipole(Element):
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
+                It is overwritten with the length of Amplitude(A,B)
             Seed(int): Seed of the random number generator for white
                        noise excitation. Default datetime.now()
             FuncA(list): User defined tbt kick list for PolynomA
@@ -83,36 +83,50 @@ class VariableMultipole(Element):
 
         .. note::
 
-            * For all excitation modes all least one amplitude has to be provided.
+            * If no parameters are given it will be initialized as IdentityPass.
+            * For all excitation modes at least one amplitudes (A or B) has
+              to be provided.
               The default excitation is ``ACMode.SINE``
             * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
+              ``Amplitude(A,B)`` has to be provided.
             * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
+              ``Amplitude(A,B)`` has to be provided.
         """
-        # if element has not been created
-        if not hasattr(self, "to_dict"):
-            self.FamName = family_name
-            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-            AmplitudeA = kwargs.pop("AmplitudeA", None)
-            AmplitudeB = kwargs.pop("AmplitudeB", None)
-            mode = kwargs.pop("mode", ACMode.SINE)
-            self.MaxOrder = kwargs.pop("MaxOrder", 0)
-            self.Periodic = kwargs.pop("Periodic", True)
-            self.Mode = int(mode)
-            if AmplitudeA is None and AmplitudeB is None:
+        if len(kwargs) > 0:
+            if not "AmplitudeA" in kwargs and not "AmplitudeB" in kwargs:
                 raise AtError("Please provide at least one amplitude for A or B")
-            AmplitudeB = self._set_params(AmplitudeB, mode, "B", **kwargs)
-            AmplitudeA = self._set_params(AmplitudeA, mode, "A", **kwargs)
-            self._setmaxorder(AmplitudeA, AmplitudeB)
-            if mode == ACMode.WHITENOISE:
-                self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-            self.PolynomA = np.zeros(self.MaxOrder + 1)
-            self.PolynomB = np.zeros(self.MaxOrder + 1)
+            # start setting up Amplitudes and modes
+            mode = kwargs.pop("mode", ACMode.SINE)
+            self.Mode = int(mode)
+            self.MaxOrder = kwargs.get("MaxOrder", 0)
+            amplitudea = None
+            amplitudeb = None
+            if "AmplitudeA" in kwargs:
+                amplitudea = kwargs.pop("AmplitudeA", None)
+                amplitudea = self._set_params(amplitudea, mode, "A", **kwargs)
+            if "AmplitudeB" in kwargs:
+                amplitudeb = kwargs.pop("AmplitudeB", None)
+                amplitudeb = self._set_params(amplitudeb, mode, "B", **kwargs)
+            if amplitudea is not None:
+                self.AmplitudeA = amplitudea
+            if amplitudeb is not None:
+                self.AmplitudeB = amplitudeb
+            # end setting up Amplitudes and modes
+            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
+            # this overwrites MaxOrder
+            self._setmaxorder(amplitudea, amplitudeb)
+            if mode == ACMode.WHITENOISE and "Seed" not in kwargs:
+                kwargs.update({"Seed": datetime.now().timestamp()})
+            self.Periodic = kwargs.pop("Periodic", True)
+            self.PolynomA = kwargs.pop("PolynomA", np.zeros(self.MaxOrder + 1))
+            self.PolynomB = kwargs.pop("PolynomB", np.zeros(self.MaxOrder + 1))
+            # check ramps
             ramps = kwargs.pop("Ramps", None)
             if ramps is not None:
-                assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
+                if len(ramps) != 4:
+                    raise AtError("Ramps has to be a vector with 4 elements")
                 self.Ramps = ramps
+        # fill in super class
         super().__init__(family_name, **kwargs)
 
     def _setmaxorder(self, ampa: np.ndarray, ampb: np.ndarray):
@@ -133,7 +147,9 @@ class VariableMultipole(Element):
                 ampb = np.pad(ampb, (0, delta))
             self.AmplitudeB = ampb
 
-    def _set_params(self, amplitude: np.ndarray, mode, ab, **kwargs: dict[str, any]):
+    def _set_params(
+        self, amplitude: int or str, mode: int, ab: str, **kwargs: dict[str, any]
+    ):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
@@ -144,16 +160,18 @@ class VariableMultipole(Element):
                 self._set_arb(ab, **kwargs)
         return amplitude
 
-    def _set_sine(self, ab, **kwargs: dict[str, any]):
+    def _set_sine(self, ab: str, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + ab, None)
         phase = kwargs.pop("Phase" + ab, 0)
-        assert frequency is not None, "Please provide a value for Frequency" + ab
+        if frequency is None:
+            raise AtError("Please provide a value for Frequency" + ab)
         setattr(self, "Frequency" + ab, frequency)
         setattr(self, "Phase" + ab, phase)
 
-    def _set_arb(self, ab, **kwargs: dict[str, any]):
+    def _set_arb(self, ab: str, **kwargs: dict[str, any]):
         func = kwargs.pop("Func" + ab, None)
         nsamp = len(func)
-        assert func is not None, "Please provide a value for Func" + ab
+        if func is None:
+            raise AtError("Please provide a value for Func" + ab)
         setattr(self, "Func" + ab, func)
         setattr(self, "NSamples" + ab, nsamp)
