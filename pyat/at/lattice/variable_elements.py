@@ -54,7 +54,7 @@ class VariableMultipole(Element):
             mode(ACMode): defines the evaluation grid. Default ACMode.SINE
               * :py:attr:`.ACMode.SINE`: sine function
               * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
+              * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
             FrequencyA(float): Frequency of the sine excitation for PolynomA
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
@@ -70,15 +70,15 @@ class VariableMultipole(Element):
                         the ramping of the excitation
 
               * ``t<t0``: excitation amplitude is zero
-              * ``t0<t<t1``: exciation amplitude is linearly ramped up
-              * ``t1<t<t2``: exciation amplitude is constant
-              * ``t2<t<t3``: exciation amplitude is linearly ramped down
-              * ``t3<t``: exciation amplitude is zero
+              * ``t0<t<t1``: excitation amplitude is linearly ramped up
+              * ``t1<t<t2``: excitation amplitude is constant
+              * ``t2<t<t3``: excitation amplitude is linearly ramped down
+              * ``t3<t``: excitation amplitude is zero
         Raises:
             AtError if none of AmplitudeA or AmplitudeB is passed.
             AtError if ramp is not vector of length 4 when using Ramps
-            AtError when Frequency is not defined if using Mode SINE
-            AtError when Funct is not defined if using Mode ARBITRARY
+            AtError when Frequency is not defined if using Mode ``ACMode.SINE``
+            AtError when Funct is not defined if using Mode ``ACMode.ARBITRARY``
 
 
         Examples:
