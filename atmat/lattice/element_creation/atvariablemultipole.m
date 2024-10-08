@@ -13,7 +13,7 @@ function elem=atvariablemultipole(fname,varargin)
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
 %    AMPLITUDEB     Vector or scalar to define the excitation amplitude for
-%                   PolynomA
+%                   PolynomB
 %    FREQUENCYA     Frequency of SINE excitation for PolynomA
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
