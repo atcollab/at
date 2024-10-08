@@ -183,9 +183,10 @@ def ohmi_envelope(
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
-    uint32refs = ring.get_uint32_index(refpts)
-    bbcum, orbs = _dmatr(ring, orbit=orbit, keep_lattice=keep_lattice)
-    mring, ms = find_m66(ring, uint32refs, orbit=orbs[0], keep_lattice=True)
+    rtmp = ring.disable_6d(QuantumDiffusion, copy=True)
+    uint32refs = rtmp.get_uint32_index(refpts)
+    bbcum, orbs = _dmatr(rtmp, orbit=orbit, keep_lattice=keep_lattice)
+    mring, ms = find_m66(rtmp, uint32refs, orbit=orbs[0], keep_lattice=True)
     # ------------------------------------------------------------------------
     # Equation for the moment matrix R is
     #         R = MRING*R*MRING' + BCUM;
