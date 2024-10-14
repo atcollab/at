@@ -657,6 +657,7 @@ class Aperture(Element):
         kwargs.setdefault('PassMethod', 'AperturePass')
         super(Aperture, self).__init__(family_name, Limits=limits, **kwargs)
 
+
 class LongtAperture(Element):
     """Longitudinal aperture element"""
 
@@ -673,6 +674,7 @@ class LongtAperture(Element):
         """
         kwargs.setdefault('PassMethod', 'LongtAperturePass')
         super(LongtAperture, self).__init__(family_name, Limits=limits, **kwargs)
+
 
 class Drift(LongElement):
     """Drift space element"""
@@ -861,7 +863,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
         arr = self.PolynomB
-        return 0.0 if len(arr) < 2 else arr[1]
+        return 0.0 if len(arr) < 2 else float(arr[1])
 
     # noinspection PyPep8Naming
     @K.setter
@@ -873,7 +875,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     def H(self) -> float:
         """Sextupolar strength [mˆ-3]"""
         arr = self.PolynomB
-        return 0.0 if len(arr) < 3 else arr[2]
+        return 0.0 if len(arr) < 3 else float(arr[2])
 
     # noinspection PyPep8Naming
     @H.setter
@@ -954,7 +956,7 @@ class Dipole(Radiative, Multipole):
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
-        yield "K", vars(self)["PolynomB"][1]
+        yield "K", self.K
 
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
@@ -1027,7 +1029,7 @@ class Quadrupole(Radiative, Multipole):
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
-        yield "K", vars(self)["PolynomB"][1]
+        yield "K", self.K
 
 
 class Sextupole(Multipole):
@@ -1062,7 +1064,7 @@ class Sextupole(Multipole):
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
-        yield "H", vars(self)["PolynomB"][2]
+        yield "H", self.H
 
 
 class Octupole(Multipole):
