@@ -61,7 +61,7 @@ from collections.abc import Callable, Set
 from enum import Enum
 from itertools import repeat
 from math import pi
-from typing import Optional, Union
+from typing import Union
 
 # For sys.version_info.minor < 9:
 from typing import Tuple
@@ -79,7 +79,7 @@ RefIndex = Union[int, Tuple[int, ...], slice]
 # functions are replaced be module-level callable class instances:
 
 
-class _ModFun(object):
+class _ModFun:
     """General and pickleable evaluation function"""
 
     def __init__(self, fun, statfun):
@@ -90,7 +90,7 @@ class _ModFun(object):
         return self.statfun(self.fun(*a), axis=0)
 
 
-class _ArrayAccess(object):
+class _ArrayAccess:
     """Access to selected items in an array"""
 
     def __init__(self, index):
@@ -101,7 +101,7 @@ class _ArrayAccess(object):
         return data if index is None else data[self.index]
 
 
-class _RecordAccess(object):
+class _RecordAccess:
     """Access to selected items in a record array"""
 
     def __init__(self, fieldname: str, index):
@@ -114,7 +114,7 @@ class _RecordAccess(object):
         return data if index is None else data[self.index]
 
 
-def _all_rows(index: Optional[RefIndex]):
+def _all_rows(index: RefIndex | None):
     """Prepends "all rows" (":") to an index tuple"""
     if index is None:
         return None
@@ -124,7 +124,7 @@ def _all_rows(index: Optional[RefIndex]):
         return slice(None), index
 
 
-class _Tune(object):
+class _Tune:
     """Get integer tune from the phase advance"""
 
     def __init__(self, idx: RefIndex):
@@ -135,7 +135,7 @@ class _Tune(object):
         return np.squeeze(mu, axis=0) / 2 / pi
 
 
-class _Ring(object):
+class _Ring:
     """Get an attribute of a lattice element"""
 
     def __init__(self, attrname, index, refpts):
@@ -182,18 +182,18 @@ class Need(Enum):
     GEOMETRY = 11
 
 
-class Observable(object):
+class Observable:
     """Base class for Observables. Can be used for user-defined observables"""
 
     def __init__(
         self,
         fun: Callable,
         *args,
-        name: Optional[str] = None,
+        name: str | None = None,
         target=None,
         weight=1.0,
         bounds=(0.0, 0.0),
-        needs: Optional[Set[Need]] = None,
+        needs: Set[Need] | None = None,
         **kwargs,
     ):
         r"""
@@ -403,8 +403,8 @@ class RingObservable(Observable):
     def __init__(
         self,
         fun: Callable,
-        name: Optional[str] = None,
-        ** kwargs,
+        name: str | None = None,
+        **kwargs,
     ):
         r"""
         Args:
@@ -460,9 +460,9 @@ class ElementObservable(Observable):
         self,
         fun: Callable,
         refpts: Refpts,
-        name: Optional[str] = None,
+        name: str | None = None,
         summary: bool = False,
-        statfun: Optional[Callable] = None,
+        statfun: Callable | None = None,
         **kwargs,
     ):
         r"""
@@ -490,7 +490,7 @@ class ElementObservable(Observable):
         name = fun.__name__ if name is None else name
         if statfun:
             summary = True
-            name = "{}({})".format(statfun.__name__, name)
+            name = f"{statfun.__name__}({name})"
             fun = _ModFun(fun, statfun)
         super().__init__(fun, name=name, **kwargs)
         self.summary = summary
@@ -542,9 +542,7 @@ class GeometryObservable(ElementObservable):
 
     _field_list = {"x", "y", "angle"}
 
-    def __init__(
-        self, refpts: Refpts, param: str, name: Optional[str] = None, **kwargs
-    ):
+    def __init__(self, refpts: Refpts, param: str, name: str | None = None, **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
@@ -570,7 +568,7 @@ class GeometryObservable(ElementObservable):
 
         Example:
 
-            >>> obs = GeometryObservable(at.Monitor, param='x')
+            >>> obs = GeometryObservable(at.Monitor, param="x")
 
             Observe x coordinate of monitors
         """
@@ -589,7 +587,7 @@ class OrbitObservable(ElementObservable):
     """
 
     def __init__(
-        self, refpts: Refpts, axis: AxisDef = None, name: Optional[str] = None, **kwargs
+        self, refpts: Refpts, axis: AxisDef = None, name: str | None = None, **kwargs
     ):
         # noinspection PyUnresolvedReferences
         r"""
@@ -638,7 +636,7 @@ class MatrixObservable(ElementObservable):
         self,
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
-        name: Optional[str] = None,
+        name: str | None = None,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
@@ -667,7 +665,7 @@ class MatrixObservable(ElementObservable):
 
         Example:
 
-            >>> obs = MatrixObservable(at.Monitor, axis=('x', 'px'))
+            >>> obs = MatrixObservable(at.Monitor, axis=("x", "px"))
 
             Observe the transfer matrix from origin to monitor locations and
             extract T[0,1]
@@ -680,7 +678,7 @@ class MatrixObservable(ElementObservable):
 
 class _GlobalOpticsObservable(Observable):
     def __init__(
-        self, param: str, plane: AxisDef = None, name: Optional[str] = None, **kwargs
+        self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
     ):
         # noinspection PyUnresolvedReferences
         r"""
@@ -727,9 +725,9 @@ class LocalOpticsObservable(ElementObservable):
     def __init__(
         self,
         refpts: Refpts,
-        param: Union[str, Callable],
+        param: str | Callable,
         plane: AxisDef = Ellipsis,
-        name: Optional[str] = None,
+        name: str | None = None,
         all_points: bool = False,
         **kwargs,
     ):
@@ -780,13 +778,14 @@ class LocalOpticsObservable(ElementObservable):
 
         Examples:
 
-            >>> obs = LocalOpticsObservable(at.Monitor, 'beta')
+            >>> obs = LocalOpticsObservable(at.Monitor, "beta")
 
             Observe the beta in both planes at all :py:class:`.Monitor`
             locations
 
-            >>> obs = LocalOpticsObservable(at.Quadrupole, 'beta', plane='y',
-            ...                        statfun=np.max)
+            >>> obs = LocalOpticsObservable(
+            ...     at.Quadrupole, "beta", plane="y", statfun=np.max
+            ... )
 
             Observe the maximum vertical beta in Quadrupoles
 
@@ -794,8 +793,11 @@ class LocalOpticsObservable(ElementObservable):
             ...     mu = elemdata.mu
             ...     return mu[-1] - mu[0]
             >>>
-            >>> allobs.append(LocalOpticsObservable([33, 101], phase_advance,
-            ...               all_points=True, summary=True))
+            >>> allobs.append(
+            ...     LocalOpticsObservable(
+            ...         [33, 101], phase_advance, all_points=True, summary=True
+            ...     )
+            ... )
 
             The user-defined evaluation function computes the phase-advance
             between the 1st and last given reference points, here the elements
@@ -827,8 +829,8 @@ class LatticeObservable(ElementObservable):
         self,
         refpts: Refpts,
         attrname: str,
-        index: AxisDef = Ellipsis,
-        name: Optional[str] = None,
+        index: int | None = None,
+        name: str | None = None,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
@@ -837,7 +839,7 @@ class LatticeObservable(ElementObservable):
             refpts:         Elements to be observed
               See ":ref:`Selecting elements in a lattice <refpts>`"
             attrname:       Attribute name
-            index:          Index in the attribute array. If :py:obj:`Ellipsis`,
+            index:          Index in the attribute array. If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
@@ -848,8 +850,7 @@ class LatticeObservable(ElementObservable):
 
         Example:
 
-            >>> obs = LatticeObservable(at.Sextupole, 'KickAngle', plane=0,
-            ...                      statfun=np.sum)
+            >>> obs = LatticeObservable(at.Sextupole, "KickAngle", index=0, statfun=np.sum)
 
             Observe the sum of horizontal kicks in Sextupoles
         """
@@ -869,7 +870,7 @@ class TrajectoryObservable(ElementObservable):
         self,
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
-        name: Optional[str] = None,
+        name: str | None = None,
         **kwargs,
     ):
         r"""
@@ -908,7 +909,7 @@ class EmittanceObservable(Observable):
     """
 
     def __init__(
-        self, param: str, plane: AxisDef = None, name: Optional[str] = None, **kwargs
+        self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
     ):
         r"""
         Args:
@@ -945,7 +946,7 @@ class EmittanceObservable(Observable):
 
         Example:
 
-            >>> EmittanceObservable('emittances', plane='h')
+            >>> EmittanceObservable("emittances", plane="h")
 
             Observe the horizontal emittance
         """
@@ -962,7 +963,7 @@ class EmittanceObservable(Observable):
 def GlobalOpticsObservable(
     param: str,
     plane: AxisDef = Ellipsis,
-    name: Optional[str] = None,
+    name: str | None = None,
     use_integer: bool = False,
     **kwargs,
 ):
@@ -1006,11 +1007,11 @@ def GlobalOpticsObservable(
 
     Examples:
 
-        >>> obs = GlobalOpticsObservable('tune', use_integer=True)
+        >>> obs = GlobalOpticsObservable("tune", use_integer=True)
 
         Observe the tune in both planes, including the integer part (slower)
 
-        >>> obs = GlobalOpticsObservable('chromaticity', plane='v')
+        >>> obs = GlobalOpticsObservable("chromaticity", plane="v")
 
         Observe the vertical chromaticity
     """
