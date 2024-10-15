@@ -39,8 +39,6 @@ container which performs the required optics computation and feeds each
 - :py:attr:`~Observable.residual`:  :pycode:`((value - target)/weight)**2`
 """
 
-# ruff: noqa: D205, D415, D417
-
 from __future__ import annotations
 
 __all__ = [
@@ -92,7 +90,7 @@ class _ModFun:
 
 
 class _ArrayAccess:
-    """Access a selected items in an array."""
+    """Access a selected item in an array."""
 
     def __init__(self, index):
         self.index = _all_rows(index)
@@ -435,6 +433,7 @@ class RingObservable(Observable):
         - *value* is the value of the Observable.
 
         Examples:
+
             >>> def circumference(ring):
             ...     return ring.get_s_pos(len(ring))[0]
             >>> obs = RingObservable(circumference)
@@ -564,6 +563,7 @@ class GeometryObservable(ElementObservable):
         shape of *value*.
 
         Example:
+
             >>> obs = GeometryObservable(at.Monitor, param="x")
 
             Observe x coordinate of monitors
@@ -657,6 +657,7 @@ class MatrixObservable(ElementObservable):
         shape of *value*.
 
         Example:
+
             >>> obs = MatrixObservable(at.Monitor, axis=("x", "px"))
 
             Observe the transfer matrix from origin to monitor locations and
@@ -767,6 +768,7 @@ class LocalOpticsObservable(ElementObservable):
           *summary* keyword must be set to :py:obj:`True`.
 
         Examples:
+
             >>> obs = LocalOpticsObservable(at.Monitor, "beta")
 
             Observe the beta in both planes at all :py:class:`.Monitor`
@@ -818,7 +820,7 @@ class LatticeObservable(ElementObservable):
         self,
         refpts: Refpts,
         attrname: str,
-        index: AxisDef = Ellipsis,
+        index: int | None = None,
         name: str | None = None,
         **kwargs,
     ):
@@ -827,7 +829,7 @@ class LatticeObservable(ElementObservable):
             refpts:         Elements to be observed
               See ":ref:`Selecting elements in a lattice <refpts>`"
             attrname:       Attribute name
-            index:          Index in the attribute array. If :py:obj:`Ellipsis`,
+            index:          Index in the attribute array. If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated.
@@ -837,8 +839,8 @@ class LatticeObservable(ElementObservable):
               observable. Example: :pycode:`statfun=numpy.mean`
 
         Example:
-            >>> obs = LatticeObservable(at.Sextupole, "KickAngle", plane=0,
-            ...                         statfun=np.sum)
+
+            >>> obs = LatticeObservable(at.Sextupole, "KickAngle", index=0, statfun=np.sum)
 
             Observe the sum of horizontal kicks in Sextupoles
         """
@@ -931,6 +933,7 @@ class EmittanceObservable(Observable):
         *value* is the value of the Observable.
 
         Example:
+
             >>> EmittanceObservable("emittances", plane="h")
 
             Observe the horizontal emittance
@@ -991,6 +994,7 @@ def GlobalOpticsObservable(
     - *value* is the value of the Observable.
 
     Examples:
+
         >>> obs = GlobalOpticsObservable("tune", use_integer=True)
 
         Observe the tune in both planes, including the integer part (slower)
