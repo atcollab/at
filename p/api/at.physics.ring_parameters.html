@@ -523,7 +523,7 @@ document.write(`
 <dl class="py class">
 <dt class="sig sig-object py" id="at.physics.ring_parameters.RingParameters">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RingParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/physics/ring_parameters.html#RingParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.physics.ring_parameters.RingParameters" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for pretty printing the ring properties</p>
 </dd></dl>
 
@@ -539,7 +539,7 @@ document.write(`
 Default: create a new one</p></li>
 <li><p><strong>orbit</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a><em> | </em><em>None</em>) – Avoids looking for the closed orbit if it is
 already known ((6,) array)</p></li>
-<li><p><strong>keep_lattice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Assume no lattice change since the
+<li><p><strong>keep_lattice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Assume no lattice change since the
 previous tracking.</p></li>
 </ul>
 </dd>
@@ -592,14 +592,14 @@ attributes:</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Momentum deviation.</p></li>
+<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Momentum deviation.</p></li>
 <li><p><strong>params</strong> (<a class="reference internal" href="#at.physics.ring_parameters.RingParameters" title="at.physics.ring_parameters.RingParameters"><em>RingParameters</em></a><em> | </em><em>None</em>) – <a class="reference internal" href="#at.physics.ring_parameters.RingParameters" title="at.physics.ring_parameters.RingParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">RingParameters</span></code></a> object to be updated.
 Default: create a new one</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Path lengthening. If specified, <code class="docutils literal notranslate"><span class="pre">dp</span></code> is
+<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Path lengthening. If specified, <code class="docutils literal notranslate"><span class="pre">dp</span></code> is
 ignored and the off-momentum is deduced from the path lengthening.</p></li>
 <li><p><strong>method</strong> (<em>Callable</em>) – <p>Method for linear optics:</p>
 <p><a class="reference internal" href="at.physics.linear.html#at.physics.linear.linopt2" title="at.physics.linear.linopt2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">linopt2</span></code></a>: no longitudinal motion, no H/V coupling,</p>
@@ -608,9 +608,9 @@ motion, normal mode analysis</p>
 </p></li>
 <li><p><strong>orbit</strong> (<em>Orbit</em>) – Avoids looking for the closed orbit if is
 already known ((6,) array)</p></li>
-<li><p><strong>XYStep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Step size.
+<li><p><strong>XYStep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Step size.
 Default: <a class="reference internal" href="at.lattice.options.html#at.lattice.options.DConstant" title="at.lattice.options.DConstant"><code class="xref py py-data docutils literal notranslate"><span class="pre">DConstant.XYStep</span></code></a></p></li>
-<li><p><strong>DPStep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Momentum step size.
+<li><p><strong>DPStep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Momentum step size.
 Default: <a class="reference internal" href="at.lattice.options.html#at.lattice.options.DConstant" title="at.lattice.options.DConstant"><code class="xref py py-data docutils literal notranslate"><span class="pre">DConstant.DPStep</span></code></a></p></li>
 </ul>
 </dd>

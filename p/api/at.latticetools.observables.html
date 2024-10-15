@@ -586,18 +586,18 @@ container which performs the required optics computation and feeds each
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <a class="reference internal" href="#base-eval"><span class="std std-ref">evaluation function</span></a></p></li>
+<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – <a class="reference internal" href="#base-eval"><span class="std std-ref">evaluation function</span></a></p></li>
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
-<li><p><strong>statfun</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>) – Post-processing function called on the value of the
+<li><p><strong>statfun</strong> (<em>Callable</em><em> | </em><em>None</em>) – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -620,12 +620,12 @@ shape of <em>value</em>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Parameter name (see <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a>) or
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Parameter name (see <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a>) or
 <a class="reference internal" href="#emittance-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
 <li><p><strong>plane</strong> (<em>AxisDef</em>) – One out of {0, ‘x’, ‘h’, ‘H’} for horizontal plane,
 one out of {1, ‘y’, ‘v’, ‘V’} for vertival plane or one out of
 {2, ‘z’, ‘l’, ‘L’} for longitudinal plane</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
@@ -633,7 +633,7 @@ name will be generated</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>statfun</strong> – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -650,7 +650,7 @@ is constrained in the interval
 <a class="reference internal" href="at.physics.ring_parameters.html#at.physics.ring_parameters.envelope_parameters" title="at.physics.ring_parameters.envelope_parameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">envelope_parameters()</span></code></a>.</p>
 <p><em>value</em> is the value of the Observable.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">EmittanceObservable</span><span class="p">(</span><span class="s1">&#39;emittances&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;h&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">EmittanceObservable</span><span class="p">(</span><span class="s2">&quot;emittances&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe the horizontal emittance</p>
@@ -667,8 +667,8 @@ is constrained in the interval
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Geometry parameter name: one in {‘x’, ‘y’, ‘angle’}</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Geometry parameter name: one in {‘x’, ‘y’, ‘angle’}</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
@@ -676,7 +676,7 @@ name will be generated</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>statfun</strong> – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -689,7 +689,7 @@ is constrained in the interval
 <p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
 shape of <em>value</em>.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GeometryObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GeometryObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe x coordinate of monitors</p>
@@ -697,7 +697,7 @@ shape of <em>value</em>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="at.latticetools.observables.LatticeObservable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LatticeObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Ellipsis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#LatticeObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.LatticeObservable" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LatticeObservable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#LatticeObservable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.LatticeObservable" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#at.latticetools.observables.ElementObservable" title="at.latticetools.observables.ElementObservable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementObservable</span></code></a></p>
 <p>Observe an attribute of selected lattice elements.</p>
 <dl class="field-list simple">
@@ -705,10 +705,10 @@ shape of <em>value</em>.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Elements to be observed
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>attrname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Attribute name</p></li>
-<li><p><strong>index</strong> (<em>AxisDef</em>) – Index in the attribute array. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+<li><p><strong>attrname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Attribute name</p></li>
+<li><p><strong>index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Index in the attribute array. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>,
 the whole array is specified</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
@@ -718,8 +718,7 @@ observable. Example: <code class="code highlight pycode python docutils literal 
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LatticeObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">,</span> <span class="s1">&#39;KickAngle&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-<span class="gp">... </span>                     <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LatticeObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">,</span> <span class="s2">&quot;KickAngle&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe the sum of horizontal kicks in Sextupoles</p>
@@ -736,13 +735,13 @@ observable. Example: <code class="code highlight pycode python docutils literal 
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>param</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Callable</em><em>]</em>) – Optics parameter name (see <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>)
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>Callable</em>) – Optics parameter name (see <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>)
 or <a class="reference internal" href="#localoptics-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
-<li><p><strong>plane</strong> (<em>AxisDef</em>) – Index in the parameter array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+<li><p><strong>plane</strong> (<em>AxisDef</em>) – Index in the parameter array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
 the whole array is specified</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
-<li><p><strong>all_points</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Compute the local optics at all elements. This avoids
+<li><p><strong>all_points</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Compute the local optics at all elements. This avoids
 discontinuities in phase advances. This is automatically set for the
 ‘mu’ parameter, but may need to be specified for user-defined evaluation
 functions using the phase advance.</p></li>
@@ -750,11 +749,11 @@ functions using the phase advance.</p></li>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>summary</strong> – Set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a> if the user-defined
+<li><p><strong>summary</strong> – Set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a> if the user-defined
 evaluation function returns a single item (see below)</p></li>
 <li><p><strong>statfun</strong> – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -774,16 +773,17 @@ shape of <em>value</em>.</p>
 of the observable,</p></li>
 <li><p><em>value</em> is the value of the Observable and must have one line per
 refpoint. Alternatively, it may be a single line, but then the
-<em>summary</em> keyword must be set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>.</p></li>
+<em>summary</em> keyword must be set to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>.</p></li>
 </ul>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe the beta in both planes at all <a class="reference internal" href="at.lattice.elements.html#at.lattice.elements.Monitor" title="at.lattice.elements.Monitor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Monitor</span></code></a>
 locations</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LocalOpticsObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                       <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">LocalOpticsObservable</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">statfun</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span>
+<span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe the maximum vertical beta in Quadrupoles</p>
@@ -791,8 +791,11 @@ locations</p>
 <span class="gp">... </span>    <span class="n">mu</span> <span class="o">=</span> <span class="n">elemdata</span><span class="o">.</span><span class="n">mu</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">mu</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LocalOpticsObservable</span><span class="p">([</span><span class="mi">33</span><span class="p">,</span> <span class="mi">101</span><span class="p">],</span> <span class="n">phase_advance</span><span class="p">,</span>
-<span class="gp">... </span>              <span class="n">all_points</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">allobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">LocalOpticsObservable</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="p">[</span><span class="mi">33</span><span class="p">,</span> <span class="mi">101</span><span class="p">],</span> <span class="n">phase_advance</span><span class="p">,</span> <span class="n">all_points</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The user-defined evaluation function computes the phase-advance
@@ -812,9 +815,9 @@ depending upon <a class="reference internal" href="at.lattice.lattice_object.htm
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the transfer matrix, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the transfer matrix, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
 the whole matrix is specified</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
@@ -822,7 +825,7 @@ name will be generated</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>statfun</strong> – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -835,7 +838,7 @@ is constrained in the interval
 <p>The <em>target</em>, <em>weight</em> and <em>bounds</em> inputs must be broadcastable to the
 shape of <em>value</em>.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">MatrixObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;px&#39;</span><span class="p">))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">MatrixObservable</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Monitor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;px&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Observe the transfer matrix from origin to monitor locations and
@@ -845,7 +848,7 @@ extract T[0,1]</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.latticetools.observables.Need">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Need</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#Need"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.Need" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <p>Defines the computation requirements for an <a class="reference internal" href="#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.latticetools.observables.Need.ALL_POINTS">
@@ -926,23 +929,23 @@ to the evaluation function</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.latticetools.observables.Observable">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Observable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observables.html#Observable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observables.Observable" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Base class for Observables. Can be used for user-defined observables</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
-<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <a class="reference internal" href="#base-eval"><span class="std std-ref">evaluation function</span></a></p></li>
+<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – <a class="reference internal" href="#base-eval"><span class="std std-ref">evaluation function</span></a></p></li>
 <li><p><strong>*args</strong> – Arguments provided to the evaluation function</p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
 <li><p><strong>bounds</strong> – Tuple of lower and upper bounds. The parameter
 is constrained in the interval
 [<em>target</em>+<em>low_bound</em> <em>target</em>+<em>up_bound</em>]</p></li>
-<li><p><strong>needs</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Set" title="(in Python v3.12)"><em>Set</em></a><em>[</em><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><em>Need</em></a><em>]</em>) – Set of requirements. This selects the data provided
+<li><p><strong>needs</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Set" title="(in Python v3.13)"><em>Set</em></a><em>[</em><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><em>Need</em></a><em>]</em>) – Set of requirements. This selects the data provided
 to the evaluation function. <em>needs</em> items are members of the
 <a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><code class="xref py py-class docutils literal notranslate"><span class="pre">Need</span></code></a> enumeration</p></li>
 </ul>
@@ -981,7 +984,7 @@ container which provides the <em>data</em> arguments.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*data</strong> – Raw data, provided by <a class="reference internal" href="at.latticetools.observablelist.html#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a> and
 sent to the evaluation function</p></li>
-<li><p><strong>initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – It <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, store the result as the initial
+<li><p><strong>initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – It <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, store the result as the initial
 value</p></li>
 </ul>
 </dd>
@@ -997,19 +1000,19 @@ value</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.latticetools.observables.Observable.fun">
-<span class="sig-name descname"><span class="pre">fun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#at.latticetools.observables.Observable.fun" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.13)"><span class="pre">Callable</span></a></em><a class="headerlink" href="#at.latticetools.observables.Observable.fun" title="Link to this definition">#</a></dt>
 <dd><p>Evaluation function</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.latticetools.observables.Observable.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><span class="pre">str</span></a></em><a class="headerlink" href="#at.latticetools.observables.Observable.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#at.latticetools.observables.Observable.name" title="Link to this definition">#</a></dt>
 <dd><p>Observable name</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.latticetools.observables.Observable.needs">
-<span class="sig-name descname"><span class="pre">needs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Set" title="(in Python v3.12)"><span class="pre">Set</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><span class="pre">Need</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#at.latticetools.observables.Observable.needs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">needs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Set" title="(in Python v3.13)"><span class="pre">Set</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#at.latticetools.observables.Need" title="at.latticetools.observables.Need"><span class="pre">Need</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#at.latticetools.observables.Observable.needs" title="Link to this definition">#</a></dt>
 <dd><p>Set of requirements</p>
 </dd></dl>
 
@@ -1064,9 +1067,9 @@ value</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the orbit vector, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>,
+<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the orbit vector, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>,
 the whole vector is specified</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
@@ -1074,7 +1077,7 @@ name will be generated</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>statfun</strong> – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -1101,14 +1104,14 @@ shape of <em>value</em>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <a class="reference internal" href="#ring-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>fun</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – <a class="reference internal" href="#ring-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -1153,9 +1156,9 @@ shape of <em>value</em>.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>refpts</strong> (<em>Refpts</em>) – Observation points.
 See “<a class="reference internal" href="at.lattice.utils.html#refpts"><span class="std std-ref">Selecting elements in a lattice</span></a>”</p></li>
-<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the orbit array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+<li><p><strong>axis</strong> (<em>AxisDef</em>) – Index in the orbit array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
 the whole array is specified</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
 </ul>
 </dd>
@@ -1163,7 +1166,7 @@ name will be generated</p></li>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>statfun</strong> – Post-processing function called on the value of the
 observable. Example: <code class="code highlight pycode python docutils literal highlight-python"><span class="n">statfun</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">mean</span></code></p></li>
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -1185,20 +1188,20 @@ shape of <em>value</em>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Optics parameter name (see <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>)
+<li><p><strong>param</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Optics parameter name (see <a class="reference internal" href="at.physics.linear.html#at.physics.linear.get_optics" title="at.physics.linear.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a>)
 or <a class="reference internal" href="#globaloptics-eval"><span class="std std-ref">user-defined evaluation function</span></a></p></li>
-<li><p><strong>plane</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a><em> | </em><em>None</em><em> | </em><em>ellipsis</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><em>Tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a><em> | </em><em>None</em><em> | </em><em>ellipsis</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.12)"><em>slice</em></a><em> | </em><em>None</em><em> | </em><em>ellipsis</em><em>]</em>) – Index in the parameter array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
+<li><p><strong>plane</strong> (<em>AxisDef</em>) – Index in the parameter array, If <a class="reference external" href="https://docs.python.org/3/library/constants.html#Ellipsis" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsis</span></code></a>,
 the whole array is specified</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Observable name. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, an explicit
 name will be generated</p></li>
-<li><p><strong>use_integer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – For <em>‘tune’</em> parameter: derive the tune from the
+<li><p><strong>use_integer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – For <em>‘tune’</em> parameter: derive the tune from the
 phase advance to avoid skipping integers. Slower than looking only
 at the fractional part</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
+<li><p><strong>target</strong> – Target value for a constraint. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>
 (default), the residual will always be zero.</p></li>
 <li><p><strong>weight</strong> – Weight factor: the residual is
 <code class="code highlight pycode python docutils literal highlight-python"><span class="p">((</span><span class="n">value</span><span class="o">-</span><span class="n">target</span><span class="p">)</span><span class="o">/</span><span class="n">weight</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></code></p></li>
@@ -1218,11 +1221,11 @@ shape of <em>value</em>.</p>
 <li><p><em>value</em> is the value of the Observable.</p></li>
 </ul>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s1">&#39;tune&#39;</span><span class="p">,</span> <span class="n">use_integer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s2">&quot;tune&quot;</span><span class="p">,</span> <span class="n">use_integer</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe the tune in both planes, including the integer part (slower)</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s1">&#39;chromaticity&#39;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">GlobalOpticsObservable</span><span class="p">(</span><span class="s2">&quot;chromaticity&quot;</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="s2">&quot;v&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Observe the vertical chromaticity</p>

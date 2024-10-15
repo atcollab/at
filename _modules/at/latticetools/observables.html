@@ -438,7 +438,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">repeat</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 
 <span class="c1"># For sys.version_info.minor &lt; 9:</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
@@ -456,7 +456,7 @@ document.write(`
 <span class="c1"># functions are replaced be module-level callable class instances:</span>
 
 
-<span class="k">class</span> <span class="nc">_ModFun</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_ModFun</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;General and pickleable evaluation function&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">statfun</span><span class="p">):</span>
@@ -467,7 +467,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">statfun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fun</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">_ArrayAccess</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_ArrayAccess</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to selected items in an array&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
@@ -478,7 +478,7 @@ document.write(`
         <span class="k">return</span> <span class="n">data</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">_RecordAccess</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_RecordAccess</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to selected items in a record array&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
@@ -491,7 +491,7 @@ document.write(`
         <span class="k">return</span> <span class="n">data</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_all_rows</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RefIndex</span><span class="p">]):</span>
+<span class="k">def</span> <span class="nf">_all_rows</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">RefIndex</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepends &quot;all rows&quot; (&quot;:&quot;) to an index tuple&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -501,7 +501,7 @@ document.write(`
         <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">index</span>
 
 
-<span class="k">class</span> <span class="nc">_Tune</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_Tune</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get integer tune from the phase advance&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n">RefIndex</span><span class="p">):</span>
@@ -512,7 +512,7 @@ document.write(`
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">pi</span>
 
 
-<span class="k">class</span> <span class="nc">_Ring</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_Ring</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get an attribute of a lattice element&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrname</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">refpts</span><span class="p">):</span>
@@ -564,18 +564,18 @@ document.write(`
 
 <div class="viewcode-block" id="Observable">
 <a class="viewcode-back" href="../../../p/api/at.latticetools.observables.html#at.latticetools.observables.Observable">[docs]</a>
-<span class="k">class</span> <span class="nc">Observable</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Observable</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for Observables. Can be used for user-defined observables&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
         <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-        <span class="n">needs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Set</span><span class="p">[</span><span class="n">Need</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">needs</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Need</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -791,8 +791,8 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span> <span class="n">kwargs</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -851,9 +851,9 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fun</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">summary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">statfun</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">statfun</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -881,7 +881,7 @@ document.write(`
         <span class="n">name</span> <span class="o">=</span> <span class="n">fun</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">statfun</span><span class="p">:</span>
             <span class="n">summary</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">statfun</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">statfun</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">)&quot;</span>
             <span class="n">fun</span> <span class="o">=</span> <span class="n">_ModFun</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">statfun</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="n">summary</span>
@@ -936,9 +936,7 @@ document.write(`
 
     <span class="n">_field_list</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;angle&quot;</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -964,7 +962,7 @@ document.write(`
 
 <span class="sd">        Example:</span>
 
-<span class="sd">            &gt;&gt;&gt; obs = GeometryObservable(at.Monitor, param=&#39;x&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; obs = GeometryObservable(at.Monitor, param=&quot;x&quot;)</span>
 
 <span class="sd">            Observe x coordinate of monitors</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -986,7 +984,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -1038,7 +1036,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span>
         <span class="n">axis</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="bp">Ellipsis</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
@@ -1067,7 +1065,7 @@ document.write(`
 
 <span class="sd">        Example:</span>
 
-<span class="sd">            &gt;&gt;&gt; obs = MatrixObservable(at.Monitor, axis=(&#39;x&#39;, &#39;px&#39;))</span>
+<span class="sd">            &gt;&gt;&gt; obs = MatrixObservable(at.Monitor, axis=(&quot;x&quot;, &quot;px&quot;))</span>
 
 <span class="sd">            Observe the transfer matrix from origin to monitor locations and</span>
 <span class="sd">            extract T[0,1]</span>
@@ -1081,7 +1079,7 @@ document.write(`
 
 <span class="k">class</span> <span class="nc">_GlobalOpticsObservable</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -1130,9 +1128,9 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span>
-        <span class="n">param</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span>
+        <span class="n">param</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">plane</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="bp">Ellipsis</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">all_points</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1183,13 +1181,14 @@ document.write(`
 
 <span class="sd">        Examples:</span>
 
-<span class="sd">            &gt;&gt;&gt; obs = LocalOpticsObservable(at.Monitor, &#39;beta&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; obs = LocalOpticsObservable(at.Monitor, &quot;beta&quot;)</span>
 
 <span class="sd">            Observe the beta in both planes at all :py:class:`.Monitor`</span>
 <span class="sd">            locations</span>
 
-<span class="sd">            &gt;&gt;&gt; obs = LocalOpticsObservable(at.Quadrupole, &#39;beta&#39;, plane=&#39;y&#39;,</span>
-<span class="sd">            ...                        statfun=np.max)</span>
+<span class="sd">            &gt;&gt;&gt; obs = LocalOpticsObservable(</span>
+<span class="sd">            ...     at.Quadrupole, &quot;beta&quot;, plane=&quot;y&quot;, statfun=np.max</span>
+<span class="sd">            ... )</span>
 
 <span class="sd">            Observe the maximum vertical beta in Quadrupoles</span>
 
@@ -1197,8 +1196,11 @@ document.write(`
 <span class="sd">            ...     mu = elemdata.mu</span>
 <span class="sd">            ...     return mu[-1] - mu[0]</span>
 <span class="sd">            &gt;&gt;&gt;</span>
-<span class="sd">            &gt;&gt;&gt; allobs.append(LocalOpticsObservable([33, 101], phase_advance,</span>
-<span class="sd">            ...               all_points=True, summary=True))</span>
+<span class="sd">            &gt;&gt;&gt; allobs.append(</span>
+<span class="sd">            ...     LocalOpticsObservable(</span>
+<span class="sd">            ...         [33, 101], phase_advance, all_points=True, summary=True</span>
+<span class="sd">            ...     )</span>
+<span class="sd">            ... )</span>
 
 <span class="sd">            The user-defined evaluation function computes the phase-advance</span>
 <span class="sd">            between the 1st and last given reference points, here the elements</span>
@@ -1233,8 +1235,8 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span>
         <span class="n">attrname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">index</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="bp">Ellipsis</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1"># noinspection PyUnresolvedReferences</span>
@@ -1243,7 +1245,7 @@ document.write(`
 <span class="sd">            refpts:         Elements to be observed</span>
 <span class="sd">              See &quot;:ref:`Selecting elements in a lattice &lt;refpts&gt;`&quot;</span>
 <span class="sd">            attrname:       Attribute name</span>
-<span class="sd">            index:          Index in the attribute array. If :py:obj:`Ellipsis`,</span>
+<span class="sd">            index:          Index in the attribute array. If :py:obj:`None`,</span>
 <span class="sd">              the whole array is specified</span>
 <span class="sd">            name:           Observable name. If :py:obj:`None`, an explicit</span>
 <span class="sd">              name will be generated</span>
@@ -1254,8 +1256,7 @@ document.write(`
 
 <span class="sd">        Example:</span>
 
-<span class="sd">            &gt;&gt;&gt; obs = LatticeObservable(at.Sextupole, &#39;KickAngle&#39;, plane=0,</span>
-<span class="sd">            ...                      statfun=np.sum)</span>
+<span class="sd">            &gt;&gt;&gt; obs = LatticeObservable(at.Sextupole, &quot;KickAngle&quot;, index=0, statfun=np.sum)</span>
 
 <span class="sd">            Observe the sum of horizontal kicks in Sextupoles</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1278,7 +1279,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">refpts</span><span class="p">:</span> <span class="n">Refpts</span><span class="p">,</span>
         <span class="n">axis</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="bp">Ellipsis</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -1320,7 +1321,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -1357,7 +1358,7 @@ document.write(`
 
 <span class="sd">        Example:</span>
 
-<span class="sd">            &gt;&gt;&gt; EmittanceObservable(&#39;emittances&#39;, plane=&#39;h&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; EmittanceObservable(&quot;emittances&quot;, plane=&quot;h&quot;)</span>
 
 <span class="sd">            Observe the horizontal emittance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1377,7 +1378,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">GlobalOpticsObservable</span><span class="p">(</span>
     <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">plane</span><span class="p">:</span> <span class="n">AxisDef</span> <span class="o">=</span> <span class="bp">Ellipsis</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">use_integer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
@@ -1421,11 +1422,11 @@ document.write(`
 
 <span class="sd">    Examples:</span>
 
-<span class="sd">        &gt;&gt;&gt; obs = GlobalOpticsObservable(&#39;tune&#39;, use_integer=True)</span>
+<span class="sd">        &gt;&gt;&gt; obs = GlobalOpticsObservable(&quot;tune&quot;, use_integer=True)</span>
 
 <span class="sd">        Observe the tune in both planes, including the integer part (slower)</span>
 
-<span class="sd">        &gt;&gt;&gt; obs = GlobalOpticsObservable(&#39;chromaticity&#39;, plane=&#39;v&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; obs = GlobalOpticsObservable(&quot;chromaticity&quot;, plane=&quot;v&quot;)</span>
 
 <span class="sd">        Observe the vertical chromaticity</span>
 <span class="sd">    &quot;&quot;&quot;</span>

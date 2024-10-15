@@ -518,7 +518,7 @@ document.write(`
 <dl class="py class">
 <dt class="sig sig-object py" id="at.collective.wake_object.Wake">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Wake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/collective/wake_object.html#Wake"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.collective.wake_object.Wake" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class to generate a wake object</p>
 <p>The wake object is defined by its srange, specified
 at initialization, and one or several components corresponding
@@ -573,16 +573,16 @@ to avoid using too much memory to store the table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – starting s-coordinate of the table
+<li><p><strong>start</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – starting s-coordinate of the table
 (can be negative for wake potential)</p></li>
-<li><p><strong>bunch_ext</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – maximum bunch extension, function
+<li><p><strong>bunch_ext</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – maximum bunch extension, function
 generates data at +/- bunch_ext
 around the bucket center</p></li>
-<li><p><strong>short_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – step size for the short range wake table</p></li>
-<li><p><strong>long_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – step size for the long range wake table</p></li>
-<li><p><strong>bunch_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – minimum bunch interval. Data will be generated
+<li><p><strong>short_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – step size for the short range wake table</p></li>
+<li><p><strong>long_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – step size for the long range wake table</p></li>
+<li><p><strong>bunch_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – minimum bunch interval. Data will be generated
 for each <code class="docutils literal notranslate"><span class="pre">bunch_interval</span></code> step</p></li>
-<li><p><strong>totallength</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – total length of the wake table, has to contain
+<li><p><strong>totallength</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – total length of the wake table, has to contain
 the full bunch extension</p></li>
 </ul>
 </dd>
@@ -636,9 +636,9 @@ and giving array parameters</p>
 <li><p><strong>length</strong></p></li>
 <li><p><strong>rvac</strong></p></li>
 <li><p><strong>conduct</strong></p></li>
-<li><p><strong>beta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Relativistic <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
+<li><p><strong>beta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Relativistic <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
 <li><p><strong>yokoya_factor</strong> – Yokoya factor</p></li>
-<li><p><strong>nelems</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>)</p></li>
+<li><p><strong>nelems</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -657,9 +657,9 @@ and giving array parameters</p>
 <li><p><strong>qfactor</strong> – Q factor</p></li>
 <li><p><strong>rshunt</strong> – Shunt impedance, [<span class="math notranslate nohighlight">\(\Omega\)</span>] for longitudinal,
 [<span class="math notranslate nohighlight">\(\Omega/m\)</span>] for transverse</p></li>
-<li><p><strong>beta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Relativistic <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
+<li><p><strong>beta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Relativistic <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
 <li><p><strong>yokoya_factor</strong> – Yokoya factor</p></li>
-<li><p><strong>nelems</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of resonators</p></li>
+<li><p><strong>nelems</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of resonators</p></li>
 </ul>
 </dd>
 </dl>
@@ -707,7 +707,7 @@ and giving array parameters</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/collective/wake_object.html#WakeComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.collective.wake_object.WakeComponent" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <p>Enum class for wake component</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent.DX">
@@ -744,7 +744,7 @@ and giving array parameters</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.collective.wake_object.WakeType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/collective/wake_object.html#WakeType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.collective.wake_object.WakeType" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
 <p>Enum class for wake type</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.collective.wake_object.WakeType.FILE">

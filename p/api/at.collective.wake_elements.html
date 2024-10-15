@@ -529,19 +529,19 @@ additional argument are frequency, qfactor, rshunt</p>
 <li><p><strong>name</strong> (<em>family</em>) – Element name</p></li>
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice in which the element will be inserted</p></li>
 <li><p><strong>srange</strong> – Vector of s position where to sample the wake</p></li>
-<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Resonator frequency [Hz]</p></li>
-<li><p><strong>qfactor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Q factor</p></li>
-<li><p><strong>rshunt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Shunt impedance, [<span class="math notranslate nohighlight">\(\Omega\)</span>] for longitudinal,
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Resonator frequency [Hz]</p></li>
+<li><p><strong>qfactor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Q factor</p></li>
+<li><p><strong>rshunt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Shunt impedance, [<span class="math notranslate nohighlight">\(\Omega\)</span>] for longitudinal,
 [<span class="math notranslate nohighlight">\(\Omega/m\)</span>] for transverse</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>yokoya_factor</strong> – Yokoya factor</p></li>
-<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
-<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
+<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
+<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
 <li><p><strong>ZCuts</strong> – Limits for fixed slicing, default is adaptive</p></li>
-<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
+<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
 to account for beta function at the observation point for
 example. Default: (1,1,1)</p></li>
 </ul>
@@ -562,18 +562,18 @@ additional argument are yokoya_factor, length, pipe radius, conductivity</p>
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice in which the element will be inserted</p></li>
 <li><p><strong>srange</strong> – Vector of s position where to sample the wake</p></li>
 <li><p><strong>wakecomp</strong> (<a class="reference internal" href="at.collective.wake_object.html#at.collective.wake_object.WakeComponent" title="at.collective.wake_object.WakeComponent"><em>WakeComponent</em></a>) – Wake component</p></li>
-<li><p><strong>rwlength</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>)</p></li>
-<li><p><strong>rvac</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>)</p></li>
-<li><p><strong>conduc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>)</p></li>
+<li><p><strong>rwlength</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>rvac</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>conduc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
 <li><p><strong>yokoya_factor</strong> – Yokoya factor</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
-<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
+<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
+<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
 <li><p><strong>ZCuts</strong> – Limits for fixed slicing, default is adaptive</p></li>
-<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
+<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
 to account for beta function at the observation point for
 example. Default: (1,1,1)</p></li>
 </ul>
@@ -623,19 +623,19 @@ additonal argument are frequency, qfactor, rshunt</p>
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice in which the element will be inserted</p></li>
 <li><p><strong>srange</strong> – Vector of s position where to sample the wake</p></li>
 <li><p><strong>wakecomp</strong> (<a class="reference internal" href="at.collective.wake_object.html#at.collective.wake_object.WakeComponent" title="at.collective.wake_object.WakeComponent"><em>WakeComponent</em></a>) – Wake component</p></li>
-<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Resonator frequency [Hz]</p></li>
-<li><p><strong>qfactor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Q factor</p></li>
-<li><p><strong>rshunt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Shunt impedance, [<span class="math notranslate nohighlight">\(\Omega\)</span>] for longitudinal,
+<li><p><strong>frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Resonator frequency [Hz]</p></li>
+<li><p><strong>qfactor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Q factor</p></li>
+<li><p><strong>rshunt</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Shunt impedance, [<span class="math notranslate nohighlight">\(\Omega\)</span>] for longitudinal,
 [<span class="math notranslate nohighlight">\(\Omega/m\)</span>] for transverse</p></li>
 <li><p><strong>yokoya_factor</strong> – Yokoya factor</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
-<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
+<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
+<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
 <li><p><strong>ZCuts</strong> – Limits for fixed slicing, default is adaptive</p></li>
-<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
+<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
 to account for beta function at the observation point for
 example. Default: (1,1,1)</p></li>
 </ul>
@@ -688,10 +688,10 @@ example. Default: (1,1,1)</p></li>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
-<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
+<li><p><strong>Nslice</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of slices per bunch. Default: 101</p></li>
+<li><p><strong>Nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of turn for the wake field. Default: 1</p></li>
 <li><p><strong>ZCuts</strong> – Limits for fixed slicing, default is adaptive</p></li>
-<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
+<li><p><strong>NormFact</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>,</em><em>...</em><em>]</em>) – Normalization for the 3 planes,
 to account for beta function at the observation point for
 example. Default: (1,1,1)</p></li>
 </ul>

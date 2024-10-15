@@ -520,12 +520,12 @@ By default, it creates a new figure for the plot, but if provided with
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p></li>
-<li><p><strong>plot_function</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.12)"><em>Callable</em></a>) – <p>Specific data generating function to be called
+<li><p><strong>plot_function</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.13)"><em>Callable</em></a>) – <p>Specific data generating function to be called
 plotting function. <code class="docutils literal notranslate"><span class="pre">plot_function</span></code> is called as:</p>
 <p><code class="code docutils literal notranslate"><span class="pre">title,</span> <span class="pre">left,</span> <span class="pre">right</span> <span class="pre">=</span> <span class="pre">plot_function(ring,</span> <span class="pre">refpts,</span> <span class="pre">*args,</span>
 <span class="pre">**kwargs)</span></code></p>
 <p>and should return 2 or 3 output:</p>
-<p><code class="docutils literal notranslate"><span class="pre">title</span></code>: plot title or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">title</span></code>: plot title or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
 <p><code class="docutils literal notranslate"><span class="pre">left</span></code>: tuple returning the data for the main (left) axis</p>
 <blockquote>
 <div><p>left[0] - y-axis label</p>
@@ -543,29 +543,29 @@ plotting function. <code class="docutils literal notranslate"><span class="pre">
 <dd class="field-even"><ul class="simple">
 <li><p><strong>s_range</strong> – Lattice range of interest, default: unchanged,
 initially set to the full cell.</p></li>
-<li><p><strong>axes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>Axes</em><em>, </em><em>Optional</em><em>[</em><em>Axes</em><em>]</em>) – <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a>
+<li><p><strong>axes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><em>Axes</em><em>, </em><em>Optional</em><em>[</em><em>Axes</em><em>]</em>) – <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a>
 for plotting as (primary_axes, secondary_axes).
 Default: create new axes</p></li>
-<li><p><strong>slices</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of slices. Default: 400</p></li>
-<li><p><strong>legend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Show a legend on the plot. Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a></p></li>
+<li><p><strong>slices</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of slices. Default: 400</p></li>
+<li><p><strong>legend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Show a legend on the plot. Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a></p></li>
 <li><p><strong>labels</strong> (<em>Refpts</em>) – display the name of selected elements.
-Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, block until the figure is closed.
-Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
-<li><p><strong>dipole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Dictionary of properties overloading the default
+Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, block until the figure is closed.
+Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
+<li><p><strong>dipole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – Dictionary of properties overloading the default
 properties of dipole representation. See <a class="reference internal" href="at.plot.synopt.html#at.plot.synopt.plot_synopt" title="at.plot.synopt.plot_synopt"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_synopt()</span></code></a>
 for details</p></li>
-<li><p><strong>quadrupole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
-<li><p><strong>sextupole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
-<li><p><strong>multipole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
-<li><p><strong>monitor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>) – Same definition as for dipole</p></li>
+<li><p><strong>quadrupole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – Same definition as for dipole</p></li>
+<li><p><strong>sextupole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – Same definition as for dipole</p></li>
+<li><p><strong>multipole</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – Same definition as for dipole</p></li>
+<li><p><strong>monitor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a>) – Same definition as for dipole</p></li>
 <li><p><strong>**kwargs</strong> – All other keywords are sent to the plotting function</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left_axes</strong> (<em>Axes</em>) – Main (left) axes</p></li>
-<li><p><strong>right_axes</strong> (<em>Axes</em>) – Secondary (right) axes or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><strong>right_axes</strong> (<em>Axes</em>) – Secondary (right) axes or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
 <li><p><strong>synopt_axes</strong> (<em>Axes</em>) – Synoptic axes</p></li>
 </ul>
 </dd>

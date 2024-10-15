@@ -680,7 +680,7 @@ qf2: 2.1
 </div>
 </div>
 <p>The copy of QF1 in is not affected.</p>
-<p>One can set upper and lower bounds on a variable. Trying to set a value out of the bounds will raise a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueError</span></code></a>. The default is (-<a class="reference external" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.inf</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.inf</span></code></a>).</p>
+<p>One can set upper and lower bounds on a variable. Trying to set a value out of the bounds will raise a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValueError</span></code></a>. The default is (-<a class="reference external" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.inf</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/constants.html#numpy.inf" title="(in NumPy v2.1)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.inf</span></code></a>).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lfbound</span> <span class="o">=</span> <span class="n">ElementVariable</span><span class="p">(</span><span class="n">qf1</span><span class="p">,</span> <span class="s2">&quot;Length&quot;</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">))</span>
@@ -700,7 +700,7 @@ qf2: 2.1
 <span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
 <span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">lfbound</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
 
-<span class="nn">File /opt/hostedtoolcache/Python/3.9.19/x64/lib/python3.9/site-packages/at/lattice/variables.py:202,</span> in <span class="ni">VariableBase.set</span><span class="nt">(self, value, ring)</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.9.20/x64/lib/python3.9/site-packages/at/lattice/variables.py:202,</span> in <span class="ni">VariableBase.set</span><span class="nt">(self, value, ring)</span>
 <span class="g g-Whitespace">    </span><span class="mi">194</span><span class="w"> </span><span class="sd">&quot;&quot;&quot;Set the variable value</span>
 <span class="g g-Whitespace">    </span><span class="mi">195</span><span class="sd"> </span>
 <span class="g g-Whitespace">    </span><span class="mi">196</span><span class="sd"> Args:</span>

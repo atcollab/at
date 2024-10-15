@@ -531,7 +531,7 @@ by using ring.set_cavity_phase().</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> – Lattice description</p></li>
-<li><p><strong>ct_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>) – Forced lower and upper ct values for the plot.</p></li>
+<li><p><strong>ct_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>) – Forced lower and upper ct values for the plot.</p></li>
 </ul>
 </dd>
 </dl>
@@ -580,7 +580,7 @@ Allowed values are: <em>‘x’</em>, <em>‘xp’</em>, <em>‘y’</em>,
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>acceptance</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>ndarray</em><em>, </em><em>ndarray</em><em>, </em><em>ndarray</em><em>]</em>) – tuple containing
+<li><p><strong>acceptance</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><em>ndarray</em><em>, </em><em>ndarray</em><em>, </em><em>ndarray</em><em>]</em>) – tuple containing
 pre-computed acceptance <em>(boundary, survived, grid)</em></p></li>
 <li><p><strong>npoints</strong> – (len(planes),) array: number of points in each
 dimension</p></li>
@@ -591,9 +591,9 @@ max. amplitude</p></li>
 <li><p><a class="reference internal" href="at.acceptance.boundary.html#at.acceptance.boundary.GridMode.RECURSIVE" title="at.acceptance.boundary.GridMode.RECURSIVE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GridMode.RECURSIVE</span></code></a>: initial step</p></li>
 </ul>
 </p></li>
-<li><p><strong>nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of turns for the tracking</p></li>
+<li><p><strong>nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Number of turns for the tracking</p></li>
 <li><p><strong>obspt</strong> (<em>Refpts</em>) – Observation points. Default: start of the machine</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Static momentum offset</p></li>
+<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Static momentum offset</p></li>
 <li><p><strong>offset</strong> – Initial orbit. Default: closed orbit</p></li>
 <li><p><strong>bounds</strong> – <p>Defines the tracked range: range=bounds*amplitude.
 It can be used to select quadrants. For example, default values are:</p>
@@ -610,16 +610,16 @@ It can be used to select quadrants. For example, default values are:</p>
 <li><p><a class="reference internal" href="at.acceptance.boundary.html#at.acceptance.boundary.GridMode.RECURSIVE" title="at.acceptance.boundary.GridMode.RECURSIVE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GridMode.RECURSIVE</span></code></a>: radial recursive search</p></li>
 </ul>
 </p></li>
-<li><p><strong>use_mp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Use python multiprocessing (<a class="reference internal" href="at.tracking.deprecated.html#at.tracking.deprecated.patpass" title="at.tracking.deprecated.patpass"><code class="xref py py-func docutils literal notranslate"><span class="pre">patpass()</span></code></a>,
+<li><p><strong>use_mp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Use python multiprocessing (<a class="reference internal" href="at.tracking.deprecated.html#at.tracking.deprecated.patpass" title="at.tracking.deprecated.patpass"><code class="xref py py-func docutils literal notranslate"><span class="pre">patpass()</span></code></a>,
 default use <a class="reference internal" href="at.tracking.deprecated.html#at.tracking.deprecated.lattice_pass" title="at.tracking.deprecated.lattice_pass"><code class="xref py py-func docutils literal notranslate"><span class="pre">lattice_pass()</span></code></a>). In case multiprocessing is not
 enabled, <em>grid_mode</em> is forced to <a class="reference internal" href="at.acceptance.boundary.html#at.acceptance.boundary.GridMode.RECURSIVE" title="at.acceptance.boundary.GridMode.RECURSIVE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GridMode.RECURSIVE</span></code></a>
 (most efficient in single core)</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Print out some information</p></li>
-<li><p><strong>divider</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Value of the divider used in
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Print out some information</p></li>
+<li><p><strong>divider</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Value of the divider used in
 <a class="reference internal" href="at.acceptance.boundary.html#at.acceptance.boundary.GridMode.RECURSIVE" title="at.acceptance.boundary.GridMode.RECURSIVE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GridMode.RECURSIVE</span></code></a> boundary search</p></li>
 <li><p><strong>shift_zero</strong></p></li>
-<li><p><strong>start_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Python multiprocessing start method. The default
-<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> uses the python default that is considered safe.
+<li><p><strong>start_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Python multiprocessing start method. The default
+<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> uses the python default that is considered safe.
 Available parameters: <em>‘fork’</em>, <em>‘spawn’</em>, <em>‘forkserver’</em>.
 The default for linux is <em>‘fork’</em>, the default for macOS and
 Windows is <em>‘spawn’</em>. <em>‘fork’</em> may be used for macOS to speed up
@@ -650,8 +650,8 @@ considered unsafe.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>start_coordinates</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – x,y,angle at starting point</p></li>
-<li><p><strong>centered</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – it True the coordinates origin is the center of the ring</p></li>
+<li><p><strong>start_coordinates</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – x,y,angle at starting point</p></li>
+<li><p><strong>centered</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – it True the coordinates origin is the center of the ring</p></li>
 <li><p><strong>ax</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><em>Axes</em></a><em> | </em><em>None</em>) – axes for the plot. If not given, new axes are created</p></li>
 </ul>
 </dd>
@@ -682,10 +682,10 @@ considered unsafe.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sigma</strong> – <span class="math notranslate nohighlight">\(\Sigma\)</span>-matrix</p></li>
-<li><p><strong>axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – tuple if indices defining the plane of the <span class="math notranslate nohighlight">\(\Sigma\)</span>
+<li><p><strong>axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>) – tuple if indices defining the plane of the <span class="math notranslate nohighlight">\(\Sigma\)</span>
 projection. Allowed values are: <em>‘x’</em>, <em>‘xp’</em>, <em>‘y’</em>,
 <em>‘yp’</em>, <em>‘dp’</em>, <em>‘ct’</em>. Default: (<em>‘x’</em>, <em>‘xp’</em>)</p></li>
-<li><p><strong>scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Scaling factor for the emittance</p></li>
+<li><p><strong>scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Scaling factor for the emittance</p></li>
 <li><p><strong>ax</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><em>Axes</em></a><em> | </em><em>None</em>) – axes for the plot. If not given, new axes are created</p></li>
 </ul>
 </dd>

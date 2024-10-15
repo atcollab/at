@@ -498,7 +498,7 @@ document.write(`
   <section id="module-at.latticetools.observablelist">
 <span id="at-latticetools-observablelist"></span><h1>at.latticetools.observablelist<a class="headerlink" href="#module-at.latticetools.observablelist" title="Link to this heading">#</a></h1>
 <dl class="simple">
-<dt><a class="reference internal" href="#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a>(lattice, …)</dt><dd><p>This container based on <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> is in charge of optics
+<dt><a class="reference internal" href="#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a>(lattice, …)</dt><dd><p>This container based on <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> is in charge of optics
 computations and provides each individual <a class="reference internal" href="at.latticetools.observables.html#at.latticetools.observables.Observable" title="at.latticetools.observables.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a> with its
 specific data.</p>
 </dd>
@@ -529,9 +529,9 @@ method and the following properties:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ObservableList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obsiter=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method=&lt;function</span> <span class="pre">linopt6&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twiss_in=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_in=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/latticetools/observablelist.html#ObservableList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.latticetools.observablelist.ObservableList" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a></p>
 <p>Handles a list of Observables to be evaluated together</p>
-<p><a class="reference internal" href="#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a> supports all <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> methods, like
+<p><a class="reference internal" href="#at.latticetools.observablelist.ObservableList" title="at.latticetools.observablelist.ObservableList"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObservableList</span></code></a> supports all <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> methods, like
 appending, insertion or concatenation with the “+” operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -599,11 +599,11 @@ tunes and horizontal emittance</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a><em> | </em><em>None</em>) – Lattice used for evaluation</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Momentum deviation. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Path lengthening. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>df</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Deviation from the nominal RF frequency.
-Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
-<li><p><strong>initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, store the values as <em>initial values</em></p></li>
+<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Momentum deviation. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><strong>dct</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Path lengthening. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><strong>df</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Deviation from the nominal RF frequency.
+Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><strong>initial</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a>, store the values as <em>initial values</em></p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
@@ -646,8 +646,8 @@ Default: <a class="reference internal" href="at.physics.linear.html#at.physics.l
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
 </ul>
 </dd>
@@ -661,10 +661,10 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
-<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -676,7 +676,7 @@ default, an Exception is raised.</p></li>
 <dd><p>Shape of the flattened values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p>
+<dd class="field-odd"><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -688,10 +688,10 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
-<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -704,10 +704,10 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
-<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -720,10 +720,10 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
-<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -736,8 +736,8 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Ordering for reshaping. See <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.reshape.html#numpy.reshape" title="(in NumPy v2.1)"><code class="xref py py-func docutils literal notranslate"><span class="pre">reshape()</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -750,8 +750,8 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
 </ul>
 </dd>
@@ -764,7 +764,7 @@ default, an Exception is raised.</p></li>
 <dd><p>Return the shapes of all values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p>
+<dd class="field-odd"><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -776,8 +776,8 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
 </ul>
 </dd>
@@ -791,8 +791,8 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
 </ul>
 </dd>
@@ -806,8 +806,8 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
 </ul>
 </dd>
@@ -821,8 +821,8 @@ default, an Exception is raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
-<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
+<li><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p></li>
+<li><p><strong>err</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Default observable value to be used when the evaluation failed. By
 default, an Exception is raised.</p></li>
 </ul>
 </dd>
@@ -835,7 +835,7 @@ default, an Exception is raised.</p></li>
 <dd><p>Return the weights of observables</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – names of selected observables (Default all)</p>
+<dd class="field-odd"><p><strong>*obsnames</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – names of selected observables (Default all)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -850,7 +850,7 @@ default, an Exception is raised.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.deviations">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deviations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.deviations" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">deviations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.deviations" title="Link to this definition">#</a></dt>
 <dd><p>Deviations from target values</p>
 </dd></dl>
 
@@ -907,37 +907,37 @@ default, an Exception is raised.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.residuals">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.residuals" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.residuals" title="Link to this definition">#</a></dt>
 <dd><p>Residuals of all observable</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.shapes">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shapes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.shapes" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shapes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.shapes" title="Link to this definition">#</a></dt>
 <dd><p>Shapes of all values</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.sum_residuals">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sum_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.sum_residuals" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sum_residuals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.sum_residuals" title="Link to this definition">#</a></dt>
 <dd><p>Sum of all residual values</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.values">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.values" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.values" title="Link to this definition">#</a></dt>
 <dd><p>values of all observables</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.weighted_deviations">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighted_deviations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.weighted_deviations" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighted_deviations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.weighted_deviations" title="Link to this definition">#</a></dt>
 <dd><p>Weighted deviations from target values</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="at.latticetools.observablelist.ObservableList.weighted_values">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighted_values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.weighted_values" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighted_values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a></em><a class="headerlink" href="#at.latticetools.observablelist.ObservableList.weighted_values" title="Link to this definition">#</a></dt>
 <dd><p>Weighted values of all observables</p>
 </dd></dl>
 

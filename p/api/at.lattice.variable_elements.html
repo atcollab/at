@@ -512,7 +512,7 @@ document.write(`
 <dl class="py class">
 <dt class="sig sig-object py" id="at.lattice.variable_elements.ACMode">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ACMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/at/lattice/variable_elements.html#ACMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#at.lattice.variable_elements.ACMode" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.IntEnum" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.IntEnum" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></a></p>
 <p>Class to define the excitation types</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.lattice.variable_elements.ACMode.ARBITRARY">
@@ -538,12 +538,12 @@ document.write(`
 <p>Class to generate an AT variable thin multipole element</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>family_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Element name</p>
+<dd class="field-odd"><p><strong>family_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Element name</p>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>AmplitudeA</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Amplitude of the excitation for PolynomA. Default None</p></li>
-<li><p><strong>AmplitudeB</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Amplitude of the excitation for PolynomB. Default None</p></li>
+<li><p><strong>AmplitudeA</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Amplitude of the excitation for PolynomA. Default None</p></li>
+<li><p><strong>AmplitudeB</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Amplitude of the excitation for PolynomB. Default None</p></li>
 <li><p><strong>mode</strong> (<a class="reference internal" href="#at.lattice.variable_elements.ACMode" title="at.lattice.variable_elements.ACMode"><em>ACMode</em></a>) – <p>defines the evaluation grid. Default ACMode.SINE</p>
 <ul>
 <li><p><a class="reference internal" href="#at.lattice.variable_elements.ACMode.SINE" title="at.lattice.variable_elements.ACMode.SINE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ACMode.SINE</span></code></a>: sine function</p></li>
@@ -551,17 +551,17 @@ document.write(`
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">GridMode.ARBITRARY</span></code>: user defined turn-by-turn kick list</p></li>
 </ul>
 </p></li>
-<li><p><strong>FrequencyA</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Frequency of the sine excitation for PolynomA</p></li>
-<li><p><strong>FrequencyB</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Frequency of the sine excitation for PolynomB</p></li>
-<li><p><strong>PhaseA</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Phase of the sine excitation for PolynomA. Default 0</p></li>
-<li><p><strong>PhaseB</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Phase of the sine excitation for PolynomB. Default 0</p></li>
-<li><p><strong>MaxOrder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Order of the multipole for scalar amplitude. Default 0</p></li>
-<li><p><strong>Seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Seed of the random number generator for white
+<li><p><strong>FrequencyA</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Frequency of the sine excitation for PolynomA</p></li>
+<li><p><strong>FrequencyB</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Frequency of the sine excitation for PolynomB</p></li>
+<li><p><strong>PhaseA</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Phase of the sine excitation for PolynomA. Default 0</p></li>
+<li><p><strong>PhaseB</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Phase of the sine excitation for PolynomB. Default 0</p></li>
+<li><p><strong>MaxOrder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Order of the multipole for scalar amplitude. Default 0</p></li>
+<li><p><strong>Seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Seed of the random number generator for white
 noise excitation. Default datetime.now()</p></li>
-<li><p><strong>FuncA</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – User defined tbt kick list for PolynomA</p></li>
-<li><p><strong>FuncB</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – User defined tbt kick list for PolynomB</p></li>
-<li><p><strong>Periodic</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If True (default) the user defined kick is repeated</p></li>
-<li><p><strong>Ramps</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – <dl class="simple">
+<li><p><strong>FuncA</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – User defined tbt kick list for PolynomA</p></li>
+<li><p><strong>FuncB</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – User defined tbt kick list for PolynomB</p></li>
+<li><p><strong>Periodic</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – If True (default) the user defined kick is repeated</p></li>
+<li><p><strong>Ramps</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – <dl class="simple">
 <dt>Vector (t0, t1, t2, t3) in turn number to define the ramping</dt><dd><p>of the excitation</p>
 </dd>
 </dl>

@@ -524,7 +524,7 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>linestyle</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – <p>str or dictionary.
+<li><p><strong>linestyle</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – <p>str or dictionary.
 If ‘dots’ it uses dotted styles as linestyles</p>
 <blockquote>
 <div><p>{“normal”: “dashdot”, “skew”: “dotted”}</p>
@@ -535,11 +535,11 @@ If ‘dots’ it uses dotted styles as linestyles</p>
 </dl>
 <p>Default: {“normal”: ‘-’, “skew”: ‘–‘}</p>
 </p></li>
-<li><p><strong>linecolor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – defines one color to be used. e.g. ‘k’.
+<li><p><strong>linecolor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – defines one color to be used. e.g. ‘k’.
 Default: custom values. See <a class="reference internal" href="#at.plot.resonances.plot_tune_diagram" title="at.plot.resonances.plot_tune_diagram"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_tune_diagram()</span></code></a></p></li>
-<li><p><strong>linewidth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – defines one integer value for the line width, e.g. 1.
+<li><p><strong>linewidth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – defines one integer value for the line width, e.g. 1.
 Default: custom values. See <a class="reference internal" href="#at.plot.resonances.plot_tune_diagram" title="at.plot.resonances.plot_tune_diagram"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_tune_diagram()</span></code></a></p></li>
-<li><p><strong>addtolabel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – adds a string to the line label</p></li>
+<li><p><strong>addtolabel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – adds a string to the line label</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -555,8 +555,8 @@ Default: custom values. See <a class="reference internal" href="#at.plot.resonan
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>nthorder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – natural number bigger than 0.</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – prints extra info. Default: False.</p></li>
+<li><p><strong>nthorder</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – natural number bigger than 0.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – prints extra info. Default: False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -568,7 +568,7 @@ See Eqs.(1,2,3) of [1].</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – if given order is lower than 0, or window is zero.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – if given order is lower than 0, or window is zero.</p>
 </dd>
 </dl>
 <dl class="simple">
@@ -584,20 +584,20 @@ See Eqs.(1,2,3) of [1].</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>orders</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – integer or tuple of integers larger than zero. Default (1,2,3).</p></li>
-<li><p><strong>periodicity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – periodicity of the machine, integer larger than zero. Default: 1.</p></li>
-<li><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a>) – (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
+<li><p><strong>orders</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – integer or tuple of integers larger than zero. Default (1,2,3).</p></li>
+<li><p><strong>periodicity</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – periodicity of the machine, integer larger than zero. Default: 1.</p></li>
+<li><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a>) – (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
 tune minimum and maximum window. Default: (0,1,0,1).
 window is ignored if the parameter axes is given.</p></li>
-<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – print verbose output.</p></li>
-<li><p><strong>legend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – print legend on the plot. Default: False.</p></li>
-<li><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – show plot. Default: True.</p></li>
-<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – passed to plot.show(). Default: False.</p></li>
-<li><p><strong>debug</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – extra output to check line construction. Default: False.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – print verbose output.</p></li>
+<li><p><strong>legend</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – print legend on the plot. Default: False.</p></li>
+<li><p><strong>show</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – show plot. Default: True.</p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – passed to plot.show(). Default: False.</p></li>
+<li><p><strong>debug</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – extra output to check line construction. Default: False.</p></li>
 <li><p><strong>axes</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><em>Axes</em></a><em> | </em><em>None</em>) – <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.9.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a> for plotting the
-resonances. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, a new figure will be created.
+resonances. If <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, a new figure will be created.
 Note that if axes are given then window is ignored.</p></li>
-<li><p><strong>linestyle</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em> | </em><em>None</em>) – <p>sets the line style for normal and skew resonances.
+<li><p><strong>linestyle</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em> | </em><em>None</em>) – <p>sets the line style for normal and skew resonances.
 If ‘dots’ is given it will use dashdot and dotted for normal
 and skew resonances, respectively.
 A dictionary could be passed containing</p>
@@ -607,12 +607,12 @@ A dictionary could be passed containing</p>
 <p>to plot using style1 and style2.
 Default: uses “-” and “–”. See Normal and Skew convention.</p>
 </p></li>
-<li><p><strong>linecolor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – sets a single color for all the resonances.
+<li><p><strong>linecolor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – sets a single color for all the resonances.
 By default a custom palette is used. See Lines Color and Width.</p></li>
 <li><p><strong>resonances.</strong> (<em>linewidth = integer width to be used for all</em>) – Default: See Color and Width below</p></li>
-<li><p><strong>addtolabel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – adds a string to the line label, e.g. for the fourth
+<li><p><strong>addtolabel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – adds a string to the line label, e.g. for the fourth
 order normal resonance “4n”+addtolabel</p></li>
-<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>any</em><em>]</em>) – <ul>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>any</em><em>]</em>) – <ul>
 <li><dl class="simple">
 <dt>only: if ‘normal’ plots only normal resonances.</dt><dd><p>if ‘skew’ plots only skew resonances.
 Otherwise ignored.
@@ -670,7 +670,7 @@ The default dictionary is created with <a href="#id1"><span class="problematic" 
 <p>you could edit the needed entries.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – if given resonances are lower than 0, or window is zero.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – if given resonances are lower than 0, or window is zero.</p>
 </dd>
 </dl>
 </dd></dl>

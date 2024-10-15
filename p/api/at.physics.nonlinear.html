@@ -527,16 +527,16 @@ order (npoints&gt;order)</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – <p><code class="docutils literal notranslate"><span class="pre">'linopt'</span></code> (dfault) returns the tunes from the
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – <p><code class="docutils literal notranslate"><span class="pre">'linopt'</span></code> (dfault) returns the tunes from the
 <code class="xref py py-func docutils literal notranslate"><span class="pre">linopt6()</span></code> function,</p>
 <p><code class="docutils literal notranslate"><span class="pre">'fft'</span></code> tracks a single particle and computes the tunes with fft,</p>
 <p><code class="docutils literal notranslate"><span class="pre">'laskar'</span></code> tracks a single particle and computes the tunes with
 NAFF.</p>
 </p></li>
-<li><p><strong>dpm</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Maximum momentum deviation</p></li>
-<li><p><strong>npoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of momentum deviations</p></li>
-<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Order of the fit</p></li>
-<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Central momentum deviation</p></li>
+<li><p><strong>dpm</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Maximum momentum deviation</p></li>
+<li><p><strong>npoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of momentum deviations</p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Order of the fit</p></li>
+<li><p><strong>dp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Central momentum deviation</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -562,16 +562,16 @@ qx, qy arrays versus x, y arrays</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>xm</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Maximum x amplitude</p></li>
-<li><p><strong>ym</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Maximum y amplitude</p></li>
-<li><p><strong>npoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of points in each plane</p></li>
-<li><p><strong>nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of turns for tracking</p></li>
+<li><p><strong>xm</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Maximum x amplitude</p></li>
+<li><p><strong>ym</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Maximum y amplitude</p></li>
+<li><p><strong>npoints</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of points in each plane</p></li>
+<li><p><strong>nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of turns for tracking</p></li>
 <li><p><strong>method</strong> – <code class="docutils literal notranslate"><span class="pre">'laskar'</span></code> or <code class="docutils literal notranslate"><span class="pre">'fft'</span></code>. Default: <code class="docutils literal notranslate"><span class="pre">'laskar'</span></code></p></li>
 <li><p><strong>num_harmonics</strong> – Number of harmonic components to compute
 (before mask applied)</p></li>
 <li><p><strong>fmin</strong> – Lower bound for tune</p></li>
 <li><p><strong>fmax</strong> – Upper bound for tune</p></li>
-<li><p><strong>hann</strong> – Turn on Hanning window. Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
+<li><p><strong>hann</strong> – Turn on Hanning window. Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -616,17 +616,17 @@ amplitude and momentum</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
-<li><p><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Oscillation amplitude. If amp is None the
+<li><p><strong>amp</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><em>Sequence</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Oscillation amplitude. If amp is None the
 tunes are calculated from <a class="reference internal" href="at.physics.linear.html#at.physics.linear.linopt6" title="at.physics.linear.linopt6"><code class="xref py py-func docutils literal notranslate"><span class="pre">linopt6()</span></code></a>
 else tracking is used</p></li>
-<li><p><strong>dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Coordinate index of the oscillation</p></li>
-<li><p><strong>nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of turns</p></li>
+<li><p><strong>dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Coordinate index of the oscillation</p></li>
+<li><p><strong>nturns</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of turns</p></li>
 <li><p><strong>method</strong> – <code class="docutils literal notranslate"><span class="pre">'laskar'</span></code> or <code class="docutils literal notranslate"><span class="pre">'fft'</span></code>. Default: <code class="docutils literal notranslate"><span class="pre">'laskar'</span></code></p></li>
 <li><p><strong>num_harmonics</strong> – Number of harmonic components to compute (before
 mask applied)</p></li>
 <li><p><strong>fmin</strong> – Lower bound for tune</p></li>
 <li><p><strong>fmax</strong> – Upper bound for tune</p></li>
-<li><p><strong>hann</strong> – Turn on Hanning window. Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
+<li><p><strong>hann</strong> – Turn on Hanning window. Default: <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a></p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
