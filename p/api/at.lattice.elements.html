@@ -674,8 +674,7 @@ are turned ON.</p></li>
 <p>The <a class="reference internal" href="#at.lattice.elements.Collective" title="at.lattice.elements.Collective"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collective</span></code></a> class must be set as the first base class.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">WakeElement</span><span class="p">(</span><span class="n">Collective</span><span class="p">,</span> <span class="n">Element</span><span class="p">):</span>
-<span class="gp">...</span>
-<span class="gp">... </span>    <span class="n">default_pass</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="s1">&#39;IdentityPass&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">:</span> <span class="s1">&#39;WakeFieldPass&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">default_pass</span> <span class="o">=</span> <span class="p">{</span><span class="kc">False</span><span class="p">:</span> <span class="s2">&quot;IdentityPass&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">:</span> <span class="s2">&quot;WakeFieldPass&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Defines a class where the <a class="reference internal" href="#at.lattice.elements.Element.is_collective" title="at.lattice.elements.Element.is_collective"><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_collective</span></code></a> property is
@@ -736,7 +735,7 @@ handled</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>family_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the element</p></li>
 <li><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Element length [m]</p></li>
-<li><p><strong>bending_angle</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – Bending angle [rd]</p></li>
+<li><p><strong>bending_angle</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Bending angle [rd]</p></li>
 <li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Focusing strength [m^-2]</p></li>
 </ul>
 </dd>
@@ -844,7 +843,7 @@ and <em>RefDZ</em> attributes to get a zero closed orbit for the reference parti
 <dd><p>insert elements inside a drift</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>insert_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.13)"><em>Iterable</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference internal" href="#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em> | </em><em>None</em><em>]</em><em>]</em>) – <p>iterable, each item of insert_list is itself an
+<dd class="field-odd"><p><strong>insert_list</strong> (<em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>, </em><a class="reference internal" href="#at.lattice.elements.Element" title="at.lattice.elements.Element"><em>Element</em></a><em> | </em><em>None</em><em>]</em><em>]</em>) – <p>iterable, each item of insert_list is itself an
 iterable with 2 objects:</p>
 <ol class="arabic simple">
 <li><p>the location where the center of the element
@@ -860,16 +859,15 @@ the drift will be divided but no element will be inserted.</p></li>
 </dl>
 <p>Drifts with negative lengths may be generated if necessary.</p>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;dr&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(((</span><span class="mf">0.25</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s2">&quot;dr&quot;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(((</span><span class="mf">0.25</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>
 <span class="go">[Drift(&#39;dr&#39;, 0.5), Drift(&#39;dr&#39;, 1.0), Drift(&#39;dr&#39;, 0.5)]</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;dr&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(((</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">Marker</span><span class="p">(</span><span class="s1">&#39;m1&#39;</span><span class="p">)),</span>
-<span class="gp">... </span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Marker</span><span class="p">(</span><span class="s1">&#39;m2&#39;</span><span class="p">))))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s2">&quot;dr&quot;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(((</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">Marker</span><span class="p">(</span><span class="s2">&quot;m1&quot;</span><span class="p">)),</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Marker</span><span class="p">(</span><span class="s2">&quot;m2&quot;</span><span class="p">))))</span>
 <span class="go">[Marker(&#39;m1&#39;), Drift(&#39;dr&#39;, 1.0), Marker(&#39;m2&#39;), Drift(&#39;dr&#39;, 1.0)]</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;dr&#39;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(((</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;qp&#39;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),))</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s2">&quot;dr&quot;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">insert</span><span class="p">(((</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s2">&quot;qp&quot;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),))</span>
 <span class="go">[Drift(&#39;dr&#39;, 0.8), Quadrupole(&#39;qp&#39;, 0.4), Drift(&#39;dr&#39;, 0.8)]</span>
 </pre></div>
 </div>
@@ -919,7 +917,7 @@ initial length. <code class="docutils literal notranslate"><span class="pre">sum
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;dr&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">divide</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s2">&quot;dr&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">divide</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
 <span class="go">[Drift(&#39;dr&#39;, 0.1), Drift(&#39;dr&#39;, 0.3), Drift(&#39;dr&#39;, 0.1)]</span>
 </pre></div>
 </div>
@@ -1122,7 +1120,7 @@ initial length. <code class="docutils literal notranslate"><span class="pre">sum
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;dr&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">divide</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Drift</span><span class="p">(</span><span class="s2">&quot;dr&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">divide</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
 <span class="go">[Drift(&#39;dr&#39;, 0.1), Drift(&#39;dr&#39;, 0.3), Drift(&#39;dr&#39;, 0.1)]</span>
 </pre></div>
 </div>
@@ -1335,7 +1333,7 @@ index of non-zero polynomial coefficients</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>family_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the element</p></li>
 <li><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Element length [m]</p></li>
-<li><p><strong>k</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – Focusing strength [mˆ-2]</p></li>
+<li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Focusing strength [mˆ-2]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
@@ -1494,7 +1492,7 @@ suffix.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>family_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Name of the element</p></li>
 <li><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Element length [m]</p></li>
-<li><p><strong>h</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – strength [mˆ-3]</p></li>
+<li><p><strong>h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – strength [mˆ-3]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
@@ -1685,8 +1683,8 @@ index of non-zero polynomial coefficients</p></li>
 <li><p><strong>wiggle_period</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – length must be a multiple of this</p></li>
 <li><p><strong>b_max</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – peak wiggler field [Tesla]</p></li>
 <li><p><strong>energy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – beam energy [eV]</p></li>
-<li><p><strong>Nstep</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – number of integration steps.</p></li>
-<li><p><strong>Nmeth</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – symplectic integration order: 2 or 4</p></li>
+<li><p><strong>Nstep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – number of integration steps.</p></li>
+<li><p><strong>Nmeth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – symplectic integration order: 2 or 4</p></li>
 <li><p><strong>Bx</strong> – harmonics for horizontal wiggler: (6, nHharm)
 array-like object</p></li>
 <li><p><strong>By</strong> – harmonics for vertical wiggler (6, nHharm)
