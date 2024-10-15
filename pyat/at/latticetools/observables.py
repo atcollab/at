@@ -1,6 +1,5 @@
-r"""
-Definition of :py:class:`.Observable` objects used in matching and
-response matrices
+r"""Definition of :py:class:`.Observable` objects used in matching and
+response matrices.
 
 Observables are ways to monitor various lattice parameters and use them in
 matching and correction procedures.
@@ -80,7 +79,7 @@ RefIndex = Union[int, Tuple[int, ...], slice]
 
 
 class _ModFun:
-    """General and pickleable evaluation function"""
+    """General and pickleable evaluation function."""
 
     def __init__(self, fun, statfun):
         self.fun = fun
@@ -91,7 +90,7 @@ class _ModFun:
 
 
 class _ArrayAccess:
-    """Access to selected items in an array"""
+    """Access a selected item in an array."""
 
     def __init__(self, index):
         self.index = _all_rows(index)
@@ -102,7 +101,7 @@ class _ArrayAccess:
 
 
 class _RecordAccess:
-    """Access to selected items in a record array"""
+    """Access selected items in a record array."""
 
     def __init__(self, fieldname: str, index):
         self.index = index
@@ -115,7 +114,7 @@ class _RecordAccess:
 
 
 def _all_rows(index: RefIndex | None):
-    """Prepends "all rows" (":") to an index tuple"""
+    """Prepends "all rows" (":") to an index tuple."""
     if index is None:
         return None
     if isinstance(index, tuple):
@@ -125,7 +124,7 @@ def _all_rows(index: RefIndex | None):
 
 
 class _Tune:
-    """Get integer tune from the phase advance"""
+    """Get integer tune from the phase advance."""
 
     def __init__(self, idx: RefIndex):
         self.fun = _RecordAccess("mu", _all_rows(idx))
@@ -136,7 +135,7 @@ class _Tune:
 
 
 class _Ring:
-    """Get an attribute of a lattice element"""
+    """Get an attribute of a lattice element."""
 
     def __init__(self, attrname, index, refpts):
         self.get_val = _RecordAccess(attrname, index)
@@ -183,7 +182,7 @@ class Need(Enum):
 
 
 class Observable:
-    """Base class for Observables. Can be used for user-defined observables"""
+    """Base class for Observables. Can be used for user-defined observables."""
 
     def __init__(
         self,
@@ -196,8 +195,7 @@ class Observable:
         needs: Set[Need] | None = None,
         **kwargs,
     ):
-        r"""
-        Args:
+        r"""Args:
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
             fun:            :ref:`evaluation function <base_eval>`
@@ -253,11 +251,12 @@ class Observable:
         self.kwargs = kwargs
 
     def __str__(self):
+        """Return the string representation of the Observable."""
         return "\n".join((self._header(), self._all_lines()))
 
     @staticmethod
     def _header():
-        """Header line"""
+        """Header line."""
         fstring = "\n    {:<12} {:>16}  {:>16}  {:>16}  {:>16}  {:>16} "
         return fstring.format(
             "location", "Initial", "Actual", "Low bound", "High bound", "residual"
@@ -298,11 +297,11 @@ class Observable:
         return "\n".join((self.name, values))
 
     def _setup(self, ring: Lattice):
-        """Setup function called when the observable is added to a list"""
+        """Setup function called when the observable is added to a list."""
         pass
 
     def evaluate(self, *data, initial: bool = False):
-        """Compute and store the value of the observable
+        """Compute and store the value of the observable.
 
         The direct evaluation of a single :py:class:`Observable` is normally
         not used. This method is called by the :py:class:`.ObservableList`
@@ -328,7 +327,7 @@ class Observable:
 
     @property
     def value(self):
-        """Value of the observable"""
+        """Value of the observable."""
         val = self._value
         if isinstance(val, Exception):
             raise AtError(f"Evaluation of {self.name} failed: {val.args[0]}") from val
@@ -336,19 +335,20 @@ class Observable:
 
     @property
     def weight(self):
-        """Observable weight"""
+        """Observable weight."""
         return np.broadcast_to(self.w, np.asarray(self._value).shape)
 
     @property
     def weighted_value(self):
         """Weighted value of the Observable, computed as
-        :pycode:`weighted_value = value/weight`"""
+        :pycode:`weighted_value = value/weight`.
+        """
         return self.value / self.w
 
     @property
     def deviation(self):
         """Deviation from target value, computed as
-        :pycode:`deviation = value-target`
+        :pycode:`deviation = value-target`.
         """
         vnow = np.asarray(self.value)
         vsh = vnow.shape
@@ -365,18 +365,17 @@ class Observable:
 
     @property
     def weighted_deviation(self):
-        """:pycode:`weighted_deviation = (value-target)/weight`"""
+        """:pycode:`weighted_deviation = (value-target)/weight`."""
         return self.deviation / self.w
 
     @property
     def residual(self):
-        """residual, computed as
-        :pycode:`residual = ((value-target)/weight)**2`"""
+        """residual, computed as :pycode:`residual = ((value-target)/weight)**2`."""
         return (self.deviation / self.w) ** 2
 
     @staticmethod
     def _set_name(name, param, index):
-        """Compute a default observable names"""
+        """Compute a default observable names."""
         if name is None:
             if (
                 index is Ellipsis
@@ -398,7 +397,7 @@ class Observable:
 
 
 class RingObservable(Observable):
-    """Observe any user-defined property of a ring"""
+    """Observe any user-defined property of a ring."""
 
     def __init__(
         self,
@@ -406,11 +405,10 @@ class RingObservable(Observable):
         name: str | None = None,
         **kwargs,
     ):
-        r"""
-        Args:
+        r"""Args:
             fun:            :ref:`user-defined evaluation function <ring_eval>`
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -454,7 +452,7 @@ class RingObservable(Observable):
 
 
 class ElementObservable(Observable):
-    """Base class for Observables linked to a position in the lattice"""
+    """Base class for Observables linked to a position in the lattice."""
 
     def __init__(
         self,
@@ -465,15 +463,14 @@ class ElementObservable(Observable):
         statfun: Callable | None = None,
         **kwargs,
     ):
-        r"""
-        Args:
+        r"""Args:
             fun:            :ref:`evaluation function <base_eval>`
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
             statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+              observable. Example: :pycode:`statfun=numpy.mean`.
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -544,13 +541,12 @@ class GeometryObservable(ElementObservable):
 
     def __init__(self, refpts: Refpts, param: str, name: str | None = None, **kwargs):
         # noinspection PyUnresolvedReferences
-        r"""
-        Args:
+        r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             param:          Geometry parameter name: one in {'x', 'y', 'angle'}
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             statfun:        Post-processing function called on the value of the
@@ -581,7 +577,7 @@ class GeometryObservable(ElementObservable):
 
 
 class OrbitObservable(ElementObservable):
-    """Observe the transfer matrix at selected locations.
+    """Observe the closed orbit coordinates at selected locations.
 
     Process the *orbit* output of :py:func:`.find_orbit`.
     """
@@ -590,14 +586,13 @@ class OrbitObservable(ElementObservable):
         self, refpts: Refpts, axis: AxisDef = None, name: str | None = None, **kwargs
     ):
         # noinspection PyUnresolvedReferences
-        r"""
-        Args:
+        r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             axis:           Index in the orbit vector, If :py:obj:`None`,
               the whole vector is specified
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             statfun:        Post-processing function called on the value of the
@@ -614,7 +609,6 @@ class OrbitObservable(ElementObservable):
         shape of *value*.
 
         Example:
-
             >>> obs = OrbitObservable(at.Monitor, axis=0)
 
             Observe the horizontal closed orbit at monitor locations
@@ -640,14 +634,13 @@ class MatrixObservable(ElementObservable):
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
-        r"""
-        Args:
+        r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             axis:           Index in the transfer matrix, If :py:obj:`Ellipsis`,
               the whole matrix is specified
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             statfun:        Post-processing function called on the value of the
@@ -681,8 +674,7 @@ class _GlobalOpticsObservable(Observable):
         self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
     ):
         # noinspection PyUnresolvedReferences
-        r"""
-        Args:
+        r"""Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
               :pycode:`value = fun(ringdata, ring=ring)` and returning the value of
@@ -690,7 +682,7 @@ class _GlobalOpticsObservable(Observable):
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -732,8 +724,7 @@ class LocalOpticsObservable(ElementObservable):
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
-        r"""
-        Args:
+        r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             param:          Optics parameter name (see :py:func:`.get_optics`)
@@ -834,15 +825,14 @@ class LatticeObservable(ElementObservable):
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
-        r"""
-        Args:
+        r"""Args:
             refpts:         Elements to be observed
               See ":ref:`Selecting elements in a lattice <refpts>`"
             attrname:       Attribute name
             index:          Index in the attribute array. If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             statfun:        Post-processing function called on the value of the
@@ -861,7 +851,7 @@ class LatticeObservable(ElementObservable):
 
 
 class TrajectoryObservable(ElementObservable):
-    """Observe trajectory coordinates at selected locations
+    """Observe trajectory coordinates at selected locations.
 
     Process the *r_out* output if :py:meth:`.Lattice.track`
     """
@@ -873,14 +863,13 @@ class TrajectoryObservable(ElementObservable):
         name: str | None = None,
         **kwargs,
     ):
-        r"""
-        Args:
+        r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             axis:          Index in the orbit array, If :py:obj:`Ellipsis`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             statfun:        Post-processing function called on the value of the
@@ -911,15 +900,14 @@ class EmittanceObservable(Observable):
     def __init__(
         self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
     ):
-        r"""
-        Args:
+        r"""Args:
             param:          Parameter name (see :py:func:`.envelope_parameters`) or
               :ref:`user-defined evaluation function <emittance_eval>`
             plane:          One out of {0, 'x', 'h', 'H'} for horizontal plane,
              one out of {1, 'y', 'v', 'V'} for vertival plane or one out of
              {2, 'z', 'l', 'L'} for longitudinal plane
             name:           Observable name. If :py:obj:`None`, an explicit
-              name will be generated
+              name will be generated.
 
         Keyword Args:
             statfun:        Post-processing function called on the value of the

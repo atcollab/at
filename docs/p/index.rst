@@ -28,6 +28,7 @@ Sub-packages
    howto/Primer
    notebooks/variables
    notebooks/observables
+   examples
 
 .. toctree::
    :maxdepth: 2
