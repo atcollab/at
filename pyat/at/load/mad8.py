@@ -17,8 +17,9 @@ from scipy.constants import physical_constants as _cst
 
 from ..lattice import Lattice
 
+from .file_input import ignore_names
 # noinspection PyProtectedMember
-from .madx import _MadParser
+from .madx import _MadElement, _MadParser
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -38,7 +39,7 @@ from .madx import (  # noqa: F401
     monitor,
     hmonitor,
     vmonitor,
-    solenoid,
+    value,
 )
 
 # Constants known by MAD-8
@@ -56,7 +57,13 @@ raddeg = pi / 180.0
 emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
-_attr = re.compile(r"\[([a-zA-Z][\w.]*)]")  # Identifier enclosed in square brackets
+_attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
+
+ignore_names(
+    globals(),
+    _MadElement,
+    ["solenoid", "rfmultipole", "crabcavity", "elseparator", "collimator", "tkicker"],
+)
 
 
 class Mad8Parser(_MadParser):
@@ -95,7 +102,7 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    def __init__(self, *, strict: bool = True, verbose: bool = False, **kwargs):
+    def __init__(self, **kwargs):
         """
         Args:
             strict:     If :py:obj:`False`, assign 0 to undefined variables
@@ -104,19 +111,16 @@ class Mad8Parser(_MadParser):
         """
         super().__init__(
             globals(),
-            strict=strict,
-            verbose=verbose,
             continuation="&",
             blockcomment=("comment", "endcomment"),
             **kwargs,
         )
 
-    def evaluate(self, expr):
+    def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""
-        expr = self._no_dot(expr)  # Replace "." by "_", lower case
-        expr = _attr.sub(r".\1", expr)  # Attribute access
+        expr = _attr.sub(r".\1", expr)  # Attribute access: VAR[ATTR]
         expr = expr.replace("^", "**")  # Exponentiation
-        return super().evaluate(expr)
+        return super()._format_command(expr)
 
 
 def load_mad8(

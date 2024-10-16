@@ -1,344 +1,445 @@
-"""Load a lattice from an Elegant file (.lte).
+"""Load a lattice from an Elegant file"""
 
-This is not complete but can parse the example files that I have.
-This parser is quite similar to the Tracy parser in tracy.py.
+from __future__ import annotations
 
-The Elegant file format is described briefly `here
-<https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009>`_.
-It is similar to the `MAD-X format <http://madx.web.cern.ch/madx/>`_.
+__all__ = ["ElegantParser", "load_elegant"]
 
-Note that Elegant scales magnet polynomials in a different way
-to AT, so the parsed coefficients need to be divided by n! for
-the coefficient of order n.
-
-"""
-import logging as log
+import functools
+from math import sqrt, sin, factorial
 from os.path import abspath
-import re
+from collections.abc import Iterable
+import warnings
 
-from at.lattice.elements import (
-    Aperture,
-    Corrector,
-    Drift,
-    Dipole,
-    Marker,
-    Multipole,
-    Octupole,
-    Quadrupole,
-    RFCavity,
-    Sextupole,
+import numpy as np
+from scipy.constants import c as clight
+
+from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shift_elem
+from .file_input import ElementDescr, BaseParser
+from .file_input import skip_names, ignore_names, ignore_class
+from .madx import sinc, _Line
+from .rpn import evaluate
+
+
+# -------------------
+#  Utility functions
+# -------------------
+
+
+def misalign(func):
+    """Decorator which tilts and shifts the decorated AT element"""
+
+    @functools.wraps(func)
+    def wrapper(
+        name, *args, tilt=None, dx=0.0, dy=0.0, n_slices=None, n_kicks=None, **kwargs
+    ):
+        if n_kicks is not None:  # Deprecated parameter
+            kwargs["NumIntSteps"] = int(n_kicks / 4)
+        if n_slices is not None:
+            kwargs["NumIntSteps"] = n_slices
+        elems = func(name, *args, **kwargs)
+        if tilt is not None:
+            tilt_elem(elems[0], tilt)
+        if not (dx == 0.0 and dy == 0.0):
+            shift_elem(elems[0], deltax=dx, deltaz=dy)
+        return elems
+
+    return wrapper
+
+
+class ElegantVar(str):
+    def __new__(cls, parser, expr):
+        return super().__new__(cls, expr)
+
+    # noinspection PyUnusedLocal
+    def __init__(self, parser, expr):
+        self.parser = parser
+
+    def __float__(self):
+        return float(evaluate(self))
+
+    def __int__(self):
+        return int(evaluate(self))
+
+
+# ------------------------------
+#  Elegant classes
+# ------------------------------
+
+
+# noinspection PyPep8Naming
+class DRIF(ElementDescr):
+    @staticmethod
+    def convert(name: str, l=0.0, **params):  # noqa: E741
+        return [elt.Drift(name, l, **params)]
+
+
+# noinspection PyPep8Naming
+class MARK(ElementDescr):
+    @staticmethod
+    def convert(name, **params):
+        return [elt.Marker(name, **params)]
+
+
+# noinspection PyPep8Naming
+class QUAD(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l, k1=0.0, **params):  # noqa: E741
+        return [elt.Quadrupole(name, l, k1, **params)]
+
+
+# noinspection PyPep8Naming
+class SEXT(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l, k2=0.0, order=2, **params):  # noqa: E741
+        return [elt.Sextupole(name, l, k2 / 2.0, **params)]
+
+
+# noinspection PyPep8Naming
+class OCTU(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l, k3=0.0, **params):  # noqa: E741
+        poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
+        poly_a = [0.0, 0.0, 0.0, 0.0]
+        return [elt.Multipole(name, l, poly_a, poly_b, **params)]
+
+
+class MULT(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l=0, knl=0.0, order=1, **params):  # noqa: E741
+        poly_a = np.zeros(order + 1)
+        poly_b = np.zeros(order + 1)
+        poly_b[order] = knl / factorial(order)
+        return [elt.Multipole(name, l, poly_a, poly_b, **params)]
+
+
+# noinspection PyPep8Naming
+class SBEN(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(
+        name,
+        l,  # noqa: E741
+        angle,
+        e1=0.0,
+        e2=0.0,
+        k1=0.0,
+        k2=None,
+        hgap=None,
+        fint=0.0,
+        **params,
+    ):
+        if hgap is not None:
+            params.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fint)
+        if k2 is not None:
+            params["PolynomB"] = [0.0, k1, k2 / 2.0]
+        return [
+            elt.Dipole(
+                name,
+                l,
+                angle,
+                k1,
+                EntranceAngle=e1,
+                ExitAngle=e2,
+                **params,
+            )
+        ]
+
+
+# noinspection PyPep8Naming
+class RBEN(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
+        hangle = 0.5 * angle
+        arclength = l * sinc(hangle)
+        return SBEN.convert(
+            name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
+        )
+
+    def _length(self):
+        hangle = 0.5 * self.angle
+        return self["l"] * hangle / sin(hangle)
+
+
+# noinspection PyPep8Naming
+class KICKER(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
+        kicks = np.array([hkick, vkick], dtype=float)
+        return [elt.Corrector(name, l, kicks, **params)]
+
+
+# noinspection PyPep8Naming
+class HKICK(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
+        return KICKER.convert(name, l=l, hkick=kick, **params)
+
+
+# noinspection PyPep8Naming
+class VKICK(ElementDescr):
+    @staticmethod
+    @misalign
+    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
+        return KICKER.convert(name, l=l, vkick=kick, **params)
+
+
+# noinspection PyPep8Naming
+class RFCA(ElementDescr):
+    @staticmethod
+    def convert(
+        name,
+        l=0.0,  # noqa: E741
+        volt=0.0,
+        freq=np.nan,
+        **params,
+    ):
+        cavity = elt.RFCavity(
+            name,
+            l,
+            volt,
+            freq,
+            0,
+            0.0,
+            PassMethod="IdentityPass" if l == 0.0 else "DriftPass",
+            **params,
+        )
+        return [cavity]
+
+
+# noinspection PyPep8Naming
+class MONI(ElementDescr):
+    @staticmethod
+    def convert(name, l=0.0, **params):  # noqa: E741
+        if l == 0.0:
+            return [elt.Monitor(name, **params)]
+        else:
+            hl = 0.5 * l
+            return [
+                elt.Drift(name, hl, origin="MONI"),
+                elt.Monitor(name, **params),
+                elt.Drift(name, hl, origin="MONI"),
+            ]
+
+
+# noinspection PyPep8Naming
+class HMON(MONI):
+    pass
+
+
+# noinspection PyPep8Naming
+class VMON(MONI):
+    pass
+
+
+SOLENOID = ignore_class("SOLENOID", ElementDescr)
+
+skip_names(
+    globals(),
+    ElementDescr,
+    [
+        "MAXAMP",
+        "CHARGE",
+        "RECIRC",
+        "MALIGN",
+        "SREFFECTS",
+        "PFILTER",
+        "ENERGY",
+        "SCATTER",
+        "WATCH",
+        "WAKE",
+    ],
 )
-from at.lattice import Lattice
-from at.load import register_format, utils
-
-__all__ = ['load_elegant']
 
 
-# noinspection PyUnusedLocal
-def create_drift(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    return Drift(name, length, **params)
+ignore_names(globals(), ElementDescr, ["SCRAPER", "ECOL", "RCOL", "CSRDRIF"])
+
+EDRIFT = DRIFT = DRIF
+KQUAD = QUADRUPOLE = QUAD
+CSRCSBEN = CSBEN = CSBEND = SBEND = SBEN
+CRBEN = CRBEND = RBEND = RBEN
+KSEXT = SEXTUPOLE = SEXT
+KOCT = OCTUPOLE = OCTU
+HKICKER = HKICK
+VKICKER = VKICK
+MONITOR = MONI
+HMONITOR = HMON
+VMONITOR = VMON
+RFCW = RFCA
+SOLE = SOLENOID
+MULTIPOLE = MULT
 
 
-# noinspection PyUnusedLocal
-def create_marker(name, params, energy, harmonic_number):
-    return Marker(name, **params)
+class ElegantParser(BaseParser):
+    # noinspection PyUnresolvedReferences
+    """Elegant parser
 
+    The parser is a subclass of :py:class:`dict` and is a database containing all the
+    Elegant objects.
 
-# noinspection PyUnusedLocal
-def create_aperture(name, params, energy, harmonic_number):
-    x_lim = float(params.get('x_max'))
-    y_lim = float(params.get('y_max'))
-    limits = [-x_lim, x_lim, -y_lim, y_lim]
-    return Aperture(name, limits)
+    Example:
+        Parse a file:
 
+        >>> parser = at.ElegantParser()
+        >>> parser.parse_file("file1")
 
-# noinspection PyUnusedLocal
-def create_quad(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    params["NumIntSteps"] = params.pop("n_kicks", 10)
-    params["k"] = float(params.pop("k1"))
-    params["PassMethod"] = "StrMPoleSymplectic4Pass"
-    return Quadrupole(name, length, **params)
+        Look at the "qf1" element
 
+        >>> parser["QF1"]
+        QUAD(name=QF1, l=1.0, k1=0.5, tilt=0.001)
 
-# noinspection PyUnusedLocal
-def create_sext(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    params["NumIntSteps"] = params.pop("n_kicks", 10)
-    k2 = float(params.pop("k2", 0))
-    return Sextupole(name, length, k2 / 2, **params)
+        Generate an AT :py:class:`.Lattice` from the "RING" sequence
 
+        >>> ring = parser.lattice(use="RING")  # generate an AT Lattice
+    """
 
-# noinspection PyUnusedLocal
-def create_oct(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    params["NumIntSteps"] = params.pop("n_kicks", 10)
-    k3 = float(params.pop("k3", 0))
-    PolynomA = [0, 0, 0, 0]
-    PolynomB = [0, 0, 0, k3 / 6]
-    return Octupole(name, length, PolynomA, PolynomB, **params)
+    def __init__(self, **kwargs):
+        """
+        Args:
+            verbose:    If :py:obj:`True`, print details on the processing
+            **kwargs:   Initial variable definitions
+        """
+        super().__init__(
+            globals(),
+            continuation="&",
+            linecomment="!",
+            endfile="RETURN",
+            **kwargs,
+        )
 
+    @classmethod
+    def _defkey(cls, expr: str, quoted: bool) -> str:
+        """substitutions to get a valid python identifier"""
+        expr = super()._defkey(expr, quoted)
+        return expr if quoted else expr.upper()
 
-# noinspection PyUnusedLocal
-def create_multipole(name, params, energy, harmonic_number):
-    def factorial(x, acc=1):
-        if x == 0:
-            return acc
+    def _format_statement(self, line: str) -> str:
+        """Reformat the input line"""
+        return line.upper()
+
+    def _assign(self, label: str, key: str, val: str):
+        # Special treatment of "line=(...)" commands
+        if key == "LINE":
+            val = val.replace(")", ",)")  # For tuples with a single item
+            return label, _Line(self._evaluate(val), name=label)
         else:
-            return factorial(x - 1, acc * x)
+            return super()._assign(label, key, val)
 
-    length = params.pop("l", 0)
-    PolynomA = [0, 0, 0, 0]
-    PolynomB = [0, 0, 0, 0]
-    if "knl" in params:
-        order = int(float(params.pop("order")))
-        PolynomB[order] = float(params.pop("knl")) / factorial(order)
-    if "ksl" in params:
-        order = int(float(params.pop("order")))
-        PolynomA[order] = float(params.pop("ksl")) / factorial(order)
+    def _command(self, label, cmdname, *args: str, **kwargs):
+        # Special treatment of label #INCLUDE
+        if label == "#INCLUDE":
+            file = cmdname[1:-1] if cmdname[0] == '"' else cmdname
+            self.parse_files(file, final=False)
+        else:
+            return super()._command(label, cmdname, *args, **kwargs)
 
-    return Multipole(name, length, PolynomA, PolynomB, **params)
+    def _argparser(
+        self,
+        argcount: int,
+        argstr: str,
+        *,
+        bool_attr: tuple[str] = (),
+        str_attr: tuple[str] = (),
+        pos_args: tuple[str] = (),
+    ):
+        """Evaluate a command argument and return a pair (key, value)"""
 
-
-# noinspection PyUnusedLocal
-def create_dipole(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    params["NumIntSteps"] = params.pop("n_kicks", 10)
-    params["PassMethod"] = "BndMPoleSymplectic4Pass"
-    params["BendingAngle"] = float(params.pop("angle"))
-    params["EntranceAngle"] = float(params.pop("e1"))
-    params["ExitAngle"] = float(params.pop("e2"))
-    if "hgap" in params:
-        params["FullGap"] = float(params.pop("hgap")) * 2
-        # What should we do if no fint property?
-        fint = params.pop("fint", 1)
-        params["FringeInt1"] = fint
-        params["FringeInt2"] = fint
-    k1 = float(params.pop("k1", 0))
-    k2 = float(params.pop("k2", 0))
-    k3 = float(params.pop("k3", 0))
-    k4 = float(params.pop("k4", 0))
-    params["PolynomB"] = [0, k1, k2 / 2, k3 / 6, k4 / 24]
-    return Dipole(name, length, **params)
-
-
-# noinspection PyUnusedLocal
-def create_corrector(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    hkick = params.pop("hkick", 0)
-    vkick = params.pop("vkick", 0)
-    kick_angle = [hkick, vkick]
-    return Corrector(name, length, kick_angle, **params)
-
-
-def create_cavity(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    voltage = params.pop("volt")
-    frequency = params.pop("freq")
-    params["Phi"] = params.pop("phase")
-    return RFCavity(name, length, voltage,
-                    frequency, harmonic_number, energy, **params)
-
-
-ELEMENT_MAP = {
-    "drift": create_drift,
-    "drif": create_drift,
-    "edrift": create_drift,
-    # This should be a wiggler.
-    "cwiggler": create_drift,
-    "csben": create_dipole,
-    "csbend": create_dipole,
-    "csrcsben": create_dipole,
-    "quadrupole": create_quad,
-    "kquad": create_quad,
-    "ksext": create_sext,
-    "koct": create_oct,
-    "mult": create_multipole,
-    "multipole": create_multipole,
-    "kicker": create_corrector,
-    "hkick": create_corrector,
-    "vkick": create_corrector,
-    "mark": create_marker,
-    "marker": create_marker,
-    "malign": create_marker,
-    "recirc": create_marker,
-    "sreffects": create_marker,
-    "rcol": create_marker,
-    "watch": create_marker,
-    "charge": create_marker,
-    "monitor": create_marker,
-    "moni": create_marker,
-    "maxamp": create_aperture,
-    "rfca": create_cavity,
-}
-
-
-def parse_lines(contents):
-    """Return individual lines.
-
-    Remove comments and whitespace and convert to lowercase.
-    """
-    lines = []
-    current_line = ""
-    for line in contents.splitlines():
-        line = line.lower()
-        line = line.split("!")[0]
-        line = line.strip()
-        if line:
-            if line.endswith("&"):
-                current_line += line[:-1]
+        def arg_value(v):
+            if v[0] == '"':
+                return ElegantVar(self, v[1:-1])
             else:
-                lines.append(current_line + line)
-                current_line = ""
+                return self._evaluate(v)
 
-    return lines
-
-
-def parse_chunk(value, elements, chunks):
-    """Parse a non-element part of a lattice file.
-
-    That part can reference already-parsed elements and chunks.
-
-    if
-    chunks = {"x": ["a", "b"]}
-    and
-    elements = {"a": Marker(...), "b": Quadrupole(...)}
-
-    line(a,b) => [a, b]
-    -x        => [b, a]
-    2*x       => [a, b, a, b]
-
-    """
-    chunk = []
-    parts = utils.split_ignoring_parentheses(value, ",")
-    for part in parts:
-        # What's this?
-        if "symmetry" in part:
-            continue
-        if "line" in part:
-            line_parts = re.match("line\\s*=\\s*\\((.*)\\)", part).groups()[0]
-            for p in line_parts.split(","):
-                p = p.strip()
-                chunk.extend(parse_chunk(p, elements, chunks))
-        elif part.startswith("-"):
-            # Reverse a sequence of elements. When doing this, swap
-            # the entrance and exit angles for any dipoles.
-            chunk_name = part[1:]
+        key, *value = argstr.split(sep="=", maxsplit=1)
+        if value:  # Keyword argument
+            return key.lower(), arg_value(value[0])
+        else:
             try:
-                chunk_to_invert = chunks[chunk_name]
-            except KeyError:
-                # You can reverse just a single element: probably a
-                # bend, as there's no reason to invert other elements.
-                chunk_to_invert = [elements[chunk_name]]
-            inverted_chunk = []
-            for el in reversed(chunk_to_invert):
-                if el.__class__ == Dipole:
-                    inverted_dipole = el.copy()
-                    inverted_dipole.EntranceAngle = el.ExitAngle
-                    inverted_dipole.ExitAngle = el.EntranceAngle
-                    inverted_chunk.append(inverted_dipole)
+                key = pos_args[argcount]
+            except IndexError as exc:
+                exc.args = ("too many positional arguments",)
+                raise
+            return key, arg_value(argstr)
+
+    def lattice(self, use: str = "ring", **kwargs):
+        """Create a lattice from the selected sequence
+
+        Parameters:
+            use:                Name of the MAD sequence or line containing the desired
+              lattice. Default: ``ring``
+
+        Keyword Args:
+            name (str):         Name of the lattice. Default: MAD sequence name.
+            particle(Particle): Circulating particle. Default: from MAD
+            energy (float):     Energy of the lattice [eV], Default: from MAD
+            periodicity(int):   Number of periods. Default: 1
+            *:                  All other keywords will be set as Lattice attributes
+        """
+
+        def elegant_filter(params: dict, elems: Filter, *args) -> Iterable[elt.Element]:
+            def beta() -> float:
+                rest_energy = params["particle"].rest_energy
+                if rest_energy == 0.0:
+                    return 1.0
                 else:
-                    inverted_chunk.append(el)
-            chunk.extend(inverted_chunk)
-        elif "*" in part:
-            num, chunk_name = part.split("*")
-            if chunk_name[0] == "(":
-                assert chunk_name[-1] == ")"
-                chunk_name = chunk_name[1:-1]
-            chunk.extend(int(num) * parse_chunk(chunk_name, elements, chunks))
-        elif part in elements:
-            chunk.append(elements[part])
-        elif part in chunks:
-            chunk.extend(chunks[part])
-        else:
-            raise Exception("part {} not understood".format(part))
-    return chunk
+                    gamma = float(params["energy"] / rest_energy)
+                    return sqrt(1.0 - 1.0 / gamma / gamma)
+
+            cavities = []
+            cell_length = 0
+
+            for elem in elems(params, *args):
+                if isinstance(elem, elt.RFCavity):
+                    cavities.append(elem)
+                cell_length += getattr(elem, "Length", 0.0)
+                yield elem
+
+            params["_length"] = cell_length
+            rev = beta() * clight / cell_length
+
+            # Set the cavities' Emergy and harmonic number
+            if cavities:
+                cavities.sort(key=lambda el: el.Frequency)
+                for cav in cavities:
+                    cav.Energy = params["energy"]
+                    cav.HarmNumber = cav.Frequency / rev
+                params["_cell_harmnumber"] = getattr(cavities[0], "HarmNumber", np.nan)
+
+        kwargs.setdefault("energy", 1.0e9)
+        part = kwargs.setdefault("particle", "relativistic")
+        if isinstance(part, str):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=UserWarning)
+                kwargs["particle"] = Particle(part)
+        return Lattice(self._generator, iterator=elegant_filter, use=use, **kwargs)
 
 
-def expand_elegant(contents, lattice_key, energy, harmonic_number):
-    lines = parse_lines(contents)
-    variables = {"energy": energy, "harmonic_number": harmonic_number}
-    elements = {}
-    chunks = {}
-    for line in lines:
-        if ":" not in line:
-            key, value = line.split("=")
-            variables[key.strip()] = value.strip()
-        else:
-            key, value = line.split(":")
-            key = key.strip()
-            value = value.strip()
-            if value.split(",")[0] in ELEMENT_MAP:
-                elements[key] = elegant_element_from_string(key,
-                                                            value,
-                                                            variables)
-            else:
-                chunk = parse_chunk(value, elements, chunks)
-                chunks[key] = chunk
+def load_elegant(
+    *files: str, use: str = "RING", verbose: bool = False, **kwargs
+) -> Lattice:
+    """Create a :py:class:`.Lattice` from Elegant files
 
-    return chunks[lattice_key.lower()]
-
-
-def handle_value(value):
-    value = value.strip()
-    if value.startswith('"'):
-        assert value.endswith('"')
-        value = value[1:-1]
-        value = value.split()
-        if len(value) > 1:
-            # Handle basic arithmetic e.g. "0.04 2 /" -> 0.02
-            assert len(value) == 3
-            if value[2] == "/":
-                value = float(value[0]) / float(value[1])
-            elif value[2] == "*":
-                value = float(value[0]) * float(value[1])
-            elif value[2] == "-":
-                value = float(value[0]) - float(value[1])
-            elif value[2] == "+":
-                value = float(value[0]) + float(value[1])
-        else:
-            value = value[0]
-    return value
-
-
-def elegant_element_from_string(name, element_string, variables):
-    """Create element from Elegant's string representation.
-
-    e.g. drift,l=0.045 => Drift(name, 0.045)
-
-    """
-    log.debug("Parsing elegant element {}".format(element_string))
-    parts = utils.split_ignoring_parentheses(element_string, ",")
-    params = {}
-    element_type = parts[0]
-    for part in parts[1:]:
-        key, value = utils.split_ignoring_parentheses(part, "=")
-        key = key.strip()
-        value = handle_value(value)
-        if value in variables:
-            value = variables[value]
-
-        params[key] = value
-
-    energy = variables["energy"]
-    harmonic_number = variables["harmonic_number"]
-
-    return ELEMENT_MAP[element_type](name, params, energy, harmonic_number)
-
-
-def load_elegant(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from an Elegant file
+    - Long elements are split according to the default AT value of *NumIntSteps* (10)
+      unless *N_SLICES* is specified in the Elegant element definition.
 
     Parameters:
-        filename:           Name of an Elegant file
+        files:              Names of one or several Elegant lattice description files
+        use:                Name of the MADX sequence or line containing the desired
+          lattice. Default: ``ring``
+        verbose:            If :py:obj:`True`, print details on the processing
 
     Keyword Args:
-        name (str):         Name of the lattice. Default: taken from
-          the file.
-        energy (float):     Energy of the lattice [eV]
-        periodicity(int):   Number of periods. Default: taken from the elements, or 1
-        *:                  All other keywords will be set as Lattice attributes
+        name (str):         Name of the lattice. Default: Elegant sequence name
+        particle(Particle): Circulating particle. Default: 'relativistic'
+        energy (float):     Energy of the lattice [eV]. Default: 0.0
+        periodicity(int):   Number of periods. Default: 1
+        *:                  Other keywords will be used as initial variable definitions
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
@@ -346,27 +447,12 @@ def load_elegant(filename: str, **kwargs) -> Lattice:
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
-    try:
-        energy = kwargs.pop("energy")
-        lattice_key = kwargs.pop("lattice_key")
-        harmonic_number = kwargs.pop("harmonic_number")
-
-        def elem_iterator(params, elegant_file):
-            with open(params.setdefault("in_file", elegant_file)) as f:
-                contents = f.read()
-                element_lines = expand_elegant(
-                    contents, lattice_key, energy, harmonic_number
-                )
-                params.setdefault("energy", energy)
-                for line in element_lines:
-                    yield line
-
-        lat = Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
-        return lat
-    except Exception as e:
-        raise ValueError('Failed to load elegant '
-                         'lattice {}: {}'.format(filename, e))
-
-
-register_format(
-    ".lte", load_elegant, descr="Elegant format. See :py:func:`.load_elegant`.")
+    parser = ElegantParser(verbose=verbose)
+    absfiles = tuple(abspath(file) for file in files)
+    params = {
+        key: kwargs.pop(key)
+        for key in ("name", "particle", "energy", "periodicity")
+        if key in kwargs
+    }
+    parser.parse_files(*absfiles, **kwargs)
+    return parser.lattice(use=use, in_file=absfiles, **params)
