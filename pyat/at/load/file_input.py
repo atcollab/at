@@ -252,7 +252,6 @@ class AnyDescr:
     def __init__(self, *args, **kwargs):
         self.name = kwargs.pop("name", self.__class__.__name__)
         self.inverse = kwargs.pop("inverse", False)
-        kwargs.setdefault("origin", self.__class__.__name__)
         super().__init__(*args, **kwargs)
 
     def __neg__(self):
@@ -296,6 +295,10 @@ class ElementDescr(AnyDescr, dict):
     """Simple representation of an element as a :py:class:`dict`"""
 
     _mentioned = set()
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("origin", self.__class__.__name__)
+        super().__init__(*args, **kwargs)
 
     def __getattr__(self, item):
         # Allows accessing items using the attribute access syntax
