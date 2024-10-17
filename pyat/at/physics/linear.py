@@ -605,6 +605,9 @@ def _linopt(
 def linopt2(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of an uncoupled lattice
 
+    :py:func:`linopt2` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
+
     Parameters:
         ring:   Lattice description.
 
@@ -715,6 +718,9 @@ def linopt4(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a H/V coupled lattice
 
     4D-analysis of coupled motion following Sagan/Rubin [7]_
+
+    :py:func:`linopt4` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
 
     Parameters:
         ring:   Lattice description.
@@ -836,6 +842,9 @@ def linopt6(ring: Lattice, *args, **kwargs):
 
     *  a field **R**, as provided by ATLINOPT6, or
     * the fields **beta** and **alpha**, as provided by linopt and linopt6
+
+    :py:func:`linopt6` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
 
     Parameters:
         ring:   Lattice description.
@@ -984,6 +993,9 @@ def get_optics(
     **kwargs,
 ):
     """Linear analysis of a fully coupled lattice
+
+    :py:func:`get_optics` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
 
     Parameters:
         ring:                   Lattice description.
@@ -1172,6 +1184,10 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
 
     :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
     elements.
+
+    :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
+    elements. :py:func:`avlinopt` acts on a single cell (*periodicity* is not taken
+    into account).
 
     Parameters:
         ring:       Lattice description.
@@ -1414,6 +1430,8 @@ def get_tune(
 ):
     r"""Computes the tunes using several available methods
 
+    :py:func:`get_tune` may use several methods depending on a *method* keyword.
+
     Parameters:
         ring:                   Lattice description
         method:                 ``'linopt'`` returns the tunes from the
@@ -1498,6 +1516,8 @@ def get_chrom(
     **kwargs,
 ):
     r"""Computes the chromaticities using several available methods
+
+    :py:func:`get_tune` may use several methods depending on a *method* keyword.
 
     Parameters:
         ring:               Lattice description.

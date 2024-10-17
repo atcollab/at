@@ -55,15 +55,7 @@ def tunes_vs_amp(
                 [ld["alpha"][1] / np.sqrt(ld["beta"][1]), np.sqrt(ld["beta"][1])],
             ]
         )
-        part = (
-            np.array(
-                [
-                    orbit,
-                ]
-                * len(amp)
-            ).T
-            + 1.0e-6
-        )
+        part = np.array([orbit] * len(amp)).T + 1.0e-6
         part[dim, :] += amp
         part = internal_lpass(ring, part, nturns=nturns)
         sh = part.shape
