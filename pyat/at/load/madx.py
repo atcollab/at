@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__all__ = ["MadxParser", "load_madx"]
+__all__ = ["MadParameter", "MadxParser", "load_madx"]
 
 import functools
 import warnings
@@ -22,8 +22,9 @@ from scipy.constants import c as clight, hbar as _hb, e as qelect
 from scipy.constants import physical_constants as _cst
 
 from . import register_format
+from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
-from .file_input import CaseIndependentParser, UnorderedParser, DeferredParser
+from .file_input import CaseIndependentParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
@@ -46,6 +47,69 @@ mumass = 1.0e-03 * _cst["muon mass energy equivalent in MeV"][0]  # [GeV]
 hbar = _hb / qelect * 1.0e-09  # [GeV.s]
 erad = _cst["classical electron radius"][0]  # [m]
 prad = erad * emass / pmass  # [m]
+
+
+class MadParameter(str):
+    """MAD parameter
+
+    A MAD parameter is an expression which can be evaluated n the context
+    of a MAD parser
+    """
+    def __new__(cls, parser, expr):
+        return super().__new__(cls, expr)
+
+    # noinspection PyUnusedLocal
+    def __init__(self, parser: _MadParser, expr: str):
+        """Args:
+            parser: MadParser instance defining the context for evaluation
+            expr:   expression to be evaluated
+
+        The expression may contain MAD parameter names, arithmetic operators and
+        mathematical functions known by MAD
+        """
+        self.parser = parser
+
+    def __float__(self):
+        return float(self.parser._evaluate(self))
+
+    def __int__(self):
+        return int(self.parser._evaluate(self))
+
+    def __add__(self, other):
+        return float(self) + float(other)
+
+    def __radd__(self, other):
+        return float(other) + float(self)
+
+    def __mul__(self, other):
+        return float(self) * float(other)
+
+    def __rmul__(self, other):
+        return float(other) * float(self)
+
+    def __sub__(self, other):
+        return float(self) - float(other)
+
+    def __rsub__(self, other):
+        return float(other) - float(self)
+
+    def __truediv__(self, other):
+        return float(self) / float(other)
+
+    def __rtruediv__(self, other):
+        return float(other) / float(self)
+
+    def __pow__(self, other):
+        return pow(float(self), other)
+
+    def __rpow__(self, other):
+        return pow(float(other), float(self))
+
+    def __neg__(self):
+        return -float(self)
+
+    def __pos__(self):
+        return +float(self)
 
 
 def sinc(x: float) -> float:
@@ -319,6 +383,7 @@ ignore_names(
 
 @set_argparser(_keyparser)
 def value(**kwargs):
+    """VALUE command"""
     kwargs.pop("copy", False)
     for key, v in kwargs.items():
         print(f"{key}: {v}")
@@ -556,7 +621,7 @@ class _Beam:
             beamobj[k] = v
 
 
-class _MadParser(CaseIndependentParser, DeferredParser, UnorderedParser):
+class _MadParser(CaseIndependentParser, UnorderedParser):
     """Common class for both MAD8 anf MAD-X parsers"""
 
     _str_arguments = {"file", "refer", "refpos", "sequence", "from"}
@@ -591,6 +656,27 @@ class _MadParser(CaseIndependentParser, DeferredParser, UnorderedParser):
         super().clear()
         self.current_sequence = None
         self["beam"]()
+
+    def _assign_deferred(self, value: str):
+        """Deferred assignment"""
+        if value[0] == "(" and value[-1] == ")":
+            # Array variable: convert to tuple
+            value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
+            return tuple(
+                MadParameter(self, v) for v in restore(matches, *value.split(","))
+            )
+        else:
+            # Scalar variable
+            return MadParameter(self, value)
+
+    def _argparser(self, argcount, argstr: str, **kwargs):
+        key, *value = split_ignoring_parentheses(
+            argstr, delimiter=":=", fence=('"', '"'), maxsplit=1
+        )
+        if value:
+            return key, self._assign_deferred(value[0])
+        else:
+            return super()._argparser(argcount, argstr, **kwargs)
 
     def _assign(self, label: str, key: str, val: str):
         # Special treatment of "line=(...)" assignments
@@ -629,6 +715,13 @@ class _MadParser(CaseIndependentParser, DeferredParser, UnorderedParser):
                 finally:
                     self.current_sequence.append((label, *argnames))
         return res
+
+    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
+        left, *right = cmdname.split(":=")
+        if right:
+            self[left] = self._assign_deferred(right[0])
+        else:
+            super()._decode(label, cmdname, *argnames)
 
     def _format_statement(self, line: str) -> str:
         line = super()._format_statement(line)

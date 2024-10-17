@@ -13,10 +13,8 @@ __all__ = [
     "SequenceDescr",
     "BaseParser",
     "UnorderedParser",
-    "DeferredParser",
     "CaseIndependentParser",
     "DictNoDot",
-    "FloatVar",
 ]
 
 from os import getcwd
@@ -34,68 +32,6 @@ _colon = re.compile(r":(?!=)")  # split on :=
 # For decoding error messages:
 _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
-
-
-def _assign_deferred(parser: BaseParser, value: str):
-    """Deferred assignment"""
-    if value[0] == "(" and value[-1] == ")":
-        # Array variable: convert to tuple
-        value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
-        return tuple(FloatVar(parser, v) for v in restore(matches, *value.split(",")))
-    else:
-        # Scalar variable
-        return FloatVar(parser, value)
-
-
-class FloatVar(str):
-    def __new__(cls, parser, expr):
-        return super().__new__(cls, expr)
-
-    # noinspection PyUnusedLocal
-    def __init__(self, parser, expr):
-        self.parser = parser
-
-    def __float__(self):
-        return float(self.parser._evaluate(self))
-
-    def __int__(self):
-        return int(self.parser._evaluate(self))
-
-    def __add__(self, other):
-        return float(self) + float(other)
-
-    def __radd__(self, other):
-        return float(other) + float(self)
-
-    def __mul__(self, other):
-        return float(self) * float(other)
-
-    def __rmul__(self, other):
-        return float(other) * float(self)
-
-    def __sub__(self, other):
-        return float(self) - float(other)
-
-    def __rsub__(self, other):
-        return float(other) - float(self)
-
-    def __truediv__(self, other):
-        return float(self) / float(other)
-
-    def __rtruediv__(self, other):
-        return float(other) / float(self)
-
-    def __pow__(self, other):
-        return pow(float(self), other)
-
-    def __rpow__(self, other):
-        return pow(float(other), float(self))
-
-    def __neg__(self):
-        return -float(self)
-
-    def __pos__(self):
-        return +float(self)
 
 
 def set_argparser(argparser):
@@ -907,26 +843,6 @@ class UnorderedParser(BaseParser):
                     self[var] = default_value
                 # last trial
                 replay()
-
-
-class DeferredParser(BaseParser):
-    """Parser accepting deferred evaluation (a := b)"""
-
-    def _argparser(self, argcount, argstr: str, **kwargs):
-        key, *value = split_ignoring_parentheses(
-            argstr, delimiter=":=", fence=('"', '"'), maxsplit=1
-        )
-        if value:
-            return key, _assign_deferred(self, value[0])
-        else:
-            return super()._argparser(argcount, argstr, **kwargs)
-
-    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
-        left, *right = cmdname.split(":=")
-        if right:
-            self[left] = _assign_deferred(self, right[0])
-        else:
-            super()._decode(label, cmdname, *argnames)
 
 
 class CaseIndependentParser(BaseParser):
