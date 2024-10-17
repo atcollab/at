@@ -18,6 +18,7 @@ from scipy.constants import physical_constants as _cst
 from ..lattice import Lattice
 
 from .file_input import ignore_names
+
 # noinspection PyProtectedMember
 from .madx import _MadElement, _MadParser
 

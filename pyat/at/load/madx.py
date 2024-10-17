@@ -468,22 +468,22 @@ class _BeamDescr(ElementDescr):
 
         # Respect the precedence of MAD-X
         if "energy" in self:
-            energy = float(self["energy"])  # force deferred evaluation
+            energy = float(self["energy"])  # force evaluation
             gamma = energy / mass
             # betagamma = sqrt(gamma * gamma - 1.0)
         elif "pc" in self:
-            pc = float(self["pc"])  # force deferred evaluation
+            pc = float(self["pc"])  # force evaluation
             betagamma = pc / mass
             gamma = sqrt(betagamma * betagamma + 1.0)
         elif "gamma" in self:
-            gamma = (self["gamma"])  # force deferred evaluation
+            gamma = float(self["gamma"])  # force evaluation
             # betagamma = sqrt(gamma * gamma - 1.0)
         elif "beta" in self:
-            beta = (self["beta"])  # force deferred evaluation
+            beta = float(self["beta"])  # force evaluation
             gamma = 1.0 / sqrt(1.0 - beta * beta)
             # betagamma = beta * gamma
         elif "brho" in self:
-            brho = (self["brho"])  # force deferred evaluation
+            brho = float(self["brho"])  # force evaluation
             betagamma = 1.0e-9 * brho * clight * abs(charge) / mass
             gamma = sqrt(betagamma * betagamma + 1.0)
         else:
@@ -535,7 +535,10 @@ class _Beam:
     @staticmethod
     def argparser(parser, argcount, argstr):
         return parser._argparser(
-            argcount, argstr, str_attr=("particle", "sequence"), bool_attr=("radiate", "bunched")
+            argcount,
+            argstr,
+            str_attr=("particle", "sequence"),
+            bool_attr=("radiate", "bunched"),
         )
 
     def __init__(self, parser: _MadParser):
