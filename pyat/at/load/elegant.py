@@ -17,7 +17,7 @@ from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shi
 from .file_input import ElementDescr, BaseParser
 from .file_input import skip_names, ignore_names, ignore_class
 from .madx import sinc, _Line
-from .rpn import evaluate
+from . import rpn
 
 
 # -------------------
@@ -55,10 +55,10 @@ class ElegantVar(str):
         self.parser = parser
 
     def __float__(self):
-        return float(evaluate(self))
+        return float(rpn.evaluate(self))
 
     def __int__(self):
-        return int(evaluate(self))
+        return int(rpn.evaluate(self))
 
 
 # ------------------------------

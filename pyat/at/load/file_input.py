@@ -520,7 +520,8 @@ class BaseParser(DictNoDot):
                 return idx[1]
         elif isinstance(exc, ValueError):  # overlap
             print(exc.args[0])
-            return _singlequoted.search(exc.args[0])[1]
+            names = _singlequoted.search(exc.args[0])
+            return names[-1]
         else:
             return None
 
