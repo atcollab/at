@@ -2,13 +2,8 @@ at.load.madx
 ============
 
 .. automodule:: at.load.madx
-   :inherited-members: dict, DictNoDot
+   :inherited-members: dict, DictNoDot, str
 
-   
-   
-   
-
-   
    
    .. rubric:: Functions
 
@@ -16,21 +11,10 @@ at.load.madx
    
       load_madx
    
-   
-
-   
-   
    .. rubric:: Classes
 
    .. autosummary::
    
+      MadParameter
       MadxParser
    
-   
-
-   
-   
-   
-
-
-
