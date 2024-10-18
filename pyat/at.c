@@ -645,6 +645,8 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
+    param.common_rng=&common_state;
+    param.thread_rng=&thread_state;
     param.nturn = 0;
     param.energy=0.0;
     param.rest_energy=0.0;
