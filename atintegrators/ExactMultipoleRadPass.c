@@ -106,6 +106,7 @@ static void multipole_pass(
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                                       double *r_in, int num_particles,
                                       struct parameters *Param) {
+  double energy;
   if (!Elem) {
     double Length = atGetDouble(ElemData, "Length"); check_error();
     double *PolynomA = atGetDoubleArray(ElemData, "PolynomA"); check_error();
@@ -148,12 +149,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->RApertures = RApertures;
     Elem->KickAngle = KickAngle;
   }
+  energy = atEnergy(Param->energy, Elem->Energy);
+
   multipole_pass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                  Elem->MaxOrder, Elem->NumIntSteps,
                  Elem->FringeQuadEntrance, Elem->FringeQuadExit,
                  Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                  Elem->RApertures, Elem->EApertures,
-                 Elem->KickAngle, Elem->Energy, Elem->Scaling, num_particles);
+                 Elem->KickAngle, energy, Elem->Scaling, num_particles);
   return Elem;
 }
 
@@ -163,7 +166,9 @@ MODULE_DEF(ExactMultipoleRadPass) /* Dummy module initialisation */
 
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs == 2) {
+  if (nrhs >= 2) {
+    double rest_energy = 0.0;
+    double charge = -1.0;
     double *r_in;
     const mxArray *ElemData = prhs[0];
     int num_particles = mxGetN(prhs[1]);
@@ -174,7 +179,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
     int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
     /*optional fields*/
-    double Energy=atGetDouble(ElemData,"Energy"); check_error();
+    double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
     double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
     int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
     int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -189,6 +194,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (NumIntSteps <= 0) {
         atError("NumIntSteps must be positive"); check_error();
     }
+    if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
     r_in = mxGetDoubles(plhs[0]);

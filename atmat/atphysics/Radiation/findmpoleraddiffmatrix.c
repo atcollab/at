@@ -522,7 +522,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
 	bdiff = mxGetDoubles(plhs[0]);
     for (i=0; i<36; i++) bdiff[i]=0.0;
-    
+
     diffmatrix(mxElem, orb, energy, bdiff);
 }
 #endif /*MATLAB_MEX_FILE*/
