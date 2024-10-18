@@ -59,6 +59,8 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
     double B0 = B[0];
     double A0 = A[0];
 
+    /*printf("In a dipole. E0 = %f eV",E0);*/
+    
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
@@ -143,7 +145,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
+        /*Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();*/
+        Energy=Param->energy;
         /*optional fields*/
         FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
@@ -201,7 +204,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->fringeIntM0, Elem->fringeIntP0,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, Elem->Energy, num_particles);
+            Elem->KickAngle, Elem->Scaling, Param->energy, num_particles);
     return Elem;
 }
 
