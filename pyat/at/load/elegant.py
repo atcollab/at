@@ -367,17 +367,23 @@ class ElegantParser(BaseParser):
                 raise
             return key, arg_value(argstr)
 
-    def lattice(self, use: str = "ring", **kwargs):
+    def lattice(self, use: str = "RING", **kwargs):
         """Create a lattice from the selected sequence
 
+        - Elegant lattice files do not specify the beam energy.
+          :py:class:`ElegantParser` sets it by default to 1.0 GeV. Use the *energy*
+          keyword to set it to the desired value.
+        - Long elements are split according to the default AT value of *NumIntSteps*
+          (10) unless *N_SLICES* is specified in the Elegant element definition.
+
         Parameters:
-            use:                Name of the MAD sequence or line containing the desired
-              lattice. Default: ``ring``
+            use:                Name of the Elegant LINE describing the desired
+              lattice. Default: ``RING``
 
         Keyword Args:
-            name (str):         Name of the lattice. Default: MAD sequence name.
-            particle(Particle): Circulating particle. Default: from MAD
-            energy (float):     Energy of the lattice [eV], Default: from MAD
+            name (str):         Name of the lattice. Default: line name.
+            particle(Particle): Circulating particle. Default: Particle("relativistic")
+            energy (float):     Energy of the lattice [eV], Default: 1.0E9
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
@@ -423,23 +429,26 @@ class ElegantParser(BaseParser):
 def load_elegant(
     *files: str, use: str = "RING", verbose: bool = False, **kwargs
 ) -> Lattice:
-    """Create a :py:class:`.Lattice` from Elegant files
+    """Create a :py:class:`.Lattice` from Elegant lattice files
 
+    - Elegant lattice files do not specify the beam energy. :py:class:`ElegantParser`
+      sets it by default to 1.0 GeV. Use the *energy* keyword to set it to the
+      desired value.
     - Long elements are split according to the default AT value of *NumIntSteps* (10)
       unless *N_SLICES* is specified in the Elegant element definition.
 
     Parameters:
         files:              Names of one or several Elegant lattice description files
-        use:                Name of the MADX sequence or line containing the desired
-          lattice. Default: ``ring``
+        use:                Name of the Elegant LINE describing the desired
+          lattice. Default: ``RING``
         verbose:            If :py:obj:`True`, print details on the processing
 
     Keyword Args:
         name (str):         Name of the lattice. Default: Elegant sequence name
-        particle(Particle): Circulating particle. Default: 'relativistic'
-        energy (float):     Energy of the lattice [eV]. Default: 0.0
+        particle(Particle): Circulating particle. Default: Particle("relativistic")
+        energy (float):     Energy of the lattice [eV]. Default: 1.0E9
         periodicity(int):   Number of periods. Default: 1
-        *:                  Other keywords will be used as initial variable definitions
+        *:                  Other keywords will be used as Lattice attributes
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
@@ -449,10 +458,5 @@ def load_elegant(
     """
     parser = ElegantParser(verbose=verbose)
     absfiles = tuple(abspath(file) for file in files)
-    params = {
-        key: kwargs.pop(key)
-        for key in ("name", "particle", "energy", "periodicity")
-        if key in kwargs
-    }
-    parser.parse_files(*absfiles, **kwargs)
-    return parser.lattice(use=use, in_file=absfiles, **params)
+    parser.parse_files(*absfiles)
+    return parser.lattice(use=use, in_file=absfiles, **kwargs)
