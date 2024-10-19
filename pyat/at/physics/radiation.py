@@ -23,7 +23,7 @@ from ..lattice import Lattice, Element, check_radiation, Refpts, All
 from ..lattice import Quadrupole, Multipole, QuantumDiffusion
 from ..lattice import frequency_control, set_value_refpts
 from . import ELossMethod
-from . import find_mpole_raddiff_matrix, get_tunes_damp
+from . import find_mpole_raddiff_matrix, FDW, get_tunes_damp
 from . import find_orbit6, find_m66, find_elem_m66, Orbit
 from ..tracking import internal_lpass, diffusion_matrix
 
@@ -70,6 +70,8 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         if passmethod.endswith("RadPass"):
             if not test_mode() and (passmethod in _new_methods):
                 return diffusion_matrix(elem, elemorb, energy=energy)
+            elif hasattr(elem, "Bmax"):
+                return FDW(elem, orbit, energy)
             else:
                 return find_mpole_raddiff_matrix(elem, elemorb, energy)
         else:

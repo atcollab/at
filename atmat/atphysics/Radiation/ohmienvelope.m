@@ -1,9 +1,16 @@
 function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
 %OHMIENVELOPE calculates equilibrium beam envelope in a
-% circular accelerator using Ohmi's beam envelope formalism [1]
+% circular accelerator using Ohmi's beam envelope formalism [1].
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
 %
-% [ENVELOPE, RMSDP, RMSBL] = ONMIENVELOPE(RING,RADELEMINDEX,REFPTS)
+% [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX)
+% [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX,REFPTS)
+%
+% RING    - an AT ring.
+% RADELEMINDEX - array of length equal to length(RING) filled with ones at
+%           indexes of radiative ring elements, otherwise, zeros.
+%           See the output of atenable_6d.
+% REFPTS  - reference points along the ring. Default: 1.
 %
 % ENVELOPE is a structure with fields
 % Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along
@@ -20,15 +27,24 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 % [ENVELOPE, RMSDP, RMSBL, M66, T, ORBIT] = OHMIENVELOPE(...)
 %   Returns in addition the 6x6 transfer matrices and the closed orbit
 %   from FINDM66
+%
+% See also ATENABLE_6D FINDM66
 
-newmethods = {'BndMPoleSYmplectc4RadPass', ...
-              'StrMPoleSYmplectc4RadPass', ...
+newmethods = {'BndMPoleSymplectic4RadPass', ...
+              'StrMPoleSymplectic4RadPass', ...
               'ExactMultipoleRadPass'};
 
-zr=zeros(6,6);
+zr={zeros(6,6)};
+
+check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
 if nargin<3, refpts=1; end
+
+% Erase wigglers from the radiative element list.
+% Diffusion matrix to be computed with separate FDW function.
+Wig=atgetcells(ring,'Bmax');
+radindex = radindex & ~Wig;
 
 [mring, ms, orbit] = findm66(ring,1:NumElements+1);
 mt=squeeze(num2cell(ms,[1 2]));
@@ -40,7 +56,7 @@ B=cellfun(@elem_diffusion,ring,orb(1:end-1),'UniformOutput',false);
 BCUM = zeros(6,6);
 % Batbeg{i} is the cumulative diffusion matrix from
 % 0 to the beginning of the i-th element
-Batbeg=[{zr};cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
+Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
@@ -60,7 +76,7 @@ CC = AA*BCUM;
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
-rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
 
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
@@ -85,9 +101,15 @@ if nout>=1, varargout{1}=mring; end
         if ~endsWith(passm, 'RadPass')
             bdiff = zr;
         elseif ~getoption('test_mode') && any(strcmp(elem.PassMethod, newmethods))
+            % New method
             bdiff = diffmatrix(elem,orbit);
         else
-            bdiff = findmpoleraddiffmatrix(elem,orbit);
+            % Old method
+            if isfield(elem, 'Bmax')
+                bdiff = FDW(elem, orbit);
+            else
+                bdiff = findmpoleraddiffmatrix(elem,orbit);
+            end
         end
         
     end
