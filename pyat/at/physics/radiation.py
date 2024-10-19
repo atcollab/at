@@ -132,12 +132,12 @@ def ohmi_envelope(
           Default: False
 
     Returns:
-        emit0 (numpy.recarray):     Emittance data at the start/end of the ring
-        beamdata (numpy.recarray):  Beam parameters at the start of the ring
-        emit (numpy.recarray):      Emittance data at the points selected to by
+        emit0 (np.recarray):     Emittance data at the start/end of the ring
+        beamdata (np.recarray):  Beam parameters at the start of the ring
+        emit (np.recarray):      Emittance data at the points selected to by
           ``refpts``
 
-    **emit** is a :py:obj:`record array <np.recarray>` with the following
+    **emit** is a :py:obj:`record array <numpy.recarray>` with the following
     fields:
 
     ================    ===================================================
