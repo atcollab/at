@@ -132,7 +132,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
-    double irho;
+    double irho, gamma;
     double *bdiff = Param->bdiff;
 
     if (!Elem) {
