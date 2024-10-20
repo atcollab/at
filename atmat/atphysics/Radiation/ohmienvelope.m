@@ -1,4 +1,4 @@
-function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
+function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts,energy) %#ok<INUSD>
 %OHMIENVELOPE calculates equilibrium beam envelope in a
 % circular accelerator using Ohmi's beam envelope formalism [1].
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
@@ -30,39 +30,21 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 %
 % See also ATENABLE_6D FINDM66
 
-newmethods = {'BndMPoleSymplectic4RadPass', ...
-              'StrMPoleSymplectic4RadPass', ...
-              'ExactMultipoleRadPass'};
-
-zr={zeros(6,6)};
-
 check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
+if nargin<4, energy=atGetRingProperties(ring, 'Energy'); end
 if nargin<3, refpts=1; end
 
-% Erase wigglers from the radiative element list.
-% Diffusion matrix to be computed with separate FDW function.
-Wig=atgetcells(ring,'Bmax');
-radindex = radindex & ~Wig;
-
-[mring, ms, orbit] = findm66(ring,1:NumElements+1);
-mt=squeeze(num2cell(ms,[1 2]));
-orb=num2cell(orbit,1)';
-
-% calculate Radiation-Diffusion matrix B for elements
-B=cellfun(@elem_diffusion,ring,orb(1:end-1),'UniformOutput',false);
-% Calculate cumulative Radiation-Diffusion matrix for the ring
-BCUM = zeros(6,6);
-% Batbeg{i} is the cumulative diffusion matrix from
-% 0 to the beginning of the i-th element
-Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
+orb0=findorbit(ring);
+[BCUM,Batbeg]=atdiffmat(ring,energy,'orbit',orb0);
+[mring, ms, orbit] = findm66(ring,1:NumElements+1,'orbit',orb0);
 
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
 % We rewrite it in the form of Sylvester-Lyapunov equation
-% to use MATLAB's SYLVERTER function:
+% to use MATLAB's SYLVESTER function:
 %            AA*R + R*BB = CC
 % where
 %				AA = inv(MRING)
@@ -78,6 +60,7 @@ R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
 rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
 
+mt=squeeze(num2cell(ms,[1 2]));
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
 
@@ -87,42 +70,11 @@ if nout>=3, varargout{3}=orbit(:,refpts); end
 if nout>=2, varargout{2}=ms(:,:,refpts); end
 if nout>=1, varargout{1}=mring; end
 
-    function btx=cumulb(elem,orbit,b)
-        % Calculate 6-by-6 linear transfer matrix in each element
-        % near the equilibrium orbit
-        m=findelemm66(elem,elem.PassMethod,orbit);
-        % Cumulative diffusion matrix of the entire ring
-        BCUM = m*BCUM*m' + b;
-        btx=BCUM;
-    end
-
-    function bdiff=elem_diffusion(elem,orbit)
-        passm = elem.PassMethod;
-        if ~endsWith(passm, 'RadPass')
-            bdiff = zr;
-        elseif ~getoption('test_mode') && any(strcmp(elem.PassMethod, newmethods))
-            % New method
-            bdiff = diffmatrix(elem,orbit);
-        else
-            % Old method
-            if isfield(elem, 'Bmax')
-                bdiff = FDW(elem, orbit);
-            else
-                bdiff = findmpoleraddiffmatrix(elem,orbit);
-            end
-        end
-        
-    end
-
     function [r,tilt,sigma]=propag(m,cumb)
         r=m*R*m'+cumb;
         [u,dr] = eig(r([1 3],[1 3]));
         tilt = asin((u(2,1)-u(1,2))/2);
         sigma=sqrt([dr(1,1);dr(2,2)]);
-    end
-
-    function difm=diffmatrix(elem,orbit)
-        difm=diffusion_matrix(elem,orbit,energy,particle,cell_length,0.0);
     end
 
 end
