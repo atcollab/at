@@ -100,7 +100,7 @@ MODULE_DEF(SolenoidLinearPass)        /* Dummy module initialisation */
 #ifdef MATLAB_MEX_FILE
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2 ) {
+    if (nrhs >= 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);

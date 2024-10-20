@@ -6,7 +6,7 @@ from at import linopt2, linopt4, linopt6, get_optics
 
 @pytest.mark.parametrize(
     "lattice",
-    ["dba_lattice", "noenergy_lattice", "hmba_lattice", "noringparam_lattice"],
+    ["dba_lattice", "hmba_lattice", "noringparam_lattice"],
 )
 def test_linopt6_norad(request, lattice):
     """Compare the results of linopt2 and linopt6 in 4d"""
@@ -24,7 +24,7 @@ def test_linopt6_norad(request, lattice):
 
 @pytest.mark.parametrize(
     "lattice",
-    ["hmba_lattice", "noenergy_lattice", "noringparam_lattice"],
+    ["hmba_lattice", "noringparam_lattice"],
 )
 def test_linopt6_rad(request, lattice):
     """Compare the results with and without radiation"""

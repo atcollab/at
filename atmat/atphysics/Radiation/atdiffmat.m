@@ -1,16 +1,15 @@
-function [BCUM,Batbeg] = atdiffmat(ring,energy,varargin)
+function [BCUM,Batbeg] = atdiffmat(ring,varargin)
 %quantumDiff    Compute the radiation-diffusion matrix
 %
-%[BCUM,BS]=ATDIFFMAT(RING,ENERGY)
+%[BCUM,BS]=ATDIFFMAT(RING)
 %   RING:       Closed ring AT structure, containing radiative elements and
 %               RF cavity. Radiative elements are identified by a
 %               PassMethod ending with 'RadPass'.
-%   ENERGY:     Lattice energy
 %
 %   BCUM:       Cumulated diffusion matrix
 %   BS:         Cumulative diffusion matrix at the beginning of each element
 %
-%[BCUM,BS]=ATDIFFMAT(...,'orbit',ORBITIN)
+%[BCUM,BS]=ATDIFFMAT(RING,'orbit',ORBITIN)
 %   ORBITIN:    Initial 6-D closed orbit.
 %               In this mode, RING may be a section of a ring.
 
@@ -23,12 +22,7 @@ NumElements=length(ring);
 [orb0,varargs]=getoption(varargin, 'orbit', []); %#ok<ASGLU>
 
 test_mode = getoption('test_mode');
-if test_mode
-    fprintf('diffusion_matrix\n');
-    [energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
-else
-    fprintf('findmpoleraddiffmatrix\n');
-end
+[energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
 
 if isempty(orb0)
     orbit=num2cell(findorbit6(ring, 1:NumElements),1)';

@@ -12,7 +12,7 @@ struct elem
     double *PolynomB;
     int MaxOrder;
     int NumIntSteps;
-    double Gamma;
+    double Energy;
     /* Optional fields */
     double Scaling;
     int FringeQuadEntrance;
@@ -119,6 +119,7 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
+    double gamma;
     double *bdiff = Param->bdiff;
     if (!Elem) {
         double Length, Energy, Scaling;
@@ -129,8 +130,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         /*optional fields*/
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -150,7 +151,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->PolynomB=PolynomB;
         Elem->MaxOrder=MaxOrder;
         Elem->NumIntSteps=NumIntSteps;
-        Elem->Gamma = Energy/__E0*1.0E-9;
+        Elem->Energy=Energy;
         /*optional fields*/
         Elem->Scaling=Scaling;
         Elem->FringeQuadEntrance=FringeQuadEntrance;
@@ -165,13 +166,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
+    gamma = 1.0E-9*atEnergy(Param->energy, Elem->Energy)/__E0;
+
     StrMPoleSymplectic4RadPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps,
             Elem->FringeQuadEntrance, Elem->FringeQuadExit,
             Elem->fringeIntM0, Elem->fringeIntP0,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, Elem->Gamma, num_particles, bdiff);
+            Elem->KickAngle, Elem->Scaling, gamma, num_particles, bdiff);
     return Elem;
 }
 
@@ -182,7 +185,9 @@ MODULE_DEF(StrMPoleSymplectic4RadPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
+        double rest_energy = 0.0;
+        double charge = -1.0;
         double *r_in;
         double Gamma;
         const mxArray *ElemData = prhs[0];
@@ -197,9 +202,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        Energy=atGetDouble(ElemData,"Energy"); check_error();
-        Gamma=1.0E-9*Energy/__E0;
         /*optional fields*/
+        Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -212,10 +216,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        Gamma=1.0E-9*Energy/__E0;
         r_in = mxGetDoubles(plhs[0]);
+
         StrMPoleSymplectic4RadPass(r_in, Length, PolynomA, PolynomB,
             MaxOrder, NumIntSteps,
             FringeQuadEntrance, FringeQuadExit,
