@@ -16,7 +16,7 @@ struct elem
     double BendingAngle;
     double EntranceAngle;
     double ExitAngle;
-    double Gamma;
+    double Energy;
     /* Optional fields */
     int FringeBendEntrance;
     int FringeBendExit;
@@ -149,8 +149,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         /*optional fields*/
+        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
@@ -178,7 +178,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->BendingAngle=BendingAngle;
         Elem->EntranceAngle=EntranceAngle;
         Elem->ExitAngle=ExitAngle;
-        Elem->Gamma = Energy/__E0*1.0E-9;
+        Elem->Energy=Energy;
         /*optional fields*/
         Elem->FringeBendEntrance=FringeBendEntrance;
         Elem->FringeBendExit=FringeBendExit;
@@ -199,6 +199,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->KickAngle=KickAngle;
     }
     irho = Elem->BendingAngle/Elem->Length;
+    gamma = atEnergy(Param->energy, Elem->Energy)/param->rest_energy;
+
     BndMPoleSymplectic4RadPass(r_in, Elem->Length, irho, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
@@ -207,7 +209,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->fringeIntM0, Elem->fringeIntP0,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, Elem->Gamma, num_particles, bdiff);
+            Elem->KickAngle, Elem->Scaling, gamma, num_particles, bdiff);
     return Elem;
 }
 
@@ -218,7 +220,9 @@ MODULE_DEF(BndMPoleSymplectic4RadPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
+        double rest_energy = 0.0;
+        double charge = -1.0;
         double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, Scaling,
                 FringeInt1, FringeInt2, Energy;
         int MaxOrder, NumIntSteps, FringeBendEntrance, FringeBendExit,
@@ -239,9 +243,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
-        Energy=atGetDouble(ElemData,"Energy"); check_error();
-        Gamma=1.0E-9*Energy/__E0;
         /*optional fields*/
+        Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
         FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
@@ -260,10 +263,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         irho = BendingAngle/Length;
+        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        Gamma=1.0E-9*Energy/__E0;
         r_in = mxGetDoubles(plhs[0]);
+
         BndMPoleSymplectic4RadPass(r_in, Length, irho, PolynomA, PolynomB,
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             FringeBendEntrance, FringeBendExit,
