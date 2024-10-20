@@ -199,7 +199,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->KickAngle=KickAngle;
     }
     irho = Elem->BendingAngle/Elem->Length;
-    gamma = atEnergy(Param->energy, Elem->Energy)/Param->rest_energy;
+    gamma = 1.0E-9*atEnergy(Param->energy, Elem->Energy)/__E0;
 
     BndMPoleSymplectic4RadPass(r_in, Elem->Length, irho, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
