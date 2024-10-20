@@ -9,11 +9,19 @@ function M66 = findelemm66(ELEM, varargin)
 %  M66=FINDELEMM66(...,'orbit',ORBITIN)
 %     ORBITIN       - 6-by-1 phase space coordinates at the entrance
 %                   (default: zeros(6,1))
+%
+%  M66=FINDELEMM66(...,'Energy',ENERGY)
+%     Use ENERGY and ignore the 'Energy' field of elements
+%
+%  M66=FINDELEMM66(...,'Particle',PARTICLE)
+%     Use PARTICLE (default is relativistic)
 % 
 % See also FINDELEMM44
 
 [XYStep,varargs]=getoption(varargin,'XYStep');
 [R0,varargs]=getoption(varargs,'orbit',zeros(6,1));
+[energy,varargs]=getoption(varargs,'Energy',0.0);
+[particle,varargs]=getoption(varargs,'Particle',[]);
 [MethodName,R0]=getargs(varargs,ELEM.PassMethod,R0);
 
 % Build a diagonal matrix of initial conditions
@@ -23,6 +31,6 @@ D6 = 0.5*diag(scaling);
 % Add to the orbit_in
 RIN = R0 + [D6, -D6];
 % Propagate through the element
-ROUT = feval(MethodName,ELEM,RIN);
+ROUT=elempass(ELEM,RIN,'PassMethod',MethodName,'Energy',energy,'Particle',particle);
 % Calculate numerical derivative
 M66 = (ROUT(:,1:6)-ROUT(:,7:12))./scaling;
