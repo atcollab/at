@@ -36,52 +36,6 @@ class RDTType(Enum):
     TUNESHIFT = 6
 
 
-@dataclass
-class _RDT:
-    # Location
-    refpts: Sequence[int] | int = None
-    # RDTtype.FOCUSING
-    h20000: Sequence[complex] | complex = None
-    h00200: Sequence[complex] | complex = None
-    # RDTtype.COUPLING
-    h10010: Sequence[complex] | complex = None
-    h10100: Sequence[complex] | complex = None
-    # RDTtype.CHROMATIC
-    h11001: Sequence[complex] | complex = None
-    h00111: Sequence[complex] | complex = None
-    h20001: Sequence[complex] | complex = None
-    h00201: Sequence[complex] | complex = None
-    h10002: Sequence[complex] | complex = None
-    # RDTtype.GEOMETRIC1
-    h21000: Sequence[complex] | complex = None
-    h30000: Sequence[complex] | complex = None
-    h10110: Sequence[complex] | complex = None
-    h10020: Sequence[complex] | complex = None
-    h10200: Sequence[complex] | complex = None
-    # RDTtype.GEOMETRIC2
-    h22000: Sequence[complex] | complex = None
-    h11110: Sequence[complex] | complex = None
-    h00220: Sequence[complex] | complex = None
-    h31000: Sequence[complex] | complex = None
-    h40000: Sequence[complex] | complex = None
-    h20110: Sequence[complex] | complex = None
-    h11200: Sequence[complex] | complex = None
-    h20020: Sequence[complex] | complex = None
-    h20200: Sequence[complex] | complex = None
-    h00310: Sequence[complex] | complex = None
-    h00400: Sequence[complex] | complex = None
-    # RDTtype.DETUNING
-    dnux_dJx: Sequence[float] | float = None
-    dnux_dJy: Sequence[float] | float = None
-    dnuy_dJy: Sequence[float] | float = None
-
-    def __getattr__(self, item):
-        return asdict(self)[item]
-
-    def __getitem__(self, item):
-        return asdict(self)[item]
-
-
 def _get_polynom(elem, attr, index):
     try:
         val = getattr(elem, attr)[index]
@@ -130,6 +84,7 @@ def _computedrivingterms(
         return _PERIODICFACTOR[4 + i][4 + j]
 
     rdts = {}
+    rdts2 = {}
     rbetax = np.sqrt(betax)
     rbetay = np.sqrt(betay)
     px = np.exp(1j * phix)
@@ -258,6 +213,21 @@ def _computedrivingterms(
             pym2 = pym * pym
             cpym2 = np.conj(pym2)
             cpxym2 = np.conj(pxm * pym2)
+            rdts2.update(
+                {
+                    "h22000": 0.0,
+                    "h31000": 0.0,
+                    "h11110": 0.0,
+                    "h11200": 0.0,
+                    "h40000": 0.0,
+                    "h20020": 0.0,
+                    "h20110": 0.0,
+                    "h20200": 0.0,
+                    "h00220": 0.0,
+                    "h00310": 0.0,
+                    "h00400": 0.0,
+                }
+            )
             # fmt: off
             bsign = np.array([np.sign(sm[i] - sm) * 1j * b3lm[i] * b3lm
                               for i in range(nelem)])
@@ -267,17 +237,17 @@ def _computedrivingterms(
                              for i in range(nelem)])
             ppxm = np.array([pxm[i] * pxm for i in range(nelem)])
 
-            rdts["h22000"] += (1.0 / 64) * np.sum([
+            rdts2["h22000"] += (1.0 / 64) * np.sum([
                 rbbx[i] * (pxm3[i] * cpxm3 + 3 * pxm[i] * cpxm)
                 for i in range(nelem)]
             )
-            rdts["h31000"] += (1.0 / 32) * np.sum([
+            rdts2["h31000"] += (1.0 / 32) * np.sum([
                 rbbx[i] * pxm3[i] * cpxm
                 for i in range(nelem)]
             )
             t1 = np.array([np.conj(pxm[i]) * pxm for i in range(nelem)])
             t2 = np.conj(t1)
-            rdts["h11110"] += (1.0 / 16) * np.sum([
+            rdts2["h11110"] += (1.0 / 16) * np.sum([
                 rbxy[i] * (betaxm * (t1[i] - t2[i]) + betaym * pym2[i]
                            * cpym2 * (t2[i] + t1[i]))
                 for i in range(nelem)]
@@ -285,40 +255,40 @@ def _computedrivingterms(
             t1 = np.array([np.exp(-1j * (phixm[i] - phixm))
                            for i in range(nelem)])
             t2 = np.conj(t1)
-            rdts["h11200"] += (1.0 / 32) * np.sum([
+            rdts2["h11200"] += (1.0 / 32) * np.sum([
                 rbxy[i] * np.exp(1j * (2 * phiym[i]))
                 * (betaxm * (t1[i] - t2[i]) + 2 * betaym * (t2[i] + t1[i]))
                 for i in range(nelem)]
             )
-            rdts["h40000"] += (1.0 / 64) * np.sum([
+            rdts2["h40000"] += (1.0 / 64) * np.sum([
                 rbbx[i] * pxm3[i] * pxm for i in range(nelem)]
             )
-            rdts["h20020"] += (1.0 / 64) * np.sum([
+            rdts2["h20020"] += (1.0 / 64) * np.sum([
                 rbxy[i] * (betaxm * cpxym2[i] * pxm3 - (betaxm + 4 * betaym)
                            * ppxm[i] * cpym2[i])
                 for i in range(nelem)]
             )
-            rdts["h20110"] += (1.0 / 32) * np.sum([
+            rdts2["h20110"] += (1.0 / 32) * np.sum([
                 rbxy[i] * (betaxm * (cpxm[i] * pxm3 - ppxm[i])
                            + 2 * betaym * ppxm[i] * pym2[i] * cpym2)
                 for i in range(nelem)]
             )
-            rdts["h20200"] += (1.0 / 64) * np.sum([
+            rdts2["h20200"] += (1.0 / 64) * np.sum([
                 rbxy[i] * (betaxm * cpxm[i] * pxm3 * pym2[i]
                            - (betaxm - 4 * betaym)
                            * ppxm[i] * pym2[i])
                 for i in range(nelem)]
             )
-            rdts["h00220"] += (1.0 / 64) * np.sum([
+            rdts2["h00220"] += (1.0 / 64) * np.sum([
                 rbxy[i] * betaym * (pxm[i] * pym2[i] * cpxym2 + 4 * pxm[i] * cpxm
                                     - np.conj(pxm[i] * pym2) * pxm * pym2[i])
                 for i in range(nelem)]
             )
-            rdts["h00310"] += (1.0 / 32) * np.sum([
+            rdts2["h00310"] += (1.0 / 32) * np.sum([
                 rbxy[i] * betaym * pym2[i] * (pxm[i] * cpxm - pxm * cpxm[i])
                 for i in range(nelem)]
             )
-            rdts["h00400"] += (1.0 / 64) * np.sum([
+            rdts2["h00400"] += (1.0 / 64) * np.sum([
                 rbxy[i] * betaym * pxm[i] * cpxm * pym2[i] * pym2
                 for i in range(nelem)]
             )
@@ -372,7 +342,7 @@ def _computedrivingterms(
                 for i in range(nelem)]
             )
             # fmt: on
-    return rdts
+    return rdts, rdts2
 
 
 def _get_rdtlist(
@@ -392,6 +362,7 @@ def _get_rdtlist(
     refpts,
 ):
     rdtlist = []
+    rdtlist2 = []
     _compute_pf(tune, nperiods)
     for ii in refpts:
         start_idx = sum(idx_mag < ii)
@@ -403,26 +374,26 @@ def _get_rdtlist(
         s_rot = np.roll(smag, -start_idx) - sall[ii]
         s_rot[-start_idx:] += sall[-1]
         pols_rot = np.roll(pols, -start_idx, axis=0)
-        rdtlist.append(
-            _computedrivingterms(
-                s_rot,
-                beta_rot[:, 0],
-                beta_rot[:, 1],
-                phi_rot[:, 0],
-                phi_rot[:, 1],
-                etax_rot,
-                pols_rot[:, 0],
-                pols_rot[:, 1],
-                pols_rot[:, 2],
-                pols_rot[:, 3],
-                tune,
-                rdt_type,
-                nperiods,
-                ii,
-                second_order,
-            )
+        rdt, rdt2 = _computedrivingterms(
+            s_rot,
+            beta_rot[:, 0],
+            beta_rot[:, 1],
+            phi_rot[:, 0],
+            phi_rot[:, 1],
+            etax_rot,
+            pols_rot[:, 0],
+            pols_rot[:, 1],
+            pols_rot[:, 2],
+            pols_rot[:, 3],
+            tune,
+            rdt_type,
+            nperiods,
+            ii,
+            second_order,
         )
-    return rdtlist
+        rdtlist.append(rdt)
+        rdtlist2.append(rdt2)
+    return rdtlist, rdtlist2
 
 
 def get_rdts(
@@ -472,8 +443,10 @@ def get_rdts(
 
     Returns:
         rdts: rdt data (complex) at refpts
+        rdts2: (complex) contribution from sextupole second order terms
+        rdttot: (complex) total rdts
 
-        **rdts** is a dataclass with fields:
+        **rdts** is a dictionary with keys:
         =================   ======
         **refts**           location of the rdt
 
@@ -560,16 +533,27 @@ def get_rdts(
         ctx = multiprocessing.get_context()
         refs = np.array_split(refpts, pool_size)
         with ctx.Pool(pool_size) as pool:
-            rdtlist = pool.map(fun, refs)
+            results = pool.map(fun, refs)
+            rdtlist, rdtlist2 = zip(*results)
             rdtlist = np.concatenate(rdtlist)
+            rdtlist2 = np.concatenate(rdtlist2)
     else:
-        rdtlist = fun(refpts)
-    rdts = _RDT()
-    for k in rdts.__annotations__.keys():
+        rdtlist, rdtlist2 = fun(refpts)
+    rdts = {}
+    rdts2 = {}
+    rdttot = {}
+    for k in rdtlist[0].keys():
         val = [rdt.get(k, None) for rdt in rdtlist]
+        val2 = [rdt.get(k, None) for rdt in rdtlist2]
         if val[0] is not None:
-            setattr(rdts, k, val)
-    return rdts
+            rdts[k] = np.array(val)
+            rdttot[k] = np.array(val, dtype=np.complex)
+        if val2[0] is not None:
+            rdts2[k] = np.array(val2)
+            rdttot[k] += np.array(val2, dtype=np.complex)
+    rdts2["refpts"] = rdts["refpts"]
+    rdttot["refpts"] = rdts["refpts"]
+    return rdts, rdts2, rdttot
 
 
 Lattice.get_rdts = get_rdts
