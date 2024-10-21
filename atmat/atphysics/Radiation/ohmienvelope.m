@@ -1,4 +1,4 @@
-function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
+function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts,energy) %#ok<INUSD>
 %OHMIENVELOPE calculates equilibrium beam envelope in a
 % circular accelerator using Ohmi's beam envelope formalism [1].
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
@@ -33,37 +33,18 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
+if nargin<4, energy=atGetRingProperties(ring, 'Energy'); end
 if nargin<3, refpts=1; end
 
-% Erase wigglers from the radiative element list.
-% Diffusion matrix to be computed with separate FDW function.
-Wig=atgetcells(ring,'Bmax');
-radindex = radindex & ~Wig;
-
-[mring, ms, orbit] = findm66(ring,1:NumElements+1);
-mt=squeeze(num2cell(ms,[1 2]));
-orb=num2cell(orbit,1)';
-
-zr={zeros(6,6)};
-B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
-
-% calculate Radiation-Diffusion matrix B for elements with radiation
-B(radindex)=cellfun(@findmpoleraddiffmatrix,...
-    ring(radindex),orb(radindex),'UniformOutput',false);
-B(Wig)=cellfun(@FDW,...
-    ring(Wig),orb(Wig),'UniformOutput',false);
-
-% Calculate cumulative Radiation-Diffusion matrix for the ring
-BCUM = zeros(6,6);
-% Batbeg{i} is the cumulative diffusion matrix from
-% 0 to the beginning of the i-th element
-Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
+orb0=findorbit(ring);
+[BCUM,Batbeg]=atdiffmat(ring,energy,'orbit',orb0);
+[mring, ms, orbit] = findm66(ring,1:NumElements+1,'orbit',orb0);
 
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
 % We rewrite it in the form of Sylvester-Lyapunov equation
-% to use MATLAB's SYLVERTER function:
+% to use MATLAB's SYLVESTER function:
 %            AA*R + R*BB = CC
 % where
 %				AA = inv(MRING)
@@ -77,8 +58,9 @@ CC = AA*BCUM;
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
-rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
 
+mt=squeeze(num2cell(ms,[1 2]));
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
 envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
 
@@ -87,15 +69,6 @@ varargout=cell(1,nout);
 if nout>=3, varargout{3}=orbit(:,refpts); end
 if nout>=2, varargout{2}=ms(:,:,refpts); end
 if nout>=1, varargout{1}=mring; end
-
-    function btx=cumulb(elem,orbit,b)
-        % Calculate 6-by-6 linear transfer matrix in each element
-        % near the equilibrium orbit
-        m=findelemm66(elem,elem.PassMethod,orbit);
-        % Cumulative diffusion matrix of the entire ring
-        BCUM = m*BCUM*m' + b;
-        btx=BCUM;
-    end
 
     function [r,tilt,sigma]=propag(m,cumb)
         r=m*R*m'+cumb;
