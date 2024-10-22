@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__all__ = ["MadxParser", "load_madx"]
+__all__ = ["MadParameter", "MadxParser", "load_madx"]
 
 import functools
 import warnings
@@ -22,21 +22,16 @@ from scipy.constants import c as clight, hbar as _hb, e as qelect
 from scipy.constants import physical_constants as _cst
 
 from . import register_format
-from .file_input import UnorderedParser, AnyDescr, ElementDescr, SequenceDescr
-from .utils import protect, restore
+from .utils import split_ignoring_parentheses, protect, restore
+from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
+from .file_input import CaseIndependentParser, UnorderedParser
+from .file_input import set_argparser, ignore_names
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
 _kconst = re.compile("^ *const +")
 _kreal = re.compile("^ *real +")
 _kint = re.compile("^ *int +")
-
-_default_beam = {
-    "particle": "positron",
-    "energy": 1.0,  # GeV
-    "bcurrent": 0.0,
-    "kbunch": 1,
-    "radiate": False,
-}
+_separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
 # Constants known by MAD-X
 true = True
@@ -54,21 +49,80 @@ erad = _cst["classical electron radius"][0]  # [m]
 prad = erad * emass / pmass  # [m]
 
 
+class MadParameter(str):
+    """MAD parameter
+
+    A MAD parameter is an expression which can be evaluated n the context
+    of a MAD parser
+    """
+    def __new__(cls, parser, expr):
+        return super().__new__(cls, expr)
+
+    # noinspection PyUnusedLocal
+    def __init__(self, parser: _MadParser, expr: str):
+        """Args:
+            parser: MadParser instance defining the context for evaluation
+            expr:   expression to be evaluated
+
+        The expression may contain MAD parameter names, arithmetic operators and
+        mathematical functions known by MAD
+        """
+        self.parser = parser
+
+    def __float__(self):
+        return float(self.parser._evaluate(self))
+
+    def __int__(self):
+        return int(self.parser._evaluate(self))
+
+    def __add__(self, other):
+        return float(self) + float(other)
+
+    def __radd__(self, other):
+        return float(other) + float(self)
+
+    def __mul__(self, other):
+        return float(self) * float(other)
+
+    def __rmul__(self, other):
+        return float(other) * float(self)
+
+    def __sub__(self, other):
+        return float(self) - float(other)
+
+    def __rsub__(self, other):
+        return float(other) - float(self)
+
+    def __truediv__(self, other):
+        return float(self) / float(other)
+
+    def __rtruediv__(self, other):
+        return float(other) / float(self)
+
+    def __pow__(self, other):
+        return pow(float(self), other)
+
+    def __rpow__(self, other):
+        return pow(float(other), float(self))
+
+    def __neg__(self):
+        return -float(self)
+
+    def __pos__(self):
+        return +float(self)
+
+
 def sinc(x: float) -> float:
     """Cardinal sine function known by MAD-X"""
-    return sin(x) / x
+    if abs(x) < 1e-10:
+        return x
+    else:
+        return sin(x) / x
 
 
 # -------------------
 #  Utility functions
 # -------------------
-
-
-def _value_arg_parser(parser: UnorderedParser, argstr: str):
-    """
-    Evaluate a keyword argument of a command and return the pair (key, value)
-    """
-    return argstr, parser.evaluate(argstr)
 
 
 def set_tilt(func):
@@ -84,7 +138,7 @@ def set_tilt(func):
     return wrapper
 
 
-def polyn(a: Sequence[float]) -> np.ndarray:
+def polyn(a: float | Sequence[float]) -> np.ndarray:
     """Convert polynomials from MADX to AT"""
 
     def ref(n: int, t: float):
@@ -93,9 +147,17 @@ def polyn(a: Sequence[float]) -> np.ndarray:
         f *= n + 1
         return v
 
-    a = np.ravel(a)
     f = 1.0
+    if not isinstance(a, Sequence):
+        # In case of a single element, we have a scalar instead of a tuple
+        a = (a,)
     return np.array([ref(n, t) for n, t in enumerate(a)], dtype=float)
+
+
+# noinspection PyUnusedLocal
+def _keyparser(parser, argcount, argstr):
+    """Return the pair key, value for the given 'key' argument"""
+    return argstr, parser._evaluate(argstr)
 
 
 # ------------------------------
@@ -106,16 +168,21 @@ def polyn(a: Sequence[float]) -> np.ndarray:
 class _MadElement(ElementDescr):
     """Description of MADX elements"""
 
-    def __init__(self, *args, at=0.0, frm=None, **kwargs):
+    str_attr = {"refer", "refpos", "sequence", "from"}
+
+    def __init__(self, *args, at=0.0, **kwargs):
         self.at = at
-        self.frm = frm
+        # Cannot use "from" as argument or attribute
+        setattr(self, "from", kwargs.pop("from", None))
+        # kwargs.pop("copy", False)
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
         half_length = 0.5 * self.length
         offset = offset + refer * half_length + self.at
-        if self.frm is not None:
-            offset += parser[self.frm].at
+        frm = getattr(self, "from")
+        if frm is not None:
+            offset += parser[frm].at
         return np.array([-half_length, half_length]) + offset
 
 
@@ -127,7 +194,7 @@ class _MadElement(ElementDescr):
 # noinspection PyPep8Naming
 class drift(_MadElement):
     @staticmethod
-    def convert(name: str, l, **params):  # noqa: E741
+    def convert(name: str, l=0.0, **params):  # noqa: E741
         return [elt.Drift(name, l, **params)]
 
 
@@ -183,7 +250,7 @@ class sbend(_MadElement):
     @set_tilt
     def convert(
         name,
-        l,
+        l,  # noqa: E741
         angle,
         e1=0.0,
         e2=0.0,
@@ -217,7 +284,7 @@ class rbend(_MadElement):
     @set_tilt
     def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
         hangle = 0.5 * angle
-        arclength = l * hangle / sin(hangle)
+        arclength = l * sinc(hangle)
         return sbend.convert(
             name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
@@ -232,7 +299,7 @@ class kicker(_MadElement):
     @staticmethod
     @set_tilt
     def convert(name, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
-        kicks = np.array([hkick, vkick])
+        kicks = np.array([hkick, vkick], dtype=float)
         return [elt.Corrector(name, l, kicks, **params)]
 
 
@@ -240,16 +307,16 @@ class kicker(_MadElement):
 class hkicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(name, l, hkick=kick, **params)
+    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
+        return kicker.convert(name, l=l, hkick=kick, **params)
 
 
 # noinspection PyPep8Naming
 class vkicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(name, l, vkick=kick, **params)
+    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
+        return kicker.convert(name, l=l, vkick=kick, **params)
 
 
 # noinspection PyPep8Naming
@@ -257,12 +324,12 @@ class rfcavity(_MadElement):
     @staticmethod
     def convert(
         name,
-        l=0.0,
+        l=0.0,  # noqa: E741
         volt=0.0,
         freq=np.nan,
         lag=0.0,
         harmon=0,
-        **params,  # noqa: E741
+        **params,
     ):
         cavity = elt.RFCavity(
             name,
@@ -286,9 +353,9 @@ class monitor(_MadElement):
         else:
             hl = 0.5 * l
             return [
-                elt.Drift(name, hl, madtype="monitor"),
+                elt.Drift(name, hl, origin="monitor"),
                 elt.Monitor(name, **params),
-                elt.Drift(name, hl, madtype="monitor"),
+                elt.Drift(name, hl, origin="monitor"),
             ]
 
 
@@ -307,62 +374,16 @@ class instrument(monitor):
     pass
 
 
-class _Ignored(_MadElement):
-    report = True
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        type1 = self["madtype"].title()
-        type2 = "Marker" if self.length == 0.0 else "Drift"
-        if self.report:
-            self.__class__.report = False
-            print(f"MADX type {type1} is ignored and replaced by a {type2}.")
-
-    @staticmethod
-    def convert(name, l=0.0, **params):  # noqa: E741
-        if l == 0.0:
-            return [elt.Marker(name, **params)]
-        else:
-            return [elt.Drift(name, l, **params)]
+ignore_names(
+    globals(),
+    _MadElement,
+    ["solenoid", "rfmultipole", "crabcavity", "elseparator", "collimator", "tkicker"],
+)
 
 
-# noinspection PyPep8Naming
-class solenoid(_Ignored):
-    report = True
-    pass
-
-
-# noinspection PyPep8Naming
-class rfmultipole(_Ignored):
-    report = True
-    pass
-
-
-# noinspection PyPep8Naming
-class crabcavity(_Ignored):
-    report = True
-    pass
-
-
-# noinspection PyPep8Naming
-class elseparator(_Ignored):
-    report = True
-    pass
-
-
-# noinspection PyPep8Naming
-class collimator(_Ignored):
-    report = True
-    pass
-
-
-# noinspection PyPep8Naming
-class tkicker(_Ignored):
-    report = True
-    pass
-
-
+@set_argparser(_keyparser)
 def value(**kwargs):
+    """VALUE command"""
     kwargs.pop("copy", False)
     for key, v in kwargs.items():
         print(f"{key}: {v}")
@@ -384,7 +405,7 @@ class _Line(SequenceDescr):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
+    def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         if self.inverse:
             for elem in reversed(self):
                 if isinstance(elem, AnyDescr):  # Element or List
@@ -410,32 +431,31 @@ class _Sequence(SequenceDescr):
     def __init__(
         self,
         *args,
-        l: float = 0,
+        l: float = 0,  # noqa: E741
         refer: str = "centre",
         refpos: str | None = None,
         at: float = 0.0,
-        frm: str | None = None,
         valid: int = 1,
-        **kwargs,  # noqa: E741
+        **kwargs,
     ):
         self.l = l  # noqa: E741
         try:
-            self.refer = self._offset[refer.lower()]
+            self.refer = self._offset[refer]
         except KeyError as exc:
             raise ValueError(f"REFER must be in {set(self._offset.keys())}") from exc
         self.refpos = refpos
         self.at = at
-        self.frm = frm
+        # Cannot use "from" as argument or attribute name:
+        setattr(self, "from", kwargs.pop("from", None))
         self.valid = bool(valid)
         super().__init__(*args, **kwargs)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, copy: bool = True, **kwargs):
         # Never make a copy
-        copy = kwargs.pop("copy", None)
         super().__call__(*args, copy=False, **kwargs)
         return self if copy else None
 
-    def origin(self, parser, refer, refpos):
+    def reference(self, parser, refer, refpos):
         if refpos is None:
             orig = 0.5 * (refer - 1.0) * self.length
         else:
@@ -452,12 +472,13 @@ class _Sequence(SequenceDescr):
                 raise NameError(
                     f"REFPOS {refpos!r} is not in the sequence {self.name!r}"
                 )
-        if self.frm is not None:
-            orig += parser[self.frm].at
+        frm = getattr(self, "from")
+        if frm is not None:
+            orig += parser[frm].at
         return orig
 
     def flatten(self, parser, offset: float = 0.0, refer: float = 1.0, refpos=None):
-        offset = offset + self.origin(parser, refer, refpos) + self.at
+        offset = offset + self.reference(parser, refer, refpos) + self.at
         for fname, *anames in self:
             try:
                 # noinspection PyProtectedMember
@@ -482,19 +503,14 @@ class _Sequence(SequenceDescr):
                 raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
         end = 0.0
-        elem = None
+        elem = self
         self.at = 0.0
         for (entry, ext), elem in self.flatten(parser):
             yield from insert_drift(entry - end, elem)
             end = ext
             yield from elem.expand(parser)
 
-        try:
-            yield from insert_drift(self.length - end, elem)
-        except Exception as exc:  # Cannot happen if no element in sequence
-            mess = (f"Unexpected error in sequence {self.name!r}",)
-            exc.args += mess
-            raise
+        yield from insert_drift(self.length - end, elem)  # Final drift
 
 
 class _BeamDescr(ElementDescr):
@@ -517,28 +533,29 @@ class _BeamDescr(ElementDescr):
 
         # Respect the precedence of MAD-X
         if "energy" in self:
-            energy = self["energy"]
+            energy = float(self["energy"])  # force evaluation
             gamma = energy / mass
             # betagamma = sqrt(gamma * gamma - 1.0)
         elif "pc" in self:
-            pc = self["pc"]
+            pc = float(self["pc"])  # force evaluation
             betagamma = pc / mass
             gamma = sqrt(betagamma * betagamma + 1.0)
         elif "gamma" in self:
-            gamma = self["gamma"]
+            gamma = float(self["gamma"])  # force evaluation
             # betagamma = sqrt(gamma * gamma - 1.0)
         elif "beta" in self:
-            beta = self["beta"]
+            beta = float(self["beta"])  # force evaluation
             gamma = 1.0 / sqrt(1.0 - beta * beta)
             # betagamma = beta * gamma
         elif "brho" in self:
-            brho = self["brho"]
+            brho = float(self["brho"])  # force evaluation
             betagamma = 1.0e-9 * brho * clight * abs(charge) / mass
             gamma = sqrt(betagamma * betagamma + 1.0)
         else:
             gamma = 1.0 / mass
 
-        energy = gamma * mass  # [GeV]
+        # convert from array scalar to float
+        energy = float(gamma * mass)  # [GeV]
         # pc = betagamma * mass  # [GeV]
         # beta = betagamma / gamma
         # brho = 1.0e09 * pc / abs(charge) / clight
@@ -546,122 +563,180 @@ class _BeamDescr(ElementDescr):
         return {
             "particle": atparticle,
             "energy": 1.0e09 * energy,  # [eV]
-            "beam_current": self["bcurrent"],
+            "beam_current": float(self["bcurrent"]),  # force deferred evaluation
             "nbunch": self["kbunch"],
             "periodicity": 1,
             "radiate": self["radiate"],
         }
 
 
-class _MadParser(UnorderedParser):
+class _Call:
+    """Implement the CALL Mad command"""
+
+    @staticmethod
+    def argparser(parser, argcount, argstr):
+        return parser._argparser(
+            argcount, argstr, pos_args=("file",), str_attr=("file",)
+        )
+
+    def __init__(self, parser: _MadParser):
+        self.parser = parser
+
+    def __call__(self, file=None, name=None, copy=False):
+        self.parser.parse_files(file, final=False)
+
+
+class _Beam:
+    """Implement the BEAM Mad command"""
+
+    default_beam = {
+        "particle": "positron",
+        "energy": 1.0,  # GeV
+        "bcurrent": 0.0,
+        "kbunch": 1,
+        "radiate": False,
+    }
+
+    @staticmethod
+    def argparser(parser, argcount, argstr):
+        return parser._argparser(
+            argcount,
+            argstr,
+            str_attr=("particle", "sequence"),
+            bool_attr=("radiate", "bunched"),
+        )
+
+    def __init__(self, parser: _MadParser):
+        self.parser = parser
+
+    def __call__(self, sequence=None, **kwargs):
+        """create a :py:class:`_BeamDescr` object and store it as 'beam%sequence'"""
+        name = "beam%" if sequence is None else f"beam%{sequence}"
+        beamobj = self.parser.get(name, None)
+        if beamobj is None:
+            beamobj = _BeamDescr(self.default_beam)
+            self.parser[name] = beamobj
+
+        for k, v in kwargs.items():
+            beamobj[k] = v
+
+
+class _MadParser(CaseIndependentParser, UnorderedParser):
     """Common class for both MAD8 anf MAD-X parsers"""
 
-    _str_arguments = {"file", "refer", "refpos", "sequence", "frm"}
-    _argument_parser = {"value": _value_arg_parser, "show": _value_arg_parser}
+    _str_arguments = {"file", "refer", "refpos", "sequence", "from"}
 
-    def __init__(self, env: dict, *args, strict: bool = True, **kwargs):
-        """"""
-        if not strict:
-            kwargs.update(none=0.0)
+    def __init__(self, env: dict, **kwargs):
+        """Common behaviour for MAD-X and MAD8
+
+        Args:
+            env: global namespace used for evaluating commands
+            verbose:    If :py:obj:`True`, print details on the processing
+            strict: If :py:obj:`False`, assign 0 to undefined variables
+            **kwargs: Initial variable definitions
+        """
         super().__init__(
             env,
-            *args,
             delimiter=";",
             linecomment=("!", "//"),
             endfile="return",
-            call=self._call_cmd,
-            beam=self._beam_cmd,
+            call=_Call(self),
+            beam=_Beam(self),
             sequence=_Sequence,
             centre="centre",
             entry="entry",
             exit="exit",
+            undef_key="none",
             **kwargs,
         )
         self.current_sequence = None
-        self._beam_cmd()
+        self["beam"]()
 
     def clear(self):
         super().clear()
         self.current_sequence = None
-        self._beam_cmd()
+        self["beam"]()
 
-    # noinspection PyUnusedLocal
-    def _call_cmd(self, file=None, name=None, copy=False):
-        """Implement the CALL MAD-X command"""
-        self.parse_files(file, final=False)
+    def _assign_deferred(self, value: str):
+        """Deferred assignment"""
+        if value[0] == "(" and value[-1] == ")":
+            # Array variable: convert to tuple
+            value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
+            return tuple(
+                MadParameter(self, v) for v in restore(matches, *value.split(","))
+            )
+        else:
+            # Scalar variable
+            return MadParameter(self, value)
 
-    def _beam_cmd(self, sequence=None, **kwargs):
-        """Implement the BEAM MAD-X statement"""
-        name = "beam%" if sequence is None else f"beam%{sequence}"
-        beamobj = self.get(name, None)
-        if beamobj is None:
-            beamobj = _BeamDescr(_default_beam)
-            self[name] = beamobj
+    def _argparser(self, argcount, argstr: str, **kwargs):
+        key, *value = split_ignoring_parentheses(
+            argstr, delimiter=":=", fence=('"', '"'), maxsplit=1
+        )
+        if value:
+            return key, self._assign_deferred(value[0])
+        else:
+            return super()._argparser(argcount, argstr, **kwargs)
 
-        beamobj.update(**kwargs)
+    def _assign(self, label: str, key: str, val: str):
+        # Special treatment of "line=(...)" assignments
+        if key == "line":
+            val = val.replace(")", ",)")  # For tuples with a single item
+            return label, _Line(self._evaluate(val), name=label)
+        else:
+            return super()._assign(label, key, val)
 
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
+        # Special treatment of SEQUENCE definitions
         res = None
+        if cmdname == "endsequence":
+            self.current_sequence = None
+            return None
         if self.current_sequence is None:
             try:
-                res = self._raw_command(label, cmdname, *argnames, **kwargs)
+                res = super()._command(label, cmdname, *argnames, **kwargs)
             except (KeyError, NameError) as exc:
-                if cmdname.lower() == "sequence":
+                if cmdname == "sequence":
                     # if sequence creation failed, create a dummy sequence anyway
-                    res = self._raw_command(label, cmdname, "valid=0", **kwargs)
+                    res = super()._command(label, cmdname, "valid=0", **kwargs)
                     # But store the command for later update
-                    reason = self._reason(exc)
-                    self._postpone(reason, None, label, "valid=1", *argnames)
+                    self._fallback(exc, None, label, "valid=1", *argnames)
                 else:
                     raise
             finally:
                 if isinstance(res, _Sequence):
                     self.current_sequence = res
         else:
-            if cmdname.lower() == "endsequence":
-                self.current_sequence = None
+            if label is None:
+                self.current_sequence.append((cmdname, *argnames))
             else:
-                if label is not None:
-                    try:
-                        res = self._raw_command(label, cmdname, *argnames, **kwargs)
-                    finally:
-                        self.current_sequence.append((label, *argnames))
-                else:
-                    self.current_sequence.append((cmdname, *argnames))
+                try:
+                    res = super()._command(label, cmdname, *argnames, **kwargs)
+                finally:
+                    self.current_sequence.append((label, *argnames))
         return res
 
-    def _format_statement(self, line: str) -> str:
-        line, matches = protect(line, fence=('"', '"'))
-        # Remove the MAD const, real, int keywords
-        line = _kint.sub("", _kreal.sub("", _kconst.sub("", line)))
-        line = "".join(line.split())  # Remove all spaces
-        line = line.replace("{", "(").replace("}", ")")
-        line = line.replace(":=", "=")  # since we evaluate only once
-        (line,) = restore(matches, line)
-        return line
-
-    def _assign(self, label: str, key: str, val: str):
-        if key.lower() == "line":
-            return label, _Line(self.evaluate(val), name=label)
+    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
+        left, *right = cmdname.split(":=")
+        if right:
+            self[left] = self._assign_deferred(right[0])
         else:
-            return super()._assign(label, key, val)
+            super()._decode(label, cmdname, *argnames)
 
-    def _finalise(self, final: bool = True) -> None:
-        super()._finalise(final=final)
-        if final:
-            try:
-                default_value = self["none"]
-                for var in self._missing(verbose=False):
-                    self._print(f"Set {var} to {default_value}")
-                    self[var] = default_value
-                super()._finalise()
-            except KeyError:
-                pass
+    def _format_statement(self, line: str) -> str:
+        line = super()._format_statement(line)
+        # Remove the MAD const, real, int qualifiers
+        line = _kint.sub("", _kreal.sub("", _kconst.sub("", line)))
+        # Accept space as separator (after removing qualifiers)
+        line = _separator.sub(",", line)
+        # turn curly braces into parentheses (MAD arrays)
+        line = line.replace("{", "(").replace("}", ")")
+        return line
 
     def _get_beam(self, key: str):
         """Get the beam object for a given sequence"""
         try:
-            beam = self[f"beam%{key}"]
+            beam = self[f"beam%{self._gen_key(key)}"]
         except KeyError:
             beam = self["beam%"]
         return beam
@@ -690,9 +765,8 @@ class _MadParser(UnorderedParser):
                     gamma = float(params["energy"] / rest_energy)
                     return sqrt(1.0 - 1.0 / gamma / gamma)
 
-            use = params.setdefault("use", "ring")
             # generate the Lattice attributes from the BEAM object
-            beam = self._get_beam(use).expand(self)
+            beam = self._get_beam(params["use"]).expand(self)
             for key, val in beam.items():
                 params.setdefault(key, val)
 
@@ -707,9 +781,13 @@ class _MadParser(UnorderedParser):
 
             params["_length"] = cell_length
             rev = beta() * clight / cell_length
+
+            # Set the frequency of cavities in which it is not specified
             for cav in cavities:
                 if np.isnan(cav.Frequency):
                     cav.Frequency = rev * cav.HarmNumber
+
+            # Set the lattice harmonic number
             if cavities:
                 cavities.sort(key=lambda el: el.Frequency)
                 c0 = cavities[0]
@@ -725,14 +803,10 @@ class _MadParser(UnorderedParser):
             radiate = False
         else:
             del lat.radiate
+        # noinspection PyUnboundLocalVariable
         if radiate:
             lat.enable_6d(copy=False)
         return lat
-
-    @property
-    def sequences(self):
-        """List of available sequences or lines"""
-        return [k for k, v in self.items() if isinstance(v, (_Line, _Sequence))]
 
 
 class MadxParser(_MadParser):
@@ -740,7 +814,7 @@ class MadxParser(_MadParser):
     """MAD-X specific parser
 
     The parser is a subclass of :py:class:`dict` and is database containing all the
-    MAD-X variables.
+    MAD-X parameters and objects.
 
     Example:
         Parse a 1st file:
@@ -748,30 +822,43 @@ class MadxParser(_MadParser):
         >>> parser = at.MadxParser()
         >>> parser.parse_file("file1")
 
-        Parse another file:
+        Parse another file. This adds the new definitions to the database:
 
         >>> parser.parse_file("file2")
 
-        Get the variable "vkick"
+        Look at the *rf_on* variable
 
-        >>> parser["vkick"]
-        0.003
+        >>> parser["rf_on"]
+        0
 
-        Define a new variable:
+        Get the list of available sequences/lines:
 
-        >>> parser["hkick"] = -0.0024
+        >>> parser.sequences
+        ['arca',
+         'arca_inj',
+         'arcb_inj',
+         'low_emit_ring',
+         'arc_inj',
+         'low_emit_ring_inj']
 
-        Get the "qf1" element
+        Generate an AT :py:class:`.Lattice` from the *low_emit_ring* sequence
 
-        >>> parser["qf1"]
-        quadrupole(name=qf1, l=1.0, k1=0.5, tilt=0.001)
+        >>> ring1 = parser.lattice(use="low_emit_ring")
 
-        Generate an AT :py:class:`.Lattice` from the "ring" sequence
+        Change the value of a variable:
 
-        >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
+        >>> parser["rf_on"] = 1
+
+        Generate a new AT :py:class:`.Lattice` taking into account the new variables:
+
+        >>> ring2 = parser.lattice(use="low_emit_ring")
+
+        Generate an AT :py:class:`.Lattice` from another sequence:
+
+        >>> arca = parser.lattice(use="ring")
     """
 
-    def __init__(self, *, strict: bool = True, verbose: bool = False, **kwargs):
+    def __init__(self, **kwargs):
         """
         Args:
             strict:     If :py:obj:`False`, assign 0 to undefined variables
@@ -780,23 +867,20 @@ class MadxParser(_MadParser):
         """
         super().__init__(
             globals(),
-            strict=strict,
-            verbose=verbose,
             continuation=None,
             blockcomment=("/*", "*/"),
             **kwargs,
         )
 
-    def evaluate(self, expr):
-        """Evaluate an expression using *self* as local namespace"""
-        expr = self._no_dot(expr)  # Replace "." by "_", lower case
-        expr = expr.replace("->", ".")  # Attribute access
+    def _format_command(self, expr: str) -> str:
+        """Format a command for evaluation"""
+        expr = expr.replace("->", ".")  # Attribute access: VAR->ATTR
         expr = expr.replace("^", "**")  # Exponentiation
-        return super().evaluate(expr)
+        return super()._format_command(expr)
 
 
 def load_madx(
-    *files: str, use: str = "ring", strict: bool = True, verbose=False, **kwargs
+    *files: str, use: str = "ring", strict: bool = True, verbose: bool = False, **kwargs
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD-X files
 
@@ -807,7 +891,7 @@ def load_madx(
     - The radiation state is given by the ``RADIATE`` flag of the ``BEAM`` object,
       using the AT defaults: RF cavities active, synchrotron radiation in dipoles and
       quadrupoles.
-    - Long elements are split according to the default AT value for *NumIntSteps* (10).
+    - Long elements are split according to the default AT value of *NumIntSteps* (10).
 
     Parameters:
         files:              Names of one or several MAD-X files
