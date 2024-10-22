@@ -679,6 +679,9 @@ is used</p></li>
 <dd><p>Linear analysis of a lattice with average values</p>
 <p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.avlinopt" title="at.lattice.lattice_object.Lattice.avlinopt"><code class="xref py py-func docutils literal notranslate"><span class="pre">avlinopt()</span></code></a> returns average beta, mu, dispersion over the lattice
 elements.</p>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.avlinopt" title="at.lattice.lattice_object.Lattice.avlinopt"><code class="xref py py-func docutils literal notranslate"><span class="pre">avlinopt()</span></code></a> returns average beta, mu, dispersion over the lattice
+elements. <a class="reference internal" href="#at.lattice.lattice_object.Lattice.avlinopt" title="at.lattice.lattice_object.Lattice.avlinopt"><code class="xref py py-func docutils literal notranslate"><span class="pre">avlinopt()</span></code></a> acts on a single cell (<em>periodicity</em> is not taken
+into account).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1750,6 +1753,7 @@ len(ring)+1</p>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_chrom">
 <span class="sig-name descname"><span class="pre">get_chrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_chrom" title="Link to this definition">#</a></dt>
 <dd><p>Computes the chromaticities using several available methods</p>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.get_tune" title="at.lattice.lattice_object.Lattice.get_tune"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_tune()</span></code></a> may use several methods depending on a <em>method</em> keyword.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2121,6 +2125,8 @@ full parallelization.</p></li>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_optics">
 <span class="sig-name descname"><span class="pre">get_optics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method=&lt;function</span> <span class="pre">linopt6&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_optics" title="Link to this definition">#</a></dt>
 <dd><p>Linear analysis of a fully coupled lattice</p>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.get_optics" title="at.lattice.lattice_object.Lattice.get_optics"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_optics()</span></code></a> computes the linear optics parameters on a single cell
+(<em>periodicity</em> is not taken into account).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2476,6 +2482,7 @@ Default: <a class="reference internal" href="at.lattice.options.html#at.lattice.
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_tune">
 <span class="sig-name descname"><span class="pre">get_tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_tune" title="Link to this definition">#</a></dt>
 <dd><p>Computes the tunes using several available methods</p>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.get_tune" title="at.lattice.lattice_object.Lattice.get_tune"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_tune()</span></code></a> may use several methods depending on a <em>method</em> keyword.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2787,6 +2794,8 @@ bunches defined by <code class="code docutils literal notranslate"><span class="
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.linopt2">
 <span class="sig-name descname"><span class="pre">linopt2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt2" title="Link to this definition">#</a></dt>
 <dd><p>Linear analysis of an uncoupled lattice</p>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.linopt2" title="at.lattice.lattice_object.Lattice.linopt2"><code class="xref py py-func docutils literal notranslate"><span class="pre">linopt2()</span></code></a> computes the linear optics parameters on a single cell
+(<em>periodicity</em> is not taken into account).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p>
@@ -2941,6 +2950,8 @@ vol.2 (1999)</p>
 <span class="sig-name descname"><span class="pre">linopt4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt4" title="Link to this definition">#</a></dt>
 <dd><p>Linear analysis of a H/V coupled lattice</p>
 <p>4D-analysis of coupled motion following Sagan/Rubin <a class="footnote-reference brackets" href="#id12" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a></p>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.linopt4" title="at.lattice.lattice_object.Lattice.linopt4"><code class="xref py py-func docutils literal notranslate"><span class="pre">linopt4()</span></code></a> computes the linear optics parameters on a single cell
+(<em>periodicity</em> is not taken into account).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p>
@@ -3109,6 +3120,8 @@ vol.2 (1999)</p>
 <li><p>a field <strong>R</strong>, as provided by ATLINOPT6, or</p></li>
 <li><p>the fields <strong>beta</strong> and <strong>alpha</strong>, as provided by linopt and linopt6</p></li>
 </ul>
+<p><a class="reference internal" href="#at.lattice.lattice_object.Lattice.linopt6" title="at.lattice.lattice_object.Lattice.linopt6"><code class="xref py py-func docutils literal notranslate"><span class="pre">linopt6()</span></code></a> computes the linear optics parameters on a single cell
+(<em>periodicity</em> is not taken into account).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description.</p>

@@ -542,7 +542,7 @@ NAFF.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>fit</strong> (<em>ndarray</em>) – Horizontal Vertical polynomial coefficients
-from <code class="docutils literal notranslate"><span class="pre">numpy.polyfit</span></code> of shape (2, order+1)</p></li>
+from <code class="docutils literal notranslate"><span class="pre">np.polyfit</span></code> of shape (2, order+1)</p></li>
 <li><p><strong>dpa</strong> – dp array of shape (npoints,)</p></li>
 <li><p><strong>qz</strong> – tune array of shape (npoints, 2)</p></li>
 </ul>
@@ -556,7 +556,7 @@ from <code class="docutils literal notranslate"><span class="pre">numpy.polyfit<
 <dd><p>Computes the tunes for a sequence of amplitudes</p>
 <p>This function uses <a class="reference internal" href="#at.physics.nonlinear.tunes_vs_amp" title="at.physics.nonlinear.tunes_vs_amp"><code class="xref py py-func docutils literal notranslate"><span class="pre">tunes_vs_amp()</span></code></a> to compute the tunes for
 the specified amplitudes. Then it fits this data and returns
-the detuning coefficiant dQx/dx, dQy/dx, dQx/dy, dQy/dy and the
+the detuning coefficiant dQx/Jx, dQy/Jx, dQx/Jy, dQy/Jy and the
 qx, qy arrays versus x, y arrays</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -577,13 +577,16 @@ qx, qy arrays versus x, y arrays</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>q0</strong> (<em>ndarray</em>) – qx, qy from horizontal and vertical amplitude scans.
-Fit results with shape (2, 2)</p></li>
+Fit results with shape (2, 2). Only the fractional part
+is returned</p></li>
 <li><p><strong>q1</strong> (<em>ndarray</em>) – Amplitude detuning coefficients with shape (2, 2)
-<code class="docutils literal notranslate"><span class="pre">[[dQx/dx,</span> <span class="pre">dQy/dx],</span> <span class="pre">[dQx/dy,</span> <span class="pre">dQy/dy]]</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">[[dQx/dJx,</span> <span class="pre">dQy/dJx],</span> <span class="pre">[dQx/dJy,</span> <span class="pre">dQy/dJy]]</span></code></p></li>
 <li><p><strong>x</strong> (<em>ndarray</em>) – x amplitudes (npoints, )</p></li>
-<li><p><strong>q_dx</strong> (<em>ndarray</em>) – qx, qy tunes as a function of x amplitude (npoints, 2)</p></li>
+<li><p><strong>q_dx</strong> (<em>ndarray</em>) – qx, qy tunes as a function of x amplitude (npoints, 2)
+Only the fractional parts are returned</p></li>
 <li><p><strong>y</strong> (<em>ndarray</em>) – y amplitudes (npoints, )</p></li>
-<li><p><strong>q_dy</strong> (<em>ndarray</em>) – qx, qy tunes as a function of y amplitude (npoints, 2)</p></li>
+<li><p><strong>q_dy</strong> (<em>ndarray</em>) – qx, qy tunes as a function of y amplitude (npoints, 2)
+Only the fractional parts are returned</p></li>
 </ul>
 </dd>
 </dl>
