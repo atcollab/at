@@ -264,10 +264,11 @@ def test_get_tune_chrom(hmba_lattice):
     qplin = hmba_lattice.get_chrom()
     qharm = hmba_lattice.get_tune(method='interp_fft')
     qpharm = hmba_lattice.get_chrom(method='interp_fft')
-    assert_close(qlin, [0.38156245, 0.85437541], rtol=1e-8)
-    assert_close(qharm, [0.38156245, 0.85437541], rtol=1e-8)
-    assert_close(qplin, [0.1791909, 0.12242558], rtol=1e-5)
-    assert_close(qpharm, [0.17919145, 0.12242622], rtol=1e-5)
+    print(qlin, qharm)
+    assert_close(qlin, [0.2099983, 0.34001317],atol=1e-8)
+    assert_close(qharm, [0.20999833, 0.34001324], atol=1e-8)
+    assert_close(qplin, [5.734099, 3.917612], atol=1e-8)
+    assert_close(qpharm, [5.734123, 3.917639], atol=1e-8)
 
 
 def test_nl_detuning_chromaticity(hmba_lattice):
@@ -276,17 +277,34 @@ def test_nl_detuning_chromaticity(hmba_lattice):
                                                method='interp_fft', npoints=11)
     q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
                                                npoints=11)
-    assert_close(nlqplin, [[0.38156741, 0.17908231, 1.18656034, -16.47368694],
-                           [0.85437409, 0.1224062, 2.01744075, -3.06407764]],
+    assert_close(nlqplin, [[0.2101570,  5.730634,  37.96993, -527.1578],
+                           [0.3399707,  3.916998,  64.55810, -98.05048]],
                  atol=1e-12, rtol=1e-5)
-    assert_close(nlqpharm, [[0.38156741, 0.17908228, 1.18656178, -16.47370342],
-                            [0.85437409, 0.12240619, 2.01744051, -3.06407046]],
+    assert_close(nlqpharm, [[0.2101570,  5.730630,  37.96992, -527.1587],
+                            [0.3399708,  3.916997,  64.55809, -98.05020]],
                  atol=1e-12, rtol=1e-5)
-    assert_close(q0, [[0.38156263, 0.85437553], [0.38156263, 0.85437553]],
+    assert_close(q0, [[0.210004, 0.340017], [0.210004, 0.340017]],
                  atol=1e-12, rtol=1e-5)
-    assert_close(q1, [[3005.74776344, -3256.81838517],
-                      [-3258.24669916,  1615.13729938]],
+    assert_close(q1, [[96183.925683, -104218.18371],
+                      [-104263.908197,   51684.400417]],
                  atol=1e-12, rtol=1e-5)
+
+
+def test_periodicity(hmba_lattice):
+    q32 = at.linear.get_tune(hmba_lattice)
+    qp32 = at.linear.get_chrom(hmba_lattice)
+    dq32, *_ = at.nonlinear.detuning(hmba_lattice)
+    dqp32, *_ = at.nonlinear.chromaticity(hmba_lattice, npoints=11)
+    hmba_lattice.periodicity = 1
+    hmba_lattice = hmba_lattice.repeat(32)
+    q1 = at.linear.get_tune(hmba_lattice)
+    qp1 = at.linear.get_chrom(hmba_lattice)
+    dq1, *_ = at.nonlinear.detuning(hmba_lattice)
+    dqp1, *_ = at.nonlinear.chromaticity(hmba_lattice, npoints=11)
+    assert_close(q32, q1, atol=1e-12)
+    assert_close(qp32, qp1, atol=1e-12)
+    assert_close(dq32, dq1, atol=1e-7)
+    assert_close(dqp32, dqp1, atol=1e-7)
 
 
 def test_quantdiff(hmba_lattice):
