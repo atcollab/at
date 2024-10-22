@@ -75,9 +75,6 @@ def _computedrivingterms(
 ):
     """
     Original implementation from ELEGANT
-    Based on J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
-    Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
-    A. Franchi et al. arxiv 1711.06589, PRAB 17.074001
     """
 
     def pf(i, j):
@@ -111,8 +108,8 @@ def _computedrivingterms(
         rbetaym = rbetay[mask_a2l]
         pxm = px[mask_a2l]
         pym = py[mask_a2l]
-        rdts["h10010"] = -sum((a2lm / 4) * rbetaxm * rbetaym * pxm / pym * pf(1, -1))
-        rdts["h10100"] = -sum((a2lm / 4) * rbetaxm * rbetaym * pxm * pym * pf(1, 1))
+        rdts["h10010"] = sum((a2lm / 4) * rbetaxm * rbetaym * pxm / pym * pf(1, -1))
+        rdts["h10100"] = sum((a2lm / 4) * rbetaxm * rbetaym * pxm * pym * pf(1, 1))
 
     if (RDTType.CHROMATIC in rdttype) or (RDTType.ALL in rdttype):
         mask_b23l = mask_b2l | mask_b3l
@@ -406,9 +403,11 @@ def get_rdts(
 ):
     """
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
-    from ELEGANT.
-    J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
-    Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
+    from ELEGANT. This implementation is based on Refs [1]_ and [2]_, however different
+    signs conventions are used in the references and the implementation. For consistency,
+    we keep the sign convention of the AT MATLAB interface, first and second order terms
+    are provided separately so the user can re-define these conventions if needed.
+    Focusing RDTs are added based on Ref. [3]_.
 
     The periodicity property of the lattice is automatically taken into account in the rdt
     calculation, however to calculation of the second order contribution to the GEOMETRIC2
@@ -444,6 +443,7 @@ def get_rdts(
     Returns:
         rdts: rdt data (complex) at refpts
         rdts2: (complex) contribution from sextupole second order terms
+          Available only for GEOMETRIC2 terms
         rdttot: (complex) total rdts
 
         **rdts** is a dictionary with keys:
@@ -484,6 +484,11 @@ def get_rdts(
         **dnux_dJy**
         **dnuy_dJy**
         =================   ======
+
+    References:
+        **[1]** J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
+        **[2]** Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
+        **[3]** A. Franchi et al. arxiv 1711.06589, PRAB 17.074001
     """
     rdt_type = np.atleast_1d(rdt_type)
     nperiods = ring.periodicity
