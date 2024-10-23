@@ -192,7 +192,7 @@ end
         
         if has_cavity
             try
-                [envelope,espread,blength,m,T]=ohmienvelope(ron,radindex,refpts);
+                [envelope,espread,blength,m,T]=ohmienvelope(ron,radindex,refpts,energy);
                 [tns,chi]=atdampingrates(m);
                 fs=abs(tns(3))*cell_revfreq;
                 alpha=chi*cell_revfreq;

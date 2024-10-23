@@ -1,12 +1,12 @@
-import at
 import numpy
+import pytest
 from numpy.testing import assert_allclose as assert_close
 from numpy.testing import assert_equal
-import pytest
-from at import AtWarning, physics
-from at import lattice_track
-from at import lattice_pass, internal_lpass
 
+import at
+from at import AtWarning, physics
+from at import lattice_pass, internal_lpass
+from at import lattice_track
 
 DP = 1e-5
 DP2 = 0.005
@@ -101,10 +101,13 @@ def test_find_m44_returns_same_answer_as_matlab(dba_lattice, refpts):
     assert mstack.shape == (len(refpts), 4, 4)
 
 
+@pytest.mark.parametrize(
+    "lattice", ["hmba_lattice", "noenergy_lattice", "noringparam_lattice"],
+)
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
-def test_find_m66(hmba_lattice, refpts):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
-    m66, mstack = physics.find_m66(hmba_lattice, refpts=refpts)
+def test_find_m66(request, lattice, refpts):
+    lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
+    m66, mstack = lattice.find_m66(refpts=refpts)
     assert_close(m66, M66_MATLAB, rtol=0, atol=1e-8)
     stack_size = 0 if refpts is None else len(refpts)
     assert mstack.shape == (stack_size, 6, 6)
@@ -139,10 +142,13 @@ def test_find_sync_orbit_finds_zeros(dba_lattice):
     numpy.testing.assert_equal(sync_orbit, numpy.zeros(6))
 
 
-def test_find_orbit6(hmba_lattice):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
-    refpts = numpy.ones(len(hmba_lattice), dtype=bool)
-    orbit6, all_points = physics.find_orbit6(hmba_lattice, refpts)
+@pytest.mark.parametrize(
+    "lattice", ["hmba_lattice", "noenergy_lattice", "noringparam_lattice"],
+)
+def test_find_orbit6(request, lattice):
+    lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
+    refpts = numpy.ones(len(lattice), dtype=bool)
+    orbit6, all_points = lattice.find_orbit6(refpts)
     assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-12)
 
 
@@ -350,10 +356,13 @@ def test_simple_ring():
     assert_close(ring.get_tune(), [0.1, 0.2], atol=1e-10)
     
 
+@pytest.mark.parametrize(
+    "lattice", ["hmba_lattice", "noenergy_lattice", "noringparam_lattice"],
+)
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
-def test_ohmi_envelope(hmba_lattice, refpts):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
-    emit0, beamdata, emit = hmba_lattice.ohmi_envelope(refpts)
+def test_ohmi_envelope(request, lattice, refpts):
+    lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
+    emit0, beamdata, emit = lattice.ohmi_envelope(refpts)
     obs = emit[-1]
 
     # All expected values are Matlab results
