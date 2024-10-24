@@ -30,6 +30,7 @@ _new_methods = {
     "BndMPoleSymplectic4RadPass",
     "StrMPoleSymplectic4RadPass",
     "ExactMultipoleRadPass",
+    "GWigSymplectic4RadPass",
 }
 
 _NSTEP = 60  # nb slices in a wiggler period
@@ -64,11 +65,16 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
             cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
+    def substitute(elem):
+        if elem.PassMethod not in _new_methods:
+            elem = elem.copy()
+            elem.PassMethod = "StrMPoleSymplectic4RadPass"
+        return elem
+
     def elem_diffusion(elem: Element, elemorb):
-        passmethod = elem.PassMethod
-        if passmethod.endswith("RadPass"):
-            if not test_mode() and (passmethod in _new_methods):
-                return diffusion_matrix(elem, elemorb, energy=energy)
+        if elem.PassMethod.endswith("RadPass"):
+            if not test_mode():
+                return diffusion_matrix(substitute(elem), elemorb, energy=energy)
             elif hasattr(elem, "Bmax"):
                 return FDW(elem, orbit, energy)
             else:

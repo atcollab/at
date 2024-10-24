@@ -1,4 +1,3 @@
-#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "diff_exactdrift.c"
@@ -158,7 +157,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->RApertures = RApertures;
     Elem->KickAngle = KickAngle;
   }
-    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+  gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
 
   multipole_pass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                  Elem->MaxOrder, Elem->NumIntSteps,
@@ -208,8 +207,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
-        Gamma = atGamma(Energy, Energy, rest_energy);
+    Gamma = atGamma(Energy, Energy, rest_energy);
     r_in = mxGetDoubles(plhs[0]);
+
     multipole_pass(r_in, Length, PolynomA, PolynomB, MaxOrder, NumIntSteps,
                    FringeQuadEntrance, FringeQuadExit,
                    T1, T2, R1, R2,

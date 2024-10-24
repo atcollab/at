@@ -41,9 +41,9 @@ Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
         passm = elem.PassMethod;
         if ~endsWith(passm, 'RadPass')
             bdiff = zr;
-        elseif ~test_mode && any(strcmp(passm, newmethods))
+        elseif ~test_mode
             % New method
-            bdiff = diffusion_matrix(elem,orbit,energy,particle,cell_length,0.0);
+            bdiff = diffusion_matrix(substitute(elem),orbit,energy,particle,cell_length,0.0);
         else
             % Old method
             if isfield(elem, 'Bmax')
@@ -58,6 +58,12 @@ Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
         % Cumulative diffusion matrix of the entire ring
         BCUM = m*BCUM*m' + bdiff;
         btx=BCUM;
+    end
+    
+    function elem=substitute(elem)
+        if ~any(strcmp(elem.PassMethod, newmethods))
+            elem.PassMethod = "BndMPoleSymplectic4RadPass";
+        end
     end
 end
 
