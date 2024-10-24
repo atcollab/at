@@ -7,7 +7,7 @@
 
 #include "atcommon.h"
 #include "attypes.h"
-#include "atconstants"
+#include "atconstants.h"
 
 /*----------------------------------------------------*/
 /*            For the integrator code                 */
