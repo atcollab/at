@@ -91,7 +91,7 @@ double atGamma(double ringenergy, double elemenergy, double rest_energy)
 {
     double energy = atEnergy(ringenergy, elemenergy);
     if (rest_energy == 0.0)
-        return 1.0E9 * energy / __E0;
+        return 1.0E-9 * energy / __E0;
     else
         return energy / rest_energy;
 }
@@ -206,7 +206,7 @@ typedef PyObject atElem;
 #define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
 #define atEnergy(ringenergy,elemenergy) (ringenergy)
-#define atGamma(ringenergy,elemenergy,rest_energy) ((rest_energy) == 0.0 ? 1.0e9*(ringenergy)/__E0 : (ringenergy)/(rest_energy))
+#define atGamma(ringenergy,elemenergy,rest_energy) ((rest_energy) == 0.0 ? 1.0E-9*(ringenergy)/__E0 : (ringenergy)/(rest_energy))
 
 static int array_imported = 0;
 

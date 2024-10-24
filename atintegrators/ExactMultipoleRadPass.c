@@ -113,7 +113,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                                       double *r_in, int num_particles,
                                       struct parameters *Param)
 {
-  double energy, gamma;
+  double gamma;
   double *bdiff = Param->bdiff;
 
   if (!Elem) {
