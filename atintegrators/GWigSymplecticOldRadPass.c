@@ -127,7 +127,7 @@ void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
 
 #define second 2
 #define fourth 4
-void GWigSymplecticRadPass(double *r, double Energy, double Ltot, double Lw,
+void GWigSymplecticOldRadPass(double *r, double Energy, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             double *By, double *Bx, double *T1, double *T2,
             double *R1, double *R2, int num_particles)
@@ -221,7 +221,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     energy = atEnergy(Param->energy, Elem->Energy);
 
-    GWigSymplecticRadPass(r_in, energy, Elem->Length, Elem->Lw,
+    GWigSymplecticOldRadPass(r_in, energy, Elem->Length, Elem->Lw,
             Elem->Bmax, Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
             Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             num_particles);
@@ -232,7 +232,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 /********** MATLAB GATEWAY ***************************************************/
 
-MODULE_DEF(GWigSymplecticRadPass)        /* Dummy module initialisation */
+MODULE_DEF(GWigSymplecticOldRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -272,7 +272,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        GWigSymplecticRadPass(r_in, Energy, Ltot, Lw, Bmax, Nstep, Nmeth,
+        GWigSymplecticOldRadPass(r_in, Energy, Ltot, Lw, Bmax, Nstep, Nmeth,
             NHharm, NVharm, By, Bx, T1, T2, R1, R2, num_particles);
     }
     else if (nrhs == 0) {
