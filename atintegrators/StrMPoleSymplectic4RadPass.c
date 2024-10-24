@@ -1,4 +1,3 @@
-#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "diff_str_kick.c"

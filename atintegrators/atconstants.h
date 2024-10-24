@@ -15,8 +15,8 @@ const double TWOPI = 2.0*M_PI;
 #define THIRD_ROOT_2 1.25992104989487316477
 const double DRIFT1 = 1.0 / (2.0 * (2.0 - THIRD_ROOT_2));
 const double DRIFT2 = 0.5 - (1.0 / (2.0 * (2.0 - THIRD_ROOT_2)));
-const double KICK1 = 1.0 / (2.0 - THIRD_ROOT_2);
-const double KICK2 = 1.0 - 2.0 / (2.0 - THIRD_ROOT_2);
+const double KICK1 = 1.0 / (2.0 - THIRD_ROOT_2);        /*  1.351207 */
+const double KICK2 = 1.0 - 2.0 / (2.0 - THIRD_ROOT_2);  /* -1.702414 */
 
 // Speed of light
 const double C0 = 2.99792458e8;
