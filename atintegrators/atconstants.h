@@ -23,8 +23,8 @@ const double C0 = 2.99792458e8;
 
 // Radiation damping, Physics of Electron Storage Ring, M. Sands (4.2)
 #define ROOT_3 1.7320508075688772
-#define __RE 2.8179403262e-15    // Classical electron radius [m]
-#define __E0 510.99895e-6        // Electron rest energy [GeV]
+#define __RE 2.8179403205e-15     // Classical electron radius [m] from CODATA 2022
+#define __E0 510.99895069e-6      // Electron rest energy [GeV]    from CODATA 2022
 #define __HBAR_C 197.3269804e-18  // reduced Planck constant x c [GeV.m]
 const double CGAMMA = 4.0*M_PI*__RE / (3.0*__E0*__E0*__E0);
 const double DIF_CONST = 55.0/24.0/ROOT_3 * __HBAR_C / __E0 * __RE; // [m^2]
