@@ -1,4 +1,6 @@
 classdef pytests < matlab.unittest.TestCase
+    % ">> run(pytests)" to run all tests
+    % ">> run(pytests, 'orbit4')" to run a the single orbit4 method
 
     properties(Constant)
         mlist=[...
@@ -239,6 +241,36 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(mperiodicity,double(lattice.p.periodicity));
             testCase.verifyEqual(mgamma,lattice.p.gamma);
             testCase.verifyEqual(mmcf,lattice.p.mcf,RelTol=1.E-8);
+        end
+
+        function fastring(testCase,lat2)
+            lattice=testCase.ring4.(lat2);
+            [rm, rmrad]=atfastring(lattice.m);
+            rpy=cell(py.at.fast_ring(lattice.p));
+            rp=cell(rpy{1});
+            rprad=cell(rpy{2});
+            checkattr(rm, rp);
+            checkattr(rmrad,rprad);
+
+            function checkattr(rm, rp)
+                testCase.verifyEqual(rm{2}.Frequency, rp{1}.Frequency, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{2}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{3}.I2, rp{2}.I2, RelTol=1.0e-15);
+                testCase.verifyEqual(rm{3}.Length, rp{2}.Length, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{3}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
+                testCase.verifyEqual(rm{end}.A1, rp{3}.A1, RelTol=0.01);
+                testCase.verifyEqual(rm{end}.A2, rp{3}.A2, RelTol=0.02);
+                testCase.verifyEqual(rm{end}.A3, rp{3}.A3, RelTol=0.01);
+                testCase.verifyEqual(rm{end}.Alphax, rp{3}.Alphax, AbsTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Alphay, rp{3}.Alphay, AbsTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Betax, rp{3}.Betax, RelTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Betay, rp{3}.Betay, RelTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Qpx, rp{3}.Qpx, RelTol=1.e-8);
+                testCase.verifyEqual(rm{end}.Qpy, rp{3}.Qpy, RelTol=1.e-8);
+                if length(rm) >= 5
+                    testCase.verifyEqual(rm{end-1}.Lmatp, double(rp{4}.Lmatp), AbsTol=2.e-7);
+                end
+            end
         end
     end
 end

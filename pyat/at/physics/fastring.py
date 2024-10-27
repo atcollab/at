@@ -40,7 +40,7 @@ def _rearrange(ring: Lattice, split_inds=[]):
             cavl.TimeLag = cavf[0].TimeLag
             ring_slice.append(cavl)
         ringm = ringm + ring_slice
-    return all_rings, Lattice(ringm, energy=ring.energy)
+    return all_rings, Lattice(ringm, energy=ring.energy, periodicity=1)
 
 
 def _fring(ring, split_inds=[], detuning_elem=None):
