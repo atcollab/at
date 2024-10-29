@@ -84,9 +84,13 @@ def fast_ring(ring: Lattice, split_inds: Refpts = None) -> tuple[Lattice, Lattic
     * a detuning and chromaticity element,
     * a quantum diffusion element (for radiation ring).
 
-    2 new lattices are returned, one with radiation and one without
+
+    2 new lattices are returned, one with radiation and one without. These lattices
+    keep the same attributes (energy, particle, circumference, periodicity,…)
+    as the initial one.
+
     It is possible to split the original ring in multiple "fastrings"
-    using the ``split_inds`` argument
+    using the ``split_inds`` argument.
 
     Parameters:
         ring:       Lattice description
