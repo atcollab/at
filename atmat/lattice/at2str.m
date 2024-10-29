@@ -79,7 +79,7 @@ switch atclass
         [options,args]=doptions(elem,create,{'PolynomA','PolynomB'});
     case 'RFCavity'
         create=@atrfcavity;
-        [options,args]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber'});
+        [options,args]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber','Energy'});
     case 'RingParam'
         create=@atringparam;
         [options,args]=doptions(elem,create,{'Energy','Periodicity'});

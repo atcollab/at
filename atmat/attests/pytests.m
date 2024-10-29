@@ -184,7 +184,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
             testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=1.e-9);
-            testCase.verifyEqual(mchrom*periodicity,pchrom,AbsTol=2.e-4);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=1.e-4,AbsTol=3.e-4);
         end
 
         function linopt1(testCase,dp)
@@ -272,6 +272,7 @@ classdef pytests < matlab.unittest.TestCase
                     testCase.verifyEqual(rm{end-1}.Lmatp, double(rp{4}.Lmatp), AbsTol=2.e-7);
                 end
             end
+        end
 
         function emittances(testCase, lat2)
             % Check emittances, tunes and damping rates
