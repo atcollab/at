@@ -159,11 +159,10 @@ class ElementDescr(AnyDescr, dict):
         else:
             yield from elems
 
-    def _length(self) -> float:
+    @property
+    def length(self) -> float:
         """Element length"""
         return self.get("l", 0.0)
-
-    length = property(_length)
 
 
 class SequenceDescr(AnyDescr, list, abc.ABC):

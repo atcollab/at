@@ -217,14 +217,15 @@ class rbend(_MadElement):
     @set_tilt
     def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
         hangle = 0.5 * angle
-        arclength = l * hangle / sin(hangle)
+        arclength = l / sinc(hangle)
         return sbend.convert(
             name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
 
-    def _length(self):
-        hangle = 0.5 * self.angle
-        return self["l"] * hangle / sin(hangle)
+    @property
+    def length(self):
+        hangle = 0.5 * self["angle"]
+        return self["l"] / sinc(hangle)
 
 
 # noinspection PyPep8Naming
@@ -475,9 +476,9 @@ class _Sequence(SequenceDescr):
 
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
-            if dl > 1.0e-10:
+            if dl > 1.0e-5:
                 yield from drift(name="filler", l=dl).expand(parser)
-            elif dl < -1.0e-10:
+            elif dl < -1.0e-5:
                 elemtype = type(el).__name__.upper()
                 raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
