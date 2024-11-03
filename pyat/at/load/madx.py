@@ -224,6 +224,7 @@ class rbend(_MadElement):
 
     @property
     def length(self):
+        """Element length"""
         hangle = 0.5 * self["angle"]
         return self["l"] / sinc(hangle)
 
@@ -708,13 +709,17 @@ class _MadParser(UnorderedParser):
 
             params["_length"] = cell_length
             rev = beta() * clight / cell_length
+
+            # Set the frequency of cavities in which it is not specified
+            hn = 2147483647
             for cav in cavities:
                 if np.isnan(cav.Frequency):
                     cav.Frequency = rev * cav.HarmNumber
-            if cavities:
-                cavities.sort(key=lambda el: el.Frequency)
-                c0 = cavities[0]
-                params["_cell_harmnumber"] = getattr(c0, "HarmNumber", np.nan)
+                elif cav.HarmNumber == 0:
+                    cav.HarmNumber = cav.Frequency / rev
+                if cav.HarmNumber < hn:
+                    hn = cav.HarmNumber
+            params["_cell_harmnumber"] = hn
 
         part = kwargs.get("particle", None)
         if isinstance(part, str):
