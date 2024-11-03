@@ -719,7 +719,8 @@ class _MadParser(UnorderedParser):
                     cav.HarmNumber = cav.Frequency / rev
                 if cav.HarmNumber < hn:
                     hn = cav.HarmNumber
-            params["_cell_harmnumber"] = hn
+            if cavities:
+                params["_cell_harmnumber"] = hn
 
         part = kwargs.get("particle", None)
         if isinstance(part, str):
