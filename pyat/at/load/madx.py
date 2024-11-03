@@ -284,14 +284,16 @@ class rbend(_MadElement):
     @set_tilt
     def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
         hangle = 0.5 * angle
-        arclength = l * sinc(hangle)
+        arclength = l / sinc(hangle)
         return sbend.convert(
             name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
 
-    def _length(self):
-        hangle = 0.5 * self.angle
-        return self["l"] * hangle / sin(hangle)
+    @property
+    def length(self):
+        """Element length"""
+        hangle = 0.5 * self["angle"]
+        return self["l"] / sinc(hangle)
 
 
 # noinspection PyPep8Naming
@@ -496,9 +498,9 @@ class _Sequence(SequenceDescr):
 
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
-            if dl > 1.0e-10:
+            if dl > 1.0e-5:
                 yield from drift(name="filler", l=dl).expand(parser)
-            elif dl < -1.0e-10:
+            elif dl < -1.0e-5:
                 elemtype = type(el).__name__.upper()
                 raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
@@ -783,15 +785,15 @@ class _MadParser(CaseIndependentParser, UnorderedParser):
             rev = beta() * clight / cell_length
 
             # Set the frequency of cavities in which it is not specified
+            hn = 2147483647
             for cav in cavities:
                 if np.isnan(cav.Frequency):
                     cav.Frequency = rev * cav.HarmNumber
-
-            # Set the lattice harmonic number
-            if cavities:
-                cavities.sort(key=lambda el: el.Frequency)
-                c0 = cavities[0]
-                params["_cell_harmnumber"] = getattr(c0, "HarmNumber", np.nan)
+                elif cav.HarmNumber == 0:
+                    cav.HarmNumber = cav.Frequency / rev
+                if cav.HarmNumber < hn:
+                    hn = cav.HarmNumber
+            params["_cell_harmnumber"] = hn
 
         part = kwargs.get("particle", None)
         if isinstance(part, str):

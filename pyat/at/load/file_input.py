@@ -486,14 +486,11 @@ class BaseParser(DictNoDot):
         else:
             ok = argstr[0] != "-"
             key = argstr if ok else argstr[1:]
-            if key in bool_attr:  # boolean flag
+            try:
+                key = pos_args[argcount]
+            except IndexError as exc:
                 return key, ok
-            else:  # positional parameter
-                try:
-                    key = pos_args[argcount]
-                except IndexError as exc:
-                    exc.args = ("too many positional arguments",)
-                    raise
+            else:
                 return key, arg_value(key, argstr)
 
     def _assign(self, label: str, key: str, value: str):
