@@ -486,11 +486,14 @@ class BaseParser(DictNoDot):
         else:
             ok = argstr[0] != "-"
             key = argstr if ok else argstr[1:]
-            try:
-                key = pos_args[argcount]
-            except IndexError as exc:
+            if key in bool_attr:  # boolean flag
                 return key, ok
-            else:
+            else:  # positional parameter
+                try:
+                    key = pos_args[argcount]
+                except IndexError as exc:
+                    print(f"Unexpected positional argument '{argstr}' ignored")
+                    return None
                 return key, arg_value(key, argstr)
 
     def _assign(self, label: str, key: str, value: str):
@@ -514,7 +517,7 @@ class BaseParser(DictNoDot):
             ags = (argp(self, n, arg) for n, arg in enumerate(args) if arg)
         else:
             ags = (self._argparser(n, arg) for n, arg in enumerate(args) if arg)
-        kwargs.update(ags)
+        kwargs.update(arg for arg in ags if arg is not None)
         if label is None:
             kwargs.setdefault("copy", False)
         else:
