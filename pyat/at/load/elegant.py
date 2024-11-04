@@ -154,15 +154,17 @@ class RBEN(ElementDescr):
     @staticmethod
     @misalign
     def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
-        hangle = 0.5 * angle
-        arclength = l * sinc(hangle)
+        hangle = abs(0.5 * angle)
+        arclength = l / sinc(hangle)
         return SBEN.convert(
             name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
 
-    def _length(self):
-        hangle = 0.5 * self.angle
-        return self["l"] * hangle / sin(hangle)
+    @property
+    def length(self):
+        """Element length"""
+        hangle = 0.5 * self["angle"]
+        return self["l"] / sinc(hangle)
 
 
 # noinspection PyPep8Naming

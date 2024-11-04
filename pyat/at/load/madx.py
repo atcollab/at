@@ -129,10 +129,16 @@ def set_tilt(func):
     """Decorator which tilts the decorated AT element"""
 
     @functools.wraps(func)
-    def wrapper(name, *args, tilt=None, **kwargs):
+    def wrapper(name, *args, origin="", tilt=0.0, ktap=0.0, **kwargs):
         elems = func(name, *args, **kwargs)
-        if tilt is not None:
-            tilt_elem(elems[0], tilt)
+        for el in elems:
+            tilt = float(tilt)  # MadParameter conversion
+            if tilt != 0.0:
+                tilt_elem(el, tilt)
+            ktap = float(ktap)  # MadParameter conversion
+            if ktap != 0.0:
+                el.Scaling = (1.0 + ktap)
+            el.origin = origin
         return elems
 
     return wrapper
@@ -194,54 +200,58 @@ class _MadElement(ElementDescr):
 # noinspection PyPep8Naming
 class drift(_MadElement):
     @staticmethod
+    @set_tilt
     def convert(name: str, l=0.0, **params):  # noqa: E741
-        return [elt.Drift(name, l, **params)]
+        return [elt.Drift(name, l)]
 
 
 # noinspection PyPep8Naming
 class marker(_MadElement):
     @staticmethod
-    def convert(name, **params):
-        return [elt.Marker(name, **params)]
+    @set_tilt
+    def convert(name: str, **params):
+        return [elt.Marker(name)]
 
 
 # noinspection PyPep8Naming
 class quadrupole(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, k1=0.0, k1s=None, **params):  # noqa: E741
+    def convert(name: str, l, k1=0.0, k1s=None, **params):  # noqa: E741
+        atparams = {}
         if k1s is not None:
-            params["PolynomA"] = [0.0, k1s]
-        return [elt.Quadrupole(name, l, k1, **params)]
+            atparams["PolynomA"] = [0.0, k1s]
+        return [elt.Quadrupole(name, l, k1, **atparams)]
 
 
 # noinspection PyPep8Naming
 class sextupole(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, k2=0.0, k2s=None, **params):  # noqa: E741
+    def convert(name: str, l, k2=0.0, k2s=None, **params):  # noqa: E741
+        atparams = {}
         if k2s is not None:
-            params["PolynomA"] = [0.0, 0.0, k2s / 2.0]
-        return [elt.Sextupole(name, l, k2 / 2.0, **params)]
+            atparams["PolynomA"] = [0.0, 0.0, k2s / 2.0]
+        return [elt.Sextupole(name, l, k2 / 2.0, **atparams)]
 
 
 # noinspection PyPep8Naming
 class octupole(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
+    def convert(name: str, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
         poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
         poly_a = [0.0, 0.0, 0.0, k3s / 6.0]
-        return [elt.Multipole(name, l, poly_a, poly_b, **params)]
+        return [elt.Multipole(name, l, poly_a, poly_b)]
 
 
 # noinspection PyPep8Naming
 class multipole(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, knl=(), ksl=(), **params):
+    def convert(name: str, knl=(), ksl=(), **params):
         params.pop("l", None)
-        return [elt.ThinMultipole(name, polyn(ksl), polyn(knl), **params)]
+        return [elt.ThinMultipole(name, polyn(ksl), polyn(knl))]
 
 
 # noinspection PyPep8Naming
@@ -249,22 +259,23 @@ class sbend(_MadElement):
     @staticmethod
     @set_tilt
     def convert(
-        name,
+        name: str,
         l,  # noqa: E741
         angle,
         e1=0.0,
         e2=0.0,
         k1=0.0,
-        k2=None,
+        k2=0.0,
         hgap=None,
         fint=0.0,
         **params,
     ):
+        atparams = {}
         if hgap is not None:
             fintx = params.pop("fintx", fint)
-            params.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
-        if k2 is not None:
-            params["PolynomB"] = [0.0, k1, k2 / 2.0]
+            atparams.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
+        if k2 != 0.0:
+            atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
         return [
             elt.Dipole(
                 name,
@@ -273,7 +284,7 @@ class sbend(_MadElement):
                 k1,
                 EntranceAngle=e1,
                 ExitAngle=e2,
-                **params,
+                **atparams,
             )
         ]
 
@@ -282,8 +293,8 @@ class sbend(_MadElement):
 class rbend(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
-        hangle = 0.5 * angle
+    def convert(name: str, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
+        hangle = abs(0.5 * angle)
         arclength = l / sinc(hangle)
         return sbend.convert(
             name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
@@ -300,32 +311,32 @@ class rbend(_MadElement):
 class kicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
+    def convert(name: str, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
         kicks = np.array([hkick, vkick], dtype=float)
-        return [elt.Corrector(name, l, kicks, **params)]
+        return [elt.Corrector(name, l, kicks)]
 
 
 # noinspection PyPep8Naming
 class hkicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(name, l=l, hkick=kick, **params)
+    def convert(name: str, l=0.0, kick=0.0, **params):  # noqa: E741
+        return kicker.convert(name, l=l, hkick=kick)
 
 
 # noinspection PyPep8Naming
 class vkicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(name, l=l, vkick=kick, **params)
+    def convert(name: str, l=0.0, kick=0.0, **params):  # noqa: E741
+        return kicker.convert(name, l=l, vkick=kick)
 
 
 # noinspection PyPep8Naming
 class rfcavity(_MadElement):
     @staticmethod
     def convert(
-        name,
+        name: str,
         l=0.0,  # noqa: E741
         volt=0.0,
         freq=np.nan,
@@ -341,7 +352,6 @@ class rfcavity(_MadElement):
             harmon,
             0.0,
             PassMethod="IdentityPass" if l == 0.0 else "DriftPass",
-            **params,
         )
         return [cavity]
 
@@ -349,14 +359,14 @@ class rfcavity(_MadElement):
 # noinspection PyPep8Naming
 class monitor(_MadElement):
     @staticmethod
-    def convert(name, l=0.0, **params):  # noqa: E741
+    def convert(name: str, l=0.0, **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Monitor(name, **params)]
+            return [elt.Monitor(name)]
         else:
             hl = 0.5 * l
             return [
                 elt.Drift(name, hl, origin="monitor"),
-                elt.Monitor(name, **params),
+                elt.Monitor(name),
                 elt.Drift(name, hl, origin="monitor"),
             ]
 
