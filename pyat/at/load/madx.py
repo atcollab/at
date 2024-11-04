@@ -325,18 +325,17 @@ class kicker(_MadElement):
 
 
 # noinspection PyPep8Naming
-class hkicker(_MadElement):
+class hkicker(kicker):
     @set_tilt
     def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(self.name, l=l, hkick=kick)
+        return super().convert(l=l, hkick=kick)
 
 
 # noinspection PyPep8Naming
-class vkicker(_MadElement):
-    @staticmethod
+class vkicker(kicker):
     @set_tilt
     def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(self.name, l=l, vkick=kick)
+        return super().convert(l=l, vkick=kick)
 
 
 # noinspection PyPep8Naming
