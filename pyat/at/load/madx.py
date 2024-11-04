@@ -55,6 +55,7 @@ class MadParameter(str):
     A MAD parameter is an expression which can be evaluated n the context
     of a MAD parser
     """
+
     def __new__(cls, parser, expr):
         return super().__new__(cls, expr)
 
@@ -111,6 +112,9 @@ class MadParameter(str):
     def __pos__(self):
         return +float(self)
 
+    def evaluate(self):
+        return self.parser._evaluate(self)
+
 
 def sinc(x: float) -> float:
     """Cardinal sine function known by MAD-X"""
@@ -129,15 +133,15 @@ def set_tilt(func):
     """Decorator which tilts the decorated AT element"""
 
     @functools.wraps(func)
-    def wrapper(name, *args, origin="", tilt=0.0, ktap=0.0, **kwargs):
-        elems = func(name, *args, **kwargs)
+    def wrapper(*args, origin="", tilt=0.0, ktap=0.0, **kwargs):
+        elems = func(*args, **kwargs)
         for el in elems:
             tilt = float(tilt)  # MadParameter conversion
             if tilt != 0.0:
                 tilt_elem(el, tilt)
             ktap = float(ktap)  # MadParameter conversion
             if ktap != 0.0:
-                el.Scaling = (1.0 + ktap)
+                el.Scaling = 1.0 + ktap
             el.origin = origin
         return elems
 
@@ -191,6 +195,18 @@ class _MadElement(ElementDescr):
             offset += parser[frm].at
         return np.array([-half_length, half_length]) + offset
 
+    @staticmethod
+    def meval(params: dict):
+        def mpeval(v):
+            if isinstance(v, MadParameter):
+                return v.evaluate()
+            elif isinstance(v, Sequence):
+                return tuple(mpeval(a) for a in v)
+            else:
+                return v
+
+        return {k: mpeval(v) for k, v in params.items()}
+
 
 # ------------------------------
 #  MAD-X classes
@@ -199,67 +215,60 @@ class _MadElement(ElementDescr):
 
 # noinspection PyPep8Naming
 class drift(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, l=0.0, **params):  # noqa: E741
-        return [elt.Drift(name, l)]
+    def convert(self, l=0.0, **params):  # noqa: E741
+        return [elt.Drift(self.name, l)]
 
 
 # noinspection PyPep8Naming
 class marker(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, **params):
-        return [elt.Marker(name)]
+    def convert(self, **params):
+        return [elt.Marker(self.name)]
 
 
 # noinspection PyPep8Naming
 class quadrupole(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, l, k1=0.0, k1s=None, **params):  # noqa: E741
+    def convert(self, l, k1=0.0, k1s=None, **params):  # noqa: E741
         atparams = {}
         if k1s is not None:
             atparams["PolynomA"] = [0.0, k1s]
-        return [elt.Quadrupole(name, l, k1, **atparams)]
+        return [elt.Quadrupole(self.name, l, k1, **atparams)]
 
 
 # noinspection PyPep8Naming
 class sextupole(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, l, k2=0.0, k2s=None, **params):  # noqa: E741
+    def convert(self, l, k2=0.0, k2s=None, **params):  # noqa: E741
         atparams = {}
         if k2s is not None:
             atparams["PolynomA"] = [0.0, 0.0, k2s / 2.0]
-        return [elt.Sextupole(name, l, k2 / 2.0, **atparams)]
+        return [elt.Sextupole(self.name, l, k2 / 2.0, **atparams)]
 
 
 # noinspection PyPep8Naming
 class octupole(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
+    def convert(self, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
         poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
         poly_a = [0.0, 0.0, 0.0, k3s / 6.0]
-        return [elt.Multipole(name, l, poly_a, poly_b)]
+        return [elt.Multipole(self.name, l, poly_a, poly_b)]
 
 
 # noinspection PyPep8Naming
 class multipole(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, knl=(), ksl=(), **params):
+    def convert(self, knl=(), ksl=(), **params):
         params.pop("l", None)
-        return [elt.ThinMultipole(name, polyn(ksl), polyn(knl))]
+        return [elt.ThinMultipole(self.name, polyn(ksl), polyn(knl))]
 
 
 # noinspection PyPep8Naming
 class sbend(_MadElement):
-    @staticmethod
     @set_tilt
     def convert(
-        name: str,
+        self,
         l,  # noqa: E741
         angle,
         e1=0.0,
@@ -276,9 +285,10 @@ class sbend(_MadElement):
             atparams.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
         if k2 != 0.0:
             atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
+
         return [
             elt.Dipole(
-                name,
+                self.name,
                 l,
                 angle,
                 k1,
@@ -290,14 +300,13 @@ class sbend(_MadElement):
 
 
 # noinspection PyPep8Naming
-class rbend(_MadElement):
-    @staticmethod
+class rbend(sbend):
     @set_tilt
-    def convert(name: str, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
+    def convert(self, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
         hangle = abs(0.5 * angle)
         arclength = l / sinc(hangle)
-        return sbend.convert(
-            name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
+        return super().convert(
+            arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
 
     @property
@@ -309,34 +318,32 @@ class rbend(_MadElement):
 
 # noinspection PyPep8Naming
 class kicker(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
+    def convert(self, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
         kicks = np.array([hkick, vkick], dtype=float)
-        return [elt.Corrector(name, l, kicks)]
+        return [elt.Corrector(self.name, l, kicks)]
 
 
 # noinspection PyPep8Naming
 class hkicker(_MadElement):
-    @staticmethod
     @set_tilt
-    def convert(name: str, l=0.0, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(name, l=l, hkick=kick)
+    def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
+        return kicker.convert(self.name, l=l, hkick=kick)
 
 
 # noinspection PyPep8Naming
 class vkicker(_MadElement):
     @staticmethod
     @set_tilt
-    def convert(name: str, l=0.0, kick=0.0, **params):  # noqa: E741
-        return kicker.convert(name, l=l, vkick=kick)
+    def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
+        return kicker.convert(self.name, l=l, vkick=kick)
 
 
 # noinspection PyPep8Naming
 class rfcavity(_MadElement):
-    @staticmethod
+    @set_tilt
     def convert(
-        name: str,
+        self,
         l=0.0,  # noqa: E741
         volt=0.0,
         freq=np.nan,
@@ -345,7 +352,7 @@ class rfcavity(_MadElement):
         **params,
     ):
         cavity = elt.RFCavity(
-            name,
+            self.name,
             l,
             1.0e6 * volt,
             1.0e6 * freq,
@@ -358,16 +365,16 @@ class rfcavity(_MadElement):
 
 # noinspection PyPep8Naming
 class monitor(_MadElement):
-    @staticmethod
-    def convert(name: str, l=0.0, **params):  # noqa: E741
+    @set_tilt
+    def convert(self, l=0.0, **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Monitor(name)]
+            return [elt.Monitor(self.name)]
         else:
             hl = 0.5 * l
             return [
-                elt.Drift(name, hl, origin="monitor"),
-                elt.Monitor(name),
-                elt.Drift(name, hl, origin="monitor"),
+                elt.Drift(self.name, hl, origin="monitor"),
+                elt.Monitor(self.name),
+                elt.Drift(self.name, hl, origin="monitor"),
             ]
 
 

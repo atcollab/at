@@ -5,7 +5,7 @@ from __future__ import annotations
 __all__ = ["ElegantParser", "load_elegant"]
 
 import functools
-from math import sqrt, sin, factorial
+from math import sqrt, factorial
 from os.path import abspath
 from collections.abc import Iterable
 import warnings
@@ -16,6 +16,7 @@ from scipy.constants import c as clight
 from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shift_elem
 from .file_input import ElementDescr, BaseParser
 from .file_input import skip_names, ignore_names, ignore_class
+# noinspection PyProtectedMember
 from .madx import sinc, _Line
 from . import rpn
 
@@ -30,17 +31,26 @@ def misalign(func):
 
     @functools.wraps(func)
     def wrapper(
-        name, *args, tilt=None, dx=0.0, dy=0.0, n_slices=None, n_kicks=None, **kwargs
+        *args,
+        origin="",
+        tilt=0.0,
+        dx=0.0,
+        dy=0.0,
+        n_slices=None,
+        n_kicks=None,
+        **kwargs,
     ):
         if n_kicks is not None:  # Deprecated parameter
             kwargs["NumIntSteps"] = int(n_kicks / 4)
         if n_slices is not None:
             kwargs["NumIntSteps"] = n_slices
-        elems = func(name, *args, **kwargs)
-        if tilt is not None:
-            tilt_elem(elems[0], tilt)
-        if not (dx == 0.0 and dy == 0.0):
-            shift_elem(elems[0], deltax=dx, deltaz=dy)
+        elems = func(*args, **kwargs)
+        for el in elems:
+            if tilt != 0.0:
+                tilt_elem(el, tilt)
+            if not (dx == 0.0 and dy == 0.0):
+                shift_elem(el, deltax=dx, deltaz=dy)
+            el.origin = origin
         return elems
 
     return wrapper
@@ -68,60 +78,55 @@ class ElegantVar(str):
 
 # noinspection PyPep8Naming
 class DRIF(ElementDescr):
-    @staticmethod
-    def convert(name: str, l=0.0, **params):  # noqa: E741
-        return [elt.Drift(name, l, **params)]
+    @misalign
+    def convert(self, l=0.0, **params):  # noqa: E741
+        return [elt.Drift(self.name, l, **params)]
 
 
 # noinspection PyPep8Naming
 class MARK(ElementDescr):
-    @staticmethod
-    def convert(name, **params):
-        return [elt.Marker(name, **params)]
+    @misalign
+    def convert(self, **params):
+        return [elt.Marker(self.name, **params)]
 
 
 # noinspection PyPep8Naming
 class QUAD(ElementDescr):
-    @staticmethod
     @misalign
-    def convert(name, l, k1=0.0, **params):  # noqa: E741
-        return [elt.Quadrupole(name, l, k1, **params)]
+    def convert(self, l, k1=0.0, **params):  # noqa: E741
+        return [elt.Quadrupole(self.name, l, k1, **params)]
 
 
 # noinspection PyPep8Naming
 class SEXT(ElementDescr):
-    @staticmethod
     @misalign
-    def convert(name, l, k2=0.0, order=2, **params):  # noqa: E741
-        return [elt.Sextupole(name, l, k2 / 2.0, **params)]
+    def convert(self, l, k2=0.0, order=2, **params):  # noqa: E741
+        return [elt.Sextupole(self.name, l, k2 / 2.0, **params)]
 
 
 # noinspection PyPep8Naming
 class OCTU(ElementDescr):
-    @staticmethod
     @misalign
-    def convert(name, l, k3=0.0, **params):  # noqa: E741
+    def convert(self, l, k3=0.0, **params):  # noqa: E741
         poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
         poly_a = [0.0, 0.0, 0.0, 0.0]
-        return [elt.Multipole(name, l, poly_a, poly_b, **params)]
+        return [elt.Multipole(self.name, l, poly_a, poly_b, **params)]
 
 
 class MULT(ElementDescr):
-    @staticmethod
     @misalign
-    def convert(name, l=0, knl=0.0, order=1, **params):  # noqa: E741
+    def convert(self, l=0, knl=0.0, order=1, **params):  # noqa: E741
         poly_a = np.zeros(order + 1)
         poly_b = np.zeros(order + 1)
         poly_b[order] = knl / factorial(order)
-        return [elt.Multipole(name, l, poly_a, poly_b, **params)]
+        return [elt.Multipole(self.name, l, poly_a, poly_b, **params)]
 
 
 # noinspection PyPep8Naming
 class SBEN(ElementDescr):
-    @staticmethod
     @misalign
     def convert(
-        name,
+        self,
         l,  # noqa: E741
         angle,
         e1=0.0,
@@ -138,7 +143,7 @@ class SBEN(ElementDescr):
             params["PolynomB"] = [0.0, k1, k2 / 2.0]
         return [
             elt.Dipole(
-                name,
+                self.name,
                 l,
                 angle,
                 k1,
@@ -150,14 +155,13 @@ class SBEN(ElementDescr):
 
 
 # noinspection PyPep8Naming
-class RBEN(ElementDescr):
-    @staticmethod
+class RBEN(SBEN):
     @misalign
-    def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
+    def convert(self, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
         hangle = abs(0.5 * angle)
         arclength = l / sinc(hangle)
-        return SBEN.convert(
-            name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
+        return super().convert(
+            arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
         )
 
     @property
@@ -169,41 +173,38 @@ class RBEN(ElementDescr):
 
 # noinspection PyPep8Naming
 class KICKER(ElementDescr):
-    @staticmethod
     @misalign
-    def convert(name, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
+    def convert(self, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
         kicks = np.array([hkick, vkick], dtype=float)
-        return [elt.Corrector(name, l, kicks, **params)]
+        return [elt.Corrector(self.name, l, kicks, **params)]
 
 
 # noinspection PyPep8Naming
-class HKICK(ElementDescr):
-    @staticmethod
+class HKICK(KICKER):
     @misalign
-    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
-        return KICKER.convert(name, l=l, hkick=kick, **params)
+    def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
+        return super().convert(l=l, hkick=kick, **params)
 
 
 # noinspection PyPep8Naming
-class VKICK(ElementDescr):
-    @staticmethod
+class VKICK(KICKER):
     @misalign
-    def convert(name, l=0.0, kick=0.0, **params):  # noqa: E741
-        return KICKER.convert(name, l=l, vkick=kick, **params)
+    def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
+        return super().convert(l=l, vkick=kick, **params)
 
 
 # noinspection PyPep8Naming
 class RFCA(ElementDescr):
-    @staticmethod
+    @misalign
     def convert(
-        name,
+        self,
         l=0.0,  # noqa: E741
         volt=0.0,
         freq=np.nan,
         **params,
     ):
         cavity = elt.RFCavity(
-            name,
+            self.name,
             l,
             volt,
             freq,
@@ -217,16 +218,16 @@ class RFCA(ElementDescr):
 
 # noinspection PyPep8Naming
 class MONI(ElementDescr):
-    @staticmethod
-    def convert(name, l=0.0, **params):  # noqa: E741
+    @misalign
+    def convert(self, l=0.0, **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Monitor(name, **params)]
+            return [elt.Monitor(self.name, **params)]
         else:
             hl = 0.5 * l
             return [
-                elt.Drift(name, hl, origin="MONI"),
-                elt.Monitor(name, **params),
-                elt.Drift(name, hl, origin="MONI"),
+                elt.Drift(self.name, hl, origin="MONI"),
+                elt.Monitor(self.name, **params),
+                elt.Drift(self.name, hl, origin="MONI"),
             ]
 
 

@@ -89,13 +89,13 @@ def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
             print(f"Element {self.name} ({type1}) is replaced by a {type2}.")
             self._mentioned.add(type(self))
 
-    def convert(name, l=0.0, **params):  # noqa: E741
+    def convert(self, l=0.0, **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Marker(name, **params)]
+            return [elt.Marker(self.name, **params)]
         else:
-            return [elt.Drift(name, l, **params)]
+            return [elt.Drift(self.name, l, **params)]
 
-    kwargs.update(__init__=init, convert=staticmethod(convert))
+    kwargs.update(__init__=init, convert=convert)
     return type(classname, (baseclass,), kwargs)
 
 
@@ -255,8 +255,7 @@ class ElementDescr(AnyDescr, dict):
         keywords += [f"{k}={v!r}" for k, v in self.items()]
         return f"{self.__class__.__name__}({', '.join(keywords)})"
 
-    @staticmethod
-    def convert(name: str, *args, **params) -> list[elt.Element]:
+    def convert(self, *args, **params) -> list[elt.Element]:
         """Generate the AT element. Must be overloaded for each specific element"""
         return []
 
@@ -264,7 +263,7 @@ class ElementDescr(AnyDescr, dict):
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         """Iterator on the generated AT elements"""
         try:
-            elems = self.convert(self.name, **self)
+            elems = self.convert(**self)
         except Exception as exc:
             exc.args += (f"{self}",)
             raise
@@ -491,7 +490,7 @@ class BaseParser(DictNoDot):
             else:  # positional parameter
                 try:
                     key = pos_args[argcount]
-                except IndexError as exc:
+                except IndexError:
                     print(f"Unexpected positional argument '{argstr}' ignored")
                     return None
                 return key, arg_value(key, argstr)
