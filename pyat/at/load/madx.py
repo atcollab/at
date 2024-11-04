@@ -216,7 +216,7 @@ class rbend(_MadElement):
     @staticmethod
     @set_tilt
     def convert(name, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
-        hangle = 0.5 * angle
+        hangle = abs(0.5 * angle)
         arclength = l / sinc(hangle)
         return sbend.convert(
             name, arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
