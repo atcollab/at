@@ -259,7 +259,7 @@ class Observable:
         """Header line."""
         fstring = "\n    {:<12} {:>16}  {:>16}  {:>16}  {:>16}  {:>16} "
         return fstring.format(
-            "location", "Initial", "Actual", "Low bound", "High bound", "residual"
+            "location", "Initial", "Actual", "Low bound", "High bound", "deviation"
         )
 
     @staticmethod
@@ -283,9 +283,9 @@ class Observable:
     def _all_lines(self):
         vnow = self._value
         if vnow is None or isinstance(vnow, Exception):
-            residual = None
+            deviation = None
         else:
-            residual = self.residual
+            deviation = self.deviation
         if self.target is None:
             vmin = None
             vmax = None
@@ -293,7 +293,7 @@ class Observable:
             target = np.broadcast_to(self.target, np.asarray(vnow).shape)
             vmin = target + self.lbound
             vmax = target + self.ubound
-        values = self._line("", self.initial, vnow, vmin, vmax, residual)
+        values = self._line("", self.initial, vnow, vmin, vmax, deviation)
         return "\n".join((self.name, values))
 
     def _setup(self, ring: Lattice):
@@ -503,9 +503,9 @@ class ElementObservable(Observable):
             vnow = self._value
             if vnow is None or isinstance(vnow, Exception):
                 vnow = repeat(vnow)
-                residual = repeat(None)
+                deviation = repeat(None)
             else:
-                residual = self.residual
+                deviation = self.deviation
             if self.target is None:
                 vmin = repeat(None)
                 vmax = repeat(None)
@@ -516,7 +516,7 @@ class ElementObservable(Observable):
             vini = self.initial
             if vini is None:
                 vini = repeat(None)
-            viter = zip(self._locations, vini, vnow, vmin, vmax, residual)
+            viter = zip(self._locations, vini, vnow, vmin, vmax, deviation)
             values = "\n".join(self._line(*vv) for vv in viter)
             return "\n".join((self.name, values))
 
