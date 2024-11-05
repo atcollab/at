@@ -316,7 +316,7 @@ class Observable:
         for d in data:
             if isinstance(d, Exception):
                 self._value = d
-                return
+                return d
 
         val = self.fun(*data, *self.args, **self.kwargs)
         if self._shape is None:
@@ -324,6 +324,7 @@ class Observable:
         if initial:
             self.initial = val
         self._value = val
+        return val
 
     @property
     def value(self):

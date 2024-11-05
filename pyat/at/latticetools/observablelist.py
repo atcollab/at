@@ -275,7 +275,7 @@ class ObservableList(list):
                 data.append(emdata)
             if Need.GEOMETRY in obsneeds:
                 data.append(geodata[obsrefs])
-            obs.evaluate(*data, initial=initial)
+            return obs.evaluate(*data, initial=initial)
 
         @frequency_control
         def ringeval(
@@ -367,8 +367,7 @@ class ObservableList(list):
         trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
             ring, dp=dp, dct=dct, df=df
         )
-        for ob in self:
-            obseval(ring, ob)
+        return [obseval(ring, ob) for ob in self]
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
