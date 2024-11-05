@@ -89,11 +89,11 @@ def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
             print(f"Element {self.name} ({type1}) is replaced by a {type2}.")
             self._mentioned.add(type(self))
 
-    def convert(self, l=0.0, **params):  # noqa: E741
+    def convert(self, l=0.0, origin="", **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Marker(self.name, **params)]
+            return [elt.Marker(self.name, origin=origin, **self.meval(params))]
         else:
-            return [elt.Drift(self.name, l, **params)]
+            return [elt.Drift(self.name, l, origin=origin, **self.meval(params))]
 
     kwargs.update(__init__=init, convert=convert)
     return type(classname, (baseclass,), kwargs)
@@ -278,6 +278,12 @@ class ElementDescr(AnyDescr, dict):
     def length(self) -> float:
         """Element length"""
         return self.get("l", 0.0)
+
+    @staticmethod
+    def meval(params: dict):
+        """Evaluation of superfluous parameters"""
+        # return params
+        return {}
 
 
 class SequenceDescr(AnyDescr, list):

@@ -178,7 +178,7 @@ def _keyparser(parser, argcount, argstr):
 class _MadElement(ElementDescr):
     """Description of MADX elements"""
 
-    str_attr = {"refer", "refpos", "sequence", "from"}
+    str_attr = {"apertype", "refer", "refpos", "sequence", "from"}
 
     def __init__(self, *args, at=0.0, **kwargs):
         self.at = at
@@ -197,15 +197,20 @@ class _MadElement(ElementDescr):
 
     @staticmethod
     def meval(params: dict):
+        """Evaluation of superfluous parameters"""
+
         def mpeval(v):
             if isinstance(v, MadParameter):
                 return v.evaluate()
+            elif isinstance(v, str):
+                return v
             elif isinstance(v, Sequence):
                 return tuple(mpeval(a) for a in v)
             else:
                 return v
 
-        return {k: mpeval(v) for k, v in params.items()}
+        # return {k: mpeval(v) for k, v in params.items()}
+        return {}
 
 
 # ------------------------------
@@ -217,34 +222,36 @@ class _MadElement(ElementDescr):
 class drift(_MadElement):
     @set_tilt
     def convert(self, l=0.0, **params):  # noqa: E741
-        return [elt.Drift(self.name, l)]
+        return [elt.Drift(self.name, l, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
 class marker(_MadElement):
     @set_tilt
     def convert(self, **params):
-        return [elt.Marker(self.name)]
+        return [elt.Marker(self.name, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
 class quadrupole(_MadElement):
     @set_tilt
-    def convert(self, l, k1=0.0, k1s=None, **params):  # noqa: E741
+    def convert(self, l, k1=0.0, k1s=0.0, **params):  # noqa: E741
         atparams = {}
-        if k1s is not None:
+        k1s = float(k1s)  # MadParameter conversion  # MadParameter conversion
+        if k1s != 0.0:
             atparams["PolynomA"] = [0.0, k1s]
-        return [elt.Quadrupole(self.name, l, k1, **atparams)]
+        return [elt.Quadrupole(self.name, l, k1, **atparams, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
 class sextupole(_MadElement):
     @set_tilt
-    def convert(self, l, k2=0.0, k2s=None, **params):  # noqa: E741
+    def convert(self, l, k2=0.0, k2s=0.0, **params):  # noqa: E741
         atparams = {}
-        if k2s is not None:
+        k2s = float(k2s)  # MadParameter conversion
+        if k2s != 0.0:
             atparams["PolynomA"] = [0.0, 0.0, k2s / 2.0]
-        return [elt.Sextupole(self.name, l, k2 / 2.0, **atparams)]
+        return [elt.Sextupole(self.name, l, k2 / 2.0, **atparams, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
@@ -253,7 +260,7 @@ class octupole(_MadElement):
     def convert(self, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
         poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
         poly_a = [0.0, 0.0, 0.0, k3s / 6.0]
-        return [elt.Multipole(self.name, l, poly_a, poly_b)]
+        return [elt.Multipole(self.name, l, poly_a, poly_b, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
@@ -261,7 +268,9 @@ class multipole(_MadElement):
     @set_tilt
     def convert(self, knl=(), ksl=(), **params):
         params.pop("l", None)
-        return [elt.ThinMultipole(self.name, polyn(ksl), polyn(knl))]
+        return [
+            elt.ThinMultipole(self.name, polyn(ksl), polyn(knl), **self.meval(params))
+        ]
 
 
 # noinspection PyPep8Naming
@@ -275,6 +284,7 @@ class sbend(_MadElement):
         e2=0.0,
         k1=0.0,
         k2=0.0,
+        k1s=0.0,
         hgap=None,
         fint=0.0,
         **params,
@@ -283,8 +293,12 @@ class sbend(_MadElement):
         if hgap is not None:
             fintx = params.pop("fintx", fint)
             atparams.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
+        k2 = float(k2)  # MadParameter conversion
         if k2 != 0.0:
             atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
+        k1s = float(k1s)  # MadParameter conversion
+        if k1s != 0.0:
+            atparams["PolynomA"] = [0.0, k1s]
 
         return [
             elt.Dipole(
@@ -295,6 +309,7 @@ class sbend(_MadElement):
                 EntranceAngle=e1,
                 ExitAngle=e2,
                 **atparams,
+                **self.meval(params),
             )
         ]
 
@@ -321,21 +336,21 @@ class kicker(_MadElement):
     @set_tilt
     def convert(self, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
         kicks = np.array([hkick, vkick], dtype=float)
-        return [elt.Corrector(self.name, l, kicks)]
+        return [elt.Corrector(self.name, l, kicks, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
 class hkicker(kicker):
     @set_tilt
     def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
-        return super().convert(l=l, hkick=kick)
+        return super().convert(l=l, hkick=kick, **params)
 
 
 # noinspection PyPep8Naming
 class vkicker(kicker):
     @set_tilt
     def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
-        return super().convert(l=l, vkick=kick)
+        return super().convert(l=l, vkick=kick, **params)
 
 
 # noinspection PyPep8Naming
@@ -357,7 +372,8 @@ class rfcavity(_MadElement):
             1.0e6 * freq,
             harmon,
             0.0,
-            PassMethod="IdentityPass" if l == 0.0 else "DriftPass",
+            PassMethod="IdentityPass" if float(l) == 0.0 else "DriftPass",
+            **self.meval(params),
         )
         return [cavity]
 
@@ -366,13 +382,13 @@ class rfcavity(_MadElement):
 class monitor(_MadElement):
     @set_tilt
     def convert(self, l=0.0, **params):  # noqa: E741
-        if l == 0.0:
-            return [elt.Monitor(self.name)]
+        hl = 0.5 * l  # MadParameter conversion
+        if hl == 0.0:
+            return [elt.Monitor(self.name, **self.meval(params))]
         else:
-            hl = 0.5 * l
             return [
                 elt.Drift(self.name, hl, origin="monitor"),
-                elt.Monitor(self.name),
+                elt.Monitor(self.name, **self.meval(params)),
                 elt.Drift(self.name, hl, origin="monitor"),
             ]
 
@@ -514,12 +530,15 @@ class _Sequence(SequenceDescr):
 
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
+            nonlocal drcounter
             if dl > 1.0e-5:
-                yield from drift(name="filler", l=dl).expand(parser)
+                yield from drift(name=f"drift_{drcounter}", l=dl).expand(parser)
+                drcounter += 1
             elif dl < -1.0e-5:
                 elemtype = type(el).__name__.upper()
                 raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
 
+        drcounter = 0
         end = 0.0
         elem = self
         self.at = 0.0
