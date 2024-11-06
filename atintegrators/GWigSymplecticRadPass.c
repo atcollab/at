@@ -178,6 +178,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 
 {
+    double energy;
     if (!Elem) {
         double *R1, *R2, *T1, *T2;
         double *By, *Bx;
@@ -185,7 +186,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int Nstep, Nmeth;
         int NHharm, NVharm;
 
-        Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
@@ -196,6 +196,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
         /* Optional fields */
+        Energy = atGetOptionalDouble(ElemData, "Energy",Param->energy); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
@@ -218,7 +219,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    GWigSymplecticRadPass(r_in, Elem->Energy, Elem->Length, Elem->Lw,
+    energy = atEnergy(Param->energy, Elem->Energy);
+
+    GWigSymplecticRadPass(r_in, energy, Elem->Length, Elem->Lw,
             Elem->Bmax, Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
             Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             num_particles);
@@ -236,7 +239,9 @@ MODULE_DEF(GWigSymplecticRadPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
+        double rest_energy = 0.0;
+        double charge = -1.0;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -245,8 +250,8 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         double Ltot, Lw, Bmax, Energy;
         int Nstep, Nmeth;
         int NHharm, NVharm;
+        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
@@ -257,11 +262,13 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
         /* Optional fields */
+        Energy = atGetOptionalDouble(ElemData, "Energy",0.0); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);

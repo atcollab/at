@@ -86,7 +86,11 @@ class RingParam(elt.Element):
         "Periodicity",
     ]
     _conversions = dict(
-        elt.Element._conversions, Energy=float, Periodicity=int, Particle=_particle
+        elt.Element._conversions,
+        Energy=float,
+        Periodicity=int,
+        Particle=_particle,
+        cell_harmnumber=float,
     )
 
     # noinspection PyPep8Naming

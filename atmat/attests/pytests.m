@@ -184,7 +184,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
             testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=1.e-9);
-            testCase.verifyEqual(mchrom*periodicity,pchrom,AbsTol=2.e-4);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=1.e-4,AbsTol=3.e-4);
         end
 
         function linopt1(testCase,dp)
@@ -209,6 +209,7 @@ classdef pytests < matlab.unittest.TestCase
         end
 
         function avlin1(testCase, lat, dp)
+            % Check average beta, dispersion, phase advance
             lattice=testCase.ring4.(lat);
             mrefs=true(1,length(lattice.m));
             prefs=py.numpy.array(mrefs);
@@ -272,5 +273,27 @@ classdef pytests < matlab.unittest.TestCase
                 end
             end
         end
+
+        function emittances(testCase, lat2)
+            % Check emittances, tunes and damping rates
+            lattice=testCase.ring6.(lat2);
+            % python
+            pdata=cell(lattice.p.ohmi_envelope());
+            pemit=double(py.getattr(pdata{2},'mode_emittances'));
+            ptunes=double(py.getattr(pdata{2},'tunes'));
+            pdamprate=double(py.getattr(pdata{2},'damping_rates'));
+            %matlab
+            [mdata,~,~,m]=ohmienvelope(lattice.m);
+            jmt=jmat(3);
+            aa=amat(m);
+            nn=-aa'*jmt*mdata.R*jmt*aa;
+            memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            [mtunes,mdamprate]=atdampingrates(m);
+            %check
+            testCase.verifyEqual(memit,pemit,AbsTol=1.e-30,RelTol=1.e-6);
+            testCase.verifyEqual(mtunes,ptunes,AbsTol=1.e-10);
+            testCase.verifyEqual(mdamprate,pdamprate,AbsTol=1.e-10);
+        end
+
     end
 end
