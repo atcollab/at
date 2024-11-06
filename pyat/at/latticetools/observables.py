@@ -505,15 +505,17 @@ class ElementObservable(Observable):
             if vnow is None or isinstance(vnow, Exception):
                 vnow = repeat(vnow)
                 deviation = repeat(None)
-            else:
-                deviation = self.deviation
-            if self.target is None:
                 vmin = repeat(None)
                 vmax = repeat(None)
             else:
-                target = np.broadcast_to(self.target, np.asarray(vnow).shape)
-                vmin = target + self.lbound
-                vmax = target + self.ubound
+                deviation = self.deviation
+                if self.target is None:
+                    vmin = repeat(None)
+                    vmax = repeat(None)
+                else:
+                    target = np.broadcast_to(self.target, np.asarray(vnow).shape)
+                    vmin = target + self.lbound
+                    vmax = target + self.ubound
             vini = self.initial
             if vini is None:
                 vini = repeat(None)
