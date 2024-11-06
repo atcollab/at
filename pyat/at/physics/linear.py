@@ -516,7 +516,7 @@ def _linopt(
 
     # Perform analysis
     vps, dtype, el0, els, wtype = analyze(mxx, ms)
-    tunes = _tunes(ring, orbit=orbit)
+    tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
 
     if (get_chrom or get_w) and mt.shape == (6, 6):
         f0 = ring.get_rf_frequency(cavpts=cavpts)
