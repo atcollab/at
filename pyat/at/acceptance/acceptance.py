@@ -57,7 +57,7 @@ def get_acceptance(
         dp:             static momentum offset
         offset:         initial orbit. Default: closed orbit
         bounds:         defines the tracked range: range=bounds*amplitude.
-          It can be use to select quadrants. For example, default values are:
+          It can be used to select quadrants. For example, default values are:
 
           * :py:attr:`.GridMode.CARTESIAN`: ((-1, 1), (0, 1))
           * :py:attr:`GridMode.RADIAL/RECURSIVE <.GridMode.RADIAL>`: ((0, 1),
@@ -76,9 +76,9 @@ def get_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is
           considered unsafe.
 
     Returns:
@@ -208,7 +208,7 @@ def get_1d_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing
+          default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -218,9 +218,9 @@ def get_1d_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
@@ -298,7 +298,7 @@ def get_horizontal_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing
+          default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -308,9 +308,9 @@ def get_horizontal_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
@@ -362,7 +362,7 @@ def get_vertical_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing
+          default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -372,9 +372,9 @@ def get_vertical_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
@@ -426,7 +426,7 @@ def get_momentum_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is
+          default use :py:func:`.lattice_pass`). In case multiprocessing is
           not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -436,9 +436,9 @@ def get_momentum_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
