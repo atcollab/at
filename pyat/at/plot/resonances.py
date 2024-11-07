@@ -15,29 +15,28 @@ __all__ = ["farey_sequence", "plot_tune_diagram", "create_linepalette"]
 
 
 def create_linepalette(
-    linestyle: str or dict = None,
+    linestyle: str | dict = None,
     linecolor: str = None,
     linewidth: int = None,
     addtolabel: str = None,
 ) -> dict[str, any]:
-    """
-        Create a line palette to plot resonance lines.
+    """Create a line palette to plot resonance lines.
 
     Parameters:
-        linestyle: str or dictionary.
-            If 'dots' it uses dotted styles as linestyles
-                {"normal": "dashdot", "skew": "dotted"}
-            If a dictionary is passed, it should contain
-                {"normal": style1, "skew": style2}
+        linestyle: If a dictionary is passed, it should contain
+            {"normal": style1, "skew": style2}
+
+            If 'dots' it uses dotted styles as linestyles. Equivalent to:
+            {"normal": "dashdot", "skew": "dotted"}
+
             Default: {"normal": '-', "skew": '--'}
-        linecolor: defines one color to be used. e.g. 'k'.
-            Default: custom values. See :py:func:`plot_tune_diagram`
-        linewidth: defines one integer value for the line width, e.g. 1.
-            Default: custom values. See :py:func:`plot_tune_diagram`
+        linecolor: line color, e.g. "k". Default: custom values.
+            See :py:func:`plot_tune_diagram`
+        linewidth: line width. Default: custom values. See :py:func:`plot_tune_diagram`
         addtolabel: adds a string to the line label
 
     Returns:
-            Dict dictionary contaning the line properties for resonance plots.
+        palette: dictionary containing the line properties for resonance plots.
     """
     # create default dictionary with line properties
     mypalettecolor1 = {
@@ -162,7 +161,7 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
 
 
 def plot_tune_diagram(
-    orders: int or tuple = (1, 2, 3),
+    orders: int | tuple[int] = (1, 2, 3),
     periodicity: int = 1,
     window: list = (0, 1, 0, 1),
     verbose: bool = False,
@@ -178,14 +177,18 @@ def plot_tune_diagram(
     **kwargs: dict[str, any],
 ) -> tuple[matplotlib.axes.Axes, list, list]:
     r"""
-    Plot the tune diagram and resonance lines for a given order, periodicity and window.
+    Plot the tune diagram and resonance lines for the given *orders*, *periodicity*
+    and *window*.
+
+    The resonance equation is :math:`a\nu_x + b\nu_y = c`
+    with :math:`a,b` and :math:`c` integers. The order is: :math:`N=abs(a)+abs(b)`.
 
     Parameters:
-        orders: integer or tuple of integers larger than zero. Default (1,2,3).
+        orders: integer or tuple of integers larger than zero. Default (1, 2, 3).
         periodicity: periodicity of the machine, integer larger than zero. Default: 1.
-        window: (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
-            tune minimum and maximum window. Default: (0,1,0,1).
-            window is ignored if the parameter axes is given.
+        window: ``(nux_min, nux_max, nuy_min, nuy_max)``: tuple of 4 values for the
+            tune minimum and maximum window. Default: (0, 1, 0, 1).
+            *window* is ignored if the parameter axes is given.
         verbose: print verbose output.
         legend: print legend on the plot. Default: False.
         show: show plot. Default: True.
@@ -193,41 +196,43 @@ def plot_tune_diagram(
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
             resonances. If :py:obj:`None`, a new figure will be created.
-            Note that if axes are given then window is ignored.
-        linestyle: sets the line style for normal and skew resonances.
-            If 'dots' is given it will use dashdot and dotted for normal
-            and skew resonances, respectively.
-            A dictionary could be passed containing
-               {"normal": style1, "skew":style2}
-            to plot using style1 and style2.
-            Default: uses "-" and "--". See Normal and Skew convention.
-        linecolor: sets a single color for all the resonances.
-            By default a custom palette is used. See Lines Color and Width.
-        linewidth = integer width to be used for all resonances.
-            Default: See Color and Width below
+            Note that if *axes* are given then *window* is ignored.
+        linestyle: line style for normal and skew resonances.
+
+            If a dictionary is passed, it should contain
+            {"normal": style1, "skew": style2}
+
+            If 'dots' it uses dotted styles as linestyles. Equivalent to:
+            {"normal": "dashdot", "skew": "dotted"}
+
+            Default: {"normal": '-', "skew": '--'}
+        linecolor: single color for all resonances. Default: custom palette.
+            See :ref:`Lines Color and Width <color_width>`
+        linewidth: line width for all resonances. Default: custom values.
+            See :ref:`Lines Color and Width <color_width>`
         addtolabel: adds a string to the line label, e.g. for the fourth
             order normal resonance "4n"+addtolabel
-        kwargs:
-            * only: if 'normal' plots only normal resonances.
-                    if 'skew' plots only skew resonances.
-                    Otherwise ignored.
-                    See the notes on Normal and Skew convention.
-            * linedict: use it to pass a dictionary with custom line styles.
-                See notes below.
+    Keyword Args:
+        only (str): if 'normal', plot only normal resonances.
+
+            if 'skew' plots only skew resonances.
+
+            Otherwise, ignored. See the notes on Normal and Skew convention.
+        linedict (dict): dictionary of custom line styles. See notes below.
 
     Returns:
-        Axes object from matplotlib.axes._axes
-        List of handles for the legend
-        List of labels for the legend
+        Axes (matplotlib.axes.Axes): object from matplotlib.axes._axes
+        legend_h (list):  list of handles for the legend
+        legend_lab (list): list of labels for the legend
 
     NOTES:
-    The resonance equation is :math:`a\nu_x + b\nu_y = c`
-    with :math:`a,b` and :math:`c` integers. The order :math:`N=abs(a)+abs(b)`.
 
     Normal and Skew convention:
     Line style is similar to reson.m from Matlab Middle Layer, MML, by L. Nadolski.
     Normal resonances are plotted with a continuous line.
     Skew resonances, i.e. N-abs(a) is odd, are plotted in dashed lines.
+
+    .. _color_width:
 
     Lines Color and Width:
     Line style is similar to reson.m from Matlab Middle Layer, MML, by L. Nadolski.
@@ -242,15 +247,13 @@ def plot_tune_diagram(
     9th: 'lightgreen', width 1
     10th to 15th: RGB increased in steps of 0.1, width 1
 
-    Custom Style:
-    You could pass a custom line style in a dictionary as
-    linedict = mydictionary,
-    where mydictionary should contain two entries
+    Custom Style: You could pass a custom line style in a dictionary as
+    ``linedict=mydictionary``, where mydictionary should contain two entries:
     dict("normal": normald, "skew": skewd).
     normald and skewd are also dictionaries, each entry contains as key
     the resonance order and as value the line properties to use in the plot.
-    The default dictionary is created with :pyt:func:`create_linepalette`
-      mydictionary = at.plot.resonances.create_linepalette()
+    The default dictionary is created with :py:func:`create_linepalette`
+    mydictionary = at.plot.resonances.create_linepalette()
     you could edit the needed entries.
 
     Raises:
@@ -338,7 +341,7 @@ def plot_tune_diagram(
     lprop["normal"].update(userprop.get("normal", {}))
     lprop["skew"].update(userprop.get("skew", {}))
 
-    # we only need to points to define a line
+    # we only need two points to define a line
     nauxpoints = 2
 
     # window min/max,horizontal and vertical

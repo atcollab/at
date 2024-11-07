@@ -185,21 +185,20 @@ def plot_RF_bucket_hamiltonian(ring, ct_range=None, dp_range=None,
 
     A perfectly tuned lattice is assumed, the cavities' frequency is nominal
     and the TimeLag is set in a way ensuring ct=0 for the synchronous phase
-    by using ring.set_cavity_phase().
+    by using :py:func:`.set_cavity_phase`.
 
     Parameters:
         ring: Lattice description
         ct_range (tuple): Forced lower and upper ct values for the plot.
-        Default to :math:`\pm 1.1 \times C / (2h)`
+            Default to :math:`\pm 1.1 \times C / (2h)`
         dp_range (tuple): Forced lower and upper dp values for the plot.
-        Default to twice the RF acceptance of the bucket.
+            Default to twice the RF acceptance of the bucket.
         num_points (int): Number of points for 1D grid (ct/dp)
-        Default to 400.
+            Default to 400.
         num_levels (int): Number of levels for contour plot. Odd number of
-        levels allow to center the colorbar around 0.
-        Default to 41.
+            levels allow to center the colorbar around 0. Default to 41.
         plot_separatrix (bool): Flag to plot the separatrix contour
-        (:math:`\mathcal{H}=0`).
+            (:math:`\mathcal{H}=0`).
 
     Returns:
         CT:   (num_points,num_points) array: ct grid
