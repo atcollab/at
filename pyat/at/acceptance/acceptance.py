@@ -225,8 +225,8 @@ def get_1d_acceptance(
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
@@ -315,8 +315,8 @@ def get_horizontal_acceptance(
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
@@ -379,8 +379,8 @@ def get_vertical_acceptance(
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
@@ -443,8 +443,8 @@ def get_momentum_acceptance(
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
