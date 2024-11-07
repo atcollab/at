@@ -119,6 +119,8 @@ pp=struct('Dipole',p1,'Quadrupole',p2,'Sextupole',p3,'Multipole',p4,...
     'BPM',p5,args{:});
 
     function [xpl,ypl]=setxpl(s,l,xmotif,ymotif)
+        s=reshape(s,1,[]);  % Ensure there is 1 line, even for empty matrices
+        l=reshape(l,1,[]);
         nm=length(xmotif);
         xpl=s(ones(nm,1),:)+l(ones(nm,1),:).*xmotif(:,ones(1,length(s)));
         ypl=ymotif(:,ones(1,length(s)));
