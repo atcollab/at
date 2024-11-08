@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+__all__ = ["farey_sequence", "plot_tune_diagram", "create_linepalette"]
+
 import warnings
 from fractions import Fraction
 
 import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy
-
-__all__ = ["farey_sequence", "plot_tune_diagram", "create_linepalette"]
 
 # 2024jul31 oblanco at ALBA CELLS
 
@@ -409,8 +409,6 @@ def plot_tune_diagram(
     axes.set_xlabel(r"$\nu_x$")
     axes.set_ylabel(r"$\nu_y$")
     # printing legend if necessary
-    myleghandles = []
-    myleglabels = []
     handleall, labelall = axes.get_legend_handles_labels()
     hstyle = [hline._linestyle for hline in handleall]
     joinlabelstyle = [i + j for i, j in zip(labelall, hstyle)]
