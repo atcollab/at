@@ -9,7 +9,7 @@ from fractions import Fraction
 
 import matplotlib.axes
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 
 # 2024jul31 oblanco at ALBA CELLS
 
@@ -147,8 +147,8 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     idx = 0
     while (farey[-1] < 1) and (idx < 100):
         idx += 1
-        caux = numpy.floor((nthorder + bfarey) / dfarey) * cfarey - afarey
-        daux = numpy.floor((nthorder + bfarey) / dfarey) * dfarey - bfarey
+        caux = np.floor((nthorder + bfarey) / dfarey) * cfarey - afarey
+        daux = np.floor((nthorder + bfarey) / dfarey) * dfarey - bfarey
         afarey = cfarey
         bfarey = dfarey
         cfarey = int(caux)
@@ -286,7 +286,7 @@ def plot_tune_diagram(
 
     verboseprint(f"The window is {window}")
     # check the window
-    windowa = numpy.array(window)
+    windowa = np.array(window)
     if windowa[0] == windowa[1]:
         raise ValueError("horizontal coordinates must be different")
     if windowa[2] == windowa[3]:
@@ -300,7 +300,7 @@ def plot_tune_diagram(
     # get xlimits and ylimits
     the_axeslims = windowa.reshape((2, 2))
 
-    maxreson2calc = numpy.max(orders)
+    maxreson2calc = np.max(orders)
     verboseprint(f"Farey max order={maxreson2calc}")
 
     # get the Farey collection, i.e., a list of farey sequences, one per order
@@ -318,17 +318,17 @@ def plot_tune_diagram(
         axes = fig.add_subplot(111)
     else:
         verboseprint("Axes already exist, ignore window")
-        the_axeslims = numpy.array([axes.get_xlim(), axes.get_ylim()])
+        the_axeslims = np.array([axes.get_xlim(), axes.get_ylim()])
     # min/max to plot lines with slopes
-    minx = numpy.floor(the_axeslims[0, 0])
-    minx = minx - periodicity - numpy.mod(minx, periodicity)
-    maxx = numpy.ceil(the_axeslims[0, 1])
-    maxx = maxx + periodicity - numpy.mod(maxx, periodicity)
+    minx = np.floor(the_axeslims[0, 0])
+    minx = minx - periodicity - np.mod(minx, periodicity)
+    maxx = np.ceil(the_axeslims[0, 1])
+    maxx = maxx + periodicity - np.mod(maxx, periodicity)
     minmaxxdist = maxx - minx
-    miny = numpy.floor(the_axeslims[1, 0])
-    miny = miny - periodicity - numpy.mod(miny, periodicity)
-    maxy = numpy.ceil(the_axeslims[1, 1])
-    maxy = maxy + periodicity - numpy.mod(maxy, periodicity)
+    miny = np.floor(the_axeslims[1, 0])
+    miny = miny - periodicity - np.mod(miny, periodicity)
+    maxy = np.ceil(the_axeslims[1, 1])
+    maxy = maxy + periodicity - np.mod(maxy, periodicity)
     minmaxydist = maxy - miny
 
     lprop = create_linepalette(
@@ -362,16 +362,12 @@ def plot_tune_diagram(
             # increase step by the periodicity in straight resonances
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
-                for iaux in numpy.arange(
-                    minx, maxx + 0.000001, periodicity * chosenstep
-                ):
+                for iaux in np.arange(minx, maxx + 0.000001, periodicity * chosenstep):
                     axes.axvline(x=iaux, **lprop["normal"][nthorder])
             debugprint("enter plotting vertical straight lines")
-            nsaux = numpy.mod(nthorder, 2)
+            nsaux = np.mod(nthorder, 2)
             if nsaux in normalskew:
-                for iaux in numpy.arange(
-                    miny, maxy + 0.000001, periodicity * chosenstep
-                ):
+                for iaux in np.arange(miny, maxy + 0.000001, periodicity * chosenstep):
                     axes.axhline(y=iaux, **lprop[idxtotype[nsaux]][nthorder])
             # aeq*nux + beq*nuy = nthorder
             for aeq in range(1, nthorder):
@@ -382,20 +378,20 @@ def plot_tune_diagram(
                 debugprint(f"chosen slope={chosenslope}")
                 debugprint(f"chosen ystep={ystep}")
                 # calculate the variation on the vertical direction from window size
-                yyaux = numpy.ceil(minmaxxdist * chosenslope + minmaxydist * ystep)
+                yyaux = np.ceil(minmaxxdist * chosenslope + minmaxydist * ystep)
                 y1aux = -yyaux + miny
                 y2aux = yyaux + maxy
                 # adapt to periodicity
-                y1aux = periodicity * numpy.floor(y1aux / periodicity)
-                y2aux = periodicity * numpy.ceil(y2aux / periodicity)
+                y1aux = periodicity * np.floor(y1aux / periodicity)
+                y2aux = periodicity * np.ceil(y2aux / periodicity)
                 debugprint(f"minx={minx},maxx={maxx},minmaxxdist={minmaxxdist}")
                 debugprint(f"miny={miny},maxy={maxy},minmaxydist={minmaxydist}")
                 debugprint(f"y1aux={y1aux},y2aux={y2aux}")
-                xaux = numpy.linspace(minx, maxx, nauxpoints)
+                xaux = np.linspace(minx, maxx, nauxpoints)
                 debugprint(f"xaux={xaux}")
-                nsaux = numpy.mod(beq, 2)
+                nsaux = np.mod(beq, 2)
                 if nsaux in normalskew:
-                    for istep in numpy.arange(0, y2aux - y1aux + 0.0001, ystep):
+                    for istep in np.arange(0, y2aux - y1aux + 0.0001, ystep):
                         y1line = (
                             -chosenslope * (xaux - minx) + y2aux - periodicity * istep
                         )
