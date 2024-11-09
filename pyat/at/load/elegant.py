@@ -100,8 +100,16 @@ class QUAD(ElementDescr):
 # noinspection PyPep8Naming
 class SEXT(ElementDescr):
     @misalign
-    def convert(self, l, k2=0.0, order=2, **params):  # noqa: E741
+    def convert(self, l, k2=0.0, **params):  # noqa: E741
         return [elt.Sextupole(self.name, l, k2 / 2.0, **params)]
+
+
+# noinspection PyPep8Naming
+class KQUSE(ElementDescr):
+    @misalign
+    def convert(self, l, k1=0.0, k2=0.0, **params):  # noqa: E741
+        poly_b = [0.0, k1, k2 / 2.0]
+        return [elt.Multipole(self.name, l, [], poly_b, **params)]
 
 
 # noinspection PyPep8Naming
@@ -118,8 +126,12 @@ class MULT(ElementDescr):
     def convert(self, l=0, knl=0.0, order=1, **params):  # noqa: E741
         poly_a = np.zeros(order + 1)
         poly_b = np.zeros(order + 1)
-        poly_b[order] = knl / factorial(order)
-        return [elt.Multipole(self.name, l, poly_a, poly_b, **params)]
+        if l == 0.0:
+            poly_b[order] = knl / factorial(order)
+            return [elt.ThinMultipole(self.name, poly_a, poly_b, **params)]
+        else:
+            poly_b[order] = knl / factorial(order) / l
+            return [elt.Multipole(self.name, l, poly_a, poly_b, **params)]
 
 
 # noinspection PyPep8Naming
@@ -132,15 +144,17 @@ class SBEN(ElementDescr):
         e1=0.0,
         e2=0.0,
         k1=0.0,
-        k2=None,
+        k2=0.0,
+        k3=0.0,
+        k4=0.0,
         hgap=None,
         fint=0.0,
         **params,
     ):
         if hgap is not None:
             params.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fint)
-        if k2 is not None:
-            params["PolynomB"] = [0.0, k1, k2 / 2.0]
+        if k2 != 0.0 or k3 != 0.0 or k4 != 0.0:
+            params["PolynomB"] = [0.0, k1, k2 / 2.0, k3 / 6.0, k4 / 24.0]
         return [
             elt.Dipole(
                 self.name,
