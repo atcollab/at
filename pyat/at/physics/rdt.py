@@ -403,15 +403,19 @@ def get_rdts(
 ):
     """
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
-    from ELEGANT. This implementation is based on Refs [1]_ and [2]_, however different
-    signs conventions are used in the references and the implementation. For consistency,
-    we keep the sign convention of the AT MATLAB interface, first and second order terms
-    are provided separately so the user can re-define these conventions if needed.
-    Focusing RDTs are added based on Ref. [3]_.
+    from ELEGANT. For consistency, pyAT keeps the sign convention of the AT MATLAB interface
+
+    Refs [1]_ and [2]_ were used to calculate the magnitude of first and second order rdts and
+    Ref. [3]_ for the focusing rdt, however, different sign conventions are used along the references
+    and in the original implementation. To overcome this issue, first and second order rdts
+    are provided as a total and also separately so the user can redefine these conventions if needed.
+
+    The resonance base of GEOMETRIC2 rdts is explained in Eq. (54) of Ref [4]_.
 
     The periodicity property of the lattice is automatically taken into account in the rdt
-    calculation, however to calculation of the second order contribution to the GEOMETRIC2
-    and DETUNING RDT types can only be derived for periodicity=1 (i.e. full ring provided)
+    calculation, however the calculation of the second order contribution of sextupoles
+    to the GEOMETRIC2 and DETUNING RDT types can only be derived for periodicity=1
+    (i.e. full ring provided)
 
     Usage:
       >>> get_rdts(ring, reftps, [RDTType.COUPLING, RDTType.CHROMATIC])
@@ -448,7 +452,7 @@ def get_rdts(
 
         **rdts** is a dictionary with keys:
         =================   ======
-        **refts**           location of the rdt
+        **refpts**           location of the rdt
 
         **h20000**          at.RDTType.FOCUSING
         **h00200**
@@ -489,6 +493,7 @@ def get_rdts(
         **[1]** J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
         **[2]** Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
         **[3]** A. Franchi et al. arxiv 1711.06589, PRAB 17.074001
+        **[4]** Chunxi Wang and Alex Chao. Notes on Lie algebraic analysis of achromats. SLAC/AP-100. Jan/1995
     """
     rdt_type = np.atleast_1d(rdt_type)
     nperiods = ring.periodicity
