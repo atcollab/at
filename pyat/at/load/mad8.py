@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-__all__ = ["Mad8Parser", "load_mad8"]
+__all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
+import sys
 from os.path import abspath
 
 # functions known by MAD-8
@@ -18,9 +19,10 @@ from scipy.constants import physical_constants as _cst
 from ..lattice import Lattice
 
 from .file_input import ignore_names
+from .file_output import translate
 
 # noinspection PyProtectedMember
-from .madx import _MadElement, _MadParser
+from .madx import _MadElement, _MadParser, beam_descr, at2mad
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -167,3 +169,18 @@ def load_mad8(
     }
     parser.parse_files(*absfiles, **kwargs)
     return parser.lattice(use=use, in_file=absfiles, **params)
+
+
+def save_mad8(ring: Lattice, filename: str | None = None, use_line: bool = False):
+    kwargs = {
+        "delimiter": "",
+        "continuation": "&",
+        "bool_fmt": {False: ".FALSE.", True: ".TRUE."},
+        "use_line": use_line,
+        "beam_descr": beam_descr,
+    }
+    if filename is None:
+        translate(at2mad, ring, file=sys.stdout, **kwargs)
+    else:
+        with open(filename, "w") as mfile:
+            translate(at2mad, ring, file=mfile, **kwargs)

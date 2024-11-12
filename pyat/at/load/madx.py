@@ -1,9 +1,10 @@
-"""Load a lattice from a MADX file (.seq)."""
+"""Load and save a lattice using a MADX file (.seq)."""
 
 from __future__ import annotations
 
-__all__ = ["MadParameter", "MadxParser", "load_madx"]
+__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx"]
 
+import sys
 import functools
 import warnings
 
@@ -21,11 +22,12 @@ import numpy as np
 from scipy.constants import c as clight, hbar as _hb, e as qelect
 from scipy.constants import physical_constants as _cst
 
-from . import register_format
+from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import CaseIndependentParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
+from .file_output import translate
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
 _kconst = re.compile("^ *const +")
@@ -129,12 +131,12 @@ def sinc(x: float) -> float:
 # -------------------
 
 
-def set_tilt(func):
-    """Decorator which tilts the decorated AT element"""
+def mad_element(func):
+    """Decorator for AT elements"""
 
     @functools.wraps(func)
-    def wrapper(*args, origin="", tilt=0.0, ktap=0.0, **kwargs):
-        elems = func(*args, **kwargs)
+    def wrapper(self, *args, tilt=0.0, ktap=0.0, **kwargs):
+        elems = func(self, *args, **kwargs)
         for el in elems:
             tilt = float(tilt)  # MadParameter conversion
             if tilt != 0.0:
@@ -142,26 +144,44 @@ def set_tilt(func):
             ktap = float(ktap)  # MadParameter conversion
             if ktap != 0.0:
                 el.Scaling = 1.0 + ktap
-            el.origin = origin
+            el.origin = self.origin
         return elems
 
     return wrapper
 
 
-def polyn(a: float | Sequence[float]) -> np.ndarray:
-    """Convert polynomials from MADX to AT"""
-
-    def ref(n: int, t: float):
-        nonlocal f
-        v = t / f
-        f *= n + 1
-        return v
-
+def poly_to_mad(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
+    """Convert polynomials from AT to MAD"""
     f = 1.0
+    for n, vx in enumerate(x):
+        yield factor * float(vx * f)
+        f *= n + 1
+
+
+def poly_from_mad(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
+    """Convert polynomials from MAD to AT"""
+    f = 1.0
+    for n, vx in enumerate(x):
+        yield factor * float(vx / f)
+        f *= n + 1
+
+
+def p_to_at(a: float | Sequence[float]) -> np.ndarray:
+    """Convert polynomials from MADX to AT"""
     if not isinstance(a, Sequence):
         # In case of a single element, we have a scalar instead of a tuple
         a = (a,)
-    return np.array([ref(n, t) for n, t in enumerate(a)], dtype=float)
+    return np.fromiter(poly_from_mad(a), dtype=float)
+
+
+def p_dict(keys: Iterable[str], a: Iterable[float]) -> dict[str, float]:
+    """return K1, K2... from an AT Polynom"""
+    return {k: v for k, v in zip(keys, poly_to_mad(a)) if k and (v != 0.0)}
+
+
+def p_list(a: Iterable[float], factor: float = 1.0):
+    """Return a Polynom list"""
+    return list(poly_to_mad(a, factor=factor))
 
 
 # noinspection PyUnusedLocal
@@ -195,8 +215,7 @@ class _MadElement(ElementDescr):
             offset += parser[frm].at
         return np.array([-half_length, half_length]) + offset
 
-    @staticmethod
-    def meval(params: dict):
+    def meval(self, params: dict):
         """Evaluation of superfluous parameters"""
 
         def mpeval(v):
@@ -214,69 +233,110 @@ class _MadElement(ElementDescr):
 
 
 # ------------------------------
-#  MAD-X classes
+#  MAD-X element classes
 # ------------------------------
 
 
 # noinspection PyPep8Naming
 class drift(_MadElement):
-    @set_tilt
-    def convert(self, l=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l=0.0, **params):  # noqa: E741
         return [elt.Drift(self.name, l, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
 class marker(_MadElement):
-    @set_tilt
-    def convert(self, **params):
+    at2mad = {}
+
+    @mad_element
+    def to_at(self, **params):
         return [elt.Marker(self.name, **self.meval(params))]
 
 
 # noinspection PyPep8Naming
 class quadrupole(_MadElement):
-    @set_tilt
-    def convert(self, l, k1=0.0, k1s=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l, k1=0.0, k1s=0.0, **params):  # noqa: E741
         atparams = {}
         k1s = float(k1s)  # MadParameter conversion  # MadParameter conversion
         if k1s != 0.0:
             atparams["PolynomA"] = [0.0, k1s]
         return [elt.Quadrupole(self.name, l, k1, **atparams, **self.meval(params))]
 
+    @classmethod
+    def from_at(cls, kwargs):
+        el = super().from_at(kwargs)
+        el.update(p_dict(["K0", "K1"], kwargs.pop("PolynomB", ())))
+        el.update(p_dict(["K0S", "K1S"], kwargs.pop("PolynomA", ())))
+        return el
+
 
 # noinspection PyPep8Naming
 class sextupole(_MadElement):
-    @set_tilt
-    def convert(self, l, k2=0.0, k2s=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l, k2=0.0, k2s=0.0, **params):  # noqa: E741
         atparams = {}
         k2s = float(k2s)  # MadParameter conversion
         if k2s != 0.0:
             atparams["PolynomA"] = [0.0, 0.0, k2s / 2.0]
         return [elt.Sextupole(self.name, l, k2 / 2.0, **atparams, **self.meval(params))]
 
+    @classmethod
+    def from_at(cls, kwargs):
+        el = super().from_at(kwargs)
+        el.update(p_dict(["K0", "K1", "K2"], kwargs.pop("PolynomB", ())))
+        el.update(p_dict(["K0S", "K1S", "K2S"], kwargs.pop("PolynomA", ())))
+        return el
+
 
 # noinspection PyPep8Naming
 class octupole(_MadElement):
-    @set_tilt
-    def convert(self, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l, k3=0.0, k3s=0.0, **params):  # noqa: E741
         poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
         poly_a = [0.0, 0.0, 0.0, k3s / 6.0]
-        return [elt.Multipole(self.name, l, poly_a, poly_b, **self.meval(params))]
+        return [elt.Octupole(self.name, l, poly_a, poly_b, **self.meval(params))]
+
+    @classmethod
+    def from_at(cls, kwargs):
+        el = super().from_at(kwargs)
+        el.update(p_dict(["K0", "K1", "K2", "K3"], kwargs.pop("PolynomB", ())))
+        el.update(p_dict(["K0S", "K1S", "K2S", "K3S"], kwargs.pop("PolynomA", ())))
+        return el
 
 
 # noinspection PyPep8Naming
 class multipole(_MadElement):
-    @set_tilt
-    def convert(self, knl=(), ksl=(), **params):
+    at2mad = {}
+
+    @mad_element
+    def to_at(self, knl=(), ksl=(), **params):
         params.pop("l", None)
         return [
-            elt.ThinMultipole(self.name, polyn(ksl), polyn(knl), **self.meval(params))
+            elt.ThinMultipole(
+                self.name, p_to_at(ksl), p_to_at(knl), **self.meval(params)
+            )
         ]
+
+    @classmethod
+    def from_at(cls, kwargs, factor=1.0):
+        el = super().from_at(kwargs)
+        el["KNL"] = p_list(kwargs.pop("PolynomB", ()), factor=factor)
+        el["KSL"] = p_list(kwargs.pop("PolynomA", ()), factor=factor)
+        return el
 
 
 # noinspection PyPep8Naming
 class sbend(_MadElement):
-    @set_tilt
-    def convert(
+    at2mad = {
+        "Length": "L",
+        "BendingAngle": "ANGLE",
+        "EntranceAngle": "E1",
+        "ExitAngle": "E2",
+    }
+
+    @mad_element
+    def to_at(
         self,
         l,  # noqa: E741
         angle,
@@ -313,16 +373,21 @@ class sbend(_MadElement):
             )
         ]
 
+    @classmethod
+    def from_at(cls, kwargs):
+        el = super().from_at(kwargs)
+        el.update(p_dict(["K0", "K1", "K2"], kwargs.pop("PolynomB", ())))
+        el.update(p_dict(["K0S", "K1S", "K2S"], kwargs.pop("PolynomA", ())))
+        return el
+
 
 # noinspection PyPep8Naming
 class rbend(sbend):
-    @set_tilt
-    def convert(self, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l, angle, e1=0.0, e2=0.0, **params):  # noqa: E741
         hangle = abs(0.5 * angle)
         arclength = l / sinc(hangle)
-        return super().convert(
-            arclength, angle, e1=hangle + e1, e2=hangle + e2, **params
-        )
+        return super().to_at(arclength, angle, e1=hangle + e1, e2=hangle + e2, **params)
 
     @property
     def length(self):
@@ -333,30 +398,38 @@ class rbend(sbend):
 
 # noinspection PyPep8Naming
 class kicker(_MadElement):
-    @set_tilt
-    def convert(self, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l=0.0, hkick=0.0, vkick=0.0, **params):  # noqa: E741
         kicks = np.array([hkick, vkick], dtype=float)
         return [elt.Corrector(self.name, l, kicks, **self.meval(params))]
+
+    @classmethod
+    def from_at(cls, kwargs):
+        el = super().from_at(kwargs)
+        kicks = kwargs.pop("KickAngle", (0.0, 0.0))
+        el["HKICK"] = kicks[0]
+        el["VKICK"] = kicks[1]
+        return el
 
 
 # noinspection PyPep8Naming
 class hkicker(kicker):
-    @set_tilt
-    def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
-        return super().convert(l=l, hkick=kick, **params)
+    @mad_element
+    def to_at(self, l=0.0, kick=0.0, **params):  # noqa: E741
+        return super().to_at(l=l, hkick=kick, **params)
 
 
 # noinspection PyPep8Naming
 class vkicker(kicker):
-    @set_tilt
-    def convert(self, l=0.0, kick=0.0, **params):  # noqa: E741
-        return super().convert(l=l, vkick=kick, **params)
+    @mad_element
+    def to_at(self, l=0.0, kick=0.0, **params):  # noqa: E741
+        return super().to_at(l=l, vkick=kick, **params)
 
 
 # noinspection PyPep8Naming
 class rfcavity(_MadElement):
-    @set_tilt
-    def convert(
+    @mad_element
+    def to_at(
         self,
         l=0.0,  # noqa: E741
         volt=0.0,
@@ -377,19 +450,27 @@ class rfcavity(_MadElement):
         )
         return [cavity]
 
+    @classmethod
+    def from_at(cls, kwargs):
+        el = super().from_at(kwargs)
+        el["VOLT"] = 1.0e-6 * kwargs.pop("Voltage")
+        el["FREQ"] = 1.0e-6 * kwargs.pop("Frequency")
+        return el
+
 
 # noinspection PyPep8Naming
 class monitor(_MadElement):
-    @set_tilt
-    def convert(self, l=0.0, **params):  # noqa: E741
+    @mad_element
+    def to_at(self, l=0.0, **params):  # noqa: E741
         hl = 0.5 * l  # MadParameter conversion
         if hl == 0.0:
             return [elt.Monitor(self.name, **self.meval(params))]
         else:
+            drname = self.name + ".1"
             return [
-                elt.Drift(self.name, hl, origin="monitor"),
+                elt.Drift(drname, hl),
                 elt.Monitor(self.name, **self.meval(params)),
-                elt.Drift(self.name, hl, origin="monitor"),
+                elt.Drift(drname, hl),
             ]
 
 
@@ -554,7 +635,7 @@ class _BeamDescr(ElementDescr):
     """Descriptor for the MAD-X BEAM object"""
 
     @staticmethod
-    def convert(name, *args, **params):
+    def to_at(name, *args, **params):
         return []
 
     def expand(self, parser: MadxParser) -> dict:
@@ -961,6 +1042,84 @@ def load_madx(
     return parser.lattice(use=use, in_file=absfiles, **params)
 
 
+def longmultipole(kwargs):
+    length = kwargs.get("Length", 0.0)
+    if length == 0.0:
+        return multipole.from_at(kwargs)
+    else:
+        drname = kwargs["FamName"] + ".1"
+        dr1 = drift.from_at({"FamName": drname, "Length": 0.5 * length})
+        dr2 = drift.from_at({"FamName": drname, "Length": 0.5 * length})
+        return [dr1, multipole.from_at(kwargs, factor=length), dr2]
+
+
+def ignore(kwargs):
+    length = kwargs.get("Length", 0.0)
+    if length == 0.0:
+        print(f"{kwargs['name']} is replaced by a marker")
+        return marker.from_at(kwargs)
+    else:
+        print(f"{kwargs['name']} is replaced by a drift")
+        return drift.from_at(kwargs)
+
+
+_AT2MAD = {
+    elt.Quadrupole: quadrupole.from_at,
+    elt.Sextupole: sextupole.from_at,
+    elt.Octupole: octupole.from_at,
+    elt.ThinMultipole: multipole.from_at,
+    elt.Multipole: longmultipole,
+    elt.RFCavity: rfcavity.from_at,
+    elt.Drift: drift.from_at,
+    elt.Bend: sbend.from_at,
+    elt.Marker: marker.from_at,
+    elt.Monitor: monitor.from_at,
+    elt.Corrector: kicker.from_at,
+}
+
+
+def at2mad(attype):
+    return _AT2MAD.get(attype, ignore)
+
+
+def beam_descr(ring: Lattice):
+    part = str(ring.particle)
+    if part == "relativistic":
+        part = "electron"
+    data = {
+        "ENERGY": 1.0e-9 * ring.energy,
+        "PARTICLE": part.upper(),
+        "RADIATE": ring.is_6d,
+    }
+    attrs = [f"{key}={ElementDescr.attr_format(value)}" for key, value in data.items()]
+    return ", ".join(["BEAM".ljust(10)] + attrs)
+
+
+def save_madx(ring: Lattice, filename: str | None = None, *, use_line: bool = False):
+    """Save a :py:class:`.Lattice` as a MAD-X file
+
+    Args:
+        ring:   lattice
+        filename: file to be created. If None, write to sys.stdout
+        use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
+    """
+    kwargs = {
+        "delimiter": ";",
+        "continuation": "",
+        "bool_fmt": {False: "FALSE", True: "TRUE"},
+        "use_line": use_line,
+        "beam_descr": beam_descr,
+    }
+    if filename is None:
+        translate(at2mad, ring, file=sys.stdout, **kwargs)
+    else:
+        with open(filename, "w") as mfile:
+            translate(at2mad, ring, file=mfile, **kwargs)
+
+
 register_format(
-    ".seq", load_madx, descr="MAD-X lattice description. See :py:func:`.load_madx`."
+    ".seq",
+    load_madx,
+    save_madx,
+    descr="MAD-X lattice description. See :py:func:`.load_madx`.",
 )

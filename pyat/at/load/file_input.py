@@ -21,7 +21,9 @@ from os import getcwd
 from os.path import join, normpath, dirname
 import re
 from itertools import repeat
-from collections.abc import Callable, Iterable, Generator, Mapping
+from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
+
+import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
 from ..lattice import Lattice, elements as elt, params_filter
@@ -89,13 +91,13 @@ def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
             print(f"Element {self.name} ({type1}) is replaced by a {type2}.")
             self._mentioned.add(type(self))
 
-    def convert(self, l=0.0, origin="", **params):  # noqa: E741
+    def to_at(self, l=0.0, origin="", **params):  # noqa: E741
         if l == 0.0:
             return [elt.Marker(self.name, origin=origin, **self.meval(params))]
         else:
             return [elt.Drift(self.name, l, origin=origin, **self.meval(params))]
 
-    kwargs.update(__init__=init, convert=convert)
+    kwargs.update(__init__=init, to_at=to_at)
     return type(classname, (baseclass,), kwargs)
 
 
@@ -126,7 +128,6 @@ def skip_names(
 
 
 class DictNoDot(dict):
-
     @classmethod
     def _defkey(cls, expr: str, quoted: bool) -> str:
         """substitutions to get a valid python identifier"""
@@ -231,10 +232,14 @@ class ElementDescr(AnyDescr, dict):
     """Simple representation of an element as a :py:class:`dict`"""
 
     _mentioned = set()
+    at2mad = {"Length": "L"}
+    label_fmt = str.maketrans("/", ".")
+    array_fmt = str.maketrans("[]()", "{}{}")
+    bool_fmt = None
 
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("origin", self.__class__.__name__)
+    def __init__(self, *args, origin=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.origin = origin or self.__class__.__name__
 
     def __getattr__(self, item):
         # Allows accessing items using the attribute access syntax
@@ -255,7 +260,36 @@ class ElementDescr(AnyDescr, dict):
         keywords += [f"{k}={v!r}" for k, v in self.items()]
         return f"{self.__class__.__name__}({', '.join(keywords)})"
 
-    def convert(self, *args, **params) -> list[elt.Element]:
+    def __str__(self):
+        attrs = [f"{key}={self.attr_format(value)}" for key, value in self.items()]
+        return ", ".join([self.__class__.__name__.upper().ljust(10)] + attrs)
+
+    @staticmethod
+    def attr_format(value):
+        if isinstance(value, bool):
+            return ElementDescr.bool_fmt[value]
+        elif isinstance(value, np.ndarray):
+            return np.array2string(value, separator=", ").translate(
+                ElementDescr.array_fmt
+            )
+        elif isinstance(value, Sequence):
+            return str(value).translate(ElementDescr.array_fmt)
+        else:
+            return str(value)
+
+    @classmethod
+    def from_at(cls, kwargs):
+        def translate(attributes):
+            for at, mad in cls.at2mad.items():
+                v = attributes.pop(at, None)
+                if v is not None:
+                    yield mad, v
+
+        params = {"name": kwargs.pop("FamName", "?").translate(cls.label_fmt)}
+        params.update(translate(kwargs))
+        return cls(**params)
+
+    def to_at(self, *args, **params) -> list[elt.Element]:
         """Generate the AT element. Must be overloaded for each specific element"""
         return []
 
@@ -263,7 +297,7 @@ class ElementDescr(AnyDescr, dict):
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         """Iterator on the generated AT elements"""
         try:
-            elems = self.convert(**self)
+            elems = self.to_at(**self)
         except Exception as exc:
             exc.args += (f"{self}",)
             raise
