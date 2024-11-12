@@ -552,10 +552,10 @@ def get_rdts(
         val2 = [rdt.get(k, None) for rdt in rdtlist2]
         if val[0] is not None:
             rdts[k] = np.array(val)
-            rdttot[k] = np.array(val, dtype=np.complex)
+            rdttot[k] = np.array(val, dtype=complex)
         if val2[0] is not None:
             rdts2[k] = np.array(val2)
-            rdttot[k] += np.array(val2, dtype=np.complex)
+            rdttot[k] += np.array(val2, dtype=complex)
     rdts2["refpts"] = rdts["refpts"]
     rdttot["refpts"] = rdts["refpts"]
     return rdts, rdts2, rdttot
