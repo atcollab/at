@@ -233,7 +233,7 @@ class ElementDescr(AnyDescr, dict):
 
     _mentioned = set()
     at2mad = {"Length": "L"}
-    label_fmt = str.maketrans("/", ".")
+    label_fmt = str.maketrans("/-", "._")
     array_fmt = str.maketrans("[]()", "{}{}")
     bool_fmt = None
 

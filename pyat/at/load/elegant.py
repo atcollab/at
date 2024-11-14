@@ -35,8 +35,8 @@ def elegant_element(func):
 
     @functools.wraps(func)
     def wrapper(
+        self,
         *args,
-        origin="",
         tilt=0.0,
         dx=0.0,
         dy=0.0,
@@ -48,13 +48,13 @@ def elegant_element(func):
             kwargs["NumIntSteps"] = int(n_kicks / 4)
         if n_slices is not None:
             kwargs["NumIntSteps"] = n_slices
-        elems = func(*args, **kwargs)
+        elems = func(self, *args, **kwargs)
         for el in elems:
             if tilt != 0.0:
                 tilt_elem(el, tilt)
             if not (dx == 0.0 and dy == 0.0):
                 shift_elem(el, deltax=dx, deltaz=dy)
-            el.origin = origin
+            el.origin = self.origin
         return elems
 
     return wrapper
@@ -312,19 +312,21 @@ class VMON(MONI):
 def multipole(kwargs):
     """AT ThinMultipole or Multipole converted to Elegant MULT"""
 
-    def singlemul(o, v):
-        mn = ".".join((name, str(o)))
-        return MULT.from_at({"FamName": mn, "Length": length, "Order": o, "Value": v})
+    def singlemul(nm, o, v):
+        if nm is None:
+            nm = ".".join((name, str(o)))
+        return MULT.from_at({"FamName": nm, "Length": length, "Order": o, "Value": v})
 
     name = kwargs.pop("FamName")
     length = kwargs.pop("Length", 0.0)
     poly_b = p_list(kwargs.pop("PolynomB", ()))
     if length == 0.0:
-        return [singlemul(order, v) for order, v in enumerate(poly_b) if v != 0.0]
+        return [singlemul(None, ord, v) for ord, v in enumerate(poly_b) if v != 0.0]
     else:
         for order, v in enumerate(poly_b):
             if v != 0.0:
-                return singlemul(order, length * v)
+                return singlemul(name, order, length * v)
+        return singlemul(name, len(poly_b)-1, 0.0)
 
 
 def ignore(kwargs):
