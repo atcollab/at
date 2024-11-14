@@ -20,7 +20,7 @@ __all__ = [
 from os import getcwd
 from os.path import join, normpath, dirname
 import re
-from itertools import repeat
+from itertools import repeat, count
 from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 
 import numpy as np
@@ -591,19 +591,32 @@ class BaseParser(DictNoDot):
         return line
 
     def _statement(self, line: str) -> bool:
+        # protect quoted items. Make sure placeholder cannot be modified
         line, match1 = protect(line, fence=('"', '"'), placeholder="_0_")
+
         line = self._format_statement(line)
         line = line.replace(" ", "")  # Remove all spaces
         if self.endfile is not None and line.startswith(self.endfile):
             return False
+
         *left, right = _colon.split(line, maxsplit=1)
-        right, match2 = protect(right, fence=("\\(", "\\)"), placeholder="_plh2_")
-        # protect again for nested parentheses
-        right, match3 = protect(right, fence=("\\(", "\\)"), placeholder="_plh3_")
+
+        # protect nested parentheses
+        cpt = count()
+        rpt = []
+        while "(" in right:
+            plh = str(next(cpt)).join(("_par", "_"))
+            right, match = protect(right, fence=("\\(", "\\)"), placeholder=plh)
+            rpt.append(match)
+
         cmdargs = right.split(",")
-        b = restore(match3, *left, *cmdargs)
-        b = restore(match2, *b)
-        b = restore(match1, *b)
+
+        # restore parentheses
+        for match in reversed(rpt):
+            cmdargs = restore(match, *cmdargs)
+
+        # restore quoted items
+        b = restore(match1, *left, *cmdargs)
         if left:
             self._decode(b[0], *b[1:])
         else:
