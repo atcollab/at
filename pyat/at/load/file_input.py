@@ -233,7 +233,6 @@ class ElementDescr(AnyDescr, dict):
 
     _mentioned = set()
     at2mad = {"Length": "L"}
-    label_fmt = str.maketrans("/-", "._")
     array_fmt = str.maketrans("[]()", "{}{}")
     bool_fmt = None
 
@@ -285,7 +284,7 @@ class ElementDescr(AnyDescr, dict):
                 if v is not None:
                     yield mad, v
 
-        params = {"name": kwargs.pop("FamName", "?").translate(cls.label_fmt)}
+        params = {"name": kwargs.pop("FamName", "?")}
         params.update(translate(kwargs))
         return cls(**params)
 

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-__all__ = ["ElegantParser", "load_elegant", "save_elegant"]
+__all__ = ["ElegantParser", "ElegantExporter", "load_elegant", "save_elegant"]
 
-import sys
 import functools
 from math import sqrt, factorial
 from os.path import abspath
@@ -17,7 +16,7 @@ from scipy.constants import c as clight
 from .allfiles import register_format
 from .file_input import ElementDescr, BaseParser
 from .file_input import skip_names, ignore_names, ignore_class
-from .file_output import translate
+from .file_output import Exporter
 from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shift_elem
 
 # noinspection PyProtectedMember
@@ -321,12 +320,12 @@ def multipole(kwargs):
     length = kwargs.pop("Length", 0.0)
     poly_b = p_list(kwargs.pop("PolynomB", ()))
     if length == 0.0:
-        return [singlemul(None, ord, v) for ord, v in enumerate(poly_b) if v != 0.0]
+        return [singlemul(None, o, v) for o, v in enumerate(poly_b) if v != 0.0]
     else:
         for order, v in enumerate(poly_b):
             if v != 0.0:
                 return singlemul(name, order, length * v)
-        return singlemul(name, len(poly_b)-1, 0.0)
+        return singlemul(name, len(poly_b) - 1, 0.0)
 
 
 def ignore(kwargs):
@@ -583,23 +582,31 @@ _AT2EL = {
 }
 
 
+class ElegantExporter(Exporter):
+    delimiter = ""
+    continuation = "&"
+    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+    use_line = True
+
+    def generate_madelems(
+        self, eltype: type[elt.Element], elemdict: dict
+    ) -> ElementDescr | list[ElementDescr]:
+        return _AT2EL.get(eltype, ignore)(elemdict)
+
+
 def at2elegant(attype):
     return _AT2EL.get(attype, ignore)
 
 
 def save_elegant(ring: Lattice, filename: str | None = None):
-    kwargs = {
-        "delimiter": "",
-        "continuation": "&",
-        "bool_fmt": {False: ".FALSE.", True: ".TRUE."},
-        "use_line": True,
-        "beam_descr": None,
-    }
-    if filename is None:
-        translate(at2elegant, ring, file=sys.stdout, **kwargs)
-    else:
-        with open(filename, "w") as mfile:
-            translate(at2elegant, ring, file=mfile, **kwargs)
+    """Save a :py:class:`.Lattice` as an Elegant file
+
+    Args:
+        ring:   lattice
+        filename: file to be created. If None, write to sys.stdout
+    """
+    exporter = ElegantExporter(ring)
+    exporter.export(filename)
 
 
 register_format(

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-__all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
+__all__ = ["Mad8Parser", "Mad8Exporter", "load_mad8", "save_mad8"]
 
-import sys
 from os.path import abspath
 
 # functions known by MAD-8
@@ -19,10 +18,9 @@ from scipy.constants import physical_constants as _cst
 from ..lattice import Lattice
 
 from .file_input import ignore_names
-from .file_output import translate
 
 # noinspection PyProtectedMember
-from .madx import _MadElement, _MadParser, beam_descr, at2mad
+from .madx import _MadElement, _MadParser, _MadExporter
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -171,16 +169,19 @@ def load_mad8(
     return parser.lattice(use=use, in_file=absfiles, **params)
 
 
+class Mad8Exporter(_MadExporter):
+    delimiter = ""
+    continuation = "&"
+    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+
+
 def save_mad8(ring: Lattice, filename: str | None = None, use_line: bool = False):
-    kwargs = {
-        "delimiter": "",
-        "continuation": "&",
-        "bool_fmt": {False: ".FALSE.", True: ".TRUE."},
-        "use_line": use_line,
-        "beam_descr": beam_descr,
-    }
-    if filename is None:
-        translate(at2mad, ring, file=sys.stdout, **kwargs)
-    else:
-        with open(filename, "w") as mfile:
-            translate(at2mad, ring, file=mfile, **kwargs)
+    """Save a :py:class:`.Lattice` as a MAD8 file
+
+    Args:
+        ring:   lattice
+        filename: file to be created. If None, write to sys.stdout
+        use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
+    """
+    exporter = Mad8Exporter(ring, use_line=use_line)
+    exporter.export(filename)

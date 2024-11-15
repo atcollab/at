@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx"]
+__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx", "MadxExporter"]
 
-import sys
 import functools
 import warnings
 
@@ -27,7 +26,7 @@ from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import CaseIndependentParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
-from .file_output import translate
+from .file_output import Exporter
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
 _kconst = re.compile("^ *const +")
@@ -1078,21 +1077,32 @@ _AT2MAD = {
 }
 
 
-def at2mad(attype):
-    return _AT2MAD.get(attype, ignore)
+class _MadExporter(Exporter):
+    use_line = False
+
+    def generate_madelems(
+        self, eltype: type[elt.Element], elemdict: dict
+    ) -> ElementDescr | list[ElementDescr]:
+        return _AT2MAD.get(eltype, ignore)(elemdict)
+
+    def print_beam(self, file):
+        part = str(self.particle)
+        if part == "relativistic":
+            part = "electron"
+        data = {
+            "ENERGY": 1.0e-9 * self.energy,
+            "PARTICLE": part.upper(),
+            "RADIATE": self.is_6d,
+        }
+        attrs = [f"{k}={ElementDescr.attr_format(v)}" for k, v in data.items()]
+        line = ", ".join(["BEAM".ljust(10)] + attrs)
+        print(f"{line}{self.delimiter}", file=file)
 
 
-def beam_descr(ring: Lattice):
-    part = str(ring.particle)
-    if part == "relativistic":
-        part = "electron"
-    data = {
-        "ENERGY": 1.0e-9 * ring.energy,
-        "PARTICLE": part.upper(),
-        "RADIATE": ring.is_6d,
-    }
-    attrs = [f"{key}={ElementDescr.attr_format(value)}" for key, value in data.items()]
-    return ", ".join(["BEAM".ljust(10)] + attrs)
+class MadxExporter(_MadExporter):
+    delimiter = ";"
+    continuation = ""
+    bool_fmt = {False: "FALSE", True: "TRUE"}
 
 
 def save_madx(ring: Lattice, filename: str | None = None, *, use_line: bool = False):
@@ -1103,18 +1113,8 @@ def save_madx(ring: Lattice, filename: str | None = None, *, use_line: bool = Fa
         filename: file to be created. If None, write to sys.stdout
         use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
     """
-    kwargs = {
-        "delimiter": ";",
-        "continuation": "",
-        "bool_fmt": {False: "FALSE", True: "TRUE"},
-        "use_line": use_line,
-        "beam_descr": beam_descr,
-    }
-    if filename is None:
-        translate(at2mad, ring, file=sys.stdout, **kwargs)
-    else:
-        with open(filename, "w") as mfile:
-            translate(at2mad, ring, file=mfile, **kwargs)
+    exporter = MadxExporter(ring, use_line=use_line)
+    exporter.export(filename)
 
 
 register_format(
