@@ -201,17 +201,17 @@ def command1(**kwargs):
 
 
 @pytest.mark.parametrize(
-    "continuation, delimiter, linecomment, data",
+    "cont, delimit, linecomm, data",
     [[None, ";", ("!", "//"), test_data1], ["\\", ";", "#", test_data2]],
 )
-def test_unordered_parser(continuation, delimiter, linecomment, data: str):
-    parser = UnorderedParser(
-        globals(),
-        blockcomment=("/*", "*/"),
-        linecomment=linecomment,
-        continuation=continuation,
-        delimiter=delimiter,
-    )
+def test_unordered_parser(cont, delimit, linecomm, data: str):
+    class _Parser(UnorderedParser):
+        blockcomment = ("/*", "*/")
+        linecomment = linecomm
+        continuation = cont
+        delimiter = delimit
+
+    parser = _Parser(globals())
     parser.parse_lines(data.splitlines())
     assert parser["label"] == "done"  # Make sure that "command1" was executed
 
@@ -257,9 +257,10 @@ def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: b
 
 
 def test_elegant_parser():
+    # fmt: off
     expected_ring_pos = np.array([
         0.0, 0.25, 1.25, 2.25, 3.25, 4.0, 4.25, 4.75, 4.8, 4.8,
-        4.8, 4.8, 4.8, 4.85, 4.9, 4.9, 4.95, 5.0, 5.0,
+        4.8,  4.8,  4.8, 4.85,  4.9, 4.9, 4.95,  5.0, 5.0,
         5.25, 6.25, 7.25, 8.25, 9.0,
     ])
     expected_cell_pos = np.array([0., 0.25, 1.25, 2.25, 3.25, 4.])
@@ -269,9 +270,9 @@ def test_elegant_parser():
 
     sequences = parser.sequences
 
-    assert sequences == ['CELL_1', 'RING_1']
+    assert sequences == ["CELL_1", "RING_1"]
 
-    ring = parser.lattice(use="ring.1", particle="electron", energy=6.0E9)
+    ring = parser.lattice(use="ring.1", particle="electron", energy=6.0e9)
     assert len(ring) == 23
     assert ring.energy == 6.0e9
     assert str(ring.particle) == "electron"
@@ -279,7 +280,7 @@ def test_elegant_parser():
     assert ring.is_6d is False
     assert_close(ring.get_s_pos(), expected_ring_pos)
 
-    cell = parser.lattice(use="cell.1", particle="positron", energy=2.0E9)
+    cell = parser.lattice(use="cell.1", particle="positron", energy=2.0e9)
     assert len(cell) == 5
     assert cell.energy == 2.0e09
     assert str(cell.particle) == "positron"

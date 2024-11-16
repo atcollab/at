@@ -14,7 +14,7 @@ import numpy as np
 from scipy.constants import c as clight
 
 from .allfiles import register_format
-from .file_input import ElementDescr, BaseParser
+from .file_input import ElementDescr, BaseParser, UpperCaseParser
 from .file_input import skip_names, ignore_names, ignore_class
 from .file_output import Exporter
 from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shift_elem
@@ -377,7 +377,7 @@ SOLE = SOLENOID
 MULTIPOLE = MULT
 
 
-class ElegantParser(BaseParser):
+class ElegantParser(UpperCaseParser, BaseParser):
     # noinspection PyUnresolvedReferences
     """Elegant parser
 
@@ -400,29 +400,17 @@ class ElegantParser(BaseParser):
         >>> ring = parser.lattice(use="RING")  # generate an AT Lattice
     """
 
+    continuation = "&"
+    linecomment = "!"
+    endfile = "RETURN"
+
     def __init__(self, **kwargs):
         """
         Args:
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(
-            globals(),
-            continuation="&",
-            linecomment="!",
-            endfile="RETURN",
-            **kwargs,
-        )
-
-    @classmethod
-    def _defkey(cls, expr: str, quoted: bool) -> str:
-        """substitutions to get a valid python identifier"""
-        expr = super()._defkey(expr, quoted)
-        return expr if quoted else expr.upper()
-
-    def _format_statement(self, line: str) -> str:
-        """Reformat the input line"""
-        return line.upper()
+        super().__init__(globals(), **kwargs)
 
     def _assign(self, label: str, key: str, val: str):
         # Special treatment of "line=(...)" commands

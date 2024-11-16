@@ -103,6 +103,9 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
+    continuation = "&"
+    blockcomment = ("comment", "endcomment")
+
     def __init__(self, **kwargs):
         """
         Args:
@@ -110,12 +113,7 @@ class Mad8Parser(_MadParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(
-            globals(),
-            continuation="&",
-            blockcomment=("comment", "endcomment"),
-            **kwargs,
-        )
+        super().__init__(globals(),**kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""

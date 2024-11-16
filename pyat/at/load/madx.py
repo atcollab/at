@@ -24,7 +24,7 @@ from scipy.constants import physical_constants as _cst
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
-from .file_input import CaseIndependentParser, UnorderedParser
+from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
@@ -738,8 +738,13 @@ class _Beam:
             beamobj[k] = v
 
 
-class _MadParser(CaseIndependentParser, UnorderedParser):
+class _MadParser(LowerCaseParser, UnorderedParser):
     """Common class for both MAD8 anf MAD-X parsers"""
+
+    delimiter = ";"
+    linecomment = ("!", "//")
+    endfile = "return"
+    undef_key = "none"
 
     _str_arguments = {"file", "refer", "refpos", "sequence", "from"}
 
@@ -754,16 +759,12 @@ class _MadParser(CaseIndependentParser, UnorderedParser):
         """
         super().__init__(
             env,
-            delimiter=";",
-            linecomment=("!", "//"),
-            endfile="return",
             call=_Call(self),
             beam=_Beam(self),
             sequence=_Sequence,
             centre="centre",
             entry="entry",
             exit="exit",
-            undef_key="none",
             **kwargs,
         )
         self.current_sequence = None
@@ -975,6 +976,9 @@ class MadxParser(_MadParser):
         >>> arca = parser.lattice(use="ring")
     """
 
+    continuation = None
+    blockcomment = ("/*", "*/")
+
     def __init__(self, **kwargs):
         """
         Args:
@@ -984,8 +988,6 @@ class MadxParser(_MadParser):
         """
         super().__init__(
             globals(),
-            continuation=None,
-            blockcomment=("/*", "*/"),
             **kwargs,
         )
 

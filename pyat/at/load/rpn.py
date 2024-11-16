@@ -25,8 +25,12 @@ def mpop(stack: list[Any], n: int = 1) -> list[Any]:
 
 def to_num(x: Any) -> Number:
     """Converts a value to its appropriate numeric type"""
-    n = float(x)
-    return int(n) if n.is_integer() else n
+    try:
+        n = float(x)
+    except ValueError:
+        return x
+    else:
+        return int(n) if n.is_integer() else n
 
 
 def consume_token(token: str, stack: list[Number]) -> list[Number]:

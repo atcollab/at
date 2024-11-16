@@ -13,7 +13,8 @@ __all__ = [
     "SequenceDescr",
     "BaseParser",
     "UnorderedParser",
-    "CaseIndependentParser",
+    "LowerCaseParser",
+    "UpperCaseParser",
     "DictNoDot",
 ]
 
@@ -343,34 +344,31 @@ class BaseParser(DictNoDot):
     The parser builds a database of all the defined objects
     """
 
+    delimiter: str | None = None
+    continuation: str = "\\"
+    linecomment: str | tuple[str] | None = "#"
+    blockcomment: tuple[str, str] | None = None
+    endfile: str | None = None
+    undef_key: str = "missing"
+
     def __init__(
         self,
         env: dict,
         *args,
-        delimiter: str | None = None,
-        continuation: str = "\\",
-        linecomment: str | tuple[str] | None = "#",
-        blockcomment: tuple[str, str] | None = None,
-        endfile: str | None = None,
         strict: bool = True,
-        undef_key: str = "missing",
         always_force: bool = True,
         **kwargs,
     ):
         """
         Args:
             env: global namespace used for evaluating commands
-            delimiter: command delimiter
-            continuation: command continuation character
-            linecomment: Line comment character
-            blockcomment: Block comment delimiter
-            endfile: "End of input" marker
             verbose: If True, print detail on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
-            undef_key: database key used for assignment to undefined variables
             *args: dict initializer
             **kwargs: dict initializer
         """
+        linecomment = self.linecomment
+        blockcomment = self.blockcomment
         if isinstance(linecomment, tuple):
 
             def line_comment(line):
@@ -422,14 +420,10 @@ class BaseParser(DictNoDot):
             begcomment, endcomment = blockcomment
 
         self.skip_comments = handle_comments
-        self.delimiter = delimiter
-        self.continuation = continuation
-        self.endfile = endfile
         self.env = env
         self.bases = [getcwd()]
         self.kwargs = kwargs
         self.strict = strict
-        self.undef_key = undef_key
         self.always_force = always_force
         self.force = always_force
 
@@ -853,11 +847,6 @@ class UnorderedParser(BaseParser):
         """
         Args:
             env: global namespace
-            delimiter: command delimiter
-            continuation: command continuation character
-            linecomment: Line comment character
-            blockcomment: Block comment delimiter
-            endfile: End of input marker
             verbose: If True, print detail on the processing
             *args: dict initializer
             **kwargs: dict initializer
@@ -896,7 +885,7 @@ class UnorderedParser(BaseParser):
                 replay()
 
 
-class CaseIndependentParser(BaseParser):
+class LowerCaseParser(BaseParser):
     """Case independent parser"""
 
     @classmethod
@@ -908,3 +897,17 @@ class CaseIndependentParser(BaseParser):
     def _format_statement(self, line: str) -> str:
         """Reformat the input line"""
         return line.lower()
+
+
+class UpperCaseParser(BaseParser):
+    """Case independent parser"""
+
+    @classmethod
+    def _defkey(cls, expr: str, quoted: bool) -> str:
+        """substitutions to get a valid python identifier"""
+        expr = super()._defkey(expr, quoted)
+        return expr if quoted else expr.upper()
+
+    def _format_statement(self, line: str) -> str:
+        """Reformat the input line"""
+        return line.upper()
