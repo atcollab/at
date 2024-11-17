@@ -29,9 +29,6 @@ from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
 from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
 
-_kconst = re.compile("^ *const +")
-_kreal = re.compile("^ *real +")
-_kint = re.compile("^ *int +")
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
 # Constants known by MAD-X
@@ -842,14 +839,10 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             super()._decode(label, cmdname, *argnames)
 
     def _format_statement(self, line: str) -> str:
-        line = super()._format_statement(line)
-        # Remove the MAD const, real, int qualifiers
-        line = _kint.sub("", _kreal.sub("", _kconst.sub("", line)))
-        # Accept space as separator (after removing qualifiers)
-        line = _separator.sub(",", line)
-        # turn curly braces into parentheses (MAD arrays)
+        line = _separator.sub(",", line)   # Replace space separators with commas
+        # turn curly braces into parentheses. Must be done before splitting arguments
         line = line.replace("{", "(").replace("}", ")")
-        return line
+        return super()._format_statement(line)
 
     def _get_beam(self, key: str):
         """Get the beam object for a given sequence"""

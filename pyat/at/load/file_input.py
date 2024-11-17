@@ -578,21 +578,18 @@ class BaseParser(DictNoDot):
         self.postponed.append((self._reason(exc), lbl, cmd, *args))
 
     def _format_statement(self, line: str) -> str:
-        """Reformat the input line
-
-        Overload this method for specific languages"""
-        return line
+        """Reformat the input line"""
+        return line.replace(" ", "")  # Remove all spaces
 
     def _statement(self, line: str) -> bool:
         # protect quoted items. Make sure placeholder cannot be modified
         line, match1 = protect(line, fence=('"', '"'), placeholder="_0_")
 
-        line = self._format_statement(line)
-        line = line.replace(" ", "")  # Remove all spaces
         if self.endfile is not None and line.startswith(self.endfile):
             return False
 
         *left, right = _colon.split(line, maxsplit=1)
+        right = self._format_statement(right)
 
         # protect nested parentheses
         cpt = count()
@@ -610,10 +607,21 @@ class BaseParser(DictNoDot):
 
         # restore quoted items
         b = restore(match1, *left, *cmdargs)
+
+        # handle label
         if left:
-            self._decode(b[0], *b[1:])
+            id = 1
+            label = b[0].replace(" ", "")
         else:
-            self._decode(None, *b)
+            id = 0
+            label = None
+
+        # ignore MAD qualifiers
+        while b[id] in ["const", "int", "real"]:
+            id += 1
+
+        # process statement
+        self._decode(label, *b[id:])
         return True
 
     def _finalise(self, final: bool = True) -> None:
@@ -896,7 +904,7 @@ class LowerCaseParser(BaseParser):
 
     def _format_statement(self, line: str) -> str:
         """Reformat the input line"""
-        return line.lower()
+        return super()._format_statement(line.lower())
 
 
 class UpperCaseParser(BaseParser):
@@ -910,4 +918,4 @@ class UpperCaseParser(BaseParser):
 
     def _format_statement(self, line: str) -> str:
         """Reformat the input line"""
-        return line.upper()
+        return super()._format_statement(line.upper())

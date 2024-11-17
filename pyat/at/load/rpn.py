@@ -3,80 +3,97 @@ https://onelharrison.medium.com/watch-building-a-reverse-polish-notation-rpn-eva
 """
 from __future__ import annotations
 
-__all__ = ["evaluate"]
+__all__ = ["Rpn"]
 
 import operator as op
+from math import sqrt, sin, cos, pi, pow
 from typing import Any, Union
 
-supported_operators = {"+": op.add, "-": op.sub, "*": op.mul, "/": op.truediv}
-
-Number = Union[int, float]
+Number = Union[int, float, str]
 
 
-def tokenize(expr: str) -> list[str]:
-    """Breaks expression `expr` into a list of tokens"""
-    return expr.split()
+# noinspection PyUnusedLocal
+def _pop(x):
+    return []
 
 
-def mpop(stack: list[Any], n: int = 1) -> list[Any]:
-    """Pops and returns `n` items from a stack. Mutates `stack`"""
-    return [stack.pop() for _ in range(n)]
+def _swap(x, y):
+    return [y, x]
 
 
-def to_num(x: Any) -> Number:
-    """Converts a value to its appropriate numeric type"""
-    try:
-        n = float(x)
-    except ValueError:
-        return x
-    else:
-        return int(n) if n.is_integer() else n
+supported_operators = {
+    "+": (op.add, 2),
+    "-": (op.sub, 2),
+    "*": (op.mul, 2),
+    "/": (op.truediv, 2),
+    "sqrt": (sqrt, 1),
+    "pi": (pi, 0),
+    "sin": (sin, 1),
+    "cos": (cos, 1),
+    "pow": (pow, 2),
+    "pop": (_pop, 1),
+    "swap": (_swap, 2),
+}
 
 
-def consume_token(token: str, stack: list[Number]) -> list[Number]:
-    """Consumes a token given the current stack and returns the updated stack"""
-    if token in supported_operators:
+class Rpn:
+
+    def __init__(self):
+        self.stack = []
+        self.store = False
+        self.operators = supported_operators.copy()
+
+    def _mpop(self, n: int = 1) -> list[Any]:
+        """Pops and returns `n` items from the stack."""
         try:
-            num1, num2 = mpop(stack, 2)
+            return [self.stack.pop() for _ in range(n)]
         except IndexError:
-            raise SyntaxError("RPN: Malformed expression") from None
+            raise SyntaxError("RPN: Malformed expression: empty stack") from None
 
-        result = supported_operators[token](num2, num1)
-        return [*stack, result]
-    else:
+    @staticmethod
+    def _to_num(x: Any) -> Number:
+        """Converts a value to its appropriate numeric type"""
         try:
-            return [*stack, to_num(token)]
+            n = float(x)
         except ValueError:
-            raise SyntaxError("RPN: Unsupported token '%s'", token) from None
+            return x
+        else:
+            return int(n) if n.is_integer() else n
 
+    def _consume_token(self, token: str) -> None:
+        """Consumes a token given the current stack and returns the updated stack"""
+        if token == "sto":
+            self.store = True
+            return
+        elif self.store:
+            self.operators[token] = (self.stack[-1], 0)
+            self.store = False
+            return
+        try:
+            oper, narg = self.operators[token]
+        except KeyError:
+            result = self._to_num(token)
+        else:
+            if narg == 0:
+                result = oper
+            else:
+                result = oper(*reversed(self._mpop(narg)))
 
-def get_result_from_stack(stack: list[Number]) -> Number:
-    """Gets the result from `stack`"""
-    result, *rest = mpop(stack, 1)
-    if rest:
-        raise SyntaxError("RPN: Found extra tokens")
-    return result
+        if isinstance(result, list):
+            self.stack.extend(result)
+        else:
+            self.stack.append(result)
 
+    def input(self, expr: str) -> None:
+        for token in expr.split():
+            self._consume_token(token)
 
-def evaluate(expr: str) -> Number:
-    """Evaluate an RPN expression and return the result"""
-    stack: list = []
+    def evaluate(self, expr: str) -> Number:
+        """Evaluate an RPN expression and return the result"""
+        for token in expr.split():
+            self._consume_token(token)
 
-    for token in tokenize(expr):
-        stack = consume_token(token, stack)
-
-    return get_result_from_stack(stack)
-#
-#
-# def evaluate_v2(tokens: list[str]) -> Number:
-#     """Evaluates a tokenized expression and returns the result"""
-#
-#     def _evaluate(tokens: list[str], stack: list) -> Number:
-#         if not tokens:
-#             return get_result_from_stack(stack)
-#
-#         stack = consume_token(tokens[0], stack)
-#
-#         return _evaluate(tokens[1:], stack)
-#
-#     return _evaluate(tokens, [])
+        result, = self._mpop(1)
+        if self.stack:
+            raise SyntaxError("RPN: Found extra tokens")
+        return result

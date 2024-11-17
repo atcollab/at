@@ -12,7 +12,7 @@ from ..lattice import Lattice, elements as elt
 class Exporter:
     delimiter: str = ";"
     continuation: str = ""
-    label_fmt = str.maketrans("/-", "._")
+    label_fmt = str.maketrans("*/+-", "..__")  # Not allowed in destination format
     bool_fmt = None
     use_line = True
 

@@ -21,7 +21,7 @@ from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shi
 
 # noinspection PyProtectedMember
 from .madx import sinc, _Line, p_dict, p_list
-from . import rpn
+from . import Rpn
 
 
 # -------------------
@@ -59,17 +59,6 @@ def elegant_element(func):
     return wrapper
 
 
-class ElegantVar(str):
-    def __new__(cls, expr):
-        return super().__new__(cls, expr)
-
-    def __float__(self):
-        return float(rpn.evaluate(self))
-
-    def __int__(self):
-        return int(rpn.evaluate(self))
-
-
 # ------------------------------
 #  Base class for Elegant elements
 # ------------------------------
@@ -78,7 +67,7 @@ class ElegantVar(str):
 class _ElegantElement(ElementDescr):
     """Description of MADX elements"""
 
-    str_attr = {"filename", "group", "mode"}
+    str_attr = {"filename", "group", "mode", "insert_from"}
 
 
 # ------------------------------
@@ -411,6 +400,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
             **kwargs:   Initial variable definitions
         """
         super().__init__(globals(), **kwargs)
+        self.rpn = Rpn()
 
     def _assign(self, label: str, key: str, val: str):
         # Special treatment of "line=(...)" commands
@@ -428,6 +418,14 @@ class ElegantParser(UpperCaseParser, BaseParser):
         else:
             return super()._command(label, cmdname, *args, **kwargs)
 
+    def _statement(self, line: str) -> bool:
+        # Special treatment of RPN definitions
+        if line[0] == "%":
+            self.rpn.input(line[1:])
+            return True
+        else:
+            return super()._statement(line)
+
     def _argparser(
         self,
         argcount: int,
@@ -443,8 +441,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
             if k in str_attr:
                 return v[1:-1] if v[0] == '"' else v
             elif v[0] == '"':
-                return ElegantVar(v[1:-1])  # Deferred RPN evalution
-                # return rpn.evaluate(v[1:-1])  # Immediate RPN evaluation
+                return self.rpn.evaluate(v[1:-1])
             else:
                 return self._evaluate(v)
 

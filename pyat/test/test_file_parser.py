@@ -65,7 +65,7 @@ SOL1:   SOLENOID,   L=0.5,
 MULT1:  MULTIPOLE,  KNL={1.0, 1.0, 2.0, 6.0};
 HK1:    HKICKER,    L=0,    KICK=0.001;
 VK1:    VKICKER,    L=0,    KICK=-0.001;
-HVK2:   KICKER,     L=0,    VKICK=VKICK;
+HVK2:   KICKER      L=0     VKICK:=VKICK;  ! Check spaces as separators
 BPM1:   MONITOR,    L=0.1;
 BPM2:   VMONITOR;
 RF:     RFCAVITY,   VOLT=5, FREQ=352.2, HARMON=31;
@@ -90,7 +90,7 @@ ENDSEQUENCE;
 VALUE, EMASS;
 
 QL = sqrt(4)/2;          ! check arithmetic
-LRING = 9.0;
+const real lring = 9.0;
 VKICK = 0.003;
 
 TEST: TWISS, D=BETA;
@@ -161,8 +161,8 @@ Q1.D:   QUADRUPOLE, L=1.0, K1=-0.5 ! check attribute access
 SOL1:   SOLENOID,   L=0.5, &
                     K1S=3.0        ! check continuation
 MULT1:  MULTIPOLE,  KNL=6.0, ORDER=3
-HK1:    HKICKER,    L=0,    KICK=0.001
-VK1:    VKICKER,    L=0,    KICK=-0.001
+"HK:1": HKICKER,    L=0,    KICK=0.001
+"VK:1": VKICKER,    L=0,    KICK=-0.001
 HVK2:   KICKER,     L=0,    VKICK=0.003
 BPM1:   MONITOR,    L=0.1
 BPM2:   VMONITOR
@@ -171,7 +171,7 @@ RF:     RFCAVITY,   VOLT=5.0E6, FREQ=352.2E6, HARMON=31
 CELL.1: LINE=(DR1, Q1.F, DR2, Q1.D, DR3)
 
 RING.1: LINE=(CELL.1, DR1, SOL1, DR4, MULT1, &
-              HK1, VK1, HVK2, DR4, BPM1, DR4, BPM2, CELL.1)
+              HK:1, VK:1, HVK2, DR4, BPM1, DR4, BPM2, CELL.1)
 """
 # Global definitions for BaseParser
 
