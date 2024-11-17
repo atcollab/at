@@ -583,14 +583,19 @@ def at2elegant(attype):
     return _AT2EL.get(attype, ignore)
 
 
-def save_elegant(ring: Lattice, filename: str | None = None):
+def save_elegant(
+    ring: Lattice,
+    filename: str | None = None,
+    *,
+    use: str | None = None,
+):
     """Save a :py:class:`.Lattice` as an Elegant file
 
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
     """
-    exporter = ElegantExporter(ring)
+    exporter = ElegantExporter(ring, use=use)
     exporter.export(filename)
 
 

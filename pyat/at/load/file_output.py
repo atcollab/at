@@ -76,7 +76,7 @@ class Exporter:
         ]
         ElementDescr.bool_fmt = self.bool_fmt
         self.seq = list(scan(ring))
-        self.seqname = ring.name if ring.name else "RING"
+        self.seqname = kwargs.pop("use", ring.name if ring.name else "RING")
         self.length = ring.cell_length
         self.in_file = getattr(ring, "in_file", "<unknown>")
         self.in_use = getattr(ring, "use", "<unknown")

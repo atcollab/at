@@ -113,7 +113,7 @@ class Mad8Parser(_MadParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(globals(),**kwargs)
+        super().__init__(globals(), **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""
@@ -173,13 +173,20 @@ class Mad8Exporter(_MadExporter):
     bool_fmt = {False: ".FALSE.", True: ".TRUE."}
 
 
-def save_mad8(ring: Lattice, filename: str | None = None, use_line: bool = False):
+def save_mad8(
+    ring: Lattice,
+    filename: str | None = None,
+    *,
+    use: str | None = None,
+    use_line: bool = False,
+):
     """Save a :py:class:`.Lattice` as a MAD8 file
 
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
+        use: name of the created SEQUENCE of LINE
         use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
     """
-    exporter = Mad8Exporter(ring, use_line=use_line)
+    exporter = Mad8Exporter(ring, use=use, use_line=use_line)
     exporter.export(filename)

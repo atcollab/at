@@ -839,7 +839,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             super()._decode(label, cmdname, *argnames)
 
     def _format_statement(self, line: str) -> str:
-        line = _separator.sub(",", line)   # Replace space separators with commas
+        line = _separator.sub(",", line)  # Replace space separators with commas
         # turn curly braces into parentheses. Must be done before splitting arguments
         line = line.replace("{", "(").replace("}", ")")
         return super()._format_statement(line)
@@ -1100,15 +1100,22 @@ class MadxExporter(_MadExporter):
     bool_fmt = {False: "FALSE", True: "TRUE"}
 
 
-def save_madx(ring: Lattice, filename: str | None = None, *, use_line: bool = False):
+def save_madx(
+    ring: Lattice,
+    filename: str | None = None,
+    *,
+    use: str | None = None,
+    use_line: bool = False,
+):
     """Save a :py:class:`.Lattice` as a MAD-X file
 
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
+        use: name of the created SEQUENCE of LINE
         use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
     """
-    exporter = MadxExporter(ring, use_line=use_line)
+    exporter = MadxExporter(ring, use_line=use_line, use=use)
     exporter.export(filename)
 
 
