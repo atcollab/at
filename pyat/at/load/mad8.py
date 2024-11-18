@@ -1,10 +1,8 @@
-r"""
-==============================
-Using `MAD8`_ files with PyAT
-==============================
+r"""Using `MAD8`_ files with PyAT
+=================================
 
 Using MAD8 files is similar to using MAD-X files: see
-:ref:`the MAD-X documentation <madx.py>`
+:py:mod:`the MAD-X documentation <at.load.madx>`
 
 .. _mad8: https://mad8.web.cern.ch/user/mad.html
 """

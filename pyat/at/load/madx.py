@@ -1,9 +1,6 @@
 # noinspection PyUnresolvedReferences
-r""".. _madx.py:
-
-==============================
-Using `MAD-X`_ files with PyAT
-==============================
+r"""Using `MAD-X`_ files with PyAT
+==================================
 
 PyAT can read lattice descriptions in Mad-X format (.seq files), and can export
 lattices in MAD-X format.
@@ -116,6 +113,9 @@ Exporting a PyAT lattice to a MAD-X files produces a single MAD ``SEQUENCE`` of
 ``LINE``.
 
 See :py:func:`save_madx` for usage.
+
+4. Functions and classes
+------------------------
 
 .. _mad-x: https://mad.web.cern.ch/mad/webguide/manual.html
 """
