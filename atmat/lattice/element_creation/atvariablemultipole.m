@@ -20,11 +20,23 @@ function elem=atvariablemultipole(fname,varargin)
 %    PHASEB         Phase of SINE excitation for PolynomB
 %    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
-%    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
-%    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
+%    FUNCA          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomA
+%    FUNCB          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomB
+%    FUNCADERIV1    ARBITRARY excitation tbt kick list for PolynomA 1st
+%                   derivative wrt 5th coordinate
+%    FUNCBDERIV1    ARBITRARY excitation tbt kick list for PolynomB 1st
+%                   derivative wrt 5th coordinate
+%    FUNCADERIV2    ARBITRARY excitation tbt kick list for PolynomA 2nd
+%                   derivative wrt 5th coordinate
+%    FUNCBDERIV2    ARBITRARY excitation tbt kick list for PolynomB 2nd
+%                   derivative wrt 5th coordinate
+%    FUNCADERIV3    ARBITRARY excitation tbt kick list for PolynomA 3rd
+%                   derivative wrt 5th coordinate
+%    FUNCBDERIV3    ARBITRARY excitation tbt kick list for PolynomB 3rd
+%                   derivative wrt 5th coordinate
 %    PERIODIC       If true (default) the user input kick list is repeated
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
-%                   * t<t0: excitation amlpitude is zero
+%                   * t<t0: excitation amplitude is zero
 %                   * t0<t<t1: excitation amplitude is linearly ramped up
 %                   * t1<t<t2: excitation amplitude is constant
 %                   * t2<t<t3: excitation amplitude is linearly ramped down
