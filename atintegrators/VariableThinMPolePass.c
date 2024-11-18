@@ -15,6 +15,9 @@ struct elemab {
     double Phase;
     int NSamples;
     double* Func;
+    double* Funcderiv1;
+    double* Funcderiv2;
+    double* Funcderiv3;
 };
 
 struct elem {
@@ -52,8 +55,8 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int seed, int order, int periodic)
 {
     int idx;
-    double ampt, freq, ph, val;
-    double* func;
+    double ampt, freq, ph, val, t2, oneoversix;
+    double* func, *funcderiv1, *funcderiv2, *funcderiv3;
     double* amp = elem->Amplitude;
     if (!amp) {
         return 0.0;
@@ -72,8 +75,14 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     case 2:
         if (periodic || turn < elem->NSamples) {
             func = elem->Func;
+            funcderiv1 = elem->Funcderiv1;
+            funcderiv2 = elem->Funcderiv2;
+            funcderiv3 = elem->Funcderiv3;
             idx = turn % elem->NSamples;
-            ampt *= func[idx];
+            t2 = t*t;
+            oneoversix = 0.166666666666667;
+            ampt *= func[idx] + funcderiv1[idx]*t + 0.5*funcderiv2[idx]*t2
+                  + oneoversix*funcderiv3[idx]*t2*t;
             return ampt;
         } else {
             return 0.0;
@@ -100,7 +109,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     struct elemab* ElemB = Elem->ElemB;
     double* ramps = Elem->Ramps;
 
-    if (mode != 0) {
+    if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
             pola[i] = get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
             polb[i] = get_pol(ElemB, ramps, mode, t, turn, seed, i, periodic);
@@ -110,7 +119,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     for (c = 0; c < num_particles; c++) {
         r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
-            if (mode == 0) {
+            if (mode != 1) {
                 double tpart = t + r6[5] / C0;
                 for (i = 0; i < maxorder + 1; i++) {
                     pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
@@ -130,6 +139,9 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
+        double *FuncAderiv1, *FuncBderiv1;
+        double *FuncAderiv2, *FuncBderiv2;
+        double *FuncAderiv3, *FuncBderiv3;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         struct elemab *ElemA, *ElemB;
@@ -149,6 +161,12 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        FuncAderiv1=atGetOptionalDoubleArray(ElemData,"FuncAderiv1"); check_error();
+        FuncBderiv1=atGetOptionalDoubleArray(ElemData,"FuncBderiv1"); check_error();
+        FuncAderiv2=atGetOptionalDoubleArray(ElemData,"FuncAderiv2"); check_error();
+        FuncBderiv2=atGetOptionalDoubleArray(ElemData,"FuncBderiv2"); check_error();
+        FuncAderiv3=atGetOptionalDoubleArray(ElemData,"FuncAderiv3"); check_error();
+        FuncBderiv3=atGetOptionalDoubleArray(ElemData,"FuncBderiv3"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         ElemA = (struct elemab*)atMalloc(sizeof(struct elemab));
@@ -170,6 +188,12 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
+        ElemA->Funcderiv1 = FuncAderiv1;
+        ElemB->Funcderiv1 = FuncBderiv1;
+        ElemA->Funcderiv2 = FuncAderiv2;
+        ElemB->Funcderiv2 = FuncBderiv2;
+        ElemA->Funcderiv3 = FuncAderiv3;
+        ElemB->Funcderiv3 = FuncBderiv3;
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
     }
@@ -193,6 +217,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
+        double *FuncAderiv1, *FuncBderiv1;
+        double *FuncAderiv2, *FuncBderiv2;
+        double *FuncAderiv3, *FuncBderiv3;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         struct elemab ElA, *ElemA = &ElA;
@@ -214,6 +241,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        FuncAderiv1=atGetOptionalDoubleArray(ElemData,"FuncAderiv1"); check_error();
+        FuncBderiv1=atGetOptionalDoubleArray(ElemData,"FuncBderiv1"); check_error();
+        FuncAderiv2=atGetOptionalDoubleArray(ElemData,"FuncAderiv2"); check_error();
+        FuncBderiv2=atGetOptionalDoubleArray(ElemData,"FuncBderiv2"); check_error();
+        FuncAderiv3=atGetOptionalDoubleArray(ElemData,"FuncAderiv3"); check_error();
+        FuncBderiv3=atGetOptionalDoubleArray(ElemData,"FuncBderiv3"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
@@ -258,9 +291,15 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 7, mxCreateString("Seed"));
             mxSetCell(plhs[1], 8, mxCreateString("FuncA"));
             mxSetCell(plhs[1], 9, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 10, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 11, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 12, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 10, mxCreateString("FuncAderiv1"));
+            mxSetCell(plhs[1], 11, mxCreateString("FuncBderiv1"));
+            mxSetCell(plhs[1], 12, mxCreateString("FuncAderiv2"));
+            mxSetCell(plhs[1], 13, mxCreateString("FuncBderiv2"));
+            mxSetCell(plhs[1], 14, mxCreateString("FuncAderiv3"));
+            mxSetCell(plhs[1], 15, mxCreateString("FuncBderiv3"));
+            mxSetCell(plhs[1], 16, mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 17, mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 18, mxCreateString("Periodic"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
