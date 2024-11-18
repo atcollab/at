@@ -1,8 +1,128 @@
-"""Load and save a lattice using a MADX file (.seq)."""
+# noinspection PyUnresolvedReferences
+r""".. _madx.py:
+
+==============================
+Using `MAD-X`_ files with PyAT
+==============================
+
+PyAT can read lattice descriptions in Mad-X format (.seq files), and can export
+lattices in MAD-X format.
+
+However, because of intrinsic differences between PyAT and MAD-X, some
+incompatibilities must be taken into account.
+
+1. Translation losses
+---------------------
+
+6-D motion
+^^^^^^^^^^^^^^
+While AT allows setting 6-D motion and synchrotron radiation on individual elements,
+MAD has a global setting for the whole lattice. When reading a MAD-X lattice without
+radiation, 6-D motion in the resulting AT lattice is turned off, including in RF
+cavities. If the MAD-X lattice has radiation on, 6-D motion is activated on the AT
+lattice according to default settings (RF cavities active, radiation in dipoles,
+quadrupoles and wigglers).
+
+Combined function magnets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+MAD has little support for combined function magnets. When exporting a lattice in MAD
+format, the main field component for each magnet class in kept but other components
+disappear, except in the few cases handled by MAD (quadrupole and sextupole
+components in ``SBEND`` or ``RBEND``, skew quad component in ``QUADRUPOLE``, see the
+MAD user's reference manual for more).
+
+Multipoles
+^^^^^^^^^^^^^^
+
+MAD has no thick multipoles. Multipoles in MAD format (``MULTIPOLE`` element) are
+interpreted as :py:class:`.ThinMultipole` elements. In the other direction, an AT
+:py:class:`.Multipole` is converted to a thin ``MULTIPOLE`` surrounded by two
+drift spaces.
+
+MAD elements absent from AT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Many MAD elements (…) have no equivalent in AT. They are replaced by
+:py:class:`.Marker` or :py:class:`.Drift` elements, depending on their length.
+
+Incompatible attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Some AT element attributes have no MAD equivalent, and vice versa.
+
+When exporting to a MAD-X file:
+
+- `NumIntSteps`, `MaxOrder` are discarded,
+- `FringeBendEntrance`, `FringeBendExit`, `FringeQuadEntrance`, `FringeQuadExit` are
+  discarded,
+- `R1`, `R2`, `T1`, `T2` are discarded,
+- `RApertures`, `EApertures` are discarded.
+
+When reading a MAD-X file:
+
+- `TILT` is interpreted and converted to `R1` and `R2` attributes,
+- `KTAP` is interpreted and converted to `FieldScaling`.
+
+2. Reading MAD-X files
+----------------------
+
+Short way
+^^^^^^^^^
+The :py:func:`load_madx` function created a :py:class:`.Lattice` from a ``LINE`` or
+``SEQUENCE`` in a MAD-X file.
+
+>>> ring = at.load_madx("lattice.seq", use="PS")
+
+>>> print(ring)
+Lattice(<1295 elements>, name='PS', energy=1000000000.0, particle=Particle('positron'),
+periodicity=1, harmonic_number=0, beam_current=0.0, nbunch=1, use='PS')
+
+Detailed way
+^^^^^^^^^^^^
+:py:class:`MadxParser` creates an empty database which can be populated with the
+elements of a MAD-X file.
+
+>>> parser = at.MadxParser()
+
+The :py:meth:`MadxParser.parse_files` method reads one or several MAD-X files and
+populates the parser
+
+>>> parser.parse_files("lattice.seq", use="PS")
+
+The parser can be examined and modified using the standard python syntax:
+
+>>> parser["pr_bht91_f"]
+sbend(name=PR.BHT91.F, l=2.1975925, angle='angle.prbhf', k1='k1prbhf+k1prpfwf-k1prf8l')
+
+>>> parser["angle.prbhf"]
+0.03135884818
+
+>>> parser["angle.prbhf"] = 0.032
+
+All MAD parameters can be interactively modified and their last value will be taken
+into account when generating a PyAT lattice.
+
+The :py:meth:`MadxParser.lattice` method creates a :py:class:`.Lattice` from a ``LINE``
+or ``SEQUENCE`` of the parser:
+
+>>> ring = parser.lattice(use="ps")
+
+>>> print(ring)
+Lattice(<1295 elements>, name='PS', energy=1000000000.0, particle=Particle('positron'),
+periodicity=1, harmonic_number=0, beam_current=0.0, nbunch=1, use='PS')
+
+3. Exporting to MAD-X files
+---------------------------
+Exporting a PyAT lattice to a MAD-X files produces a single MAD ``SEQUENCE`` of
+``LINE``.
+
+See :py:func:`save_madx` for usage.
+
+.. _mad-x: https://mad.web.cern.ch/mad/webguide/manual.html
+"""
 
 from __future__ import annotations
 
-__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx", "MadxExporter"]
+__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx"]
 
 import functools
 import warnings
@@ -1094,7 +1214,7 @@ class _MadExporter(Exporter):
         print(f"{line}{self.delimiter}", file=file)
 
 
-class MadxExporter(_MadExporter):
+class _MadxExporter(_MadExporter):
     delimiter = ";"
     continuation = ""
     bool_fmt = {False: "FALSE", True: "TRUE"}
@@ -1112,10 +1232,10 @@ def save_madx(
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
-        use: name of the created SEQUENCE of LINE
+        use: name of the created SEQUENCE of LINE. Default: name of the PyAT lattice
         use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
     """
-    exporter = MadxExporter(ring, use_line=use_line, use=use)
+    exporter = _MadxExporter(ring, use_line=use_line, use=use)
     exporter.export(filename)
 
 

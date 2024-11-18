@@ -10,6 +10,7 @@ at.load.madx
    .. autosummary::
    
       load_madx
+      save_madx
    
    .. rubric:: Classes
 

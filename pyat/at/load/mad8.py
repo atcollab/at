@@ -1,8 +1,16 @@
-"""Load a lattice from a MAD8 file."""
+r"""
+==============================
+Using `MAD8`_ files with PyAT
+==============================
 
+Using MAD8 files is similar to using MAD-X files: see
+:ref:`the MAD-X documentation <madx.py>`
+
+.. _mad8: https://mad8.web.cern.ch/user/mad.html
+"""
 from __future__ import annotations
 
-__all__ = ["Mad8Parser", "Mad8Exporter", "load_mad8", "save_mad8"]
+__all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
 from os.path import abspath
 
@@ -152,9 +160,6 @@ def load_mad8(
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
-
-    See Also:
-        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     parser = Mad8Parser(strict=strict, verbose=verbose)
     absfiles = tuple(abspath(file) for file in files)
@@ -167,7 +172,7 @@ def load_mad8(
     return parser.lattice(use=use, in_file=absfiles, **params)
 
 
-class Mad8Exporter(_MadExporter):
+class _Mad8Exporter(_MadExporter):
     delimiter = ""
     continuation = "&"
     bool_fmt = {False: ".FALSE.", True: ".TRUE."}
@@ -185,8 +190,8 @@ def save_mad8(
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
-        use: name of the created SEQUENCE of LINE
+        use: name of the created SEQUENCE of LINE. Default: name of the PyAT lattice
         use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
     """
-    exporter = Mad8Exporter(ring, use=use, use_line=use_line)
+    exporter = _Mad8Exporter(ring, use=use, use_line=use_line)
     exporter.export(filename)
