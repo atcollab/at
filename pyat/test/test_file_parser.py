@@ -206,10 +206,10 @@ def command1(**kwargs):
 )
 def test_unordered_parser(cont, delimit, linecomm, data: str):
     class _Parser(UnorderedParser):
-        blockcomment = ("/*", "*/")
-        linecomment = linecomm
-        continuation = cont
-        delimiter = delimit
+        _blockcomment = ("/*", "*/")
+        _linecomment = linecomm
+        _continuation = cont
+        _delimiter = delimit
 
     parser = _Parser(globals())
     parser.parse_lines(data.splitlines())

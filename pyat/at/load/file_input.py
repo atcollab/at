@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 from os import getcwd
-from os.path import join, normpath, dirname
+from os.path import join, abspath, normpath, dirname
 import re
 from itertools import repeat, count
 from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
@@ -344,12 +344,12 @@ class BaseParser(DictNoDot):
     The parser builds a database of all the defined objects
     """
 
-    delimiter: str | None = None
-    continuation: str = "\\"
-    linecomment: str | tuple[str] | None = "#"
-    blockcomment: tuple[str, str] | None = None
-    endfile: str | None = None
-    undef_key: str = "missing"
+    _delimiter: str | None = None
+    _continuation: str = "\\"
+    _linecomment: str | tuple[str] | None = "#"
+    _blockcomment: tuple[str, str] | None = None
+    _endfile: str | None = None
+    _undef_key: str = "missing"
 
     def __init__(
         self,
@@ -367,8 +367,8 @@ class BaseParser(DictNoDot):
             *args: dict initializer
             **kwargs: dict initializer
         """
-        linecomment = self.linecomment
-        blockcomment = self.blockcomment
+        linecomment = self._linecomment
+        blockcomment = self._blockcomment
         if isinstance(linecomment, tuple):
 
             def line_comment(line):
@@ -430,16 +430,18 @@ class BaseParser(DictNoDot):
         super().__init__(*args, **kwargs)
 
         if not strict:
-            self[self.undef_key] = 0
+            self[self._undef_key] = 0
         self.postponed = []
+        self.in_file = []
 
     def clear(self):
         """Clear the database: remove all parameters and objects"""
         super().clear()
         self.update(self.kwargs)
         if not self.strict:
-            self[self.undef_key] = 0
+            self[self._undef_key] = 0
         self.postponed = []
+        self.in_file = []
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation
@@ -447,10 +449,17 @@ class BaseParser(DictNoDot):
         Overload this method for specific languages"""
         return expr
 
-    def _evaluate(self, expr: str):
-        """Evaluate the right-hand side of an assignment"""
+    def evaluate(self, expr: str):
+        """Evaluate the right side of an expression
+
+        Args:
+            expr: expression to evaluate
+
+        Returns:
+            value: evaluated expression
+        """
         expr = self._format_command(self._gen_expr(expr))
-        default_value = self.get(self.undef_key)
+        default_value = self.get(self._undef_key)
         if self.force and default_value is not None:
             for _loop in range(5):
                 try:
@@ -508,7 +517,7 @@ class BaseParser(DictNoDot):
             if k in str_attr:
                 return v[1:-1] if v[0] == '"' else v
             else:
-                return self._evaluate(v)
+                return self.evaluate(v)
 
         key, *value = split_ignoring_parentheses(
             argstr, delimiter="=", fence=('"', '"'), maxsplit=1
@@ -530,7 +539,7 @@ class BaseParser(DictNoDot):
 
     def _assign(self, label: str, key: str, value: str):
         """Variable assignment"""
-        return key, self._evaluate(value)
+        return key, self.evaluate(value)
 
     def _raw_command(
         self,
@@ -585,7 +594,7 @@ class BaseParser(DictNoDot):
         # protect quoted items. Make sure placeholder cannot be modified
         line, match1 = protect(line, fence=('"', '"'), placeholder="_0_")
 
-        if self.endfile is not None and line.startswith(self.endfile):
+        if self._endfile is not None and line.startswith(self._endfile):
             return False
 
         *left, right = _colon.split(line, maxsplit=1)
@@ -710,6 +719,8 @@ class BaseParser(DictNoDot):
         """Generate AT elements for the Lattice constructor"""
         use = params.setdefault("use", "ring")
         params.setdefault("name", use)
+        params.setdefault("energy", 1.0e9)
+        params.setdefault("periodicity", 1)
 
         # Iterate from the elements
         yield from self.expand(use)
@@ -718,17 +729,23 @@ class BaseParser(DictNoDot):
         """Create a lattice from the selected sequence
 
         Parameters:
-            use:                Name of the MADX sequence or line containing the desired
+            use:                Name of the sequence or line containing the desired
               lattice. Default: ``ring``
 
         Keyword Args:
-            name (str):         Name of the lattice. Default: MADX sequence name.
-            particle(Particle): Circulating particle. Default: from MADX
-            energy (float):     Energy of the lattice [eV], Default: from MADX
+            name (str):         Name of the lattice. Default: sequence name.
+            particle(Particle): Circulating particle. Default: Particle("relativistic")
+            energy (float):     Energy of the lattice [eV]. Default: 1.0 GeV
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-        return Lattice(self._generator, iterator=params_filter, use=use, **kwargs)
+        return Lattice(
+            self._generator,
+            iterator=params_filter,
+            in_file=self.in_file or None,
+            use=use,
+            **kwargs,
+        )
 
     def parse_lines(
         self,
@@ -766,17 +783,17 @@ class BaseParser(DictNoDot):
                 continue
 
             # Handle delimiters
-            if self.delimiter is None:
+            if self._delimiter is None:
                 statements = []
                 last = contents
             else:
-                *statements, last = contents.split(sep=self.delimiter)
+                *statements, last = contents.split(sep=self._delimiter)
 
             # Handle continuation
-            if self.continuation is None:
+            if self._continuation is None:
                 buffer.append(last)
             else:
-                idc = last.find(self.continuation)
+                idc = last.find(self._continuation)
                 if idc >= 0:
                     buffer.append(last[:idc])
                 else:
@@ -820,6 +837,8 @@ class BaseParser(DictNoDot):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
+        filenames = tuple(abspath(file) for file in filenames)
+        self.in_file.extend(filenames)
         last = len(filenames) - 1
         ElementDescr._mentioned.clear()
         for nf, fn in enumerate(filenames):
@@ -881,7 +900,7 @@ class UnorderedParser(BaseParser):
         replay()
 
         # After the last file: initialize the remaining undefined variables
-        default_value = self.get(self.undef_key)
+        default_value = self.get(self._undef_key)
         if final:
             undefined = self._missing(verbose=self.verbose)
             self._print(f"{len(undefined)} missing definitions.")

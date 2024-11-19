@@ -6,11 +6,10 @@ Using MAD8 files is similar to using MAD-X files: see
 
 .. _mad8: https://mad8.web.cern.ch/user/mad.html
 """
+
 from __future__ import annotations
 
 __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
-
-from os.path import abspath
 
 # functions known by MAD-8
 from math import pi, e, sqrt, exp, log, sin, cos, tan  # noqa: F401
@@ -109,8 +108,8 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    continuation = "&"
-    blockcomment = ("comment", "endcomment")
+    _continuation = "&"
+    _blockcomment = ("comment", "endcomment")
 
     def __init__(self, **kwargs):
         """
@@ -129,7 +128,11 @@ class Mad8Parser(_MadParser):
 
 
 def load_mad8(
-    *files: str, use: str = "ring", strict: bool = True, verbose=False, **kwargs
+    *files: str,
+    use: str = "ring",
+    strict: bool = True,
+    verbose: bool = False,
+    **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD8 files
 
@@ -160,14 +163,13 @@ def load_mad8(
         lattice (Lattice):  New :py:class:`.Lattice` object
     """
     parser = Mad8Parser(strict=strict, verbose=verbose)
-    absfiles = tuple(abspath(file) for file in files)
     params = {
         key: kwargs.pop(key)
         for key in ("name", "particle", "energy", "periodicity")
         if key in kwargs
     }
-    parser.parse_files(*absfiles, **kwargs)
-    return parser.lattice(use=use, in_file=absfiles, **params)
+    parser.parse_files(*files, **kwargs)
+    return parser.lattice(use=use, **params)
 
 
 class _Mad8Exporter(_MadExporter):
@@ -176,20 +178,18 @@ class _Mad8Exporter(_MadExporter):
     bool_fmt = {False: ".FALSE.", True: ".TRUE."}
 
 
-def save_mad8(
-    ring: Lattice,
-    filename: str | None = None,
-    *,
-    use: str | None = None,
-    use_line: bool = False,
-):
+def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
     """Save a :py:class:`.Lattice` as a MAD8 file
 
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
-        use: name of the created SEQUENCE of LINE. Default: name of the PyAT lattice
-        use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
+
+    Keyword Args:
+        use (str | None): name of the created SEQUENCE of LINE.
+          Default: name of the PyAT lattice
+        use_line (bool):  If True, use a MAD "LINE" format. Otherwise, use
+          a MAD "SEQUENCE"
     """
-    exporter = _Mad8Exporter(ring, use=use, use_line=use_line)
+    exporter = _Mad8Exporter(ring, **kwargs)
     exporter.export(filename)

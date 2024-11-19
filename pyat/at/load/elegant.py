@@ -1,12 +1,64 @@
-"""Load a lattice from an Elegant file"""
+"""Using `Elegant`_ files with PyAT
+==================================
+
+PyAT can read lattice descriptions in Elegant format (.lte files), and can export
+lattices in Elegant format.
+
+However, because of intrinsic differences between PyAT and Elegant, some
+incompatibilities must be taken into account.
+
+1. Translation losses
+---------------------
+
+Multipoles
+^^^^^^^^^^^^^^
+
+Elegant thick multipoles are limited to a single multipole order. For AT
+:py:class:`.Multipole` elements combining several orders, the lowest order is converted
+and higher orders are discarded. AT :py:class:`.ThinMultipole` elements are expanded
+to a series of thin ``MULT`` elements with 0 length.
+
+Elegant elements absent from AT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Many Elegant elements have no equivalent in AT. They are replaced by
+:py:class:`.Marker` or :py:class:`.Drift` elements, depending on their length.
+
+Incompatible attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Some AT element attributes have no Elegant equivalent, and vice versa.
+
+When exporting to an Elegant file:
+
+- `FringeBendEntrance`, `FringeBendExit`, `FringeQuadEntrance`, `FringeQuadExit` are
+  discarded,
+- `R1`, `R2`, `T1`, `T2` are discarded,
+- `RApertures`, `EApertures` are discarded.
+
+When reading an Elegant file:
+
+- `TILT` is interpreted and converted to `R1` and `R2` attributes,
+- `DX`, `DZ` are converted to `T1`and `T2` attributes,
+- `N_SLICES`, if specified, is converted to `NumIntSteps`. If not, `NumIntSteps` is
+  left to is default value (10).
+
+2. Usage
+--------
+
+Usage Elegant files is similar to :ref:`using MAD-X files <using-mad-x-files>`. The
+Elegant RPN calculator is emulated.
+
+3. Functions and classes
+------------------------
+
+.. _elegant: https://ops.aps.anl.gov/manuals/elegant_latest/elegant.html#elegantse9.html
+"""
 
 from __future__ import annotations
 
-__all__ = ["ElegantParser", "ElegantExporter", "load_elegant", "save_elegant"]
+__all__ = ["ElegantParser", "_ElegantExporter", "load_elegant", "save_elegant"]
 
 import functools
 from math import sqrt, factorial
-from os.path import abspath
 from collections.abc import Iterable
 import warnings
 
@@ -17,7 +69,7 @@ from .allfiles import register_format
 from .file_input import ElementDescr, BaseParser, UpperCaseParser
 from .file_input import skip_names, ignore_names, ignore_class
 from .file_output import Exporter
-from ..lattice import Particle, Lattice, Filter, elements as elt, tilt_elem, shift_elem
+from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 
 # noinspection PyProtectedMember
 from .madx import sinc, _Line, p_dict, p_list
@@ -389,9 +441,9 @@ class ElegantParser(UpperCaseParser, BaseParser):
         >>> ring = parser.lattice(use="RING")  # generate an AT Lattice
     """
 
-    continuation = "&"
-    linecomment = "!"
-    endfile = "RETURN"
+    _continuation = "&"
+    _linecomment = "!"
+    _endfile = "RETURN"
 
     def __init__(self, **kwargs):
         """
@@ -406,7 +458,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
         # Special treatment of "line=(...)" commands
         if key == "LINE":
             val = val.replace(")", ",)")  # For tuples with a single item
-            return label, _Line(self._evaluate(val), name=label)
+            return label, _Line(self.evaluate(val), name=label)
         else:
             return super()._assign(label, key, val)
 
@@ -443,7 +495,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
             elif v[0] == '"':
                 return self.rpn.evaluate(v[1:-1])
             else:
-                return self._evaluate(v)
+                return self.evaluate(v)
 
         key, *value = argstr.split(sep="=", maxsplit=1)
         if value:  # Keyword argument
@@ -457,63 +509,36 @@ class ElegantParser(UpperCaseParser, BaseParser):
                 return None
             return key, arg_value(key, argstr)
 
-    def lattice(self, use: str = "RING", **kwargs):
-        """Create a lattice from the selected sequence
+    def _generator(self, params: dict) -> Iterable[elt.Element]:
+        def beta() -> float:
+            rest_energy = params["particle"].rest_energy
+            if rest_energy == 0.0:
+                return 1.0
+            else:
+                gamma = float(params["energy"] / rest_energy)
+                return sqrt(1.0 - 1.0 / gamma / gamma)
 
-        - Elegant lattice files do not specify the beam energy.
-          :py:class:`ElegantParser` sets it by default to 1.0 GeV. Use the *energy*
-          keyword to set it to the desired value.
-        - Long elements are split according to the default AT value of *NumIntSteps*
-          (10) unless *N_SLICES* is specified in the Elegant element definition.
+        cavities = []
+        cell_length = 0
 
-        Parameters:
-            use:                Name of the Elegant LINE describing the desired
-              lattice. Default: ``RING``
+        for elem in super()._generator(params):
+            if isinstance(elem, elt.RFCavity):
+                cavities.append(elem)
+            cell_length += getattr(elem, "Length", 0.0)
+            yield elem
 
-        Keyword Args:
-            name (str):         Name of the lattice. Default: line name.
-            particle(Particle): Circulating particle. Default: Particle("relativistic")
-            energy (float):     Energy of the lattice [eV], Default: 1.0E9
-            periodicity(int):   Number of periods. Default: 1
-            *:                  All other keywords will be set as Lattice attributes
-        """
-
-        def elegant_filter(params: dict, elems: Filter, *args) -> Iterable[elt.Element]:
-            def beta() -> float:
-                rest_energy = params["particle"].rest_energy
-                if rest_energy == 0.0:
-                    return 1.0
-                else:
-                    gamma = float(params["energy"] / rest_energy)
-                    return sqrt(1.0 - 1.0 / gamma / gamma)
-
-            cavities = []
-            cell_length = 0
-
-            for elem in elems(params, *args):
-                if isinstance(elem, elt.RFCavity):
-                    cavities.append(elem)
-                cell_length += getattr(elem, "Length", 0.0)
-                yield elem
-
-            params["_length"] = cell_length
-            rev = beta() * clight / cell_length
-
-            # Set the cavities' Emergy and harmonic number
-            if cavities:
-                cavities.sort(key=lambda el: el.Frequency)
-                for cav in cavities:
-                    cav.Energy = params["energy"]
-                    cav.HarmNumber = cav.Frequency / rev
-                params["_cell_harmnumber"] = getattr(cavities[0], "HarmNumber", np.nan)
-
-        kwargs.setdefault("energy", 1.0e9)
-        part = kwargs.setdefault("particle", "relativistic")
+        part = params.setdefault("particle", "relativistic")
         if isinstance(part, str):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=UserWarning)
-                kwargs["particle"] = Particle(part)
-        return Lattice(self._generator, iterator=elegant_filter, use=use, **kwargs)
+                params["particle"] = Particle(part)
+
+        rev = beta() * clight / cell_length
+
+        # Set the cavities' Energy and harmonic number
+        for cav in cavities:
+            h = cav.Frequency / rev
+            cav.HarmNumber = h
 
 
 def load_elegant(
@@ -547,9 +572,8 @@ def load_elegant(
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     parser = ElegantParser(verbose=verbose)
-    absfiles = tuple(abspath(file) for file in files)
-    parser.parse_files(*absfiles)
-    return parser.lattice(use=use, in_file=absfiles, **kwargs)
+    parser.parse_files(*files)
+    return parser.lattice(use=use, **kwargs)
 
 
 _AT2EL = {
@@ -567,7 +591,7 @@ _AT2EL = {
 }
 
 
-class ElegantExporter(Exporter):
+class _ElegantExporter(Exporter):
     delimiter = ""
     continuation = "&"
     bool_fmt = {False: ".FALSE.", True: ".TRUE."}
@@ -586,16 +610,19 @@ def at2elegant(attype):
 def save_elegant(
     ring: Lattice,
     filename: str | None = None,
-    *,
-    use: str | None = None,
+    **kwargs,
 ):
     """Save a :py:class:`.Lattice` as an Elegant file
 
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
+
+    Keyword Args:
+        use (str | None): name of the created SEQUENCE of LINE.
+          Default: name of the PyAT lattice
     """
-    exporter = ElegantExporter(ring, use=use)
+    exporter = _ElegantExporter(ring, **kwargs)
     exporter.export(filename)
 
 

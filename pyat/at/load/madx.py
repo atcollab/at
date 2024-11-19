@@ -39,7 +39,7 @@ drift spaces.
 
 MAD elements absent from AT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Many MAD elements (…) have no equivalent in AT. They are replaced by
+Many MAD elements have no equivalent in AT. They are replaced by
 :py:class:`.Marker` or :py:class:`.Drift` elements, depending on their length.
 
 Incompatible attributes
@@ -58,6 +58,8 @@ When reading a MAD-X file:
 
 - `TILT` is interpreted and converted to `R1` and `R2` attributes,
 - `KTAP` is interpreted and converted to `FieldScaling`.
+
+.. _using-mad-x-files:
 
 2. Reading MAD-X files
 ----------------------
@@ -130,7 +132,6 @@ import warnings
 # functions known by MAD-X
 from math import pi, e, sqrt, exp, log, log10, sin, cos, tan  # noqa: F401
 from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
-from os.path import abspath
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
 import re
@@ -147,7 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, Filter, elements as elt, tilt_elem
+from ..lattice import Lattice, Particle, elements as elt, tilt_elem
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -189,10 +190,10 @@ class MadParameter(str):
         self.parser = parser
 
     def __float__(self):
-        return float(self.parser._evaluate(self))
+        return float(self.parser.evaluate(self))
 
     def __int__(self):
-        return int(self.parser._evaluate(self))
+        return int(self.parser.evaluate(self))
 
     def __add__(self, other):
         return float(self) + float(other)
@@ -231,7 +232,7 @@ class MadParameter(str):
         return +float(self)
 
     def evaluate(self):
-        return self.parser._evaluate(self)
+        return self.parser.evaluate(self)
 
 
 def sinc(x: float) -> float:
@@ -303,7 +304,7 @@ def p_list(a: Iterable[float], factor: float = 1.0):
 # noinspection PyUnusedLocal
 def _keyparser(parser, argcount, argstr):
     """Return the pair key, value for the given 'key' argument"""
-    return argstr, parser._evaluate(argstr)
+    return argstr, parser.evaluate(argstr)
 
 
 # ------------------------------
@@ -858,10 +859,10 @@ class _Beam:
 class _MadParser(LowerCaseParser, UnorderedParser):
     """Common class for both MAD8 anf MAD-X parsers"""
 
-    delimiter = ";"
-    linecomment = ("!", "//")
-    endfile = "return"
-    undef_key = "none"
+    _delimiter = ";"
+    _linecomment = ("!", "//")
+    _endfile = "return"
+    _undef_key = "none"
 
     _str_arguments = {"file", "refer", "refpos", "sequence", "from"}
 
@@ -917,7 +918,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         # Special treatment of "line=(...)" assignments
         if key == "line":
             val = val.replace(")", ",)")  # For tuples with a single item
-            return label, _Line(self._evaluate(val), name=label)
+            return label, _Line(self.evaluate(val), name=label)
         else:
             return super()._assign(label, key, val)
 
@@ -972,6 +973,38 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             beam = self["beam%"]
         return beam
 
+    def _generator(self, params: dict) -> Iterable[elt.Element]:
+        def beta() -> float:
+            rest_energy = params["particle"].rest_energy
+            if rest_energy == 0.0:
+                return 1.0
+            else:
+                gamma = float(params["energy"] / rest_energy)
+                return sqrt(1.0 - 1.0 / gamma / gamma)
+
+        # generate the Lattice attributes from the BEAM object
+        beam = self._get_beam(params["use"]).expand(self)
+        for key, val in beam.items():
+            params.setdefault(key, val)
+
+        cavities = []
+        cell_length = 0
+
+        for elem in super()._generator(params):
+            if isinstance(elem, elt.RFCavity):
+                cavities.append(elem)
+            cell_length += getattr(elem, "Length", 0.0)
+            yield elem
+
+        rev = beta() * clight / cell_length
+
+        # Set the frequency of cavities in which it is not specified
+        for cav in cavities:
+            if np.isnan(cav.Frequency):
+                cav.Frequency = rev * cav.HarmNumber
+            elif cav.HarmNumber == 0:
+                cav.HarmNumber = cav.Frequency / rev
+
     def lattice(self, use: str = "ring", **kwargs):
         """Create a lattice from the selected sequence
 
@@ -982,52 +1015,16 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         Keyword Args:
             name (str):         Name of the lattice. Default: MAD sequence name.
             particle(Particle): Circulating particle. Default: from MAD
-            energy (float):     Energy of the lattice [eV], Default: from MAD
+            energy (float):     Energy of the lattice [eV]. Default: from MAD
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-
-        def mad_filter(params: dict, elems: Filter, *args) -> Iterable[elt.Element]:
-            def beta() -> float:
-                rest_energy = params["particle"].rest_energy
-                if rest_energy == 0.0:
-                    return 1.0
-                else:
-                    gamma = float(params["energy"] / rest_energy)
-                    return sqrt(1.0 - 1.0 / gamma / gamma)
-
-            # generate the Lattice attributes from the BEAM object
-            beam = self._get_beam(params["use"]).expand(self)
-            for key, val in beam.items():
-                params.setdefault(key, val)
-
-            cavities = []
-            cell_length = 0
-
-            for elem in elems(params, *args):
-                if isinstance(elem, elt.RFCavity):
-                    cavities.append(elem)
-                cell_length += getattr(elem, "Length", 0.0)
-                yield elem
-
-            params["_length"] = cell_length
-            rev = beta() * clight / cell_length
-
-            # Set the frequency of cavities in which it is not specified
-            hn = 2147483647
-            for cav in cavities:
-                if np.isnan(cav.Frequency):
-                    cav.Frequency = rev * cav.HarmNumber
-                elif cav.HarmNumber == 0:
-                    cav.HarmNumber = cav.Frequency / rev
-                if cav.HarmNumber < hn:
-                    hn = cav.HarmNumber
-            params["_cell_harmnumber"] = hn
-
         part = kwargs.get("particle", None)
         if isinstance(part, str):
             kwargs["particle"] = Particle(part)
-        lat = Lattice(self._generator, iterator=mad_filter, use=use, **kwargs)
+
+        lat = super().lattice(use=use, **kwargs)
+
         try:
             radiate = lat.radiate
         except AttributeError:
@@ -1089,8 +1086,8 @@ class MadxParser(_MadParser):
         >>> arca = parser.lattice(use="ring")
     """
 
-    continuation = None
-    blockcomment = ("/*", "*/")
+    _continuation = None
+    _blockcomment = ("/*", "*/")
 
     def __init__(self, **kwargs):
         """
@@ -1112,7 +1109,11 @@ class MadxParser(_MadParser):
 
 
 def load_madx(
-    *files: str, use: str = "ring", strict: bool = True, verbose: bool = False, **kwargs
+    *files: str,
+    use: str = "ring",
+    strict: bool = True,
+    verbose: bool = False,
+    **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD-X files
 
@@ -1146,14 +1147,13 @@ def load_madx(
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     parser = MadxParser(strict=strict, verbose=verbose)
-    absfiles = tuple(abspath(file) for file in files)
     params = {
         key: kwargs.pop(key)
         for key in ("name", "particle", "energy", "periodicity")
         if key in kwargs
     }
-    parser.parse_files(*absfiles, **kwargs)
-    return parser.lattice(use=use, in_file=absfiles, **params)
+    parser.parse_files(*files, **kwargs)
+    return parser.lattice(use=use, **params)
 
 
 def longmultipole(kwargs):
@@ -1220,22 +1220,20 @@ class _MadxExporter(_MadExporter):
     bool_fmt = {False: "FALSE", True: "TRUE"}
 
 
-def save_madx(
-    ring: Lattice,
-    filename: str | None = None,
-    *,
-    use: str | None = None,
-    use_line: bool = False,
-):
+def save_madx(ring: Lattice, filename: str | None = None, **kwargs):
     """Save a :py:class:`.Lattice` as a MAD-X file
 
     Args:
         ring:   lattice
         filename: file to be created. If None, write to sys.stdout
-        use: name of the created SEQUENCE of LINE. Default: name of the PyAT lattice
-        use_line:  If True, use a MAD "LINE" format. Otherwise, use a MAD "SEQUENCE"
+
+    Keyword Args:
+        use (str | None): name of the created SEQUENCE of LINE.
+          Default: name of the PyAT lattice
+        use_line (bool):  If True, use a MAD "LINE" format. Otherwise, use
+          a MAD "SEQUENCE"
     """
-    exporter = _MadxExporter(ring, use_line=use_line, use=use)
+    exporter = _MadxExporter(ring, **kwargs)
     exporter.export(filename)
 
 
