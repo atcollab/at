@@ -23,17 +23,20 @@ function elem=atvariablemultipole(fname,varargin)
 %    FUNCA          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomB
 %    FUNCADERIV1    ARBITRARY excitation tbt kick list for PolynomA 1st
-%                   derivative wrt 5th coordinate
+%                   derivative wrt tau
 %    FUNCBDERIV1    ARBITRARY excitation tbt kick list for PolynomB 1st
-%                   derivative wrt 5th coordinate
+%                   derivative wrt tau
 %    FUNCADERIV2    ARBITRARY excitation tbt kick list for PolynomA 2nd
-%                   derivative wrt 5th coordinate
+%                   derivative wrt tau
 %    FUNCBDERIV2    ARBITRARY excitation tbt kick list for PolynomB 2nd
-%                   derivative wrt 5th coordinate
+%                   derivative wrt tau
 %    FUNCADERIV3    ARBITRARY excitation tbt kick list for PolynomA 3rd
-%                   derivative wrt 5th coordinate
+%                   derivative wrt tau
 %    FUNCBDERIV3    ARBITRARY excitation tbt kick list for PolynomB 3rd
-%                   derivative wrt 5th coordinate
+%                   derivative wrt tau
+%    FUNCTIMEDELAY  TimeDelay to generate a small time offset on the
+%                   function FUNC. It only has an effect if any of the
+%                   derivatives is not zero.
 %    PERIODIC       If true (default) the user input kick list is repeated
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
 %                   * t<t0: excitation amplitude is zero
@@ -98,7 +101,18 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if ~isfield(rsrc,funcarg)
             error(strcat('Please provide a value for Func',ab))
         end
-        rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
+        nsamples = length(rsrc.(funcarg));
+        rsrc.(strcat('NSamples',ab)) = nsamples;
+        for i = 1:4
+            funcarg=strcat('Func',ab,'deriv',num2str(i));
+            if ~isfield(rsrc,funcarg)
+                rsrc.(funcarg) = zeros(1,nsamples);
+            end
+        end
+        funcarg = strcat('Func',ab,'TimeDelay');
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
+        end
     end
 
     function rsrc = setparams(rsrc,mode,ab)
