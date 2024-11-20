@@ -1003,7 +1003,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             if np.isnan(cav.Frequency):
                 cav.Frequency = rev * cav.HarmNumber
             elif cav.HarmNumber == 0:
-                cav.HarmNumber = cav.Frequency / rev
+                cav.HarmNumber = round(cav.Frequency / rev)
 
     def lattice(self, use: str = "ring", **kwargs):
         """Create a lattice from the selected sequence
