@@ -3,79 +3,193 @@
 from __future__ import annotations
 
 __all__ = [
+    "set_argparser",
+    "skip_class",
+    "ignore_class",
+    "skip_names",
+    "ignore_names",
     "AnyDescr",
     "ElementDescr",
     "SequenceDescr",
     "BaseParser",
     "UnorderedParser",
+    "LowerCaseParser",
+    "UpperCaseParser",
     "DictNoDot",
 ]
 
 from os import getcwd
-from os.path import join, normpath, dirname
+from os.path import join, abspath, normpath, dirname
 import re
-import abc
-from itertools import repeat
-from collections.abc import Callable, Iterable, Generator, Mapping
+from itertools import repeat, count
+from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
+
+import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Element, Lattice, params_filter
+from ..lattice import Lattice, elements as elt, params_filter
 
-_dot = re.compile(r"\.?[a-z][\w.]*")  # An identifier: starts with a letter
-_singlequoted = re.compile(r"'([\w.]*)'")
-_named = re.compile(r"name=([\w.]*)")
-_doublequoted = re.compile(r'^"(.*)"$')
+_dot = re.compile(r'("?)(\.?[a-zA-Z_][\w.:]*)\1')  # look for MAD identifiers
+_colon = re.compile(r":(?!=)")  # split on :=
+
+# For decoding error messages:
+_singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
+_named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
 
 
-def _default_arg_parser(parser: BaseParser, argstr: str):
+def set_argparser(argparser):
+    """Decorator which adds an "argparser" attribute to a function"""
+
+    def decorator(func):
+        func.argparser = argparser
+        return func
+
+    return decorator
+
+
+def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
+    """Generate a class for skipped elements.
+
+    Args:
+        classname: Name of the generated class
+        baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
+        **kwargs: dictionary of additional attributes and methods. See :py:func:`type`.
+
+    Returns:
+        cls: Element class, skipped when generating AT elements
     """
-    Evaluate a keyword argument of a command and return the pair (key, value)
+
+    def init(self, *args, **kwargs):
+        baseclass.__init__(self, *args, **kwargs)
+        # if type(self) not in self.mentioned:
+        type1 = self.__class__.__name__
+        print(f"Element {self.name} ({type1}) is ignored.")
+        self._mentioned.add(type(self))
+
+    kwargs.update(__init__=init)
+    return type(classname, (baseclass,), kwargs)
+
+
+def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
+    """Generate a class for ignored elements.
+
+    Args:
+        classname: Name of the generated class
+        baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
+        **kwargs: dictionary of additional attributes and methods. See :py:func:`type`.
+
+    Returns:
+        cls: Element class, converted to :py:class:`.Marker` or :py:class:`.Drift`
+          when generating AT elements
     """
-    try:
-        key, value = split_ignoring_parentheses(argstr, delimiter="=")
-    except ValueError:  # Positional argument -> boolean flag
-        argstr = argstr.lower()
-        if argstr.startswith("-"):
-            v = False
-            key = argstr[1:]
+
+    def init(self, *args, **kwargs):
+        baseclass.__init__(self, *args, **kwargs)
+        # if type(self) not in self.mentioned:
+        if not args:  # not for replication
+            type1 = self.__class__.__name__
+            type2 = "Marker" if self.get("l", 0.0) == 0.0 else "Drift"
+            print(f"Element {self.name} ({type1}) is replaced by a {type2}.")
+            self._mentioned.add(type(self))
+
+    def to_at(self, l=0.0, origin="", **params):  # noqa: E741
+        if l == 0.0:
+            return [elt.Marker(self.name, origin=origin, **self.meval(params))]
         else:
-            key = argstr
-            v = True
-    else:  # Keyword argument
-        key = key.lower().replace("from", "frm")
-        # noinspection PyProtectedMember
-        if key in parser._str_arguments:
-            v = _doublequoted.sub(r"\1", value)
-        else:
-            v = parser.evaluate(value)
-    return key, v
+            return [elt.Drift(self.name, l, origin=origin, **self.meval(params))]
+
+    kwargs.update(__init__=init, to_at=to_at)
+    return type(classname, (baseclass,), kwargs)
+
+
+def ignore_names(
+    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str]
+) -> None:
+    """Add classes for ignored elements in the given namespace.
+
+    Args:
+        namespace:
+        baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
+        classnames: Class names of the generated classes
+    """
+    namespace.update((nm, ignore_class(nm, baseclass)) for nm in classnames)
+
+
+def skip_names(
+    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str]
+) -> None:
+    """Add classes for ignored elements in the given namespace.
+
+    Args:
+        namespace:
+        baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
+        classnames: Class names of the generated classes
+    """
+    namespace.update((nm, skip_class(nm, baseclass)) for nm in classnames)
 
 
 class DictNoDot(dict):
-    @staticmethod
-    def _no_dot(expr):
-        def repl(match):
-            return match.group().replace(".", "_")
+    @classmethod
+    def _defkey(cls, expr: str, quoted: bool) -> str:
+        """substitutions to get a valid python identifier"""
+        # Using classmethod to allow using super() in subclasses
+        return expr.replace(".", "_").replace(":", "_")
 
-        return _dot.sub(repl, expr.lower())
+    @classmethod
+    def _gen_key(cls, expr: str) -> str:
+        """Generate a dict key"""
+        if expr and expr[0] == '"':
+            return cls._defkey(expr[1:-1], True)
+        else:
+            return cls._defkey(expr, False)
+
+    @classmethod
+    def _gen_expr(cls, expr) -> str:
+        """Generate a valid python expression"""
+
+        def repl(match):
+            return cls._defkey(match.group(2), match.group(1))
+
+        return _dot.sub(repl, expr)
+
+    def __init__(self, *args, verbose: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.verbose = verbose
 
     def __setitem__(self, key, value):
-        super().__setitem__(self._no_dot(key), value)
+        super().__setitem__(self._gen_key(key), value)
 
     def __getitem__(self, key):
-        return super().__getitem__(self._no_dot(key))
+        return super().__getitem__(self._gen_key(key))
 
     def get(self, key, *args):
-        return super().get(self._no_dot(key), *args)
+        return super().get(self._gen_key(key), *args)
+
+    def _print(self, *args, **kwargs):
+        if self.verbose:
+            print(*args, **kwargs)
 
 
-class AnyDescr(abc.ABC):
+class AnyDescr:
     """Base class for source object descriptors"""
+
+    str_attr = ()
+    "list of names of str attributes"
+    bool_attr = ()
+    "list of names of bool attributes"
+    pos_args = ()
+    "list of names of positional arguments"
+
+    @classmethod
+    def argparser(cls, parser, argcount, argstr):
+        """Specialised argument parser"""
+        return parser._argparser(
+            argcount, argstr, bool_attr=cls.bool_attr, str_attr=cls.str_attr
+        )
 
     def __init__(self, *args, **kwargs):
         self.name = kwargs.pop("name", self.__class__.__name__)
         self.inverse = kwargs.pop("inverse", False)
-        # kwargs.setdefault("madclass", self.__class__.__name__)
         super().__init__(*args, **kwargs)
 
     def __neg__(self):
@@ -86,7 +200,6 @@ class AnyDescr(abc.ABC):
         if copy:
             b = {key: kwargs.pop(key, value) for key, value in vars(self).items()}
             b.update(kwargs)
-            # b.update(madclass=self.name)
             return type(self)(self, *args, **b)
         else:
             self.update(*args, **kwargs)
@@ -98,6 +211,7 @@ class AnyDescr(abc.ABC):
             setattr(self, key, kwargs.pop(key, value))
         if isinstance(self, Mapping):
             # Update mapping
+            # noinspection PyUnresolvedReferences
             super().update(*args, **kwargs)
         else:
             # Add new attributes
@@ -110,45 +224,80 @@ class AnyDescr(abc.ABC):
         instance.inverse = not self.inverse
         return instance
 
-    @abc.abstractmethod
-    def expand(self, parser: BaseParser) -> Generator[Element, None, None]:
-        """Iterator on the possibly inverted sequence of elements"""
-        pass
+    def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
+        """Iterator on the generated AT elements"""
+        yield from ()
 
 
 class ElementDescr(AnyDescr, dict):
-    """Simple representation of an element as a dict"""
+    """Simple representation of an element as a :py:class:`dict`"""
 
-    def __init__(self, *args, **kwargs):
-        kwargs.pop("copy", False)
-        kwargs.setdefault("madtype", self.__class__.__name__)
+    _mentioned = set()
+    at2mad = {"Length": "L"}
+    array_fmt = str.maketrans("[]()", "{}{}")
+    bool_fmt = None
+
+    def __init__(self, *args, origin=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.origin = origin or self.__class__.__name__
 
     def __getattr__(self, item):
         # Allows accessing items using the attribute access syntax
-        return self[item]
+        # tried after lookup for a real attribute failed
+        try:
+            return self[item]
+        except KeyError as exc:
+            # necessary for getattr to return the default value for a missing attribute
+            name = self.__class__.__name__
+            raise AttributeError(f"{name!r} object has no {item!r} attribute") from exc
 
     def __rmul__(self, other):
         """Element repetition"""
         return list(repeat(self, other))
 
     def __repr__(self):
-        descr = super().copy()
-        cls = descr.pop("madtype")
         keywords = [f"name={self.name}"]
-        keywords += [f"{k}={v!r}" for k, v in descr.items()]
-        return f"{cls}({', '.join(keywords)})"
+        keywords += [f"{k}={v!r}" for k, v in self.items()]
+        return f"{self.__class__.__name__}({', '.join(keywords)})"
+
+    def __str__(self):
+        attrs = [f"{key}={self.attr_format(value)}" for key, value in self.items()]
+        return ", ".join([self.__class__.__name__.upper().ljust(10)] + attrs)
 
     @staticmethod
-    def convert(name: str, *args, **params) -> list[Element]:
-        """Generate the AT element, Most be overloaded for each specific element"""
+    def attr_format(value):
+        if isinstance(value, bool):
+            return ElementDescr.bool_fmt[value]
+        elif isinstance(value, np.ndarray):
+            return np.array2string(value, separator=", ").translate(
+                ElementDescr.array_fmt
+            )
+        elif isinstance(value, Sequence):
+            return str(value).translate(ElementDescr.array_fmt)
+        else:
+            return str(value)
+
+    @classmethod
+    def from_at(cls, kwargs):
+        def translate(attributes):
+            for at, mad in cls.at2mad.items():
+                v = attributes.pop(at, None)
+                if v is not None:
+                    yield mad, v
+
+        params = {"name": kwargs.pop("FamName", "?")}
+        params.update(translate(kwargs))
+        return cls(**params)
+
+    def to_at(self, *args, **params) -> list[elt.Element]:
+        """Generate the AT element. Must be overloaded for each specific element"""
         return []
 
     # noinspection PyUnusedLocal
-    def expand(self, parser: BaseParser) -> Generator[Element, None, None]:
-        """Iterator on the possibly inverted sequence of elements"""
+    def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
+        """Iterator on the generated AT elements"""
         try:
-            elems = self.convert(self.name, **self)
+            elems = self.to_at(**self)
         except Exception as exc:
             exc.args += (f"{self}",)
             raise
@@ -164,13 +313,19 @@ class ElementDescr(AnyDescr, dict):
         """Element length"""
         return self.get("l", 0.0)
 
+    @staticmethod
+    def meval(params: dict):
+        """Evaluation of superfluous parameters"""
+        # return params
+        return {}
 
-class SequenceDescr(AnyDescr, list, abc.ABC):
-    """Simple representation of a sequence of elements as a list"""
+
+class SequenceDescr(AnyDescr, list):
+    """Simple representation of a sequence of elements as a :py:class:`list`"""
 
     def __repr__(self):
-        str = super().__repr__()
-        return f"{self.__class__.__name__}({str})"
+        string = super().__repr__()
+        return f"{self.__class__.__name__}({string})"
 
     @property
     def length(self) -> float:
@@ -189,33 +344,31 @@ class BaseParser(DictNoDot):
     The parser builds a database of all the defined objects
     """
 
-    _str_arguments = set()
-    _argument_parser = {}
+    _delimiter: str | None = None
+    _continuation: str = "\\"
+    _linecomment: str | tuple[str] | None = "#"
+    _blockcomment: tuple[str, str] | None = None
+    _endfile: str | None = None
+    _undef_key: str = "missing"
 
     def __init__(
         self,
         env: dict,
         *args,
-        delimiter: str | None = None,
-        continuation: str = "\\",
-        linecomment: str | tuple[str] | None = "#",
-        blockcomment: tuple[str, str] | None = None,
-        endfile: str | None = None,
-        verbose: bool = False,
+        strict: bool = True,
+        always_force: bool = True,
         **kwargs,
     ):
         """
         Args:
             env: global namespace used for evaluating commands
-            delimiter: command delimiter
-            continuation: command continuation character
-            linecomment: Line comment character
-            blockcomment: Block comment delimiter
-            endfile: "End of input" marker
             verbose: If True, print detail on the processing
+            strict: If :py:obj:`False`, assign 0 to undefined variables
             *args: dict initializer
             **kwargs: dict initializer
         """
+        linecomment = self._linecomment
+        blockcomment = self._blockcomment
         if isinstance(linecomment, tuple):
 
             def line_comment(line):
@@ -238,8 +391,13 @@ class BaseParser(DictNoDot):
         if blockcomment is None:
             # noinspection PyUnusedLocal
             def handle_comments(buffer, line, in_comment):
-                buffer.append(line_comment(line))
-                return False, ""
+                line = line_comment(line)
+                if line:
+                    buffer.append(line_comment(line))
+                    return False, ""
+                else:
+                    # Special case to avoid that empty lines break the continuation
+                    return False, None
 
         else:
 
@@ -250,35 +408,66 @@ class BaseParser(DictNoDot):
                     return in_comment, "" if in_comment > 0 else line
                 else:
                     line = line_comment(line)
-                    contents, *rest = line.split(sep=begcomment, maxsplit=1)
-                    buffer.append(contents)
-                    in_comment = len(rest) > 0
-                    return in_comment, rest[0] if in_comment else ""
+                    if line:
+                        contents, *rest = line.split(sep=begcomment, maxsplit=1)
+                        buffer.append(contents)
+                        in_comment = len(rest) > 0
+                        return in_comment, rest[0] if in_comment else ""
+                    else:
+                        # Special case to avoid that empty lines break the continuation
+                        return False, None
 
             begcomment, endcomment = blockcomment
 
         self.skip_comments = handle_comments
-        self.delimiter = delimiter
-        self.continuation = continuation
-        self.endfile = endfile
-        self._verbose = verbose
         self.env = env
         self.bases = [getcwd()]
         self.kwargs = kwargs
+        self.strict = strict
+        self.always_force = always_force
+        self.force = always_force
 
         super().__init__(*args, **kwargs)
 
-    def _print(self, *args, **kwargs):
-        if self._verbose:
-            print(*args, **kwargs)
+        if not strict:
+            self[self._undef_key] = 0
+        self.postponed = []
+        self.in_file = []
 
     def clear(self):
-        """Clean the database"""
+        """Clear the database: remove all parameters and objects"""
         super().clear()
         self.update(self.kwargs)
+        if not self.strict:
+            self[self._undef_key] = 0
+        self.postponed = []
+        self.in_file = []
 
-    def evaluate(self, expr):
-        """Evaluate an expression using *self* as local namespace"""
+    def _format_command(self, expr: str) -> str:
+        """Format a command for evaluation
+
+        Overload this method for specific languages"""
+        return expr
+
+    def evaluate(self, expr: str):
+        """Evaluate the right side of an expression
+
+        Args:
+            expr: expression to evaluate
+
+        Returns:
+            value: evaluated expression
+        """
+        expr = self._format_command(self._gen_expr(expr))
+        default_value = self.get(self._undef_key)
+        if self.force and default_value is not None:
+            for _loop in range(5):
+                try:
+                    return eval(expr, self.env, self)
+                except NameError as exc:
+                    var = self._reason(exc)
+                    self._print(f"Set {var!r} to {default_value} ({_loop})")
+                    self[var] = default_value
         return eval(expr, self.env, self)
 
     def _eval_cmd(self, cmdname: str, no_global: bool = False) -> Callable:
@@ -286,18 +475,13 @@ class BaseParser(DictNoDot):
         cmd: Callable | None = self.get(cmdname, None)
         if cmd is not None:
             return cmd
-        else:
-            cmdname = cmdname.lower()
-            cmd = self.env.get(cmdname, None)
-        if cmd is None:
-            raise KeyError(cmdname)
         elif no_global:
             raise TypeError(f"{cmdname!r} is not allowed in this context")
         else:
-            return cmd
+            return self.env[self._gen_key(cmdname)]
 
     @staticmethod
-    def _reason(exc: Exception) -> str:
+    def _reason(exc: Exception) -> str | None:
         """Extract the element name from the exception"""
         if isinstance(exc, KeyError):  # Undefined element, attribute
             return exc.args[0]
@@ -313,13 +497,45 @@ class BaseParser(DictNoDot):
                 return idx[1]
         elif isinstance(exc, ValueError):  # overlap
             print(exc.args[0])
-            return _singlequoted.search(exc.args[0])[1]
+            names = _singlequoted.search(exc.args[0])
+            return names[-1]
         else:
-            return type(exc).__name__
+            return None
 
-    def _argparser(self, command: str, *args: str):
-        argparser = self._argument_parser.get(command.lower(), _default_arg_parser)
-        return (argparser(self, arg) for arg in args)
+    def _argparser(
+        self,
+        argcount: int,
+        argstr: str,
+        *,
+        bool_attr: tuple[str] = (),
+        str_attr: tuple[str] = (),
+        pos_args: tuple[str] = (),
+    ):
+        """Evaluate the value of a command argument and return the pair (key, value)"""
+
+        def arg_value(k, v):
+            if k in str_attr:
+                return v[1:-1] if v[0] == '"' else v
+            else:
+                return self.evaluate(v)
+
+        key, *value = split_ignoring_parentheses(
+            argstr, delimiter="=", fence=('"', '"'), maxsplit=1
+        )
+        if value:  # Keyword argument
+            return key, arg_value(key, value[0])
+        else:
+            ok = argstr[0] != "-"
+            key = argstr if ok else argstr[1:]
+            if key in bool_attr:  # boolean flag
+                return key, ok
+            else:  # positional parameter
+                try:
+                    key = pos_args[argcount]
+                except IndexError:
+                    print(f"Unexpected positional argument '{argstr}' ignored")
+                    return None
+                return key, arg_value(key, argstr)
 
     def _assign(self, label: str, key: str, value: str):
         """Variable assignment"""
@@ -329,73 +545,162 @@ class BaseParser(DictNoDot):
         self,
         label: str | None,
         cmdname: str,
-        *argnames: str,
+        *args: str,
         no_global: bool = False,
         **kwargs,
     ):
         """Command execution"""
-        func = self._eval_cmd(cmdname, no_global=no_global)
-        kwargs.update(self._argparser(cmdname, *argnames))
+        # Get the command
+        cmd = self._eval_cmd(cmdname, no_global=no_global)
+        # Evaluate the arguments
+        argp = getattr(cmd, "argparser", None)
+        if argp:
+            ags = (argp(self, n, arg) for n, arg in enumerate(args) if arg)
+        else:
+            ags = (self._argparser(n, arg) for n, arg in enumerate(args) if arg)
+        kwargs.update(arg for arg in ags if arg is not None)
         if label is None:
             kwargs.setdefault("copy", False)
         else:
-            kwargs.setdefault("name", label)
-        return func(**kwargs)
+            kwargs.setdefault("name", label.replace('"', ""))
+        # Execute the command
+        return cmd(**kwargs)
 
-    def _command(self, *args, **kwargs):
+    def _command(self, *args: str, **kwargs):
         return self._raw_command(*args, **kwargs)
 
-    def _format_statement(self, line: str) -> str:
-        """Reformat the input line
-
-        Overload this method for specific languages"""
-        line, matches = protect(line, fence=('"', '"'))  # protect the quoted parts
-        line = "".join(line.split())  # Remove all spaces
-        (line,) = restore(matches, line)
-        return line
-
-    def _statement(self, line: str) -> bool:
-        """Split a statement in 'label: command'"""
-        fmtline = self._format_statement(line)
-        if self.endfile is not None and fmtline.startswith(self.endfile):
-            return False
-        label, *cmd = fmtline.split(":", maxsplit=1)
-        if cmd:  # label
-            fmtline = cmd[0]
-        else:  # no label
-            label = None
-
-        arguments = split_ignoring_parentheses(fmtline)
-        self._decode(label, *arguments)
-        return True
-
-    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
+    def _decode(self, label: str | None, cmdname: str, *args: str) -> None:
         """Execute the split statement"""
         left, *right = cmdname.split("=")
-        if right:
-            label, result = self._assign(label, left, right[0])
+        try:
+            if right:
+                label, result = self._assign(label, left, right[0])
+            else:
+                result = self._command(label, cmdname, *args)
+            if not (label is None or result is None):
+                self[label] = result
+        except (KeyError, NameError) as exc:  # store the failing assignment
+            self._fallback(exc, label, cmdname, *args)
+
+    def _fallback(self, exc: Exception, lbl: str | None, cmd: str, *args: str) -> None:
+        """Store failing commands in self.postponed for later evaluation"""
+        self.postponed.append((self._reason(exc), lbl, cmd, *args))
+
+    def _format_statement(self, line: str) -> str:
+        """Reformat the input line"""
+        return line.replace(" ", "")  # Remove all spaces
+
+    def _statement(self, line: str) -> bool:
+        # protect quoted items. Make sure placeholder cannot be modified
+        line, match1 = protect(line, fence=('"', '"'), placeholder="_0_")
+
+        if self._endfile is not None and line.startswith(self._endfile):
+            return False
+
+        *left, right = _colon.split(line, maxsplit=1)
+        right = self._format_statement(right)
+
+        # protect nested parentheses
+        cpt = count()
+        rpt = []
+        while "(" in right:
+            plh = str(next(cpt)).join(("_par", "_"))
+            right, match = protect(right, fence=("\\(", "\\)"), placeholder=plh)
+            rpt.append(match)
+
+        cmdargs = right.split(",")
+
+        # restore parentheses
+        for match in reversed(rpt):
+            cmdargs = restore(match, *cmdargs)
+
+        # restore quoted items
+        b = restore(match1, *left, *cmdargs)
+
+        # handle label
+        if left:
+            id = 1
+            label = b[0].replace(" ", "")
         else:
-            result = self._command(label, cmdname, *argnames)
-        if not (label is None or result is None):
-            self[label] = result
+            id = 0
+            label = None
+
+        # ignore MAD qualifiers
+        while b[id] in ["const", "int", "real"]:
+            id += 1
+
+        # process statement
+        self._decode(label, *b[id:])
+        return True
 
     def _finalise(self, final: bool = True) -> None:
         """Called at the end of processing"""
-        pass
+        if final:
+            undefined = self._missing(verbose=self.verbose)
+            self._print(f"{len(undefined)} missing definitions.")
+
+    @property
+    def sequences(self):
+        """List of available sequences or lines"""
+        return [k for k, v in self.items() if isinstance(v, SequenceDescr)]
 
     @staticmethod
-    def _command_str(_, label, cmdname, *argnames):
+    def _command_str(label: str | None, cmdname: str, *argnames: str):
         string = ", ".join((cmdname, *argnames))
         if label is not None:
             string = " : ".join((label, string))
         return string
 
-    def _analyse(self, key: str) -> None:
-        """Print info on failed statements"""
-        print(f"\n{key!r} is not defined\n")
+    def _lookup(self, item: str):
+        """Search for an object in the pending statements"""
+        for reason, label, *args in self.postponed:
+            if label is not None and self._gen_key(label) == item:
+                return (reason, label, *args)
+        return None
 
-    def expand(self, key: str) -> Generator[Element, None, None]:
+    def _missing(self, verbose=False):
+        """Return the set of missing definitions"""
+        miss = set()
+        for cmd in self.postponed:
+            reason = cmd[0]
+            if reason == self._gen_key(cmd[2]):
+                if verbose:
+                    cmdstr = self._command_str(*cmd[1:])
+                    self._print(f"Command {cmdstr!r} ignored")
+                continue
+            while cmd is not None:
+                reason = cmd[0]
+                cmd = self._lookup(reason)
+            miss.add(reason)
+        return miss
+
+    missing = property(_missing, doc="Set of missing definitions")
+
+    def _analyse(self, key: str) -> None:
+        """Print the chain of failing commands"""
+        if isinstance(key, str):
+            reason = self._gen_key(key)
+            cmd = self._lookup(reason)
+            while cmd is not None:
+                reason, *cmdargs = cmd
+                cmdstr = self._command_str(*cmdargs)
+                print(f"\n{key!r} depends on {reason!r}: {cmdstr!r}")
+                key = reason
+                cmd = self._lookup(reason)
+            print(f"\n{reason!r} is not defined\n")
+
+    @property
+    def ignored(self):
+        """Set of ignored commands"""
+        ignd = set()
+        for cmd in self.postponed:
+            if cmd[0] == self._gen_key(cmd[2]):
+                ignd.add(cmd[2])
+        return ignd
+
+    def expand(self, key: str) -> Generator[elt.Element, None, None]:
         """iterator over AT objects generated by a source object"""
+        self.force = True
         try:
             v = self[key]
             if isinstance(v, AnyDescr):
@@ -403,16 +708,19 @@ class BaseParser(DictNoDot):
             else:
                 yield v
         except Exception as exc:
-            print(f"{type(exc).__name__}: {exc.args[0]}")
-            for arg in exc.args[1:]:
-                print(arg)
+            strargs = (arg for arg in exc.args if isinstance(arg, str))
+            print(f"{type(exc).__name__}: {': '.join(strargs)}")
             self._analyse(self._reason(exc))
             raise
+        finally:
+            self.force = self.always_force
 
     def _generator(self, params):
         """Generate AT elements for the Lattice constructor"""
         use = params.setdefault("use", "ring")
         params.setdefault("name", use)
+        params.setdefault("energy", 1.0e9)
+        params.setdefault("periodicity", 1)
 
         # Iterate from the elements
         yield from self.expand(use)
@@ -421,21 +729,28 @@ class BaseParser(DictNoDot):
         """Create a lattice from the selected sequence
 
         Parameters:
-            use:                Name of the MADX sequence or line containing the desired
+            use:                Name of the sequence or line containing the desired
               lattice. Default: ``ring``
 
         Keyword Args:
-            name (str):         Name of the lattice. Default: MADX sequence name.
-            particle(Particle): Circulating particle. Default: from MADX
-            energy (float):     Energy of the lattice [eV], Default: from MADX
+            name (str):         Name of the lattice. Default: sequence name.
+            particle(Particle): Circulating particle. Default: Particle("relativistic")
+            energy (float):     Energy of the lattice [eV]. Default: 1.0 GeV
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
         """
-        return Lattice(self._generator, iterator=params_filter, use=use, **kwargs)
+        return Lattice(
+            self._generator,
+            iterator=params_filter,
+            in_file=self.in_file or None,
+            use=use,
+            **kwargs,
+        )
 
     def parse_lines(
         self,
         lines: Iterable[str],
+        *,
         final: bool = True,
         **kwargs,
     ) -> None:
@@ -455,6 +770,9 @@ class BaseParser(DictNoDot):
             # Handle comments
             while contents:
                 in_comment, contents = self.skip_comments(buffer, contents, in_comment)
+            if contents is None:
+                # Special case to avoid that empty lines break the continuation
+                continue
 
             if buffer:
                 contents = "".join(buffer).strip()
@@ -464,19 +782,18 @@ class BaseParser(DictNoDot):
             else:
                 continue
 
-            # print(repr(contents))
             # Handle delimiters
-            if self.delimiter is None:
+            if self._delimiter is None:
                 statements = []
                 last = contents
             else:
-                *statements, last = contents.split(sep=self.delimiter)
+                *statements, last = contents.split(sep=self._delimiter)
 
             # Handle continuation
-            if self.continuation is None:
+            if self._continuation is None:
                 buffer.append(last)
             else:
-                idc = last.find(self.continuation)
+                idc = last.find(self._continuation)
                 if idc >= 0:
                     buffer.append(last[:idc])
                 else:
@@ -491,6 +808,7 @@ class BaseParser(DictNoDot):
                     ok = self._statement(stmnt)
                 except Exception as exc:
                     message = f"Line {line_number} {stmnt!r}, {exc}"
+                    print(message)
                     raise type(exc)(message) from exc
                 if not ok:
                     break
@@ -519,7 +837,10 @@ class BaseParser(DictNoDot):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
+        filenames = tuple(abspath(file) for file in filenames)
+        self.in_file.extend(filenames)
         last = len(filenames) - 1
+        ElementDescr._mentioned.clear()
         for nf, fn in enumerate(filenames):
             fn = normpath(join(self.bases[-1], fn))
             self.bases.append(dirname(fn))
@@ -542,7 +863,7 @@ class BaseParser(DictNoDot):
 
 
 class UnorderedParser(BaseParser):
-    """parser allowing definitions in any order
+    """Parser allowing definitions in any order
 
     This is done by storing the failed statements in a queue and iteratively trying
     to execute them after all input statements have been processed, until the number
@@ -553,81 +874,67 @@ class UnorderedParser(BaseParser):
         """
         Args:
             env: global namespace
-            delimiter: command delimiter
-            continuation: command continuation character
-            linecomment: Line comment character
-            blockcomment: Block comment delimiter
-            endfile: End of input marker
             verbose: If True, print detail on the processing
             *args: dict initializer
             **kwargs: dict initializer
         """
-        super().__init__(env, *args, **kwargs)
-        self.delayed = []
-
-    def clear(self):
-        super().clear()
-        self.delayed = []
-
-    def _postpone(self, reason, label, cmdname, *argnames):
-        """Store failing commands in self.delayed for later evaluation"""
-        self.delayed.append((reason, label, cmdname, *argnames))
-
-    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
-        """Postpone failing commands"""
-        try:
-            super()._decode(label, cmdname, *argnames)
-        except (KeyError, NameError) as exc:  # store the failing assignment
-            self._postpone(self._reason(exc), label, cmdname, *argnames)
+        super().__init__(env, *args, always_force=False, **kwargs)
 
     def _finalise(self, final: bool = True) -> None:
         """Loop on evaluation of the pending statements"""
-        nend = len(self.delayed)
-        if nend > 0:
-            self._print(f"\nDelayed evaluation of {nend} statements\n")
-        while nend > 0:
-            statements = self.delayed
-            self.delayed = []
-            nstart = nend
-            for _reason, *args in statements:
-                self._decode(*args)
-            nend = len(self.delayed)
-            if nend == nstart:
-                break
 
-    def _lookup(self, item: str):
-        """Search for an object in the pending statements"""
-        for reason, label, *args in self.delayed:
-            if label is not None and label.lower() == item:
-                return (reason, label, *args)
-        return None
+        def replay():
+            nend = len(self.postponed)
+            while nend > 0:
+                self._print(f"Delayed evaluation of {nend} statements")
+                nstart = nend
+                statements = self.postponed
+                self.postponed = []
+                for _reason, *args in statements:
+                    self._decode(*args)
+                nend = len(self.postponed)
+                if nend == nstart:
+                    break
 
-    def _missing(self, verbose: bool = False):
-        miss = set()
-        for cmd in self.delayed:
-            reason = cmd[0]
-            if reason == cmd[2].lower():
-                if verbose:
-                    print(
-                        f"Unknown command {cmd[2]!r} ignored: "
-                        f"{self._command_str(*cmd)!r}"
-                    )
-                continue
-            while cmd is not None:
-                reason = cmd[0]
-                cmd = self._lookup(reason)
-            miss.add(reason)
-        return miss
+        # at the end of each file: try again previously failing commands
+        replay()
 
-    def _analyse(self, key: str) -> None:
-        """Print the chain of failing commands"""
-        cmd = self._lookup(key.lower())
-        reason = key
-        while cmd is not None:
-            reason = cmd[0]
-            print(f"\n{key!r} depends on {reason!r}: {self._command_str(*cmd)!r}")
-            key = reason
-            cmd = self._lookup(reason)
-        print(f"\n{reason!r} is not defined\n")
+        # After the last file: initialize the remaining undefined variables
+        default_value = self.get(self._undef_key)
+        if final:
+            undefined = self._missing(verbose=self.verbose)
+            self._print(f"{len(undefined)} missing definitions.")
+            if undefined and default_value is not None:
+                for var in undefined:
+                    self._print(f"Set {var} to {default_value}")
+                    self[var] = default_value
+                # last trial
+                replay()
 
-    missing = property(_missing, doc="Set of missing definitions")
+
+class LowerCaseParser(BaseParser):
+    """Case independent parser"""
+
+    @classmethod
+    def _defkey(cls, expr: str, quoted: bool) -> str:
+        """substitutions to get a valid python identifier"""
+        expr = super()._defkey(expr, quoted)
+        return expr if quoted else expr.lower()
+
+    def _format_statement(self, line: str) -> str:
+        """Reformat the input line"""
+        return super()._format_statement(line.lower())
+
+
+class UpperCaseParser(BaseParser):
+    """Case independent parser"""
+
+    @classmethod
+    def _defkey(cls, expr: str, quoted: bool) -> str:
+        """substitutions to get a valid python identifier"""
+        expr = super()._defkey(expr, quoted)
+        return expr if quoted else expr.upper()
+
+    def _format_statement(self, line: str) -> str:
+        """Reformat the input line"""
+        return super()._format_statement(line.upper())
