@@ -26,6 +26,7 @@ Sub-packages
 
    howto/Installation
    howto/Primer
+   notebooks/ATPrimer
    notebooks/variables
    notebooks/observables
 
