@@ -26,8 +26,7 @@ Sub-packages
 
    howto/Installation
    notebooks/ATPrimer
-   notebooks/variables
-   notebooks/observables
+   examples
 
 .. toctree::
    :maxdepth: 2
