@@ -147,7 +147,7 @@ latex_documents = [
         False,
     ),
 ]
-latex_logo = "images/AT.png"
+latex_logo = "images/ATlarge.png"
 
 
 # -- Options for copybutton  -------------------------------------------------
