@@ -25,9 +25,8 @@ Sub-packages
    :hidden:
 
    howto/Installation
-   howto/Primer
-   notebooks/variables
-   notebooks/observables
+   notebooks/ATPrimer
+   examples
 
 .. toctree::
    :maxdepth: 2
