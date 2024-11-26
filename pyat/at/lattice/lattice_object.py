@@ -98,12 +98,13 @@ class Lattice(list):
 
     # noinspection PyUnusedLocal
     def __init__(self, *args, iterator: Filter = None, scan: bool = False, **kwargs):
+        # noinspection PyUnresolvedReferences
         """
-        Lattice(elements, **params)
-        Lattice(filter, [filter, ...,] iterator=iter,**params)
+        Lattice(elements: Iterable[Element], **params)
+        Lattice(filter, [filter, ...,] iterator=iter, **params)
 
         Parameters:
-            elements: iterable of Element objects
+            elements: iterable of Element objects.
             iter: function called as :pycode:`iter(params, *args)`. It must
               return an iterable of :py:class:`.Element` objects for building
               the lattice. It must also fill the *params* dictionary providing
@@ -113,19 +114,18 @@ class Lattice(list):
               parameters will be set as Lattice attributes.
 
         Keyword Arguments:
-            name='':        Name of the lattice
-            energy:         Energy of the lattice
-            periodicity=1:  Number of periods
-            particle='relativistic': circulating particle. May be
-              'relativistic', 'electron', 'positron', 'proton'
-              or a Particle object
-            iterator=None:  custom iterator (see below)
-            *: all other keywords will be set as attributes of
-              the Lattice object
-            beam_current:   Total current in the beam, used for collective
-              effects
+            name (str): Name of the lattice, Default: "".
+            energy (float):  Energy of the beam.
+            periodicity (int): Number of periods. Default: 1. If <= 0, it will be
+              deduced from the sum of bending angles.
+            particle (Particle | str): circulating particle. May be "relativistic",
+              "electron", "positron", "proton", "antiproton", "posmuon", "negmuon"
+              or a Particle object. Default: "relativistic".
+            iterator:  custom iterator (see below). Default :py:obj:`None`.
+            *: all other keywords will be set as attributes of the Lattice object.
+            beam_current:   Total current in the beam, used for collective effects [A].
 
-        An iterator ``it`` is called as ``it(params, *args)`` where ``args``
+        An iterator ``it`` is called as :pycode:`it(params, *args)` where ``args``
         and ``params`` are the arguments of the ``Lattice`` constructor. It
         must yield the AT ``Elements`` for building the lattice. It must
         also fill its ``params`` dictionary argument, which will be used to
@@ -147,13 +147,12 @@ class Lattice(list):
         .. Note::
 
            It is possible to define a filling pattern for the beam using the
-           function ``ring.set_fillingpattern()``. The default configuration
+           function :pycode:`ring.set_fillingpattern()`. The default configuration
            (no arguments) is for single bunch and is the one loaded at lattice
            initialization. See function help for details.
            Changing ``Lattice.harmonic_number`` will reset the filling pattern
            to its default configuration.
-           The beam current can be changed with
-           ``Lattice.beam_current=current``
+           The beam current can be changed with :pycode:`Lattice.beam_current = current`
            The filling pattern and beam current are used by collective effects
            passmethods.
 
@@ -161,10 +160,8 @@ class Lattice(list):
         Examples:
             Chaining iterators (taken from ``load_mat``):
 
-            .. code-block:: python
-
-               Lattice(ringparam_filter, matfile_generator, filename
-                       iterator=params_filter, **params)
+            >>> ring = Lattice(ringparam_filter, matfile_generator, filename,
+                               iterator=params_filter, **params)
 
             ``matfile_generator(params, filename)``
                 opens filename and generates AT elements for each cell of the
@@ -1468,7 +1465,7 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
 
     periodicity is taken from:
         1) The params dictionary
-        2) Sum of the bending angles of magnets
+        2) if periodicity <= 0, from the sum of the bending angles of magnets
     """
     el_energies = []
     thetas = []
@@ -1505,19 +1502,18 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
                 warn(AtWarning('Inconsistent energy values, '
                                '"energy" set to {0}'.format(energy)))
 
-    if 'periodicity' not in params:
+    if params.setdefault("periodicity", 1) <= 0:
         # Guess periodicity from the bending angles of the lattice
         try:
             nbp = 2.0 * numpy.pi / sum(thetas)
         except ZeroDivisionError:
             periodicity = 1
-            warn(AtWarning('No bending in the cell, set "Periodicity" to 1'))
+            warn(AtWarning("No bending in the cell, set \"Periodicity\" to 1"))
         else:
             periodicity = int(round(nbp))
             if abs(periodicity - nbp) > _TWO_PI_ERROR:
-                warn(AtWarning('Non-integer number of cells: '
-                               '{0} -> {1}'.format(nbp, periodicity)))
-        params['periodicity'] = periodicity
+                warn(AtWarning(f"Non-integer number of cells: {nbp} -> {periodicity}"))
+        params["periodicity"] = periodicity
 
 
 Lattice.get_uint32_index = get_uint32_index
