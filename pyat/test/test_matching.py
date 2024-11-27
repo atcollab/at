@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 # import at
-from at.lattice import Lattice
+from at.lattice import Lattice, End
 from at.latticetools import LocalOpticsObservable, GlobalOpticsObservable
 from at.latticetools import EmittanceObservable, ObservableList
 from at.future import RefptsVariable, VariableList, match
@@ -27,6 +27,18 @@ def mring(hmba_lattice: Lattice):
     ring.insert(sf[0], sf1[0])
     ring.periodicity = 1
     return ring
+
+
+@pytest.fixture()
+def mline(hmba_lattice: Lattice):
+    """Return hmba lattice with focusing sextupoles split."""
+    ring = hmba_lattice.deepcopy()
+    twiss_in, _, _ = ring.linopt6()
+    sf = ring.get_uint32_index("SF*")
+    sf1 = ring[sf[0]].divide([0.5, 0.5])
+    ring.pop(sf[0])
+    ring.insert(sf[0], sf1[0])
+    return ring[:sf[0]+1], twiss_in
 
 
 def test_linopt_matching(mring: Lattice):
@@ -116,3 +128,22 @@ def test_envelope_matching(mring: Lattice):
     # check the residuals
     obs.evaluate(newring)
     assert obs.sum_residuals < 1.0e-12
+
+
+def test_line_matching(mline):
+    line, twiss_in = mline
+    names = ["QF1*", "QD2*"]
+    variables = VariableList(
+        RefptsVariable(nm, "PolynomB", index=1, name=nm, ring=line) for nm in names
+    )
+
+    # Define the constraints: set alpha = [0.0, 0.0] at the end of the line
+    obs = ObservableList(twiss_in=twiss_in)
+    obs.append(LocalOpticsObservable(End, "alpha", target=[0.0, 0.0]))
+
+    # Perform the fit
+    newline = match(line, variables, obs, copy=True)
+
+    # check the residuals
+    obs.evaluate(newline)
+    assert obs.sum_residuals < 1.0e-08
