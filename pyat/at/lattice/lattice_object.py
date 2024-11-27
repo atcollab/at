@@ -34,7 +34,7 @@ if sys.version_info.minor < 9:
 else:
     from typing import SupportsIndex
     from collections.abc import Callable, Iterable, Generator
-from warnings import warn
+import warnings
 
 import numpy as np
 
@@ -85,6 +85,7 @@ _DEFAULT_PASS = {
 
 # Don't warn on floating-point errors
 np.seterr(divide="ignore", invalid="ignore")
+warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 # noinspection PyAttributeOutsideInit
@@ -420,7 +421,7 @@ class Lattice(list):
             nbp = periodicity / n
             periodicity = int(round(nbp))
             if abs(periodicity - nbp) > _TWO_PI_ERROR:
-                warn(
+                warnings.warn(
                     AtWarning(
                         f"Non-integer number of cells: {self.periodicity}/{n}."
                         " Periodicity set to 1"
@@ -881,7 +882,7 @@ class Lattice(list):
         #                   .format(value, int(self.periodicity)))
         self._cell_harmnumber = cell_h
         if len(self._fillpattern) != value:
-            warn(
+            warnings.warn(
                 AtWarning(
                     "Harmonic number changed, resetting fillpattern to "
                     "default (single bunch)."
@@ -1322,7 +1323,7 @@ class Lattice(list):
         break_elems = np.reshape(break_elems, -1)
         # Check element lengths
         if not all(e.Length == 0 for e in break_elems):
-            warn(
+            warnings.warn(
                 AtWarning("Inserting elements with length!=0 may change the lattice"),
                 stacklevel=2,
             )
@@ -1480,7 +1481,7 @@ def type_filter(params, elems: Iterable[Element]) -> Generator[Element, None, No
                 radiate = True
             yield elem
         else:
-            warn(
+            warnings.warn(
                 AtWarning(f"item {idx} ({elem}) is not an AT element: " "ignored"),
                 stacklevel=2,
             )
@@ -1547,7 +1548,7 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
             # Guess energy from the Energy attribute of the elements
             energy = params.setdefault("energy", max(energies))
             if min(energies) < max(energies):
-                warn(
+                warnings.warn(
                     AtWarning(
                         "Inconsistent energy values, " f'"energy" set to {energy}'
                     ),
@@ -1560,14 +1561,14 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
             nbp = 2.0 * np.pi / sum(thetas)
         except ZeroDivisionError:
             periodicity = 1
-            warn(
+            warnings.warn(
                 AtWarning('No bending in the cell, set "Periodicity" to 1'),
                 stacklevel=2,
             )
         else:
             periodicity = int(round(nbp))
             if abs(periodicity - nbp) > _TWO_PI_ERROR:
-                warn(
+                warnings.warn(
                     AtWarning(f"Non-integer number of cells: {nbp} -> {periodicity}"),
                     stacklevel=2,
                 )
