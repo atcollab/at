@@ -2,5 +2,4 @@
 
 from .observables import *
 from .observablelist import *
-from .matching import *
 from .response_matrix import *
