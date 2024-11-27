@@ -41,6 +41,49 @@
 #include <stdio.h>
 #endif
 
+/* struct used for GWigSymplecticRadPass */
+struct gwigR{
+  int Pmethod;      /* Integration Method */
+  int PN;           /* Number of integration steps */
+  double E0;        /* Energy of ring, [GeV] */
+  double PB0;       /* B0 in [Tesla] */
+  int Nw;           /* Number of periods */
+  double Lw;        /* Wiggler Period [m] */
+  int NHharm;       /* No. of horizontal harmonics */
+  int NVharm;       /* No. of vertical harmonics */
+  double Aw;        /* Wiggler parameter */
+  double Zw;        /* Longitudinal variable [m] */
+  double zStartH;
+  double zStartV;  /* Start and end z coordinates of the wiggler field, which are computed */
+  double zEndH;
+  double zEndV;      /* based on the phase of the first harmonic to get matched dispersion. */
+  double srCoef;
+  double Po;        /* beta*gamma for reference particle */
+  int HSplitPole;
+  int VSplitPole;
+
+  double HCw[WHmax];
+  double VCw[WHmax];
+  double HCw_raw[WHmax];
+  double VCw_raw[WHmax];
+  double Hkx[WHmax];
+  double Hky[WHmax];
+  double Hkz[WHmax];
+  double Htz[WHmax];
+  double Vkx[WHmax];
+  double Vky[WHmax];
+  double Vkz[WHmax];
+  double Vtz[WHmax];
+};
+
+static const double q_e    = 1.602176462e-19; /* electron charge, [C] */
+static const double m_e    = 9.10938188e-31;  /* electron mass, [kg] */
+static const double clight = 2.99792458e8;    /* speed of light [m/s] */
+static const double r_e    = 2.817940285e-15; /* electron classic radius,[m]*/
+static const double XMC2   = 0.510998902e-03; /* mc^2 in GeV */
+static const double PI     = 3.141592653589793238462643383279502884197e0;
+static const double epsilon_o = 8.854187817e-12;  /*Vacuum permittivity*/
+
 #define SQR(X) ((X)*(X))
 
 static void GWigGauge(struct gwigR *pWig, double *X, int flag);
@@ -823,4 +866,13 @@ static void AyHessian(struct gwigR *pWig, double *Xvec, double *pay)
   pay[3]   = ayy;
   pay[4]   = ayyy;
   pay[5]   = ayxy;
+}
+
+static void print66(const char *title, double *m)
+{
+    atPrintf("\n%s\n", title);
+    for (int i=0; i<6; i++) {
+        int k=6*i;
+        atPrintf("%.12g, %.12g, %.12g, %.12g, %.12g, %.12g\n", m[k+0], m[k+1], m[k+2], m[k+3], m[k+4], m[k+5]);
+    }
 }

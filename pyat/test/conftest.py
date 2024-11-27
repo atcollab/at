@@ -61,13 +61,6 @@ def hmba_lattice():
 
 
 @pytest.fixture(scope='session')
-def noenergy_lattice():
-    with as_file(files(machine_data) / 'noenergy.mat') as path:
-        ring = at.load_lattice(path)
-    return ring
-
-
-@pytest.fixture(scope='session')
 def noringparam_lattice():
     with as_file(files(machine_data) / 'noringparam.mat') as path:
         ring = at.load_lattice(path)

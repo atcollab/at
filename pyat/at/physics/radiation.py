@@ -17,15 +17,22 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy as np
 from scipy.linalg import inv, det, solve_sylvester
 
-from at.lattice import Dipole, Wiggler, DConstant
-from at.lattice import Lattice, check_radiation, Refpts, All
-from at.lattice import Quadrupole, Multipole, QuantumDiffusion
-from at.lattice import Collective, SimpleQuantDiff
-from at.lattice import frequency_control, set_value_refpts
-from at.physics import ELossMethod
-from at.physics import find_mpole_raddiff_matrix, FDW, get_tunes_damp
-from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
-from at.tracking import internal_lpass
+from ..lattice import Dipole, Wiggler, DConstant, test_mode
+from ..lattice import Lattice, Element, check_radiation, Refpts, All
+from ..lattice import Quadrupole, Multipole, QuantumDiffusion
+from ..lattice import Collective, SimpleQuantDiff
+from ..lattice import frequency_control, set_value_refpts
+from . import ELossMethod
+from . import find_mpole_raddiff_matrix, FDW, get_tunes_damp
+from . import find_orbit6, find_m66, find_elem_m66, Orbit
+from ..tracking import internal_lpass, diffusion_matrix
+
+_new_methods = {
+    "BndMPoleSymplectic4RadPass",
+    "StrMPoleSymplectic4RadPass",
+    "ExactMultipoleRadPass",
+    "GWigSymplectic4RadPass",
+}
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -40,6 +47,8 @@ ENVELOPE_DTYPE = [
     ("emitXY", np.float64, (2,)),
     ("emitXYZ", np.float64, (3,)),
 ]
+
+_b0 = np.zeros((6, 6), dtype=np.float64)
 
 
 def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
@@ -57,14 +66,22 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
             cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
-    def diffusion_matrix(elem, orbit, energy):
+    def substitute(elem):
+        if elem.PassMethod not in _new_methods:
+            elem = elem.copy()
+            elem.PassMethod = "StrMPoleSymplectic4RadPass"
+        return elem
+
+    def elem_diffusion(elem: Element, elemorb):
         if elem.PassMethod.endswith("RadPass"):
-            if hasattr(elem, "Bmax"):
+            if not test_mode():
+                return diffusion_matrix(substitute(elem), elemorb, energy=energy)
+            elif hasattr(elem, "Bmax"):
                 return FDW(elem, orbit, energy)
             else:
-                return find_mpole_raddiff_matrix(elem, orbit, energy)
+                return find_mpole_raddiff_matrix(elem, elemorb, energy)
         else:
-            return b0
+            return _b0
 
     energy = ring.energy
 
@@ -78,8 +95,9 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         ),
         axis=(1, 3),
     ).T
-    b0 = np.zeros((6, 6))
-    bb = [diffusion_matrix(elem, elemorb, energy) for elem, elemorb in zip(ring, orbs)]
+
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
+
     bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
@@ -126,7 +144,7 @@ def ohmi_envelope(
         emit (np.recarray):      Emittance data at the points selected to by
           ``refpts``
 
-    **emit** is a :py:obj:`record array <np.recarray>` with the following
+    **emit** is a :py:obj:`record array <numpy.recarray>` with the following
     fields:
 
     ================    ===================================================
@@ -143,7 +161,7 @@ def ohmi_envelope(
     Field values can be obtained with either
     ``emit['r66']`` or ``emit.r66``
 
-    **beamdata** is a :py:obj:`record array <np.recarray>` with the
+    **beamdata** is a :py:obj:`record array <numpy.recarray>` with the
     following fields:
 
     ====================  ===================================================
@@ -259,8 +277,8 @@ def get_radiation_integrals(
         etap0 = vini.dispersion[1]
         theta = getattr(elem, "BendingAngle", None)
         if theta is None:
-            xpi = vini.closed_orbit[1] / (1 + vini.closed_orbit[4])
-            xpo = vend.closed_orbit[1] / (1 + vend.closed_orbit[4])
+            xpi = vini.closed_orbit[1] / (1.0 + vini.closed_orbit[4])
+            xpo = vend.closed_orbit[1] / (1.0 + vend.closed_orbit[4])
             theta = xpi - xpo
         if abs(theta) < 1.0e-7:
             return np.zeros(5)
