@@ -8,4 +8,3 @@ Example notebooks
 
    notebooks/variables
    notebooks/observables
-   notebooks/test_variables
