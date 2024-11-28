@@ -69,8 +69,8 @@ machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
 # Pypy does not have Scipy so we cannot support it.
-# build = ["cp3{7,8,9,10,11,12,13}*"]
-build = ["cp312-*"]  # Only cp312 for test
+build = ["cp3{7,8,9,10,11,12,13}*"]
+# build = ["cp312-*"]  # Only cp312 for test
 # Skip 32-bit builds
 skip = ["*-win32", "*_i686"]
 build-verbosity = "1"
