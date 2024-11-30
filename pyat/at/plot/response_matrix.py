@@ -1,18 +1,13 @@
 from __future__ import annotations
 from ..lattice import Lattice
-from ..latticetools import SvdSolver, ResponseMatrix
+from ..latticetools import ResponseMatrix
 from typing import Optional
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
 
-def plot_norm(resp: SvdSolver, ax: Optional[tuple[Axes, Axes]] = None) -> None:
-    r"""Plot the norm of :py:class:`.Observable`\ s and
-    :py:class:`~.variables.Variable`\ s of a response matrix
-
-    Plot the norm of the lines of the weighted response matrix
-    (:py:class:`.Observable`\ s) and of its columns
-    (:py:class:`~.variables.Variable`\ s)
+def plot_norm(resp: ResponseMatrix, ax: Optional[tuple[Axes, Axes]] = None) -> None:
+    r"""Plot the norm of the lines and columns of the weighted response matrix
 
     For a stable solution, the norms should have the same order of magnitude.
     If not, the weights of observables and variables should be adjusted.
@@ -36,7 +31,7 @@ def plot_norm(resp: SvdSolver, ax: Optional[tuple[Axes, Axes]] = None) -> None:
 
 
 def plot_singular_values(
-    resp: SvdSolver, ax: Axes = None, logscale: bool = True
+    resp: ResponseMatrix, ax: Axes = None, logscale: bool = True
 ) -> None:
     r"""Plot the singular values of a response matrix
 
@@ -111,7 +106,7 @@ def plot_var_analysis(
     ax.set_xlabel("Singular vector #")
 
 
-SvdSolver.plot_norm = plot_norm
-SvdSolver.plot_singular_values = plot_singular_values
+ResponseMatrix.plot_norm = plot_norm
+ResponseMatrix.plot_singular_values = plot_singular_values
 ResponseMatrix.plot_obs_analysis = plot_obs_analysis
 ResponseMatrix.plot_var_analysis = plot_var_analysis
