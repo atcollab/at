@@ -1,18 +1,114 @@
-"""Definition of :py:class:`.ResponseMatrix` objects."""
+# noinspection PyUnresolvedReferences
+r"""Definition of :py:class:`.ResponseMatrix` objects.
+
+A :py:class:`ResponseMatrix` object defines a general-purpose response matrix, based
+on a :py:class:`.VariableList` of attributes which will be independently varied, and an
+:py:class:`.ObservableList` of attributes which will be recorded for each
+variable step.
+
+:py:class:`ResponseMatrix` objects can be combined with the "+" operator to define
+combined responses. This concatenates the variables and the observables.
+
+This module also defines two commonly used response matrices:
+:py:class:`OrbitResponseMatrix` for circular machines and
+:py:class:`TrajectoryResponseMatrix` for beam lines. Other matrices can be easily
+defined by providing the desired Observables and Variables to the
+:py:class:`ResponseMatrix` base class.
+
+Instantiation
+^^^^^^^^^^^^^
+
+The simplest orbit response matrix can be instantiated with:
+
+>>> resp_v = OrbitResponseMatrix(ring, "v")
+
+By default, the observables are all the :py:class:`.Monitor` elements, and the
+variables are all the elements having a *KickAngle* attribute. This is equivalent to:
+
+>>> resp_v = OrbitResponseMatrix(ring, "v", bpmrefs = at.Monitor,
+... steerrefs = at.checkattr("KickAngle"))
+
+If correction is desired, the variable elements must have the *KickAngle* attribute
+used for correction. It's available for all magnets, though not present by default
+except in :py:class:`.Corrector` magnets. For other magnets, the attribute should be
+explicitly created.
+
+There are options to include the RF frequency in the variable list, and the sum of
+correction angles in the list of observables:
+
+>>> resp_h = OrbitResponseMatrix(ring, "h", cavrefs=at.RFCavity, steersum=True)
+
+A combined horizontal+vertical response matrix is obtained with:
+
+>>> resp_hv = resp_h + resp_v
+
+Matrix Building
+^^^^^^^^^^^^^^^
+
+The response matrix may be built by two methods:
+
+1. :py:meth:`~ResponseMatrix.build` computes the matrix using tracking.
+2. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
+   saved values or experimentally measured values
+
+Normalisation
+^^^^^^^^^^^^^
+
+To be correctly inverted, the response matrix must be correctly normalised: the norms
+of its columns must be of the same order of magnitude, and similarly for the rows.
+This is done by adjusting the weights :math:`w_v` for the variables :math:`\mathbf{V}`
+and :math:`w_o` for the observables :math:`\mathbf{O}`.
+With :math:`\mathbf{R}` the response matrix:
+
+.. math::
+
+   \mathbf{O} = \mathbf{R} . \mathbf{V}
+
+The weighted response matrix :math:`\mathbf{R}_w` is:
+
+.. math::
+
+   \frac{\mathbf{O}}{w_o} = \mathbf{R}_w . \frac{\mathbf{V}}{w_v}
+
+The :math:`\mathbf{R}_w` is dimensionless and should be normalised. This can be checked
+using:
+
+* :py:meth:`~ResponseMatrix.check_norm` which prints the ratio of the maximum / minimum
+  norms for variables and observables. These should be less than 10.
+* :py:meth:`~.ResponseMatrix.plot_norm`
+
+Both natural and weighted response matrices can be retrieved with the
+:py:meth:`~ResponseMatrix.get_response` method.
+
+Inversion
+^^^^^^^^^
+
+The :py:meth:`~ResponseMatrix.solve` method computes the singular values of the
+weighted response matrix.
+
+After solving, orbit correction is available, for instance with
+
+* :py:meth:`~ResponseMatrix.get_correction` which returns the correction matrix,
+* :py:meth:`~ResponseMatrix.correct` which computes and optionally applies a correction
+  for the provided :py:class:`.Lattice`.
+
+.. include:: ../notebooks/ATPrimer.rst
+
+
+"""
 
 from __future__ import annotations
 
 __all__ = [
     "ResponseMatrix",
-    "SvdSolver",
     "OrbitResponseMatrix",
     "TrajectoryResponseMatrix",
 ]
 
-import abc
 import copy
 import multiprocessing
-from abc import ABC
+import abc
+from collections.abc import Sequence
 from functools import partial
 
 import numpy as np
@@ -20,8 +116,11 @@ import numpy as np
 from .observables import TrajectoryObservable, OrbitObservable, LatticeObservable
 from .observablelist import ObservableList
 from ..lattice import AtError, Lattice, Refpts, Orbit, AxisDef, plane_
+from ..lattice import Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableBase, VariableList
+
+_orbit_correctors = checkattr("KickAngle")
 
 _globring = None
 _globobs = None
@@ -45,13 +144,13 @@ def _resp_one_fork(variable: VariableBase):
     return _resp_one(_globring, _globobs, variable)
 
 
-class SvdSolver(ABC):
+class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
 
     def __init__(self):
-        self.weighted_response = None
-        self.obsweights = None
-        self.varweights = None
+        self._weighted_response = None
+        self.obsweights = None  #: Observable weights
+        self.varweights = None  #: Variable weights
         self.v = None
         self.singular_values = None
         self.uh = None
@@ -59,15 +158,15 @@ class SvdSolver(ABC):
         self._varmask = None
 
     @abc.abstractmethod
-    def build(self):
+    def build(self) -> None:
         """Build the response matrix."""
-        nobs, nvar = self.weighted_response.shape
+        nobs, nvar = self._weighted_response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
 
-    def solve(self):
+    def solve(self) -> None:
         """Compute the singular values of the response matrix."""
-        resp = self.weighted_response
+        resp = self._weighted_response
         if resp is None:
             raise AtError("No response matrix: run build() first")
         selected = np.ix_(self._obsmask, self._varmask)
@@ -86,31 +185,26 @@ class SvdSolver(ABC):
             obs_norms:      Norms of observables (rows)
             var_norms:      Norms of Variables (columns)
         """
-        if self.weighted_response is None:
+        if self._weighted_response is None:
             raise AtError("No response matrix: run build() first")
-        obs = np.linalg.norm(self.weighted_response, axis=1)
-        var = np.linalg.norm(self.weighted_response, axis=0)
-        print(f"Observables: {np.amax(obs) / np.amin(obs)}")
-        print(f"Variables: {np.amax(var) / np.amin(var)}")
+        obs = np.linalg.norm(self._weighted_response, axis=1)
+        var = np.linalg.norm(self._weighted_response, axis=0)
+        print(f"max/min Observables: {np.amax(obs) / np.amin(obs)}")
+        print(f"max/min Variables: {np.amax(var) / np.amin(var)}")
         return obs, var
 
-    def get_response(self, weighted: bool = False):
-        """Return the response matrix.
+    @property
+    def response(self):
+        """Response matrix."""
+        weights = self.obsweights.reshape(-1, 1) / self.varweights
+        return self.weighted_response * weights
 
-        Args:
-            weighted:   If :py:obj:`True`, returns the weighted response
-              matrix
-
-        Returns:
-            response:   Response matrix
-        """
-        if self.weighted_response is None:
+    @property
+    def weighted_response(self):
+        """Weighted response matrix."""
+        if self._weighted_response is None:
             raise AtError("No response matrix: run build() first")
-        if weighted:
-            return self.weighted_response
-        else:
-            weights = self.obsweights.reshape(-1, 1) / self.varweights
-            return self.weighted_response * weights
+        return self._weighted_response
 
     def correction_matrix(self, nvals: int | None = None):
         """Return the correction matrix (pseudo-inverse of the response matrix).
@@ -145,29 +239,29 @@ class SvdSolver(ABC):
         """Save a response matrix.
 
         Args:
-            file:   file-like object, string, or pathlib.Path: File to which
-              the data is saved. If file is a file-object, it must be opened in
+            file:   file-like object, string, or :py:class:`pathlib.Path`: File to
+              which the data is saved. If file is a file-object, it must be opened in
               binary mode. If file is a string or Path, a .npy extension will
               be appended to the filename if it does not already have one.
         """
-        if self.weighted_response is None:
+        if self._weighted_response is None:
             raise AtError("No response matrix: run build() first")
-        np.save(file, self.weighted_response)
+        np.save(file, self._weighted_response)
 
     def load(self, file) -> None:
         """Load a response matrix.
 
         Args:
-            file:   file-like object, string, or pathlib.Path: the file to read.
-              A file object must always be opened in binaty mode.
+            file:   file-like object, string, or :py:class:`pathlib.Path`: the file to
+              read. A file object must always be opened in binary mode.
         """
-        self.weighted_response = np.load(file)
-        nobs, nvar = self.weighted_response.shape
+        self._weighted_response = np.load(file)
+        nobs, nvar = self._weighted_response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
 
 
-class ResponseMatrix(SvdSolver):
+class ResponseMatrix(_SvdSolver):
     r"""Base class for response matrices.
 
     It is defined by any arbitrary set of :py:class:`~.variables.VariableBase`\ s and
@@ -197,6 +291,8 @@ class ResponseMatrix(SvdSolver):
         self.variables = variables
         self.observables = observables
         self.r_in = r_in
+        variables.get(ring=ring, initial=True)
+        observables.evaluate(ring=ring, initial=True)
         super().__init__()
 
     def __iadd__(self, other: ResponseMatrix):
@@ -205,13 +301,22 @@ class ResponseMatrix(SvdSolver):
             raise TypeError(mess.format(type(other), type(self)))
         self.variables += other.variables
         self.observables += other.observables
-        self.response = None
+        self._weighted_response = None
         return self
 
     def __add__(self, other: ResponseMatrix):
         nresp = copy.copy(self)
         nresp += other
         return nresp
+
+    def __str__(self):
+        no, nv = self.shape
+        return f"{type(self).__name__}({no} observables, {nv} variables)"
+
+    @property
+    def shape(self):
+        """Shape of the response matrix"""
+        return len(self.observables.flat_values), len(self.variables)
 
     def correct(
         self, ring: Lattice, nvals: int = None, niter: int = 1, apply: bool = False
@@ -221,7 +326,7 @@ class ResponseMatrix(SvdSolver):
         Args:
             ring:       Lattice description. The response matrix observables
               will be evaluated for *ring* and the deviation from target will
-              be   corrected
+              be corrected
             nvals:      Desired number of singular values. If :py:obj:`None`,
               use all singular values
             apply:      If :py:obj:`True`, apply the correction to *ring*
@@ -295,7 +400,7 @@ class ResponseMatrix(SvdSolver):
                     results = pool.map(_resp_one_spawn, self.variables)
         else:
             results = [_resp_one(ring, self.observables, var) for var in self.variables]
-        self.weighted_response = np.stack(results, axis=-1)
+        self._weighted_response = np.stack(results, axis=-1)
         super().build()
 
     def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
@@ -308,7 +413,7 @@ class ResponseMatrix(SvdSolver):
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h", Monitor, Corrector)
-            >>> resp.exclude_obs("h_orbit", "BPM_02")
+            >>> resp.exclude_obs("x_orbit", "BPM_02")
 
             Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
@@ -317,7 +422,7 @@ class ResponseMatrix(SvdSolver):
         self.observables.exclude(obsname, excluded)
         # Force a full rebuild
         self.singular_values = None
-        self.weighted_response = None
+        self._weighted_response = None
 
 
 class OrbitResponseMatrix(ResponseMatrix):
@@ -341,36 +446,43 @@ class OrbitResponseMatrix(ResponseMatrix):
         self,
         ring: Lattice,
         plane: AxisDef,
-        bpmrefs: Refpts,
-        steerrefs: Refpts,
+        bpmrefs: Refpts = Monitor,
+        steerrefs: Refpts = _orbit_correctors,
         *,
         cavrefs: Refpts = None,
         bpmweight: float = 1.0,
-        bpmtarget=0.0,
-        steerdelta: float = 0.0001,
+        bpmtarget: float | Sequence[float] = 0.0,
+        steerdelta: float | Sequence[float] = 0.0001,
         cavdelta: float = 100.0,
         steersum: bool = False,
     ):
         """
         Args:
-            ring:       Design lattice, used to compute the response
+            ring:       Design lattice, used to compute the response.
             plane:      One out of {0, 'x', 'h', 'H'} for horizontal orbit, or
-              one of {1, 'y', 'v', 'V'} for vertical orbit
+              one of {1, 'y', 'v', 'V'} for vertical orbit.
             bpmrefs:    Location of closed orbit observation points.
-              See ":ref:`Selecting elements in a lattice <refpts>`"
+              See ":ref:`Selecting elements in a lattice <refpts>`".
+              Default: all :py:class:`.Monitor` elements.
             steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used.
+              is used and must be present in the selected elements.
+              Default: All Elements having a *KickAngle* attribute.
             cavrefs:    Location of RF cavities. Their *Frequency* attribute
               is used. If :py:obj:`None`, no cavity is included in the response.
               Cavities must be active.
-            bpmweight:  Weight on position readings
+            bpmweight:  Weight on position readings. Must be broadcastable to the
+              number of BPMs
             bpmtarget:  Target position.
             steerdelta: Step on steerers for matrix computation [rad]. This is
-              also the steerer weight
+              also the steerer weight. Must be broadcastable to the number of steerers.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
               is also the cavity weight
             steersum:   If :py:obj:`True`, the sum of steerers is added to the
               Observables
+
+        :ivar VariableList variables: matrix variables
+        :ivar ObservableList observables: matrix observables
+
         """
 
         def steerer(ik):
@@ -433,8 +545,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self,
         ring: Lattice,
         plane: AxisDef,
-        bpmrefs: Refpts,
-        steerrefs: Refpts,
+        bpmrefs: Refpts = Monitor,
+        steerrefs: Refpts = _orbit_correctors,
         *,
         r_in: Orbit = None,
         bpmweight: float = 1.0,
@@ -448,14 +560,17 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             plane:      One out of {0, 'x', 'h', 'H'} for horizontal orbit, or
               one of {1, 'y', 'v', 'V'} for vertical orbit
             bpmrefs:    Location of closed orbit observation points.
-              See ":ref:`Selecting elements in a lattice <refpts>`"
+              See ":ref:`Selecting elements in a lattice <refpts>`".
+              Default: all :py:class:`.Monitor` elements.
             steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used.
+              is used and must be present in the selected elements.
+              Default: All Elements having a *KickAngle* attribute.
             r_in:       (6,) vector of initial coordinates of the trajectory
-            bpmweight:  Weight on position readings
+            bpmweight:  Weight on position readings. Must be broadcastable to the
+              number of BPMs
             bpmtarget:  Target position
             steerdelta: Step on steerers for matrix computation [rad]. This is
-              also the steerer weight
+              also the steerer weight. Must be broadcastable to the number of steerers.
         """
 
         def steerer(ik):
