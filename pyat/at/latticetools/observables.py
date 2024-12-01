@@ -339,6 +339,10 @@ class Observable:
         """Observable weight."""
         return np.broadcast_to(self.w, np.asarray(self._value).shape)
 
+    @weight.setter
+    def weight(self, w):
+        self.w = w
+
     @property
     def weighted_value(self):
         """Weighted value of the Observable, computed as
