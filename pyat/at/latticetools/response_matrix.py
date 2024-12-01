@@ -25,8 +25,9 @@ The simplest orbit response matrix can be instantiated with:
 By default, the observables are all the :py:class:`.Monitor` elements, and the
 variables are all the elements having a *KickAngle* attribute. This is equivalent to:
 
->>> resp_v = OrbitResponseMatrix(ring, "v", bpmrefs = at.Monitor,
-... steerrefs = at.checkattr("KickAngle"))
+>>> resp_v = OrbitResponseMatrix(
+...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
+... )
 
 If correction is desired, the variable elements must have the *KickAngle* attribute
 used for correction. It's available for all magnets, though not present by default
@@ -130,12 +131,12 @@ def _resp_one(ring: Lattice, observables: ObservableList, variable: VariableBase
     """Single response for serial computation."""
     variable.step_up(ring=ring)
     observables.evaluate(ring)
-    op = observables.flat_weighted_values
+    op = observables.flat_values
     variable.step_down(ring=ring)
     observables.evaluate(ring)
-    om = observables.flat_weighted_values
+    om = observables.flat_values
     variable.reset(ring=ring)
-    return 0.5 * (op - om)
+    return (op - om) / (2.0 * variable.delta)
 
 
 def _resp_one_fork(variable: VariableBase):
@@ -148,9 +149,7 @@ class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
 
     def __init__(self):
-        self._weighted_response = None
-        self.obsweights = None  #: Observable weights
-        self.varweights = None  #: Variable weights
+        self._response = None
         self.v = None
         self.singular_values = None
         self.uh = None
@@ -160,13 +159,21 @@ class _SvdSolver(abc.ABC):
     @abc.abstractmethod
     def build(self) -> None:
         """Build the response matrix."""
-        nobs, nvar = self._weighted_response.shape
+        nobs, nvar = self._response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
 
+    @property
+    @abc.abstractmethod
+    def varweights(self): ...
+
+    @property
+    @abc.abstractmethod
+    def obsweights(self): ...
+
     def solve(self) -> None:
         """Compute the singular values of the response matrix."""
-        resp = self._weighted_response
+        resp = self.weighted_response
         if resp is None:
             raise AtError("No response matrix: run build() first")
         selected = np.ix_(self._obsmask, self._varmask)
@@ -185,10 +192,11 @@ class _SvdSolver(abc.ABC):
             obs_norms:      Norms of observables (rows)
             var_norms:      Norms of Variables (columns)
         """
-        if self._weighted_response is None:
+        resp = self.weighted_response
+        if resp is None:
             raise AtError("No response matrix: run build() first")
-        obs = np.linalg.norm(self._weighted_response, axis=1)
-        var = np.linalg.norm(self._weighted_response, axis=0)
+        obs = np.linalg.norm(resp, axis=1)
+        var = np.linalg.norm(resp, axis=0)
         print(f"max/min Observables: {np.amax(obs) / np.amin(obs)}")
         print(f"max/min Variables: {np.amax(var) / np.amin(var)}")
         return obs, var
@@ -196,15 +204,16 @@ class _SvdSolver(abc.ABC):
     @property
     def response(self):
         """Response matrix."""
-        weights = self.obsweights.reshape(-1, 1) / self.varweights
-        return self.weighted_response * weights
+        return self._response
 
     @property
     def weighted_response(self):
         """Weighted response matrix."""
-        if self._weighted_response is None:
-            raise AtError("No response matrix: run build() first")
-        return self._weighted_response
+        resp = self._response
+        if resp is None:
+            return None
+        else:
+            return resp * (self.varweights / self.obsweights.reshape(-1, 1))
 
     def correction_matrix(self, nvals: int | None = None):
         """Return the correction matrix (pseudo-inverse of the response matrix).
@@ -244,9 +253,9 @@ class _SvdSolver(abc.ABC):
               binary mode. If file is a string or Path, a .npy extension will
               be appended to the filename if it does not already have one.
         """
-        if self._weighted_response is None:
+        if self._response is None:
             raise AtError("No response matrix: run build() first")
-        np.save(file, self._weighted_response)
+        np.save(file, self._response)
 
     def load(self, file) -> None:
         """Load a response matrix.
@@ -255,8 +264,8 @@ class _SvdSolver(abc.ABC):
             file:   file-like object, string, or :py:class:`pathlib.Path`: the file to
               read. A file object must always be opened in binary mode.
         """
-        self._weighted_response = np.load(file)
-        nobs, nvar = self._weighted_response.shape
+        self._response = np.load(file)
+        nobs, nvar = self._response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
 
@@ -301,7 +310,7 @@ class ResponseMatrix(_SvdSolver):
             raise TypeError(mess.format(type(other), type(self)))
         self.variables += other.variables
         self.observables += other.observables
-        self._weighted_response = None
+        self._response = None
         return self
 
     def __add__(self, other: ResponseMatrix):
@@ -317,6 +326,14 @@ class ResponseMatrix(_SvdSolver):
     def shape(self):
         """Shape of the response matrix"""
         return len(self.observables.flat_values), len(self.variables)
+
+    @property
+    def varweights(self):
+        return self.variables.deltas
+
+    @property
+    def obsweights(self):
+        return self.observables.flat_weights
 
     def correct(
         self, ring: Lattice, nvals: int = None, niter: int = 1, apply: bool = False
@@ -378,8 +395,6 @@ class ResponseMatrix(_SvdSolver):
 
         ring = ring.replace(boolrefs)
         self.observables.evaluate(ring)
-        self.obsweights = self.observables.flat_weights
-        self.varweights = self.variables.deltas
 
         if use_mp:
             ctx = multiprocessing.get_context(start_method)
@@ -400,7 +415,7 @@ class ResponseMatrix(_SvdSolver):
                     results = pool.map(_resp_one_spawn, self.variables)
         else:
             results = [_resp_one(ring, self.observables, var) for var in self.variables]
-        self._weighted_response = np.stack(results, axis=-1)
+        self._response = np.stack(results, axis=-1)
         super().build()
 
     def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
@@ -422,7 +437,7 @@ class ResponseMatrix(_SvdSolver):
         self.observables.exclude(obsname, excluded)
         # Force a full rebuild
         self.singular_values = None
-        self._weighted_response = None
+        self._response = None
 
 
 class OrbitResponseMatrix(ResponseMatrix):
@@ -455,6 +470,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         steerdelta: float | Sequence[float] = 0.0001,
         cavdelta: float = 100.0,
         steersum: bool = False,
+        stsumweight: float = 1.0,
     ):
         """
         Args:
@@ -472,13 +488,17 @@ class OrbitResponseMatrix(ResponseMatrix):
               Cavities must be active.
             bpmweight:  Weight on position readings. Must be broadcastable to the
               number of BPMs
-            bpmtarget:  Target position.
+            bpmtarget:  Target orbit position. Must be broadcastable to the number of
+              observation points.
+            cavdelta:   Step on RF frequency for matrix computation [Hz]. This
+              is also the cavity weight
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
               is also the cavity weight
             steersum:   If :py:obj:`True`, the sum of steerers is added to the
               Observables
+            stsumweight: Weight on steerer summation. Default 1.0.
 
         :ivar VariableList variables: matrix variables
         :ivar ObservableList observables: matrix observables
@@ -500,17 +520,19 @@ class OrbitResponseMatrix(ResponseMatrix):
         )
         observables = ObservableList([bpms])
         if steersum:
-            nm = f"{plcode}_kicks"
-            observables.append(
-                LatticeObservable(
-                    steerrefs,
-                    "KickAngle",
-                    name=nm,
-                    target=0.0,
-                    index=pl,
-                    statfun=np.sum,
-                )
+            sumobs = LatticeObservable(
+                steerrefs,
+                "KickAngle",
+                name=f"{plcode}_kicks",
+                target=0.0,
+                index=pl,
+                statfun=np.sum,
             )
+            observables.append(sumobs)
+            self.steersum = sumobs
+            self.stsumweight = stsumweight
+        else:
+            self.steersum = None
         # Variables
         steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
         variables = VariableList(steerers)
@@ -518,13 +540,30 @@ class OrbitResponseMatrix(ResponseMatrix):
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
                 raise ValueError("Cavities are not active")
-            variables.append(
-                RefptsVariable(
-                    cavrefs, "Frequency", name="RF frequency", delta=cavdelta
-                )
-            )
+            cavvar = RefptsVariable(cavrefs, "Frequency", name="RF frequency")
+            variables.append(cavvar)
+            self.cavvar = cavvar
+            self.cavdelta = cavdelta
+        else:
+            self.cavvar = None
 
         super().__init__(ring, variables, observables)
+
+    @property
+    def stsumweight(self):
+        return self.steersum.weight
+
+    @stsumweight.setter
+    def stsumweight(self, value):
+        self.steersum.weight = value
+
+    @property
+    def cavdelta(self):
+        return self.cavvar.delta
+
+    @cavdelta.setter
+    def cavdelta(self, value):
+        self.cavvar.delta = value
 
 
 class TrajectoryResponseMatrix(ResponseMatrix):
