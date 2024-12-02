@@ -1,15 +1,39 @@
-function elem=atvariablemultipole(fname,varargin)
-%ATVARIABLEMULTIPOLE Creates a variable thin multipole element
+function elem=atvariablemultipole(fname, mode, varargin)
+% ATVARIABLEMULTIPOLE Creates a variable thin multipole element
 %
+%  ATVARIABLEMULTIPOLE(FAMNAME,MODE)
 %  ATVARIABLEMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
-%	
+%
+% This function creates a thin multipole of order and type defined by the
+% amplitude components; the polynoms PolynomA and PolynomB are calculated
+% on every turn depending on the chosen mode.
+%
+% Keep in mind that this element varies on every turn, therefore, any ring
+% containing a variable element may change after tracking n turns.
+%
+% There are three different modes implemented: SINE, WHITENOISE and ARBITRARY.
+%
+% The SINE mode requires amplitude, frequency and phase of at least one of the
+% two polynoms A or B. The j-th component of the polynom on the n-th turn
+% is given by:
+%   amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + c\tau_k) + phase],
+% where T0 is the revolution period of the ideal ring, and c\tau_k is the delay
+% of the kth particle i.e. the sixth coordinate.
+% The following is an example of the SINE mode of an skew quad:
+%
+%     varskew = ATVARIABLEMULTIPOLE('VAR_SKEW','SINE', ...
+%         AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+%
+% The WHITENOISE mode requires the amplitude.
+% THe ARBITRARY mode requires the amplitude
+%
+%
 %  INPUTS
 %    FNAME          Family name 
 %    MODE           Excitation mode: 'SINE', 'WHITENOISE' or 'ARBITRARY'.
-%                   Default: 'SINE'
-%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %
 %  OPTIONS (order does not matter)
+%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
 %    AMPLITUDEB     Vector or scalar to define the excitation amplitude for
@@ -18,7 +42,6 @@ function elem=atvariablemultipole(fname,varargin)
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
-%    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomB
@@ -65,9 +88,8 @@ function elem=atvariablemultipole(fname,varargin)
 % >> atvariablemultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
-[mode,rsrc]=getargs(varargin,'SINE','check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
-[method,rsrc]=getargs(rsrc,'VariableThinMPolePass','check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
-[mode,rsrc]                       = getoption(rsrc,'Mode',mode);
+[method,rsrc]=getargs(varargin,'VariableThinMPolePass', ...
+    'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [method,rsrc]                     = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]                         = getoption(rsrc,'Class','VariableMultipole');
 [maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
