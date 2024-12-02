@@ -44,17 +44,39 @@ class VariableMultipole(Element):
         r"""
         Create VariableMultipole.
 
+        This function creates a thin multipole of order and type defined by the
+        amplitude components; the polynoms PolynomA and PolynomB are calculated
+        on every turn depending on the chosen mode.
+
+        Keep in mind that this element varies on every turn, therefore, any ring
+        containing a variable element may change after tracking n turns.
+
+        There are three different modes implemented: SINE, WHITENOISE and ARBITRARY.
+
+        The SINE mode requires amplitude, frequency and phase of at least one of the
+        two polynoms A or B. The j-th component of the polynom on the n-th turn
+        is given by:
+          amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + c\tau_k) + phase],
+        where T0 is the revolution period of the ideal ring, and c\tau_k is the delay
+        of the particle i.e. the sixth coordinate.
+        The following is an example of the SINE mode of an skew quad:
+            eleskew = at.VariableMultipole('VAR_SKEW',
+                AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+        The WHITENOISE mode requires the amplitude.
+        THe ARBITRARY mode requires the Amplitude
+
+
         Parameters:
             family_name(str):    Element name
+            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
+              * :py:attr:`.ACMode.SINE`: sine function
+              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+              * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
                 Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
                 Default None
-            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
             FrequencyA(float): Frequency of the sine excitation for PolynomA
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
