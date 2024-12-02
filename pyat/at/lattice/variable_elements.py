@@ -38,7 +38,7 @@ class VariableMultipole(Element):
         periodic=bool,
     )
 
-    def __init__(self, family_name: str, **kwargs: dict[str, any]):
+    def __init__(self, family_name: str, mode:int, **kwargs: dict[str, any]):
         # noinspection PyUnresolvedReferences
         r"""
         Create VariableMultipole.
