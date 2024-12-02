@@ -32,6 +32,7 @@ from at.lattice import AtWarning
 from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
 from at.lattice import idtable_element
+from at.lattice import variable_elements
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _placeholder = "placeholder"
@@ -138,6 +139,7 @@ _PASS_MAP = {
     "AperturePass": elt.Aperture,
     "IdTablePass": idtable_element.InsertionDeviceKickMap,
     "GWigSymplecticPass": elt.Wiggler,
+    "VariableThinMPolePass": variable_elements.VariableMultipole,
 }
 
 # Maps python class name to Matlab class
