@@ -57,10 +57,13 @@ class VariableMultipole(Element):
         is given by:
           amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + c\tau_k) + phase],
         where T0 is the revolution period of the ideal ring, and c\tau_k is the delay
-        of the kth particle i.e. the sixth coordinate.
+        of the kth particle i.e. the sixth coordinate over the speed of light. Also,
+        note that the position of the element on the ring has no effect, the phase
+        should be used to add any delay due to the position along s.
         The following is an example of the SINE mode of an skew quad:
             eleskew = at.VariableMultipole('VAR_SKEW',
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+
         The WHITENOISE mode requires the amplitude.
         THe ARBITRARY mode requires the amplitude
 
