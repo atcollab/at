@@ -19,7 +19,7 @@ def plot_norm(resp: ResponseMatrix, ax: Optional[tuple[Axes, Axes]] = None) -> N
     """
     obs, var = resp.check_norm()
     if ax is None:
-        fig, (ax1, ax2) = plt.subplots(nrows=2)
+        fig, (ax1, ax2) = plt.subplots(nrows=2, gridspec_kw={"hspace": 0.5})
     else:
         ax1, ax2 = ax[:2]
     ax1.bar(range(len(obs)), obs)
