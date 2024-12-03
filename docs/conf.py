@@ -105,10 +105,14 @@ nb_execution_allow_errors = True
 # html_theme = 'sphinx_rtd_theme'
 # html_theme = 'sphinx_book_theme'
 html_theme = "pydata_sphinx_theme"
-html_logo = "images/AT.png"
+html_logo = "images/ATlight.png"
 html_copy_source = False
 html_theme_options = {
     "github_url": "https://github.com/atcollab/at",
+    "logo": {
+      "image_light": "images/ATlight.png",
+      "image_dark": "images/ATdark.png",
+   }
 }
 html_sidebars = {
     "index": [],
