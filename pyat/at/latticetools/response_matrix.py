@@ -485,9 +485,10 @@ class OrbitResponseMatrix(ResponseMatrix):
               Default: All Elements having a *KickAngle* attribute.
             cavrefs:    Location of RF cavities. Their *Frequency* attribute
               is used. If :py:obj:`None`, no cavity is included in the response.
-              Cavities must be active.
-            bpmweight:  Weight on position readings. Must be broadcastable to the
-              number of BPMs
+              Cavities must be active. Cavity variables are appended to the steerer
+              variables.
+            bpmweight:  Weight of position readings. Must be broadcastable to the
+              number of BPMs.
             bpmtarget:  Target orbit position. Must be broadcastable to the number of
               observation points.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
@@ -496,8 +497,8 @@ class OrbitResponseMatrix(ResponseMatrix):
               also the steerer weight. Must be broadcastable to the number of steerers.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
               is also the cavity weight
-            steersum:   If :py:obj:`True`, the sum of steerers is added to the
-              Observables
+            steersum:   If :py:obj:`True`, the sum of steerers is appended to the
+              Observables.
             stsumweight: Weight on steerer summation. Default 1.0.
 
         :ivar VariableList variables: matrix variables
@@ -505,11 +506,9 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         """
 
-        def steerer(ik):
+        def steerer(ik, delta):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(
-                ik, "KickAngle", index=pl, name=name, delta=steerdelta
-            )
+            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
@@ -526,44 +525,61 @@ class OrbitResponseMatrix(ResponseMatrix):
                 name=f"{plcode}_kicks",
                 target=0.0,
                 index=pl,
+                weight=stsumweight,
                 statfun=np.sum,
             )
             observables.append(sumobs)
-            self.steersum = sumobs
-            self.stsumweight = stsumweight
-        else:
-            self.steersum = None
         # Variables
-        steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
-        variables = VariableList(steerers)
+        ids = ring.get_uint32_index(steerrefs)
+        nbsteers = len(ids)
+        deltas = np.broadcast_to(steerdelta, nbsteers)
+        variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
                 raise ValueError("Cavities are not active")
-            cavvar = RefptsVariable(cavrefs, "Frequency", name="RF frequency")
+            cavvar = RefptsVariable(cavrefs, "Frequency", name="RF frequency", delta=cavdelta)
             variables.append(cavvar)
-            self.cavvar = cavvar
-            self.cavdelta = cavdelta
-        else:
-            self.cavvar = None
+
+        self.nbsteers = nbsteers
 
         super().__init__(ring, variables, observables)
 
     @property
+    def bpmweight(self):
+        """Weight of position readings."""
+        return self.observables[0].weight
+
+    @bpmweight.setter
+    def bpmweight(self, value):
+        self.observables[0].weight = value
+
+    @property
     def stsumweight(self):
-        return self.steersum.weight
+        """Weight of steerer summation."""
+        return self.observables[1].weight
 
     @stsumweight.setter
     def stsumweight(self, value):
-        self.steersum.weight = value
+        self.observables[1].weight = value
+
+    @property
+    def steerdelta(self):
+        """Step and weight on steerers."""
+        return self.variables[:self.nbsteers].deltas
+
+    @steerdelta.setter
+    def steerdelta(self, value):
+        self.variables[:self.nbsteers].deltas = value
 
     @property
     def cavdelta(self):
-        return self.cavvar.delta
+        """Step and weight on RF frequency deviation."""
+        return self.variables[self.nbsteers].delta
 
     @cavdelta.setter
     def cavdelta(self, value):
-        self.cavvar.delta = value
+        self.variables[self.nbsteers].delta = value
 
 
 class TrajectoryResponseMatrix(ResponseMatrix):
@@ -589,9 +605,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         *,
         r_in: Orbit = None,
         bpmweight: float = 1.0,
-        bpmtarget=0.0,
+        bpmtarget: float = 0.0,
         steerdelta: float = 0.0001,
-        steersum: bool = False,
     ):
         """
         Args:
@@ -614,9 +629,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
         def steerer(ik):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(
-                ik, "KickAngle", index=pl, name=name, delta=steerdelta
-            )
+            return RefptsVariable(ik, "KickAngle", index=pl, name=name)
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
@@ -626,20 +639,28 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             bpmrefs, axis=2 * pl, name=nm, target=bpmtarget, weight=bpmweight
         )
         observables = ObservableList([bpms])
-        if steersum:
-            nm = f"{plcode}_kicks"
-            observables.append(
-                LatticeObservable(
-                    steerrefs,
-                    "KickAngle",
-                    name=nm,
-                    target=0.0,
-                    index=plane,
-                    statfun=np.sum,
-                )
-            )
         # Variables
-        steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
-        variables = VariableList(steerers)
+        steeridx = ring.get_uint32_index(steerrefs)
+        variables = VariableList(steerer(idx) for idx in steeridx)
+
+        self.steerdelta = steerdelta
 
         super().__init__(ring, variables, observables, r_in=r_in)
+
+    @property
+    def bpmweight(self):
+        """Weight of position readings."""
+        return self.observables[0].weight
+
+    @bpmweight.setter
+    def bpmweight(self, value):
+        self.observables[0].weight = value
+
+    @property
+    def steerdelta(self):
+        """Step and weight on steerers."""
+        return self.variables.deltas
+
+    @steerdelta.setter
+    def steerdelta(self, value):
+        self.variables.deltas = value
