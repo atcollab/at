@@ -1,4 +1,4 @@
-r"""
+r"""Grouping of :py:class:`.Observable` objects for fast evaluation.
 
 :py:class:`ObservableList`\ (lattice, ...)
     This container based on :py:class:`list` is in charge of optics
@@ -18,7 +18,6 @@ method and the following properties:
 - :py:attr:`~ObservableList.flat_deviations`
 - :py:attr:`~ObservableList.residuals`
 - :py:attr:`~ObservableList.sum_residuals`
-
 """
 
 from __future__ import annotations
@@ -29,7 +28,7 @@ __all__ = [
 
 from collections.abc import Iterable
 from functools import reduce
-from typing import Optional, Callable
+from typing import Callable
 
 import numpy as np
 
@@ -46,7 +45,7 @@ def _flatten(vals, order="F"):
 
 
 class ObservableList(list):
-    """Handles a list of Observables to be evaluated together
+    """Handles a list of Observables to be evaluated together.
 
     :py:class:`ObservableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
@@ -101,14 +100,13 @@ class ObservableList(list):
 
 
         Example:
-
             >>> obslist = ObservableList()
 
             Create an empty Observable list
 
-            >>> obslist.append(OrbitObservable(at.Monitor, plane='x'))
-            >>> obslist.append(GlobalOpticsObservable('tune'))
-            >>> obslist.append(EmittanceObservable('emittances', plane='h'))
+            >>> obslist.append(OrbitObservable(at.Monitor, plane="x"))
+            >>> obslist.append(GlobalOpticsObservable("tune"))
+            >>> obslist.append(EmittanceObservable("emittances", plane="h"))
 
             Add observables for horizontal closed orbit at Monitor locations,
             tunes and horizontal emittance
@@ -125,7 +123,7 @@ class ObservableList(list):
             array([3.81563019e-01, 8.54376397e-01, 1.09060730e-04]),
             1.320391045951568e-10]
 
-            >>> obslist.get_flat_values('tune', 'emittances[h]')
+            >>> obslist.get_flat_values("tune", "emittances[h]")
             array([3.815630e-01, 8.543764e-01, 1.090607e-04, 1.320391e-10])
 
             Get a flattened array of tunes and horizontal emittance
@@ -195,16 +193,19 @@ class ObservableList(list):
         return nobs
 
     def append(self, obs: Observable):
+        """Append observable to the end of the list."""
         if not isinstance(obs, Observable):
             raise TypeError(f"Cannot append a {type(obs)} to an ObservableList")
         self.needs = None
         super().append(obs)
 
     def extend(self, obsiter: Iterable[Observable]):
+        """Extend list by appending Observables from the iterable."""
         self.needs = None
         super().extend(obsiter)
 
     def insert(self, index: int, obs: Observable):
+        """Insert Observable before index."""
         if not isinstance(obs, Observable):
             raise TypeError(f"Cannot insert a {type(obs)} in an ObservableList")
         self.needs = None
@@ -217,15 +218,15 @@ class ObservableList(list):
 
     def evaluate(
         self,
-        ring: Optional[Lattice] = None,
+        ring: Lattice | None = None,
         *,
-        dp: Optional[float] = None,
-        dct: Optional[float] = None,
-        df: Optional[float] = None,
+        dp: float | None = None,
+        dct: float | None = None,
+        df: float | None = None,
         initial: bool = False,
         **kwargs,
     ):
-        r"""Compute all the :py:class:`Observable` values
+        r"""Compute all the :py:class:`Observable` values.
 
         Args:
             ring:           Lattice used for evaluation
@@ -250,7 +251,7 @@ class ObservableList(list):
         """
 
         def obseval(ring, obs):
-            """Evaluate a single observable"""
+            """Evaluate a single observable."""
 
             def check_error(data, refpts):
                 return data if isinstance(data, AtError) else data[refpts]
@@ -274,19 +275,23 @@ class ObservableList(list):
                 data.append(emdata)
             if Need.GEOMETRY in obsneeds:
                 data.append(geodata[obsrefs])
-            obs.evaluate(*data, initial=initial)
+            return obs.evaluate(*data, initial=initial)
 
         @frequency_control
         def ringeval(
             ring,
-            dp: Optional[float] = None,
-            dct: Optional[float] = None,
-            df: Optional[float] = None,
+            dp: float | None = None,
+            dct: float | None = None,
+            df: float | None = None,
         ):
-            """Optics computations"""
+            """Optics computations."""
+            keep_lattice = False
             trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = None
-            o0 = None
+            twiss_in = kwargs.get("twiss_in", self.twiss_in)
+            o0 = kwargs.get("orbit", self.orbit)
+            o0 = getattr(twiss_in, "closed_orbit", None) if o0 is None else o0
             needs = self.needs
+            needs_o0 = (needs & self.needs_orbit) and (o0 is None)
 
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
@@ -295,39 +300,38 @@ class ObservableList(list):
                     r_in = np.zeros(6)
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
                 trajs = r_out[:, 0, :, 0].T
+                keep_lattice = True
 
-            if needs & self.needs_orbit:
+            # if needs & self.needs_orbit:
+            if Need.ORBIT in needs or needs_o0:
                 # Closed orbit computation
-                orbit0 = kwargs.get("orbit", self.orbit)
                 try:
                     o0, orbits = ring.find_orbit(
-                        refpts=self.orbitrefs, dp=dp, dct=dct, df=df, orbit=orbit0
+                        refpts=self.orbitrefs,
+                        dp=dp,
+                        dct=dct,
+                        df=df,
+                        orbit=o0,
+                        keep_lattice=keep_lattice,
                     )
                 except AtError as err:
                     orbits = mxdata = rgdata = eldata = emdata = err
+                else:
+                    keep_lattice = True
 
             if Need.MATRIX in needs and o0 is not None:
                 # Transfer matrix computation
-                if ring.is_6d:
-                    # noinspection PyUnboundLocalVariable
-                    _, mxdata = ring.find_m66(
-                        refpts=self.matrixrefs,
-                        dp=dp,
-                        dct=dct,
-                        df=df,
-                        orbit=o0,
-                        keep_lattice=True,
-                    )
-                else:
-                    # noinspection PyUnboundLocalVariable
-                    _, mxdata = ring.find_m44(
-                        refpts=self.matrixrefs,
-                        dp=dp,
-                        dct=dct,
-                        df=df,
-                        orbit=o0,
-                        keep_lattice=True,
-                    )
+                find_m = ring.find_m66 if ring.is_6d else ring.find_m44
+                # noinspection PyUnboundLocalVariable
+                _, mxdata = find_m(
+                    refpts=self.matrixrefs,
+                    dp=dp,
+                    dct=dct,
+                    df=df,
+                    orbit=o0,
+                    keep_lattice=keep_lattice,
+                )
+                keep_lattice = True
 
             if (needs & self.needs_optics) and o0 is not None:
                 # Linear optics computation
@@ -338,19 +342,23 @@ class ObservableList(list):
                         dct=dct,
                         df=df,
                         orbit=o0,
-                        keep_lattice=True,
+                        keep_lattice=keep_lattice,
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
-                        twiss_in=kwargs.get("twiss_in", self.twiss_in),
+                        twiss_in=twiss_in,
                         method=kwargs.get("method", self.method),
                     )
                 except AtError as err:
                     rgdata = eldata = err
+                else:
+                    keep_lattice = True
 
             if Need.EMITTANCE in needs and o0 is not None:
                 # Emittance computation
                 try:
-                    emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
+                    emdata = ring.envelope_parameters(
+                        orbit=o0, keep_lattice=keep_lattice
+                    )
                 except Exception as err:
                     emdata = err
 
@@ -366,26 +374,25 @@ class ObservableList(list):
         trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
             ring, dp=dp, dct=dct, df=df
         )
-        for ob in self:
-            obseval(ring, ob)
+        return [obseval(ring, ob) for ob in self]
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
-        # Set the excluded mask on the selected observable
+        """Set the excluded mask on the selected observable."""
         for obs in self:
             if obs.name == obsname:
                 obs._excluded = excluded
         self.needs = None
 
     def _select(self, *obsnames: str):
-        """Return an iterable over selected observables"""
+        """Return an iterable over selected observables."""
         if obsnames:
             sel = set(obsnames)
             return (obs for obs in self if obs.name in sel)
         else:
             return self
 
-    def _substitute(self, attrname: str, *obsnames: str, err: Optional[float] = None):
+    def _substitute(self, attrname: str, *obsnames: str, err: float | None = None):
         for obs in self._select(*obsnames):
             try:
                 res = getattr(obs, attrname)
@@ -399,7 +406,7 @@ class ObservableList(list):
             yield res
 
     def get_shapes(self, *obsnames: str) -> list:
-        """Return the shapes of all values
+        """Return the shapes of all values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -407,7 +414,7 @@ class ObservableList(list):
         return list(self._substitute("_shape", *obsnames))
 
     def get_flat_shape(self, *obsnames: str):
-        """Shape of the flattened values
+        """Return the shape of the flattened values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -418,8 +425,8 @@ class ObservableList(list):
         )
         return (sum(vals),)
 
-    def get_values(self, *obsnames: str, err: Optional[float] = None) -> list:
-        """Return the values of observables
+    def get_values(self, *obsnames: str, err: float | None = None) -> list:
+        """Return the values of observables.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -429,9 +436,9 @@ class ObservableList(list):
         return list(self._substitute("value", *obsnames, err=err))
 
     def get_flat_values(
-        self, *obsnames: str, err: Optional[float] = None, order: str = "F"
+        self, *obsnames: str, err: float | None = None, order: str = "F"
     ) -> np.ndarray:
-        """Return a 1-D array of Observable values
+        """Return a 1-D array of Observable values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -441,8 +448,8 @@ class ObservableList(list):
         """
         return _flatten(self._substitute("value", *obsnames, err=err), order=order)
 
-    def get_weighted_values(self, *obsnames: str, err: Optional[float] = None) -> list:
-        """Return the weighted values of observables
+    def get_weighted_values(self, *obsnames: str, err: float | None = None) -> list:
+        """Return the weighted values of observables.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -452,9 +459,9 @@ class ObservableList(list):
         return list(self._substitute("weighted_value", *obsnames, err=err))
 
     def get_flat_weighted_values(
-        self, *obsnames: str, err: Optional[float] = None, order: str = "F"
+        self, *obsnames: str, err: float | None = None, order: str = "F"
     ) -> np.ndarray:
-        """Return a 1-D array of Observable weighted values
+        """Return a 1-D array of Observable weighted values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -466,8 +473,8 @@ class ObservableList(list):
             self._substitute("weighted_value", *obsnames, err=err), order=order
         )
 
-    def get_deviations(self, *obsnames: str, err: Optional[float] = None) -> list:
-        """Return the deviations from target values
+    def get_deviations(self, *obsnames: str, err: float | None = None) -> list:
+        """Return the deviations from target values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -477,9 +484,9 @@ class ObservableList(list):
         return list(self._substitute("deviation", *obsnames, err=err))
 
     def get_flat_deviations(
-        self, *obsnames: str, err: Optional[float] = None, order: str = "F"
+        self, *obsnames: str, err: float | None = None, order: str = "F"
     ) -> np.ndarray:
-        """Return a 1-D array of deviations from target values
+        """Return a 1-D array of deviations from target values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -489,10 +496,8 @@ class ObservableList(list):
         """
         return _flatten(self._substitute("deviation", *obsnames, err=err), order=order)
 
-    def get_weighted_deviations(
-        self, *obsnames: str, err: Optional[float] = None
-    ) -> list:
-        """Return the weighted deviations from target values
+    def get_weighted_deviations(self, *obsnames: str, err: float | None = None) -> list:
+        """Return the weighted deviations from target values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -502,9 +507,9 @@ class ObservableList(list):
         return list(self._substitute("weighted_deviation", *obsnames, err=err))
 
     def get_flat_weighted_deviations(
-        self, *obsnames: str, err: Optional[float] = None, order: str = "F"
+        self, *obsnames: str, err: float | None = None, order: str = "F"
     ) -> np.ndarray:
-        """Return a 1-D array of weighted deviations from target values
+        """Return a 1-D array of weighted deviations from target values.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -517,7 +522,7 @@ class ObservableList(list):
         )
 
     def get_weights(self, *obsnames: str) -> list:
-        """Return the weights of observables
+        """Return the weights of observables.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -525,7 +530,7 @@ class ObservableList(list):
         return list(self._substitute("weight", *obsnames))
 
     def get_flat_weights(self, *obsnames: str, order: str = "F") -> np.ndarray:
-        """Return a 1-D array of Observable weights
+        """Return a 1-D array of Observable weights.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -533,8 +538,8 @@ class ObservableList(list):
         """
         return _flatten(self._substitute("weight", *obsnames), order=order)
 
-    def get_residuals(self, *obsnames: str, err: Optional[float] = None) -> list:
-        """Return the residuals of observables
+    def get_residuals(self, *obsnames: str, err: float | None = None) -> list:
+        """Return the residuals of observables.
 
         Args:
             *obsnames: names of selected observables (Default all)
@@ -543,8 +548,8 @@ class ObservableList(list):
         """
         return list(self._substitute("residual", *obsnames, err=err))
 
-    def get_sum_residuals(self, *obsnames: str, err: Optional[float] = None) -> float:
-        """Return the sum of residual values
+    def get_sum_residuals(self, *obsnames: str, err: float | None = None) -> float:
+        """Return the sum of residual values.
 
         Args:
             *obsnames: names of selected observables (Default all)
