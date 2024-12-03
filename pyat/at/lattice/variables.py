@@ -403,6 +403,12 @@ class VariableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return VariableList(super().__getitem__(index))
+        else:
+            return super().__getitem__(index)
+
     def get(self, ring=None, **kwargs) -> Sequence[float]:
         r"""Get the current values of Variables
 
@@ -456,3 +462,9 @@ class VariableList(list):
     def deltas(self) -> Sequence[Number]:
         """delta values of the variables"""
         return np.array([var.delta for var in self])
+
+    @deltas.setter
+    def deltas(self, value: Number | Sequence[Number]) -> None:
+        deltas = np.broadcast_to(value, len(self))
+        for var, delta in zip(self, deltas):
+            var.delta = delta
