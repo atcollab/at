@@ -13,22 +13,37 @@ function elem=atvariablemultipole(fname,varargin)
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
 %    AMPLITUDEB     Vector or scalar to define the excitation amplitude for
-%                   PolynomA
+%                   PolynomB
 %    FREQUENCYA     Frequency of SINE excitation for PolynomA
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
-%	 MAXORDER       Order of the multipole for a scalar amplitude
+%    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
-%    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
-%    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
+%    FUNCA          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomA
+%    FUNCB          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomB
+%    FUNCADERIV1    ARBITRARY excitation tbt kick list for PolynomA 1st
+%                   derivative wrt tau
+%    FUNCBDERIV1    ARBITRARY excitation tbt kick list for PolynomB 1st
+%                   derivative wrt tau
+%    FUNCADERIV2    ARBITRARY excitation tbt kick list for PolynomA 2nd
+%                   derivative wrt tau
+%    FUNCBDERIV2    ARBITRARY excitation tbt kick list for PolynomB 2nd
+%                   derivative wrt tau
+%    FUNCADERIV3    ARBITRARY excitation tbt kick list for PolynomA 3rd
+%                   derivative wrt tau
+%    FUNCBDERIV3    ARBITRARY excitation tbt kick list for PolynomB 3rd
+%                   derivative wrt tau
+%    FUNCTIMEDELAY  TimeDelay to generate a small time offset on the
+%                   function FUNC. It only has an effect if any of the
+%                   derivatives is not zero.
 %    PERIODIC       If true (default) the user input kick list is repeated
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
-%                   * t<t0: excitation amlpitude is zero
-%                   * t0<t<t1: exciation amplitude is linearly ramped up
-%                   * t1<t<t2: exciation amplitude is constant             
-%                   * t2<t<t3: exciation amplitude is linearly ramped down
-%                   * t3<t: exciation amplitude is zero 
+%                   * t<t0: excitation amplitude is zero
+%                   * t0<t<t1: excitation amplitude is linearly ramped up
+%                   * t1<t<t2: excitation amplitude is constant
+%                   * t2<t<t3: excitation amplitude is linearly ramped down
+%                   * t3<t:    excitation amplitude is zero
 %
 %  OUTPUTS
 %  1. ELEM - Structure with the AT element
@@ -86,7 +101,18 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if ~isfield(rsrc,funcarg)
             error(strcat('Please provide a value for Func',ab))
         end
-        rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
+        nsamples = length(rsrc.(funcarg));
+        rsrc.(strcat('NSamples',ab)) = nsamples;
+        for i = 1:4
+            funcarg=strcat('Func',ab,'deriv',num2str(i));
+            if ~isfield(rsrc,funcarg)
+                rsrc.(funcarg) = zeros(1,nsamples);
+            end
+        end
+        funcarg = strcat('Func',ab,'TimeDelay');
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
+        end
     end
 
     function rsrc = setparams(rsrc,mode,ab)
@@ -108,15 +134,21 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
     function rsrc = setmaxorder(rsrc)
         if isfield(rsrc,'AmplitudeA')
             mxa=find(abs(rsrc.AmplitudeA)>0,1,'last');
+            if isempty(mxa)
+                mxa=1;
+            end
         else
             mxa=0;
         end
         if isfield(rsrc,'AmplitudeB')
             mxb=find(abs(rsrc.AmplitudeB)>0,1,'last');
+            if isempty(mxb)
+                mxb=1;
+            end
         else
             mxb=0;
         end
-        mxab=max([mxa,mxb,rsrc.MaxOrder-1]);
+        mxab=max([mxa,mxb,rsrc.MaxOrder+1]);
         rsrc.MaxOrder=mxab-1;
         if isfield(rsrc,'AmplitudeA')
             rsrc.AmplitudeA(mxa+1:mxab)=0;
