@@ -23,23 +23,22 @@ class VariableMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Mode']
     _conversions = dict(
         Element._conversions,
-        amplitudeA=_array,
-        amplitudeB=_array,
-        frequencyA=float,
-        frequencyB=float,
-        phaseA=float,
-        phaseB=float,
+        amplitudea=_array,
+        amplitudeb=_array,
+        frequencya=float,
+        frequencyb=float,
+        phasea=float,
+        phaseb=float,
         seed=int,
-        nsamplesA=int,
-        nsamplesB=int,
-        funcA=_array,
-        funcB=_array,
+        nsamplesa=int,
+        nsamplesb=int,
+        funca=_array,
+        funcb=_array,
         ramps=_array,
         periodic=bool,
     )
 
     def __init__(self, family_name: str, mode:int, **kwargs: dict[str, any]):
-        # noinspection PyUnresolvedReferences
         r"""
         Create VariableMultipole.
 
@@ -105,27 +104,34 @@ class VariableMultipole(Element):
 
         Examples:
 
-            >>> acmpole = at.VariableMultipole('ACMPOLE', amplitudeB=amp, frequencyB=frequency)
-            >>> acmpole = at.VariableMultipole('ACMPOLE', amplitudeB=amp, mode=at.ACMode.WHITENOISE)
-            >>> acmpole = at.VariableMultipole('ACMPOLE', amplitudeB=amp, funcB=fun, mode=at.ACMode.ARBITRARY)
+            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.SINE, amplitudeb=amp, frequencyb=frequency)
+            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.WHITENOISE, amplitudeb=amp)
+            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, amplitudeb=amp, funcb=fun)
 
-        .. note::
-
-            * For all excitation modes at least one amplitudes (A or B) has
-              to be provided.
-            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided.
             * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided.
         """
+        print(kwargs)
         if len(kwargs) > 0:
             self.FamName = family_name
             self.Mode = int(mode)
-            if "AmplitudeA" not in kwargs and "AmplitudeB" not in kwargs:
-                raise AtError("Please provide at least one amplitude for A or B")
             # start setting up Amplitudes
-            amplitudea = None
-            amplitudeb = None
+            theamplitudes = {"amplitudea" : None, "amplitudeb": None}
+            # amplitude names need to be different in pyat and matlab in order to avoid
+            # problems between args and kwargs
+            validamplitudenames = ["amplitude","Amplitude"]
+            invalidname = 1
+            namecounter = 0
+            lenvalidnames = len(validamplitudenames)
+            for thetype in ['A','B']:
+            while invalidname:
+                if namecounter >= lenvalidnames:
+                    raise AtError("Please provide at least one amplitude for A or B")
+                else:
+                    if validamplitudenames[namecounter] in kwargs:
+                        invalidname = 0
+                    else:
+                        namecounter += 1
             if "AmplitudeA" in kwargs:
                 amplitudea = kwargs.pop("AmplitudeA", None)
                 amplitudea = self._set_params(amplitudea, mode, "A", **kwargs)
