@@ -21,7 +21,7 @@ import collections
 import os
 import re
 import sysconfig
-from typing import Any, Optional
+from typing import Any
 from warnings import warn
 from collections.abc import Callable, Generator
 
@@ -34,7 +34,7 @@ from at.lattice import Lattice, Particle, Element, Marker
 from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
-_placeholder = "placeholder"
+_plh = "placeholder"
 
 
 def _no_encoder(v):
@@ -86,7 +86,11 @@ class RingParam(elt.Element):
         "Periodicity",
     ]
     _conversions = dict(
-        elt.Element._conversions, Energy=float, Periodicity=int, Particle=_particle
+        elt.Element._conversions,
+        Energy=float,
+        Periodicity=int,
+        Particle=_particle,
+        cell_harmnumber=float,
     )
 
     # noinspection PyPep8Naming
@@ -100,7 +104,7 @@ class RingParam(elt.Element):
         if not np.isnan(float(Energy)):
             kwargs["Energy"] = Energy
         kwargs.setdefault("PassMethod", "IdentityPass")
-        super(RingParam, self).__init__(FamName, Periodicity=Periodicity, **kwargs)
+        super().__init__(FamName, Periodicity=Periodicity, **kwargs)
 
 
 _alias_map = {
@@ -119,7 +123,7 @@ _alias_map = {
 }
 
 # Map class names to Element classes
-_CLASS_MAP = dict((cls.__name__.lower(), cls) for cls in element_classes())
+_CLASS_MAP = {cls.__name__.lower(): cls for cls in element_classes()}
 _CLASS_MAP.update(_alias_map)
 
 # Maps passmethods to Element classes
@@ -180,9 +184,7 @@ def _hasattrs(kwargs: dict, *attributes) -> bool:
 
 def keep_attributes(ring: Lattice):
     """Remove Lattice attributes which must not be saved on file"""
-    return dict(
-        (k, v) for k, v in ring.attrs.items() if _drop_attrs.get(k, k) is not None
-    )
+    return {k: v for k, v in ring.attrs.items() if _drop_attrs.get(k, k) is not None}
 
 
 def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
@@ -245,7 +247,7 @@ def _from_contents(elem: dict) -> type[Element]:
 
 
 def find_class(
-    elem_dict: dict, quiet: bool = False, index: Optional[int] = None
+    elem_dict: dict, quiet: bool = False, index: int | None = None
 ) -> type(Element):
     """Deduce the class of an element from its attributes
 
@@ -300,7 +302,7 @@ def find_class(
 
 def element_from_dict(
     elem_dict: dict,
-    index: Optional[int] = None,
+    index: int | None = None,
     check: bool = True,
     quiet: bool = False,
 ) -> Element:
@@ -376,17 +378,17 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     Returns:
         dct (dict):     Dictionary of :py:class:`.Element` attributes
     """
-    dct = dict((k, encoder(v)) for k, v in elem.items())
+    dct = {k: encoder(v) for k, v in elem.items()}
     class_name = elem.__class__.__name__
     dct["Class"] = _mat_class.get(class_name, class_name)
     return dct
 
 
 def split_ignoring_parentheses(
-        string: str,
-        delimiter: str = ",",
-        fence: tuple[str, str] = ('\\(', '\\)'),
-        maxsplit: int = -1,
+    string: str,
+    delimiter: str = ",",
+    fence: tuple[str, str] = ("\\(", "\\)"),
+    maxsplit: int = -1,
 ) -> list[str]:
     """Split a string while keeping protected expressions intact
 
@@ -397,26 +399,32 @@ def split_ignoring_parentheses(
     return restore(matches, *parts)
 
 
-def protect(string: str, fence: tuple[str, str] = ('"', '"')):
+def protect(
+    string: str,
+    fence: tuple[str, str] = ('"', '"'),
+    *,
+    placeholder: str = _plh,
+):
     inf, outf = fence
-    pattern = f"{inf}.*?{outf}"
+    pattern = f"{inf}[^{inf}]*?{outf}"
     substituted = string[:]
     matches = collections.deque(re.finditer(pattern, string))
     for match in matches:
-        substituted = substituted.replace(match.group(), _placeholder, 1)
-    return substituted, matches
+        substituted = substituted.replace(match.group(), placeholder, 1)
+    return substituted, (placeholder, matches)
 
 
-def restore(matches, *parts):
-
+def restore(replmatch, *parts):
     def rep(part):
-        while _placeholder in part:
+        while placeholder in part:
             next_match = matches.popleft()
-            part = part.replace(_placeholder, next_match.group(), 1)
+            part = part.replace(placeholder, next_match.group(), 1)
         return part
 
+    placeholder, matches = replmatch
     replaced_parts = [rep(part) for part in parts]
     assert not matches
+
     return replaced_parts
 
 

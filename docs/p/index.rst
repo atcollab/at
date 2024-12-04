@@ -25,9 +25,8 @@ Sub-packages
    :hidden:
 
    howto/Installation
-   howto/Primer
-   notebooks/variables
-   notebooks/observables
+   notebooks/ATPrimer
+   examples
 
 .. toctree::
    :maxdepth: 2
@@ -37,6 +36,7 @@ Sub-packages
    howto/multiprocessing
    howto/CavityControl
    howto/Collective
+   Working with MAD-X files <api/at.load.madx>
 
 .. autosummary::
    :toctree: api

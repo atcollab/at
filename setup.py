@@ -142,14 +142,22 @@ cconfig = Extension(
 
 diffmatrix = Extension(
     name='at.physics.diffmatrix',
-    sources=[diffmatrix_source],
+    sources=[join(diffmatrix_orig, 'findmpoleraddiffmatrix.c')],
+    include_dirs=[numpy.get_include(), integrator_src_orig],
+    define_macros=macros,
+    extra_compile_args=cflags
+)
+
+wiggdiffmatrix = Extension(
+    name='at.physics.wiggdiffmatrix',
+    sources=[join(diffmatrix_orig, 'FDW.c')],
     include_dirs=[numpy.get_include(), integrator_src_orig],
     define_macros=macros,
     extra_compile_args=cflags
 )
 
 setup(
-    ext_modules=[at, cconfig, diffmatrix] +
+    ext_modules=[at, cconfig, diffmatrix, wiggdiffmatrix] +
                 [c_integrator_ext(pm) for pm in c_pass_methods] +
                 [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )

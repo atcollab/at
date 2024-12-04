@@ -214,7 +214,7 @@ MODULE_DEF(BndMPoleSymplectic4Pass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
         double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, Scaling,
                 FringeInt1, FringeInt2;
         int MaxOrder, NumIntSteps, FringeBendEntrance, FringeBendExit,

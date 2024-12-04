@@ -12,29 +12,12 @@
 
 #include "atelem.c"
 #include "atlalib.c"
-
-/* Fourth order-symplectic integrator constants */
-
-#define DRIFT1    0.6756035959798286638
-#define DRIFT2   -0.1756035959798286639
-#define KICK1     1.351207191959657328
-#define KICK2    -1.702414383919314656
-
-/* Physical constants used in the calculations */
-
-#define TWOPI		6.28318530717959
-#define CGAMMA 	8.846056192e-05 			/* [m]/[GeV^3] Ref[1] (4.1)      */
-#define M0C2      5.10999060e5				/* Electron rest mass [eV]       */
-#define LAMBDABAR 3.86159323e-13			/* Compton wavelength/2pi [m]    */
-#define CER   		2.81794092e-15			/* Classical electron radius [m] */
-#define CU        1.323094366892892			/* 55/(24*sqrt(3)) factor        */
-
-
+#include "atconstants.h"
 
 #define SQR(X) ((X)*(X))
 
-
-
+/* Physical constants used in the calculations */
+const double M0C2 = 1.0e9*__E0;				/* Electron rest mass [eV] */
 
 static void edgefringeB(double* r, double *B, double inv_rho, double edge_angle, double fint, double gap)
 {   double fx, fy, psi;
@@ -289,7 +272,7 @@ static void thinkickB(double* orbit_in, double* A, double* B, double L,
 								orbit_in[2] , orbit_in[3]*p_norm );
 	B3P = B2P*sqrt(B2P);
 
-	BB = CU * CER * LAMBDABAR *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
+	BB = DIF_CONST *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
 				(1+orbit_in[0]*irho + (SQR(orbit_in[1])+SQR(orbit_in[3]))*p_norm2/2);
 
 	
@@ -522,7 +505,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
 	bdiff = mxGetDoubles(plhs[0]);
     for (i=0; i<36; i++) bdiff[i]=0.0;
-    
+
     diffmatrix(mxElem, orb, energy, bdiff);
 }
 #endif /*MATLAB_MEX_FILE*/

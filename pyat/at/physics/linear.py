@@ -102,6 +102,7 @@ _WX_DTYPE = [
 
 
 _IDX_DTYPE = [("idx", np.uint32)]
+warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _twiss22(t12, alpha0, beta0):
@@ -146,7 +147,7 @@ def _tunes(ring, **kwargs):
         _, vps = a_matrix(mt)
         tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
     except AtError:
-        warnings.warn(AtWarning("Unstable ring"))
+        warnings.warn(AtWarning("Unstable ring"), stacklevel=1)
         tunes = np.empty(nd)
         tunes[:] = np.nan
     return tunes
@@ -377,12 +378,12 @@ def _linopt(
                 dd0 = twiss_in["ddispersion"]
                 dalpha = twiss_in["dalpha"]
                 dbeta = twiss_in["dbeta"]
-            except (ValueError, KeyError):  # record arrays throw ValueError !
+            except (ValueError, KeyError) as exc:  # record arrays throw ValueError !
                 msg = (
                     "'get_w' option for a line requires 'twiss_in' calculated "
                     "with 'get_w' activated"
                 )
-                raise AtError(msg)
+                raise AtError(msg) from exc
 
             orbit = orbit + np.hstack((dd0, 1.0, 0.0)) * dp * dp
             dorbit = np.hstack((d0 + dd0 * dp, 1.0, 0.0))
@@ -516,7 +517,7 @@ def _linopt(
 
     # Perform analysis
     vps, dtype, el0, els, wtype = analyze(mxx, ms)
-    tunes = _tunes(ring, orbit=orbit)
+    tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
 
     if (get_chrom or get_w) and mt.shape == (6, 6):
         f0 = ring.get_rf_frequency(cavpts=cavpts)
@@ -604,6 +605,9 @@ def _linopt(
 @check_6d(False)
 def linopt2(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of an uncoupled lattice
+
+    :py:func:`linopt2` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
 
     Parameters:
         ring:   Lattice description.
@@ -715,6 +719,9 @@ def linopt4(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a H/V coupled lattice
 
     4D-analysis of coupled motion following Sagan/Rubin [7]_
+
+    :py:func:`linopt4` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
 
     Parameters:
         ring:   Lattice description.
@@ -837,6 +844,9 @@ def linopt6(ring: Lattice, *args, **kwargs):
     *  a field **R**, as provided by ATLINOPT6, or
     * the fields **beta** and **alpha**, as provided by linopt and linopt6
 
+    :py:func:`linopt6` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
+
     Parameters:
         ring:   Lattice description.
 
@@ -950,7 +960,7 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
     This is a convenience function to automatically switch to the faster
     :py:func:`linopt2` in case the *coupled* keyword argument is
     :py:obj:`False` **and** ring.is_6d is :py:obj:`False`.
-    Otherwise the default :py:func:`linopt6` is used
+    Otherwise, the default :py:func:`linopt6` is used
 
     Parameters: Same as :py:func:`.linopt2` or :py:func:`.linopt6`
 
@@ -963,7 +973,7 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by *refpts*,
+        elemdata:       Linear optics at the points referred to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     Warning:
@@ -984,6 +994,9 @@ def get_optics(
     **kwargs,
 ):
     """Linear analysis of a fully coupled lattice
+
+    :py:func:`get_optics` computes the linear optics parameters on a single cell
+    (*periodicity* is not taken into account).
 
     Parameters:
         ring:                   Lattice description.
@@ -1117,7 +1130,7 @@ def linopt(
                         of linear motion [1]
         chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is :py:obj:`True`
-        lindata         linear optics at the points refered to by refpts, if
+        lindata         linear optics at the points referred to by refpts, if
                         refpts is None an empty lindata structure is returned.
 
         lindata is a record array with fields:
@@ -1173,6 +1186,10 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
     :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
     elements.
 
+    :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
+    elements. :py:func:`avlinopt` acts on a single cell (*periodicity* is not taken
+    into account).
+
     Parameters:
         ring:       Lattice description.
         dp:         Momentum deviation.
@@ -1219,7 +1236,7 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
           are ignored.
 
     Returns:
-        elemdata:   Linear optics at the points refered to by *refpts*,
+        elemdata:   Linear optics at the points referred to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
         avebeta:    Average beta functions
           [:math:`\hat{\beta_x},\hat{\beta_y}`] at *refpts*
@@ -1414,6 +1431,8 @@ def get_tune(
 ):
     r"""Computes the tunes using several available methods
 
+    :py:func:`get_tune` may use several methods depending on a *method* keyword.
+
     Parameters:
         ring:                   Lattice description
         method:                 ``'linopt'`` returns the tunes from the
@@ -1471,9 +1490,10 @@ def get_tune(
             _, _, c = get_optics(
                 ring, refpts=range(len(ring) + 1), dp=dp, dct=dct, df=df, orbit=orbit
             )
-            tunes = c.mu[-1] / (2 * np.pi)
+            tunes = c.mu[-1] / (2 * np.pi) * ring.periodicity
         else:
             tunes = _tunes(ring, dp=dp, dct=dct, df=df, orbit=orbit)
+            tunes, _ = np.modf(tunes * ring.periodicity)
     else:
         nturns = kwargs.pop("nturns", 512)
         ampl = kwargs.pop("ampl", 1.0e-6)
@@ -1481,6 +1501,7 @@ def get_tune(
         ld, _, _ = linopt6(ring, dp=dp, dct=dct, df=df, orbit=orbit)
         cents = gen_centroid(ring, ampl, nturns, remove_dc, ld)
         tunes = get_tunes_harmonic(cents, method=method, **kwargs)
+        tunes, _ = np.modf(tunes * ring.periodicity)
     return tunes
 
 
@@ -1496,6 +1517,8 @@ def get_chrom(
     **kwargs,
 ):
     r"""Computes the chromaticities using several available methods
+
+    :py:func:`get_tune` may use several methods depending on a *method* keyword.
 
     Parameters:
         ring:               Lattice description.

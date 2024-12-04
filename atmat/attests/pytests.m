@@ -1,4 +1,6 @@
 classdef pytests < matlab.unittest.TestCase
+    % ">> run(pytests)" to run all tests
+    % ">> run(pytests, 'orbit4')" to run a the single orbit4 method
 
     properties(Constant)
         mlist=[...
@@ -164,23 +166,25 @@ classdef pytests < matlab.unittest.TestCase
         function tunechrom4(testCase,lat,dp)
             % test on and off-momentum tunes of 4D lattices
             lattice=testCase.ring4.(lat);
+            periodicity = atGetRingProperties(lattice.m,'Periodicity');
             [mtune,mchrom]=tunechrom(lattice.m,'get_chrom',dp=dp);
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
-            testCase.verifyEqual(mtune,ptune,AbsTol=2.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=3.e-4);
+            testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=2.e-9);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,AbsTol=3.e-4);
         end
 
         function tunechrom6(testCase,lat2,dp)
             % test on and off-momentum tunes of 6D lattices
             lattice=testCase.ring6.(lat2);
+            periodicity = atGetRingProperties(lattice.m,'Periodicity');
             mlat=atsetcavity(lattice.m,frequency='nominal',dp=dp);
             plat=lattice.p.set_rf_frequency(pyargs(dp=dp,copy=true));
             [mtune,mchrom]=tunechrom(mlat,'get_chrom');
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
-            testCase.verifyEqual(mtune,ptune,AbsTol=1.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.e-4);
+            testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=1.e-9);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=1.e-4,AbsTol=3.e-4);
         end
 
         function linopt1(testCase,dp)
@@ -205,6 +209,7 @@ classdef pytests < matlab.unittest.TestCase
         end
 
         function avlin1(testCase, lat, dp)
+            % Check average beta, dispersion, phase advance
             lattice=testCase.ring4.(lat);
             mrefs=true(1,length(lattice.m));
             prefs=py.numpy.array(mrefs);
@@ -212,10 +217,12 @@ classdef pytests < matlab.unittest.TestCase
             a=cell(lattice.p.avlinopt(dp, prefs));
             pbeta = double(a{2});
             pdisp = double(a{4});
+            pmu = double(a{3});
             % Matlab
-            [~,mbeta,~,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
+            [~,mbeta,mmu,mdisp,~,~]=atavedata(lattice.m,dp,mrefs);
             % check
-            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-7,RelTol=1.e-7);
+            testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-8,RelTol=1.e-8);
+            testCase.verifyEqual(mmu,pmu,AbsTol=1.E-8,RelTol=0);
             testCase.verifyEqual(mdisp,pdisp,AbsTol=1.E-8,RelTol=0);
         end
 
@@ -236,5 +243,57 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(mgamma,lattice.p.gamma);
             testCase.verifyEqual(mmcf,lattice.p.mcf,RelTol=1.E-8);
         end
+
+        function fastring(testCase,lat2)
+            lattice=testCase.ring4.(lat2);
+            [rm, rmrad]=atfastring(lattice.m);
+            rpy=cell(py.at.fast_ring(lattice.p));
+            rp=cell(rpy{1});
+            rprad=cell(rpy{2});
+            checkattr(rm, rp);
+            checkattr(rmrad,rprad);
+
+            function checkattr(rm, rp)
+                testCase.verifyEqual(rm{2}.Frequency, rp{1}.Frequency, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{2}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{3}.I2, rp{2}.I2, RelTol=1.0e-15);
+                testCase.verifyEqual(rm{3}.Length, rp{2}.Length, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{3}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
+                testCase.verifyEqual(rm{end}.A1, rp{3}.A1, RelTol=0.01);
+                testCase.verifyEqual(rm{end}.A2, rp{3}.A2, RelTol=0.02);
+                testCase.verifyEqual(rm{end}.A3, rp{3}.A3, RelTol=0.01);
+                testCase.verifyEqual(rm{end}.Alphax, rp{3}.Alphax, AbsTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Alphay, rp{3}.Alphay, AbsTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Betax, rp{3}.Betax, RelTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Betay, rp{3}.Betay, RelTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Qpx, rp{3}.Qpx, RelTol=1.e-8);
+                testCase.verifyEqual(rm{end}.Qpy, rp{3}.Qpy, RelTol=1.e-8);
+                if length(rm) >= 5
+                    testCase.verifyEqual(rm{end-1}.Lmatp, double(rp{4}.Lmatp), AbsTol=2.e-7);
+                end
+            end
+        end
+
+        function emittances(testCase, lat2)
+            % Check emittances, tunes and damping rates
+            lattice=testCase.ring6.(lat2);
+            % python
+            pdata=cell(lattice.p.ohmi_envelope());
+            pemit=double(py.getattr(pdata{2},'mode_emittances'));
+            ptunes=double(py.getattr(pdata{2},'tunes'));
+            pdamprate=double(py.getattr(pdata{2},'damping_rates'));
+            %matlab
+            [mdata,~,~,m]=ohmienvelope(lattice.m);
+            jmt=jmat(3);
+            aa=amat(m);
+            nn=-aa'*jmt*mdata.R*jmt*aa;
+            memit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            [mtunes,mdamprate]=atdampingrates(m);
+            %check
+            testCase.verifyEqual(memit,pemit,AbsTol=1.e-30,RelTol=1.e-6);
+            testCase.verifyEqual(mtunes,ptunes,AbsTol=1.e-10);
+            testCase.verifyEqual(mdamprate,pdamprate,AbsTol=1.e-10);
+        end
+
     end
 end
