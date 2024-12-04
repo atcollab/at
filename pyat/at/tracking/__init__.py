@@ -1,7 +1,7 @@
 """
 Tracking functions
 """
-from .atpass import reset_rng, common_rng, thread_rng
+from .atpass import diffusion_matrix, reset_rng, common_rng, thread_rng
 from .track import *
 from .particles import *
 from .utils import *

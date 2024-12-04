@@ -86,7 +86,7 @@ end
         % Check the validity of the harmonic number
         cell_h=ring_h/nper;
         % Check on full ring
-        if (round(ring_h) - ring_h) ~= 0
+        if isfinite(ring_h) && (round(ring_h) - ring_h) ~= 0
             error('AT:Invalid','The harmonic number must be integer')
         end
 %       % Check on cell

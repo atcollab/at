@@ -29,13 +29,13 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
         cache: pip
 
     - name: Set up MATLAB
       uses: matlab-actions/setup-matlab@v2
       with:
-        release: R2023a
+        release: R2024a
 
     - name: Atmexall
       uses: matlab-actions/run-command@v2

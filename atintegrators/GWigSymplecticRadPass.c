@@ -1,11 +1,17 @@
 /* GWigSymplecticRadPass.c for
-   Accelerator Toolbox 
+   Accelerator Toolbox
 */
 
 /*
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .04  2024-10-21     L. Farvacque
+ *              Merged tracking and diffusion matrices
+ * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
+ *              Adding rotations and translations to wiggler.
+ *				Bug fix in wiggler initialisation.
+ *				Energy parameter bug fix.
  * .02  2003-06-18     J. Li
  *				Cleanup the code
  *
@@ -13,12 +19,12 @@
  *				GWiggler interface
  *
  *---------------------------------------------------------------------------
- *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu  
+ *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
  */
 
 #include "atelem.c"
 #include "atlalib.c"
-#include "gwigR.c"
+#include "wigrad.c"
 
 struct elem {
     double Energy;
@@ -41,122 +47,191 @@ struct elem {
 /*****************************************************************************/
 /* PHYSICS SECTION ***********************************************************/
 
-void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
-            double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
-            int HSplitPole, int VSplitPole, double *zEndPointH,
-            double *zEndPointV, double *By, double *Bx, double *T1,
-            double *T2, double *R1, double *R2)
+
+static void wigglerM(struct gwig *pWig, double* orbit_in, double L, double *bdiff)
 {
-    double *tmppr;
-    int    i;
-    double kw;
+    /* Computes the transfer matrix for a wiggler. */
+	double M66[36];
+	double H2[36];
+	Hessian(pWig, orbit_in ,H2);
 
-    Wig->E0 = design_energy;
-    Wig->Po = Wig->E0/XMC2;
-    Wig->Pmethod = Nmeth;
-    Wig->PN = Nstep;
-    Wig->Nw = (int)(Ltot / Lw);
-    Wig->NHharm = NHharm;
-    Wig->NVharm = NVharm;
-    Wig->PB0 = Bmax;
-    Wig->Lw = Lw;
-    /*------------------ radiation including -------------------*/
-    Wig->srCoef = (q_e*q_e)*((Wig->Po)*(Wig->Po)*(Wig->Po))/(6*PI*epsilon_o*m_e*(clight*clight));
-    Wig->HSplitPole = HSplitPole;
-    Wig->VSplitPole = VSplitPole;
-    Wig->zStartH = zEndPointH[0];
-    Wig->zEndH = zEndPointH[1];
-    Wig->zStartV = zEndPointV[0];
-    Wig->zEndV = zEndPointV[1];
-    /*----------------------------------------------------------*/
+	M66[0]   = 1.0 + H2[6]; /* H[1, 0] */
+	M66[1]   =-H2[0];       /* H[0, 0] */
+	M66[2]   = H2[18];      /* H[3, 0] */
+	M66[3]   =-H2[12];      /* H[2, 0] */
+	M66[4]   = H2[30];      /* H[5, 0] */
+	M66[5]   =-H2[24];      /* H[4, 0] */
 
-    kw = 2.0e0*PI/(Wig->Lw);
-    Wig->Zw = 0.0;
-    Wig->Aw = 0.0;
-    tmppr = By;
-    for (i = 0; i < NHharm; i++) {
-        tmppr++;
-        Wig->HCw[i] = 0.0;
-        Wig->HCw_raw[i] = *tmppr;
-        tmppr++;
-        Wig->Hkx[i] = (*tmppr) * kw;
-        tmppr++;
-        Wig->Hky[i] = (*tmppr) * kw;
-        tmppr++;
-        Wig->Hkz[i] = (*tmppr) * kw;
-        tmppr++;
-        Wig->Htz[i] = *tmppr;
-        tmppr++;
-    }
-    tmppr = Bx;
-    for (i = 0; i < NVharm; i++) {
-        tmppr++;
-        Wig->VCw[i] = 0.0;
-        Wig->VCw_raw[i] = *tmppr;
-        tmppr++;
-        Wig->Vkx[i] = (*tmppr) * kw;
-        tmppr++;
-        Wig->Vky[i] = (*tmppr) * kw;
-        tmppr++;
-        Wig->Vkz[i] = (*tmppr) * kw;
-        tmppr++;
-        Wig->Vtz[i] = *tmppr;
-        tmppr++;
-    }
-    for (i = NHharm; i< WHmax; i++) {
-        Wig->HCw[i] = 0.0;
-        Wig->HCw_raw[i] = 0.0;
-        Wig->Hkx[i] = 0.0;
-        Wig->Hky[i] = 0.0;
-        Wig->Hkz[i] = 0.0;
-        Wig->Htz[i] = 0.0;
-    }
-    for (i = NVharm; i< WHmax; i++) {
-        Wig->VCw[i] = 0.0;
-        Wig->VCw_raw[i] = 0.0;
-        Wig->Vkx[i] = 0.0;
-        Wig->Vky[i] = 0.0;
-        Wig->Vkz[i] = 0.0;
-        Wig->Vtz[i] = 0.0;
-    }
+	M66[6]   = L*H2[6]+H2[7];       /* H[1, 0] + H[1, 1] */
+	M66[7]   = 1.0 - L*H2[0]-H2[1]; /* H[0, 0] - H[0, 1] */
+	M66[8]   = L*H2[18]+H2[19];     /* H[3, 0] + H[3, 1] */
+	M66[9]   =-L*H2[12]-H2[13];     /* H[2, 0] - H[2, 1] */
+	M66[10]  = L*H2[30]+H2[31];     /* H[5, 0] + H[5, 1] */
+	M66[11]  =-L*H2[24]-H2[25];     /* H[4, 0] - H[4, 1] */
+
+	M66[12]  = H2[8];        /* H[1, 2] */
+	M66[13]  =-H2[2];        /* H[0, 2] */
+	M66[14]  = 1.0 + H2[20]; /* H[3, 2] */
+	M66[15]  =-H2[14];       /* H[2, 2] */
+	M66[16]  = H2[32];       /* H[5, 2] */
+	M66[17]  =-H2[26];       /* H[4, 2] */
+
+	M66[18]  = L*H2[8]+H2[9];         /* H[1, 2] + H[1, 3] */
+	M66[19]  =-L*H2[2]-H2[3];         /* H[0, 2] - H[0, 3] */
+	M66[20]  = L*H2[20]+H2[21];       /* H[3, 2] + H[3, 3] */
+	M66[21]  = 1.0 - L*H2[14]-H2[15]; /* H[2, 2] - H[2, 3] */
+	M66[22]  = L*H2[32]+H2[33];       /* H[5, 2] - H[5, 3] */
+	M66[23]  =-L*H2[26]-H2[27];       /* H[4, 2] - H[4, 3] */
+
+	M66[24]  = H2[10];       /* H[1, 4] */
+	M66[25]  =-H2[4];        /* H[0, 4] */
+	M66[26]  = H2[22];       /* H[3, 4] */
+	M66[27]  =-H2[16];       /* H[2, 4] */
+	M66[28]  = 1.0 + H2[34]; /* H[5, 4] */
+	M66[29]  =-H2[28];       /* H[4, 4] */
+
+	M66[30]  = H2[11];       /* H[1, 5] */
+	M66[31]  =-H2[5];        /* H[0, 5] */
+	M66[32]  = H2[23];       /* H[3, 5] */
+	M66[33]  =-H2[17];       /* H[2, 5] */
+	M66[34]  = H2[35];       /* H[5, 5] */
+	M66[35]  = 1.0 - H2[29]; /* H[4, 5] */
+
+    ATsandwichmmt(M66, bdiff);
 }
 
-#define second 2
-#define fourth 4
-void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
+
+static void wigglerB(struct gwig *pWig, double* orbit_in, double L, double *bdiff)
+{  /* Calculate Ohmi's diffusion matrix of a wiggler.
+   Since wigglers have a straight coordinate system: irho=0
+   The result is stored in a preallocated 1-dimentional array B66
+   (of 36 elements) of matrix B arranged column-by-column
+*/
+
+    double B66[36];
+    double ax,ay,kx,ky,axpy,aypx;
+	double BB, E;
+	double Brho,irho3,B2;
+	double Bxyz[3];
+    double gamma0 = sqrt(1.0 + pWig->Po*pWig->Po);
+	double px= orbit_in[1];
+	double py= orbit_in[3];
+	double D = orbit_in[4];
+	double p_norm = 1.0/(1.0+D);
+	double DLDS;
+
+	GWigAx(pWig, orbit_in, &ax, &axpy);
+	GWigAy(pWig, orbit_in, &ay, &aypx);
+	kx=(px-ax)*p_norm;
+	ky=(py-ay)*p_norm;
+
+	/* Calculate the local  magnetic field in T^2 */
+    GWigB(pWig, orbit_in, Bxyz);
+    B2 = (Bxyz[0]*Bxyz[0]) + (Bxyz[1]*Bxyz[1]) + (Bxyz[2]*Bxyz[2]);
+
+    /* Beam rigidity in T*m */
+	Brho = 1.0e9 * pWig->Po * (1.0+D) *__E0 / C0;
+
+    /* 1/rho^3 */
+    irho3 = B2/(Brho*Brho)*sqrt(B2)/Brho;
+
+	DLDS = 1.0/sqrt(1.0 - kx*kx - ky*ky);
+	BB = DIF_CONST * pow(gamma0, 5) * irho3 * DLDS * L;
+
+	/* When a 6-by-6 matrix is represented in MATLAB as one-dimentional
+	   array containing 36 elements arranged column-by-column,
+	   the relationship between indexes  is
+	   [i][j] <---> [i+6*j]
+	*/
+
+	/* initialize B66 to 0 */
+	for (int i=0; i<36; i++)
+		B66[i] = 0.0;
+
+	/* Populate B66 */
+	B66[7]      = BB*kx*kx;  /* B66[1, 1] */
+	B66[19]     = BB*kx*ky;  /* B66[1, 3] */
+	B66[9]      = B66[19];   /* B66[3, 1] */
+	B66[21]     = BB*ky*ky;  /* B66[3, 3] */
+	B66[10]     = BB*kx;     /* B66[4, 1] */
+	B66[25]     = B66[10];   /* B66[1, 4] */
+	B66[22]     = BB*ky;     /* B66[4, 3] */
+	B66[27]     = B66[22];   /* B66[3, 4] */
+	B66[28]     = BB;        /* B66[4, 4] */
+
+    ATaddmm(B66, bdiff);
+}
+
+void GWigSymplecticRadPass(double *orbit_in, double gamma, double le, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             double *By, double *Bx, double *T1, double *T2,
-            double *R1, double *R2, int num_particles)
+            double *R1, double *R2, int num_particles, double *bdiff)
 {
-    int c;
-    double *r6;
-    double zEndPointH[2];
-    double zEndPointV[2];
-    struct gwigR Wig;
-    /* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
-    Energy = Energy / 1e9;
+	double ax,ay,axpy,aypx;
+    struct gwig pWig;
+	double B[3];
+    double SL = Lw/Nstep;
+	double dl1 = SL*KICK1;
+    double dl0 = SL*KICK2;
+	int Niter = Nstep*(le/Lw);
 
-    zEndPointH[0] = 0;
-    zEndPointH[1] = Ltot;
-    zEndPointV[0] = 0;
-    zEndPointV[1] = Ltot;
+    GWigInit2(&pWig, gamma,le, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0,0,By,Bx,T1,T2,R1,R2);
 
-    GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, zEndPointH, zEndPointV, By, Bx, T1, T2, R1, R2);
-
-    for(c = 0;c<num_particles;c++) {
-        r6 = r+c*6;
+    for (int c = 0; c<num_particles; c++) { /* Loop over particles */
+        double *r6 = orbit_in + c*6;
+        pWig.Zw = 0.0;
         if(!atIsNaN(r6[0])) {
-            switch (Nmeth) {
-                case second:
-                    GWigPass_2nd(&Wig, r6);
-                    break;
-                case fourth:
-                    GWigPass_4th(&Wig, r6);
-                    break;
-                default:
-                    printf("Invalid wiggler integration method %d.\n", Nmeth);
-                    break;
+			/* Misalignment at entrance */
+			if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
+            GWigGauge(&pWig, r6, 1);
+
+            GWigAx(&pWig, r6, &ax, &axpy);
+            GWigAy(&pWig, r6, &ay, &aypx);
+            GWigB(&pWig, r6, B);
+            r6[1] -= ax;
+            r6[3] -= ay;
+            GWigRadiationKicks(&pWig, r6, B, SL);
+            r6[1] += ax;
+            r6[3] += ay;
+
+            /* integrator */
+            for (int m=0; m < Niter; m++) { /* Loop over slices */
+                if (bdiff) {
+                    wigglerM(&pWig, r6, dl1, bdiff);
+                    wigglerB(&pWig, r6, dl1, bdiff);
+                }
+                GWigMap_2nd(&pWig, r6, dl1);
+
+                if (bdiff) {
+                    wigglerM(&pWig, r6, dl0, bdiff);
+                    wigglerB(&pWig, r6, dl0, bdiff);
+                }
+                GWigMap_2nd(&pWig, r6, dl0);
+
+                if (bdiff) {
+                    wigglerM(&pWig, r6, dl1, bdiff);
+                    wigglerB(&pWig, r6, dl1, bdiff);
+                }
+                GWigMap_2nd(&pWig, r6, dl1);
+
+                GWigAx(&pWig, r6, &ax, &axpy);
+                GWigAy(&pWig, r6, &ay, &aypx);
+                GWigB(&pWig, r6, B);
+                r6[1] -= ax;
+                r6[3] -= ay;
+                GWigRadiationKicks(&pWig, r6, B, SL);
+                r6[1] += ax;
+                r6[3] += ay;
+		    }
+
+            GWigGauge(&pWig, r6, -1);
+
+            if(R2) {
+               ATmultmv(r6,R2);
+               ATsandwichmmt(R2,bdiff);
             }
+            if(T2) ATaddvv(r6,T2);
         }
     }
 }
@@ -169,6 +244,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 
 {
+    double gamma;
+    double *bdiff = Param->bdiff;
+
     if (!Elem) {
         double *R1, *R2, *T1, *T2;
         double *By, *Bx;
@@ -176,7 +254,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int Nstep, Nmeth;
         int NHharm, NVharm;
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
@@ -187,6 +264,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
         /* Optional fields */
+        Energy = atGetOptionalDouble(ElemData, "Energy",Param->energy); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
@@ -209,10 +287,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    GWigSymplecticRadPass(r_in, Elem->Energy, Elem->Length, Elem->Lw,
-            Elem->Bmax, Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+
+    GWigSymplecticRadPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
+            Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
             Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
-            num_particles);
+            num_particles, bdiff);
   return Elem;
 }
 
@@ -227,8 +307,11 @@ MODULE_DEF(GWigSymplecticRadPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
+        double rest_energy = 0.0;
+        double charge = -1.0;
         double *r_in;
+        double Gamma;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         double *By, *Bx;
@@ -236,8 +319,8 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         double Ltot, Lw, Bmax, Energy;
         int Nstep, Nmeth;
         int NHharm, NVharm;
+        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
 
-        Energy = atGetDouble(ElemData, "Energy"); check_error();
         Ltot = atGetDouble(ElemData, "Length"); check_error();
         Lw = atGetDouble(ElemData, "Lw"); check_error();
         Bmax = atGetDouble(ElemData, "Bmax"); check_error();
@@ -248,16 +331,20 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
         /* Optional fields */
+        Energy = atGetOptionalDouble(ElemData, "Energy",0.0); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        Gamma = atGamma(Energy, Energy, rest_energy);
         r_in = mxGetDoubles(plhs[0]);
-        GWigSymplecticRadPass(r_in, Energy, Ltot, Lw, Bmax, Nstep, Nmeth,
-            NHharm, NVharm, By, Bx, T1, T2, R1, R2, num_particles);
+
+        GWigSymplecticRadPass(r_in, Gamma, Ltot, Lw, Bmax, Nstep, Nmeth,
+            NHharm, NVharm, By, Bx, T1, T2, R1, R2, num_particles, NULL);
     }
     else if (nrhs == 0) {
         /* list of required fields */

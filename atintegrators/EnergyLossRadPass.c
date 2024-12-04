@@ -62,7 +62,7 @@ MODULE_DEF(EnergyLossRadPass)        /* Dummy module initialisation */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
      /* Check if the number of input arguments is correct. */
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
         /* Get the input arguments. */
         double *r_in;
         const mxArray *ElemData = prhs[0];

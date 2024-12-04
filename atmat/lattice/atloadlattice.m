@@ -94,8 +94,13 @@ lattice=atSetRingProperties(lattice,varargs{:});
         energy=props.energy;
         periodicity=props.periodicity;
         particle=atparticle.loadobj(props.particle);
-        harmnumber=props.harmonic_number;
-        props=rmfield(props,{'name','energy','periodicity','particle','harmonic_number'});
+        if isfield(props,'harmonic_number')
+            harmnumber=props.harmonic_number;
+            props=rmfield(props,'harmonic_number');
+        else
+            harmnumber=NaN;
+        end
+        props=rmfield(props,{'name','energy','periodicity','particle'});
         args=[fieldnames(props) struct2cell(props)]';
         lattice=atSetRingProperties(data.elements,...
             'FamName', name,...
