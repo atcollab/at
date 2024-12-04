@@ -102,12 +102,8 @@ _WX_DTYPE = [
 
 
 _IDX_DTYPE = [("idx", np.uint32)]
-<<<<<<< HEAD
-=======
-
-
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
->>>>>>> master
+
 
 
 def _twiss22(t12, alpha0, beta0):
@@ -152,11 +148,7 @@ def _tunes(ring, **kwargs):
         _, vps = a_matrix(mt)
         tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
     except AtError:
-<<<<<<< HEAD
-        warnings.warn(AtWarning("Unstable ring"))
-=======
         warnings.warn(AtWarning("Unstable ring"), stacklevel=1)
->>>>>>> master
         tunes = np.empty(nd)
         tunes[:] = np.nan
     return tunes
@@ -387,20 +379,12 @@ def _linopt(
                 dd0 = twiss_in["ddispersion"]
                 dalpha = twiss_in["dalpha"]
                 dbeta = twiss_in["dbeta"]
-<<<<<<< HEAD
-            except (ValueError, KeyError):  # record arrays throw ValueError !
-=======
             except (ValueError, KeyError) as exc:  # record arrays throw ValueError !
->>>>>>> master
                 msg = (
                     "'get_w' option for a line requires 'twiss_in' calculated "
                     "with 'get_w' activated"
                 )
-<<<<<<< HEAD
-                raise AtError(msg)
-=======
                 raise AtError(msg) from exc
->>>>>>> master
 
             orbit = orbit + np.hstack((dd0, 1.0, 0.0)) * dp * dp
             dorbit = np.hstack((d0 + dd0 * dp, 1.0, 0.0))
@@ -1507,11 +1491,7 @@ def get_tune(
             _, _, c = get_optics(
                 ring, refpts=range(len(ring) + 1), dp=dp, dct=dct, df=df, orbit=orbit
             )
-<<<<<<< HEAD
-            tunes = c.mu[-1] / (2 * np.pi)
-=======
             tunes = c.mu[-1] / (2 * np.pi) * ring.periodicity
->>>>>>> master
         else:
             tunes = _tunes(ring, dp=dp, dct=dct, df=df, orbit=orbit)
             tunes, _ = np.modf(tunes * ring.periodicity)
