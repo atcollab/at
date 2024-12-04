@@ -15,7 +15,8 @@ function [BCUM,Batbeg] = atdiffmat(ring,varargin)
 
 newmethods = {'BndMPoleSymplectic4RadPass', ...
               'StrMPoleSymplectic4RadPass', ...
-              'ExactMultipoleRadPass'};
+              'ExactMultipoleRadPass', ...
+              'EnergyLossRadPass'};
 
 NumElements=length(ring);
 
