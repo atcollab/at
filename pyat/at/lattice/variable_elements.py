@@ -118,38 +118,34 @@ class VariableMultipole(Element):
             # start setting up Amplitudes
             theamplitudes = {"amplitudea" : None, "amplitudeb": None}
             # amplitude names need to be different in pyat and matlab in order to avoid
-            # problems between args and kwargs
-            validamplitudenames = ["amplitude","Amplitude"]
-            invalidname = 1
-            namecounter = 0
-            lenvalidnames = len(validamplitudenames)
-            for thetype in ['A','B']:
-            while invalidname:
-                if namecounter >= lenvalidnames:
-                    raise AtError("Please provide at least one amplitude for A or B")
-                else:
-                    if validamplitudenames[namecounter] in kwargs:
-                        invalidname = 0
-                    else:
-                        namecounter += 1
-            if "AmplitudeA" in kwargs:
-                amplitudea = kwargs.pop("AmplitudeA", None)
-                amplitudea = self._set_params(amplitudea, mode, "A", **kwargs)
-            if "AmplitudeB" in kwargs:
-                amplitudeb = kwargs.pop("AmplitudeB", None)
-                amplitudeb = self._set_params(amplitudeb, mode, "B", **kwargs)
-            if amplitudea is not None:
-                self.AmplitudeA = amplitudea
-            if amplitudeb is not None:
-                self.AmplitudeB = amplitudeb
-            # end setting up Amplitudes and modes
+            # problems between args and kwargs in python
+            amp_aux = {'A':None, 'B':None}
+            all_amplitudes_are_none = 1
+            for key in amp_aux.keys():
+                if 'Amplitude'+key in kwargs and 'amplitude'+key in kwargs:
+                    raise AtError('Duplicated amplitude '+key+'parameters.')
+                    some_amplitude_exists = 1
+                lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
+                amp_aux[key] = lower_case_kwargs.pop('amplitude'+key.lower(), None)
+                if amp_aux[key] is not None:
+                    all_amplitudes_are_none = 0
+            if all_amplitudes_are_none:
+                raise AtError("Please provide at least one amplitude for A or B")
+            for key in amp_aux.keys():
+                amp_aux[key] = self._set_amplitude(amp_aux[key])
+                self._set_params(mode, key, **kwargs)
+                if amp_aux[key] is not None:
+                    setattr(self, 'Amplitude'+key, amp_aux[key])
             kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-            self._setmaxorder(amplitudea, amplitudeb)
+            self._setmaxorder(amp_aux['A'], amp_aux['B'])
             if mode == ACMode.WHITENOISE and "Seed" not in kwargs:
                 kwargs.update({"Seed": datetime.now().timestamp()})
             self.Periodic = kwargs.pop("Periodic", True)
-            self.PolynomA = kwargs.pop("PolynomA", np.zeros(self.MaxOrder + 1))
-            self.PolynomB = kwargs.pop("PolynomB", np.zeros(self.MaxOrder + 1))
+            for key in amp_aux.keys():
+                if amp_aux[key] is not None:
+                    setattr(self, 'Polynom'+key, amp_aux[key])
+                else:
+                    setattr(self, 'Polynom'+key, np.zeros(self.MaxOrder+1))
             # check ramps
             ramps = kwargs.pop("Ramps", None)
             if ramps is not None:
@@ -166,29 +162,21 @@ class VariableMultipole(Element):
         if ampb is not None:
             mxb = np.max(np.append(np.nonzero(ampb), 0))
         self.MaxOrder = max(mxa, mxb)
-        if ampa is not None:
-            delta = self.MaxOrder - len(ampa)
-            if delta > 0:
-                ampa = np.pad(ampa, (0, delta))
-            self.AmplitudeA = ampa
-        if ampb is not None:
-            delta = self.MaxOrder + 1 - len(ampb)
-            if delta > 0:
-                ampb = np.pad(ampb, (0, delta))
-            self.AmplitudeB = ampb
 
-    def _set_params(
-        self, amplitude: int or str, mode, a_b: str, **kwargs: dict[str, any]
-    ):
+    def _set_amplitude(self, amplitude: int or str):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
                 amplitude = np.append(amp, amplitude)
+        return np.asarray(amplitude)
+
+    def _set_params(
+        self, mode, a_b: str, **kwargs: dict[str, any]
+    ):
             if mode == ACMode.SINE:
                 self._set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
                 self._set_arb(a_b, **kwargs)
-        return amplitude
 
     def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + a_b, None)
