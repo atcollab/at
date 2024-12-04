@@ -45,7 +45,7 @@ lg=initial(refs(needed)); % refpts
 
 beta0=avebeta(lg,:); %long
 alpha0=cat(1,lin0.alpha); %long
-mu0=cat(1,lin0.mu); %long
+mu0=avemu(lg,:); %long
 disp0=avedisp(lg,:); %long
 
 mu1=cat(1,lin1.mu); %long
