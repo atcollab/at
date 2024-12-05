@@ -452,7 +452,7 @@ def get_rdts(
 
         **rdts** is a dictionary with keys:
         =================   ======
-        **refpts**           location of the rdt
+        **refpts**          location of the rdt
 
         **h20000**          at.RDTType.FOCUSING
         **h00200**
