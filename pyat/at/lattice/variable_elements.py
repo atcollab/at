@@ -133,8 +133,8 @@ class VariableMultipole(Element):
                 raise AtError("Please provide at least one amplitude for A or B")
             for key in amp_aux.keys():
                 amp_aux[key] = self._set_amplitude(amp_aux[key])
-                self._set_params(mode, key, **kwargs)
                 if amp_aux[key] is not None:
+                    self._set_params(mode, key, **kwargs)
                     setattr(self, 'Amplitude'+key, amp_aux[key])
             kwargs.setdefault("PassMethod", "VariableThinMPolePass")
             self._setmaxorder(amp_aux['A'], amp_aux['B'])
