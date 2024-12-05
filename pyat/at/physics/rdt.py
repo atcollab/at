@@ -11,8 +11,6 @@ from dataclasses import dataclass, asdict
 
 __all__ = ["get_rdts", "RDTType"]
 
-_PERIODICFACTOR = np.ones((9, 9), dtype=complex)
-
 
 class RDTType(Enum):
     """Enum class for RDT type
@@ -46,14 +44,14 @@ def _get_polynom(elem, attr, index):
 
 def _compute_pf(tune, nperiods):
     "This uses the formula Sum(x^k, k=1->p) = x(x^p-1)/(x-1)"
+    pf = np.ones((9, 9), dtype=complex)
     if nperiods != 1:
         for i in range(9):
             for j in range(9):
                 a1 = np.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
                 a2 = a1 / nperiods
-                _PERIODICFACTOR[i][j] = (np.exp(1j * a1) - 1.0) / (
-                    np.exp(1j * a2) - 1.0
-                )
+                pf[i][j] = (np.exp(1j * a1) - 1.0) / (np.exp(1j * a2) - 1.0)
+    return pf
 
 
 def _computedrivingterms(
@@ -72,13 +70,14 @@ def _computedrivingterms(
     nperiods,
     refpt,
     second_order,
+    periodic_factor,
 ):
     """
     Original implementation from ELEGANT
     """
 
     def pf(i, j):
-        return _PERIODICFACTOR[4 + i][4 + j]
+        return periodic_factor[4 + i][4 + j]
 
     rdts = {}
     rdts2 = {}
@@ -360,7 +359,7 @@ def _get_rdtlist(
 ):
     rdtlist = []
     rdtlist2 = []
-    _compute_pf(tune, nperiods)
+    pf = _compute_pf(tune, nperiods)
     for ii in refpts:
         start_idx = sum(idx_mag < ii)
         beta_rot = np.roll(beta, -start_idx, axis=0)
@@ -387,6 +386,7 @@ def _get_rdtlist(
             nperiods,
             ii,
             second_order,
+            pf,
         )
         rdtlist.append(rdt)
         rdtlist2.append(rdt2)
@@ -539,11 +539,11 @@ def get_rdts(
     )
     if use_mp:
         if pool_size is None:
-            pool_size = multiprocessing.cpu_count()
+            pool_size = min(len(refpts), multiprocessing.cpu_count())
         ctx = multiprocessing.get_context()
-        refs = np.array_split(refpts, pool_size)
+        refpts = np.array_split(refpts, pool_size)
         with ctx.Pool(pool_size) as pool:
-            results = pool.map(fun, refs)
+            results = pool.map(fun, refpts)
             rdtlist, rdtlist2 = zip(*results)
             rdtlist = np.concatenate(rdtlist)
             rdtlist2 = np.concatenate(rdtlist2)
