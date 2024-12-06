@@ -18,4 +18,5 @@ from .ring_parameters import *
 from .nonlinear import *
 from .fastring import *
 from .frequency_maps import fmap_parallel_track
+from .rdt import *
 from .magnet_tools import *

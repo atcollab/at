@@ -102,9 +102,8 @@ _WX_DTYPE = [
 
 
 _IDX_DTYPE = [("idx", np.uint32)]
-
-
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
+
 
 
 def _twiss22(t12, alpha0, beta0):
@@ -1372,7 +1371,7 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
     longi_refpts = np.append(longelem, [False])
     longf_refpts = np.roll(longi_refpts, 1)
     all_refs = boolrefs | longf_refpts
-    _, bd, d_all = linopt4(ring, refpts=all_refs, dp=dp, get_chrom=True, **kwargs)
+    _, bd, d_all = get_optics(ring, refpts=all_refs, dp=dp, get_chrom=True, **kwargs)
     lindata = d_all[boolrefs[all_refs]]  # Optics at entrance of selected elements
 
     avebeta = lindata.beta.copy()
