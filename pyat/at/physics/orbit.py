@@ -56,7 +56,13 @@ def _orbit_dp(ring: Lattice, dp: float = None, guess: Orbit = None, **kwargs):
         j4 = (in_mat[:4, :4] - in_mat[:4, 4:]) / scaling
         a = j4 - id4  # f'(r_n) - 1
         b = ref_out[:4] - ref_in[:4]
-        b_over_a = numpy.linalg.solve(a, b)
+        try:
+            b_over_a = numpy.linalg.solve(a, b)
+        except numpy.linalg.LinAlgError:
+            msg = 'Particle lost during orbit search, returning NaN'
+            warnings.warn(AtWarning(msg))
+            b_over_a = numpy.zeros(4)
+            b_over_a[:] = numpy.nan
         r_next = ref_in - numpy.append(b_over_a, numpy.zeros((2,)))
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
@@ -106,7 +112,13 @@ def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
         j5 = (in_mat[idx, :5] - in_mat[idx, 5:]) / scaling
         a = j5 - id5  # f'(r_n) - 1
         b = ref_out[idx] - numpy.append(ref_in[:4], 0.0) - theta5
-        b_over_a = numpy.linalg.solve(a, b)
+        try:
+            b_over_a = numpy.linalg.solve(a, b)
+        except numpy.linalg.LinAlgError:
+            msg = 'Particle lost during orbit search, returning NaN'
+            warnings.warn(AtWarning(msg))
+            b_over_a = numpy.zeros(5)
+            b_over_a[:] = numpy.nan
         r_next = ref_in - numpy.append(b_over_a, 0.0)
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
@@ -321,7 +333,14 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     harm_number = round(f_rf*l0/ring.beta/clight)
 
     if guess is None:
-        _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+        try:
+            _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+        except AtError:
+            try:
+                _, dt = get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=cavpts)
+            except AtError:
+                msg = 'Energy loss per turn calculation failed, closed orbit not found'
+                raise AtError(msg)
         # Getting timelag by tracking uses a different lattice,
         # so we cannot now use the same one again.
         if method is ELossMethod.TRACKING:
@@ -353,7 +372,13 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
         a = j6 - id6  # f'(r_n) - 1
         b = ref_out[:] - ref_in[:] - theta
         # b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
-        b_over_a = numpy.linalg.solve(a, b)
+        try:
+            b_over_a = numpy.linalg.solve(a, b)
+        except numpy.linalg.LinAlgError:
+            msg = 'Particle lost during orbit search, returning NaN'
+            warnings.warn(AtWarning(msg))
+            b_over_a = numpy.zeros(6)
+            b_over_a[:] = numpy.nan
         r_next = ref_in - b_over_a
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
