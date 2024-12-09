@@ -105,6 +105,32 @@ All = RefptsCode.All
 End = RefptsCode.End
 
 
+def _chkattr(attrname: str, el):
+    return hasattr(el, attrname)
+
+
+def _chkattrval(attrname: str, attrvalue, el):
+    try:
+        v = getattr(el, attrname)
+    except AttributeError:
+        return False
+    else:
+        return v == attrvalue
+
+
+def _chkpattern(pattern: str, el):
+    return fnmatch(el.FamName, pattern)
+
+
+def _chkregex(pattern: str, el):
+    rgx = re.compile(pattern)
+    return rgx.fullmatch(el.FamName)
+
+
+def _chktype(eltype: type, el):
+    return isinstance(el, eltype)
+
+
 def _type_error(refpts, types):
     if isinstance(refpts, numpy.ndarray):
         tp = refpts.dtype.type
@@ -615,14 +641,10 @@ def checkattr(attrname: str, attrvalue: Optional = None) \
         Returns an iterator over all elements in ring that have a
         :pycode:`K` attribute equal to 0.0
     """
-    def testf(el):
-        try:
-            v = getattr(el, attrname)
-            return (attrvalue is None) or (v == attrvalue)
-        except AttributeError:
-            return False
-
-    return testf
+    if attrvalue is None:
+        return functools.partial(_chkattr, attrname)
+    else:
+        return functools.partial(_chkattrval, attrname, attrvalue)
 
 
 def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
@@ -646,7 +668,7 @@ def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
 
         Returns an iterator over all quadrupoles in ring
     """
-    return lambda el: isinstance(el, eltype)
+    return functools.partial(_chktype, eltype)
 
 
 def checkname(pattern: str, regex: bool = False) -> ElementFilter:
@@ -674,10 +696,9 @@ def checkname(pattern: str, regex: bool = False) -> ElementFilter:
         Returns an iterator over all with name starting with ``QF``.
     """
     if regex:
-        rgx = re.compile(pattern)
-        return lambda el: rgx.fullmatch(el.FamName)
+        return functools.partial(_chkregex, pattern)
     else:
-        return lambda el: fnmatch(el.FamName, pattern)
+        return functools.partial(_chkpattern, pattern)
 
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts,
