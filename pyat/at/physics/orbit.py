@@ -1,7 +1,8 @@
 """
 Closed orbit related functions
 """
-import numpy
+
+import numpy as np
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant, Orbit
 from at.lattice import Lattice, get_s_pos, Refpts, frequency_control
@@ -9,7 +10,7 @@ from at.tracking import internal_lpass
 from .energy_loss import ELossMethod, get_timelag_fromU0
 import warnings
 
-__all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6', 'find_orbit']
+__all__ = ["find_orbit4", "find_sync_orbit", "find_orbit6", "find_orbit"]
 
 
 @check_6d(False)
@@ -27,23 +28,23 @@ def _orbit_dp(ring: Lattice, dp: float = None, guess: Orbit = None, **kwargs):
     #     squares fitting to determine x when ax = b
     # f(r_n) - r_n is denoted b
     # f'(r_n) is the 4x4 jacobian, denoted j4
-    keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
-    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
-    kwargs.pop('DPStep', DConstant.DPStep)
+    keep_lattice = kwargs.pop("keep_lattice", False)
+    convergence = kwargs.pop("convergence", DConstant.OrbConvergence)
+    max_iterations = kwargs.pop("max_iterations", DConstant.OrbMaxIter)
+    xy_step = kwargs.pop("XYStep", DConstant.XYStep)
+    kwargs.pop("DPStep", DConstant.DPStep)
     rem = kwargs.keys()
     if len(rem) > 0:
         raise AtError(f'Unexpected keywords for orbit_dp: {", ".join(rem)}')
 
-    ref_in = numpy.zeros((6,)) if guess is None else numpy.copy(guess)
+    ref_in = np.zeros((6,)) if guess is None else np.copy(guess)
     ref_in[4] = 0.0 if dp is None else dp
 
-    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0])
-    delta_matrix = numpy.zeros((6, 5), order='F')
+    scaling = xy_step * np.array([1.0, 1.0, 1.0, 1.0])
+    delta_matrix = np.zeros((6, 5), order="F")
     for i in range(4):
         delta_matrix[i, i] = scaling[i]
-    id4 = numpy.asfortranarray(numpy.identity(4))
+    id4 = np.asfortranarray(np.identity(4))
     change = 1
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
@@ -57,49 +58,52 @@ def _orbit_dp(ring: Lattice, dp: float = None, guess: Orbit = None, **kwargs):
         a = j4 - id4  # f'(r_n) - 1
         b = ref_out[:4] - ref_in[:4]
         try:
-            b_over_a = numpy.linalg.solve(a, b)
-        except numpy.linalg.LinAlgError:
-            msg = 'Particle lost during orbit search, returning NaN'
+            b_over_a = np.linalg.solve(a, b)
+        except np.linalg.LinAlgError:
+            msg = "Particle lost during orbit search, returning NaN"
             warnings.warn(AtWarning(msg))
-            b_over_a = numpy.zeros(4)
-            b_over_a[:] = numpy.nan
-        r_next = ref_in - numpy.append(b_over_a, numpy.zeros((2,)))
+            b_over_a = np.zeros(4)
+            b_over_a[:] = np.nan
+        r_next = ref_in - np.append(b_over_a, np.zeros((2,)))
         # determine if we are close enough
-        change = numpy.linalg.norm(r_next - ref_in)
+        change = np.linalg.norm(r_next - ref_in)
         itercount += 1
         ref_in = r_next
         keep_lattice = True
 
     if itercount == max_iterations:
-        warnings.warn(AtWarning('Maximum number of iterations reached. '
-                                'Possible non-convergence'))
+        warnings.warn(
+            AtWarning(
+                "Maximum number of iterations reached. " "Possible non-convergence"
+            )
+        )
     return ref_in
 
 
 @check_6d(False)
 def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
     """Solver for fixed path lengthening"""
-    keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
-    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
-    kwargs.pop('DPStep', DConstant.DPStep)
+    keep_lattice = kwargs.pop("keep_lattice", False)
+    convergence = kwargs.pop("convergence", DConstant.OrbConvergence)
+    max_iterations = kwargs.pop("max_iterations", DConstant.OrbMaxIter)
+    xy_step = kwargs.pop("XYStep", DConstant.XYStep)
+    kwargs.pop("DPStep", DConstant.DPStep)
     rem = kwargs.keys()
     if len(rem) > 0:
         raise AtError(f'Unexpected keywords for orbit_dct: {", ".join(rem)}')
 
-    ref_in = numpy.zeros((6,)) if guess is None else numpy.copy(guess)
+    ref_in = np.zeros((6,)) if guess is None else np.copy(guess)
 
-    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
-    delta_matrix = numpy.zeros((6, 6), order='F')
+    scaling = xy_step * np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+    delta_matrix = np.zeros((6, 6), order="F")
     for i in range(5):
         delta_matrix[i, i] = scaling[i]
-    theta5 = numpy.zeros((5,), order='F')
+    theta5 = np.zeros((5,), order="F")
     theta5[4] = 0.0 if dct is None else dct
-    id5 = numpy.zeros((5, 5), order='F')
+    id5 = np.zeros((5, 5), order="F")
     for i in range(4):
         id5[i, i] = 1.0
-    idx = numpy.array([0, 1, 2, 3, 5])
+    idx = np.array([0, 1, 2, 3, 5])
     change = 1
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
@@ -111,32 +115,41 @@ def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
         # f(x+d) - f(x) / d
         j5 = (in_mat[idx, :5] - in_mat[idx, 5:]) / scaling
         a = j5 - id5  # f'(r_n) - 1
-        b = ref_out[idx] - numpy.append(ref_in[:4], 0.0) - theta5
+        b = ref_out[idx] - np.append(ref_in[:4], 0.0) - theta5
         try:
-            b_over_a = numpy.linalg.solve(a, b)
-        except numpy.linalg.LinAlgError:
-            msg = 'Particle lost during orbit search, returning NaN'
+            b_over_a = np.linalg.solve(a, b)
+        except np.linalg.LinAlgError:
+            msg = "Particle lost during orbit search, returning NaN"
             warnings.warn(AtWarning(msg))
-            b_over_a = numpy.zeros(5)
-            b_over_a[:] = numpy.nan
-        r_next = ref_in - numpy.append(b_over_a, 0.0)
+            b_over_a = np.zeros(5)
+            b_over_a[:] = np.nan
+        r_next = ref_in - np.append(b_over_a, 0.0)
         # determine if we are close enough
-        change = numpy.linalg.norm(r_next - ref_in)
+        change = np.linalg.norm(r_next - ref_in)
         itercount += 1
         ref_in = r_next
         keep_lattice = True
 
     if itercount == max_iterations:
-        warnings.warn(AtWarning('Maximum number of iterations reached. '
-                                'Possible non-convergence'))
+        warnings.warn(
+            AtWarning(
+                "Maximum number of iterations reached. " "Possible non-convergence"
+            )
+        )
     return ref_in
 
 
-def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
-                dct: float = None,
-                df: float = None,
-                orbit: Orbit = None,
-                keep_lattice: bool = False, **kwargs):
+def find_orbit4(
+    ring: Lattice,
+    dp: float = None,
+    refpts: Refpts = None,
+    *,
+    dct: float = None,
+    df: float = None,
+    orbit: Orbit = None,
+    keep_lattice: bool = False,
+    **kwargs,
+):
     r"""Gets the 4D closed orbit for a given dp
 
     Finds the closed orbit in the 4-d transverse phase space by numerically
@@ -201,12 +214,14 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
         :py:func:`find_sync_orbit`, :py:func:`find_orbit6`
     """
     if len([v for v in (dp, dct, df) if v is not None]) > 1:
-        raise AtError("For off-momentum specification, only one of "
-                      "dp, dct and df may be specified")
+        raise AtError(
+            "For off-momentum specification, only one of "
+            "dp, dct and df may be specified"
+        )
     if orbit is None:
         if df is not None:
             frf = ring.cell_revolution_frequency * ring.cell_harmnumber
-            dct = -ring.cell_length * df / (frf+df)
+            dct = -ring.cell_length * df / (frf + df)
             orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
         elif dct is not None:
             orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
@@ -216,19 +231,26 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
 
     # bug in numpy < 1.13
     if ring.refcount(refpts) == 0:
-        all_points = numpy.empty((0, 6), dtype=float)
+        all_points = np.empty((0, 6), dtype=float)
     else:
-        all_points = internal_lpass(ring, orbit.copy(order='K'), refpts=refpts,
-                                    keep_lattice=keep_lattice)
-        all_points = numpy.squeeze(all_points, axis=(1, 3)).T
+        all_points = internal_lpass(
+            ring, orbit.copy(order="K"), refpts=refpts, keep_lattice=keep_lattice
+        )
+        all_points = np.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
 
-def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
-                    dp: float = None,
-                    df: float = None,
-                    orbit: Orbit = None,
-                    keep_lattice: bool = False, **kwargs):
+def find_sync_orbit(
+    ring: Lattice,
+    dct: float = None,
+    refpts: Refpts = None,
+    *,
+    dp: float = None,
+    df: float = None,
+    orbit: Orbit = None,
+    keep_lattice: bool = False,
+    **kwargs,
+):
     r"""Gets the 4D closed orbit for a given dct
 
     Finds the closed orbit, synchronous with the RF cavity (first 5
@@ -293,72 +315,78 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
         :py:func:`find_orbit4`, :py:func:`find_orbit6`
     """
     if len([v for v in (dp, dct, df) if v is not None]) > 1:
-        raise AtError("For off-momentum specification, only one of "
-                      "dp, dct and df may be specified")
+        raise AtError(
+            "For off-momentum specification, only one of "
+            "dp, dct and df may be specified"
+        )
     if orbit is None:
         if df is not None:
             frf = ring.cell_revolution_frequency * ring.cell_harmnumber
-            dct = -ring.cell_length * df / (frf+df)
+            dct = -ring.cell_length * df / (frf + df)
             orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
         elif dp is not None:
             orbit = _orbit_dp(ring, dp, keep_lattice=keep_lattice, **kwargs)
         else:
-            orbit = _orbit_dct(ring, dct,  keep_lattice=keep_lattice, **kwargs)
+            orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
     # bug in numpy < 1.13
     if ring.refcount(refpts) == 0:
-        all_points = numpy.empty((0, 6), dtype=float)
+        all_points = np.empty((0, 6), dtype=float)
     else:
-        all_points = internal_lpass(ring, orbit.copy(order='K'), refpts=refpts,
-                                    keep_lattice=keep_lattice)
-        all_points = numpy.squeeze(all_points, axis=(1, 3)).T
+        all_points = internal_lpass(
+            ring, orbit.copy(order="K"), refpts=refpts, keep_lattice=keep_lattice
+        )
+        all_points = np.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
 
-def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
-            **kwargs):
+def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     """Solver for 6D motion"""
-    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
-    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
-    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    method = kwargs.pop('method', ELossMethod.TRACKING)
+    convergence = kwargs.pop("convergence", DConstant.OrbConvergence)
+    max_iterations = kwargs.pop("max_iterations", DConstant.OrbMaxIter)
+    xy_step = kwargs.pop("XYStep", DConstant.XYStep)
+    dp_step = kwargs.pop("DPStep", DConstant.DPStep)
+    method = kwargs.pop("method", ELossMethod.TRACKING)
     rem = kwargs.keys()
     if len(rem) > 0:
         raise AtError(f'Unexpected keywords for orbit6: {", ".join(rem)}')
 
     l0 = get_s_pos(ring, len(ring))[0]
     f_rf = ring.get_rf_frequency()
-    harm_number = round(f_rf*l0/ring.beta/clight)
+    harm_number = round(f_rf * l0 / ring.beta / clight)
 
     if guess is None:
         try:
             _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
         except AtError:
             try:
-                _, dt = get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=cavpts)
+                _, dt = get_timelag_fromU0(
+                    ring, method=ELossMethod.INTEGRAL, cavpts=cavpts
+                )
             except AtError:
-                msg = 'Energy loss per turn calculation failed, closed orbit not found'
+                msg = "Energy loss per turn calculation failed, closed orbit not found"
                 raise AtError(msg)
         # Getting timelag by tracking uses a different lattice,
         # so we cannot now use the same one again.
         if method is ELossMethod.TRACKING:
             keep_lattice = False
-        ref_in = numpy.zeros((6,), order='F')
+        ref_in = np.zeros((6,), order="F")
         ref_in[5] = -dt
     else:
-        ref_in = numpy.copy(guess)
+        ref_in = np.copy(guess)
 
-    theta = numpy.zeros((6,))
+    theta = np.zeros((6,))
     theta[5] = ring.beta * clight * harm_number / f_rf - l0
 
-    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
-        dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
-    delta_matrix = numpy.asfortranarray(
-        numpy.concatenate((numpy.diag(scaling), numpy.zeros((6, 1))), axis=1))
+    scaling = xy_step * np.array(
+        [1.0, 1.0, 1.0, 1.0, 0.0, 0.0]
+    ) + dp_step * np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+    delta_matrix = np.asfortranarray(
+        np.concatenate((np.diag(scaling), np.zeros((6, 1))), axis=1)
+    )
 
-    id6 = numpy.asfortranarray(numpy.identity(6))
+    id6 = np.asfortranarray(np.identity(6))
     change = 1
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
@@ -371,31 +399,40 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
         j6 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
         a = j6 - id6  # f'(r_n) - 1
         b = ref_out[:] - ref_in[:] - theta
-        # b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        # b_over_a, _, _, _ = np.linalg.lstsq(a, b, rcond=-1)
         try:
-            b_over_a = numpy.linalg.solve(a, b)
-        except numpy.linalg.LinAlgError:
-            msg = 'Particle lost during orbit search, returning NaN'
+            b_over_a = np.linalg.solve(a, b)
+        except np.linalg.LinAlgError:
+            msg = "Particle lost during orbit search, returning NaN"
             warnings.warn(AtWarning(msg))
-            b_over_a = numpy.zeros(6)
-            b_over_a[:] = numpy.nan
+            b_over_a = np.zeros(6)
+            b_over_a[:] = np.nan
         r_next = ref_in - b_over_a
         # determine if we are close enough
-        change = numpy.linalg.norm(r_next - ref_in)
+        change = np.linalg.norm(r_next - ref_in)
         itercount += 1
         ref_in = r_next
         keep_lattice = True
 
     if itercount == max_iterations:
-        warnings.warn(AtWarning('Maximum number of iterations reached. '
-                                'Possible non-convergence'))
+        warnings.warn(
+            AtWarning(
+                "Maximum number of iterations reached. " "Possible non-convergence"
+            )
+        )
     return ref_in
 
 
 # noinspection PyIncorrectDocstring
 @frequency_control
-def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
-                orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
+def find_orbit6(
+    ring: Lattice,
+    refpts: Refpts = None,
+    *,
+    orbit: Orbit = None,
+    keep_lattice: bool = False,
+    **kwargs,
+):
     r"""Gets the closed orbit in the full 6-D phase space
 
     Finds the closed orbit in the full 6-D phase space
@@ -433,7 +470,7 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
         6.  ``dp``, ``dct`` and ``df`` arguments are applied with respect
             to the **NOMINAL** on-momentum frequency. They overwrite
             exisiting frequency offsets
-            
+
 
     Parameters:
         ring:           Lattice description
@@ -476,11 +513,12 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
 
     # bug in numpy < 1.13
     if ring.refcount(refpts) == 0:
-        all_points = numpy.empty((0, 6), dtype=float)
+        all_points = np.empty((0, 6), dtype=float)
     else:
-        all_points = internal_lpass(ring, orbit.copy(order='K'), refpts=refpts,
-                                    keep_lattice=keep_lattice)
-        all_points = numpy.squeeze(all_points, axis=(1, 3)).T
+        all_points = internal_lpass(
+            ring, orbit.copy(order="K"), refpts=refpts, keep_lattice=keep_lattice
+        )
+        all_points = np.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
 
