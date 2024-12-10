@@ -119,30 +119,35 @@ from .observablelist import ObservableList
 from ..lattice import AtError, Lattice, Refpts, Orbit, AxisDef, plane_
 from ..lattice import Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
-from ..lattice.variables import VariableBase, VariableList
+from ..lattice.variables import VariableList
 
 _orbit_correctors = checkattr("KickAngle")
 
-_globring = None
-_globobs = None
+_globring: Lattice | None = None
+_globobs: ObservableList | None = None
 
 
-def _resp_one(ring: Lattice, observables: ObservableList, variable: VariableBase):
+def _resp_one(
+    ring: Lattice, observables: ObservableList, variable: RefptsVariable, **kwargs
+):
     """Single response for serial computation."""
+    # make a copy of ring to allow parallel computation
+    ring = ring.copy()
+    for ik in variable.refpts:  # Assuming refpts is integer
+        ring[ik] = ring[ik].deepcopy()
     variable.step_up(ring=ring)
-    observables.evaluate(ring)
+    observables.evaluate(ring, **kwargs)
     op = observables.flat_values
     variable.step_down(ring=ring)
-    observables.evaluate(ring)
+    observables.evaluate(ring, **kwargs)
     om = observables.flat_values
     variable.reset(ring=ring)
     return (op - om) / (2.0 * variable.delta)
 
 
-def _resp_one_fork(variable: VariableBase):
-    """Single response for spawn parallel method."""
-    # noinspection PyTypeChecker
-    return _resp_one(_globring, _globobs, variable)
+def _resp_one_fork(variable: RefptsVariable, **kwargs):
+    """Single response for fork parallel method."""
+    return _resp_one(_globring, _globobs, variable, **kwargs)
 
 
 class _SvdSolver(abc.ABC):
@@ -286,20 +291,20 @@ class ResponseMatrix(_SvdSolver):
         ring: Lattice,
         variables: VariableList,
         observables: ObservableList,
-        *,
-        r_in: Orbit = None,
     ):
         r"""
         Args:
             ring:           Design lattice, used to compute the response
             variables:      List of :py:class:`~.variables.VariableBase`\ s
             observables:    List of :py:class:`.Observable`\s
-            r_in:
         """
+        # for efficiency of parallel computation, the variable's refpts must be integer
+        for var in variables:
+            var.refpts = ring.get_uint32_index(var.refpts)
         self.ring = ring
         self.variables = variables
         self.observables = observables
-        self.r_in = r_in
+        self.buildargs = {}
         variables.get(ring=ring, initial=True)
         observables.evaluate(ring=ring, initial=True)
         super().__init__()
@@ -360,7 +365,7 @@ class ResponseMatrix(_SvdSolver):
             self.variables.get(ring=ring)
         sumcorr = np.array([0.0])
         for _ in range(niter):
-            obs.evaluate(ring, r_in=self.r_in)
+            obs.evaluate(ring, **self.buildargs)
             corr = self.get_correction(obs.flat_deviations, nvals=nvals)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
@@ -372,6 +377,7 @@ class ResponseMatrix(_SvdSolver):
         use_mp: bool = False,
         pool_size: int | None = None,
         start_method: str | None = None,
+        **kwargs,
     ) -> None:
         """Build the response matrix.
 
@@ -386,35 +392,45 @@ class ResponseMatrix(_SvdSolver):
               is ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
               calculation or to solve Runtime Errors, however it is considered
               unsafe.
-        """
-        ring = self.ring
-        boolrefs = ring.get_bool_index(None)
-        for var in self.variables:
-            boolrefs |= ring.get_bool_index(var.refpts)
-            var.get(ring=ring, initial=True)
 
-        ring = ring.replace(boolrefs)
-        self.observables.evaluate(ring)
+        Keyword Args:
+            dp (float):     Momentum deviation. Defaults to :py:obj:`None`
+            dct (float):    Path lengthening. Defaults to :py:obj:`None`
+            df (float):     Deviation from the nominal RF frequency.
+              Defaults to :py:obj:`None`
+            r_in (Orbit):   Initial trajectory, used for
+              :py:class:`TrajectoryResponseMatrix`, Default: zeros(6)
+        """
+        self.buildargs = kwargs
+        self.observables.evaluate(self.ring)
 
         if use_mp:
+            global _globring
+            global _globobs
             ctx = multiprocessing.get_context(start_method)
             if pool_size is None:
                 pool_size = min(len(self.variables), multiprocessing.cpu_count())
             if ctx.get_start_method() == "fork":
-                global _globring
-                global _globobs
-                _globring = ring
+                _globring = self.ring
                 _globobs = self.observables
-                with ctx.Pool(pool_size) as pool:
-                    results = pool.map(_resp_one_fork, self.variables)
-                _globring = None
-                _globobs = None
+                _single_resp = partial(_resp_one_fork, **kwargs)
             else:
-                _resp_one_spawn = partial(_resp_one, ring, self.observables)
-                with ctx.Pool(pool_size) as pool:
-                    results = pool.map(_resp_one_spawn, self.variables)
+                _single_resp = partial(_resp_one, self.ring, self.observables, **kwargs)
+            with ctx.Pool(pool_size) as pool:
+                results = pool.map(_single_resp, self.variables)
+            _globring = None
+            _globobs = None
         else:
-            results = [_resp_one(ring, self.observables, var) for var in self.variables]
+            ring = self.ring
+            boolrefs = ring.get_bool_index(None)
+            for var in self.variables:
+                boolrefs |= ring.get_bool_index(var.refpts)
+
+            ring = ring.replace(boolrefs)
+            results = [
+                _resp_one(ring, self.observables, var, **kwargs)
+                for var in self.variables
+            ]
         self._response = np.stack(results, axis=-1)
         super().build()
 
@@ -538,7 +554,9 @@ class OrbitResponseMatrix(ResponseMatrix):
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
                 raise ValueError("Cavities are not active")
-            cavvar = RefptsVariable(cavrefs, "Frequency", name="RF frequency", delta=cavdelta)
+            cavvar = RefptsVariable(
+                cavrefs, "Frequency", name="RF frequency", delta=cavdelta
+            )
             variables.append(cavvar)
 
         self.nbsteers = nbsteers
@@ -566,11 +584,11 @@ class OrbitResponseMatrix(ResponseMatrix):
     @property
     def steerdelta(self):
         """Step and weight on steerers."""
-        return self.variables[:self.nbsteers].deltas
+        return self.variables[: self.nbsteers].deltas
 
     @steerdelta.setter
     def steerdelta(self, value):
-        self.variables[:self.nbsteers].deltas = value
+        self.variables[: self.nbsteers].deltas = value
 
     @property
     def cavdelta(self):
@@ -603,7 +621,6 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         bpmrefs: Refpts = Monitor,
         steerrefs: Refpts = _orbit_correctors,
         *,
-        r_in: Orbit = None,
         bpmweight: float = 1.0,
         bpmtarget: float = 0.0,
         steerdelta: float = 0.0001,
@@ -619,7 +636,6 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
               is used and must be present in the selected elements.
               Default: All Elements having a *KickAngle* attribute.
-            r_in:       (6,) vector of initial coordinates of the trajectory
             bpmweight:  Weight on position readings. Must be broadcastable to the
               number of BPMs
             bpmtarget:  Target position
@@ -645,7 +661,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
         self.steerdelta = steerdelta
 
-        super().__init__(ring, variables, observables, r_in=r_in)
+        super().__init__(ring, variables, observables)
 
     @property
     def bpmweight(self):
