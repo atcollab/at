@@ -9,7 +9,6 @@ from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import QuantumDiffusion, Collective, SimpleQuantDiff
 from at.lattice import get_bool_index, set_value_refpts
 from at.constants import clight, Cgamma
-from at.tracking import internal_lpass
 
 __all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod',
            'get_timelag_fromU0']
@@ -77,16 +76,16 @@ def get_energy_loss(ring: Lattice,
         """
         ringtmp = ring.disable_6d(RFCavity, QuantumDiffusion, Collective,
                                   SimpleQuantDiff, copy=True)
-        o6 = numpy.squeeze(internal_lpass(ringtmp, numpy.zeros(6),
-                                          refpts=len(ringtmp)))
-        if numpy.isnan(o6[0]):
-            dp = 0
-            for e in ringtmp:
-                ot = numpy.squeeze(internal_lpass([e], numpy.zeros(6)))
-                dp += -ot[4] * ring.energy
-            return dp
-        else:
-            return -o6[4] * ring.energy
+
+        # o6 = numpy.squeeze(ringtmp.track(numpy.zeros(6), refpts=len(ringtmp))[0])
+        energy = ring.energy
+        particle = ring.particle
+        delta = 0.0
+        for e in ringtmp:
+            if e.PassMethod.endswith('RadPass'):
+                ot = e.track(numpy.zeros(6), energy=energy, particle=particle)
+                delta += ot[4]
+        return -delta * energy
 
     if isinstance(method, str):
         method = ELossMethod[method.upper()]
@@ -119,7 +118,7 @@ def get_timelag_fromU0(ring: Lattice,
         cavpts:             Cavity location. If None, use all cavities.
           This allows to ignore harmonic cavities.
         divider: number of segments to search for ts
-        phis_tol: relative tolerance for ts calculation
+        ts_tol: relative tolerance for ts calculation
     Returns:
         timelag (float):    Timelag
         ts (float):         Time difference with the present value
