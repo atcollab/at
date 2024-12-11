@@ -15,7 +15,9 @@ function [BCUM,Batbeg] = atdiffmat(ring,varargin)
 
 newmethods = {'BndMPoleSymplectic4RadPass', ...
               'StrMPoleSymplectic4RadPass', ...
-              'ExactMultipoleRadPass'};
+              'ExactMultipoleRadPass',...
+              'GWigSymplecticRadPass',...
+              'EnergyLossRadPass'};
 
 NumElements=length(ring);
 
@@ -62,7 +64,7 @@ Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
     
     function elem=substitute(elem)
         if ~any(strcmp(elem.PassMethod, newmethods))
-            elem.PassMethod = "BndMPoleSymplectic4RadPass";
+            elem.PassMethod = 'BndMPoleSymplectic4RadPass';
         end
     end
 end

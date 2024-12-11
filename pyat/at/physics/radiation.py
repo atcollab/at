@@ -32,6 +32,7 @@ _new_methods = {
     "StrMPoleSymplectic4RadPass",
     "ExactMultipoleRadPass",
     "GWigSymplecticRadPass",
+    "EnergyLossRadPass",
 }
 
 _NSTEP = 60  # nb slices in a wiggler period
