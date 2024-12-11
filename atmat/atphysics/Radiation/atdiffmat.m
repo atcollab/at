@@ -62,7 +62,7 @@ Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
     
     function elem=substitute(elem)
         if ~any(strcmp(elem.PassMethod, newmethods))
-            elem.PassMethod = "BndMPoleSymplectic4RadPass";
+            elem.PassMethod = 'BndMPoleSymplectic4RadPass';
         end
     end
 end
