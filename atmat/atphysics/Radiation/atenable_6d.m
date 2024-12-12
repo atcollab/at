@@ -34,7 +34,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 %   'quadpass'       pass method for quadrupoles. Default 'auto'
 %   'sextupass'      pass method for sextupoles. Default ''
 %   'octupass'       pass method for octupoles. Default ''
-%   'multipolepass'  pass method for multipole magnets. Default 'auto'
+%   'multipolepass'  pass method for multipole magnets. Default ''
 %   'wigglerpass'    pass method for wigglers. Default 'auto'
 %   'quantdiffpass'  pass method for quantum radiation. default 'auto'
 %   'energylosspass' pass method for energyloss element. default 'auto'
