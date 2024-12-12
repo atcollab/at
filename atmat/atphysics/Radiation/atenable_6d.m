@@ -61,7 +61,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 
 % Process the keyword arguments
 [allpass,varargs]=getoption(varargin,'allpass',[]);
-[multipolepass,varargs]=getoption(varargs,'multipolepass',default_pass('auto'));
+[multipolepass,varargs]=getoption(varargs,'multipolepass',default_pass(''));
 [octupass,varargs]=getoption(varargs,'octupass',default_pass(''));
 [sextupass,varargs]=getoption(varargs,'sextupass',default_pass(''));
 [quadpass,varargs]=getoption(varargs,'quadpass',default_pass('auto'));
