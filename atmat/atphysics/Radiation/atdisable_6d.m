@@ -33,6 +33,7 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 %   'quadpass'       pass method for quadrupoles. Default 'auto'
 %   'sextupass'      pass method for sextupoles. Default 'auto'
 %   'octupass'       pass method for bending magnets. Default 'auto'
+%   'multipolepass'  pass method for multipole magnets. Default 'auto'
 %   'wigglerpass'	 pass method for wigglers. Default 'auto'
 %   'quantdiffpass'  pass method for quantum diffusion. Default 'auto'
 %   'energylosspass' pass method for atenergyloss element. Default 'auto'
