@@ -80,8 +80,8 @@ class VariableMultipole(Element):
                 Default None
             frequencyA(float): Frequency of the sine excitation for PolynomA
             frequencyB(float): Frequency of the sine excitation for PolynomB
-            phaseA(float): Phase of the sine excitation for PolynomA. Default 0
-            phaseB(float): Phase of the sine excitation for PolynomB. Default 0
+            phaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
+            phaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
             Seed(int): Seed of the random number generator for white
                        noise excitation. Default datetime.now()
             FuncA(list): User defined tbt kick list for PolynomA
@@ -112,15 +112,18 @@ class VariableMultipole(Element):
               ``Amplitude(A,B)`` has to be provided.
         """
         print(kwargs)
+        print(vars(self))
         if len(kwargs) > 0:
             self.FamName = family_name
             self.Mode = int(mode)
             # start setting up Amplitudes
-            theamplitudes = {"amplitudea" : None, "amplitudeb": None}
             # amplitude names need to be different in pyat and matlab in order to avoid
-            # problems between args and kwargs in python
+            # problems between args and kwargs in python when loading a .mat file
+            # as a dictionary.
+            # I chose to use lower case in the pyat args, and A and B when reading
+            # from kwargs.
             amp_aux = {'A':None, 'B':None}
-            all_amplitudes_are_none = 1
+            all_amplitudes_are_none = True
             for key in amp_aux.keys():
                 if 'Amplitude'+key in kwargs and 'amplitude'+key in kwargs:
                     raise AtError('Duplicated amplitude '+key+'parameters.')
@@ -128,17 +131,17 @@ class VariableMultipole(Element):
                 lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
                 amp_aux[key] = lower_case_kwargs.pop('amplitude'+key.lower(), None)
                 if amp_aux[key] is not None:
-                    all_amplitudes_are_none = 0
+                    all_amplitudes_are_none = False
             if all_amplitudes_are_none:
                 raise AtError("Please provide at least one amplitude for A or B")
-            for key in amp_aux.keys():
-                amp_aux[key] = self._set_amplitude(amp_aux[key])
-                if amp_aux[key] is not None:
-                    self._set_params(mode, key, **kwargs)
-                    setattr(self, 'Amplitude'+key, amp_aux[key])
+            for k,v in amp_aux.items():
+                amp_aux[k] = self._set_amplitude(v)
+                if amp_aux[k] is not None:
+                    setattr(self, 'Amplitude'+k, amp_aux[k])
+                    self._set_params(mode, k, **kwargs)
             kwargs.setdefault("PassMethod", "VariableThinMPolePass")
             self._setmaxorder(amp_aux['A'], amp_aux['B'])
-            if mode == ACMode.WHITENOISE and "Seed" not in kwargs:
+            if mode == ACMode.WHITENOISE and "seed" not in kwargs:
                 kwargs.update({"Seed": datetime.now().timestamp()})
             self.Periodic = kwargs.pop("Periodic", True)
             for key in amp_aux.keys():
@@ -163,33 +166,31 @@ class VariableMultipole(Element):
             mxb = np.max(np.append(np.nonzero(ampb), 0))
         self.MaxOrder = max(mxa, mxb)
 
-    def _set_amplitude(self, amplitude: int or str):
+    def _set_amplitude(self, amplitude: float or _array or None):
         if amplitude is not None:
             if np.isscalar(amplitude):
-                amp = np.zeros(self.MaxOrder)
-                amplitude = np.append(amp, amplitude)
-        return np.asarray(amplitude)
+                amplitude = [amplitude]
+            amplitude = np.asarray(amplitude)
+        return amplitude
 
-    def _set_params(
-        self, mode, a_b: str, **kwargs: dict[str, any]
-    ):
-            if mode == ACMode.SINE:
-                self._set_sine(a_b, **kwargs)
-            if mode == ACMode.ARBITRARY:
-                self._set_arb(a_b, **kwargs)
+    def _set_params( self, mode, a_b: str, **kwargs: dict[str, any]):
+        if mode == ACMode.SINE:
+            self._set_sine(a_b, **kwargs)
+        if mode == ACMode.ARBITRARY:
+            self._set_arb(a_b, **kwargs)
 
     def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + a_b, None)
-        phase = kwargs.pop("Phase" + a_b, 0)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
+        phase = kwargs.pop("Phase" + a_b, 0)
         setattr(self, "Frequency" + a_b, frequency)
         setattr(self, "Phase" + a_b, phase)
 
     def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
         func = kwargs.pop("Func" + a_b, None)
-        nsamp = len(func)
         if func is None:
             raise AtError("Please provide a value for Func" + a_b)
+        nsamp = len(func)
         setattr(self, "Func" + a_b, func)
         setattr(self, "NSamples" + a_b, nsamp)
