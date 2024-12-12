@@ -34,6 +34,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 %   'quadpass'       pass method for quadrupoles. Default 'auto'
 %   'sextupass'      pass method for sextupoles. Default ''
 %   'octupass'       pass method for octupoles. Default ''
+%   'multipolepass'  pass method for multipole magnets. Default ''
 %   'wigglerpass'    pass method for wigglers. Default 'auto'
 %   'quantdiffpass'  pass method for quantum radiation. default 'auto'
 %   'energylosspass' pass method for energyloss element. default 'auto'
@@ -60,6 +61,7 @@ function [newring,radelemIndex,cavitiesIndex,energy] = atenable_6d(ring,varargin
 
 % Process the keyword arguments
 [allpass,varargs]=getoption(varargin,'allpass',[]);
+[multipolepass,varargs]=getoption(varargs,'multipolepass',default_pass(''));
 [octupass,varargs]=getoption(varargs,'octupass',default_pass(''));
 [sextupass,varargs]=getoption(varargs,'sextupass',default_pass(''));
 [quadpass,varargs]=getoption(varargs,'quadpass',default_pass('auto'));
@@ -81,6 +83,7 @@ mod.Bend=autoMultipolePass(bendpass,energy);
 mod.Quadrupole=autoMultipolePass(quadpass,energy);
 mod.Sextupole=autoMultipolePass(sextupass,energy);
 mod.Octupole=autoMultipolePass(octupass,energy);
+mod.Multipole=autoMultipolePass(multipolepass,energy);
 mod.Wiggler=autoMultipolePass(wigglerpass,energy);
 mod.QuantDiff=autoClassPass(quantdiffpass);
 mod.EnergyLoss=autoElemPass(energylosspass,'EnergyLossRadPass', energy);
