@@ -121,9 +121,8 @@ class VariableMultipole(Element):
         if len(kwargs) > 3:
             amp_aux = self._check_amplitudes(**kwargs)
             for k,v in amp_aux.items():
-                if amp_aux[k] is not None:
-                    amp_aux[k] = self._set_amplitude(v)
-                    kwargs['Amplitude'+k] = kwargs.get('Amplitude'+k, amp_aux[k])
+                if v is not None:
+                    kwargs['Amplitude'+k] = self._set_amplitude(v)
                     self._check_mode(mode, k, **kwargs)
             maxorder = self._getmaxorder(amp_aux['A'], amp_aux['B'])
             kwargs['MaxOrder'] = kwargs.get("MaxOrder", maxorder)
