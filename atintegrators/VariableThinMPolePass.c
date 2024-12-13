@@ -34,6 +34,12 @@ struct elem {
     int MaxOrder;
     double* Ramps;
     int Periodic;
+    double *R1;
+    double *R2;
+    double *T1;
+    double *T2;
+    double *EApertures;
+    double *RApertures;
 };
 
 double get_amp(double amp, double* ramps, double t)
@@ -106,7 +112,12 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     }
 }
 
-void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles)
+void VariableThinMPolePass(
+    double* r,
+    struct elem* Elem,
+    double t0,
+    int turn,
+    int num_particles)
 {
 
     int i, c;
@@ -126,7 +137,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     double* ramps = Elem->Ramps;
 
     double *T1 = Elem->T1;
-    double *T2 = Elem->T2,
+    double *T2 = Elem->T2;
     double *R1 = Elem->R1;
     double *R2 = Elem->R2;
     double *RApertures = Elem->RApertures;
@@ -146,9 +157,14 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
 
     for (c = 0; c < num_particles; c++) {
         r6 = r + c * 6;
+        /* check if the particle is alive */
         if (!atIsNaN(r6[0])) {
+            /* mode 0 : sin function */
+            /* mode 1 :  */
             if (mode != 1) {
+                /* modify the time of arrival of the particle  */
                 tpart = time_in_this_mode + r6[5] / C0;
+                /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
                     pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
                     polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
@@ -175,6 +191,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
 {
     if (!Elem) {
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double *FuncAderiv1, *FuncBderiv1;
@@ -185,6 +202,12 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         struct elemab *ElemA, *ElemB;
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -215,6 +238,12 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         ElemA = (struct elemab*)atMalloc(sizeof(struct elemab));
         ElemB = (struct elemab*)atMalloc(sizeof(struct elemab));
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+        Elem->EApertures=EApertures;
+        Elem->RApertures=RApertures;
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
@@ -263,6 +292,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double *FuncAderiv1, *FuncBderiv1;
@@ -275,6 +305,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -368,6 +404,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 20, mxCreateString("NSamplesA"));
             mxSetCell(plhs[1], 21, mxCreateString("NSamplesB"));
             mxSetCell(plhs[1], 22, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 23,mxCreateString("T1"));
+            mxSetCell(plhs[1], 24,mxCreateString("T2"));
+            mxSetCell(plhs[1], 25,mxCreateString("R1"));
+            mxSetCell(plhs[1], 26,mxCreateString("R2"));
+            mxSetCell(plhs[1], 27,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 28,mxCreateString("EApertures"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
