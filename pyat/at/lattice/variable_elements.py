@@ -16,15 +16,18 @@ class ACMode(IntEnum):
     WHITENOISE = 1
     ARBITRARY = 2
 
+
 def _array(value, shape=(-1,), dtype=np.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return np.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
-        shape, order='F')
+    return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
+        shape, order="F"
+    )
+
 
 class VariableMultipole(Element):
     """Class to generate an AT variable thin multipole element."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Mode']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
     _conversions = dict(
         Element._conversions,
         amplitudea=_array,
@@ -42,7 +45,7 @@ class VariableMultipole(Element):
         periodic=bool,
     )
 
-    def __init__(self, family_name: str, mode:int, **kwargs: dict[str, any]):
+    def __init__(self, family_name: str, mode: int, **kwargs: dict[str, any]):
         r"""
         Create VariableMultipole.
 
@@ -115,33 +118,34 @@ class VariableMultipole(Element):
             * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided.
         """
-        kwargs['Mode'] = kwargs.get('Mode',mode)
-        kwargs.setdefault("PassMethod","VariableThinMPolePass")
+        kwargs["Mode"] = kwargs.get("Mode", mode)
+        kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         kwargs.setdefault("Periodic", True)
         if len(kwargs) > 3:
             amp_aux = self._check_amplitudes(**kwargs)
-            for k,v in amp_aux.items():
+            for k, v in amp_aux.items():
                 if v is not None:
-                    kwargs['Amplitude'+k] = self._set_amplitude(v)
+                    kwargs["Amplitude" + k] = self._set_amplitude(v)
                     self._check_mode(mode, k, **kwargs)
-            maxorder = self._getmaxorder(amp_aux['A'], amp_aux['B'])
-            kwargs['MaxOrder'] = kwargs.get("MaxOrder", maxorder)
+            maxorder = self._getmaxorder(amp_aux["A"], amp_aux["B"])
+            kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
             for key in amp_aux.keys():
-                kwargs['Polynom'+key] = kwargs.get('Polynom'+key, np.zeros(maxorder+1))
+                kwargs["Polynom" + key] = kwargs.get(
+                    "Polynom" + key, np.zeros(maxorder + 1)
+                )
             ramps = self._check_ramp(**kwargs)
             if ramps is not None:
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
 
-
     def _check_amplitudes(self, **kwargs: dict[str, any]):
-        amp_aux = {'A':None, 'B':None}
+        amp_aux = {"A": None, "B": None}
         all_amplitudes_are_none = True
         for key in amp_aux.keys():
-            if 'Amplitude'+key in kwargs and 'amplitude'+key in kwargs:
-                raise AtError('Duplicated amplitude '+key+'parameters.')
+            if "Amplitude" + key in kwargs and "amplitude" + key in kwargs:
+                raise AtError("Duplicated amplitude " + key + "parameters.")
             lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
-            amp_aux[key] = lower_case_kwargs.pop('amplitude'+key.lower(), None)
+            amp_aux[key] = lower_case_kwargs.pop("amplitude" + key.lower(), None)
             if amp_aux[key] is not None:
                 all_amplitudes_are_none = False
         if all_amplitudes_are_none:
@@ -162,7 +166,7 @@ class VariableMultipole(Element):
             mxb = np.max(np.append(np.nonzero(ampb), 0))
         return max(mxa, mxb)
 
-    def _check_mode( self, mode, a_b: str, **kwargs: dict[str, any]):
+    def _check_mode(self, mode, a_b: str, **kwargs: dict[str, any]):
         if mode == ACMode.WHITENOISE and "seed" not in kwargs:
             kwargs["Seed"] = kwargs.get("Seed", datetime.now().timestamp())
         if mode == ACMode.SINE:
