@@ -87,6 +87,7 @@ add_module_names = False
 # -- Options for the myst markdown parser ------------------------------------
 
 myst_enable_extensions = [
+    "attrs_inline",
     "colon_fence",
     "dollarmath",
     "replacements",

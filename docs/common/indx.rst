@@ -9,7 +9,8 @@ The AT coordinate system is based on a design trajectory along which the magneti
 elements are aligned, and a reference particle:
 
 .. image:: /images/coord_system.*
-
+   :alt: coordinate system
+   :align: center
 
 By convention, the reference particle travels along the design trajectory at constant
 nominal energy and defines the phase origin of the RF voltage.
