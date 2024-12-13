@@ -16,12 +16,10 @@ class ACMode(IntEnum):
     WHITENOISE = 1
     ARBITRARY = 2
 
-
 def _array(value, shape=(-1,), dtype=np.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
-        shape, order="F"
-    )
+    return np.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
+        shape, order='F')
 
 class VariableMultipole(Element):
     """Class to generate an AT variable thin multipole element."""
@@ -117,81 +115,67 @@ class VariableMultipole(Element):
             * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided.
         """
-        print('0',kwargs)
         kwargs['Mode'] = kwargs.get('Mode',mode)
-        if len(kwargs) > 0:
-            # start setting up Amplitudes
-            # amplitude names need to be different in pyat and matlab in order to avoid
-            # problems between args and kwargs in python when loading a .mat file
-            # as a dictionary.
-            # I chose to use lower case in the pyat args, and A and B when reading
-            # from kwargs.
-            amp_aux = {'A':None, 'B':None}
-            all_amplitudes_are_none = True
-            for key in amp_aux.keys():
-                if 'Amplitude'+key in kwargs and 'amplitude'+key in kwargs:
-                    raise AtError('Duplicated amplitude '+key+'parameters.')
-                    some_amplitude_exists = 1
-                lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
-                amp_aux[key] = lower_case_kwargs.pop('amplitude'+key.lower(), None)
-                if amp_aux[key] is not None:
-                    all_amplitudes_are_none = False
-            if all_amplitudes_are_none:
-                raise AtError("Please provide at least one amplitude for A or B")
+        kwargs.setdefault("PassMethod","VariableThinMPolePass")
+        kwargs.setdefault("Periodic", True)
+        if len(kwargs) > 3:
+            amp_aux = self._check_amplitudes(**kwargs)
             for k,v in amp_aux.items():
-                amp_aux[k] = self._set_amplitude(v)
                 if amp_aux[k] is not None:
-                    setattr(self, 'Amplitude'+k, amp_aux[k])
-                    self._set_params(mode, k, **kwargs)
-            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-            self._setmaxorder(amp_aux['A'], amp_aux['B'])
-            if mode == ACMode.WHITENOISE and "seed" not in kwargs:
-                kwargs.update({"Seed": datetime.now().timestamp()})
-            self.Periodic = kwargs.pop("Periodic", True)
+                    amp_aux[k] = self._set_amplitude(v)
+                    kwargs['Amplitude'+k] = kwargs.get('Amplitude'+k, amp_aux[k])
+                    self._check_mode(mode, k, **kwargs)
+            maxorder = self._getmaxorder(amp_aux['A'], amp_aux['B'])
+            kwargs['MaxOrder'] = kwargs.get("MaxOrder", maxorder)
             for key in amp_aux.keys():
-                if amp_aux[key] is not None:
-                    setattr(self, 'Polynom'+key, amp_aux[key])
-                else:
-                    setattr(self, 'Polynom'+key, np.zeros(self.MaxOrder+1))
-            # check ramps
-            ramps = kwargs.pop("Ramps", None)
+                kwargs['Polynom'+key] = kwargs.get('Polynom'+key, np.zeros(maxorder+1))
+            ramps = self._check_ramp(**kwargs)
             if ramps is not None:
-                if len(ramps) != 4:
-                    raise AtError("Ramps has to be a vector with 4 elements")
-                self.Ramps = ramps
-        # fill in super class
-        print('1',kwargs)
+                kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
 
-    def _setmaxorder(self, ampa: np.ndarray, ampb: np.ndarray):
+
+    def _check_amplitudes(self, **kwargs: dict[str, any]):
+        amp_aux = {'A':None, 'B':None}
+        all_amplitudes_are_none = True
+        for key in amp_aux.keys():
+            if 'Amplitude'+key in kwargs and 'amplitude'+key in kwargs:
+                raise AtError('Duplicated amplitude '+key+'parameters.')
+            lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
+            amp_aux[key] = lower_case_kwargs.pop('amplitude'+key.lower(), None)
+            if amp_aux[key] is not None:
+                all_amplitudes_are_none = False
+        if all_amplitudes_are_none:
+            raise AtError("Please provide at least one amplitude for A or B")
+        return amp_aux
+
+    def _set_amplitude(self, amplitude: float or _array or None):
+        if np.isscalar(amplitude):
+            amplitude = [amplitude]
+        amplitude = np.asarray(amplitude)
+        return amplitude
+
+    def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray):
         mxa, mxb = 0, 0
         if ampa is not None:
             mxa = np.max(np.append(np.nonzero(ampa), 0))
         if ampb is not None:
             mxb = np.max(np.append(np.nonzero(ampb), 0))
-        self.MaxOrder = max(mxa, mxb)
+        return max(mxa, mxb)
 
-    def _set_amplitude(self, amplitude: float or _array or None):
-        if amplitude is not None:
-            if np.isscalar(amplitude):
-                amplitude = [amplitude]
-            amplitude = np.asarray(amplitude)
-            print(type(amplitude),amplitude)
-        return amplitude
-
-    def _set_params( self, mode, a_b: str, **kwargs: dict[str, any]):
+    def _check_mode( self, mode, a_b: str, **kwargs: dict[str, any]):
+        if mode == ACMode.WHITENOISE and "seed" not in kwargs:
+            kwargs["Seed"] = kwargs.get("Seed", datetime.now().timestamp())
         if mode == ACMode.SINE:
-            self._set_sine(a_b, **kwargs)
+            self._check_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
             self._set_arb(a_b, **kwargs)
 
-    def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
+    def _check_sine(self, a_b: str, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + a_b, None)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
-        phase = kwargs.pop("Phase" + a_b, 0)
-        setattr(self, "Frequency" + a_b, frequency)
-        setattr(self, "Phase" + a_b, phase)
+        kwargs["Phase" + a_b] = kwargs.get("Phase" + a_b, 0)
 
     def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
         func = kwargs.pop("Func" + a_b, None)
@@ -200,3 +184,11 @@ class VariableMultipole(Element):
         nsamp = len(func)
         setattr(self, "Func" + a_b, func)
         setattr(self, "NSamples" + a_b, nsamp)
+
+    def _check_ramp(self, **kwargs: dict[str, any]):
+        ramps = kwargs.get("Ramps", None)
+        if ramps is not None:
+            if len(ramps) != 4:
+                raise AtError("Ramps has to be a vector with 4 elements")
+            ramps = np.asarray(ramps)
+        return ramps
