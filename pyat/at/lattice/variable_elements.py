@@ -17,6 +17,12 @@ class ACMode(IntEnum):
     ARBITRARY = 2
 
 
+def _array(value, shape=(-1,), dtype=np.float64):
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
+        shape, order="F"
+    )
+
 class VariableMultipole(Element):
     """Class to generate an AT variable thin multipole element."""
 
@@ -111,11 +117,9 @@ class VariableMultipole(Element):
             * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided.
         """
-        print(kwargs)
-        print(vars(self))
+        print('0',kwargs)
+        kwargs['Mode'] = kwargs.get('Mode',mode)
         if len(kwargs) > 0:
-            self.FamName = family_name
-            self.Mode = int(mode)
             # start setting up Amplitudes
             # amplitude names need to be different in pyat and matlab in order to avoid
             # problems between args and kwargs in python when loading a .mat file
@@ -156,6 +160,7 @@ class VariableMultipole(Element):
                     raise AtError("Ramps has to be a vector with 4 elements")
                 self.Ramps = ramps
         # fill in super class
+        print('1',kwargs)
         super().__init__(family_name, **kwargs)
 
     def _setmaxorder(self, ampa: np.ndarray, ampb: np.ndarray):
@@ -171,6 +176,7 @@ class VariableMultipole(Element):
             if np.isscalar(amplitude):
                 amplitude = [amplitude]
             amplitude = np.asarray(amplitude)
+            print(type(amplitude),amplitude)
         return amplitude
 
     def _set_params( self, mode, a_b: str, **kwargs: dict[str, any]):
