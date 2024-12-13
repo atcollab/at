@@ -5,7 +5,16 @@ The Accelerator Toolbox is based on a fast and modular tracking engine.
 
 Coordinate system
 -----------------
-AT runs in 6 dimensions using the following coordinate system:
+The AT coordinate system is based on a design trajectory along which the magnetic
+elements are aligned, and a reference particle:
+
+.. image:: /images/coord_system.*
+
+
+By convention, the reference particle travels along the design trajectory at constant
+nominal energy and defines the phase origin of the RF voltage.
+
+The 6-d coordinate vector :math:`\vec Z` is:
 
 .. math::
 
@@ -16,13 +25,14 @@ AT runs in 6 dimensions using the following coordinate system:
    \delta \\ \beta c\tau
    \end{pmatrix}
 
+:math:`\delta=\dfrac{p-p_0}{p_0}` is the relative momentum deviation,
+
+:math:`p_0` is the nominal momentum.
+
 AT works with relative path lengths: the 6\ :sup:`th` coordinate :math:`\beta c\tau`
 represents the path lengthening with respect to the reference particle. :math:`\tau`
 is the delay with respect to the reference particle: the particle is late for
 :math:`\tau > 0`.
-
-The reference particle is conventionally a particle travelling on the reference orbit
-at constant nominal energy and crossing the RF cavities at their 0 voltage.
 
 Tracking
 --------
