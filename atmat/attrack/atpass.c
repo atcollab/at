@@ -11,6 +11,7 @@
 #include "attypes.h"
 #include "elempass.h"
 #include "atrandom.c"
+#include "ringproperties.c"
 
 /* Get ready for R2018a C matrix API */
 #ifndef mxGetDoubles
@@ -235,42 +236,7 @@ static mxDouble *passhook(mxArray *mxPassArg[], mxArray *mxElem, mxArray *func)
     return tempdoubleptr;
 }
 
-static double getoptionaldoubleprop(const mxArray *obj, const char *fieldname, double default_value)
-{
-    mxArray *field=mxGetProperty(obj, 0, fieldname);
-    return (field) ? mxGetScalar(field) : default_value;
-}
-
-static void getparticle(const mxArray *opts, double *rest_energy, double *charge)
-{
-    const mxArray *part = mxGetField(opts, 0, "Particle");
-    if (part) {
-        if (mxIsClass(part, "atparticle")) {  /* OK */
-            *rest_energy = getoptionaldoubleprop(part, "rest_energy", 0.0);
-            *charge = getoptionaldoubleprop(part, "charge", -1.0);
-        }
-        else {                              /* particle is not a Particle object */
-            mexErrMsgIdAndTxt("Atpass:WrongParameter","Particle must be an 'atparticle' object");
-        }
-    }
-}
-
-static void getproperties(const mxArray *opts, double *energy, double *rest_energy, double *charge)
-{
-    mxArray *field;
-    if (!mxIsStruct(opts)) {
-        mexErrMsgIdAndTxt("Atpass:WrongParameter","ring properties must be a struct");
-    }
-    field = mxGetField(opts, 0, "Energy");
-    if (field) {
-        *energy = mxGetScalar(field);
-        getparticle(opts, rest_energy, charge);
-    }
-}
-
-/*!
- * 
-
+/*
 @param[in]      [0] LATTICE
 @param[in,out]  [1] INITCONDITIONS
 @param[in]      [2] NEWLATTICE
@@ -339,13 +305,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.charge = -1.0;
     param.nbunch = 1;
     param.num_turns = num_turns;
+    param.bdiff = NULL;
+
     if (keep_counter)
         param.nturn = last_turn;
     else
         param.nturn = counter;
 
     if (nrhs >= 10) {
-        getproperties(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge);
+        atProperties(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge);
     }
 
     if (nlhs >= 2) {

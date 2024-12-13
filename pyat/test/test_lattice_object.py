@@ -25,7 +25,7 @@ def test_lattice_energy_radiation_periodicity():
         Energy=5.0e6,
         PassMethod="BndMPoleSymplectic4RadPass",
     )
-    lat = Lattice([d], name="lattice", energy=3.0e6)
+    lat = Lattice([d], name="lattice", periodicity=0, energy=3.0e6)
     assert lat.energy == 3.0e6
     assert lat.periodicity == 32
     assert lat.radiation is True
@@ -35,7 +35,7 @@ def test_lattice_energy_radiation_periodicity():
 def test_lattice_voltage_harmonic_number():
     rf = elements.RFCavity("rf", 0, 0.2e6, 0.5e9, 5, 3.0e6)
     d = elements.Dipole("d1", 2.99792458, BendingAngle=numpy.pi / 5)
-    lat = Lattice([rf, d], name="lattice")
+    lat = Lattice([rf, d], name="lattice", periodicity=0)
     assert lat.energy == 3.0e6
     assert lat.periodicity == 10
     assert lat.rf_voltage == 2e6

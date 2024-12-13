@@ -1,14 +1,6 @@
 """Acceptance computation"""
 
-import numpy
-from .boundary import GridMode
-
-# noinspection PyProtectedMember
-from .boundary import boundary_search
-from typing import Optional, Sequence
-import multiprocessing
-from ..lattice import Lattice, Refpts, frequency_control
-
+from __future__ import annotations
 
 __all__ = [
     "get_acceptance",
@@ -18,6 +10,17 @@ __all__ = [
     "get_momentum_acceptance",
 ]
 
+import multiprocessing
+from typing import Sequence
+
+import numpy as np
+
+from .boundary import GridMode
+
+# noinspection PyProtectedMember
+from .boundary import boundary_search
+from ..lattice import Lattice, Refpts, frequency_control
+
 
 @frequency_control
 def get_acceptance(
@@ -25,17 +28,17 @@ def get_acceptance(
     planes,
     npoints,
     amplitudes,
-    nturns: Optional[int] = 1024,
-    refpts: Optional[Refpts] = None,
-    dp: Optional[float] = None,
+    nturns: int | None = 1024,
+    refpts: Refpts | None = None,
+    dp: float | None = None,
     offset: Sequence[float] = None,
     bounds=None,
-    grid_mode: Optional[GridMode] = GridMode.RADIAL,
-    use_mp: Optional[bool] = False,
-    verbose: Optional[bool] = True,
-    divider: Optional[int] = 2,
-    shift_zero: Optional[float] = 1.0e-6,
-    start_method: Optional[str] = None,
+    grid_mode: GridMode | None = GridMode.RADIAL,
+    use_mp: bool | None = False,
+    verbose: bool | None = True,
+    divider: int | None = 2,
+    shift_zero: float | None = 1.0e-6,
+    start_method: str | None = None,
 ):
     # noinspection PyUnresolvedReferences
     r"""Computes the acceptance at ``repfts`` observation points
@@ -57,7 +60,7 @@ def get_acceptance(
         dp:             static momentum offset
         offset:         initial orbit. Default: closed orbit
         bounds:         defines the tracked range: range=bounds*amplitude.
-          It can be use to select quadrants. For example, default values are:
+          It can be used to select quadrants. For example, default values are:
 
           * :py:attr:`.GridMode.CARTESIAN`: ((-1, 1), (0, 1))
           * :py:attr:`GridMode.RADIAL/RECURSIVE <.GridMode.RADIAL>`: ((0, 1),
@@ -76,9 +79,9 @@ def get_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is
           considered unsafe.
 
     Returns:
@@ -91,9 +94,9 @@ def get_acceptance(
 
     Examples:
 
-        >>> bf,sf,gf = ring.get_acceptance(planes, npoints, amplitudes)
-        >>> plt.plot(*gf,'.')
-        >>> plt.plot(*sf,'.')
+        >>> bf, sf, gf = ring.get_acceptance(planes, npoints, amplitudes)
+        >>> plt.plot(*gf, ".")
+        >>> plt.plot(*sf, ".")
         >>> plt.plot(*bf)
         >>> plt.show()
 
@@ -114,7 +117,7 @@ def get_acceptance(
 
     if verbose:
         nproc = multiprocessing.cpu_count()
-        print("\n{0} cpu found for acceptance calculation".format(nproc))
+        print(f"\n{nproc} cpu found for acceptance calculation")
         if use_mp:
             nprocu = nproc
             print("Multi-process acceptance calculation selected...")
@@ -125,27 +128,25 @@ def get_acceptance(
             print("Single process acceptance calculation selected...")
             if nproc > 1:
                 print("Consider use_mp=True for parallelized computations")
-        np = numpy.atleast_1d(npoints)
+        npts = np.atleast_1d(npoints)
         na = 2
-        if len(np) == 2:
-            na = np[1]
-        npp = numpy.prod(npoints)
-        rpp = 2 * numpy.ceil(numpy.log2(np[0])) * numpy.ceil(na / nprocu)
+        if len(npts) == 2:
+            na = npts[1]
+        npp = np.prod(npoints)
+        rpp = 2 * np.ceil(np.log2(npts[0])) * np.ceil(na / nprocu)
         mpp = npp / nprocu
         if rpp > mpp:
             cond = grid_mode is GridMode.RADIAL or grid_mode is GridMode.CARTESIAN
         else:
             cond = grid_mode is GridMode.RECURSIVE
         if rpp > mpp and not cond:
-            print("The estimated load for grid mode is {0}".format(mpp))
-            print("The estimated load for recursive mode is {0}".format(rpp))
-            print(
-                "{0} or {1} is recommended".format(GridMode.RADIAL, GridMode.CARTESIAN)
-            )
+            print(f"The estimated load for grid mode is {mpp}")
+            print(f"The estimated load for recursive mode is {rpp}")
+            print(f"{GridMode.RADIAL} or {GridMode.CARTESIAN} is recommended")
         elif rpp < mpp and not cond:
-            print("The estimated load for grid mode is {0}".format(mpp))
-            print("The estimated load for recursive mode is {0}".format(rpp))
-            print("{0} is recommended".format(GridMode.RECURSIVE))
+            print(f"The estimated load for grid mode is {mpp}")
+            print(f"The estimated load for recursive mode is {rpp}")
+            print(f"{GridMode.RECURSIVE} is recommended")
 
     b, s, g = boundary_search(
         ring,
@@ -172,16 +173,16 @@ def get_1d_acceptance(
     plane: str,
     resolution: float,
     amplitude: float,
-    nturns: Optional[int] = 1024,
-    refpts: Optional[Refpts] = None,
-    dp: Optional[float] = None,
+    nturns: int | None = 1024,
+    refpts: Refpts | None = None,
+    dp: float | None = None,
     offset: Sequence[float] = None,
-    grid_mode: Optional[GridMode] = GridMode.RADIAL,
-    use_mp: Optional[bool] = False,
-    verbose: Optional[bool] = False,
-    divider: Optional[int] = 2,
-    shift_zero: Optional[float] = 1.0e-6,
-    start_method: Optional[str] = None,
+    grid_mode: GridMode | None = GridMode.RADIAL,
+    use_mp: bool | None = False,
+    verbose: bool | None = False,
+    divider: int | None = 2,
+    shift_zero: float | None = 1.0e-6,
+    start_method: str | None = None,
 ):
     r"""Computes the 1D acceptance at ``refpts`` observation points
 
@@ -208,7 +209,7 @@ def get_1d_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing
+          default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -218,15 +219,15 @@ def get_1d_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
@@ -244,10 +245,10 @@ def get_1d_acceptance(
     """
     if not use_mp:
         grid_mode = GridMode.RECURSIVE
-    assert len(numpy.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
-    assert numpy.isscalar(resolution), "1D acceptance: scalar args required"
-    assert numpy.isscalar(amplitude), "1D acceptance: scalar args required"
-    npoint = numpy.ceil(amplitude / resolution)
+    assert len(np.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
+    assert np.isscalar(resolution), "1D acceptance: scalar args required"
+    assert np.isscalar(amplitude), "1D acceptance: scalar args required"
+    npoint = np.ceil(amplitude / resolution)
     if grid_mode is not GridMode.RECURSIVE:
         assert (
             npoint > 1
@@ -268,7 +269,7 @@ def get_1d_acceptance(
         shift_zero=shift_zero,
         offset=offset,
     )
-    return numpy.squeeze(b), s, g
+    return np.squeeze(b), s, g
 
 
 def get_horizontal_acceptance(
@@ -298,7 +299,7 @@ def get_horizontal_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing
+          default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -308,15 +309,15 @@ def get_horizontal_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
@@ -362,7 +363,7 @@ def get_vertical_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing
+          default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -372,15 +373,15 @@ def get_vertical_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
@@ -426,7 +427,7 @@ def get_momentum_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is
+          default use :py:func:`.lattice_pass`). In case multiprocessing is
           not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
@@ -436,15 +437,15 @@ def get_momentum_acceptance(
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
           Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for MacOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for MacOS to speed-up
-          the calculation or to solve runtime errors, however  it is considered
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
+          the calculation or to solve runtime errors, however it is considered
           unsafe.
 
     Returns:
         boundary:   (len(refpts),2) array: 1D acceptance
-        tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
+        tracked:    (n,) array: Coordinates of tracked particles
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.

@@ -392,9 +392,9 @@ def test_wiggler(rin, func):
     expected = numpy.array(rin, copy=True)
     expected[5] = 0.000000181809691064259
     if func == element_track:
-        func(c, rin, in_place=True)
+        func(c, rin, energy=3e9, in_place=True)
     else:
-        func(c, rin)
+        func(c, rin, energy=3e9)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
 

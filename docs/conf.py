@@ -18,13 +18,13 @@ import at
 
 # -- Project information -----------------------------------------------------
 
-project = 'Accelerator Toolbox'
-project_copyright = '2022, ATCollab'
-author = 'ATCollab'
+project = "Accelerator Toolbox"
+project_copyright = "2022, ATCollab"
+author = "ATCollab"
 
 # The full version, including alpha/beta/rc tags
-release = '.'.join(at.__version__.split('.')[:3])
-version = '.'.join(at.__version__.split('.')[:2])
+release = ".".join(at.__version__.split(".")[:3])
+version = ".".join(at.__version__.split(".")[:2])
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,25 +33,27 @@ version = '.'.join(at.__version__.split('.')[:2])
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-root_doc = 'index'
-extensions = ['sphinx.ext.autosummary',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.githubpages',
-              'sphinx.ext.viewcode',
-              'myst_nb',
-              'sphinx_copybutton',
-              'sphinx_design',
-              ]
+root_doc = "index"
+extensions = [
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.viewcode",
+    "myst_nb",
+    "sphinx_copybutton",
+    "sphinx_design",
+]
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
-                       'matplotlib': ('https://matplotlib.org/stable/', None),
-                       'numpy': ('https://numpy.org/doc/stable/', None),
-                       'scipy': ('https://docs.scipy.org/doc/scipy/', None),
-                       }
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -62,15 +64,15 @@ rst_prolog = """
    :language: python
 """
 autodoc_default_options = {
-        # Make sure that any autodoc declarations show the right members
-        "members": True,
-        "undoc-members": True,
-        "show-inheritance": True,
-        "member-order": "groupwise"
+    # Make sure that any autodoc declarations show the right members
+    "members": True,
+    "undoc-members": True,
+    "show-inheritance": True,
+    "member-order": "groupwise",
 }
-autodoc_typehints = 'description'
-autodoc_typehints_description_target = 'documented'
-autodoc_typehints_format = 'short'
+autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
+autodoc_typehints_format = "short"
 autosummary_generate = True  # Make _autosummary files and include them
 autosummary_generate_overwrite = False
 autosummary_ignore_module_all = False
@@ -78,7 +80,7 @@ autoclass_content = "both"  # include both class docstring and __init__
 
 napoleon_use_rtype = False  # More legible
 # napoleon_numpy_docstring = False  # Force consistency, leave only Google
-napoleon_custom_sections = [('Returns', 'params_style')]
+napoleon_custom_sections = [("Returns", "params_style")]
 
 add_module_names = False
 
@@ -88,7 +90,7 @@ myst_enable_extensions = [
     "colon_fence",
     "dollarmath",
     "replacements",
-    "deflist"
+    "deflist",
 ]
 myst_heading_anchors = 3
 nb_execution_mode = "auto"
@@ -102,11 +104,15 @@ nb_execution_allow_errors = True
 # html_theme = 'alabaster'
 # html_theme = 'sphinx_rtd_theme'
 # html_theme = 'sphinx_book_theme'
-html_theme = 'pydata_sphinx_theme'
-html_logo = 'images/AT.png'
+html_theme = "pydata_sphinx_theme"
+html_logo = "images/ATlight.png"
 html_copy_source = False
 html_theme_options = {
     "github_url": "https://github.com/atcollab/at",
+    "logo": {
+      "image_light": "images/ATlight.png",
+      "image_dark": "images/ATdark.png",
+   }
 }
 html_sidebars = {
     "index": [],
@@ -120,10 +126,32 @@ html_sidebars = {
 
 html_css_files = ["css/custom_at.css"]
 
-# Add any paths that contain custom static files (such as style sheets) here,
+# Add any paths that contaAddedin custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static', 'atdocs']
+html_static_path = ["_static", "atdocs"]
+
+# -- Options for latex output -------------------------------------------------
+
+latex_documents = [
+    (
+        "p/index",
+        "pyat.tex",
+        "PyAT User's Guide",
+        "The AT collaboration",
+        "manual",
+        True,
+    ),
+    (
+        "common/passmethods",
+        "at.tex",
+        "AT Integrators",
+        "The AT collaboration",
+        "manual",
+        False,
+    ),
+]
+latex_logo = "images/ATlarge.png"
 
 
 # -- Options for copybutton  -------------------------------------------------

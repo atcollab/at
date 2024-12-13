@@ -6,6 +6,8 @@
 #define ATELEM_C
 
 #include "atcommon.h"
+#include "attypes.h"
+#include "atconstants.h"
 
 /*----------------------------------------------------*/
 /*            For the integrator code                 */
@@ -70,6 +72,29 @@ typedef mxArray atElem;
 #define atError(...) mexErrMsgIdAndTxt("AT:PassError", __VA_ARGS__)
 #define atWarning(...) mexWarnMsgIdAndTxt("AT:PassWarning", __VA_ARGS__)
 #define atPrintf(...) mexPrintf(__VA_ARGS__)
+#include "ringproperties.c"
+
+double atEnergy(double ringenergy, double elemenergy)
+{
+    if (ringenergy!=0.0)
+        return ringenergy;
+    else
+        if (elemenergy!=0.0)
+            return elemenergy;
+        else {
+            atError("Energy not defined.");
+            return 0.0;   /* Never reached but makes the compiler happy */
+        }
+}
+
+double atGamma(double ringenergy, double elemenergy, double rest_energy)
+{
+    double energy = atEnergy(ringenergy, elemenergy);
+    if (rest_energy == 0.0)
+        return 1.0E-9 * energy / __E0;
+    else
+        return energy / rest_energy;
+}
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
@@ -180,6 +205,8 @@ typedef PyObject atElem;
 #define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
+#define atEnergy(ringenergy,elemenergy) (ringenergy)
+#define atGamma(ringenergy,elemenergy,rest_energy) ((rest_energy) == 0.0 ? 1.0E-9*(ringenergy)/__E0 : (ringenergy)/(rest_energy))
 
 static int array_imported = 0;
 
@@ -327,7 +354,6 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 #endif /* defined(PYAT) */
 
 #if defined(PYAT) || defined(MATLAB_MEX_FILE)
-#include "attypes.h"
 
 #ifdef __cplusplus
 #define C_LINK extern "C"

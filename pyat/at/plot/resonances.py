@@ -2,42 +2,41 @@
 
 from __future__ import annotations
 
+__all__ = ["farey_sequence", "plot_tune_diagram", "create_linepalette"]
+
 import warnings
 from fractions import Fraction
 
 import matplotlib.axes
 import matplotlib.pyplot as plt
-import numpy
-
-__all__ = ["farey_sequence", "plot_tune_diagram", "create_linepalette"]
+import numpy as np
 
 # 2024jul31 oblanco at ALBA CELLS
 
 
 def create_linepalette(
-    linestyle: str or dict = None,
+    linestyle: str | dict = None,
     linecolor: str = None,
     linewidth: int = None,
     addtolabel: str = None,
 ) -> dict[str, any]:
-    """
-        Create a line palette to plot resonance lines.
+    """Create a line palette to plot resonance lines.
 
     Parameters:
-        linestyle: str or dictionary.
-            If 'dots' it uses dotted styles as linestyles
-                {"normal": "dashdot", "skew": "dotted"}
-            If a dictionary is passed, it should contain
-                {"normal": style1, "skew": style2}
+        linestyle: If a dictionary is passed, it should contain
+            {"normal": style1, "skew": style2}
+
+            If 'dots' it uses dotted styles as linestyles. Equivalent to:
+            {"normal": "dashdot", "skew": "dotted"}
+
             Default: {"normal": '-', "skew": '--'}
-        linecolor: defines one color to be used. e.g. 'k'.
-            Default: custom values. See :py:func:`plot_tune_diagram`
-        linewidth: defines one integer value for the line width, e.g. 1.
-            Default: custom values. See :py:func:`plot_tune_diagram`
+        linecolor: line color, e.g. "k". Default: custom values.
+            See :py:func:`plot_tune_diagram`
+        linewidth: line width. Default: custom values. See :py:func:`plot_tune_diagram`
         addtolabel: adds a string to the line label
 
     Returns:
-            Dict dictionary contaning the line properties for resonance plots.
+        palette: dictionary containing the line properties for resonance plots.
     """
     # create default dictionary with line properties
     mypalettecolor1 = {
@@ -148,8 +147,8 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
     idx = 0
     while (farey[-1] < 1) and (idx < 100):
         idx += 1
-        caux = numpy.floor((nthorder + bfarey) / dfarey) * cfarey - afarey
-        daux = numpy.floor((nthorder + bfarey) / dfarey) * dfarey - bfarey
+        caux = np.floor((nthorder + bfarey) / dfarey) * cfarey - afarey
+        daux = np.floor((nthorder + bfarey) / dfarey) * dfarey - bfarey
         afarey = cfarey
         bfarey = dfarey
         cfarey = int(caux)
@@ -162,7 +161,7 @@ def farey_sequence(nthorder: int, verbose: bool = False) -> tuple[list, list]:
 
 
 def plot_tune_diagram(
-    orders: int or tuple = (1, 2, 3),
+    orders: int | tuple[int] = (1, 2, 3),
     periodicity: int = 1,
     window: list = (0, 1, 0, 1),
     verbose: bool = False,
@@ -178,14 +177,18 @@ def plot_tune_diagram(
     **kwargs: dict[str, any],
 ) -> tuple[matplotlib.axes.Axes, list, list]:
     r"""
-    Plot the tune diagram and resonance lines for a given order, periodicity and window.
+    Plot the tune diagram and resonance lines for the given *orders*, *periodicity*
+    and *window*.
+
+    The resonance equation is :math:`a\nu_x + b\nu_y = c`
+    with :math:`a,b` and :math:`c` integers. The order is: :math:`N=abs(a)+abs(b)`.
 
     Parameters:
-        orders: integer or tuple of integers larger than zero. Default (1,2,3).
+        orders: integer or tuple of integers larger than zero. Default (1, 2, 3).
         periodicity: periodicity of the machine, integer larger than zero. Default: 1.
-        window: (min_nux,max_nux,min_nuy,max_nuy) tuple of 4 values for the
-            tune minimum and maximum window. Default: (0,1,0,1).
-            window is ignored if the parameter axes is given.
+        window: ``(nux_min, nux_max, nuy_min, nuy_max)``: tuple of 4 values for the
+            tune minimum and maximum window. Default: (0, 1, 0, 1).
+            *window* is ignored if the parameter axes is given.
         verbose: print verbose output.
         legend: print legend on the plot. Default: False.
         show: show plot. Default: True.
@@ -193,41 +196,43 @@ def plot_tune_diagram(
         debug: extra output to check line construction. Default: False.
         axes: :py:class:`~matplotlib.axes.Axes` for plotting the
             resonances. If :py:obj:`None`, a new figure will be created.
-            Note that if axes are given then window is ignored.
-        linestyle: sets the line style for normal and skew resonances.
-            If 'dots' is given it will use dashdot and dotted for normal
-            and skew resonances, respectively.
-            A dictionary could be passed containing
-               {"normal": style1, "skew":style2}
-            to plot using style1 and style2.
-            Default: uses "-" and "--". See Normal and Skew convention.
-        linecolor: sets a single color for all the resonances.
-            By default a custom palette is used. See Lines Color and Width.
-        linewidth = integer width to be used for all resonances.
-            Default: See Color and Width below
+            Note that if *axes* are given then *window* is ignored.
+        linestyle: line style for normal and skew resonances.
+
+            If a dictionary is passed, it should contain
+            {"normal": style1, "skew": style2}
+
+            If 'dots' it uses dotted styles as linestyles. Equivalent to:
+            {"normal": "dashdot", "skew": "dotted"}
+
+            Default: {"normal": '-', "skew": '--'}
+        linecolor: single color for all resonances. Default: custom palette.
+            See :ref:`Lines Color and Width <color_width>`
+        linewidth: line width for all resonances. Default: custom values.
+            See :ref:`Lines Color and Width <color_width>`
         addtolabel: adds a string to the line label, e.g. for the fourth
             order normal resonance "4n"+addtolabel
-        kwargs:
-            * only: if 'normal' plots only normal resonances.
-                    if 'skew' plots only skew resonances.
-                    Otherwise ignored.
-                    See the notes on Normal and Skew convention.
-            * linedict: use it to pass a dictionary with custom line styles.
-                See notes below.
+    Keyword Args:
+        only (str): if 'normal', plot only normal resonances.
+
+            if 'skew' plots only skew resonances.
+
+            Otherwise, ignored. See the notes on Normal and Skew convention.
+        linedict (dict): dictionary of custom line styles. See notes below.
 
     Returns:
-        Axes object from matplotlib.axes._axes
-        List of handles for the legend
-        List of labels for the legend
+        Axes (matplotlib.axes.Axes): object from matplotlib.axes._axes
+        legend_h (list):  list of handles for the legend
+        legend_lab (list): list of labels for the legend
 
     NOTES:
-    The resonance equation is :math:`a\nu_x + b\nu_y = c`
-    with :math:`a,b` and :math:`c` integers. The order :math:`N=abs(a)+abs(b)`.
 
     Normal and Skew convention:
     Line style is similar to reson.m from Matlab Middle Layer, MML, by L. Nadolski.
     Normal resonances are plotted with a continuous line.
     Skew resonances, i.e. N-abs(a) is odd, are plotted in dashed lines.
+
+    .. _color_width:
 
     Lines Color and Width:
     Line style is similar to reson.m from Matlab Middle Layer, MML, by L. Nadolski.
@@ -242,15 +247,13 @@ def plot_tune_diagram(
     9th: 'lightgreen', width 1
     10th to 15th: RGB increased in steps of 0.1, width 1
 
-    Custom Style:
-    You could pass a custom line style in a dictionary as
-    linedict = mydictionary,
-    where mydictionary should contain two entries
+    Custom Style: You could pass a custom line style in a dictionary as
+    ``linedict=mydictionary``, where mydictionary should contain two entries:
     dict("normal": normald, "skew": skewd).
     normald and skewd are also dictionaries, each entry contains as key
     the resonance order and as value the line properties to use in the plot.
-    The default dictionary is created with :pyt:func:`create_linepalette`
-      mydictionary = at.plot.resonances.create_linepalette()
+    The default dictionary is created with :py:func:`create_linepalette`
+    mydictionary = at.plot.resonances.create_linepalette()
     you could edit the needed entries.
 
     Raises:
@@ -283,7 +286,7 @@ def plot_tune_diagram(
 
     verboseprint(f"The window is {window}")
     # check the window
-    windowa = numpy.array(window)
+    windowa = np.array(window)
     if windowa[0] == windowa[1]:
         raise ValueError("horizontal coordinates must be different")
     if windowa[2] == windowa[3]:
@@ -297,7 +300,7 @@ def plot_tune_diagram(
     # get xlimits and ylimits
     the_axeslims = windowa.reshape((2, 2))
 
-    maxreson2calc = numpy.max(orders)
+    maxreson2calc = np.max(orders)
     verboseprint(f"Farey max order={maxreson2calc}")
 
     # get the Farey collection, i.e., a list of farey sequences, one per order
@@ -315,17 +318,17 @@ def plot_tune_diagram(
         axes = fig.add_subplot(111)
     else:
         verboseprint("Axes already exist, ignore window")
-        the_axeslims = numpy.array([axes.get_xlim(), axes.get_ylim()])
+        the_axeslims = np.array([axes.get_xlim(), axes.get_ylim()])
     # min/max to plot lines with slopes
-    minx = numpy.floor(the_axeslims[0, 0])
-    minx = minx - periodicity - numpy.mod(minx, periodicity)
-    maxx = numpy.ceil(the_axeslims[0, 1])
-    maxx = maxx + periodicity - numpy.mod(maxx, periodicity)
+    minx = np.floor(the_axeslims[0, 0])
+    minx = minx - periodicity - np.mod(minx, periodicity)
+    maxx = np.ceil(the_axeslims[0, 1])
+    maxx = maxx + periodicity - np.mod(maxx, periodicity)
     minmaxxdist = maxx - minx
-    miny = numpy.floor(the_axeslims[1, 0])
-    miny = miny - periodicity - numpy.mod(miny, periodicity)
-    maxy = numpy.ceil(the_axeslims[1, 1])
-    maxy = maxy + periodicity - numpy.mod(maxy, periodicity)
+    miny = np.floor(the_axeslims[1, 0])
+    miny = miny - periodicity - np.mod(miny, periodicity)
+    maxy = np.ceil(the_axeslims[1, 1])
+    maxy = maxy + periodicity - np.mod(maxy, periodicity)
     minmaxydist = maxy - miny
 
     lprop = create_linepalette(
@@ -338,7 +341,7 @@ def plot_tune_diagram(
     lprop["normal"].update(userprop.get("normal", {}))
     lprop["skew"].update(userprop.get("skew", {}))
 
-    # we only need to points to define a line
+    # we only need two points to define a line
     nauxpoints = 2
 
     # window min/max,horizontal and vertical
@@ -359,16 +362,12 @@ def plot_tune_diagram(
             # increase step by the periodicity in straight resonances
             debugprint("enter plotting horizontal straight lines")
             if 0 in normalskew:
-                for iaux in numpy.arange(
-                    minx, maxx + 0.000001, periodicity * chosenstep
-                ):
+                for iaux in np.arange(minx, maxx + 0.000001, periodicity * chosenstep):
                     axes.axvline(x=iaux, **lprop["normal"][nthorder])
             debugprint("enter plotting vertical straight lines")
-            nsaux = numpy.mod(nthorder, 2)
+            nsaux = np.mod(nthorder, 2)
             if nsaux in normalskew:
-                for iaux in numpy.arange(
-                    miny, maxy + 0.000001, periodicity * chosenstep
-                ):
+                for iaux in np.arange(miny, maxy + 0.000001, periodicity * chosenstep):
                     axes.axhline(y=iaux, **lprop[idxtotype[nsaux]][nthorder])
             # aeq*nux + beq*nuy = nthorder
             for aeq in range(1, nthorder):
@@ -379,20 +378,20 @@ def plot_tune_diagram(
                 debugprint(f"chosen slope={chosenslope}")
                 debugprint(f"chosen ystep={ystep}")
                 # calculate the variation on the vertical direction from window size
-                yyaux = numpy.ceil(minmaxxdist * chosenslope + minmaxydist * ystep)
+                yyaux = np.ceil(minmaxxdist * chosenslope + minmaxydist * ystep)
                 y1aux = -yyaux + miny
                 y2aux = yyaux + maxy
                 # adapt to periodicity
-                y1aux = periodicity * numpy.floor(y1aux / periodicity)
-                y2aux = periodicity * numpy.ceil(y2aux / periodicity)
+                y1aux = periodicity * np.floor(y1aux / periodicity)
+                y2aux = periodicity * np.ceil(y2aux / periodicity)
                 debugprint(f"minx={minx},maxx={maxx},minmaxxdist={minmaxxdist}")
                 debugprint(f"miny={miny},maxy={maxy},minmaxydist={minmaxydist}")
                 debugprint(f"y1aux={y1aux},y2aux={y2aux}")
-                xaux = numpy.linspace(minx, maxx, nauxpoints)
+                xaux = np.linspace(minx, maxx, nauxpoints)
                 debugprint(f"xaux={xaux}")
-                nsaux = numpy.mod(beq, 2)
+                nsaux = np.mod(beq, 2)
                 if nsaux in normalskew:
-                    for istep in numpy.arange(0, y2aux - y1aux + 0.0001, ystep):
+                    for istep in np.arange(0, y2aux - y1aux + 0.0001, ystep):
                         y1line = (
                             -chosenslope * (xaux - minx) + y2aux - periodicity * istep
                         )
@@ -406,8 +405,6 @@ def plot_tune_diagram(
     axes.set_xlabel(r"$\nu_x$")
     axes.set_ylabel(r"$\nu_y$")
     # printing legend if necessary
-    myleghandles = []
-    myleglabels = []
     handleall, labelall = axes.get_legend_handles_labels()
     hstyle = [hline._linestyle for hline in handleall]
     joinlabelstyle = [i + j for i, j in zip(labelall, hstyle)]

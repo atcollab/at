@@ -33,7 +33,7 @@ struct elem
     double *KickAngle;
 };
 
-static void ExactSectorBendRad(double *r, double le, double bending_angle,
+static void ExactSectorBendRad(double *r, double le, double irho,
         double *A, double *B,
         int max_order, int num_int_steps,
         double entrance_angle, double exit_angle,
@@ -43,9 +43,8 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, double E0, int num_particles)
+        double *KickAngle, double scaling, double gamma, int num_particles)
 {
-    double irho = bending_angle / le;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
@@ -53,6 +52,8 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
     double K2 = SL*KICK2;
     double B0 = B[0];
     double A0 = A[0];
+    double rad_const = RAD_CONST*pow(gamma, 3);
+    double diff_const = DIF_CONST*pow(gamma, 5);
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
@@ -63,7 +64,8 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
-    FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,le,E0)
+    FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,le,\
+    rad_const, diff_const)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -87,11 +89,11 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
 
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
                 exact_bend(r6, irho, L1);
-                ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+                ex_bndthinkickrad(r6, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
                 exact_bend(r6, irho, L2);
-                ex_bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
+                ex_bndthinkickrad(r6, A, B, max_order, K2, irho, rad_const, diff_const, NULL);
                 exact_bend(r6, irho, L2);
-                ex_bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+                ex_bndthinkickrad(r6, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
                 exact_bend(r6, irho, L1);
             }
 
@@ -127,6 +129,8 @@ static void ExactSectorBendRad(double *r, double le, double bending_angle,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
+    double irho, gamma;
+
     if (!Elem) {
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -181,7 +185,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    ExactSectorBendRad(r_in, Elem->Length, Elem->BendingAngle,
+    irho = Elem->BendingAngle/Elem->Length;
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+
+    ExactSectorBendRad(r_in, Elem->Length, irho,
             Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
@@ -189,7 +196,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->gK,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, Elem->Energy, num_particles);
+            Elem->KickAngle, Elem->Scaling, gamma, num_particles);
     return Elem;
 }
 
@@ -200,7 +207,11 @@ MODULE_DEF(ExactSectorBendRadPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
+        double rest_energy = 0.0;
+        double charge = -1.0;
+        double irho;
+        double Gamma;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -215,7 +226,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
-        double Energy=atGetDouble(ElemData,"Energy"); check_error();
+        double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
         int FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
@@ -233,17 +244,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (NumIntSteps == 0) {
             atError("NumIntSteps == 0 not allowed with radiation"); check_error();
         }
+        if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        irho = BendingAngle/Length;
+        Gamma = atGamma(Energy, Energy, rest_energy);
         r_in = mxGetDoubles(plhs[0]);
-        ExactSectorBendRad(r_in, Length, BendingAngle, PolynomA, PolynomB,
+
+        ExactSectorBendRad(r_in, Length, irho, PolynomA, PolynomB,
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             FringeBendEntrance, FringeBendExit,
             FringeQuadEntrance, FringeQuadExit,
             gK,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, Energy, num_particles);
+            KickAngle, Scaling, Gamma, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;

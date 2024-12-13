@@ -1,10 +1,15 @@
-"""Load a lattice from a MAD8 file."""
+r"""Using `MAD8`_ files with PyAT
+=================================
+
+Using MAD8 files is similar to using MAD-X files: see
+:py:mod:`the MAD-X documentation <at.load.madx>`
+
+.. _mad8: https://mad8.web.cern.ch/user/mad.html
+"""
 
 from __future__ import annotations
 
-__all__ = ["Mad8Parser", "load_mad8"]
-
-from os.path import abspath
+__all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
 # functions known by MAD-8
 from math import pi, e, sqrt, exp, log, sin, cos, tan  # noqa: F401
@@ -17,8 +22,10 @@ from scipy.constants import physical_constants as _cst
 
 from ..lattice import Lattice
 
+from .file_input import ignore_names
+
 # noinspection PyProtectedMember
-from .madx import _MadParser
+from .madx import _MadElement, _MadParser, _MadExporter
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -38,7 +45,7 @@ from .madx import (  # noqa: F401
     monitor,
     hmonitor,
     vmonitor,
-    solenoid,
+    value,
 )
 
 # Constants known by MAD-8
@@ -56,7 +63,13 @@ raddeg = pi / 180.0
 emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
-_attr = re.compile(r"\[([a-zA-Z][\w.]*)]")  # Identifier enclosed in square brackets
+_attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
+
+ignore_names(
+    globals(),
+    _MadElement,
+    ["solenoid", "rfmultipole", "crabcavity", "elseparator", "collimator", "tkicker"],
+)
 
 
 class Mad8Parser(_MadParser):
@@ -95,32 +108,31 @@ class Mad8Parser(_MadParser):
         >>> ring = parser.lattice(use="ring")  # generate an AT Lattice
     """
 
-    def __init__(self, *, strict: bool = True, verbose: bool = False, **kwargs):
+    _continuation = "&"
+    _blockcomment = ("comment", "endcomment")
+
+    def __init__(self, **kwargs):
         """
         Args:
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(
-            globals(),
-            strict=strict,
-            verbose=verbose,
-            continuation="&",
-            blockcomment=("comment", "endcomment"),
-            **kwargs,
-        )
+        super().__init__(globals(), **kwargs)
 
-    def evaluate(self, expr):
+    def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""
-        expr = self._no_dot(expr)  # Replace "." by "_", lower case
-        expr = _attr.sub(r".\1", expr)  # Attribute access
+        expr = _attr.sub(r".\1", expr)  # Attribute access: VAR[ATTR]
         expr = expr.replace("^", "**")  # Exponentiation
-        return super().evaluate(expr)
+        return super()._format_command(expr)
 
 
 def load_mad8(
-    *files: str, use: str = "ring", strict: bool = True, verbose=False, **kwargs
+    *files: str,
+    use: str = "ring",
+    strict: bool = True,
+    verbose: bool = False,
+    **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD8 files
 
@@ -149,16 +161,35 @@ def load_mad8(
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
-
-    See Also:
-        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     parser = Mad8Parser(strict=strict, verbose=verbose)
-    absfiles = tuple(abspath(file) for file in files)
     params = {
         key: kwargs.pop(key)
         for key in ("name", "particle", "energy", "periodicity")
         if key in kwargs
     }
-    parser.parse_files(*absfiles, **kwargs)
-    return parser.lattice(use=use, in_file=absfiles, **params)
+    parser.parse_files(*files, **kwargs)
+    return parser.lattice(use=use, **params)
+
+
+class _Mad8Exporter(_MadExporter):
+    delimiter = ""
+    continuation = "&"
+    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+
+
+def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
+    """Save a :py:class:`.Lattice` as a MAD8 file
+
+    Args:
+        ring:   lattice
+        filename: file to be created. If None, write to sys.stdout
+
+    Keyword Args:
+        use (str | None): name of the created SEQUENCE of LINE.
+          Default: name of the PyAT lattice
+        use_line (bool):  If True, use a MAD "LINE" format. Otherwise, use
+          a MAD "SEQUENCE"
+    """
+    exporter = _Mad8Exporter(ring, **kwargs)
+    exporter.export(filename)

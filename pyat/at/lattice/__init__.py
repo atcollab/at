@@ -1,5 +1,4 @@
-"""
-Helper functions for working with AT lattices.
+"""Helper functions for working with AT lattices.
 
 A :py:class:`.Lattice` in pyAT is a sequence of :py:class:`.Element` objects.
 These functions are useful for building ad manipulating these sequences.
@@ -7,7 +6,7 @@ These functions are useful for building ad manipulating these sequences.
 import sys
 import numpy as np
 from .axisdef import *
-from .options import DConstant, random
+from .options import *
 from .particle_object import Particle
 # from .variables import *
 from .variables import VariableList

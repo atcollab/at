@@ -14,17 +14,26 @@ __all__ = [
 
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 
-import numpy
+import numpy as np
 from scipy.linalg import inv, det, solve_sylvester
 
-from at.lattice import Dipole, Wiggler, DConstant
-from at.lattice import Lattice, check_radiation, Refpts, All
-from at.lattice import Quadrupole, Multipole, QuantumDiffusion
-from at.lattice import frequency_control, set_value_refpts
-from at.physics import ELossMethod
-from at.physics import find_mpole_raddiff_matrix, FDW, get_tunes_damp
-from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
-from at.tracking import internal_lpass
+from ..lattice import Dipole, Wiggler, DConstant, test_mode
+from ..lattice import Lattice, Element, check_radiation, Refpts, All
+from ..lattice import Quadrupole, Multipole, QuantumDiffusion
+from ..lattice import Collective, SimpleQuantDiff
+from ..lattice import frequency_control, set_value_refpts
+from . import ELossMethod
+from . import find_mpole_raddiff_matrix, FDW, get_tunes_damp
+from . import find_orbit6, find_m66, find_elem_m66, Orbit
+from ..tracking import internal_lpass, diffusion_matrix
+
+_new_methods = {
+    "BndMPoleSymplectic4RadPass",
+    "StrMPoleSymplectic4RadPass",
+    "ExactMultipoleRadPass",
+    "GWigSymplecticRadPass",
+    "EnergyLossRadPass",
+}
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -32,13 +41,15 @@ _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
 # dtype for structured array containing optical parameters
 ENVELOPE_DTYPE = [
-    ("r66", numpy.float64, (6, 6)),
-    ("r44", numpy.float64, (4, 4)),
-    ("m66", numpy.float64, (6, 6)),
-    ("orbit6", numpy.float64, (6,)),
-    ("emitXY", numpy.float64, (2,)),
-    ("emitXYZ", numpy.float64, (3,)),
+    ("r66", np.float64, (6, 6)),
+    ("r44", np.float64, (4, 4)),
+    ("m66", np.float64, (6, 6)),
+    ("orbit6", np.float64, (6,)),
+    ("emitXY", np.float64, (2,)),
+    ("emitXYZ", np.float64, (3,)),
 ]
+
+_b0 = np.zeros((6, 6), dtype=np.float64)
 
 
 def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
@@ -49,21 +60,29 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
 
     def _cumulb(it):
         """accumulate diffusion matrices"""
-        cumul = numpy.zeros((6, 6))
+        cumul = np.zeros((6, 6))
         yield cumul
         for el, orbin, b in it:
             m = find_elem_m66(el, orbin, energy=energy, particle=ring.particle)
             cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
-    def diffusion_matrix(elem, orbit, energy):
+    def substitute(elem):
+        if elem.PassMethod not in _new_methods:
+            elem = elem.copy()
+            elem.PassMethod = "StrMPoleSymplectic4RadPass"
+        return elem
+
+    def elem_diffusion(elem: Element, elemorb):
         if elem.PassMethod.endswith("RadPass"):
-            if hasattr(elem, "Bmax"):
+            if not test_mode():
+                return diffusion_matrix(substitute(elem), elemorb, energy=energy)
+            elif hasattr(elem, "Bmax"):
                 return FDW(elem, orbit, energy)
             else:
-                return find_mpole_raddiff_matrix(elem, orbit, energy)
+                return find_mpole_raddiff_matrix(elem, elemorb, energy)
         else:
-            return b0
+            return _b0
 
     energy = ring.energy
 
@@ -71,15 +90,16 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.squeeze(
+    orbs = np.squeeze(
         internal_lpass(
             ring, orbit.copy(order="K"), refpts=All, keep_lattice=keep_lattice
         ),
         axis=(1, 3),
     ).T
-    b0 = numpy.zeros((6, 6))
-    bb = [diffusion_matrix(elem, elemorb, energy) for elem, elemorb in zip(ring, orbs)]
-    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
+
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
+
+    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
 
@@ -89,14 +109,14 @@ def _lmat(dmat):
     vertical.  Then do chol on 4x4 hor-long matrix and put 0's
     in vertical
     """
-    lmat = numpy.zeros((6, 6))
+    lmat = np.zeros((6, 6))
     try:
-        lmat = numpy.linalg.cholesky(dmat)
-    except numpy.linalg.LinAlgError:
-        nz = numpy.where(dmat != 0)
-        cmat = numpy.reshape(dmat[nz], (4, 4))
-        cmat = numpy.linalg.cholesky(cmat)
-        lmat[nz] = numpy.reshape(cmat, (16,))
+        lmat = np.linalg.cholesky(dmat)
+    except np.linalg.LinAlgError:
+        nz = np.where(dmat != 0)
+        cmat = np.reshape(dmat[nz], (4, 4))
+        cmat = np.linalg.cholesky(cmat)
+        lmat[nz] = np.reshape(cmat, (16,))
     return lmat
 
 
@@ -120,9 +140,9 @@ def ohmi_envelope(
           Default: False
 
     Returns:
-        emit0 (numpy.recarray):     Emittance data at the start/end of the ring
-        beamdata (numpy.recarray):  Beam parameters at the start of the ring
-        emit (numpy.recarray):      Emittance data at the points selected to by
+        emit0 (np.recarray):     Emittance data at the start/end of the ring
+        beamdata (np.recarray):  Beam parameters at the start of the ring
+        emit (np.recarray):      Emittance data at the points selected to by
           ``refpts``
 
     **emit** is a :py:obj:`record array <numpy.recarray>` with the following
@@ -158,23 +178,23 @@ def ohmi_envelope(
 
     def process(r66):
         # projections on xx', zz', ldp
-        emit3sq = numpy.array([det(r66[s, s]) for s in _submat])
+        emit3sq = np.array([det(r66[s, s]) for s in _submat])
         # Prevent from unrealistic negative values of the determinant
-        emit3 = numpy.sqrt(numpy.maximum(emit3sq, 0.0))
+        emit3 = np.sqrt(np.maximum(emit3sq, 0.0))
         # Emittance cut for dpp=0
         if emit3[0] < 1.0e-13:  # No equilibrium emittance
-            r44 = numpy.nan * numpy.ones((4, 4))
+            r44 = np.nan * np.ones((4, 4))
         elif emit3[1] < 1.0e-13:  # Uncoupled machine
             minv = inv(r66[[0, 1, 4, 5], :][:, [0, 1, 4, 5]])
-            r44 = numpy.zeros((4, 4))
+            r44 = np.zeros((4, 4))
             r44[:2, :2] = inv(minv[:2, :2])
         else:  # Coupled machine
             minv = inv(r66)
             r44 = inv(minv[:4, :4])
         # betatron emittances (dpp=0)
-        emit2sq = numpy.array([det(r44[s, s], check_finite=False) for s in _submat[:2]])
+        emit2sq = np.array([det(r44[s, s], check_finite=False) for s in _submat[:2]])
         # Prevent from unrealistic negative values of the determinant
-        emit2 = numpy.sqrt(numpy.maximum(emit2sq, 0.0))
+        emit2 = np.sqrt(np.maximum(emit2sq, 0.0))
         return r44, emit2, emit3
 
     def propag(m, cumb, orbit6):
@@ -183,9 +203,10 @@ def ohmi_envelope(
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
-    uint32refs = ring.get_uint32_index(refpts)
-    bbcum, orbs = _dmatr(ring, orbit=orbit, keep_lattice=keep_lattice)
-    mring, ms = find_m66(ring, uint32refs, orbit=orbs[0], keep_lattice=True)
+    rtmp = ring.disable_6d(QuantumDiffusion, Collective, SimpleQuantDiff, copy=True)
+    uint32refs = rtmp.get_uint32_index(refpts)
+    bbcum, orbs = _dmatr(rtmp, orbit=orbit, keep_lattice=keep_lattice)
+    mring, ms = find_m66(rtmp, uint32refs, orbit=orbs[0], keep_lattice=True)
     # ------------------------------------------------------------------------
     # Equation for the moment matrix R is
     #         R = MRING*R*MRING' + BCUM;
@@ -199,19 +220,19 @@ def ohmi_envelope(
     # ------------------------------------------------------------------------
     aa = inv(mring)
     bb = -mring.T
-    qq = numpy.dot(aa, bbcum[-1])
+    qq = np.dot(aa, bbcum[-1])
     rr = solve_sylvester(aa, bb, qq)
     rr = 0.5 * (rr + rr.T)
     rr4, emitxy, emitxyz = process(rr)
     r66data = get_tunes_damp(mring, rr)
 
-    data0 = numpy.rec.fromarrays(
+    data0 = np.rec.fromarrays(
         (rr, rr4, mring, orbs[0], emitxy, emitxyz), dtype=ENVELOPE_DTYPE
     )
     if uint32refs.shape == (0,):
-        data = numpy.recarray((0,), dtype=ENVELOPE_DTYPE)
+        data = np.recarray((0,), dtype=ENVELOPE_DTYPE)
     else:
-        data = numpy.rec.fromrecords(
+        data = np.rec.fromrecords(
             list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])),
             dtype=ENVELOPE_DTYPE,
         )
@@ -257,11 +278,11 @@ def get_radiation_integrals(
         etap0 = vini.dispersion[1]
         theta = getattr(elem, "BendingAngle", None)
         if theta is None:
-            xpi = vini.closed_orbit[1] / (1 + vini.closed_orbit[4])
-            xpo = vend.closed_orbit[1] / (1 + vend.closed_orbit[4])
+            xpi = vini.closed_orbit[1] / (1.0 + vini.closed_orbit[4])
+            xpo = vend.closed_orbit[1] / (1.0 + vend.closed_orbit[4])
             theta = xpi - xpo
         if abs(theta) < 1.0e-7:
-            return numpy.zeros(5)
+            return np.zeros(5)
         angin = getattr(elem, "EntranceAngle", 0.0)
         angout = getattr(elem, "ExitAngle", 0.0)
 
@@ -323,7 +344,7 @@ def get_radiation_integrals(
             - (eta0 * eps1 + eta3 * eps2) / rho
         )
         di5 = h_ave * ll / abs(rho) / rho2
-        return numpy.array([di1, di2, di3, di4, di5])
+        return np.array([di1, di2, di3, di4, di5])
 
     def wiggler_radiation(elem: Wiggler, dini):
         """Compute the radiation integrals in wigglers with the following
@@ -341,16 +362,16 @@ def get_radiation_integrals(
             """On-axis wiggler field"""
 
             def harm(coef, h, phi):
-                return -Bmax * coef * numpy.cos(h * kws + phi)
+                return -Bmax * coef * np.cos(h * kws + phi)
 
             kw = 2 * pi / wiggler.Lw
             Bmax = wiggler.Bmax
             kws = kw * s
-            zz = [numpy.zeros(kws.shape)]
+            zz = [np.zeros(kws.shape)]
             vh = zz + [harm(pb[1], pb[4], pb[5]) for pb in wiggler.By.T]
             vv = zz + [-harm(pb[1], pb[4], pb[5]) for pb in wiggler.Bx.T]
-            bys = numpy.sum(numpy.stack(vh), axis=0)
-            bxs = numpy.sum(numpy.stack(vv), axis=0)
+            bys = np.sum(np.stack(vh), axis=0)
+            bxs = np.sum(np.stack(vv), axis=0)
             return bxs, bys
 
         le = elem.Length
@@ -366,14 +387,14 @@ def get_radiation_integrals(
         rhoinv = elem.Bmax / Brho
         coefh = elem.By[1, :] * rhoinv
         coefv = elem.Bx[1, :] * rhoinv
-        coef2 = numpy.concatenate((coefh, coefv))
+        coef2 = np.concatenate((coefh, coefv))
         if len(coef2) == 1:
             di3 = le * coef2[0] ** 3 * 4 / 3 / pi
         else:
-            bx, bz = b_on_axis(elem, numpy.linspace(0, elem.Lw, _NSTEP + 1))
-            rinv = numpy.sqrt(bx * bx + bz * bz) / Brho
-            di3 = numpy.trapz(rinv**3) * le / _NSTEP
-        di2 = le * (numpy.sum(coefh * coefh) + numpy.sum(coefv * coefv)) / 2
+            bx, bz = b_on_axis(elem, np.linspace(0, elem.Lw, _NSTEP + 1))
+            rinv = np.sqrt(bx * bx + bz * bz) / Brho
+            di3 = np.trapz(rinv**3) * le / _NSTEP
+        di2 = le * (np.sum(coefh * coefh) + np.sum(coefv * coefv)) / 2
         di1 = -di2 / kw / kw
         di4 = 0
         if len(coefh) > 0:
@@ -381,10 +402,10 @@ def get_radiation_integrals(
         else:
             d5lim = 0
         di5 = max(H0 * di3, d5lim)
-        return numpy.array([di1, di2, di3, di4, di5])
+        return np.array([di1, di2, di3, di4, di5])
 
     Brho = ring.BRho
-    integrals = numpy.zeros((5,))
+    integrals = np.zeros((5,))
 
     if twiss is None:
         _, _, twiss = ring.get_optics(
@@ -401,7 +422,7 @@ def get_radiation_integrals(
 
 
 @check_radiation(True)
-def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> numpy.ndarray:
+def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
     """Computes the diffusion matrix of the whole ring
 
     Parameters:
@@ -414,7 +435,7 @@ def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> numpy.ndarray:
     """
     bbcum, _ = _dmatr(ring, orbit=orbit)
     diffmat = [(bbc + bbc.T) / 2 for bbc in bbcum]
-    return numpy.round(diffmat[-1], 24)
+    return np.round(diffmat[-1], 24)
 
 
 @check_radiation(True)
@@ -430,7 +451,7 @@ def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
         diffElem (QuantumDiffusion): Quantum diffusion element
     """
     dmat = quantdiffmat(ring, orbit=orbit)
-    lmat = numpy.asfortranarray(_lmat(dmat))
+    lmat = np.asfortranarray(_lmat(dmat))
     diff_elem = QuantumDiffusion("Diffusion", lmat)
     return diff_elem
 
@@ -468,9 +489,9 @@ def tapering(ring: Lattice, multipoles: bool = True, niter: int = 1, **kwargs) -
     dp_step = kwargs.pop("DPStep", DConstant.DPStep)
     method = kwargs.pop("method", ELossMethod.TRACKING)
     dipin = ring.get_bool_index(Dipole)
-    dipout = numpy.roll(dipin, 1)
+    dipout = np.roll(dipin, 1)
     multin = ring.get_bool_index(Multipole) & ~dipin
-    multout = numpy.roll(multin, 1)
+    multout = np.roll(multin, 1)
 
     for _i in range(niter):
         _, o6 = find_orbit6(
