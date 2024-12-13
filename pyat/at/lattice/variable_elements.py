@@ -49,25 +49,27 @@ class VariableMultipole(Element):
         r"""
         Create VariableMultipole.
 
-        This function creates a thin multipole of order and type defined by the
-        amplitude components; the polynoms PolynomA and PolynomB are calculated
-        on every turn depending on the chosen mode.
+        This function creates a thin multipole any order (1 to k) and type (Normal
+        or Skew) defined by the amplitude A or B components; the polynoms PolynomA
+        and PolynomB are calculated on every turn depending on the chosen mode. All
+        modes could be ramped.
 
         Keep in mind that this element varies on every turn, therefore, any ring
         containing a variable element may change after tracking n turns.
 
         There are three different modes implemented: SINE, WHITENOISE and ARBITRARY.
+        By default all are periodic.
 
         The SINE mode requires amplitude, frequency and phase of at least one of the
-        two polynoms A or B. The j-th component of the polynom on the n-th turn
-        is given by:
-          amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + c\tau_k) + phase],
-        where T0 is the revolution period of the ideal ring, and c\tau_k is the delay
-        of the kth particle i.e. the sixth coordinate over the speed of light. Also,
+        two polynoms A or B. The j-th component of the kth order polynom on the
+        n-th turn is given by:
+          amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + \tau_p) + phase],
+        where T0 is the revolution period of the ideal ring, and \tau_p is the delay
+        of the pth particle i.e. the sixth coordinate over the speed of light. Also,
         note that the position of the element on the ring has no effect, the phase
         should be used to add any delay due to the position along s.
         The following is an example of the SINE mode of an skew quad:
-            eleskew = at.VariableMultipole('VAR_SKEW',
+            eleskew = at.VariableMultipole('VAR_SKEW',ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
 
         The WHITENOISE mode requires the amplitude.
