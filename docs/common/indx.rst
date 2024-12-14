@@ -21,14 +21,14 @@ The 6-d coordinate vector :math:`\vec Z` is:
 
    \vec Z =
    \begin{pmatrix}
-   x \\ p_x \\
-   y \\ p_y \\
+   x \\ p_x/p_0 \\
+   y \\ p_y/p_0 \\
    \delta \\ \beta c\tau
    \end{pmatrix}
 
-:math:`\delta=\dfrac{p-p_0}{p_0}` is the relative momentum deviation,
+:math:`p_0` is the nominal momentum,
 
-:math:`p_0` is the nominal momentum.
+:math:`\delta=\dfrac{p-p_0}{p_0}` is the relative momentum deviation.
 
 AT works with relative path lengths: the 6\ :sup:`th` coordinate :math:`\beta c\tau`
 represents the path lengthening with respect to the reference particle. :math:`\tau`
