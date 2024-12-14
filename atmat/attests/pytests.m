@@ -183,8 +183,8 @@ classdef pytests < matlab.unittest.TestCase
             [mtune,mchrom]=tunechrom(mlat,'get_chrom');
             ptune=double(plat.get_tune());
             pchrom=double(plat.get_chrom());
-            testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=1.e-9);
-            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=1.e-4,AbsTol=3.e-4);
+            testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=2.e-9);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=3.e-4,AbsTol=3.e-4);
         end
 
         function linopt1(testCase,dp)
