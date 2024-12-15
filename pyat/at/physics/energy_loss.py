@@ -174,20 +174,17 @@ def get_timelag_fromU0(
         ok = res < ts_tol
         vals = np.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not np.any(ok):
-            raise AtError("No solution found for Phis, check RF settings") from exc
+            raise AtError("No solution found for Phis: check RF settings") from exc
         if len(np.unique(vals[ok])) > 1:
             warn(
-                AtWarning(
-                    "More than one solution found for Phis: use "
-                    "best fit, check RF settings"
-                ),
+                AtWarning("More than one solution found for Phis: check RF settings"),
                 stacklevel=2,
             )
         ts = -r[np.argmin(res)].x[0]
         timelag = ts + tl0
     else:
         if u0 > np.sum(rfv):
-            raise AtError("Not enough RF voltage: unstable ring")
+            raise AtError("Not enough RF voltage: check RF settings")
         vrf = np.sum(rfv)
         timelag = clight / (2 * np.pi * frf) * np.arcsin(u0 / vrf)
         ts = timelag - tml
