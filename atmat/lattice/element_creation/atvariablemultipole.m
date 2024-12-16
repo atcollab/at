@@ -94,9 +94,7 @@ function elem=atvariablemultipole(fname, mode, varargin)
     'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [method,rsrc]                     = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]                         = getoption(rsrc,'Class','VariableMultipole');
-[maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
 rsrc                              = struct(rsrc{:});
-rsrc.MaxOrder                     = maxorder;
 
 m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
 
@@ -144,10 +142,13 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if isfield(rsrc,amplarg)
             amp=rsrc.(amplarg);
             if isscalar(amp)
-                rsrc.(amplarg)=[zeros(1,rsrc.MaxOrder) amp];
+                rsrc.(amplarg)=[amp];
             end
             if strcmpi(mode,'SINE')
                 setsine(rsrc,ab);
+            end
+            if strcmpi(mode,'WHITENOISE')
+
             end
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
