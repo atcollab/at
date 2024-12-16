@@ -137,18 +137,28 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         end
     end
 
+    function rsrc = setwhitenoise(rsrc, ab)
+        whitenoise_params = {'Mean','Std'};
+        whitenoise_defvals = {0,1};
+        for idx = 1:length(whitenoise_params)
+            funcarg=strcat(whitenoise_params{idx},ab);
+            if ~isfield(rsrc,funcarg)
+                auxvalue = whitenoise_defvals{idx};
+            else
+                auxvalue = rsrc.(strcat(whitenoise_params{idx},ab));
+            end
+            rsrc.(strcat(whitenoise_params{idx},ab)) = auxvalue;
+        end
+    end
+
     function rsrc = setparams(rsrc,mode,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
-            amp=rsrc.(amplarg);
-            if isscalar(amp)
-                rsrc.(amplarg)=[amp];
-            end
             if strcmpi(mode,'SINE')
                 setsine(rsrc,ab);
             end
             if strcmpi(mode,'WHITENOISE')
-
+                rsrc = setwhitenoise(rsrc,ab);
             end
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
@@ -173,7 +183,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         else
             mxb=0;
         end
-        mxab=max([mxa,mxb,rsrc.MaxOrder+1]);
+        mxab=max([mxa,mxb,1]);
         rsrc.MaxOrder=mxab-1;
         if isfield(rsrc,'AmplitudeA')
             rsrc.AmplitudeA(mxa+1:mxab)=0;
