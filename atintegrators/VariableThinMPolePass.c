@@ -129,8 +129,7 @@ void VariableThinMPolePass(
     struct elem* Elem,
     double t0,
     int turn,
-    int num_particles,
-    pcg32_random_t* rng
+    int num_particles
     )
 {
 
@@ -156,6 +155,10 @@ void VariableThinMPolePass(
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
 
+    pcg32_random_t rng;
+    printf("Elem->Seed %d\n",Elem->Seed);
+    pcg32_srandom_r(&rng, 1, Elem->Seed);
+
     printf("mode %d\n",mode);
     printf("Elem->mode %d\n",Elem->Mode);
     printf("ElemB->Std %.4f\n",ElemB->Std);
@@ -165,8 +168,8 @@ void VariableThinMPolePass(
     if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
             /* calculate the polynom to apply on all particles */
-            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic,rng);
-            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic,rng);
+            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic,&rng);
+            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic,&rng);
         };
     };
 
@@ -185,8 +188,8 @@ void VariableThinMPolePass(
                 tpart = time_in_this_mode + r6[5] / C0;
                 /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic, rng);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic, rng);
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic, &rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic, &rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -305,7 +308,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->thread_rng);
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles);
     return Elem;
 }
 
@@ -409,7 +412,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
+//        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
