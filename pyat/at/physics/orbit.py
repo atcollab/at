@@ -321,12 +321,11 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     harm_number = round(f_rf*l0/ring.beta/clight)
 
     if guess is None:
-        _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
-        # Getting timelag by tracking uses a different lattice,
-        # so we cannot now use the same one again.
-        if method is ELossMethod.TRACKING:
-            keep_lattice = False
         ref_in = numpy.zeros((6,), order='F')
+        try:
+            _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+        except AtError as exc:
+            raise AtError("Could not determine the initial synchronous phase") from exc
         ref_in[5] = -dt
     else:
         ref_in = numpy.copy(guess)

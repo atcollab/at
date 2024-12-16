@@ -152,7 +152,7 @@ def get_timelag_fromU0(
     try:
         frf = singlev(freq)
         tml = singlev(tl0)
-    except AtError as exc:
+    except AtError:
         ctmax = clight / np.amin(freq) / 2
         tt0 = tl0[np.argmin(freq)]
         bounds = (-ctmax, ctmax)
@@ -174,7 +174,7 @@ def get_timelag_fromU0(
         ok = res < ts_tol
         vals = np.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not np.any(ok):
-            raise AtError("No solution found for Phis: check RF settings") from exc
+            raise AtError("No solution found for Phis: check RF settings") from None
         if len(np.unique(vals[ok])) > 1:
             warn(
                 AtWarning("More than one solution found for Phis: check RF settings"),
@@ -183,9 +183,14 @@ def get_timelag_fromU0(
         ts = -r[np.argmin(res)].x[0]
         timelag = ts + tl0
     else:
-        if u0 > np.sum(rfv):
-            raise AtError("Not enough RF voltage: check RF settings")
         vrf = np.sum(rfv)
+        if u0 > vrf:
+            v1 = ring.periodicity * vrf
+            v2 = ring.periodicity * u0
+            raise AtError(
+                f"The RF voltage ({v1:.3e} eV) is lower than "
+                f"the radiation losses ({v2:.3e} eV)."
+            )
         timelag = clight / (2 * np.pi * frf) * np.arcsin(u0 / vrf)
         ts = timelag - tml
         timelag *= np.ones(ring.refcount(cavpts))
