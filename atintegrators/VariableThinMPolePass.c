@@ -16,6 +16,7 @@ struct elemab {
     double Frequency;
     double Phase;
     int NSamples;
+    double Mean, Std;
     double* Func;
     double* Funcderiv1;
     double* Funcderiv2;
@@ -30,6 +31,7 @@ struct elem {
     struct elemab* ElemA;
     struct elemab* ElemB;
     int Seed;
+    double Mean, Std;
     int Mode;
     int MaxOrder;
     double* Ramps;
@@ -69,6 +71,8 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double* func;
     double *funcderiv1, *funcderiv2, *funcderiv3, *funcderiv4;
     double* amp = elem->Amplitude;
+    double randmean = elem->Mean;
+    double randstd = elem->Std;
     if (!amp) {
         return 0.0;
     }
@@ -81,7 +85,8 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
         ampt *= sin(TWOPI * freq * t + ph);
         return ampt;
     case 1:
-        val = atrandn(0.0, 1.0);
+        val = atrandn(randmean, randstd);
+        printf("%.4f\n",val);
         ampt *= val;
         return ampt;
     case 2:
@@ -143,14 +148,18 @@ void VariableThinMPolePass(
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
 
+    /* mode 0 : sin function */
+    /* mode 1 : random value applied to all particles */
+    /* mode 2 : */
     if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
+            /* calculate the polynom to apply on all particles */
             pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic);
             polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic);
         };
     };
 
-    // branch the time offset avoiding if statement inside the particle tracking
+    // offset the time when applying the sin function
     if (mode == 0){
       time_in_this_mode = t0 * turn;
     }
@@ -159,9 +168,7 @@ void VariableThinMPolePass(
         r6 = r + c * 6;
         /* check if the particle is alive */
         if (!atIsNaN(r6[0])) {
-            /* mode 0 : sin function */
-            /* mode 1 :  */
-            if (mode != 1) {
+            if (mode == 0 || mode == 2) {
                 /* modify the time of arrival of the particle  */
                 tpart = time_in_this_mode + r6[5] / C0;
                 /* calculate the polynom A and B components seen by the particle */
@@ -191,6 +198,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
 {
     if (!Elem) {
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        double Mean, Std;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -220,6 +228,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
+        Mean=atGetOptionalDouble(ElemData, "Mean", 0); check_error();
+        Std=atGetOptionalDouble(ElemData, "Std", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
@@ -248,6 +258,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
+        Elem->Mean = Mean;
+        Elem->Std = Std;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -292,6 +304,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        double Mean, Std;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -323,6 +336,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
+        Mean=atGetOptionalDouble(ElemData, "Mean", 0); check_error();
+        Std=atGetOptionalDouble(ElemData, "Std", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
@@ -342,6 +357,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
+        Elem->Mean = Seed;
+        Elem->Std = Seed;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -389,27 +406,29 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 5, mxCreateString("PhaseB"));
             mxSetCell(plhs[1], 6, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 7, mxCreateString("Seed"));
-            mxSetCell(plhs[1], 8, mxCreateString("FuncA"));
-            mxSetCell(plhs[1], 9, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 10, mxCreateString("FuncAderiv1"));
-            mxSetCell(plhs[1], 11, mxCreateString("FuncBderiv1"));
-            mxSetCell(plhs[1], 12, mxCreateString("FuncAderiv2"));
-            mxSetCell(plhs[1], 13, mxCreateString("FuncBderiv2"));
-            mxSetCell(plhs[1], 14, mxCreateString("FuncAderiv3"));
-            mxSetCell(plhs[1], 15, mxCreateString("FuncBderiv3"));
-            mxSetCell(plhs[1], 16, mxCreateString("FuncAderiv4"));
-            mxSetCell(plhs[1], 17, mxCreateString("FuncBderiv4"));
-            mxSetCell(plhs[1], 18, mxCreateString("FuncATimeDelay"));
-            mxSetCell(plhs[1], 19, mxCreateString("FuncBTimeDelay"));
-            mxSetCell(plhs[1], 20, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 21, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 22, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 23,mxCreateString("T1"));
-            mxSetCell(plhs[1], 24,mxCreateString("T2"));
-            mxSetCell(plhs[1], 25,mxCreateString("R1"));
-            mxSetCell(plhs[1], 26,mxCreateString("R2"));
-            mxSetCell(plhs[1], 27,mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 28,mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 8, mxCreateString("Mean"));
+            mxSetCell(plhs[1], 9, mxCreateString("Std"));
+            mxSetCell(plhs[1], 10, mxCreateString("FuncA"));
+            mxSetCell(plhs[1], 11, mxCreateString("FuncB"));
+            mxSetCell(plhs[1], 12, mxCreateString("FuncAderiv1"));
+            mxSetCell(plhs[1], 13, mxCreateString("FuncBderiv1"));
+            mxSetCell(plhs[1], 14, mxCreateString("FuncAderiv2"));
+            mxSetCell(plhs[1], 15, mxCreateString("FuncBderiv2"));
+            mxSetCell(plhs[1], 16, mxCreateString("FuncAderiv3"));
+            mxSetCell(plhs[1], 17, mxCreateString("FuncBderiv3"));
+            mxSetCell(plhs[1], 18, mxCreateString("FuncAderiv4"));
+            mxSetCell(plhs[1], 19, mxCreateString("FuncBderiv4"));
+            mxSetCell(plhs[1], 20, mxCreateString("FuncATimeDelay"));
+            mxSetCell(plhs[1], 21, mxCreateString("FuncBTimeDelay"));
+            mxSetCell(plhs[1], 22, mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 23, mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 24, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 25,mxCreateString("T1"));
+            mxSetCell(plhs[1], 26,mxCreateString("T2"));
+            mxSetCell(plhs[1], 27,mxCreateString("R1"));
+            mxSetCell(plhs[1], 28,mxCreateString("R2"));
+            mxSetCell(plhs[1], 29,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 30,mxCreateString("EApertures"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
