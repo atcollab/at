@@ -64,15 +64,17 @@ double get_amp(double amp, double* ramps, double t)
 }
 
 double get_pol(struct elemab* elem, double* ramps, int mode,
-    double t, int turn, int seed, int order, int periodic)
+    double t, int turn, int seed, int order, int periodic,
+    pcg32_random_t* rng
+    )
 {
     int idx;
     double ampt, freq, ph, val, t2, oneoversix, oneovertwentyfour, functdelay;
     double* func;
     double *funcderiv1, *funcderiv2, *funcderiv3, *funcderiv4;
     double* amp = elem->Amplitude;
-    double randmean = elem->Mean;
-    double randstd = elem->Std;
+    double randmean;
+    double randstd;
     if (!amp) {
         return 0.0;
     }
@@ -85,8 +87,12 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
         ampt *= sin(TWOPI * freq * t + ph);
         return ampt;
     case 1:
-        val = atrandn(randmean, randstd);
-        printf("%.4f\n",val);
+        randmean = elem->Mean;
+        randstd = elem->Std;
+        val = atrandn_r(rng, randmean, randstd);
+        printf("randmean %.4f\n",randmean);
+        printf("randstd %.4f\n",randstd);
+        printf("val %.4f\n",val);
         ampt *= val;
         return ampt;
     case 2:
@@ -122,7 +128,9 @@ void VariableThinMPolePass(
     struct elem* Elem,
     double t0,
     int turn,
-    int num_particles)
+    int num_particles,
+    pcg32_random_t* rng
+    )
 {
 
     int i, c;
@@ -154,8 +162,8 @@ void VariableThinMPolePass(
     if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
             /* calculate the polynom to apply on all particles */
-            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic);
-            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic);
+            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic,rng);
+            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic,rng);
         };
     };
 
@@ -173,8 +181,8 @@ void VariableThinMPolePass(
                 tpart = time_in_this_mode + r6[5] / C0;
                 /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic, rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -288,7 +296,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles);
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->thread_rng);
     return Elem;
 }
 
@@ -357,8 +365,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
-        Elem->Mean = Seed;
-        Elem->Std = Seed;
+        Elem->Mean = Mean;
+        Elem->Std = Std;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -387,7 +395,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
