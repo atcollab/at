@@ -169,8 +169,13 @@ class VariableMultipole(Element):
         return max(mxa, mxb)
 
     def _check_mode(self, mode, a_b: str, **kwargs: dict[str, any]):
-        if mode == ACMode.WHITENOISE and "seed" not in kwargs:
-            kwargs["Seed"] = kwargs.get("Seed", datetime.now().timestamp())
+        if mode == ACMode.WHITENOISE:
+            if "seed" not in kwargs:
+                kwargs["Seed"] = kwargs.get("Seed", datetime.now().timestamp())
+            if 'Mean' not in kwargs:
+                kwargs['Mean'] = kwargs.get("Mean", 0)
+            if 'Std' not in kwargs:
+                kwargs['Std'] = kwargs.get("Std", 1)
         if mode == ACMode.SINE:
             self._check_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
