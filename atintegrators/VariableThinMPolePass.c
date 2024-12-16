@@ -3,7 +3,7 @@
    S.White
 */
 
-/* 2024nov19 oblanco at ALBA CELLS. Add Funcderiv 1to4*/
+/* 2024nov19 oblanco at ALBA CELLS. modified to be compatible with AT matlab*/
 
 #include "atconstants.h"
 #include "atelem.c"
