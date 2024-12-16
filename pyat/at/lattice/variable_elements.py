@@ -122,8 +122,7 @@ class VariableMultipole(Element):
         """
         kwargs["Mode"] = kwargs.get("Mode", mode)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-        kwargs.setdefault("Periodic", True)
-        if len(kwargs) > 3:
+        if len(kwargs) > 2:
             amp_aux = self._check_amplitudes(**kwargs)
             for k, v in amp_aux.items():
                 if v is not None:
@@ -180,6 +179,7 @@ class VariableMultipole(Element):
             self._check_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
             self._set_arb(a_b, **kwargs)
+            kwargs["Periodic"] = kwargs.get("Periodic", True)
 
     def _check_sine(self, a_b: str, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + a_b, None)
