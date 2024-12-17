@@ -168,6 +168,9 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
             end
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
+                if ~isfield(rsrc,'Periodic')
+                    rsrc.Periodic = true;
+                end
             end        
         end
     end
