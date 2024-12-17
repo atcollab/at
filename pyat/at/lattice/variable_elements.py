@@ -17,33 +17,34 @@ class ACMode(IntEnum):
     ARBITRARY = 2
 
 
-def _array(value, shape=(-1,), dtype=np.float64):
-    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
-        shape, order="F"
-    )
-
-
 class VariableMultipole(Element):
     """Class to generate an AT variable thin multipole element."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
     _conversions = dict(
         Element._conversions,
-        amplitudea=_array,
-        amplitudeb=_array,
-        frequencya=float,
-        frequencyb=float,
-        phasea=float,
-        phaseb=float,
-        seed=int,
-        seedinitstate=int,
-        nsamplesa=int,
-        nsamplesb=int,
-        funca=_array,
-        funcb=_array,
-        ramps=_array,
-        periodic=bool,
+        AmplitudeA=_array,
+        AmplitudeB=_array,
+        FrequencyA=float,
+        FrequencyB=float,
+        PhaseA=float,
+        PhaseB=float,
+        Seed=int,
+        Seedinitstate=int,
+        NsamplesA=int,
+        NsamplesB=int,
+        FuncA=_array,
+        FuncAderiv1=_array,
+        FuncAderiv2=_array,
+        FuncAderiv3=_array,
+        FuncAderiv4=_array,
+        FuncB=_array,
+        FuncBderiv1=_array,
+        FuncBderiv2=_array,
+        FuncBderiv3=_array,
+        FuncBderiv4=_array,
+        Ramps=_array,
+        Periodic=bool,
     )
 
     def __init__(self, family_name: str, mode: int, **kwargs: dict[str, any]):
