@@ -158,6 +158,12 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
                 setsine(rsrc,ab);
             end
             if strcmpi(mode,'WHITENOISE')
+                if ~isfield(rsrc,'Seed')
+                    rsrc.Seed = 1;
+                end
+                if ~isfield(rsrc,'Seedinitstate')
+                    rsrc.Seedinitstate = 1;
+                end
                 rsrc = setwhitenoise(rsrc,ab);
             end
             if strcmpi(mode,'ARBITRARY')
