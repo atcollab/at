@@ -37,6 +37,7 @@ class VariableMultipole(Element):
         phasea=float,
         phaseb=float,
         seed=int,
+        seedinitstate=int,
         nsamplesa=int,
         nsamplesb=int,
         funca=_array,
@@ -171,6 +172,8 @@ class VariableMultipole(Element):
         if mode == ACMode.WHITENOISE:
             if "seed" not in kwargs:
                 kwargs["Seed"] = kwargs.get("Seed", datetime.now().timestamp())
+            if "seedinitstate" not in kwargs:
+                kwargs["Seedinitstate"] = kwargs.get("Seedinitstate", 1)
             if 'Mean' not in kwargs:
                 kwargs['Mean'] = kwargs.get("Mean", 0)
             if 'Std' not in kwargs:
