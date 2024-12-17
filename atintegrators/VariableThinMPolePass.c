@@ -11,6 +11,8 @@
 #include "atrandom.c"
 #include "driftkick.c"
 
+
+/* This struct contains the parameters of either A or B */
 struct elemab {
     double* Amplitude;
     double Frequency;
@@ -25,16 +27,18 @@ struct elemab {
     double FuncTimeDelay;
 };
 
+/* This struct contains the parameters of the element.
+ * It uses elemab struct */
 struct elem {
-    double* PolynomA;
-    double* PolynomB;
     struct elemab* ElemA;
     struct elemab* ElemB;
-    int Seed, Seedinitstate;
-    double MeanA, StdA;
-    double MeanB, StdB;
-    int Mode;
+    double* PolynomA;        // calculated on every turn
+    double* PolynomB;        // calculated on every turn
     int MaxOrder;
+    int Mode;
+    int Seed, Seedinitstate; // used in white noise mode
+    double MeanA, StdA;      // used in white noise mode
+    double MeanB, StdB;      // used in white noise mode
     double* Ramps;
     int Periodic;
     double *R1;
@@ -45,6 +49,10 @@ struct elem {
     double *RApertures;
 };
 
+
+/* get_amp returns the same value when ramps is False.
+ * If ramps is True, it returns a value linearly interpolated
+ * accoding to the ramping turn.*/
 double get_amp(double amp, double* ramps, double t)
 {
     double ampt = amp;
@@ -64,13 +72,27 @@ double get_amp(double amp, double* ramps, double t)
     return ampt;
 }
 
-double get_pol(struct elemab* elem, double* ramps, int mode,
-    double t, int turn, int seed, int order, int periodic,
+
+/* get_pol calculates the PolynomA/B per turn and mode */
+double get_pol(
+    struct elemab* elem,
+    double* ramps,
+    int mode,
+    double t,
+    int turn,
+    int seed,
+    int order,
+    int periodic,
     pcg32_random_t* rng
     )
 {
-    int idx;
-    double ampt, freq, ph, val, t2, oneoversix, oneovertwentyfour, functdelay;
+    int turnidx; // turn index
+    double val; // amplitude value
+
+    double ampt, freq, ph; // sin function parameters
+    double t2; // time squared
+    double oneoversix, oneovertwentyfour, functdelay; // custom func constants
+                                                      //
     double* func;
     double *funcderiv1, *funcderiv2, *funcderiv3, *funcderiv4;
     double* amp = elem->Amplitude;
@@ -90,7 +112,9 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     case 1:
         randmean = elem->Mean;
         randstd = elem->Std;
-        val = atrandn_r(rng, randmean, randstd);
+        // using seed needs to be debugged
+        //val = atrandn_r(rng, randmean, randstd);
+        val = atrandn(randmean, randstd);
         printf("randmean %.4f\n",randmean);
         printf("randstd %.4f\n",randstd);
         printf("val %.4f\n",val);
@@ -105,16 +129,16 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
             funcderiv3 = elem->Funcderiv3;
             funcderiv4 = elem->Funcderiv4;
             functdelay = elem->FuncTimeDelay;
-            idx = turn % elem->NSamples;
+            turnidx = turn % elem->NSamples;
 
             t = t - functdelay;
             t2 = t*t;
             oneoversix = 0.166666666666667;
             oneovertwentyfour = 0.041666666666667;
-            ampt = ampt*(func[idx] + funcderiv1[idx]*t
-                  + 0.5*funcderiv2[idx]*t2
-                  + oneoversix*funcderiv3[idx]*t2*t
-                  + oneovertwentyfour*funcderiv4[idx]*t2*t2);
+            ampt = ampt*(func[turnidx] + funcderiv1[turnidx]*t
+                  + 0.5*funcderiv2[turnidx]*t2
+                  + oneoversix*funcderiv3[turnidx]*t2*t
+                  + oneovertwentyfour*funcderiv4[turnidx]*t2*t2);
             return ampt;
         } else {
             return 0.0;
@@ -129,7 +153,8 @@ void VariableThinMPolePass(
     struct elem* Elem,
     double t0,
     int turn,
-    int num_particles
+    int num_particles,
+    pcg32_random_t* rng
     )
 {
 
@@ -156,22 +181,14 @@ void VariableThinMPolePass(
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
 
-    pcg32_random_t rng;
-    printf("Elem->Seed %d\n",Elem->Seed);
-    printf("Elem->Seedinitstate %d\n",Elem->Seedinitstate);
-    pcg32_srandom_r(&rng, Elem->Seedinitstate, Elem->Seed);
-
-    printf("mode %d\n",mode);
-    printf("Elem->mode %d\n",Elem->Mode);
-    printf("ElemB->Std %.4f\n",ElemB->Std);
     /* mode 0 : sin function */
     /* mode 1 : random value applied to all particles */
-    /* mode 2 : */
+    /* mode 2 : custom function */
     if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
             /* calculate the polynom to apply on all particles */
-            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic,&rng);
-            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic,&rng);
+            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic, rng);
+            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic, rng);
         };
     };
 
@@ -190,8 +207,8 @@ void VariableThinMPolePass(
                 tpart = time_in_this_mode + r6[5] / C0;
                 /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic, &rng);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic, &rng);
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic, rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -214,6 +231,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
     if (!Elem) {
+
         int MaxOrder, Mode, Seed, Seedinitstate, NSamplesA, NSamplesB, Periodic;
         double MeanA, StdA;
         double MeanB, StdB;
@@ -312,7 +330,12 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles);
+    pcg32_random_t rng;
+    printf("pymexElem->Seed %d\n",Elem->Seed);
+    printf("pymexElem->Seedinitstate %d\n",Elem->Seedinitstate);
+    pcg32_srandom_r(&rng, Elem->Seedinitstate, Elem->Seed);
+
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, &rng);
     return Elem;
 }
 
@@ -418,6 +441,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
+
+        printf("mexElem->Seed %d\n",Elem->Seed);
         VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
 //        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
