@@ -75,12 +75,14 @@ end
     function U0=tracking(ring)
         % Ensure 6d is enabled
         check_6d(ring,true);
-        % Turn cavities off
-        ringtmp=atdisable_6d(ring,'allpass','','cavipass','auto',...
-            'quantdiffpass','auto','simplequantdiffpass','auto');
-        o0=zeros(6,1);
-        o6=ringpass(ringtmp,o0);
-        U0=-o6(5)*energy;
+        radiating=atgetcells(ring,'PassMethod','*RadPass');
+        sumd=sum(cellfun(@comp, ring(radiating)));
+        U0=-sumd*energy;
+
+        function delta = comp(elem)
+            rout=elempass(elem,zeros(6,1),'Energy',energy);
+            delta=rout(5);
+        end
     end
 
 end

@@ -76,7 +76,8 @@ if nargout>0, varargout={curve}; end
 
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0 ...
-                && ~strcmp(elem.PassMethod, 'IdTablePass')
+                && ~any(strcmp(elem.PassMethod,...
+                {'IdTablePass', 'GWigSymplecticPass', 'GWigSymplecticRadPass'}))
             nslices=ceil(elem.Length/elmlength);
             if ~KeepAxis
                 newelems=atdivelem(elem,ones(1,nslices)./nslices);

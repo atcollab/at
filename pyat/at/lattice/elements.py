@@ -1439,6 +1439,10 @@ class Wiggler(Radiative, LongElement):
         self.NHharm = self.By.shape[1]
         self.NVharm = self.Bx.shape[1]
 
+    def divide(self, frac) -> list[Element]:
+        # A wiggler is indivisible
+        return [self]
+
 
 class QuantumDiffusion(_DictLongtMotion, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Lmatp"]
