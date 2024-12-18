@@ -1,34 +1,74 @@
-function elem=atvariablemultipole(fname,varargin)
-%ATVARIABLEMULTIPOLE Creates a variable thin multipole element
+function elem=atvariablemultipole(fname, mode, varargin)
+% ATVARIABLEMULTIPOLE Creates a variable thin multipole element
 %
+%  ATVARIABLEMULTIPOLE(FAMNAME,MODE)
 %  ATVARIABLEMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
-%	
+%
+% This function creates a thin multipole of order and type defined by the
+% amplitude components; the polynoms PolynomA and PolynomB are calculated
+% on every turn depending on the chosen mode.
+%
+% Keep in mind that this element varies on every turn, therefore, any ring
+% containing a variable element may change after tracking n turns.
+%
+% There are three different modes implemented: SINE, WHITENOISE and ARBITRARY.
+%
+% The SINE mode requires amplitude, frequency and phase of at least one of the
+% two polynoms A or B. The j-th component of the polynom on the n-th turn
+% is given by:
+%   amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + c\tau_k) + phase],
+% where T0 is the revolution period of the ideal ring, and c\tau_k is the
+% delay of the kth particle i.e. the sixth coordinate over the speed of light.
+% Also, note that the position of the element on the ring has no effect,
+% the phase should be used to add any delay due to the position along s.
+% The following is an example of the SINE mode of an skew quad:
+%
+%     varskew = ATVARIABLEMULTIPOLE('VAR_SKEW','SINE', ...
+%         AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+%
+% The WHITENOISE mode requires the amplitude.
+% THe ARBITRARY mode requires the amplitude
+%
+%
 %  INPUTS
 %    FNAME          Family name 
 %    MODE           Excitation mode: 'SINE', 'WHITENOISE' or 'ARBITRARY'.
-%                   Default: 'SINE'
-%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %
 %  OPTIONS (order does not matter)
+%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
 %    AMPLITUDEB     Vector or scalar to define the excitation amplitude for
-%                   PolynomA
+%                   PolynomB
 %    FREQUENCYA     Frequency of SINE excitation for PolynomA
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
-%	 MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
-%    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
-%    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
+%    FUNCA          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomA
+%    FUNCB          ARBITRARY excitation turn-by-turn (tbt) kick list for PolynomB
+%    FUNCADERIV1    ARBITRARY excitation tbt kick list for PolynomA 1st
+%                   derivative wrt tau
+%    FUNCBDERIV1    ARBITRARY excitation tbt kick list for PolynomB 1st
+%                   derivative wrt tau
+%    FUNCADERIV2    ARBITRARY excitation tbt kick list for PolynomA 2nd
+%                   derivative wrt tau
+%    FUNCBDERIV2    ARBITRARY excitation tbt kick list for PolynomB 2nd
+%                   derivative wrt tau
+%    FUNCADERIV3    ARBITRARY excitation tbt kick list for PolynomA 3rd
+%                   derivative wrt tau
+%    FUNCBDERIV3    ARBITRARY excitation tbt kick list for PolynomB 3rd
+%                   derivative wrt tau
+%    FUNCTIMEDELAY  TimeDelay to generate a small time offset on the
+%                   function FUNC. It only has an effect if any of the
+%                   derivatives is not zero.
 %    PERIODIC       If true (default) the user input kick list is repeated
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
-%                   * t<t0: excitation amlpitude is zero
-%                   * t0<t<t1: exciation amplitude is linearly ramped up
-%                   * t1<t<t2: exciation amplitude is constant             
-%                   * t2<t<t3: exciation amplitude is linearly ramped down
-%                   * t3<t: exciation amplitude is zero 
+%                   * t<t0: excitation amplitude is zero
+%                   * t0<t<t1: excitation amplitude is linearly ramped up
+%                   * t1<t<t2: excitation amplitude is constant
+%                   * t2<t<t3: excitation amplitude is linearly ramped down
+%                   * t3<t:    excitation amplitude is zero
 %
 %  OUTPUTS
 %  1. ELEM - Structure with the AT element
@@ -50,14 +90,11 @@ function elem=atvariablemultipole(fname,varargin)
 % >> atvariablemultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
-[mode,rsrc]=getargs(varargin,'SINE','check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
-[method,rsrc]=getargs(rsrc,'VariableThinMPolePass','check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
-[mode,rsrc]                       = getoption(rsrc,'Mode',mode);
+[method,rsrc]=getargs(varargin,'VariableThinMPolePass', ...
+    'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [method,rsrc]                     = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]                         = getoption(rsrc,'Class','VariableMultipole');
-[maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
 rsrc                              = struct(rsrc{:});
-rsrc.MaxOrder                     = maxorder;
 
 m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
 
@@ -86,21 +123,54 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if ~isfield(rsrc,funcarg)
             error(strcat('Please provide a value for Func',ab))
         end
-        rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
+        nsamples = length(rsrc.(funcarg));
+        rsrc.(strcat('NSamples',ab)) = nsamples;
+        for i = 1:4
+            funcarg=strcat('Func',ab,'deriv',num2str(i));
+            if ~isfield(rsrc,funcarg)
+                rsrc.(funcarg) = zeros(1,nsamples);
+            end
+        end
+        funcarg = strcat('Func',ab,'TimeDelay');
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
+        end
+    end
+
+    function rsrc = setwhitenoise(rsrc, ab)
+        whitenoise_params = {'Mean','Std'};
+        whitenoise_defvals = {0,1};
+        for idx = 1:length(whitenoise_params)
+            funcarg=strcat(whitenoise_params{idx},ab);
+            if ~isfield(rsrc,funcarg)
+                auxvalue = whitenoise_defvals{idx};
+            else
+                auxvalue = rsrc.(strcat(whitenoise_params{idx},ab));
+            end
+            rsrc.(strcat(whitenoise_params{idx},ab)) = auxvalue;
+        end
     end
 
     function rsrc = setparams(rsrc,mode,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
-            amp=rsrc.(amplarg);
-            if isscalar(amp)
-                rsrc.(amplarg)=[zeros(1,rsrc.MaxOrder) amp];
-            end
             if strcmpi(mode,'SINE')
                 setsine(rsrc,ab);
             end
+            if strcmpi(mode,'WHITENOISE')
+                if ~isfield(rsrc,'Seed')
+                    rsrc.Seed = 1;
+                end
+                if ~isfield(rsrc,'Seedinitstate')
+                    rsrc.Seedinitstate = 1;
+                end
+                rsrc = setwhitenoise(rsrc,ab);
+            end
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
+                if ~isfield(rsrc,'Periodic')
+                    rsrc.Periodic = true;
+                end
             end        
         end
     end
@@ -108,15 +178,21 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
     function rsrc = setmaxorder(rsrc)
         if isfield(rsrc,'AmplitudeA')
             mxa=find(abs(rsrc.AmplitudeA)>0,1,'last');
+            if isempty(mxa)
+                mxa=1;
+            end
         else
             mxa=0;
         end
         if isfield(rsrc,'AmplitudeB')
             mxb=find(abs(rsrc.AmplitudeB)>0,1,'last');
+            if isempty(mxb)
+                mxb=1;
+            end
         else
             mxb=0;
         end
-        mxab=max([mxa,mxb,rsrc.MaxOrder-1]);
+        mxab=max([mxa,mxb,1]);
         rsrc.MaxOrder=mxab-1;
         if isfield(rsrc,'AmplitudeA')
             rsrc.AmplitudeA(mxa+1:mxab)=0;
