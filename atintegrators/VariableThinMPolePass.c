@@ -50,7 +50,7 @@ struct elem {
 };
 
 
-/* get_amp returns the same value when ramps is False.
+/* get_amp returns the input value when ramps is False.
  * If ramps is True, it returns a value linearly interpolated
  * accoding to the ramping turn.*/
 double get_amp(double amp, double* ramps, double t)
@@ -113,8 +113,8 @@ double get_pol(
         randmean = elem->Mean;
         randstd = elem->Std;
         // using seed needs to be debugged
-        //val = atrandn_r(rng, randmean, randstd);
-        val = atrandn(randmean, randstd);
+        val = atrandn_r(rng, randmean, randstd);
+        //val = atrandn(randmean, randstd);
         printf("randmean %.4f\n",randmean);
         printf("randstd %.4f\n",randstd);
         printf("val %.4f\n",val);
@@ -330,12 +330,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    pcg32_random_t rng;
-    printf("pymexElem->Seed %d\n",Elem->Seed);
-    printf("pymexElem->Seedinitstate %d\n",Elem->Seedinitstate);
-    pcg32_srandom_r(&rng, Elem->Seedinitstate, Elem->Seed);
-
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, &rng);
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->thread_rng);
     return Elem;
 }
 
@@ -443,8 +438,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         r_in = mxGetDoubles(plhs[0]);
 
         printf("mexElem->Seed %d\n",Elem->Seed);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
-//        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, Param->thread_rng);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
