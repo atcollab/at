@@ -8,6 +8,7 @@ import numpy as np
 from .elements import Element, _array
 from .utils import AtError
 
+__all__ = ["ACMode","VariableMultipole"]
 
 class ACMode(IntEnum):
     """Class to define the excitation types."""
@@ -59,7 +60,8 @@ class VariableMultipole(Element):
         Keep in mind that this element varies on every turn, therefore, any ring
         containing a variable element may change after tracking n turns.
 
-        There are three different modes implemented: SINE, WHITENOISE and ARBITRARY.
+        There are three different modes implemented:
+            SINE = 0, WHITENOISE = 1 and ARBITRARY = 2.
 
         The SINE mode requires amplitude, frequency and phase of at least one of the
         two polynoms A or B. The j-th component of the kth order polynom on the
