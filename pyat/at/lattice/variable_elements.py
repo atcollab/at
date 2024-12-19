@@ -1,6 +1,7 @@
+"""VariableMultipole."""
+
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
 import numpy as np
@@ -50,9 +51,7 @@ class VariableMultipole(Element):
     )
 
     def __init__(self, family_name: str, mode: int, **kwargs: dict[str, any]):
-        r"""
-        Create VariableMultipole.
-
+        r"""Create VariableMultipole.
         This function creates a thin multipole of any order (1 to k) and type
         (Normal or Skew) defined by the amplitude A or B components; the polynoms
         PolynomA and PolynomB are calculated on every turn depending on the
@@ -133,26 +132,26 @@ class VariableMultipole(Element):
             FuncA(list):   User defined tbt kick list for PolynomA
             FuncB(list):   User defined tbt kick list for PolynomB
             FuncAderiv1    ARBITRARY excitation tbt kick list for PolynomA 1st
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncBderiv1    ARBITRARY excitation tbt kick list for PolynomB 1st
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncAderiv2    ARBITRARY excitation tbt kick list for PolynomA 2nd
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncBderiv2    ARBITRARY excitation tbt kick list for PolynomB 2nd
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncAderiv3    ARBITRARY excitation tbt kick list for PolynomA 3rd
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncBderiv3    ARBITRARY excitation tbt kick list for PolynomB 3rd
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncAderiv4    ARBITRARY excitation tbt kick list for PolynomA 3rd
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncBderiv4    ARBITRARY excitation tbt kick list for PolynomB 3rd
-                           derivative wrt tau
+                 (list)          derivative wrt tau
             FuncATimeDelay TimeDelay to generate a small time offset on the
-                           function FUNC. It only has an effect if any of the
+                 (float)         function FUNC. It only has an effect if any of the
                            derivatives is not zero.
             FuncBTimeDelay TimeDelay to generate a small time offset on the
-                           function FUNC. It only has an effect if any of the
+                 (float)         function FUNC. It only has an effect if any of the
                            derivatives is not zero.
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define
@@ -181,13 +180,13 @@ class VariableMultipole(Element):
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         if len(kwargs) > 2:
             amp_aux = self._check_amplitudes(**kwargs)
-            for k, v in amp_aux.items():
-                if v is not None:
-                    kwargs["Amplitude" + k] = self._set_amplitude(v)
-                    kwargs = self._set_mode(mode, k, **kwargs)
+            for key, value in amp_aux.items():
+                if value is not None:
+                    kwargs["Amplitude" + key] = self._set_amplitude(value)
+                    kwargs = self._set_mode(mode, key, **kwargs)
             maxorder = self._getmaxorder(amp_aux["A"], amp_aux["B"])
             kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
-            for key in amp_aux.keys():
+            for key in amp_aux:
                 kwargs["Polynom" + key] = kwargs.get(
                     "Polynom" + key, np.zeros(maxorder + 1)
                 )
@@ -196,10 +195,10 @@ class VariableMultipole(Element):
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
 
-    def _check_amplitudes(self, **kwargs: dict[str, any]):
+    def _check_amplitudes(self, **kwargs: dict[str, any]) -> dict[str, any]:
         amp_aux = {"A": None, "B": None}
         all_amplitudes_are_none = True
-        for key in amp_aux.keys():
+        for key in amp_aux:
             if "Amplitude" + key in kwargs and "amplitude" + key in kwargs:
                 raise AtError("Duplicated amplitude " + key + "parameters.")
             lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
@@ -210,13 +209,12 @@ class VariableMultipole(Element):
             raise AtError("Please provide at least one amplitude for A or B")
         return amp_aux
 
-    def _set_amplitude(self, amplitude: float or _array or None):
+    def _set_amplitude(self, amplitude: float or _array or None) -> _array:
         if np.isscalar(amplitude):
             amplitude = [amplitude]
-        amplitude = np.asarray(amplitude)
-        return amplitude
+        return np.asarray(amplitude)
 
-    def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray):
+    def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray) -> int:
         mxa, mxb = 0, 0
         if ampa is not None:
             mxa = np.max(np.append(np.nonzero(ampa), 0))
@@ -224,7 +222,9 @@ class VariableMultipole(Element):
             mxb = np.max(np.append(np.nonzero(ampb), 0))
         return max(mxa, mxb)
 
-    def _set_mode(self, mode, a_b: str, **kwargs: dict[str, any]):
+    def _set_mode(
+        self, mode: int, a_b: str, **kwargs: dict[str, any]
+    ) -> dict[str, any]:
         if mode == ACMode.WHITENOISE:
             kwargs = self._set_white_noise(a_b, **kwargs)
         if mode == ACMode.SINE:
@@ -233,14 +233,14 @@ class VariableMultipole(Element):
             kwargs = self._set_arb(a_b, **kwargs)
         return kwargs
 
-    def _set_white_noise(self, a_b: str, **kwargs: dict[str, any]):
+    def _set_white_noise(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
         if "Mean" + a_b not in kwargs:
             kwargs["Mean" + a_b] = kwargs.get("Mean" + a_b, 0)
         if "Std" not in kwargs:
             kwargs["Std" + a_b] = kwargs.get("Std" + a_b, 1)
         return kwargs
 
-    def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
+    def _set_sine(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
         frequency = kwargs.get("Frequency" + a_b, None)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
@@ -248,7 +248,7 @@ class VariableMultipole(Element):
         kwargs["Sinlimit" + a_b] = kwargs.get("Sinlimit" + a_b, -1)
         return kwargs
 
-    def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
+    def _set_arb(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
         func = kwargs.get("Func" + a_b, None)
         if func is None:
             raise AtError("Please provide a value for Func" + a_b)
@@ -270,7 +270,7 @@ class VariableMultipole(Element):
         kwargs["Periodic"] = kwargs.get("Periodic", True)
         return kwargs
 
-    def _check_ramp(self, **kwargs: dict[str, any]):
+    def _check_ramp(self, **kwargs: dict[str, any]) -> _array:
         ramps = kwargs.get("Ramps", None)
         if ramps is not None:
             if len(ramps) != 4:
