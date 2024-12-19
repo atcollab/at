@@ -42,6 +42,10 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %                   derivative wrt tau
 %    FuncBderiv3    ARBITRARY excitation tbt kick list for PolynomB 3rd
 %                   derivative wrt tau
+%    FuncAderiv4    ARBITRARY excitation tbt kick list for PolynomA 3rd
+%                   derivative wrt tau
+%    FuncBderiv4    ARBITRARY excitation tbt kick list for PolynomB 3rd
+%                   derivative wrt tau
 %    FuncATimeDelay TimeDelay to generate a small time offset on the
 %                   function FUNC. It only has an effect if any of the
 %                   derivatives is not zero.
@@ -93,7 +97,7 @@ function elem=atvariablemultipole(fname, mode, varargin)
 % containing a variable element may change after tracking n turns.
 %
 % There are three different modes implemented:
-% SINE, WHITENOISE and ARBITRARY.
+%   SINE = 0, WHITENOISE = 1 and ARBITRARY = 2.
 %
 % The SINE mode requires amplitude, frequency and phase of at least one of
 % the two polynoms A or B. The j-th component of the kth order polynom on
@@ -137,8 +141,8 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %     elesinglekick = at.VariableMultipole('CUSTOMFUNC','ARBITRARY',
 %     AmplitudeA=1e-4,FuncA=funca,Periodic=True)
 % by default the array is assumed periodic. If Periodic is set to False
-% any turn exceeding the defined length of the function is assumed to have
-% no effect on the beam.
+% it is assumed that the function has no effect on the particle in turns
+% exceeding the function definition.
 %
 
 % Input parser for option
