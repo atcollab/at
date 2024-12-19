@@ -17,7 +17,7 @@ from .utils import *
 from .lattice_object import *
 # from .lattice_variables import *
 from .cavity_access import *
-from .variable_elements import VariableMultipole
+from .variable_elements import *
 from .deprecated import *
 # Define the module "lattice.constants" for backward compatibility
 # noinspection PyUnresolvedReferences
