@@ -158,7 +158,7 @@ class VariableMultipole(Element):
             for k, v in amp_aux.items():
                 if v is not None:
                     kwargs["Amplitude" + k] = self._set_amplitude(v)
-                    self._check_mode(mode, k, **kwargs)
+                    kwargs = self._set_mode(mode, k, **kwargs)
             maxorder = self._getmaxorder(amp_aux["A"], amp_aux["B"])
             kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
             for key in amp_aux.keys():
@@ -198,32 +198,51 @@ class VariableMultipole(Element):
             mxb = np.max(np.append(np.nonzero(ampb), 0))
         return max(mxa, mxb)
 
-    def _check_mode(self, mode, a_b: str, **kwargs: dict[str, any]):
+    def _set_mode(self, mode, a_b: str, **kwargs: dict[str, any]):
         if mode == ACMode.WHITENOISE:
-            if 'Mean' not in kwargs:
-                kwargs['Mean'] = kwargs.get("Mean", 0)
-            if 'Std' not in kwargs:
-                kwargs['Std'] = kwargs.get("Std", 1)
+            kwargs = self._set_white_noise(a_b, **kwargs)
         if mode == ACMode.SINE:
-            self._check_sine(a_b, **kwargs)
+            kwargs = self._set_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
             self._set_arb(a_b, **kwargs)
             kwargs["Periodic"] = kwargs.get("Periodic", True)
+        return kwargs
 
-    def _check_sine(self, a_b: str, **kwargs: dict[str, any]):
+    def _set_white_noise(self, a_b: str, **kwargs: dict[str, any]):
+        if "Mean" + a_b not in kwargs:
+            kwargs["Mean" + a_b] = kwargs.get("Mean" + a_b, 0)
+        if "Std" not in kwargs:
+            kwargs["Std" + a_b] = kwargs.get("Std" + a_b, 1)
+        return kwargs
+
+    def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
         frequency = kwargs.pop("Frequency" + a_b, None)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
         kwargs["Phase" + a_b] = kwargs.get("Phase" + a_b, 0)
         kwargs["Sinlimit" + a_b] = kwargs.get("Sinlimit" + a_b, -1)
+        return kwargs
 
     def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
         func = kwargs.pop("Func" + a_b, None)
         if func is None:
             raise AtError("Please provide a value for Func" + a_b)
         nsamp = len(func)
-        setattr(self, "Func" + a_b, func)
-        setattr(self, "NSamples" + a_b, nsamp)
+        kwargs["Func" + a_b] = func
+        kwargs["Func" + a_b + "deriv1"] = kwargs.get(
+            "Func" + a_b + "deriv1", np.zeros(nsamp)
+        )
+        kwargs["Func" + a_b + "deriv2"] = kwargs.get(
+            "Func" + a_b + "deriv2", np.zeros(nsamp)
+        )
+        kwargs["Func" + a_b + "deriv3"] = kwargs.get(
+            "Func" + a_b + "deriv3", np.zeros(nsamp)
+        )
+        kwargs["Func" + a_b + "deriv4"] = kwargs.get(
+            "Func" + a_b + "deriv4", np.zeros(nsamp)
+        )
+        kwargs["NSamples" + a_b] = nsamp
+        return kwargs
 
     def _check_ramp(self, **kwargs: dict[str, any]):
         ramps = kwargs.get("Ramps", None)
