@@ -52,6 +52,7 @@ class VariableMultipole(Element):
 
     def __init__(self, family_name: str, mode: int, **kwargs: dict[str, any]):
         r"""Create VariableMultipole.
+
         This function creates a thin multipole of any order (1 to k) and type
         (Normal or Skew) defined by the amplitude A or B components; the polynoms
         PolynomA and PolynomB are calculated on every turn depending on the
