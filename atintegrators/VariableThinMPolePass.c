@@ -149,7 +149,7 @@ double get_pol(
         // branchless if, to get
         // the whole sin if whole_sin_limit is -1 or less
         // the positive side of sin uf whole_sin_limit is 0.
-        ampt = ampt*sinval*(sinval > whole_sin_limit);
+        ampt = ampt*sinval*(sinval >= whole_sin_limit);
         return ampt;
     case 1:
         randmean = elem->Mean;
