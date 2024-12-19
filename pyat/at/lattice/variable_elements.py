@@ -204,8 +204,7 @@ class VariableMultipole(Element):
         if mode == ACMode.SINE:
             kwargs = self._set_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
-            self._set_arb(a_b, **kwargs)
-            kwargs["Periodic"] = kwargs.get("Periodic", True)
+            kwargs = self._set_arb(a_b, **kwargs)
         return kwargs
 
     def _set_white_noise(self, a_b: str, **kwargs: dict[str, any]):
@@ -224,11 +223,10 @@ class VariableMultipole(Element):
         return kwargs
 
     def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
-        func = kwargs.pop("Func" + a_b, None)
+        func = kwargs.get("Func" + a_b, None)
         if func is None:
             raise AtError("Please provide a value for Func" + a_b)
         nsamp = len(func)
-        kwargs["Func" + a_b] = func
         kwargs["Func" + a_b + "deriv1"] = kwargs.get(
             "Func" + a_b + "deriv1", np.zeros(nsamp)
         )
@@ -241,7 +239,11 @@ class VariableMultipole(Element):
         kwargs["Func" + a_b + "deriv4"] = kwargs.get(
             "Func" + a_b + "deriv4", np.zeros(nsamp)
         )
+        kwargs["Func" + a_b + "TimeDelay"] = kwargs.get(
+            "Func" + a_b + "TimeDelay", 0
+        )
         kwargs["NSamples" + a_b] = nsamp
+        kwargs["Periodic"] = kwargs.get("Periodic", True)
         return kwargs
 
     def _check_ramp(self, **kwargs: dict[str, any]):
