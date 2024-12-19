@@ -3,7 +3,33 @@
    S.White
 */
 
-/* 2024nov19 oblanco at ALBA CELLS. modified to be compatible with AT matlab*/
+/* 2024nov19 oblanco at ALBA CELLS. modified to be compatible with
+                                    pyat and AT matlab*/
+
+/*
+ This pass method is implements three modes.
+ Mode 0 : a sin function with frequency and phase
+ Mode 1 : a random kick
+ Mode 2 : a custom function defined in every turn
+
+ All modes could be ramped using the flag `ramp:.
+
+ The value of the polynoms A and B are calculated per turn during tracking,
+ and also, in modes 0 and 2, per particle to take in to account
+ the delay time.
+
+ In mode 0, the sin function could be limited to be between any value above
+ `Sinlimit`. For example a half-sin function would be obtained by setting
+ `Sinlimit` to zero.
+
+ In mode 1 the stream of pseudo-random values is taken from the
+ parameters structure in attypes.h. For more details about the random
+ generator in AT:
+ https://github.com/atcollab/at/discussions/879
+
+ In mode 2, the values could be periodically applied or not.
+*/
+
 
 #include "atconstants.h"
 #include "atelem.c"
@@ -11,11 +37,16 @@
 #include "atrandom.c"
 #include "driftkick.c"
 
+/* constants to be used in the Taylor expansion of the custom function */
+#define oneoversix 0.166666666666667
+#define oneovertwentyfour 0.041666666666667
 
-/* This struct contains the parameters of either A or B */
+/* This struct contains the values to set one of the two
+   poynoms: A or B */
 struct elemab {
     double* Amplitude;
     double Frequency;
+    double Sinlimit;
     double Phase;
     int NSamples;
     double Mean, Std;
@@ -36,7 +67,6 @@ struct elem {
     double* PolynomB;        // calculated on every turn
     int MaxOrder;
     int Mode;
-    int Seed, Seedinitstate; // used in white noise mode
     double MeanA, StdA;      // used in white noise mode
     double MeanB, StdB;      // used in white noise mode
     double* Ramps;
@@ -50,7 +80,7 @@ struct elem {
 };
 
 
-/* get_amp returns the input value when ramps is False.
+/* get_amp returns the input value `amp` when ramps is False.
  * If ramps is True, it returns a value linearly interpolated
  * accoding to the ramping turn.*/
 double get_amp(double amp, double* ramps, double t)
@@ -73,31 +103,39 @@ double get_amp(double amp, double* ramps, double t)
 }
 
 
-/* get_pol calculates the PolynomA/B per turn and mode */
+/* get_pol calculates the PolynomA/B per turn and mode.
+   If the mode is 0 or 2, the polynom depends on the particle time
+   of delay*/
 double get_pol(
     struct elemab* elem,
     double* ramps,
     int mode,
-    double t,
+    double t,           // time
     int turn,
-    int seed,
-    int order,
+    int order,          //max(length of any of the polynoms) - 1
     int periodic,
     pcg32_random_t* rng
     )
 {
     int turnidx; // turn index
-    double val; // amplitude value
+    double val;  // amplitude value
+    double ampt; // amplitude per turn
 
-    double ampt, freq, ph; // sin function parameters
-    double t2; // time squared
-    double oneoversix, oneovertwentyfour, functdelay; // custom func constants
-                                                      //
+    // sin mode parameters
+    double whole_sin_limit = elem->Sinlimit;
+    double freq, ph, sinval;
+
+    // random mode parameters
+    double randmean;
+    double randstd;
+
+    // custom mode parameters
     double* func;
     double *funcderiv1, *funcderiv2, *funcderiv3, *funcderiv4;
     double* amp = elem->Amplitude;
-    double randmean;
-    double randstd;
+    double t2;       // time squared
+    double functdelay;
+
     if (!amp) {
         return 0.0;
     }
@@ -107,22 +145,20 @@ double get_pol(
     case 0:
         freq = elem->Frequency;
         ph = elem->Phase;
-        ampt *= sin(TWOPI * freq * t + ph);
+        sinval = sin(TWOPI * freq * t + ph);
+        // branchless if, to get
+        // the whole sin if whole_sin_limit is -1 or less
+        // the positive side of sin uf whole_sin_limit is 0.
+        ampt = ampt*sinval*(sinval > whole_sin_limit);
         return ampt;
     case 1:
         randmean = elem->Mean;
         randstd = elem->Std;
-        // using seed needs to be debugged
         val = atrandn_r(rng, randmean, randstd);
-        //val = atrandn(randmean, randstd);
-        printf("randmean %.4f\n",randmean);
-        printf("randstd %.4f\n",randstd);
-        printf("val %.4f\n",val);
         ampt *= val;
         return ampt;
     case 2:
         if (periodic || turn < elem->NSamples) {
-
             func = elem->Func;
             funcderiv1 = elem->Funcderiv1;
             funcderiv2 = elem->Funcderiv2;
@@ -133,9 +169,8 @@ double get_pol(
 
             t = t - functdelay;
             t2 = t*t;
-            oneoversix = 0.166666666666667;
-            oneovertwentyfour = 0.041666666666667;
-            ampt = ampt*(func[turnidx] + funcderiv1[turnidx]*t
+            ampt = ampt*(func[turnidx]
+                  + funcderiv1[turnidx]*t
                   + 0.5*funcderiv2[turnidx]*t2
                   + oneoversix*funcderiv3[turnidx]*t2*t
                   + oneovertwentyfour*funcderiv4[turnidx]*t2*t2);
@@ -148,47 +183,58 @@ double get_pol(
     }
 }
 
+/* This function tracks a particle through a thin element with
+   variable PolynomB and PolynomA per turn.*/
 void VariableThinMPolePass(
-    double* r,
-    struct elem* Elem,
-    double t0,
-    int turn,
-    int num_particles,
-    pcg32_random_t* rng
+    double* r, // the particle in 6D
+    struct elem* Elem,  //the variable element
+    double t0, //time of one revolution
+    int turn,  //number of the current turn
+    int num_particles, //number of particles
+    pcg32_random_t* rng // pcg32 random stream
     )
 {
 
-    int i, c;
-    double* r6;
-    double tpart;
+    int i; // order of the polynom, counter
+    int c; // particle, counter
+    double* r6; // particle 6D coordinates
+    double tpart; //time of particle delay
+
+    // particle time offset for the mode
     double time_in_this_mode = 0;
 
-    int maxorder = Elem->MaxOrder;
-    int periodic = Elem->Periodic;
-    double* pola = Elem->PolynomA;
-    double* polb = Elem->PolynomB;
-    int seed = Elem->Seed;
-    int seedinitstate = Elem->Seedinitstate;
+    // setting the element properties
     int mode = Elem->Mode;
     struct elemab* ElemA = Elem->ElemA;
     struct elemab* ElemB = Elem->ElemB;
+    double* pola = Elem->PolynomA;
+    double* polb = Elem->PolynomB;
+    int maxorder = Elem->MaxOrder;
     double* ramps = Elem->Ramps;
 
+    // custom function is periodic
+    int periodic = Elem->Periodic;
+
+    // offsets at input and output
     double *T1 = Elem->T1;
     double *T2 = Elem->T2;
+    // rotations at input and output
     double *R1 = Elem->R1;
     double *R2 = Elem->R2;
+    // apertures
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
 
     /* mode 0 : sin function */
     /* mode 1 : random value applied to all particles */
     /* mode 2 : custom function */
+
     if (mode == 1) {
+         /* calculate the polynom to apply on all particles */
+         /* the particle delay time is not used */
         for (i = 0; i < maxorder + 1; i++) {
-            /* calculate the polynom to apply on all particles */
-            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, seed, i, periodic, rng);
-            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, seed, i, periodic, rng);
+            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, i, periodic, rng);
+            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, i, periodic, rng);
         };
     };
 
@@ -202,13 +248,14 @@ void VariableThinMPolePass(
         r6 = r + c * 6;
         /* check if the particle is alive */
         if (!atIsNaN(r6[0])) {
+            /* mode 0 and mode 2 take into account the particle delay time */
             if (mode == 0 || mode == 2) {
-                /* modify the time of arrival of the particle  */
+                /* modify the time of delay of the particle  */
                 tpart = time_in_this_mode + r6[5] / C0;
                 /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic, rng);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic, rng);
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -231,8 +278,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
     if (!Elem) {
-
-        int MaxOrder, Mode, Seed, Seedinitstate, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
         double MeanA, StdA;
         double MeanB, StdB;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
@@ -245,6 +291,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
+        double SinlimitA, SinlimitB;
         struct elemab *ElemA, *ElemB;
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -262,9 +309,9 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
+        SinlimitA=atGetOptionalDouble(ElemData,"SinlimitA", 0); check_error();
+        SinlimitB=atGetOptionalDouble(ElemData,"SinlimitB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
-        Seedinitstate=atGetOptionalLong(ElemData, "Seedinitstate", 0); check_error();
         MeanA=atGetOptionalDouble(ElemData, "MeanA", 0); check_error();
         StdA=atGetOptionalDouble(ElemData, "StdA", 0); check_error();
         MeanB=atGetOptionalDouble(ElemData, "MeanB", 0); check_error();
@@ -296,8 +343,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
-        Elem->Seed = Seed;
-        Elem->Seedinitstate = Seedinitstate;
         ElemA->Mean = MeanA;
         ElemA->Std = StdA;
         ElemB->Mean = MeanB;
@@ -311,6 +356,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
+        ElemA->Sinlimit = SinlimitA;
+        ElemB->Sinlimit = SinlimitB;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -330,7 +377,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->thread_rng);
+
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->common_rng);
     return Elem;
 }
 
@@ -345,7 +393,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double* r_in;
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder, Mode, Seed, Seedinitstate, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
         double MeanA, StdA;
         double MeanB, StdB;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
@@ -358,6 +406,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
+        double SinlimitA, SinlimitB;
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
@@ -377,9 +426,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
+        SinlimitA=atGetOptionalDouble(ElemData,"SinlimitA", 0); check_error();
+        SinlimitB=atGetOptionalDouble(ElemData,"SinlimitB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
-        Seedinitstate=atGetOptionalLong(ElemData, "Seedinitstate", 0); check_error();
         MeanA=atGetOptionalDouble(ElemData, "MeanA", 0); check_error();
         StdA=atGetOptionalDouble(ElemData, "StdA", 0); check_error();
         MeanB=atGetOptionalDouble(ElemData, "MeanB", 0); check_error();
@@ -402,8 +451,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
-        Elem->Seed = Seed;
-        Elem->Seedinitstate = Seedinitstate;
         ElemA->Mean = MeanA;
         ElemA->Std = StdA;
         ElemB->Mean = MeanB;
@@ -417,6 +464,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
+        ElemA->Sinlimit = SinlimitA;
+        ElemB->Sinlimit = SinlimitB;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -437,8 +486,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
 
-        printf("mexElem->Seed %d\n",Elem->Seed);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, Param->thread_rng);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, Param->common_rng);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
@@ -446,7 +494,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 1, mxCreateString("Mode"));
         mxSetCell(plhs[0], 2, mxCreateString("PolynomA"));
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
-        if (nlhs > 1) {
+        if (nlhs > 4) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(23, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
@@ -455,9 +503,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 3, mxCreateString("FrequencyB"));
             mxSetCell(plhs[1], 4, mxCreateString("PhaseA"));
             mxSetCell(plhs[1], 5, mxCreateString("PhaseB"));
-            mxSetCell(plhs[1], 6, mxCreateString("Ramps"));
-            mxSetCell(plhs[1], 7, mxCreateString("Seed"));
-            mxSetCell(plhs[1], 8, mxCreateString("Seedinitstate"));
+            mxSetCell(plhs[1], 6, mxCreateString("SinlimitA"));
+            mxSetCell(plhs[1], 7, mxCreateString("SinlimitB"));
+            mxSetCell(plhs[1], 8, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 9, mxCreateString("MeanA"));
             mxSetCell(plhs[1], 10, mxCreateString("StdA"));
             mxSetCell(plhs[1], 11, mxCreateString("MeanB"));
