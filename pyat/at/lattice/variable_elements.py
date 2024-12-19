@@ -29,8 +29,8 @@ class VariableMultipole(Element):
         FrequencyB=float,
         PhaseA=float,
         PhaseB=float,
-        Seed=int,
-        Seedinitstate=int,
+        SinlimitA=float,
+        SinlimitB=float,
         NsamplesA=int,
         NsamplesB=int,
         FuncA=_array,
@@ -53,14 +53,13 @@ class VariableMultipole(Element):
 
         This function creates a thin multipole any order (1 to k) and type (Normal
         or Skew) defined by the amplitude A or B components; the polynoms PolynomA
-        and PolynomB are calculated on every turn depending on the chosen mode. All
-        modes could be ramped.
+        and PolynomB are calculated on every turn depending on the chosen mode, and
+        for some modes on the particle time delay. All modes could be ramped.
 
         Keep in mind that this element varies on every turn, therefore, any ring
         containing a variable element may change after tracking n turns.
 
         There are three different modes implemented: SINE, WHITENOISE and ARBITRARY.
-        By default all are periodic.
 
         The SINE mode requires amplitude, frequency and phase of at least one of the
         two polynoms A or B. The j-th component of the kth order polynom on the
@@ -73,28 +72,58 @@ class VariableMultipole(Element):
         The following is an example of the SINE mode of an skew quad:
             eleskew = at.VariableMultipole('VAR_SKEW',ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+        The values of the sin function could be limited to be above a defined
+        threshold using `Sinlimit`. For example, you could create a half-sin
+        by setting `Sinlimit` to zero.
 
-        The WHITENOISE mode requires the amplitude.
-        THe ARBITRARY mode requires the amplitude
+        The WHITENOISE mode requires the amplitude of either A or B. For example
+            elenoise = at.VariableMultipole('MYNOISE',ACMode.WHITENOISE,
+                AmplitudeA=[noiseA1])
+        creates a gaussian vertical noise of amplitude noiseA1. The gaussian
+        distribution is generated with zero-mean and one standard deviation from
+        a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
+        function, therefore using the same stream on all trackings (sequencial or
+        parallel). See https://github.com/atcollab/at/discussions/879 for more
+        details on the pseudo random stream.  Additionally, the user could set
+        the mean and std values by setting MeanA, MeanB, StdA, StdB.
+
+        The ARBITRARY mode requires the definition of a custom turn-by-turn function.
+        The user defines the value of the function and its Taylor expansion with
+        respect to \tau up to fourth order.
+            value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
+                    + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4
+        where f is an array of values, f',f'',f''',f'''', are arrays containing
+        the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
+        the the sixth coordinate divided by the speed of light.
+        For example, the following is a positive vertical kick in the first turn,
+        negative on the second turn, and zero on the third turn.
+            funca = [1 -1 0];
+            elesinglekick = at.VariableMultipole('CUSTOMFUNC','ARBITRARY',
+            AmplitudeA=1e-4,FuncA=funca,Periodic=True)
+        by default the array is assumed periodic. If Periodic is set to False
+        any turn exceeding the defined length of the function is assumed to have
+        no effect on the beam.
 
 
         Parameters:
-            family_name(str):    Element name
+            family_name(str):  Element name
             mode(ACMode): defines the evaluation grid. Default ACMode.SINE
               * :py:attr:`.ACMode.SINE`: sine function
               * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
               * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
         Keyword Arguments:
-            amplitudeA(list,float): Amplitude of the excitation for PolynomA.
+            AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
                 Default None
-            amplitudeB(list,float): Amplitude of the excitation for PolynomB.
+            AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
                 Default None
-            frequencyA(float): Frequency of the sine excitation for PolynomA
-            frequencyB(float): Frequency of the sine excitation for PolynomB
-            phaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
-            phaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
+            FrequencyA(float): Frequency of the sine excitation for PolynomA
+            FrequencyB(float): Frequency of the sine excitation for PolynomB
+            PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
+            PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
+            SinlimitA(float): Default -1. Values of the sin function will be above
+                SinlimitA or zero.
+            SinlimitB(float): Default -1. Values of the sin function will be above
+                SinlimitB or zero.
             FuncA(list): User defined tbt kick list for PolynomA
             FuncB(list): User defined tbt kick list for PolynomB
             Periodic(bool): If True (default) the user defined kick is repeated
@@ -171,10 +200,6 @@ class VariableMultipole(Element):
 
     def _check_mode(self, mode, a_b: str, **kwargs: dict[str, any]):
         if mode == ACMode.WHITENOISE:
-            if "seed" not in kwargs:
-                kwargs["Seed"] = kwargs.get("Seed", datetime.now().timestamp())
-            if "seedinitstate" not in kwargs:
-                kwargs["Seedinitstate"] = kwargs.get("Seedinitstate", 1)
             if 'Mean' not in kwargs:
                 kwargs['Mean'] = kwargs.get("Mean", 0)
             if 'Std' not in kwargs:
@@ -190,6 +215,7 @@ class VariableMultipole(Element):
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
         kwargs["Phase" + a_b] = kwargs.get("Phase" + a_b, 0)
+        kwargs["Sinlimit" + a_b] = kwargs.get("Sinlimit" + a_b, -1)
 
     def _set_arb(self, a_b: str, **kwargs: dict[str, any]):
         func = kwargs.pop("Func" + a_b, None)
