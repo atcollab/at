@@ -216,7 +216,7 @@ class VariableMultipole(Element):
         return kwargs
 
     def _set_sine(self, a_b: str, **kwargs: dict[str, any]):
-        frequency = kwargs.pop("Frequency" + a_b, None)
+        frequency = kwargs.get("Frequency" + a_b, None)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
         kwargs["Phase" + a_b] = kwargs.get("Phase" + a_b, 0)
