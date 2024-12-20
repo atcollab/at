@@ -146,9 +146,9 @@ double get_pol(
         freq = elem->Frequency;
         ph = elem->Phase;
         sinval = sin(TWOPI * freq * t + ph);
-        // branchless if, to get
-        // the whole sin if whole_sin_limit is -1 or less
-        // the positive side of sin uf whole_sin_limit is 0.
+        // branchless if
+        // sinval >= wholelimit  -> sinval
+        // else                  -> 0
         ampt = ampt*sinval*(sinval >= whole_sin_limit);
         return ampt;
     case 1:
@@ -239,9 +239,10 @@ void VariableThinMPolePass(
     };
 
     // offset the time when applying the sin function
-    if (mode == 0){
-      time_in_this_mode = t0 * turn;
-    }
+    // branchless if
+    // mode == 0 -> time_in_this_mode = t0 *turn
+    // else      -> 0
+    time_in_this_mode = t0 * turn * (mode == 0);
 
     /* cycle over all particles */
     for (c = 0; c < num_particles; c++) {
