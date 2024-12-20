@@ -1,5 +1,5 @@
 function elem=atQuantDiff(fname,varargin)
-%atQuantDiff creates a quantum diffusion element
+%atQuantDiff creates a quantum diffusion element.
 %
 %ELEM=ATQUANTDIFF(FAMNAME,DIFFMAT) uses the given diffusion matrix
 %   FAMNAME:   family name
@@ -13,6 +13,10 @@ function elem=atQuantDiff(fname,varargin)
 %   matrix of the ring without computing the closed orbit
 %   ORBIT:	closed orbit at beginning of the ring 
 %           (this option is useful for the islands)
+%
+%The default pass method is 'QuantDiffPass' which uses a global
+%pseudo-random pcg32 stream inplemented in C. More details at:
+%https://github.com/atcollab/at/discussions/879
 %
 %See also quantumDiff
 
