@@ -79,7 +79,8 @@ using:
 * :py:meth:`~.ResponseMatrix.plot_norm`
 
 Both natural and weighted response matrices can be retrieved with the
-:py:meth:`~ResponseMatrix.get_response` method.
+:py:attr:`~ResponseMatrix.response` and :py:attr:`~ResponseMatrix.weighted_response`
+properties.
 
 Inversion
 ^^^^^^^^^
@@ -218,7 +219,7 @@ class _SvdSolver(abc.ABC):
         self.uh = u.T / self.obsweights
         self.singular_values = s
 
-    def check_norm(self):
+    def check_norm(self) -> tuple[float, float]:
         """Display the norm of the rows and columns of the weighted response matrix.
 
         Adjusting the variables and observable weights to equalize the norms
@@ -360,15 +361,17 @@ class ResponseMatrix(_SvdSolver):
 
     @property
     def shape(self):
-        """Shape of the response matrix"""
+        """Shape of the response matrix."""
         return len(self.observables.flat_values), len(self.variables)
 
     @property
     def varweights(self):
+        """Variable weights."""
         return self.variables.deltas
 
     @property
     def obsweights(self):
+        """Observable weights."""
         return self.observables.flat_weights
 
     def correct(
@@ -421,8 +424,7 @@ class ResponseMatrix(_SvdSolver):
               Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
               Default for linux is ``'fork'``, default for macOS and  Windows
               is ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
-              calculation or to solve Runtime Errors, however it is considered
-              unsafe.
+              calculation, however it is considered unsafe.
 
         Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
