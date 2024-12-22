@@ -101,15 +101,20 @@ After solving, orbit correction is available, for instance with
 from __future__ import annotations
 
 __all__ = [
+    "split",
     "ResponseMatrix",
     "OrbitResponseMatrix",
     "TrajectoryResponseMatrix",
 ]
 
+import os
+import math
 import copy
 import multiprocessing
+import concurrent.futures
 import abc
 from collections.abc import Sequence
+from itertools import chain
 from functools import partial
 
 import numpy as np
@@ -127,27 +132,43 @@ _globring: Lattice | None = None
 _globobs: ObservableList | None = None
 
 
-def _resp_one(
-    ring: Lattice, observables: ObservableList, variable: RefptsVariable, **kwargs
+def split(ary: Sequence, nslices):
+
+    def _spl(lll):
+        beg = 0
+        for k in lll:
+            end = beg + k
+            yield ary[beg:end]
+            beg = end
+
+    lna = len(ary)
+    sz  = math.trunc(lna/nslices)
+    lsl = [sz] * nslices
+    for k in range(lna - sz * nslices):
+        lsl[k] += 1
+    return list(_spl(lsl))
+
+
+def _resp(
+    ring: Lattice, observables: ObservableList, variables: VariableList, **kwargs
 ):
-    """Single response for serial computation."""
-    # make a copy of ring to allow parallel computation
-    ring = ring.copy()
-    for ik in variable.refpts:  # Assuming refpts is integer
-        ring[ik] = ring[ik].deepcopy()
-    variable.step_up(ring=ring)
-    observables.evaluate(ring, **kwargs)
-    op = observables.flat_values
-    variable.step_down(ring=ring)
-    observables.evaluate(ring, **kwargs)
-    om = observables.flat_values
-    variable.reset(ring=ring)
-    return (op - om) / (2.0 * variable.delta)
+    def _resp_one(variable: RefptsVariable):
+        """Single response"""
+        variable.step_up(ring=ring)
+        observables.evaluate(ring, **kwargs)
+        op = observables.flat_values
+        variable.step_down(ring=ring)
+        observables.evaluate(ring, **kwargs)
+        om = observables.flat_values
+        variable.reset(ring=ring)
+        return (op - om) / (2.0 * variable.delta)
+
+    return [_resp_one(v) for v in variables]
 
 
-def _resp_one_fork(variable: RefptsVariable, **kwargs):
-    """Single response for fork parallel method."""
-    return _resp_one(_globring, _globobs, variable, **kwargs)
+def _resp_fork(variables: VariableList, **kwargs):
+    """Response for fork parallel method."""
+    return _resp(_globring, _globobs, variables, **kwargs)
 
 
 class _SvdSolver(abc.ABC):
@@ -409,15 +430,22 @@ class ResponseMatrix(_SvdSolver):
             global _globobs
             ctx = multiprocessing.get_context(start_method)
             if pool_size is None:
-                pool_size = min(len(self.variables), multiprocessing.cpu_count())
+                pool_size = min(len(self.variables), os.cpu_count())
+            obschunks = np.array_split(self.variables, pool_size)
             if ctx.get_start_method() == "fork":
                 _globring = self.ring
                 _globobs = self.observables
-                _single_resp = partial(_resp_one_fork, **kwargs)
+                _single_resp = partial(_resp_fork, **kwargs)
+
             else:
-                _single_resp = partial(_resp_one, self.ring, self.observables, **kwargs)
-            with ctx.Pool(pool_size) as pool:
-                results = pool.map(_single_resp, self.variables)
+                _single_resp = partial(_resp, self.ring, self.observables, **kwargs)
+            with concurrent.futures.ProcessPoolExecutor(
+                max_workers=pool_size,
+                mp_context=ctx,
+            ) as pool:
+                results = list(chain(*pool.map(_single_resp, obschunks)))
+            # with ctx.Pool(pool_size) as pool:
+            #     results = pool.map(_single_resp, self.variables)
             _globring = None
             _globobs = None
         else:
@@ -427,10 +455,8 @@ class ResponseMatrix(_SvdSolver):
                 boolrefs |= ring.get_bool_index(var.refpts)
 
             ring = ring.replace(boolrefs)
-            results = [
-                _resp_one(ring, self.observables, var, **kwargs)
-                for var in self.variables
-            ]
+            results = _resp(ring.deepcopy(), self.observables, self.variables, **kwargs)
+
         self._response = np.stack(results, axis=-1)
         super().build()
 
