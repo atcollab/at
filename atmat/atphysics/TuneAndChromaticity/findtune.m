@@ -69,7 +69,7 @@ reject=find(~(keep | wrong));
 for bpm=reject
     fprintf('rejected BPM %d\n', bpm);
 end
-fprintf('%20s tune:%g (rms:%g)\n',methname, mean(tune(keep),2),std(tune(keep),0,2));
+% fprintf('%20s tune:%g (rms:%g)\n',methname, mean(tune(keep),2),std(tune(keep),0,2));
 
 function vv=phi(a,b,c) %#ok<DEFNU>
 d1=c*(a+b);
