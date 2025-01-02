@@ -38,37 +38,43 @@ else
     LIBDL={};
 end
 
-ompflags={};
-cflags={};
+if isunix
+    cflags={'-std=c99'};
+else
+    cflags={};
+end
 ldflags={};
+
 if openmp
     if ispc()
-        cflags={'/openmp'};
+        cflags=[cflags {'/openmp'}];
         ompflags={};
     elseif ismac()
-        ompinc = select_omp();
-        cflags={'-Xpreprocessor', '-fopenmp'};
+        [ompinc,ompdir,omplib] = select_omp();
+        cflags=[cflags {'-Xpreprocessor', '-fopenmp'}];
         ompflags={ompinc,...
              sprintf('-L"%s"',fullfile(matlabroot,'sys','os',computer('arch'))),...
-            '-liomp5'};
+            ['-l' omplib]};
     else
-        cflags={'-fopenmp'};
+        cflags=[cflags {'-fopenmp'}];
         ompflags={...
             sprintf('-L"%s"',fullfile(matlabroot,'sys','os',computer('arch'))),...
             '-liomp5'};
     end
+else
+    ompflags={};
 end
 
 if ispc()
-    ompoptions=pc_flags(ompflags, cflags, ldflags);
-    map1=pc_flags(ompflags, cflags, ldflags);
+    mexflags=pc_flags(cflags, ldflags);
+    map1=pc_flags(cflags, ldflags);
 elseif ismac()
-    ompoptions=unix_flags(ompflags, cflags, ldflags);
-    map1=unix_flags(ompflags, cflags, ldflags, '-Wl,-exported_symbols_list,', 'trackFunctionMAC.map');
-    map2=unix_flags(ompflags, cflags, ldflags, '-Wl,-exported_symbols_list,', 'passFunctionMAC.map');
+    mexflags=unix_flags(cflags, ldflags);
+    map1=unix_flags(cflags, ldflags, '-Wl,-exported_symbols_list,', 'trackFunctionMAC.map');
+    map2=unix_flags(cflags, ldflags, '-Wl,-exported_symbols_list,', 'passFunctionMAC.map');
 else
-    ompoptions=unix_flags(ompflags, cflags, ldflags);
-    map1=unix_flags(ompflags, cflags, ldflags, '-Wl,--version-script,', 'mexFunctionGLNX86.map');
+    mexflags=unix_flags(cflags, ldflags);
+    map1=unix_flags(cflags, ldflags, '-Wl,--version-script,', 'mexFunctionGLNX86.map');
 end
 
 try
@@ -89,8 +95,8 @@ alloptions=[atoptions varargs];
 
 % atpass
 cdir=fullfile(atroot,'attrack','');
-compile([alloptions, {passinclude}, LIBDL, ompoptions], fullfile(cdir,'atpass.c'));
-compile([atoptions, ompoptions],fullfile(cdir,'coptions.c'))
+compile([alloptions, {passinclude}, LIBDL, mexflags, ompflags], fullfile(cdir,'atpass.c'));
+compile([alloptions, mexflags, ompflags],fullfile(cdir,'coptions.c'))
 
 [warnmess,warnid]=lastwarn; %#ok<ASGLU>
 if strcmp(warnid,'MATLAB:mex:GccVersion_link')
@@ -100,19 +106,19 @@ oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
 
 % Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');
-compile([alloptions, {passinclude}], fullfile(cdir,'findmpoleraddiffmatrix.c'));
-compile([alloptions, {passinclude}], fullfile(cdir,'FDW.c'));
-compile([alloptions, {passinclude}, LIBDL], fullfile(cdir,'diffusion_matrix.c'));
+compile([alloptions, {passinclude}, mexflags], fullfile(cdir,'findmpoleraddiffmatrix.c'));
+compile([alloptions, {passinclude}, mexflags], fullfile(cdir,'FDW.c'));
+compile([alloptions, {passinclude}, LIBDL, mexflags], fullfile(cdir,'diffusion_matrix.c'));
 
 % RDTs
 cdir=fullfile(atroot,'atphysics','NonLinearDynamics');
-compile(alloptions, fullfile(cdir,'RDTelegantAT.cpp'));
+compile([alloptions, mexflags], fullfile(cdir,'RDTelegantAT.cpp'));
 
 % NAFF
 cdir=fullfile(atroot,'atphysics','nafflib');
-compile(alloptions, fullfile(cdir,'nafflib.c'),...
-                    fullfile(cdir,'modnaff.c'),...
-                    fullfile(cdir,'complexe.c'));
+compile([alloptions, mexflags], fullfile(cdir,'nafflib.c'),...
+                              fullfile(cdir,'modnaff.c'),...
+                              fullfile(cdir,'complexe.c'));
 
 % Find all files matching '*Pass.c' wildcard
 cfiles = dir(fullfile(pdir,'*Pass.c'));
@@ -137,12 +143,12 @@ for i = 1:length(passmethods)
         try
             if exist('map2','var')
                 try
-                    compile([map1, alloptions], PM);
+                    compile([alloptions, map1, ompflags], PM);
                 catch
-                    compile([map2, alloptions], PM);
+                    compile([alloptions, map2, ompflags], PM);
                 end
             else
-                compile([map1, alloptions], PM);
+                compile([alloptions, map1, ompflags], PM);
             end
         catch err
             if fail
@@ -181,32 +187,34 @@ warning(oldwarns.state,oldwarns.identifier);
         fclose(fid);
     end
 
-	function flags=pc_flags(flags, cflags,ldflags)
+	function flags=pc_flags(cflags,ldflags)
+        flags={};
         if ~isempty(ldflags)
-            flags=[{sprintf('LINKFLAGS="$LINKFLAGS %s"',strjoin(ldflags))}, flags];
+            flags=[{sprintf('LINKFLAGS="$LINKFLAGS %s"',strjoin(ldflags))} flags];
         end
         if ~isempty(cflags)
-            flags=[{sprintf('COMPFLAGS="$COMPFLAGS %s"',strjoin(cflags))}, flags];
+            flags=[{sprintf('COMPFLAGS="$COMPFLAGS %s"',strjoin(cflags))} flags];
         end
     end
         
 
-    function flags=unix_flags(flags, cflags, ldflags, exportarg, map)
-        if nargin > 3
+    function flags=unix_flags(cflags, ldflags, exportarg, map)
+        if nargin > 2
             mapfile=fullfile(pdir, map);
             if verLessThan('matlab','8.3')                          %  R2008a < < R2014a
                 exp=sprintf([exportarg '"%s"'], mapfile);
                 def_ldflags=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['\s(' exportarg ')([^\s,]+)'],'');
-                flags=[{sprintf('LDFLAGS=%s',strjoin([{def_ldflags}, ldflags, {exp}]))}, flags];
+                flags={sprintf('LDFLAGS=%s',strjoin([{def_ldflags}, ldflags, {exp}]))};
                 ldflags = {};
             elseif verLessThan('matlab','9.1')                      %           < R2016b
-                flags=[{sprintf('LINKEXPORT=%s"%s"',exportarg,mapfile)}, flags];
+                flags={sprintf('LINKEXPORT=%s"%s"',exportarg,mapfile)};
             else                                                    %           >= R2016b
-                %           Starting from R2016b, Matlab introduced a new entry point in MEX-files
-                %           The "*.mapext" files defines this new entry point
-                flags=[{sprintf('VERSIONMAP="''%sext''"',mapfile),...
-                    sprintf('FUNCTIONMAP="''%s''"',mapfile)}, flags];
+                % Starting from R2016b, Matlab introduced a new entry point in MEX-files
+                % The "*.mapext" files defines this new entry point
+                flags={sprintf('VERSIONMAP="''%sext''"',mapfile), 'LINKEXPORT=""'};
             end
+        else
+            flags = {};
         end
         if ~isempty(ldflags)
             flags = [{sprintf('LDFLAGS="$LDFLAGS %s"',strjoin(ldflags))} flags];
@@ -232,11 +240,21 @@ warning(oldwarns.state,oldwarns.identifier);
         end
     end
 
-    function include=select_omp()
-        if exist('/usr/local/include/omp.h', 'file')            % Homebrew
-            include='-I/usr/local/include';
+    function [incdir,libdir,libname]=select_omp()
+        arch=computer('arch');
+        if strcmp(arch, 'maca64')
+            homeb='/opt/homebrew/opt/libomp';
+            libdir=fullfile(matlabroot,'bin',arch);
+            libname='omp';
+        else
+            homeb='/usr/local';
+            libdir=fullfile(matlabroot,'sys','os',arch);
+            libname='iomp5';
+        end
+        if exist([homeb '/include/omp.h'], 'file')            % Homebrew
+            incdir=['-I' homeb '/include'];
         elseif exist('/opt/local/include/libomp/omp.h', 'file') % MacPorts
-            include='-I/opt/local/include/libomp';
+            incdir='-I/opt/local/include/libomp';
         else
             error('AT:MissingLibrary', strjoin({'', ...
                 'libomp.dylib must be installed with your favourite package manager:', '', ...

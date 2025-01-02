@@ -9,10 +9,15 @@ from setuptools import setup, Extension
 
 
 def select_omp():
-    if exists("/usr/local/include/omp.h"):  # Homebrew
-        return "-I/usr/local/include", "/usr/local/lib"
+    if os.uname().machine.startswith("arm"):
+        homeb = "/opt/homebrew/opt/libomp"
+    else:
+        homeb = "/usr/local"
+
+    if exists(os.path.join(homeb, "include/omp.h")):  # Homebrew
+        return "-I" + os.path.join(homeb, "include"), os.path.join(homeb, "lib")
     elif exists("/opt/local/include/libomp/omp.h"):  # MacPorts
-        return "-I/opt/local/include/libomp", "/opt/local/lib/libomp"
+        return "/opt/local/include/libomp", "/opt/local/lib/libomp"
     else:
         raise FileNotFoundError(
             "\n".join(
@@ -40,9 +45,11 @@ cppflags = []
 
 if not platform.startswith("win32"):
     cflags += ["-std=c99", "-Wno-unused-function", "-Wno-unknown-pragmas"]
+    cppflags += ["-Wno-unused-function", "-Wno-unknown-pragmas"]
 
-if platform.startswith("darwin") and os.uname().machine.startswith("arm"):
+if platform.startswith("darwin"):
     cflags += ["-ffp-contract=off"]
+    cppflags += ["-ffp-contract=off"]
 
 mpi = eval(os.environ.get("MPI", "None"))
 if not mpi or (len(sys.argv) >= 2 and sys.argv[1] in {"egg_info", "sdist"}):
