@@ -6,6 +6,7 @@ function githubsetup(varargin)
 % user workflow.
 
 savepath('pathdef.m');
+mex -setup
 atmexall('-fail', varargin{:});
 if ispc
     execfile=fullfile(getenv('pythonLocation'),'pythonw.exe');
