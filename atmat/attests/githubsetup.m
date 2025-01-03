@@ -7,6 +7,7 @@ function githubsetup(varargin)
 
 savepath('pathdef.m');
 mex -setup
+mex -setup C++
 atmexall('-fail', varargin{:});
 if ispc
     execfile=fullfile(getenv('pythonLocation'),'pythonw.exe');
