@@ -183,7 +183,7 @@ class VariableMultipole(Element):
             amp_aux = self._check_amplitudes(**kwargs)
             for key, value in amp_aux.items():
                 if value is not None:
-                    kwargs["Amplitude" + key] = self._set_amplitude(value)
+                    kwargs["Amplitude" + key] = value
                     kwargs = self._set_mode(mode, key, **kwargs)
             maxorder = self._getmaxorder(amp_aux["A"], amp_aux["B"])
             kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
@@ -209,11 +209,6 @@ class VariableMultipole(Element):
         if all_amplitudes_are_none:
             raise AtError("Please provide at least one amplitude for A or B")
         return amp_aux
-
-    def _set_amplitude(self, amplitude: float or _array or None) -> _array:
-        if np.isscalar(amplitude):
-            amplitude = [amplitude]
-        return np.asarray(amplitude)
 
     def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray) -> int:
         mxa, mxb = 0, 0
