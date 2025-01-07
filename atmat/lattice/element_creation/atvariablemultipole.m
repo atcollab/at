@@ -22,10 +22,6 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %    PhaseB         Phase of SINE excitation for PolynomB
 %    SinlimitA      Limit the sin function to be above. Default -1.
 %    SinlimitB      Limit the sin function to be above. Default -1.
-%    MeanA          Mean value of the gaussian noise. Default 0.
-%    StdA           Std value of the gaussian noise. Default 1.
-%    MeanB          Mean value of the gaussian noise. Default 0.
-%    StdB           Std value of the gaussian noise. Default 1.
 %    FuncA          ARBITRARY excitation turn-by-turn (tbt) kick list for
 %                   PolynomA
 %    FuncB          ARBITRARY excitation turn-by-turn (tbt) kick list for
@@ -122,8 +118,7 @@ function elem=atvariablemultipole(fname, mode, varargin)
 % a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
 % function, therefore using the same stream on all trackings (sequencial or
 % parallel). See https://github.com/atcollab/at/discussions/879 for more
-% details on the pseudo random stream.  Additionally, the user could set
-% the mean and std values by setting MeanA, MeanB, StdA, StdB.
+% details on the pseudo random stream.
 %
 % The ARBITRARY mode requires the definition of a custom turn-by-turn function.
 % The user defines the value of the function and its Taylor expansion with
@@ -197,35 +192,18 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         end
     end
 
-    function rsrc = setwhitenoise(rsrc, ab)
-        whitenoise_params = {'Mean','Std'};
-        whitenoise_defvals = {0,1};
-        for idx = 1:length(whitenoise_params)
-            funcarg=strcat(whitenoise_params{idx},ab);
-            if ~isfield(rsrc,funcarg)
-                auxvalue = whitenoise_defvals{idx};
-            else
-                auxvalue = rsrc.(strcat(whitenoise_params{idx},ab));
-            end
-            rsrc.(strcat(whitenoise_params{idx},ab)) = auxvalue;
-        end
-    end
-
     function rsrc = setparams(rsrc,mode,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
             if strcmpi(mode,'SINE')
                 setsine(rsrc,ab);
             end
-            if strcmpi(mode,'WHITENOISE')
-                rsrc = setwhitenoise(rsrc,ab);
-            end
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
                 if ~isfield(rsrc,'Periodic')
                     rsrc.Periodic = true;
                 end
-            end        
+            end
         end
     end
 
