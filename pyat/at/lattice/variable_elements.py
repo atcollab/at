@@ -66,7 +66,7 @@ class VariableMultipole(Element):
         There are three different modes that could be set:
             SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
 
-        The **SINE** mode requires amplitude, frequency and phase for A and/or B.
+        The **SINE** mode requires amplitude and frequency for A and/or B.
         The value of the jth component of the polynom (A or B) at the nth turn
         is given by
             Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_p) + phase],
@@ -101,7 +101,7 @@ class VariableMultipole(Element):
         the the sixth coordinate divided by the speed of light.
         tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
             tau = tau - Func[AB]TimeDelay
-        The function value is then multiplied by amplitude A and/or B.
+        The function `value` is then **multiplied by Amplitude A and/or B**.
         For example, the following is a positive vertical kick in the first turn,
         negative on the second turn, and zero on the third turn.
             elesinglekick = at.VariableMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
@@ -123,57 +123,55 @@ class VariableMultipole(Element):
                 Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
                 Default None
-            FrequencyA(float): Frequency of the sine excitation for PolynomA
-            FrequencyB(float): Frequency of the sine excitation for PolynomB
+            FrequencyA(float): Frequency of the PolynomA sine excitation. Unit Hz
+            FrequencyB(float): Frequency of the PolynomB sine excitation. Unit Hz
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
-            SinAabove(float): Default -1.
-            SinBabove(float): Default -1.
-            FuncA(list):   User defined tbt kick list for PolynomA
-            FuncB(list):   User defined tbt kick list for PolynomB
-            FuncAderiv1    ARBITRARY excitation tbt kick list for PolynomA 1st
-                 (list)          derivative wrt tau
-            FuncBderiv1    ARBITRARY excitation tbt kick list for PolynomB 1st
-                 (list)          derivative wrt tau
-            FuncAderiv2    ARBITRARY excitation tbt kick list for PolynomA 2nd
-                 (list)          derivative wrt tau
-            FuncBderiv2    ARBITRARY excitation tbt kick list for PolynomB 2nd
-                 (list)          derivative wrt tau
-            FuncAderiv3    ARBITRARY excitation tbt kick list for PolynomA 3rd
-                 (list)          derivative wrt tau
-            FuncBderiv3    ARBITRARY excitation tbt kick list for PolynomB 3rd
-                 (list)          derivative wrt tau
-            FuncAderiv4    ARBITRARY excitation tbt kick list for PolynomA 3rd
-                 (list)          derivative wrt tau
-            FuncBderiv4    ARBITRARY excitation tbt kick list for PolynomB 3rd
-                 (list)          derivative wrt tau
-            FuncATimeDelay TimeDelay to generate a small time offset on the
-                 (float)         function FUNC. It only has an effect if any of the
-                           derivatives is not zero.
-            FuncBTimeDelay TimeDelay to generate a small time offset on the
-                 (float)         function FUNC. It only has an effect if any of the
-                           derivatives is not zero.
-            Periodic(bool): If True (default) the user defined kick is repeated
-            Ramps(list): Vector (t0, t1, t2, t3) in turn number to define
-                        the ramping of the excitation
+            SinAabove(float): Limit the sin function to be above. Default -1.
+            SinBabove(float): Limit the sin function to be above. Default -1.
+            FuncA(list):   User defined tbt list for PolynomA
+            FuncB(list):   User defined tbt list for PolynomB
+            FuncAderiv1(list): tbt list for PolynomA 1st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncBderiv1(list): tbt list for PolynomB 1st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncAderiv2(list): tbt list for PolynomA 2st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncBderiv2(list): tbt list for PolynomB 2st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncAderiv3(list): tbt list for PolynomA 3st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncBderiv3(list): tbt list for PolynomB 3st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncAderiv4(list): tbt list for PolynomA 4st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncBderiv4(list): tbt list for PolynomB 4st derivative wrt tau.
+                Default: zeros array of the custom function length.
+            FuncATimeDelay(float): generate a time offset on the function FUNCA.
+                It only has an effect if any of the derivatives is not zero.
+            FuncBTimeDelay(float): generate a time offset on the function FUNCB.
+                It only has an effect if any of the derivatives is not zero.
+            Periodic(bool): If True (default) the user defined  is repeated.
+            Ramps(list): Four values (t0,t1,t2,t3) defining the ramping steps:
 
-              * ``t<t0``: excitation amplitude is zero
-              * ``t0<t<t1``: excitation amplitude is linearly ramped up
-              * ``t1<t<t2``: excitation amplitude is constant
-              * ``t2<t<t3``: excitation amplitude is linearly ramped down
-              * ``t3<t``: excitation amplitude is zero
+              * ``t<=t0``: excitation amplitude is zero.
+              * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
+              * ``t1<t<=t2``: excitation amplitude is constant.
+              * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
+              * ``t3<t``: excitation amplitude is zero.
         Raises:
-            AtError if none of AmplitudeA or AmplitudeB is passed.
-            AtError if ramp is not vector of length 4 when using Ramps
-            AtError when Frequency is not defined if using Mode ``ACMode.SINE``
-            AtError when Funct is not defined if using Mode ``ACMode.ARBITRARY``
+            AtError: if none of ``AmplitudeA`` or ``AmplitudeB`` is passed.
+            AtError: if ramp is not vector of length 4 when using ``Ramps``.
+            AtError: when frequency is not defined if using Mode ``ACMode.SINE``.
+            AtError: when the custom function is not defined if using mode
+                ``ACMode.ARBITRARY``.
 
 
         Examples:
 
-            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency)
-            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.WHITENOISE, AmplitudeB=amp)
-            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun)
+            >>> acmpole = at.VariableMultipole('ACSKEW', at.ACMode.SINE, AmplitudeA=[0,amp], FrequencyA=freq)
+            >>> acmpole = at.VariableMultipole('ACHKICK', at.ACMode.WHITENOISE, AmplitudeB=amp)
+            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=[0,0,amp], FuncB=fun)
 
         """
 
