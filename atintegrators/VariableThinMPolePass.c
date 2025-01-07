@@ -19,8 +19,8 @@
  the delay time.
 
  In mode 0, the sin function could be limited to be between any value above
- `Sinlimit`. For example a half-sin function would be obtained by setting
- `Sinlimit` to zero.
+ `Sinabove`. For example a half-sin function would be obtained by setting
+ `Sinabove` to zero.
 
  In mode 1 the stream of pseudo-random values is taken from the
  parameters structure in attypes.h. For more details about the random
@@ -46,7 +46,7 @@
 struct elemab {
     double* Amplitude;
     double Frequency;
-    double Sinlimit;
+    double Sinabove;
     double Phase;
     int NSamples;
     double* Func;
@@ -118,7 +118,7 @@ double get_pol(
     double ampt; // amplitude per turn
 
     // sin mode parameters
-    double whole_sin_limit = elem->Sinlimit;
+    double whole_sin_above = elem->Sinabove;
     double freq, ph, sinval;
 
     // custom mode parameters
@@ -139,9 +139,9 @@ double get_pol(
         ph = elem->Phase;
         sinval = sin(TWOPI * freq * t + ph);
         // branchless if
-        // sinval >= wholelimit  -> sinval
+        // sinval >= wholeabove  -> sinval
         // else                  -> 0
-        ampt = ampt*sinval*(sinval >= whole_sin_limit);
+        ampt = ampt*sinval*(sinval >= whole_sin_above);
         return ampt;
     case 1:
         ampt *= atrandn_r(rng, 0, 1);
@@ -279,7 +279,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
-        double SinlimitA, SinlimitB;
+        double SinaboveA, SinaboveB;
         struct elemab *ElemA, *ElemB;
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -297,8 +297,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
-        SinlimitA=atGetOptionalDouble(ElemData,"SinlimitA", 0); check_error();
-        SinlimitB=atGetOptionalDouble(ElemData,"SinlimitB", 0); check_error();
+        SinaboveA=atGetOptionalDouble(ElemData,"SinaboveA", 0); check_error();
+        SinaboveB=atGetOptionalDouble(ElemData,"SinaboveB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
@@ -336,8 +336,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
-        ElemA->Sinlimit = SinlimitA;
-        ElemB->Sinlimit = SinlimitB;
+        ElemA->Sinabove = SinaboveA;
+        ElemB->Sinabove = SinaboveB;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -384,7 +384,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
-        double SinlimitA, SinlimitB;
+        double SinaboveA, SinaboveB;
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
@@ -404,8 +404,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
-        SinlimitA=atGetOptionalDouble(ElemData,"SinlimitA", 0); check_error();
-        SinlimitB=atGetOptionalDouble(ElemData,"SinlimitB", 0); check_error();
+        SinaboveA=atGetOptionalDouble(ElemData,"SinaboveA", 0); check_error();
+        SinaboveB=atGetOptionalDouble(ElemData,"SinaboveB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
@@ -434,8 +434,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
-        ElemA->Sinlimit = SinlimitA;
-        ElemB->Sinlimit = SinlimitB;
+        ElemA->Sinabove = SinaboveA;
+        ElemB->Sinabove = SinaboveB;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -473,8 +473,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 3, mxCreateString("FrequencyB"));
             mxSetCell(plhs[1], 4, mxCreateString("PhaseA"));
             mxSetCell(plhs[1], 5, mxCreateString("PhaseB"));
-            mxSetCell(plhs[1], 6, mxCreateString("SinlimitA"));
-            mxSetCell(plhs[1], 7, mxCreateString("SinlimitB"));
+            mxSetCell(plhs[1], 6, mxCreateString("SinaboveA"));
+            mxSetCell(plhs[1], 7, mxCreateString("SinaboveB"));
             mxSetCell(plhs[1], 8, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 9, mxCreateString("FuncA"));
             mxSetCell(plhs[1], 10, mxCreateString("FuncB"));
