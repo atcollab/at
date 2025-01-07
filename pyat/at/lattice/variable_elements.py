@@ -8,6 +8,7 @@ import numpy as np
 
 from .elements import Element, _array
 from .utils import AtError, AtWarning
+from typing import Any
 
 __all__ = ["ACMode", "VariableMultipole"]
 
@@ -50,7 +51,7 @@ class VariableMultipole(Element):
         Periodic=bool,
     )
 
-    def __init__(self, family_name: str, mode: int, **kwargs: dict[str, any]):
+    def __init__(self, family_name: str, mode: int, **kwargs):
         r"""Create VariableMultipole.
 
         This function creates a thin multipole of any order (1 to k) and type
@@ -195,7 +196,7 @@ class VariableMultipole(Element):
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
 
-    def _check_amplitudes(self, **kwargs: dict[str, any]) -> dict[str, any]:
+    def _check_amplitudes(self, **kwargs) -> dict[str, Any]:
         amp_aux = {"A": None, "B": None}
         all_amplitudes_are_none = True
         for key in amp_aux:
@@ -223,15 +224,14 @@ class VariableMultipole(Element):
         return max(mxa, mxb)
 
     def _set_mode(
-        self, mode: int, a_b: str, **kwargs: dict[str, any]
-    ) -> dict[str, any]:
+        self, mode: int, a_b: str, **kwargs) -> dict[str, Any]:
         if mode == ACMode.SINE:
             kwargs = self._set_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
             kwargs = self._set_arb(a_b, **kwargs)
         return kwargs
 
-    def _set_sine(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
+    def _set_sine(self, a_b: str, **kwargs) -> dict[str, Any]:
         frequency = kwargs.get("Frequency" + a_b, None)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
@@ -239,7 +239,7 @@ class VariableMultipole(Element):
         kwargs["Sinlimit" + a_b] = kwargs.get("Sinlimit" + a_b, -1)
         return kwargs
 
-    def _set_arb(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
+    def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
         func = kwargs.get("Func" + a_b, None)
         if func is None:
             raise AtError("Please provide a value for Func" + a_b)
@@ -261,7 +261,7 @@ class VariableMultipole(Element):
         kwargs["Periodic"] = kwargs.get("Periodic", True)
         return kwargs
 
-    def _check_ramp(self, **kwargs: dict[str, any]) -> _array:
+    def _check_ramp(self, **kwargs) -> _array:
         ramps = kwargs.get("Ramps", None)
         if ramps is not None:
             if len(ramps) != 4:
