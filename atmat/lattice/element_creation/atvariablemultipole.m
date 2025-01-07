@@ -20,8 +20,8 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %    FrequencyB     Frequency of SINE excitation for PolynomB
 %    PhaseA         Phase of SINE excitation for PolynomA
 %    PhaseB         Phase of SINE excitation for PolynomB
-%    SinlimitA      Limit the sin function to be above. Default -1.
-%    SinlimitB      Limit the sin function to be above. Default -1.
+%    SinaboveA      Limit the sin function to be above. Default -1.
+%    SinaboveB      Limit the sin function to be above. Default -1.
 %    FuncA          ARBITRARY excitation turn-by-turn (tbt) kick list for
 %                   PolynomA
 %    FuncB          ARBITRARY excitation turn-by-turn (tbt) kick list for
@@ -107,8 +107,8 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %     eleskew = atvariablemultipole('VAR_SKEW','SINE',
 %         'AmplitudeA',[0,skewa2],'FrequencyA',freqA,'PhaseA',phaseA)
 % The values of the sin function could be limited to be above a defined
-% threshold using `Sinlimit`. For example, you could create a half-sin
-% by setting `Sinlimit` to zero.
+% threshold using ``Sinabove``. For example, you could create a half-sin
+% by setting ``Sinabove`` to zero.
 %
 % The WHITENOISE mode requires the amplitude of either A or B. For example
 %     elenoise = atvariablemultipole('MYNOISE','WHITENOISE',
@@ -167,7 +167,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if ~isfield(rsrc,strcat('Frequency',ab))
             error(strcat('Please provide a value for Frequency',ab))
         end
-        funcarg=strcat('Sinlimit',ab);
+        funcarg=strcat('Sinabove',ab);
         if ~isfield(rsrc,funcarg)
             rsrc.(funcarg) = -1;
         end
