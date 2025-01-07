@@ -49,7 +49,6 @@ struct elemab {
     double Sinlimit;
     double Phase;
     int NSamples;
-    double Mean, Std;
     double* Func;
     double* Funcderiv1;
     double* Funcderiv2;
@@ -67,8 +66,6 @@ struct elem {
     double* PolynomB;        // calculated on every turn
     int MaxOrder;
     int Mode;
-    double MeanA, StdA;      // used in white noise mode
-    double MeanB, StdB;      // used in white noise mode
     double* Ramps;
     int Periodic;
     double *R1;
@@ -118,16 +115,11 @@ double get_pol(
     )
 {
     int turnidx; // turn index
-    double val;  // amplitude value
     double ampt; // amplitude per turn
 
     // sin mode parameters
     double whole_sin_limit = elem->Sinlimit;
     double freq, ph, sinval;
-
-    // random mode parameters
-    double randmean;
-    double randstd;
 
     // custom mode parameters
     double* func;
@@ -152,10 +144,7 @@ double get_pol(
         ampt = ampt*sinval*(sinval >= whole_sin_limit);
         return ampt;
     case 1:
-        randmean = elem->Mean;
-        randstd = elem->Std;
-        val = atrandn_r(rng, randmean, randstd);
-        ampt *= val;
+        ampt *= atrandn_r(rng, 0, 1);
         return ampt;
     case 2:
         if (periodic || turn < elem->NSamples) {
@@ -280,8 +269,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
 {
     if (!Elem) {
         int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
-        double MeanA, StdA;
-        double MeanB, StdB;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -313,10 +300,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         SinlimitA=atGetOptionalDouble(ElemData,"SinlimitA", 0); check_error();
         SinlimitB=atGetOptionalDouble(ElemData,"SinlimitB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        MeanA=atGetOptionalDouble(ElemData, "MeanA", 0); check_error();
-        StdA=atGetOptionalDouble(ElemData, "StdA", 0); check_error();
-        MeanB=atGetOptionalDouble(ElemData, "MeanB", 0); check_error();
-        StdB=atGetOptionalDouble(ElemData, "StdB", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
@@ -344,10 +327,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
-        ElemA->Mean = MeanA;
-        ElemA->Std = StdA;
-        ElemB->Mean = MeanB;
-        ElemB->Std = StdB;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -395,8 +374,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
-        double MeanA, StdA;
-        double MeanB, StdB;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -430,10 +407,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         SinlimitA=atGetOptionalDouble(ElemData,"SinlimitA", 0); check_error();
         SinlimitB=atGetOptionalDouble(ElemData,"SinlimitB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        MeanA=atGetOptionalDouble(ElemData, "MeanA", 0); check_error();
-        StdA=atGetOptionalDouble(ElemData, "StdA", 0); check_error();
-        MeanB=atGetOptionalDouble(ElemData, "MeanB", 0); check_error();
-        StdB=atGetOptionalDouble(ElemData, "StdB", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
@@ -452,10 +425,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
-        ElemA->Mean = MeanA;
-        ElemA->Std = StdA;
-        ElemB->Mean = MeanB;
-        ElemB->Std = StdB;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -507,31 +476,27 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 6, mxCreateString("SinlimitA"));
             mxSetCell(plhs[1], 7, mxCreateString("SinlimitB"));
             mxSetCell(plhs[1], 8, mxCreateString("Ramps"));
-            mxSetCell(plhs[1], 9, mxCreateString("MeanA"));
-            mxSetCell(plhs[1], 10, mxCreateString("StdA"));
-            mxSetCell(plhs[1], 11, mxCreateString("MeanB"));
-            mxSetCell(plhs[1], 12, mxCreateString("StdB"));
-            mxSetCell(plhs[1], 13, mxCreateString("FuncA"));
-            mxSetCell(plhs[1], 14, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 15, mxCreateString("FuncAderiv1"));
-            mxSetCell(plhs[1], 16, mxCreateString("FuncBderiv1"));
-            mxSetCell(plhs[1], 17, mxCreateString("FuncAderiv2"));
-            mxSetCell(plhs[1], 18, mxCreateString("FuncBderiv2"));
-            mxSetCell(plhs[1], 19, mxCreateString("FuncAderiv3"));
-            mxSetCell(plhs[1], 20, mxCreateString("FuncBderiv3"));
-            mxSetCell(plhs[1], 21, mxCreateString("FuncAderiv4"));
-            mxSetCell(plhs[1], 22, mxCreateString("FuncBderiv4"));
-            mxSetCell(plhs[1], 23, mxCreateString("FuncATimeDelay"));
-            mxSetCell(plhs[1], 24, mxCreateString("FuncBTimeDelay"));
-            mxSetCell(plhs[1], 25, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 26, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 27, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 28,mxCreateString("T1"));
-            mxSetCell(plhs[1], 29,mxCreateString("T2"));
-            mxSetCell(plhs[1], 30,mxCreateString("R1"));
-            mxSetCell(plhs[1], 31,mxCreateString("R2"));
-            mxSetCell(plhs[1], 32,mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 33,mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 9, mxCreateString("FuncA"));
+            mxSetCell(plhs[1], 10, mxCreateString("FuncB"));
+            mxSetCell(plhs[1], 11, mxCreateString("FuncAderiv1"));
+            mxSetCell(plhs[1], 12, mxCreateString("FuncBderiv1"));
+            mxSetCell(plhs[1], 13, mxCreateString("FuncAderiv2"));
+            mxSetCell(plhs[1], 14, mxCreateString("FuncBderiv2"));
+            mxSetCell(plhs[1], 15, mxCreateString("FuncAderiv3"));
+            mxSetCell(plhs[1], 16, mxCreateString("FuncBderiv3"));
+            mxSetCell(plhs[1], 17, mxCreateString("FuncAderiv4"));
+            mxSetCell(plhs[1], 18, mxCreateString("FuncBderiv4"));
+            mxSetCell(plhs[1], 19, mxCreateString("FuncATimeDelay"));
+            mxSetCell(plhs[1], 20, mxCreateString("FuncBTimeDelay"));
+            mxSetCell(plhs[1], 21, mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 22, mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 23, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 24,mxCreateString("T1"));
+            mxSetCell(plhs[1], 25,mxCreateString("T2"));
+            mxSetCell(plhs[1], 26,mxCreateString("R1"));
+            mxSetCell(plhs[1], 27,mxCreateString("R2"));
+            mxSetCell(plhs[1], 28,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 29,mxCreateString("EApertures"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
