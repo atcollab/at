@@ -177,6 +177,75 @@ class VariableMultipole(Element):
             >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun)
 
         """
+        def _check_amplitudes(self, **kwargs) -> dict[str, Any]:
+            amp_aux = {"A": None, "B": None}
+            all_amplitudes_are_none = True
+            for key in amp_aux:
+                if "amplitude" + key in kwargs:
+                    raise AtWarning("amplitude" + key + " should be Amplitude"+ key +".")
+                lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
+                amp_aux[key] = lower_case_kwargs.pop("amplitude" + key.lower(), None)
+                if amp_aux[key] is not None:
+                    all_amplitudes_are_none = False
+            if all_amplitudes_are_none:
+                raise AtError("Please provide at least one amplitude for A or B")
+            return amp_aux
+
+        def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray) -> int:
+            mxa, mxb = 0, 0
+            if ampa is not None:
+                mxa = np.max(np.append(np.nonzero(ampa), 0))
+            if ampb is not None:
+                mxb = np.max(np.append(np.nonzero(ampb), 0))
+            return max(mxa, mxb)
+
+        def _set_mode(
+            self, mode: int, a_b: str, **kwargs) -> dict[str, Any]:
+            if mode == ACMode.SINE:
+                kwargs = self._set_sine(a_b, **kwargs)
+            if mode == ACMode.ARBITRARY:
+                kwargs = self._set_arb(a_b, **kwargs)
+            return kwargs
+
+        def _set_sine(self, a_b: str, **kwargs) -> dict[str, Any]:
+            frequency = kwargs.get("Frequency" + a_b, None)
+            if frequency is None:
+                raise AtError("Please provide a value for Frequency" + a_b)
+            kwargs.setdefault("Phase" + a_b, 0)
+            kwargs.setdefault("Sinlimit" + a_b, -1)
+            return kwargs
+
+        def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
+            func = kwargs.get("Func" + a_b, None)
+            if func is None:
+                raise AtError("Please provide a value for Func" + a_b)
+            nsamp = len(func)
+            kwargs["Func" + a_b + "deriv1"] = kwargs.get(
+                "Func" + a_b + "deriv1", np.zeros(nsamp)
+            )
+            kwargs["Func" + a_b + "deriv2"] = kwargs.get(
+                "Func" + a_b + "deriv2", np.zeros(nsamp)
+            )
+            kwargs["Func" + a_b + "deriv3"] = kwargs.get(
+                "Func" + a_b + "deriv3", np.zeros(nsamp)
+            )
+            kwargs["Func" + a_b + "deriv4"] = kwargs.get(
+                "Func" + a_b + "deriv4", np.zeros(nsamp)
+            )
+            kwargs["Func" + a_b + "TimeDelay"] = kwargs.get("Func" + a_b + "TimeDelay", 0)
+            kwargs["NSamples" + a_b] = nsamp
+            kwargs["Periodic"] = kwargs.get("Periodic", True)
+            return kwargs
+
+        def _check_ramp(self, **kwargs) -> _array:
+            ramps = kwargs.get("Ramps", None)
+            if ramps is not None:
+                if len(ramps) != 4:
+                    raise AtError("Ramps has to be a vector with 4 elements")
+                ramps = np.asarray(ramps)
+            return ramps
+
+        # init begins
         kwargs.setdefault("Mode", mode)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         if len(kwargs) > 2:
@@ -195,71 +264,3 @@ class VariableMultipole(Element):
             if ramps is not None:
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
-
-    def _check_amplitudes(self, **kwargs) -> dict[str, Any]:
-        amp_aux = {"A": None, "B": None}
-        all_amplitudes_are_none = True
-        for key in amp_aux:
-            if "amplitude" + key in kwargs:
-                raise AtWarning("amplitude" + key + " should be Amplitude"+ key +".")
-            lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
-            amp_aux[key] = lower_case_kwargs.pop("amplitude" + key.lower(), None)
-            if amp_aux[key] is not None:
-                all_amplitudes_are_none = False
-        if all_amplitudes_are_none:
-            raise AtError("Please provide at least one amplitude for A or B")
-        return amp_aux
-
-    def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray) -> int:
-        mxa, mxb = 0, 0
-        if ampa is not None:
-            mxa = np.max(np.append(np.nonzero(ampa), 0))
-        if ampb is not None:
-            mxb = np.max(np.append(np.nonzero(ampb), 0))
-        return max(mxa, mxb)
-
-    def _set_mode(
-        self, mode: int, a_b: str, **kwargs) -> dict[str, Any]:
-        if mode == ACMode.SINE:
-            kwargs = self._set_sine(a_b, **kwargs)
-        if mode == ACMode.ARBITRARY:
-            kwargs = self._set_arb(a_b, **kwargs)
-        return kwargs
-
-    def _set_sine(self, a_b: str, **kwargs) -> dict[str, Any]:
-        frequency = kwargs.get("Frequency" + a_b, None)
-        if frequency is None:
-            raise AtError("Please provide a value for Frequency" + a_b)
-        kwargs.setdefault("Phase" + a_b, 0)
-        kwargs.setdefault("Sinlimit" + a_b, -1)
-        return kwargs
-
-    def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
-        func = kwargs.get("Func" + a_b, None)
-        if func is None:
-            raise AtError("Please provide a value for Func" + a_b)
-        nsamp = len(func)
-        kwargs["Func" + a_b + "deriv1"] = kwargs.get(
-            "Func" + a_b + "deriv1", np.zeros(nsamp)
-        )
-        kwargs["Func" + a_b + "deriv2"] = kwargs.get(
-            "Func" + a_b + "deriv2", np.zeros(nsamp)
-        )
-        kwargs["Func" + a_b + "deriv3"] = kwargs.get(
-            "Func" + a_b + "deriv3", np.zeros(nsamp)
-        )
-        kwargs["Func" + a_b + "deriv4"] = kwargs.get(
-            "Func" + a_b + "deriv4", np.zeros(nsamp)
-        )
-        kwargs["Func" + a_b + "TimeDelay"] = kwargs.get("Func" + a_b + "TimeDelay", 0)
-        kwargs["NSamples" + a_b] = nsamp
-        kwargs["Periodic"] = kwargs.get("Periodic", True)
-        return kwargs
-
-    def _check_ramp(self, **kwargs) -> _array:
-        ramps = kwargs.get("Ramps", None)
-        if ramps is not None:
-            if len(ramps) != 4:
-                raise AtError("Ramps has to be a vector with 4 elements")
-            ramps = np.asarray(ramps)
-        return ramps
