@@ -54,6 +54,8 @@ class VariableMultipole(Element):
     def __init__(self, family_name: str, mode: int, **kwargs):
         r"""VariableMultipole initialization.
 
+        Default pass method: ``VariableThinMPolePass``.
+
         This Class creates a thin multipole of any order (dipole kick, quadrupole,
         sextupole, etc.) and type (Normal or Skew) defined by AmplitudeA and/or
         AmplitudeB components; the polynoms PolynomA and PolynomB are calculated
