@@ -7,7 +7,7 @@ from enum import IntEnum
 import numpy as np
 
 from .elements import Element, _array
-from .utils import AtError
+from .utils import AtError, AtWarning
 
 __all__ = ["ACMode", "VariableMultipole"]
 
@@ -199,8 +199,8 @@ class VariableMultipole(Element):
         amp_aux = {"A": None, "B": None}
         all_amplitudes_are_none = True
         for key in amp_aux:
-            if "Amplitude" + key in kwargs and "amplitude" + key in kwargs:
-                raise AtError("Duplicated amplitude " + key + "parameters.")
+            if "amplitude" + key in kwargs:
+                raise AtWarning("amplitude" + key + " should be Amplitude"+ key +".")
             lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
             amp_aux[key] = lower_case_kwargs.pop("amplitude" + key.lower(), None)
             if amp_aux[key] is not None:
