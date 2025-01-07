@@ -16,15 +16,15 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %                   PolynomA
 %    AmplitudeB     Vector or scalar to define the excitation amplitude for
 %                   PolynomB
-%    FrequencyA     Frequency of SINE excitation for PolynomA
-%    FrequencyB     Frequency of SINE excitation for PolynomB
+%    FrequencyA     Frequency of SINE excitation for PolynomA. Unit Hz
+%    FrequencyB     Frequency of SINE excitation for PolynomB. Unit Hz.
 %    PhaseA         Phase of SINE excitation for PolynomA
 %    PhaseB         Phase of SINE excitation for PolynomB
 %    SinAabove      Limit the sin function to be above. Default -1.
 %    SinBabove      Limit the sin function to be above. Default -1.
-%    FuncA          ARBITRARY excitation turn-by-turn (tbt) kick list for
+%    FuncA          ARBITRARY excitation turn-by-turn (tbt) list for
 %                   PolynomA
-%    FuncB          ARBITRARY excitation turn-by-turn (tbt) kick list for
+%    FuncB          ARBITRARY excitation turn-by-turn (tbt) list for
 %                   PolynomB
 %    FuncAderiv1    ARBITRARY excitation tbt kick list for PolynomA 1st
 %                   derivative wrt tau
@@ -50,12 +50,13 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %                   derivatives is not zero.
 %    Periodic       If true (default) the user input kick list is repeated
 %    Ramps          Vector (t0, t1, t2, t3) in turn number to define the
-%                   ramping of the excitation
-%                   * t<t0: excitation amplitude is zero
-%                   * t0<t<t1: excitation amplitude is linearly ramped up
-%                   * t1<t<t2: excitation amplitude is constant
-%                   * t2<t<t3: excitation amplitude is linearly ramped down
-%                   * t3<t:    excitation amplitude is zero
+%                   ramping of the excitation:
+
+%                   * t<=t0: excitation amplitude is zero.
+%                   * t0<t<=t1: excitation amplitude is linearly ramped up.
+%                   * t1<t<=t2: excitation amplitude is constant.
+%                   * t2<t<=t3: excitation amplitude is linearly ramped down.
+%                   * t3<t:    excitation amplitude is zero.
 %
 %  OUTPUTS
 %  1. ELEM - Structure with the AT element
@@ -68,11 +69,11 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %
 %  EXAMPLES
 %
-% % Create a sinusoidal dipole with amplitude 0.1 mrad and frequency 1 kHz
-% >> atvariablemultipole('ACM','SINE','AmplitudeB',1.e-4,'FrequencyB',1.e3);
+% % Create a sinusoidal skew quadrupole with amplitude 0.0001  and frequency 1 kHz
+% >> atvariablemultipole('ACSKEW','SINE','AmplitudeA',[0,1.e-4],'FrequencyA',1.e3);
 %
-% % Create a white noise dipole excitation of amplitude 0.1 mrad
-% >> atvariablemultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
+% % Create a white noise horizontal dipole excitation of amplitude 0.1 mrad
+% >> atvariablemultipole('ACKICK','WHITENOISE','AmplitudeB',1.e-4);
 %
 % % Create a vertical kick in the first turn and the opposite kick in the second
 % % turn.
@@ -83,26 +84,25 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %
 % MORE DETAILS
 %
-% This function creates a thin multipole of any order (1 to k) and type
-% (Normal or Skew) defined by the amplitude A or B components; the polynoms
-% PolynomA and PolynomB are calculated on every turn depending on the
-% chosen mode, and for some modes also on the particle time delay.
-% All modes could be ramped.
+% This function creates a thin multipole of any order (dipole kick, quadrupole,
+% sextupole, etc.)) and type (Normal or Skew) defined by the AmplitudeA and/or
+% AmplitudeB components; the polynoms PolynomA and PolynomB are calculated on
+% every turn depending on the chosen mode, and for some modes also on the
+% particle time delay. All modes could be ramped.
 %
-% Keep in mind that this element varies on every turn, therefore, any ring
-% containing a variable element may change after tracking n turns.
+% Keep in mind that as this element varies on every turn, any ring
+% containing a variable multipole may change after tracking.
 %
-% There are three different modes implemented:
+% There are three different modes that could be set:
 %   SINE = 0, WHITENOISE = 1 and ARBITRARY = 2.
 %
-% The SINE mode requires amplitude, frequency and phase of at least one of
-% the two polynoms A or B. The j-th component of the kth order polynom on
-% the n-th turn is given by:
-%   amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + \tau_p) + phase],
+% The SINE mode requires amplitude, frequency of at least for A and/or B.
+% The jth component of the polynom (A or B) at the nth turn is given by:
+%   amplitude(j)*sin[ TWOPI*frequency*(n*T0 + \tau_p) + phase],
 % where T0 is the revolution period of the ideal ring, and \tau_p is the delay
 % of the pth particle i.e. the sixth coordinate over the speed of light. Also,
 % note that the position of the element on the ring has no effect, the phase
-% should be used to add any delay due to the position along s.
+% could be used to add any delay due to the position along s.
 % The following is an example of the SINE mode of an skew quad:
 %     eleskew = atvariablemultipole('VAR_SKEW','SINE',
 %         'AmplitudeA',[0,skewa2],'FrequencyA',freqA,'PhaseA',phaseA)
