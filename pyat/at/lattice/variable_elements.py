@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from enum import IntEnum
+from typing import Any
 
 import numpy as np
 
 from .elements import Element, _array
 from .utils import AtError, AtWarning
-from typing import Any
 
 __all__ = ["ACMode", "VariableMultipole"]
 
