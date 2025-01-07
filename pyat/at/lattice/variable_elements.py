@@ -33,8 +33,8 @@ class VariableMultipole(Element):
         FrequencyB=float,
         PhaseA=float,
         PhaseB=float,
-        SinaboveA=float,
-        SinaboveB=float,
+        SinAabove=float,
+        SinBabove=float,
         NsamplesA=int,
         NsamplesB=int,
         FuncA=_array,
@@ -78,8 +78,8 @@ class VariableMultipole(Element):
             eleskew = at.VariableMultipole('VAR_SKEW',at.ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
         The values of the sin function could be limited to be above a defined
-        threshold using ``Sinabove``. For example, you could create a half-sin
-        by setting ``Sinabove`` to zero.
+        threshold using ``Sin[AB]above``. For example, you could create a half-sin
+        by setting ``Sin[AB]above`` to zero.
 
         The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
         distribution is generated with zero-mean and one standard deviation from
@@ -127,8 +127,8 @@ class VariableMultipole(Element):
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
-            SinaboveA(float): Default -1.
-            SinaboveB(float): Default -1.
+            SinAabove(float): Default -1.
+            SinBabove(float): Default -1.
             FuncA(list):   User defined tbt kick list for PolynomA
             FuncB(list):   User defined tbt kick list for PolynomB
             FuncAderiv1    ARBITRARY excitation tbt kick list for PolynomA 1st
@@ -213,7 +213,7 @@ class VariableMultipole(Element):
             if frequency is None:
                 raise AtError("Please provide a value for Frequency" + a_b)
             kwargs.setdefault("Phase" + a_b, 0)
-            kwargs.setdefault("Sinabove" + a_b, -1)
+            kwargs.setdefault("Sin" + a_b + "above", -1)
             return kwargs
 
         def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
