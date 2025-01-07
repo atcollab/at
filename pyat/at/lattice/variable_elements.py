@@ -113,7 +113,8 @@ class VariableMultipole(Element):
 
         Parameters:
             family_name(str):  Element name
-            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
+            mode(ACMode): defines the mode. Default ACMode.SINE:
+
               * :py:attr:`.ACMode.SINE`: sine function
               * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
               * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
