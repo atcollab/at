@@ -176,7 +176,7 @@ class VariableMultipole(Element):
             >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun)
 
         """
-        kwargs["Mode"] = kwargs.get("Mode", mode)
+        kwargs.setdefault("Mode", mode)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         if len(kwargs) > 2:
             amp_aux = self._check_amplitudes(**kwargs)
