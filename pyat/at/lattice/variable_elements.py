@@ -14,7 +14,7 @@ __all__ = ["ACMode", "VariableMultipole"]
 
 
 class ACMode(IntEnum):
-    """Class to define the VariableMultipole excitation mode."""
+    """Class to define the ``VariableMultipole`` excitation mode."""
 
     SINE = 0
     WHITENOISE = 1
@@ -73,41 +73,40 @@ class VariableMultipole(Element):
         where T0 is the revolution period of the ideal ring, and \tau_p is the delay
         of the pth particle i.e. the sixth coordinate over the speed of light. Also,
         note that the position of the element on the ring has no effect, the phase
-        could be used to add any delay due to the position along s.
-
-        The following is an example of the SINE mode of an skew quad
+        could be used to add any delay due to the position along s. The following is
+        an example of the SINE mode of an skew quad
             eleskew = at.VariableMultipole('VAR_SKEW',at.ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
         The values of the sin function could be limited to be above a defined
-        threshold using `Sinabove`. For example, you could create a half-sin
-        by setting `Sinabove` to zero.
+        threshold using ``Sinabove``. For example, you could create a half-sin
+        by setting ``Sinabove`` to zero.
 
-        The WHITENOISE mode requires the amplitude of either A or B. For example
-            elenoise = at.VariableMultipole('MYNOISE',at.ACMode.WHITENOISE,
-                AmplitudeA=[noiseA1])
-        creates a gaussian vertical noise of amplitude noiseA1. The gaussian
+        The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
         distribution is generated with zero-mean and one standard deviation from
         a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
         function, therefore using the same stream on all trackings (sequencial or
         parallel). See https://github.com/atcollab/at/discussions/879 for more
-        details on the pseudo random stream.
+        details on the pseudo random stream. For example
+            elenoise = at.VariableMultipole('MYNOISE',at.ACMode.WHITENOISE,
+                AmplitudeA=[noiseA1])
+        creates a vertical kick as gaussian noise of amplitude noiseA1.
 
-        The ARBITRARY mode requires the definition of a custom turn-by-turn function.
-        The user defines the value of the function and its Taylor expansion with
-        respect to \tau up to fourth order.
+        The **ARBITRARY** mode requires the definition of a custom discrete function
+        to be sampled at every turn. The function and its Taylor expansion with
+        respect to \tau up to fourth order is used to calculate a value
             value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
                     + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4
-        where f is an array of values, f',f'',f''',f'''', are arrays containing
+        f is an array of values, f',f'',f''',f'''', are arrays containing
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
         the the sixth coordinate divided by the speed of light.
-        tau could be offset using FuncATimeDelay or FuncBTimeDelay.
-            tau -> tau - Func[AB]TimeDel
+        tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
+            tau = tau - Func[AB]TimeDelay
+        The function value is then multiplied by amplitude A and/or B.
         For example, the following is a positive vertical kick in the first turn,
         negative on the second turn, and zero on the third turn.
-            funca = [1,-1,0];
             elesinglekick = at.VariableMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
-            AmplitudeA=1e-4,FuncA=funca,Periodic=True)
-        by default the array is assumed periodic. If Periodic is set to False
+                AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+        By default the array is assumed periodic. If ``Periodic`` is set to False
         it is assumed that the function has no effect on the particle in turns
         exceeding the function definition.
 
