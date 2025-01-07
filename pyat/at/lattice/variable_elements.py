@@ -177,12 +177,15 @@ class VariableMultipole(Element):
             >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun)
 
         """
+
         def _check_amplitudes(self, **kwargs) -> dict[str, Any]:
             amp_aux = {"A": None, "B": None}
             all_amplitudes_are_none = True
             for key in amp_aux:
                 if "amplitude" + key in kwargs:
-                    raise AtWarning("amplitude" + key + " should be Amplitude"+ key +".")
+                    raise AtWarning(
+                        "amplitude" + key + " should be Amplitude" + key + "."
+                    )
                 lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
                 amp_aux[key] = lower_case_kwargs.pop("amplitude" + key.lower(), None)
                 if amp_aux[key] is not None:
@@ -199,8 +202,7 @@ class VariableMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        def _set_mode(
-            self, mode: int, a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_mode(self, mode: int, a_b: str, **kwargs) -> dict[str, Any]:
             if mode == ACMode.SINE:
                 kwargs = self._set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
@@ -220,21 +222,13 @@ class VariableMultipole(Element):
             if func is None:
                 raise AtError("Please provide a value for Func" + a_b)
             nsamp = len(func)
-            kwargs["Func" + a_b + "deriv1"] = kwargs.get(
-                "Func" + a_b + "deriv1", np.zeros(nsamp)
-            )
-            kwargs["Func" + a_b + "deriv2"] = kwargs.get(
-                "Func" + a_b + "deriv2", np.zeros(nsamp)
-            )
-            kwargs["Func" + a_b + "deriv3"] = kwargs.get(
-                "Func" + a_b + "deriv3", np.zeros(nsamp)
-            )
-            kwargs["Func" + a_b + "deriv4"] = kwargs.get(
-                "Func" + a_b + "deriv4", np.zeros(nsamp)
-            )
-            kwargs["Func" + a_b + "TimeDelay"] = kwargs.get("Func" + a_b + "TimeDelay", 0)
+            kwargs.setdefault("Func" + a_b + "deriv1", np.zeros(nsamp))
+            kwargs.setdefault("Func" + a_b + "deriv2", np.zeros(nsamp))
+            kwargs.setdefault("Func" + a_b + "deriv3", np.zeros(nsamp))
+            kwargs.setdefault("Func" + a_b + "deriv4", np.zeros(nsamp))
+            kwargs.setdefault("Func" + a_b + "TimeDelay", 0)
             kwargs["NSamples" + a_b] = nsamp
-            kwargs["Periodic"] = kwargs.get("Periodic", True)
+            kwargs.setdefault("Periodic", True)
             return kwargs
 
         def _check_ramp(self, **kwargs) -> _array:
