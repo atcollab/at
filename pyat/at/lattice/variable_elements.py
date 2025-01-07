@@ -88,8 +88,7 @@ class VariableMultipole(Element):
         a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
         function, therefore using the same stream on all trackings (sequencial or
         parallel). See https://github.com/atcollab/at/discussions/879 for more
-        details on the pseudo random stream.  Additionally, the user could set
-        the mean and std values by setting MeanA, MeanB, StdA, StdB.
+        details on the pseudo random stream.
 
         The ARBITRARY mode requires the definition of a custom turn-by-turn function.
         The user defines the value of the function and its Taylor expansion with
@@ -226,19 +225,10 @@ class VariableMultipole(Element):
     def _set_mode(
         self, mode: int, a_b: str, **kwargs: dict[str, any]
     ) -> dict[str, any]:
-        if mode == ACMode.WHITENOISE:
-            kwargs = self._set_white_noise(a_b, **kwargs)
         if mode == ACMode.SINE:
             kwargs = self._set_sine(a_b, **kwargs)
         if mode == ACMode.ARBITRARY:
             kwargs = self._set_arb(a_b, **kwargs)
-        return kwargs
-
-    def _set_white_noise(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
-        if "Mean" + a_b not in kwargs:
-            kwargs["Mean" + a_b] = kwargs.get("Mean" + a_b, 0)
-        if "Std" not in kwargs:
-            kwargs["Std" + a_b] = kwargs.get("Std" + a_b, 1)
         return kwargs
 
     def _set_sine(self, a_b: str, **kwargs: dict[str, any]) -> dict[str, any]:
