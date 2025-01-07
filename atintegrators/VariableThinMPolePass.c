@@ -279,7 +279,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
-        double SinaboveA, SinaboveB;
+        double SinAabove, SinBabove;
         struct elemab *ElemA, *ElemB;
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -297,8 +297,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
-        SinaboveA=atGetOptionalDouble(ElemData,"SinaboveA", 0); check_error();
-        SinaboveB=atGetOptionalDouble(ElemData,"SinaboveB", 0); check_error();
+        SinAabove=atGetOptionalDouble(ElemData,"SinAabove", 0); check_error();
+        SinBabove=atGetOptionalDouble(ElemData,"SinBabove", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
@@ -336,8 +336,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
-        ElemA->Sinabove = SinaboveA;
-        ElemB->Sinabove = SinaboveB;
+        ElemA->Sinabove = SinAabove;
+        ElemB->Sinabove = SinBabove;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -384,7 +384,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
-        double SinaboveA, SinaboveB;
+        double SinAabove, SinBabove;
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
@@ -404,8 +404,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
-        SinaboveA=atGetOptionalDouble(ElemData,"SinaboveA", 0); check_error();
-        SinaboveB=atGetOptionalDouble(ElemData,"SinaboveB", 0); check_error();
+        SinAabove=atGetOptionalDouble(ElemData,"SinAabove", 0); check_error();
+        SinBabove=atGetOptionalDouble(ElemData,"SinBabove", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
@@ -434,8 +434,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
-        ElemA->Sinabove = SinaboveA;
-        ElemB->Sinabove = SinaboveB;
+        ElemA->Sinabove = SinAabove;
+        ElemB->Sinabove = SinBabove;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -473,8 +473,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 3, mxCreateString("FrequencyB"));
             mxSetCell(plhs[1], 4, mxCreateString("PhaseA"));
             mxSetCell(plhs[1], 5, mxCreateString("PhaseB"));
-            mxSetCell(plhs[1], 6, mxCreateString("SinaboveA"));
-            mxSetCell(plhs[1], 7, mxCreateString("SinaboveB"));
+            mxSetCell(plhs[1], 6, mxCreateString("SinAabove"));
+            mxSetCell(plhs[1], 7, mxCreateString("SinBabove"));
             mxSetCell(plhs[1], 8, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 9, mxCreateString("FuncA"));
             mxSetCell(plhs[1], 10, mxCreateString("FuncB"));
