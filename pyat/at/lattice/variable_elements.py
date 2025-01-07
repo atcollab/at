@@ -14,7 +14,7 @@ __all__ = ["ACMode", "VariableMultipole"]
 
 
 class ACMode(IntEnum):
-    """Class to define the excitation types."""
+    """Class to define the VariableMultipole excitation mode."""
 
     SINE = 0
     WHITENOISE = 1
@@ -22,7 +22,7 @@ class ACMode(IntEnum):
 
 
 class VariableMultipole(Element):
-    """Class to generate an AT variable thin multipole element."""
+    """Turn by turn variable thin multipole."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
     _conversions = dict(
@@ -33,8 +33,8 @@ class VariableMultipole(Element):
         FrequencyB=float,
         PhaseA=float,
         PhaseB=float,
-        SinlimitA=float,
-        SinlimitB=float,
+        SinaboveA=float,
+        SinaboveB=float,
         NsamplesA=int,
         NsamplesB=int,
         FuncA=_array,
@@ -52,34 +52,35 @@ class VariableMultipole(Element):
     )
 
     def __init__(self, family_name: str, mode: int, **kwargs):
-        r"""Create VariableMultipole.
+        r"""VariableMultipole initialization.
 
-        This function creates a thin multipole of any order (1 to k) and type
-        (Normal or Skew) defined by the amplitude A or B components; the polynoms
-        PolynomA and PolynomB are calculated on every turn depending on the
-        chosen mode, and for some modes on the particle time delay.
-        All modes could be ramped.
+        This Class creates a thin multipole of any order (dipole kick, quadrupole,
+        sextupole, etc.) and type (Normal or Skew) defined by AmplitudeA and/or
+        AmplitudeB components; the polynoms PolynomA and PolynomB are calculated
+        on every turn depending on the chosen mode, and for some modes on the
+        particle time delay. All modes could be ramped.
 
-        Keep in mind that this element varies on every turn, therefore, any ring
-        containing a variable element may change after tracking n turns.
+        Keep in mind that as this element varies on every turn, any ring
+        containing a VariableMultipole may change after tracking.
 
-        There are three different modes implemented:
-            SINE = 0, WHITENOISE = 1 and ARBITRARY = 2.
+        There are three different modes that could be set:
+            SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
 
-        The SINE mode requires amplitude, frequency and phase of at least one of
-        the two polynoms A or B. The j-th component of the kth order polynom on
-        the n-th turn is given by:
-          amplitude_j*sin[ 2\pi*frequency*(nth_turn*T0 + \tau_p) + phase],
+        The **SINE** mode requires amplitude, frequency and phase for A and/or B.
+        The value of the jth component of the polynom (A or B) at the nth turn
+        is given by
+            Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_p) + phase],
         where T0 is the revolution period of the ideal ring, and \tau_p is the delay
         of the pth particle i.e. the sixth coordinate over the speed of light. Also,
         note that the position of the element on the ring has no effect, the phase
-        should be used to add any delay due to the position along s.
-        The following is an example of the SINE mode of an skew quad:
+        could be used to add any delay due to the position along s.
+
+        The following is an example of the SINE mode of an skew quad
             eleskew = at.VariableMultipole('VAR_SKEW',at.ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
         The values of the sin function could be limited to be above a defined
-        threshold using `Sinlimit`. For example, you could create a half-sin
-        by setting `Sinlimit` to zero.
+        threshold using `Sinabove`. For example, you could create a half-sin
+        by setting `Sinabove` to zero.
 
         The WHITENOISE mode requires the amplitude of either A or B. For example
             elenoise = at.VariableMultipole('MYNOISE',at.ACMode.WHITENOISE,
@@ -126,10 +127,8 @@ class VariableMultipole(Element):
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
-            SinlimitA(float): Default -1. Values of the sin function will be above
-                SinlimitA or zero.
-            SinlimitB(float): Default -1. Values of the sin function will be above
-                SinlimitB or zero.
+            SinaboveA(float): Default -1.
+            SinaboveB(float): Default -1.
             FuncA(list):   User defined tbt kick list for PolynomA
             FuncB(list):   User defined tbt kick list for PolynomB
             FuncAderiv1    ARBITRARY excitation tbt kick list for PolynomA 1st
@@ -214,7 +213,7 @@ class VariableMultipole(Element):
             if frequency is None:
                 raise AtError("Please provide a value for Frequency" + a_b)
             kwargs.setdefault("Phase" + a_b, 0)
-            kwargs.setdefault("Sinlimit" + a_b, -1)
+            kwargs.setdefault("Sinabove" + a_b, -1)
             return kwargs
 
         def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
