@@ -177,7 +177,7 @@ class VariableMultipole(Element):
 
         """
 
-        def _check_amplitudes(self, **kwargs) -> dict[str, Any]:
+        def _check_amplitudes(**kwargs) -> dict[str, Any]:
             amp_aux = {"A": None, "B": None}
             all_amplitudes_are_none = True
             for key in amp_aux:
@@ -193,7 +193,7 @@ class VariableMultipole(Element):
                 raise AtError("Please provide at least one amplitude for A or B")
             return amp_aux
 
-        def _getmaxorder(self, ampa: np.ndarray, ampb: np.ndarray) -> int:
+        def _getmaxorder(ampa: np.ndarray, ampb: np.ndarray) -> int:
             mxa, mxb = 0, 0
             if ampa is not None:
                 mxa = np.max(np.append(np.nonzero(ampa), 0))
@@ -201,14 +201,14 @@ class VariableMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        def _set_mode(self, mode: int, a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_mode(mode: int, a_b: str, **kwargs) -> dict[str, Any]:
             if mode == ACMode.SINE:
-                kwargs = self._set_sine(a_b, **kwargs)
+                kwargs = _set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
-                kwargs = self._set_arb(a_b, **kwargs)
+                kwargs = _set_arb(a_b, **kwargs)
             return kwargs
 
-        def _set_sine(self, a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_sine(a_b: str, **kwargs) -> dict[str, Any]:
             frequency = kwargs.get("Frequency" + a_b, None)
             if frequency is None:
                 raise AtError("Please provide a value for Frequency" + a_b)
@@ -216,7 +216,7 @@ class VariableMultipole(Element):
             kwargs.setdefault("Sin" + a_b + "above", -1)
             return kwargs
 
-        def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_arb(a_b: str, **kwargs) -> dict[str, Any]:
             func = kwargs.get("Func" + a_b, None)
             if func is None:
                 raise AtError("Please provide a value for Func" + a_b)
@@ -230,7 +230,7 @@ class VariableMultipole(Element):
             kwargs.setdefault("Periodic", True)
             return kwargs
 
-        def _check_ramp(self, **kwargs) -> _array:
+        def _check_ramp(**kwargs) -> _array:
             ramps = kwargs.get("Ramps", None)
             if ramps is not None:
                 if len(ramps) != 4:
@@ -242,18 +242,18 @@ class VariableMultipole(Element):
         kwargs.setdefault("Mode", mode)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         if len(kwargs) > 2:
-            amp_aux = self._check_amplitudes(**kwargs)
+            amp_aux = _check_amplitudes(**kwargs)
             for key, value in amp_aux.items():
                 if value is not None:
                     kwargs["Amplitude" + key] = value
-                    kwargs = self._set_mode(mode, key, **kwargs)
-            maxorder = self._getmaxorder(amp_aux["A"], amp_aux["B"])
+                    kwargs = _set_mode(mode, key, **kwargs)
+            maxorder = _getmaxorder(amp_aux["A"], amp_aux["B"])
             kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
             for key in amp_aux:
                 kwargs["Polynom" + key] = kwargs.get(
                     "Polynom" + key, np.zeros(maxorder + 1)
                 )
-            ramps = self._check_ramp(**kwargs)
+            ramps = _check_ramp(**kwargs)
             if ramps is not None:
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
