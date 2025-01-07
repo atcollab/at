@@ -235,8 +235,8 @@ class VariableMultipole(Element):
         frequency = kwargs.get("Frequency" + a_b, None)
         if frequency is None:
             raise AtError("Please provide a value for Frequency" + a_b)
-        kwargs["Phase" + a_b] = kwargs.get("Phase" + a_b, 0)
-        kwargs["Sinlimit" + a_b] = kwargs.get("Sinlimit" + a_b, -1)
+        kwargs.setdefault("Phase" + a_b, 0)
+        kwargs.setdefault("Sinlimit" + a_b, -1)
         return kwargs
 
     def _set_arb(self, a_b: str, **kwargs) -> dict[str, Any]:
