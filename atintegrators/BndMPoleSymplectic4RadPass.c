@@ -67,7 +67,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
         A[0] += sin(KickAngle[1])/le;
     }
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
+    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,bdiff,\
     irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,rad_const, diff_const,scaling,\
     FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
     FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0)
