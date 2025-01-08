@@ -548,17 +548,20 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmtarget:  Target orbit position. Must be broadcastable to the number of
               observation points.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
-              is also the cavity weight
+              is also the cavity weight. Default: automatically computed.
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
               is also the cavity weight
             steersum:   If :py:obj:`True`, the sum of steerers is appended to the
               Observables.
-            stsumweight: Weight on steerer summation. Default 1.0.
+            stsumweight: Weight on steerer summation. Default: automatically computed.
 
         :ivar VariableList variables: matrix variables
         :ivar ObservableList observables: matrix observables
+
+        By default, the weights of cavities and steerers summation are set to give
+        a factor 2 more efficiency than steerers and BPMs
 
         """
 
@@ -581,9 +584,9 @@ class OrbitResponseMatrix(ResponseMatrix):
             vv = np.mean(np.linalg.norm(nr, axis=0))
             vo = np.mean(np.linalg.norm(nr, axis=1))
             korb = 0.25 * math.sqrt(2.0) / math.sin(math.pi * result[3])
-            cavd = vv * korb * alpha * freq / np.linalg.norm(result[2] / bpmweight)
-            stsw = np.linalg.norm(deltas) / vo / korb
-            return cavd, stsw
+            cd = vv * korb * alpha * freq / np.linalg.norm(result[2] / bpmweight)
+            sw = np.linalg.norm(deltas) / vo / korb
+            return cd, sw
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
@@ -600,13 +603,14 @@ class OrbitResponseMatrix(ResponseMatrix):
         )
         observables = ObservableList([bpms])
         if steersum:
+            # noinspection PyUnboundLocalVariable
             sumobs = LatticeObservable(
                 steerrefs,
                 "KickAngle",
                 name=f"{plcode}_kicks",
                 target=0.0,
                 index=pl,
-                weight=stsumweight if stsumweight else stsw,
+                weight=stsumweight if stsumweight else stsw / 2.0,
                 statfun=np.sum,
             )
             observables.append(sumobs)
@@ -617,17 +621,48 @@ class OrbitResponseMatrix(ResponseMatrix):
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
                 raise ValueError("Cavities are not active")
+            # noinspection PyUnboundLocalVariable
             cavvar = RefptsVariable(
                 cavrefs,
                 "Frequency",
                 name="RF frequency",
-                delta=cavdelta if cavdelta else cavd,
+                delta=cavdelta if cavdelta else 2.0 * cavd,
             )
             variables.append(cavvar)
 
         self.nbsteers = nbsteers
 
         super().__init__(ring, variables, observables)
+
+    def normalise(
+        self, cav_ampl: float | None = 2.0, stsum_ampl: float | None = 2.0
+    ) -> None:
+        """Normalise the response matrix
+
+        Adjust the RF cavity delta and/or the weight of steerer summation so that the
+        weighted response matrix is normalised.
+
+        Args:
+            cav_ampl: Desired ratio between the cavity response and the average of
+              steerer responses. If :py:obj:`None`, do not normalise.
+            stsum_ampl: Desired inverse ratio between the weight of the steerer
+              summation and the average of Monitor responses. If :py:obj:`None`,
+              do not normalise.
+
+        By default, the normalisation gives to the RF frequency and steerer summation
+        a factor 2 more efficiency than steerers and BPMs
+        """
+        resp = self.weighted_response
+        if resp is None:
+            raise AtError("No response matrix: run build() first")
+        normvar = np.linalg.norm(resp, axis=0)
+        normobs = np.linalg.norm(resp, axis=1)
+        if len(self.variables) > self.nbsteers and cav_ampl is not None:
+            self.cavdelta *= np.mean(normvar[:-1]) / normvar[-1] * cav_ampl
+        if len(self.observables) > 1 and stsum_ampl is not None:
+            self.stsumweight = (
+                self.stsumweight * normobs[-1] / np.mean(normobs[:-1]) / stsum_ampl
+            )
 
     @property
     def bpmweight(self):
