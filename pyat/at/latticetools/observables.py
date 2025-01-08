@@ -86,7 +86,7 @@ class _ModFun:
         self.statfun = statfun
 
     def __call__(self, *a):
-        return self.statfun(self.fun(*a), axis=0)
+        return self.statfun(self.fun(*a))
 
 
 class _ArrayAccess:
