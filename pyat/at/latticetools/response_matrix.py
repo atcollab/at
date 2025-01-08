@@ -116,10 +116,12 @@ import abc
 from collections.abc import Sequence, Generator
 from itertools import chain
 from functools import partial
+import math
 
 import numpy as np
 
 from .observables import TrajectoryObservable, OrbitObservable, LatticeObservable
+from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
 from ..lattice import AtError, Lattice, Refpts, AxisDef, plane_
 from ..lattice import Monitor, checkattr
@@ -522,9 +524,9 @@ class OrbitResponseMatrix(ResponseMatrix):
         bpmweight: float = 1.0,
         bpmtarget: float | Sequence[float] = 0.0,
         steerdelta: float | Sequence[float] = 0.0001,
-        cavdelta: float = 100.0,
+        cavdelta: float | None = None,
         steersum: bool = False,
-        stsumweight: float = 1.0,
+        stsumweight: float | None = None,
     ):
         """
         Args:
@@ -564,8 +566,33 @@ class OrbitResponseMatrix(ResponseMatrix):
             name = f"{plcode}{ik:04}"
             return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
 
+        def set_norm():
+            bpm = LocalOpticsObservable(bpmrefs, "beta", plane=pl)
+            sts = LocalOpticsObservable(ids, "beta", plane=pl)
+            dsp = LocalOpticsObservable(bpmrefs, "dispersion", plane=2 * pl)
+            tun = GlobalOpticsObservable("tune", plane=pl)
+            obs = ObservableList([bpm, sts, dsp, tun])
+            result = obs.evaluate(ring=ring)
+            alpha = ring.disable_6d(copy=True).get_mcf(0)
+            freq = ring.get_rf_frequency(cavpts=cavrefs)
+            nr = np.outer(
+                np.sqrt(result[0]) / bpmweight, np.sqrt(result[1]) * steerdelta
+            )
+            vv = np.mean(np.linalg.norm(nr, axis=0))
+            vo = np.mean(np.linalg.norm(nr, axis=1))
+            korb = 0.25 * math.sqrt(2.0) / math.sin(math.pi * result[3])
+            cavd = vv * korb * alpha * freq / np.linalg.norm(result[2] / bpmweight)
+            stsw = np.linalg.norm(deltas) / vo / korb
+            return cavd, stsw
+
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
+        ids = ring.get_uint32_index(steerrefs)
+        nbsteers = len(ids)
+        deltas = np.broadcast_to(steerdelta, nbsteers)
+        if steersum and stsumweight is None or cavrefs and cavdelta is None:
+            cavd, stsw = set_norm()
+
         # Observables
         nm = f"{plcode}_orbit"
         bpms = OrbitObservable(
@@ -579,21 +606,22 @@ class OrbitResponseMatrix(ResponseMatrix):
                 name=f"{plcode}_kicks",
                 target=0.0,
                 index=pl,
-                weight=stsumweight,
+                weight=stsumweight if stsumweight else stsw,
                 statfun=np.sum,
             )
             observables.append(sumobs)
+
         # Variables
-        ids = ring.get_uint32_index(steerrefs)
-        nbsteers = len(ids)
-        deltas = np.broadcast_to(steerdelta, nbsteers)
         variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
                 raise ValueError("Cavities are not active")
             cavvar = RefptsVariable(
-                cavrefs, "Frequency", name="RF frequency", delta=cavdelta
+                cavrefs,
+                "Frequency",
+                name="RF frequency",
+                delta=cavdelta if cavdelta else cavd,
             )
             variables.append(cavvar)
 
