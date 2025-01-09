@@ -406,6 +406,7 @@ def get_radiation_integrals(
         return np.array([di1, di2, di3, di4, di5])
 
     def eloss_radiation(elem: EnergyLoss, coef):
+        # Assuming no diffusion
         di2 = elem.EnergyLoss / coef
         return np.array([0.0, di2, 0.0, 0.0, 0.0])
 
