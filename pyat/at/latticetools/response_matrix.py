@@ -34,8 +34,8 @@ used for correction. It's available for all magnets, though not present by defau
 except in :py:class:`.Corrector` magnets. For other magnets, the attribute should be
 explicitly created.
 
-There are options to include the RF frequency in the variable list, and the sum of
-correction angles in the list of observables:
+There are options in :py:class:`OrbitResponseMatrix`to include the RF frequency in the
+variable list, and the sum of correction angles in the list of observables:
 
 >>> resp_h = OrbitResponseMatrix(ring, "h", cavrefs=at.RFCavity, steersum=True)
 
@@ -57,8 +57,12 @@ Normalisation
 
 To be correctly inverted, the response matrix must be correctly normalised: the norms
 of its columns must be of the same order of magnitude, and similarly for the rows.
-This is done by adjusting the weights :math:`w_v` for the variables :math:`\mathbf{V}`
-and :math:`w_o` for the observables :math:`\mathbf{O}`.
+This is critical when including the RF frequency response which is not commensurate
+with steerer response. Similarly for rows, the sum of steerers is not commensurate with
+monitor readings.
+
+Normalisation is done by adjusting the weights :math:`w_v` for the variables
+:math:`\mathbf{V}` and :math:`w_o` for the observables :math:`\mathbf{O}`.
 With :math:`\mathbf{R}` the response matrix:
 
 .. math::
@@ -78,6 +82,14 @@ using:
   norms for variables and observables. These should be less than 10.
 * :py:meth:`~.ResponseMatrix.plot_norm`
 
+By default, the normalisation is done automatically by adjusting the RF frequency step
+and the weight of the steerer sum based on the analytical response matrix. Explicitly
+specifying the *cavdelta* and *stsumweight* prevents this automatical normalisation.
+
+After building the response matrix, and before solving, normalisation may be applied
+with the :py:meth:`~.OrbitResponseMatrix.normalise` method. The default normalisation
+gives a higher priority to RF response and steerer sum.
+
 Both natural and weighted response matrices can be retrieved with the
 :py:attr:`~ResponseMatrix.response` and :py:attr:`~ResponseMatrix.weighted_response`
 properties.
@@ -90,13 +102,12 @@ weighted response matrix.
 
 After solving, orbit correction is available, for instance with
 
-* :py:meth:`~ResponseMatrix.get_correction` which returns the correction matrix,
+* :py:meth:`~ResponseMatrix.correction_matrix` which returns the correction matrix
+  (pseudo-inverse of the response matrix),
+* :py:meth:`~ResponseMatrix.get_correction` which returns a correction vector when
+  given observed values,
 * :py:meth:`~ResponseMatrix.correct` which computes and optionally applies a correction
   for the provided :py:class:`.Lattice`.
-
-.. include:: ../notebooks/ATPrimer.rst
-
-
 """
 
 from __future__ import annotations
@@ -274,7 +285,7 @@ class _SvdSolver(abc.ABC):
         """Compute the correction of the given observation.
 
         Args:
-            observed:   Observed error vector
+            observed:   Vector of observed deviations,
             nvals:      Desired number of singular values. If :py:obj:`None`, use
               all singular values
 
@@ -478,9 +489,12 @@ class ResponseMatrix(_SvdSolver):
         # noinspection PyUnresolvedReferences
         r"""Exclude items from :py:class:`.Observable`\ s.
 
+        After excluding observation points, the matrix must be rebuilt with
+        :py:meth:`build`.
+
         Args:
             obsname:    :py:class:`.Observable` name.
-            excluded:   location of elements to excluse
+            excluded:   location of elements to exclude
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h", Monitor, Corrector)
@@ -684,7 +698,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
     @property
     def steerdelta(self):
-        """Step and weight on steerers."""
+        """Step and weight of steerers."""
         return self.variables[: self.nbsteers].deltas
 
     @steerdelta.setter
@@ -693,7 +707,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
     @property
     def cavdelta(self):
-        """Step and weight on RF frequency deviation."""
+        """Step and weight of RF frequency deviation."""
         return self.variables[self.nbsteers].delta
 
     @cavdelta.setter
