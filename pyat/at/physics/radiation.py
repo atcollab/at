@@ -425,7 +425,7 @@ def get_radiation_integrals(
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != "DriftPass":
             integrals += wiggler_radiation(el, vini)
-        elif isinstance(el, EnergyLoss) and el.PassMethod == "EnergyLossPass":
+        elif isinstance(el, EnergyLoss):
             integrals += eloss_radiation(el, elosscoef)
     return tuple(integrals)
 
