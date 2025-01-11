@@ -57,9 +57,9 @@ __all__ = [
 ]
 
 from collections.abc import Callable, Set
+from functools import partial
 from enum import Enum
 from itertools import repeat
-from math import pi
 from typing import Union
 
 # For sys.version_info.minor < 9:
@@ -100,17 +100,31 @@ class _ArrayAccess:
         return data if index is None else data[self.index]
 
 
-class _RecordAccess:
-    """Access selected items in a record array."""
+def _record_access(param, index, data):
+    val = getattr(data, param)
+    return val if index is None else val[index]
 
-    def __init__(self, fieldname: str, index):
-        self.index = index
-        self.fieldname = fieldname
 
-    def __call__(self, data):
-        index = self.index
-        data = getattr(data, self.fieldname)
-        return data if index is None else data[self.index]
+def _muf_access(_, index, data):
+    mu = _record_access("mu", index, data)
+    return np.remainder(mu, 2.0 * np.pi)
+
+
+def _mu2pi_access(_, index, data):
+    mu = _record_access("mu", index, data)
+    return mu / 2.0 / np.pi
+
+
+def _mu2pif_access(_, index, data):
+    mu = _record_access("mu", index, data)
+    return np.remainder(mu / 2.0 / np.pi, 1.0)
+
+
+_opdata = {
+    "muf": _muf_access,
+    "mu2pi": _mu2pi_access,
+    "mu2pif": _mu2pif_access,
+}
 
 
 def _all_rows(index: RefIndex | None):
@@ -127,18 +141,18 @@ class _Tune:
     """Get integer tune from the phase advance."""
 
     def __init__(self, idx: RefIndex):
-        self.fun = _RecordAccess("mu", _all_rows(idx))
+        self.fun = partial(_record_access, "mu", _all_rows(idx))
 
     def __call__(self, data):
         mu = self.fun(data)
-        return np.squeeze(mu, axis=0) / 2 / pi
+        return np.squeeze(mu, axis=0) / 2.0 / np.pi
 
 
 class _Ring:
     """Get an attribute of a lattice element."""
 
     def __init__(self, attrname, index, refpts):
-        self.get_val = _RecordAccess(attrname, index)
+        self.get_val = partial(_record_access, attrname, index)
         self.refpts = refpts
 
     def __call__(self, ring):
@@ -574,7 +588,7 @@ class GeometryObservable(ElementObservable):
         if param not in self._field_list:
             raise ValueError(f"Expected {param!r} to be one of {self._field_list!r}")
         name = self._set_name(name, "geometry", param)
-        fun = _RecordAccess(param, None)
+        fun = partial(_record_access, param, None)
         needs = {Need.GEOMETRY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -705,7 +719,7 @@ class _GlobalOpticsObservable(Observable):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = _RecordAccess(param, plane_(plane, "index"))
+            fun = partial(_record_access, param, plane_(plane, "index"))
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
         super().__init__(fun, needs=needs, name=name, **kwargs)
@@ -804,11 +818,12 @@ class LocalOpticsObservable(ElementObservable):
 
         needs = {Need.LOCALOPTICS}
         name = self._set_name(name, param, ax_(plane, "code"))
+        index = _all_rows(ax_(plane, "index"))
         if callable(param):
             fun = param
         else:
-            fun = _RecordAccess(param, _all_rows(ax_(plane, "index")))
-            if param == "mu" or all_points:
+            fun = partial(_opdata.get(param, _record_access), param, index)
+            if param in {"mu", "mu2pi"} or all_points:
                 needs.add(Need.ALL_POINTS)
             if param in {"W", "Wp", "dalpha", "dbeta", "dmu", "ddispersion", "dR"}:
                 needs.add(Need.W_FUNCTIONS)
@@ -945,7 +960,7 @@ class EmittanceObservable(Observable):
         if callable(param):
             fun = param
         else:
-            fun = _RecordAccess(param, plane_(plane, "index"))
+            fun = partial(_record_access, param, plane_(plane, "index"))
         needs = {Need.EMITTANCE}
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
