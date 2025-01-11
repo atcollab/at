@@ -305,7 +305,7 @@ class Observable:
             vmin = None
             vmax = None
         else:
-            target = np.broadcast_to(self.target, np.asarray(vnow).shape)
+            target = np.broadcast_to(self.target, vnow.shape)
             vmin = target + self.lbound
             vmax = target + self.ubound
         values = self._line("", self.initial, vnow, vmin, vmax, deviation)
@@ -331,15 +331,26 @@ class Observable:
         for d in data:
             if isinstance(d, Exception):
                 self._value = d
+                self._shape = None
                 return d
 
-        val = self.fun(*data, *self.args, **self.kwargs)
-        if self._shape is None:
-            self._shape = np.asarray(val).shape
+        val = np.asarray(self.fun(*data, *self.args, **self.kwargs))
         if initial:
             self.initial = val
+        self._shape = val.shape
         self._value = val
         return val
+
+    def check(self) -> bool:
+        """Check evaluation
+
+        Returns:
+            ok: :py:obj:`True` if is evaluation done, :py:obj:`False` otherwise
+
+        Raises:
+            AtError:    if the value is doubtful: evaluation failed, empty value…
+        """
+        return self.value is not None
 
     @property
     def value(self):
@@ -352,7 +363,7 @@ class Observable:
     @property
     def weight(self):
         """Observable weight."""
-        return np.broadcast_to(self.w, np.asarray(self._value).shape)
+        return np.broadcast_to(self.w, self._value.shape)
 
     @property
     def weighted_value(self):
@@ -366,7 +377,7 @@ class Observable:
         """Deviation from target value, computed as
         :pycode:`deviation = value-target`.
         """
-        vnow = np.asarray(self.value)
+        vnow = self.value
         vsh = vnow.shape
         if self.target is None:
             deviation = np.broadcast_to(0.0, vsh)
@@ -512,6 +523,13 @@ class ElementObservable(Observable):
         self._excluded = None
         self._locations = [""]
 
+    def check(self):
+        ok = super().check()
+        shp = self._shape
+        if ok and shp and shp[0] <= 0:
+            raise AtError(f"{self.name}: No location selected in the lattice.")
+        return ok
+
     def _all_lines(self):
         if self.summary:
             return super()._all_lines()
@@ -528,7 +546,7 @@ class ElementObservable(Observable):
                     vmin = repeat(None)
                     vmax = repeat(None)
                 else:
-                    target = np.broadcast_to(self.target, np.asarray(vnow).shape)
+                    target = np.broadcast_to(self.target, vnow.shape)
                     vmin = target + self.lbound
                     vmax = target + self.ubound
             vini = self.initial
@@ -745,7 +763,7 @@ class LocalOpticsObservable(ElementObservable):
         r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
-            param:          Optics parameter name (see :py:func:`.get_optics`)
+            param:          :ref:`Optics parameter name <localoptics_param>`
               or :ref:`user-defined evaluation function <localoptics_eval>`
             plane:          Index in the parameter array, If :py:obj:`Ellipsis`,
               the whole array is specified
@@ -771,6 +789,45 @@ class LocalOpticsObservable(ElementObservable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. _localoptics_param:
+        .. rubric:: Optics parameter name
+
+        In addition to :py:func:`.get_optics` parameter names, LocalOpticsObservable
+        adds 3 parameters: *muf*, *mu2pi* and *mu2pif*:
+
+        ================    ===================================================
+        **s_pos**           longitudinal position [m]
+        **M**               (6, 6) transfer matrix M from the beginning of ring
+                            to the entrance of the element
+        **closed_orbit**    (6,) closed orbit vector
+        **dispersion**      (4,) dispersion vector
+        **A**               (6, 6) A-matrix
+        **R**               (3, 6, 6) R-matrices
+        **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
+        **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
+        **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+        **mu2pi**           :math:`\left[ \mu_x,\mu_y \right]/2\pi`, reduced betatron
+                            phase
+        **muf**             :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+                            (modulo :math:`2\pi`)
+        **mu2pif**          :math:`\mathrm{frac}(\left[ \mu_x,\mu_y \right]/2\pi)`,
+                            fractional part of the reduced betatron phase
+        **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
+                            is :py:obj:`True`: chromatic amplitude function
+        **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+                            is :py:obj:`True`: chromatic phase function
+        **dalpha**          (2,) alpha derivative vector
+                            (:math:`\Delta \alpha/ \delta_p`)
+        **dbeta**           (2,) beta derivative vector
+                            (:math:`\Delta \beta/ \delta_p`)
+        **dmu**             (2,) mu derivative vector
+                            (:math:`\Delta \mu/ \delta_p`)
+        **ddispersion**     (4,) dispersion derivative vector
+                            (:math:`\Delta D/ \delta_p`)
+        **dR**              (3, 6, 6) R derivative vector
+                            (:math:`\Delta R/ \delta_p`)
+        ================    ===================================================
 
         .. _localoptics_eval:
         .. rubric:: User-defined evaluation function
