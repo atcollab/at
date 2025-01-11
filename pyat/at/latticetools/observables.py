@@ -527,7 +527,7 @@ class ElementObservable(Observable):
         ok = super().check()
         shp = self._shape
         if ok and shp and shp[0] <= 0:
-            raise AtError(f"{self.name}: No location selected in the lattice.")
+            raise AtError(f"Observable {self.name!r}: No location selected in the lattice.")
         return ok
 
     def _all_lines(self):

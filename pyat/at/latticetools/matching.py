@@ -36,6 +36,7 @@ def _match(
     bounds = np.array([var.bounds for var in variables])
 
     constraints.evaluate(ring, initial=True, dp=dp, dct=dct, df=df)
+    constraints.check()
     ntargets = constraints.flat_values.size
 
     if method is None:
