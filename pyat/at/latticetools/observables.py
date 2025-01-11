@@ -101,6 +101,7 @@ class _ArrayAccess:
 
 
 def _record_access(param, index, data):
+    """Access a selected item in a record array"""
     val = getattr(data, param)
     return val if index is None else val[index]
 
