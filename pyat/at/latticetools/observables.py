@@ -342,7 +342,7 @@ class Observable:
         return val
 
     def check(self) -> bool:
-        """Check evaluation
+        """Check the evaluation
 
         Returns:
             ok: :py:obj:`True` if is evaluation done, :py:obj:`False` otherwise

@@ -451,7 +451,7 @@ class ObservableList(list):
         return all(obs.check() for obs in self)
 
     def check(self) -> bool:
-        """Check evaluation
+        """Check the evaluation
 
         Returns:
             ok: :py:obj:`True` if evaluation is done, :py:obj:`False` otherwise
