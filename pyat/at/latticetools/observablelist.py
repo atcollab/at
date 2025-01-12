@@ -44,6 +44,17 @@ def _flatten(vals, order="F"):
     return np.concatenate([np.reshape(v, -1, order=order) for v in vals])
 
 
+class _ObsResults(tuple):
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return _ObsResults(super().__getitem__(item))
+        else:
+            val = super().__getitem__(item)
+            if isinstance(val, Exception):
+                raise AtError(f"Evaluation failed: {val.args[0]}") from val
+            return val
+
+
 class ObservableList(list):
     """Handles a list of Observables to be evaluated together.
 
