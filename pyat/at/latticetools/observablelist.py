@@ -26,7 +26,7 @@ __all__ = [
     "ObservableList",
 ]
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from functools import reduce
 from typing import Callable
 
@@ -44,6 +44,17 @@ def _flatten(vals, order="F"):
     return np.concatenate([np.reshape(v, -1, order=order) for v in vals])
 
 
+class _ObsResIter(Iterator):
+    def __init__(self, obsiter):
+        self.base = obsiter
+
+    def __next__(self):
+        val = next(self.base)
+        if isinstance(val, Exception):
+            raise val
+        return val
+
+
 class _ObsResults(tuple):
     def __getitem__(self, item):
         if isinstance(item, slice):
@@ -53,6 +64,9 @@ class _ObsResults(tuple):
             if isinstance(val, Exception):
                 raise AtError(f"Evaluation failed: {val.args[0]}") from val
             return val
+
+    def __iter__(self):
+        return _ObsResIter(super().__iter__())
 
 
 class ObservableList(list):
@@ -265,7 +279,7 @@ class ObservableList(list):
             """Evaluate a single observable."""
 
             def check_error(data, refpts):
-                return data if isinstance(data, AtError) else data[refpts]
+                return data if isinstance(data, Exception) else data[refpts]
 
             obsneeds = obs.needs
             obsrefs = getattr(obs, "_boolrefs", None)
@@ -385,7 +399,7 @@ class ObservableList(list):
         trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
             ring, dp=dp, dct=dct, df=df
         )
-        return [obseval(ring, ob) for ob in self]
+        return _ObsResults(obseval(ring, ob) for ob in self)
 
     def check(self) -> bool:
         """Check the evaluation
