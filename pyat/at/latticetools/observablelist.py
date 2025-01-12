@@ -62,7 +62,7 @@ class _ObsResults(tuple):
         else:
             val = super().__getitem__(item)
             if isinstance(val, Exception):
-                raise AtError(f"Evaluation failed: {val.args[0]}") from val
+                raise type(val)(val.args[0]) from val
             return val
 
     def __iter__(self):
