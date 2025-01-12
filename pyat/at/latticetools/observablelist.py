@@ -49,10 +49,7 @@ class _ObsResIter(Iterator):
         self.base = obsiter
 
     def __next__(self):
-        val = next(self.base)
-        if isinstance(val, Exception):
-            raise val
-        return val
+        return Observable.check_value(next(self.base))
 
 
 class _ObsResults(tuple):
@@ -60,10 +57,7 @@ class _ObsResults(tuple):
         if isinstance(item, slice):
             return _ObsResults(super().__getitem__(item))
         else:
-            val = super().__getitem__(item)
-            if isinstance(val, Exception):
-                raise type(val)(val.args[0]) from val
-            return val
+            return Observable.check_value(super().__getitem__(item))
 
     def __iter__(self):
         return _ObsResIter(super().__iter__())

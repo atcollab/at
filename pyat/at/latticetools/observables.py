@@ -353,13 +353,16 @@ class Observable:
         """
         return self.value is not None
 
+    @staticmethod
+    def check_value(value):
+        if isinstance(value, Exception):
+            raise type(value)(value.args[0]) from value
+        return value
+
     @property
     def value(self):
         """Value of the observable."""
-        val = self._value
-        if isinstance(val, Exception):
-            raise type(val)(val.args[0]) from val
-        return val
+        return self.check_value(self._value)
 
     @property
     def weight(self):
@@ -528,7 +531,9 @@ class ElementObservable(Observable):
         ok = super().check()
         shp = self._shape
         if ok and shp and shp[0] <= 0:
-            raise AtError(f"Observable {self.name!r}: No location selected in the lattice.")
+            raise AtError(
+                f"Observable {self.name!r}: No location selected in the lattice."
+            )
         return ok
 
     def _all_lines(self):
