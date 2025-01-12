@@ -330,9 +330,12 @@ class Observable:
         """
         for d in data:
             if isinstance(d, Exception):
-                self._value = d
+                errtype = type(d)
+                err = errtype(f"Evaluation of {self.name} failed: {d.args[0]}")
+                err.__cause__ = d
+                self._value = err
                 self._shape = None
-                return d
+                return err
 
         val = np.asarray(self.fun(*data, *self.args, **self.kwargs))
         if initial:
@@ -357,7 +360,7 @@ class Observable:
         """Value of the observable."""
         val = self._value
         if isinstance(val, Exception):
-            raise AtError(f"Evaluation of {self.name} failed: {val.args[0]}") from val
+            raise val
         return val
 
     @property
