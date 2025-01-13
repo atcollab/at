@@ -75,9 +75,6 @@ if ispc()
 elseif ismac()
     mapc=make_flags(cflags, [ldflags {'-Wl,-exported_symbol,_trackFunction'}]);
     mapcpp=make_flags(cppflags, [ldflags {'-Wl,-exported_symbol,_trackFunction'}]);
-    % exportflag = sprintf('VERSIONMAP="%s"',fullfile(pdir, 'trackFunctionMAC.mapext'));
-    % mapc=[mexflags {exportflag, 'LINKEXPORT=""'}];
-    % mapcpp=[mexcpp {exportflag, 'LINKEXPORT=""'}];
 else
     exportflag = sprintf('VERSIONMAP="%s"',fullfile(pdir, 'mexFunctionGLNX86.mapext'));
     mapc=[mexflags {exportflag, 'LINKEXPORT=""'}];
