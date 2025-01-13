@@ -86,7 +86,7 @@ class _ModFun:
         self.statfun = statfun
 
     def __call__(self, *a):
-        return self.statfun(self.fun(*a))
+        return self.statfun(self.fun(*a), axis=0)
 
 
 class _ArrayAccess:
@@ -338,10 +338,6 @@ class Observable:
     def weight(self):
         """Observable weight."""
         return np.broadcast_to(self.w, np.asarray(self._value).shape)
-
-    @weight.setter
-    def weight(self, w):
-        self.w = w
 
     @property
     def weighted_value(self):
