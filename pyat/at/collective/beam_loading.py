@@ -154,6 +154,8 @@ class BeamLoadingElement(RFCavity, Collective):
             cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
             buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
                 (default 0)
+            detune_angle:      Fixed detuning from optimal tuning angle. [rad]
+            
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -165,9 +167,9 @@ class BeamLoadingElement(RFCavity, Collective):
             raise TypeError('cavitymode has to be an ' +
                             'instance of CavityMode')
         zcuts = kwargs.pop('ZCuts', None)
-        phil = kwargs.pop('phil', 0)
         energy = ring.energy
         harmonic_number = numpy.round(frequency*ring.circumference/clight)
+        self.detune_angle = kwargs.pop('detune_angle', 0)
         self.Rshunt = rshunt
         self.Qfactor = qfactor
         self.NormFact = kwargs.pop('NormFact', 1.0)
@@ -199,7 +201,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.zeros(2)
         self._vgen = numpy.zeros(2)
         self._vcav = numpy.array([self.Voltage,
-                                  numpy.pi/2-self._phis-phil])
+                                  numpy.pi/2-self._phis-self.detune_angle])
         self.clear_history(ring=ring)
         
     def is_compatible(self, other):
