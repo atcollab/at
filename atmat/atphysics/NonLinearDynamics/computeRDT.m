@@ -6,27 +6,35 @@ function RDT=computeRDT(ring, index, varargin)
 %   
 %   RDT=computeRDT(ring, index, varargin)
 %
+%   INPUTS
 %   ring is the AT lattice
 %   index is the vector of indexes where one wants to compute RDTs
 %   The additional arguments can be up to five strings:
 %   chromatic, coupling, geometric1, geometric2 and tuneshifts
+%
+%   OPTIONS (order does not matter)
+%   dp: Default 0. Energy offset to calculate the optics parameters.
 %   
-%   example:
+%   EXAMPLES
 %   RDT=computeRDT(ring, indexBPM, 'geometric1', 'tuneshifts');
 %   creates an array of structs (the length of the array is the number of 
 %   indexes where you want to compute driving terms) with first order
 %   geometric driving terms and tune shifts with amplitude.
 %   The driving terms are complex numbers, the tune shifts are real.
 %
+%   RDT=computeRDT(ring, indexBPM, 'geometric1', 'dp',0.01);
+%   Calculate the first order geometric RDTs using the optics with
+%       0.01 energy offset.
 
 naddvar=length(varargin);
+[dp,args] = getoption(varargin,'dp',0);
 chromatic=0;
 coupling=0;
 geometric1=0;
 geometric2=0;
 tuneshifts=0;
 for ii=1:naddvar
-    switch varargin{ii}
+    switch args{ii}
         case 'chromatic'
             chromatic=1;
         case 'coupling'
@@ -55,7 +63,7 @@ end
 
 indDQSO=findcells(ring,'Class','Bend','Quadrupole','Sextupole','Octupole','Multipole');
 
-[~,AVEBETA,AVEMU,AVEDISP,~,~]=atavedata(ring,0,1:length(ring));
+[~,AVEBETA,AVEMU,AVEDISP,~,~]=atavedata(ring,dp,1:length(ring));
 
 Lin=atlinopt(ring,0,1:(length(ring)+1));
 
