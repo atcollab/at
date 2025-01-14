@@ -40,10 +40,10 @@ jobs:
     - name: Atmexall
       uses: matlab-actions/run-command@v2
       with:
-        command: run('atmat/atpath');githubsetup();
+        command: run('atmat/atpath');githubsetup('-v');
 
     - name: Build and install at
-      run: python -m pip install .
+      run: python -m pip install -v .
 
     - name: Run tests
       uses: matlab-actions/run-command@v2
