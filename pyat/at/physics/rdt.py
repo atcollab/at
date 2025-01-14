@@ -400,6 +400,7 @@ def get_rdts(
     second_order: bool = False,
     use_mp: bool = False,
     pool_size: int = None,
+    dp: float = 0.0,
 ):
     """
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
@@ -443,6 +444,7 @@ def get_rdts(
           Computation is significantly longer using this method
         use_mp: Activate parallel calculation
         pool_size: Number of processes used for parallelization
+        dp: default 0. Energy offset to calculate the optics parameters.
 
     Returns:
         rdts: rdt data (complex) at refpts
@@ -502,7 +504,7 @@ def get_rdts(
 
     refpts = ring.uint32_refpts(refpts)
     idx_mag = ring.get_uint32_index(Multipole)
-    lo, avebeta, avemu, avedisp, *_ = ring.avlinopt(refpts=All)
+    lo, avebeta, avemu, avedisp, *_ = ring.avlinopt(refpts=All,dp=dp)
 
     sall = ring.get_s_pos(All)
     smag = sall[idx_mag]
