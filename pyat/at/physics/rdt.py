@@ -504,7 +504,7 @@ def get_rdts(
 
     refpts = ring.uint32_refpts(refpts)
     idx_mag = ring.get_uint32_index(Multipole)
-    lo, avebeta, avemu, avedisp, *_ = ring.avlinopt(refpts=All,dp=dp)
+    lo, avebeta, avemu, avedisp, *_ = ring.avlinopt(refpts=All, dp=dp)
 
     sall = ring.get_s_pos(All)
     smag = sall[idx_mag]
