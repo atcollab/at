@@ -1471,6 +1471,12 @@ class EnergyLoss(_DictLongtMotion, Element):
     def __init__(self, family_name: str, energy_loss: float, **kwargs):
         """Energy loss element
 
+        the :py:class:`EnergyLoss` element is taken into account in
+        :py:func:`.radiation_parameters`: it adds damping by contributing to the
+        :math:`I_2` integral, thus reducing the equilibrium emittance. But it does not
+        generate any diffusion. This makes sense only if the losses summarised in
+        the element occur in non-dispersive locations.
+
         Args:
             family_name:    Name of the element
             energy_loss:    Energy loss [eV]
