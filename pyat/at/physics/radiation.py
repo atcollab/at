@@ -17,11 +17,12 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy as np
 from scipy.linalg import inv, det, solve_sylvester
 
-from ..lattice import Dipole, Wiggler, DConstant, test_mode
+from ..lattice import Dipole, Wiggler, EnergyLoss, DConstant, test_mode
 from ..lattice import Lattice, Element, check_radiation, Refpts, All
 from ..lattice import Quadrupole, Multipole, QuantumDiffusion
 from ..lattice import Collective, SimpleQuantDiff
 from ..lattice import frequency_control, set_value_refpts
+from ..constants import Cgamma
 from . import ELossMethod
 from . import find_mpole_raddiff_matrix, FDW, get_tunes_damp
 from . import find_orbit6, find_m66, find_elem_m66, Orbit
@@ -404,7 +405,13 @@ def get_radiation_integrals(
         di5 = max(H0 * di3, d5lim)
         return np.array([di1, di2, di3, di4, di5])
 
+    def eloss_radiation(elem: EnergyLoss, coef):
+        # Assuming no diffusion
+        di2 = elem.EnergyLoss / coef
+        return np.array([0.0, di2, 0.0, 0.0, 0.0])
+
     Brho = ring.BRho
+    elosscoef = Cgamma / 2.0 / pi * ring.energy**4
     integrals = np.zeros((5,))
 
     if twiss is None:
@@ -418,6 +425,8 @@ def get_radiation_integrals(
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != "DriftPass":
             integrals += wiggler_radiation(el, vini)
+        elif isinstance(el, EnergyLoss):
+            integrals += eloss_radiation(el, elosscoef)
     return tuple(integrals)
 
 

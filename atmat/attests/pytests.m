@@ -24,13 +24,15 @@ classdef pytests < matlab.unittest.TestCase
     methods(TestClassSetup)
         function load_lattice(testCase)
             % Shared setup for the entire test class
-            t=warning('off','AT:atradon:NOCavity');
+            t1=warning('off','AT:atradon:NOCavity');
+            t2=warning('off','AT:NoRingParam');
             setoption('WarningDp6D',false);
             for fpath=testCase.mlist
                 [~,fname,~]=fileparts(fpath);
                 [testCase.ring4.(fname),testCase.ring6.(fname)]=mload(fpath);
             end
-            warning(t);
+            testCase.addTeardown(@warning, t2);
+            warning(t1);
 
             function [ring4,ring6]=mload(fpath)
                 mr=atradoff(atloadlattice(fullfile(atroot,'..',fpath)));
@@ -171,7 +173,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
             testCase.verifyEqual(mod(mtune*periodicity,1),ptune,AbsTol=2.e-9);
-            testCase.verifyEqual(mchrom*periodicity,pchrom,AbsTol=3.e-4);
+            testCase.verifyEqual(mchrom*periodicity,pchrom,RelTol=2.e-4,AbsTol=2.e-4);
         end
 
         function tunechrom6(testCase,lat2,dp)

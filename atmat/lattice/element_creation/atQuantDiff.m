@@ -1,5 +1,5 @@
 function elem=atQuantDiff(fname,varargin)
-%atQuantDiff creates a quantum diffusion element
+%atQuantDiff creates a quantum diffusion element.
 %
 %ELEM=ATQUANTDIFF(FAMNAME,DIFFMAT) uses the given diffusion matrix
 %   FAMNAME:   family name
@@ -14,9 +14,9 @@ function elem=atQuantDiff(fname,varargin)
 %   ORBIT:	closed orbit at beginning of the ring 
 %           (this option is useful for the islands)
 %
-%  The optional field Seed can be added. In that case, the seed of the
-%  random number generator is set at the first turn.
-%  ELEM=ATQUANTDIFF(FAMNANE,RING,'Seed',4)
+%The default pass method is 'QuantDiffPass' which uses a global
+%pseudo-random pcg32 stream inplemented in C. More details at:
+%https://github.com/atcollab/at/discussions/879
 %
 %See also quantumDiff
 
