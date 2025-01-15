@@ -162,7 +162,7 @@ global THERING %#ok<GVMIS>
             fprintf('                     E: \t% 4.5f\n', smm.damping(3));
             fprintf('   Radiation Loss: \t\t% 4.5f [keV]\n', smm.radiation*1e6);
             fprintf('   Natural Energy Spread: \t% 4.5e\n', smm.naturalEnergySpread);
-            fprintf('   Natural Emittance: \t\t% 4.5e [mrad]\n', smm.naturalEmittance);
+            fprintf('   Natural Emittance: \t\t% 4.5e [m]\n', smm.naturalEmittance);
             fprintf('   Radiation Damping H: \t% 4.5f [ms] or %4.2f turns\n', smm.radiationDamping(1)*1e3, smm.radiationDamping(1)/smm.revTime);
             fprintf('                     V: \t% 4.5f [ms] or %4.2f turns\n', smm.radiationDamping(2)*1e3, smm.radiationDamping(2)/smm.revTime);
             fprintf('                     E: \t% 4.5f [ms] or %4.2f turns\n', smm.radiationDamping(3)*1e3, smm.radiationDamping(3)/smm.revTime);
