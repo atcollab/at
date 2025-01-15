@@ -1,8 +1,8 @@
-function elem=atvariablemultipole(fname, mode, varargin)
-% ATVARIABLEMULTIPOLE Creates a variable thin multipole element
+function elem=atvariablethinmultipole(fname, mode, varargin)
+% ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
-%  ATVARIABLEMULTIPOLE(FAMNAME,MODE)
-%  ATVARIABLEMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE)
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
 %
 %  INPUTS
 %    FNAME          Family name 
@@ -69,15 +69,15 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %  EXAMPLES
 %
 % % Create a sinusoidal skew quadrupole with amplitude 0.0001  and frequency 1 kHz
-% >> atvariablemultipole('ACSKEW','SINE','AmplitudeA',[0,1.e-4],'FrequencyA',1.e3);
+% >> atvariablethinmultipole('ACSKEW','SINE','AmplitudeA',[0,1.e-4],'FrequencyA',1.e3);
 %
 % % Create a white noise horizontal dipole excitation of amplitude 0.1 mrad
-% >> atvariablemultipole('ACKICK','WHITENOISE','AmplitudeB',1.e-4);
+% >> atvariablethinmultipole('ACKICK','WHITENOISE','AmplitudeB',1.e-4);
 %
 % % Create a vertical kick in the first turn and the opposite kick in the second
 % % turn.
 % >> funca = [1 -1 0];
-% >> atvariablemultipole('CUSTOMFUNC','ARBITRARY','AmplitudeA',1e-4, ...
+% >> atvariablethinmultipole('CUSTOMFUNC','ARBITRARY','AmplitudeA',1e-4, ...
 %                     'FuncA',funca,'Periodic',false);
 %
 %
@@ -103,14 +103,14 @@ function elem=atvariablemultipole(fname, mode, varargin)
 % note that the position of the element on the ring has no effect, the phase
 % could be used to add any delay due to the position along s.
 % The following is an example of the SINE mode of an skew quad:
-%     atvariablemultipole('VAR_SKEW','SINE',
+%     atvariablethinmultipole('VAR_SKEW','SINE',
 %         'AmplitudeA',[0,skewa2],'FrequencyA',freqA,'PhaseA',phaseA)
 % The values of the sin function could be limited to be above a defined
 % threshold using ``Sin[AB]above``. For example, you could create a half-sin
 % by setting ``Sin[AB]above`` to zero.
 %
 % The WHITENOISE mode requires the amplitude of either A or B. For example
-%     atvariablemultipole('MYNOISE','WHITENOISE',
+%     atvariablethinmultipole('MYNOISE','WHITENOISE',
 %         'AmplitudeA',[noiseA1])
 % creates a gaussian vertical noise of amplitude noiseA1. The gaussian
 % distribution is generated with zero-mean and one standard deviation from
@@ -132,7 +132,7 @@ function elem=atvariablemultipole(fname, mode, varargin)
 % The function value is then multiplied by Amplitude A and/or B.
 % For example, the following is a positive vertical kick in the first turn,
 % negative on the second turn, and zero on the third turn.
-%     atvariablemultipole('CUSTOMFUNC','ARBITRARY', ...
+%     atvariablethinmultipole('CUSTOMFUNC','ARBITRARY', ...
 %         'AmplitudeA',1e-4,'FuncA',[1 -1 0],'Periodic',True);
 % by default the array is assumed non periodic. The function has
 % no effect on the particle in turns exceeding the function definition.
