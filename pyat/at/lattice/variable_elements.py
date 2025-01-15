@@ -1,4 +1,4 @@
-"""VariableMultipole."""
+"""VariableThinMultipole."""
 
 from __future__ import annotations
 
@@ -11,18 +11,18 @@ import numpy as np
 from .elements import Element, _array
 from .utils import AtError, AtWarning
 
-__all__ = ["ACMode", "VariableMultipole"]
+__all__ = ["ACMode", "VariableThinMultipole"]
 
 
 class ACMode(IntEnum):
-    """Class to define the ``VariableMultipole`` excitation mode."""
+    """Class to define the ``VariableThinMultipole`` excitation mode."""
 
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
 
 
-class VariableMultipole(Element):
+class VariableThinMultipole(Element):
     """Turn by turn variable thin multipole."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
@@ -53,7 +53,7 @@ class VariableMultipole(Element):
     )
 
     def __init__(self, family_name: str, mode: int, **kwargs):
-        r"""VariableMultipole initialization.
+        r"""VariableThinMultipole initialization.
 
         Default pass method: ``VariableThinMPolePass``.
 
@@ -64,7 +64,7 @@ class VariableMultipole(Element):
         particle time delay. All modes could be ramped.
 
         Keep in mind that as this element varies on every turn, any ring
-        containing a VariableMultipole may change after tracking.
+        containing a VariableThinMultipole may change after tracking.
 
         There are three different modes that could be set:
             SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
@@ -78,7 +78,7 @@ class VariableMultipole(Element):
         note that the position of the element on the ring has no effect, the phase
         could be used to add any delay due to the position along s. The following is
         an example of the SINE mode of an skew quad
-            eleskew = at.VariableMultipole('VAR_SKEW',at.ACMode.SINE,
+            eleskew = at.VariableThinMultipole('VAR_SKEW',at.ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
         The values of the sin function could be limited to be above a defined
         threshold using ``Sin[AB]above``. For example, you could create a half-sin
@@ -90,7 +90,7 @@ class VariableMultipole(Element):
         function, therefore using the same stream on all trackings (sequencial or
         parallel). See https://github.com/atcollab/at/discussions/879 for more
         details on the pseudo random stream. For example
-            elenoise = at.VariableMultipole('MYNOISE',at.ACMode.WHITENOISE,
+            elenoise = at.VariableThinMultipole('MYNOISE',at.ACMode.WHITENOISE,
                 AmplitudeA=[noiseA1])
         creates a vertical kick as gaussian noise of amplitude noiseA1.
 
@@ -107,7 +107,7 @@ class VariableMultipole(Element):
         The function `value` is then **multiplied by Amplitude A and/or B**.
         For example, the following is a positive vertical kick in the first turn,
         negative on the second turn, and zero on the third turn.
-            elesinglekick = at.VariableMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
+            elesinglekick = at.VariableThinMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
                 AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
         By default the array is assumed non periodic, the function has no effect
         on the particle in turns exceeding the function definition. If
@@ -172,9 +172,9 @@ class VariableMultipole(Element):
 
         Examples:
 
-            >>> acmpole = at.VariableMultipole('ACSKEW', at.ACMode.SINE, AmplitudeA=[0,amp], FrequencyA=freq)
-            >>> acmpole = at.VariableMultipole('ACHKICK', at.ACMode.WHITENOISE, AmplitudeB=amp)
-            >>> acmpole = at.VariableMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=[0,0,amp], FuncB=fun)
+            >>> acmpole = at.VariableThinMultipole('ACSKEW', at.ACMode.SINE, AmplitudeA=[0,amp], FrequencyA=freq)
+            >>> acmpole = at.VariableThinMultipole('ACHKICK', at.ACMode.WHITENOISE, AmplitudeB=amp)
+            >>> acmpole = at.VariableThinMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=[0,0,amp], FuncB=fun)
 
         """
 
