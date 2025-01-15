@@ -109,9 +109,9 @@ class VariableMultipole(Element):
         negative on the second turn, and zero on the third turn.
             elesinglekick = at.VariableMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
                 AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
-        By default the array is assumed periodic. If ``Periodic`` is set to False
-        it is assumed that the function has no effect on the particle in turns
-        exceeding the function definition.
+        By default the array is assumed non periodic, the function has no effect
+        on the particle in turns exceeding the function definition. If
+        ``Periodic`` is set to True, the sequence is repeated.
 
 
         Parameters:
@@ -154,7 +154,7 @@ class VariableMultipole(Element):
                 It only has an effect if any of the derivatives is not zero.
             FuncBTimeDelay(float): generate a time offset on the function FUNCB.
                 It only has an effect if any of the derivatives is not zero.
-            Periodic(bool): If True (default) the user defined  is repeated.
+            Periodic(bool): If True the user definition is repeated. Default False.
             Ramps(list): Four values (t0,t1,t2,t3) defining the ramping steps:
 
               * ``t<=t0``: excitation amplitude is zero.
@@ -228,7 +228,7 @@ class VariableMultipole(Element):
             kwargs.setdefault("Func" + a_b + "deriv4", np.zeros(nsamp))
             kwargs.setdefault("Func" + a_b + "TimeDelay", 0)
             kwargs["NSamples" + a_b] = nsamp
-            kwargs.setdefault("Periodic", True)
+            kwargs.setdefault("Periodic", False)
             return kwargs
 
         def _check_ramp(**kwargs) -> _array:
