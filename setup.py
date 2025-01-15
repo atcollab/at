@@ -17,7 +17,7 @@ def select_omp():
     if exists(os.path.join(homeb, "include/omp.h")):  # Homebrew
         return "-I" + os.path.join(homeb, "include"), os.path.join(homeb, "lib")
     elif exists("/opt/local/include/libomp/omp.h"):  # MacPorts
-        return "/opt/local/include/libomp", "/opt/local/lib/libomp"
+        return "-I/opt/local/include/libomp", "/opt/local/lib/libomp"
     else:
         raise FileNotFoundError(
             "\n".join(
