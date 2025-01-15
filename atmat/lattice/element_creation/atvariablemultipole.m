@@ -48,7 +48,7 @@ function elem=atvariablemultipole(fname, mode, varargin)
 %    FuncBTimeDelay TimeDelay to generate a small time offset on the
 %                   function FUNC. It only has an effect if any of the
 %                   derivatives is not zero. Default 0.
-%    Periodic       If true (default) the user input kick list is repeated
+%    Periodic       If true the user input list is repeated. Default: false.
 %    Ramps          Vector (t0, t1, t2, t3) in turn number to define the
 %                   ramping of the excitation:
 %                   * t<=t0: excitation amplitude is zero.
@@ -134,9 +134,10 @@ function elem=atvariablemultipole(fname, mode, varargin)
 % negative on the second turn, and zero on the third turn.
 %     atvariablemultipole('CUSTOMFUNC','ARBITRARY', ...
 %         'AmplitudeA',1e-4,'FuncA',[1 -1 0],'Periodic',True);
-% by default the array is assumed periodic. If Periodic is set to False
-% it is assumed that the function has no effect on the particle in turns
-% exceeding the function definition.
+% by default the array is assumed non periodic. The function has
+% no effect on the particle in turns exceeding the function definition.
+% If Periodic is set to True, the sequence is repeated.
+
 %
 
 % Input parser for option
@@ -200,7 +201,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
                 if ~isfield(rsrc,'Periodic')
-                    rsrc.Periodic = true;
+                    rsrc.Periodic = false;
                 end
             end
         end
