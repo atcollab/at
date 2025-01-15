@@ -202,7 +202,7 @@ class VariableMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        def _set_mode(mode: int, a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_thismode(mode: int, a_b: str, **kwargs) -> dict[str, Any]:
             if mode == ACMode.SINE:
                 kwargs = _set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
@@ -247,7 +247,7 @@ class VariableMultipole(Element):
             for key, value in amp_aux.items():
                 if value is not None:
                     kwargs["Amplitude" + key] = value
-                    kwargs = _set_mode(mode, key, **kwargs)
+                    kwargs = _set_thismode(mode, key, **kwargs)
             maxorder = _getmaxorder(amp_aux["A"], amp_aux["B"])
             kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
             for key in amp_aux:
