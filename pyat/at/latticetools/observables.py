@@ -57,9 +57,9 @@ __all__ = [
 ]
 
 from collections.abc import Callable, Set
+from functools import partial
 from enum import Enum
 from itertools import repeat
-from math import pi
 from typing import Union
 
 # For sys.version_info.minor < 9:
@@ -100,17 +100,32 @@ class _ArrayAccess:
         return data if index is None else data[self.index]
 
 
-class _RecordAccess:
-    """Access selected items in a record array."""
+def _record_access(param, index, data):
+    """Access a selected item in a record array"""
+    val = getattr(data, param)
+    return val if index is None else val[index]
 
-    def __init__(self, fieldname: str, index):
-        self.index = index
-        self.fieldname = fieldname
 
-    def __call__(self, data):
-        index = self.index
-        data = getattr(data, self.fieldname)
-        return data if index is None else data[self.index]
+def _muf_access(_, index, data):
+    mu = _record_access("mu", index, data)
+    return np.remainder(mu, 2.0 * np.pi)
+
+
+def _mu2pi_access(_, index, data):
+    mu = _record_access("mu", index, data)
+    return mu / 2.0 / np.pi
+
+
+def _mu2pif_access(_, index, data):
+    mu = _record_access("mu", index, data)
+    return np.remainder(mu / 2.0 / np.pi, 1.0)
+
+
+_opdata = {
+    "muf": _muf_access,
+    "mu2pi": _mu2pi_access,
+    "mu2pif": _mu2pif_access,
+}
 
 
 def _all_rows(index: RefIndex | None):
@@ -127,18 +142,18 @@ class _Tune:
     """Get integer tune from the phase advance."""
 
     def __init__(self, idx: RefIndex):
-        self.fun = _RecordAccess("mu", _all_rows(idx))
+        self.fun = partial(_record_access, "mu", _all_rows(idx))
 
     def __call__(self, data):
         mu = self.fun(data)
-        return np.squeeze(mu, axis=0) / 2 / pi
+        return np.squeeze(mu, axis=0) / 2.0 / np.pi
 
 
 class _Ring:
     """Get an attribute of a lattice element."""
 
     def __init__(self, attrname, index, refpts):
-        self.get_val = _RecordAccess(attrname, index)
+        self.get_val = partial(_record_access, attrname, index)
         self.refpts = refpts
 
     def __call__(self, ring):
@@ -290,7 +305,7 @@ class Observable:
             vmin = None
             vmax = None
         else:
-            target = np.broadcast_to(self.target, np.asarray(vnow).shape)
+            target = np.broadcast_to(self.target, vnow.shape)
             vmin = target + self.lbound
             vmax = target + self.ubound
         values = self._line("", self.initial, vnow, vmin, vmax, deviation)
@@ -315,29 +330,44 @@ class Observable:
         """
         for d in data:
             if isinstance(d, Exception):
-                self._value = d
-                return d
+                message = f"Evaluation of {self.name} failed: {d.args[0]}"
+                err = type(d)(message).with_traceback(d.__traceback__)
+                self._value = err
+                return err
 
-        val = self.fun(*data, *self.args, **self.kwargs)
-        if self._shape is None:
-            self._shape = np.asarray(val).shape
+        val = np.asarray(self.fun(*data, *self.args, **self.kwargs))
         if initial:
             self.initial = val
+        self._shape = val.shape
         self._value = val
         return val
+
+    def check(self) -> bool:
+        """Check the evaluation
+
+        Returns:
+            ok: :py:obj:`True` if is evaluation done, :py:obj:`False` otherwise
+
+        Raises:
+            AtError:    if the value is doubtful: evaluation failed, empty value…
+        """
+        return self.value is not None
+
+    @staticmethod
+    def check_value(value):
+        if isinstance(value, Exception):
+            raise type(value)(value.args[0]) from value
+        return value
 
     @property
     def value(self):
         """Value of the observable."""
-        val = self._value
-        if isinstance(val, Exception):
-            raise AtError(f"Evaluation of {self.name} failed: {val.args[0]}") from val
-        return val
+        return self.check_value(self._value)
 
     @property
     def weight(self):
         """Observable weight."""
-        return np.broadcast_to(self.w, np.asarray(self._value).shape)
+        return np.broadcast_to(self.w, self._value.shape)
 
     @property
     def weighted_value(self):
@@ -351,7 +381,7 @@ class Observable:
         """Deviation from target value, computed as
         :pycode:`deviation = value-target`.
         """
-        vnow = np.asarray(self.value)
+        vnow = self.value
         vsh = vnow.shape
         if self.target is None:
             deviation = np.broadcast_to(0.0, vsh)
@@ -497,6 +527,15 @@ class ElementObservable(Observable):
         self._excluded = None
         self._locations = [""]
 
+    def check(self):
+        ok = super().check()
+        shp = self._shape
+        if ok and shp and shp[0] <= 0:
+            raise AtError(
+                f"Observable {self.name!r}: No location selected in the lattice."
+            )
+        return ok
+
     def _all_lines(self):
         if self.summary:
             return super()._all_lines()
@@ -513,7 +552,7 @@ class ElementObservable(Observable):
                     vmin = repeat(None)
                     vmax = repeat(None)
                 else:
-                    target = np.broadcast_to(self.target, np.asarray(vnow).shape)
+                    target = np.broadcast_to(self.target, vnow.shape)
                     vmin = target + self.lbound
                     vmax = target + self.ubound
             vini = self.initial
@@ -574,7 +613,7 @@ class GeometryObservable(ElementObservable):
         if param not in self._field_list:
             raise ValueError(f"Expected {param!r} to be one of {self._field_list!r}")
         name = self._set_name(name, "geometry", param)
-        fun = _RecordAccess(param, None)
+        fun = partial(_record_access, param, None)
         needs = {Need.GEOMETRY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -705,7 +744,7 @@ class _GlobalOpticsObservable(Observable):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = _RecordAccess(param, plane_(plane, "index"))
+            fun = partial(_record_access, param, plane_(plane, "index"))
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
         super().__init__(fun, needs=needs, name=name, **kwargs)
@@ -730,7 +769,7 @@ class LocalOpticsObservable(ElementObservable):
         r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
-            param:          Optics parameter name (see :py:func:`.get_optics`)
+            param:          :ref:`Optics parameter name <localoptics_param>`
               or :ref:`user-defined evaluation function <localoptics_eval>`
             plane:          Index in the parameter array, If :py:obj:`Ellipsis`,
               the whole array is specified
@@ -756,6 +795,45 @@ class LocalOpticsObservable(ElementObservable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. _localoptics_param:
+        .. rubric:: Optics parameter name
+
+        In addition to :py:func:`.get_optics` parameter names, LocalOpticsObservable
+        adds 3 parameters: *muf*, *mu2pi* and *mu2pif*:
+
+        ================    ===================================================
+        **s_pos**           longitudinal position [m]
+        **M**               (6, 6) transfer matrix M from the beginning of ring
+                            to the entrance of the element
+        **closed_orbit**    (6,) closed orbit vector
+        **dispersion**      (4,) dispersion vector
+        **A**               (6, 6) A-matrix
+        **R**               (3, 6, 6) R-matrices
+        **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
+        **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
+        **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+        **mu2pi**           :math:`\left[ \mu_x,\mu_y \right]/2\pi`, reduced betatron
+                            phase
+        **muf**             :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+                            (modulo :math:`2\pi`)
+        **mu2pif**          :math:`\mathrm{frac}(\left[ \mu_x,\mu_y \right]/2\pi)`,
+                            fractional part of the reduced betatron phase
+        **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
+                            is :py:obj:`True`: chromatic amplitude function
+        **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
+                            is :py:obj:`True`: chromatic phase function
+        **dalpha**          (2,) alpha derivative vector
+                            (:math:`\Delta \alpha/ \delta_p`)
+        **dbeta**           (2,) beta derivative vector
+                            (:math:`\Delta \beta/ \delta_p`)
+        **dmu**             (2,) mu derivative vector
+                            (:math:`\Delta \mu/ \delta_p`)
+        **ddispersion**     (4,) dispersion derivative vector
+                            (:math:`\Delta D/ \delta_p`)
+        **dR**              (3, 6, 6) R derivative vector
+                            (:math:`\Delta R/ \delta_p`)
+        ================    ===================================================
 
         .. _localoptics_eval:
         .. rubric:: User-defined evaluation function
@@ -804,11 +882,12 @@ class LocalOpticsObservable(ElementObservable):
 
         needs = {Need.LOCALOPTICS}
         name = self._set_name(name, param, ax_(plane, "code"))
+        index = _all_rows(ax_(plane, "index"))
         if callable(param):
             fun = param
         else:
-            fun = _RecordAccess(param, _all_rows(ax_(plane, "index")))
-            if param == "mu" or all_points:
+            fun = partial(_opdata.get(param, _record_access), param, index)
+            if param in {"mu", "mu2pi"} or all_points:
                 needs.add(Need.ALL_POINTS)
             if param in {"W", "Wp", "dalpha", "dbeta", "dmu", "ddispersion", "dR"}:
                 needs.add(Need.W_FUNCTIONS)
@@ -945,7 +1024,7 @@ class EmittanceObservable(Observable):
         if callable(param):
             fun = param
         else:
-            fun = _RecordAccess(param, plane_(plane, "index"))
+            fun = partial(_record_access, param, plane_(plane, "index"))
         needs = {Need.EMITTANCE}
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
