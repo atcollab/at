@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from enum import IntEnum
 from typing import Any
 
@@ -37,16 +38,16 @@ class VariableMultipole(Element):
         SinBabove=float,
         NsamplesA=int,
         NsamplesB=int,
-        FuncA=_array,
-        FuncAderiv1=_array,
-        FuncAderiv2=_array,
-        FuncAderiv3=_array,
-        FuncAderiv4=_array,
-        FuncB=_array,
-        FuncBderiv1=_array,
-        FuncBderiv2=_array,
-        FuncBderiv3=_array,
-        FuncBderiv4=_array,
+        FuncA=Sequence[float],
+        FuncAderiv1=Sequence[float],
+        FuncAderiv2=Sequence[float],
+        FuncAderiv3=Sequence[float],
+        FuncAderiv4=Sequence[float],
+        FuncB=Sequence[float],
+        FuncBderiv1=Sequence[float],
+        FuncBderiv2=Sequence[float],
+        FuncBderiv3=Sequence[float],
+        FuncBderiv4=Sequence[float],
         Ramps=_array,
         Periodic=bool,
     )
@@ -131,23 +132,23 @@ class VariableMultipole(Element):
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
             SinAabove(float): Limit the sin function to be above. Default -1.
             SinBabove(float): Limit the sin function to be above. Default -1.
-            FuncA(list):   User defined tbt list for PolynomA
-            FuncB(list):   User defined tbt list for PolynomB
-            FuncAderiv1(list): tbt list for PolynomA 1st derivative wrt tau.
+            FuncA(Sequence[float]):   User defined tbt list for PolynomA
+            FuncB(Sequence[float]):   User defined tbt list for PolynomB
+            FuncAderiv1(Sequence[float]): tbt list for PolynomA 1st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv1(list): tbt list for PolynomB 1st derivative wrt tau.
+            FuncBderiv1(Sequence[float]): tbt list for PolynomB 1st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncAderiv2(list): tbt list for PolynomA 2st derivative wrt tau.
+            FuncAderiv2(Sequence[float]): tbt list for PolynomA 2st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv2(list): tbt list for PolynomB 2st derivative wrt tau.
+            FuncBderiv2(Sequence[float]): tbt list for PolynomB 2st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncAderiv3(list): tbt list for PolynomA 3st derivative wrt tau.
+            FuncAderiv3(Sequence[float]): tbt list for PolynomA 3st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv3(list): tbt list for PolynomB 3st derivative wrt tau.
+            FuncBderiv3(Sequence[float]): tbt list for PolynomB 3st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncAderiv4(list): tbt list for PolynomA 4st derivative wrt tau.
+            FuncAderiv4(Sequence[float]): tbt list for PolynomA 4st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv4(list): tbt list for PolynomB 4st derivative wrt tau.
+            FuncBderiv4(Sequence[float]): tbt list for PolynomB 4st derivative wrt tau.
                 Default: zeros array of the custom function length.
             FuncATimeDelay(float): generate a time offset on the function FUNCA.
                 It only has an effect if any of the derivatives is not zero.
