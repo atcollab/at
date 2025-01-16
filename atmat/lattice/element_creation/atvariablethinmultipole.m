@@ -128,7 +128,7 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
 % the the sixth coordinate divided by the speed of light.
 % tau could be offset using FuncATimeDelay or FuncBTimeDelay.
-%   tau -> tau + Func[AB]TimeDelay
+%   tau <- tau - Func[AB]TimeDelay
 % The function value is then multiplied by Amplitude A and/or B.
 % For example, the following is a positive vertical kick in the first turn,
 % negative on the second turn, and zero on the third turn.
