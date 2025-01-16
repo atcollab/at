@@ -143,7 +143,7 @@ _PASS_MAP = {
     "AperturePass": elt.Aperture,
     "IdTablePass": idtable_element.InsertionDeviceKickMap,
     "GWigSymplecticPass": elt.Wiggler,
-    "VariableThinMPolePass": variable_elements.VariableMultipole,
+    "VariableThinMPolePass": variable_elements.VariableThinMultipole,
 }
 
 # Maps python class name to Matlab class
