@@ -314,7 +314,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         FuncBderiv4=atGetOptionalDoubleArray(ElemData,"FuncBderiv4"); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
         FuncBTimeDelay=atGetOptionalDouble(ElemData,"FuncBTimeDelay", 0); check_error();
-        Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
+        Periodic=atGetOptionalLong(ElemData,"Periodic", 0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         ElemA = (struct elemab*)atMalloc(sizeof(struct elemab));
         ElemB = (struct elemab*)atMalloc(sizeof(struct elemab));
@@ -357,8 +357,14 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
+    int i;
 
     VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->common_rng);
+    /* reset the polynom values*/
+    for (i = 0; i < Elem->MaxOrder + 1; i++){
+        Elem->PolynomA[i] = 0;
+        Elem->PolynomB[i] = 0;
+    };
     return Elem;
 }
 
@@ -421,7 +427,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         FuncBderiv4=atGetOptionalDoubleArray(ElemData,"FuncBderiv4"); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
         FuncBTimeDelay=atGetOptionalDouble(ElemData,"FuncBTimeDelay", 0); check_error();
-        Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
+        Periodic=atGetOptionalLong(ElemData,"Periodic", 0); check_error();
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
