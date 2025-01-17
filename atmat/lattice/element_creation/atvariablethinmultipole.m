@@ -92,11 +92,14 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % Keep in mind that as this element varies on every turn, and at the end of
 % the tracking PolynomA and PolynomB are set to zero.
 %
+% Passing arrays of zeros as amplitude will initialize the MaxOrder to
+% zero, and the polynom to a single zero.
+%
 % There are three different modes that could be set:
 %   SINE (0), WHITENOISE (1) and ARBITRARY (2).
 % when creating the element use 'SINE', 'WHITENOISE', or 'ARBITRARY'.
 %
-% The SINE mode requires amplitude and frequency for at least A and/or B.
+% The SINE mode requires amplitude and frequency for A and/or B.
 % The jth component of the polynom (A or B) at the nth turn is given by:
 %   amplitude(j)*sin[ TWOPI*frequency*(n*T0 + \tau_p) + phase],
 % where T0 is the revolution period of the ideal ring, and \tau_p is the delay
