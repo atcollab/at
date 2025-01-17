@@ -38,19 +38,66 @@ class VariableThinMultipole(Element):
         SinBabove=float,
         NsamplesA=int,
         NsamplesB=int,
-        FuncA=Sequence,
-        FuncAderiv1=Sequence,
-        FuncAderiv2=Sequence,
-        FuncAderiv3=Sequence,
-        FuncAderiv4=Sequence,
-        FuncB=Sequence,
-        FuncBderiv1=Sequence,
-        FuncBderiv2=Sequence,
-        FuncBderiv3=Sequence,
-        FuncBderiv4=Sequence,
+        FuncA=_array,
+        FuncAderiv1=_array,
+        FuncAderiv2=_array,
+        FuncAderiv3=_array,
+        FuncAderiv4=_array,
+        FuncB=_array,
+        FuncBderiv1=_array,
+        FuncBderiv2=_array,
+        FuncBderiv3=_array,
+        FuncBderiv4=_array,
         Ramps=_array,
         Periodic=bool,
     )
+
+    def _get_amp(amp:float, ramps: _array, t: float):
+        """get_amp returns the input value `amp` when ramps is False.
+
+        If ramps is True, it returns a value linearly interpolated
+        accoding to the ramping turn.
+        """
+        ampt = amp;
+        if ramps != 0:
+            if t <= ramps[0]:
+                ampt = 0.0;
+            elif t <= ramps[1]:
+                ampt = amp * (t - ramps[0]) / (ramps[1] - ramps[0])
+            elif t <= ramps[2]:
+                ampt = amp
+            elif t <= ramps[3]:
+                ampt = amp - amp * (t - ramps[2]) / (ramps[3] - ramps[2])
+            else:
+                ampt = 0.0
+        return ampt
+
+    def _get_pol(self):
+        return 0
+
+    def _check_polynom_values(self, **kwargs):
+        """
+        This function returns the PolynomA and PolynomB
+        used in tracking.
+
+        Parameters
+        turns(int): Default 1. Number of turns to calculate.
+
+        """
+        turns = kwargs.setdefault('turns',1)
+        mode = self.Mode
+        ramps = self.Ramps
+        ampt = _get_amp(amp[order], ramps, turn)
+
+        for t in range(turns):
+            if ramps:
+                #                ramp_value = get_amp(amp
+                ampt = 0
+
+
+
+
+
 
     def __init__(self, family_name: str, mode: int, **kwargs):
         r"""VariableThinMultipole initialization.
@@ -63,11 +110,15 @@ class VariableThinMultipole(Element):
         on every turn depending on the chosen mode, and for some modes on the
         particle time delay. All modes could be ramped.
 
-        Keep in mind that as this element varies on every turn, any ring
-        containing a VariableThinMultipole may change after tracking.
+        Keep in mind that as this element varies on every turn, and at the end of
+        the tracking PolynomA and PolynomB are set to zero.
+
+        Passing arrays of zeros as amplitude will initialize the MaxOrder to
+        zero, and the polynom to a single zero.
 
         There are three different modes that could be set:
             SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
+        For example, use at.ACMode.SINE or 0 to create an sin function element.
 
         The **SINE** mode requires amplitude and frequency for A and/or B.
         The value of the jth component of the polynom (A or B) at the nth turn
@@ -103,7 +154,7 @@ class VariableThinMultipole(Element):
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
         the the sixth coordinate divided by the speed of light.
         tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
-            tau = tau + Func[AB]TimeDelay
+            tau = tau - Func[AB]TimeDelay
         The function `value` is then **multiplied by Amplitude A and/or B**.
         For example, the following is a positive vertical kick in the first turn,
         negative on the second turn, and zero on the third turn.
@@ -132,23 +183,23 @@ class VariableThinMultipole(Element):
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
             SinAabove(float): Limit the sin function to be above. Default -1.
             SinBabove(float): Limit the sin function to be above. Default -1.
-            FuncA(Sequence):   User defined tbt list for PolynomA
-            FuncB(Sequence):   User defined tbt list for PolynomB
-            FuncAderiv1(Sequence): tbt list for PolynomA 1st derivative wrt tau.
+            FuncA(Sequence[float]):   User defined tbt list for PolynomA
+            FuncB(Sequence[float]):   User defined tbt list for PolynomB
+            FuncAderiv1(Sequence[float]): tbt list for PolynomA 1st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv1(Sequence): tbt list for PolynomB 1st derivative wrt tau.
+            FuncBderiv1(Sequence[float]): tbt list for PolynomB 1st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncAderiv2(Sequence): tbt list for PolynomA 2st derivative wrt tau.
+            FuncAderiv2(Sequence[float]): tbt list for PolynomA 2st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv2(Sequence): tbt list for PolynomB 2st derivative wrt tau.
+            FuncBderiv2(Sequence[float]): tbt list for PolynomB 2st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncAderiv3(Sequence): tbt list for PolynomA 3st derivative wrt tau.
+            FuncAderiv3(Sequence[float]): tbt list for PolynomA 3st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv3(Sequence): tbt list for PolynomB 3st derivative wrt tau.
+            FuncBderiv3(Sequence[float]): tbt list for PolynomB 3st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncAderiv4(Sequence): tbt list for PolynomA 4st derivative wrt tau.
+            FuncAderiv4(Sequence[float]): tbt list for PolynomA 4st derivative wrt tau.
                 Default: zeros array of the custom function length.
-            FuncBderiv4(Sequence): tbt list for PolynomB 4st derivative wrt tau.
+            FuncBderiv4(Sequence[float]): tbt list for PolynomB 4st derivative wrt tau.
                 Default: zeros array of the custom function length.
             FuncATimeDelay(float): generate a time offset on the function FUNCA.
                 It only has an effect if any of the derivatives is not zero.
