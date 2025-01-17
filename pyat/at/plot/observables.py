@@ -1,11 +1,15 @@
+from __future__ import annotations
+
+__all__ = ['plot_optics']
+
 from functools import partial
+
 from .generic import baseplot
-from ..lattice import Lattice, Refpts, axis_, plane_
-from ..latticetools import LocalOpticsObservable, TrajectoryObservable
-from ..latticetools import GeometryObservable, ObservableList
+from ..lattice import Lattice, axis_, plane_
+from ..latticetools import LocalOpticsObservable, ObservableList
 
 
-def subscript(plane):
+def _subscript(plane):
     return "".join(str(axis_(i, "index")) for i in plane)
 
 
@@ -14,14 +18,17 @@ _pinfo = dict(
     beta=(r"$\{param}_{{{plane}}}$", r"$\{param}$ [m]", partial(plane_, key="label")),
     gamma=(r"$\{param}_{{{plane}}}$", r"$\{param}$", partial(plane_, key="label")),
     mu=(r"$\{param}_{{{plane}}}$", r"$\{param}$ [rad]", partial(plane_, key="label")),
+    muf=(r"$\mu_{{{plane}}}$", r"$\mu$ [rad]", partial(plane_, key="label")),
+    mu2pi=(r"$\mu_{plane}/2\pi$", r"$\mu/2\pi$", partial(plane_, key="label")),
+    mu2pif=(r"$\mu_{plane}/2 \pi$", r"$\mu/2 \pi$", partial(plane_, key="label")),
     closed_orbit=(r"${{{plane}}}_{{co}}$", "{plane}", partial(axis_, key="code")),
     dispersion=(r"$\eta_{{{plane}}}$", r"$\eta$ [m]", partial(axis_, key="code")),
     s_pos=("s", "s [m]", partial(plane_, key="label")),
-    M=(r"${param}_{{{plane}}}$", "{param}", subscript),
-    A=(r"${param}_{{{plane}}}$", "{param}", subscript),
-    B=(r"${param}_{{{plane}}}$", "{param}", subscript),
-    C=(r"${param}_{{{plane}}}$", "{param}", subscript),
-    R=(r"${param}_{{{plane}}}$", "{param}", subscript),
+    M=(r"${param}_{{{plane}}}$", "{param}", _subscript),
+    A=(r"${param}_{{{plane}}}$", "{param}", _subscript),
+    B=(r"${param}_{{{plane}}}$", "{param}", _subscript),
+    C=(r"${param}_{{{plane}}}$", "{param}", _subscript),
+    R=(r"${param}_{{{plane}}}$", "{param}", _subscript),
     W=(r"${param}_{{{plane}}}$", "{param}", partial(plane_, key="label")),
     Wp=(r"${param}_{{{plane}}}$", "{param}", partial(plane_, key="label")),
     dalpha=(
@@ -47,7 +54,7 @@ _pinfo = dict(
     dR=(
         r"$\partial R_{{{plane}}}/ \partial \delta$",
         r"$\partial R/ \partial \delta$",
-        subscript,
+        _subscript,
     ),
     Trajectory=("{plane}", "{plane}", partial(axis_, key="label")),
     Geometry=("{plane}", "{plane}", partial(plane_, key="label")),
@@ -66,7 +73,7 @@ def _axislabel(param, plane):
     return fmt.format(param=param, plane=code(plane))
 
 
-def plot_optics(ring: Lattice, left: tuple, right: tuple = (), **kwargs):
+def plot_optics(ring: Lattice, left: tuple = (), right: tuple = (), **kwargs):
     """Plot the value of any LocalOpticsObservable
 
     Parameters:
@@ -128,18 +135,28 @@ def plot_optics(ring: Lattice, left: tuple, right: tuple = (), **kwargs):
 
     """
 
-    def plot_function(ring: Lattice, refpts: Refpts, **kwargs):
-        def getobs(refpts, param, plane):
-            if param == "Trajectory":
-                titles.add("Trajectory")
-                return TrajectoryObservable(refpts, plane)
-            elif param == "Geometry":
-                titles.add("Geometry")
-                return GeometryObservable(refpts, plane_(plane, "code"))
-            else:
-                titles.add("Optical functions ")
-                return LocalOpticsObservable(refpts, param, plane)
+    def axdef(arg):
+        """Check the validity of curve definition"""
 
+        def okcurve(v):
+            if isinstance(v, str):
+                return v, None
+            if isinstance(v, tuple) and len(v) == 2 and isinstance(v[0], str):
+                return v
+            else:
+                raise TypeError(f"{v!r}: Wrong curve definition")
+
+        try:
+            c1 = okcurve(arg)
+        except TypeError:
+            if not isinstance(arg, tuple):
+                raise TypeError(f"{arg!r}: Wrong curve definition") from None
+        else:
+            return (c1,)
+
+        return tuple(okcurve(cv) for cv in arg)
+
+    def plot_function(rng: Lattice, refpts, lft, rgt, **kw):
         def process(axes, posdata, data):
             def scan(param, plane):
                 axlabs.add(_axislabel(param, plane))
@@ -150,18 +167,17 @@ def plot_optics(ring: Lattice, left: tuple, right: tuple = (), **kwargs):
             axlabel = ", ".join(axlab for axlab in axlabs)
             return axlabel, posdata, data, legend
 
-        titles = set()
-        obs = ObservableList(getobs(refpts, *plot) for plot in left)
-        obs.extend(getobs(refpts, *plot) for plot in right)
+        obs = ObservableList(LocalOpticsObservable(refpts, *plot) for plot in lft)
+        n1 = len(obs)
+        obs.extend(LocalOpticsObservable(refpts, *plot) for plot in rgt)
+        n2 = len(obs)
         obs.append(LocalOpticsObservable(refpts, "s_pos"))
-        obs.evaluate(ring, **kwargs)
-        leftax = process(left, obs.values[-1], obs.values[:nl])
-        if nr > 0:
-            rightax = process(right, obs.values[-1], obs.values[nl : nl + nr])
-            return ", ".join(t for t in titles), leftax, rightax
+        obs.evaluate(rng, **kw)
+        leftax = process(lft, obs.values[-1], obs.values[:n1])
+        if n2 > n1:
+            rightax = process(rgt, obs.values[-1], obs.values[n1:n2])
+            return "Optical functions", leftax, rightax
         else:
-            return ", ".join(t for t in titles), leftax
+            return "Optical functions", leftax
 
-    nl = len(left)
-    nr = len(right)
-    return baseplot(ring, plot_function, **kwargs)
+    return baseplot(ring, plot_function, axdef(left), axdef(right), **kwargs)
