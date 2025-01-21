@@ -1,15 +1,19 @@
 """AT generic plotting function"""
+
 from __future__ import annotations
+
+__all__ = ["baseplot"]
+
 from itertools import chain, repeat
+from collections.abc import Callable
+
 # noinspection PyPackageRequirements
 import matplotlib.pyplot as plt
-from typing import Callable
+
 from .synopt import plot_synopt
 from ..lattice import Lattice
 
 SLICES = 400
-
-__all__ = ['baseplot']
 
 
 def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
@@ -45,7 +49,8 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
             left[3]   labels: (optional) iterable of strings as long as ydata
 
           ``right``: tuple returning the data for the secondary (right) axis
-        *args:          All other positional parameters are sent to the
+        *args:          All other positional parameters are sent to the plotting
+          function
 
     Keyword Args:
         s_range:            Lattice range of interest, default: unchanged,
@@ -74,76 +79,106 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
         synopt_axes (Axes): Synoptic axes
     """
 
-    def plot1(ax, yaxis_label, x, y, labels=()):
-        lines = []
-        for y1, prop, label in zip(y, props, chain(labels, repeat(None))):
-            ll = ax.plot(x, y1, **prop)
-            if label is not None:
-                ll[0].set_label(label)
-            lines += ll
-        ax.set_ylabel(yaxis_label)
-        return lines
+    def get_synopt(ax, **kw):
+        axs = getattr(ax, "axsyn", None)
+        if axs is None:
+            axs = plot_synopt(ring, axes=ax, **kw)
+            ax.axsyn = axs
+        return axs
 
-    def labeled(line):
-        return not line.properties()['label'].startswith('_')
+    def get_axright(ax):
+        axr = getattr(ax, "axright", None)
+        if axr is None:
+            axr = axleft.twinx()
+            ax.axright = axr
+            # axright._get_lines = ax._get_lines
+        return axr
+
+    def get_style(ax):
+        style_iter = getattr(ax, "style", None)
+        if style_iter is None:
+            style_iter = iter(plt.rcParams["axes.prop_cycle"])
+            ax.style = style_iter
+        return style_iter
+
+    def plot1(ax, props, yaxis_label, x, y, labels=()):
+        # for y1, label in zip(y, chain(labels, repeat(None))):
+        #     ax.plot(x, y1, label=label)
+        for y1, prop, label in zip(y, props, chain(labels, repeat(None))):
+            ax.plot(x, y1, label=label, **prop)
+        ax.set_ylabel(yaxis_label)
+
+    def new_axes(ax, data):
+        ax.set(
+            xlim=ring.s_range,
+            xlabel="s [m]",
+            facecolor=[1.0, 1.0, 1.0, 0.0],
+            title=title,
+        )
+        ax.set_title(ring.name, fontdict={"fontsize": "medium"}, loc="left")
+        props = get_style(ax)
+        axs = get_synopt(ax, **synargs)
+        plot1(ax, props, *data)
+        ax.grid(visible=True)
+        return props, axs
 
     # extract baseplot arguments
-    slices = kwargs.pop('slices', SLICES)
-    axes = kwargs.pop('axes', None)
-    legend = kwargs.pop('legend', True)
-    block = kwargs.pop('block', False)
-    if 's_range' in kwargs:
-        ring.s_range = kwargs.pop('s_range')
+    slices = kwargs.pop("slices", SLICES)
+    axes = kwargs.pop("axes", None)
+    legend = kwargs.pop("legend", True)
+    block = kwargs.pop("block", False)
+    s_range = kwargs.pop("s_range", None)
+
+    if s_range is not None:
+        ring.s_range = s_range
+
+    try:
+        axleft, axright = axes
+    except TypeError:
+        axleft = axes
+        axright = None
 
     # extract synopt arguments
-    synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole',
-               'monitor', 'labels']
+    synkeys = ["dipole", "quadrupole", "sextupole", "multipole", "monitor", "labels"]
     kwkeys = list(kwargs.keys())
-    synargs = dict((k, kwargs.pop(k)) for k in kwkeys if k in synkeys)
-
-    # get color cycle
-    cycle_props = plt.rcParams['axes.prop_cycle']
+    synargs = {k: kwargs.pop(k) for k in kwkeys if k in synkeys}
 
     # slice the ring
     rg = ring.slice(slices=slices)
 
     # get the data for the plot
-    pout = plot_function(rg, rg.i_range, *args, **kwargs)
-    title = pout[0]
-    plots = pout[1:]
+    title, *plots = plot_function(rg, rg.i_range, *args, **kwargs)
 
     # prepare the axes
-    if axes is None:
+    if axleft is None:
         # Create new axes
-        nplots = len(plots)
-        fig = plt.figure()
-        axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]',
-                                 facecolor=[1.0, 1.0, 1.0, 0.0],
-                                 title=title)
-        axright = axleft.twinx() if (nplots >= 2) else None
-        axleft.set_title(ring.name, fontdict={'fontsize': 'medium'},
-                         loc='left')
-        axsyn = plot_synopt(ring, axes=axleft, **synargs)
-    else:
-        # Use existing axes
-        axleft, axright = axes
-        axsyn = None
-        nplots = 1 if axright is None else len(plots)
+        fig, axleft = plt.subplots()
 
-    props = iter(cycle_props())
+    lprops, axsyn = new_axes(axleft, plots[0])
+    handles, labs = axleft.get_legend_handles_labels()
 
-    # left plot
-    lines1 = plot1(axleft, *plots[0])
-    # right plot
-    lines2 = [] if (nplots < 2) else plot1(axright, *plots[1])
-    if legend:
-        if nplots < 2:
-            axleft.legend(handles=[li for li in lines1 if labeled(li)])
+    if len(plots) > 1:
+        if axright is None:
+            # Add a right axis on axleft
+            axright = get_axright(axleft)
+            plot1(axright, lprops, *plots[1])
+            h2, l2 = axright.get_legend_handles_labels()
+            handles.extend(h2)
+            labs.extend(l2)
         elif axleft.get_shared_x_axes().joined(axleft, axright):
-            axleft.legend(
-                handles=[li for li in lines1 + lines2 if labeled(li)])
+            # Already right axis of axleft
+            plot1(axright, lprops, *plots[1])
+            h2, l2 = axright.get_legend_handles_labels()
+            handles.extend(h2)
+            labs.extend(l2)
         else:
-            axleft.legend(handles=[li for li in lines1 if labeled(li)])
-            axright.legend(handles=[li for li in lines2 if labeled(li)])
+            # New axes
+            _, _ = new_axes(axright, plots[1])
+            if legend:
+                axright.legend()
+
+    if legend and handles:
+        axleft.legend(handles, labs)
+
     plt.show(block=block)
     return axleft, axright, axsyn

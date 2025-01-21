@@ -1,6 +1,5 @@
-"""Defines classes for modifying a lattice and observing its parameters."""
+"""Defines classes for modifying a lattice and observing its parameters"""
 
 from .observables import *
 from .observablelist import *
-# from .matching import *
-from .response_matrix import *
+from .matching import *

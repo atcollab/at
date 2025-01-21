@@ -36,8 +36,7 @@ Sub-packages
    howto/multiprocessing
    howto/CavityControl
    howto/Collective
-   Work with MAD-X files <api/at.load.madx>
-   Use response matrices <notebooks/response_matrices>
+   Working with MAD-X files <api/at.load.madx>
 
 .. autosummary::
    :toctree: api
