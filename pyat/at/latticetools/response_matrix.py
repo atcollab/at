@@ -224,15 +224,13 @@ class _SvdSolver(abc.ABC):
     def solve(self) -> None:
         """Compute the singular values of the response matrix."""
         resp = self.weighted_response
-        if resp is None:
-            raise AtError("No response matrix: run build() first")
         selected = np.ix_(self._obsmask, self._varmask)
         u, s, vh = np.linalg.svd(resp[selected], full_matrices=False)
         self.v = vh.T * (1 / s) * self.varweights.reshape(-1, 1)
         self.uh = u.T / self.obsweights
         self.singular_values = s
 
-    def check_norm(self) -> tuple[float, float]:
+    def check_norm(self) -> tuple[np.ndarray, np.ndarray]:
         """Display the norm of the rows and columns of the weighted response matrix.
 
         Adjusting the variables and observable weights to equalize the norms
@@ -243,8 +241,6 @@ class _SvdSolver(abc.ABC):
             var_norms:      Norms of Variables (columns)
         """
         resp = self.weighted_response
-        if resp is None:
-            raise AtError("No response matrix: run build() first")
         obs = np.linalg.norm(resp, axis=1)
         var = np.linalg.norm(resp, axis=0)
         print(f"max/min Observables: {np.amax(obs) / np.amin(obs)}")
@@ -254,16 +250,15 @@ class _SvdSolver(abc.ABC):
     @property
     def response(self):
         """Response matrix."""
-        return self._response
+        resp = self._response
+        if resp is None:
+            raise AtError("No response matrix yet: run build() or load() first")
+        return resp
 
     @property
     def weighted_response(self):
         """Weighted response matrix."""
-        resp = self._response
-        if resp is None:
-            return None
-        else:
-            return resp * (self.varweights / self.obsweights.reshape(-1, 1))
+        return self.response * (self.varweights / self.obsweights.reshape(-1, 1))
 
     def correction_matrix(self, nvals: int | None = None):
         """Return the correction matrix (pseudo-inverse of the response matrix).
@@ -667,8 +662,6 @@ class OrbitResponseMatrix(ResponseMatrix):
         a factor 2 more efficiency than steerers and BPMs
         """
         resp = self.weighted_response
-        if resp is None:
-            raise AtError("No response matrix: run build() first")
         normvar = np.linalg.norm(resp, axis=0)
         normobs = np.linalg.norm(resp, axis=1)
         if len(self.variables) > self.nbsteers and cav_ampl is not None:
