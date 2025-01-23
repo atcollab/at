@@ -57,6 +57,15 @@ class VariableThinMultipole(Element):
 
         If ramps is True, it returns a value linearly interpolated
         accoding to the ramping turn.
+
+        Parameters
+            amp: amplitude component.
+            ramps: array containing the turns that define the ramp
+            t: turn
+
+        Returns
+            amp if no ramp.
+            amp multiplied by the ramp state.
         """
         ampt = amp
         if ramps != 0:
@@ -74,14 +83,29 @@ class VariableThinMultipole(Element):
 
     def _get_pol(
         self,
-        ab,
-        ramps,
-        mode,
-        t,
-        turn,
-        order,
-        periodic,
+        ab: str,
+        ramps: _array,
+        mode: int,
+        t: float,
+        turn: int,
+        order: int,
+        periodic: bool,
     ):
+        """
+        Return the polynom component of a given order.
+
+        Parameters
+            ab: either 'A' or 'B' indicating the polynom.
+            ramps: array containing the ramp definition.
+            mode: value to specify the type of variable element.
+            t: time for this mode
+            turn: turn to check
+            order: order of the polynom
+            periodic: whether the sequence is periodic or not.
+
+        Returns
+            the amplitude for the polynom component
+        """
         allamp = getattr(self, "Amplitude" + ab)
         amp = allamp[order]
         ampout = 0
@@ -134,9 +158,13 @@ class VariableThinMultipole(Element):
         """
         Get the polynom values per turn.
 
-        Parameters
-        turns(int): Default 1. Number of turns to calculate.
+        Keyword arguments
+            turns(int): Default 1. Number of turns to calculate.
+            T0(float): revolution time in seconds. Use only in SINE mode.
+            tparticle(float): Default 0. Time of the particle in seconds.
 
+        Returns
+            Dictionary with a list of PolynomA and PolynomB per turn.
         """
         turns = kwargs.setdefault("turns", 1)
         mode = self.Mode
