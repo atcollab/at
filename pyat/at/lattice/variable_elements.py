@@ -52,13 +52,13 @@ class VariableThinMultipole(Element):
         Periodic=bool,
     )
 
-    def _get_amp(amp:float, ramps: _array, t: float):
+    def _get_amp(self, amp:float, ramps: _array, t: float):
         """get_amp returns the input value `amp` when ramps is False.
 
         If ramps is True, it returns a value linearly interpolated
         accoding to the ramping turn.
         """
-        ampt = amp;
+        ampt = amp
         if ramps != 0:
             if t <= ramps[0]:
                 ampt = 0.0;
@@ -72,13 +72,64 @@ class VariableThinMultipole(Element):
                 ampt = 0.0
         return ampt
 
-    def _get_pol(self):
-        return 0
+    def _get_pol(self,
+        ab,
+        ramps,
+        mode,
+        t,
+        turn,
+        order,
+        periodic,
+                ):
+        allamp = getattr(self, 'Amplitude' + ab)
+        amp = allamp[order]
+        ampout = 0
+        # check if amp is zero
+        if amp == 0:
+            return ampout
 
-    def _check_polynom_values(self, **kwargs):
+        # get the ramp value
+        ampout = self._get_amp(amp, ramps, turn)
+
+        if mode == 0:
+            # sin mode parameters
+            whole_sin_above = getattr(self, 'Sin'+ab+'above')
+            freq = getattr(self, 'Frequency'+ab)
+            ph = getattr(self, 'Phase'+ab)
+            sinval = np.sin(2*np.pi * freq * t + ph)
+            if sinval >= whole_sin_above:
+                ampout = ampout * sinval
+            else:
+                ampout = 0
+        elif mode == 1:
+            ampout = np.nan
+        elif mode == 2:
+            nsamples = getattr(self, 'NSamples'+ab)
+            if (periodic or turn < nsamples):
+                func = getattr(self, 'Func'+ab)
+                funcderiv1 = np.array(getattr(self, 'Func' +ab+'deriv1'))
+                funcderiv2 = np.array(getattr(self, 'Func' +ab+'deriv2'))
+                funcderiv3 = np.array(getattr(self, 'Func' +ab+'deriv3'))
+                funcderiv4 = np.array(getattr(self, 'Func' +ab+'deriv4'))
+                functdelay = float(getattr(self, 'Func' +ab+'TimeDelay'))
+                turnidx = np.mod(turn , nsamples)
+
+                t = t - functdelay
+                t2 = t*t
+                ampout = ampout*(func[turnidx] \
+                      + funcderiv1[turnidx]*t \
+                      + 0.5*funcderiv2[turnidx]*t2 \
+                      + 1.0/6.0*funcderiv3[turnidx]*t2*t \
+                      + 1.0/24.0*funcderiv4[turnidx]*t2*t2)
+            else:
+                ampout = 0.0
+        else:
+            ampout = 0.0
+        return ampout
+
+    def inspect_polynom_values(self, **kwargs):
         """
-        This function returns the PolynomA and PolynomB
-        used in tracking.
+        Get the polynom values per turn.
 
         Parameters
         turns(int): Default 1. Number of turns to calculate.
@@ -86,17 +137,34 @@ class VariableThinMultipole(Element):
         """
         turns = kwargs.setdefault('turns',1)
         mode = self.Mode
-        ramps = self.Ramps
-        ampt = _get_amp(amp[order], ramps, turn)
+        if mode == 0:
+            # revolution time
+            trevol =  float(kwargs['T0'])
+            tparticle = float(kwargs.setdefault('tparticle',0))
+            timeoffset = trevol + tparticle
+        elif mode == 2:
+            # particle time
+            timeoffset = float(kwargs.setdefault('tparticle',0))
+        ramps = getattr(self,'Ramps',0)
+        periodic = getattr(self,'Periodic',False)
+        maxorder = self.MaxOrder
 
-        for t in range(turns):
-            if ramps:
-                #                ramp_value = get_amp(amp
-                ampt = 0
+        pola = np.full(maxorder+1,np.nan)
+        polb = np.full(maxorder+1,np.nan)
 
+        listpola = []
+        listpolb = []
 
-
-
+        for turn in range(turns):
+            for order in range(maxorder+1):
+                if hasattr(self, 'AmplitudeA'):
+                    pola[order] = self._get_pol( 'A', ramps, mode, timeoffset*turn, turn, order, periodic)
+                if hasattr(self, 'AmplitudeB'):
+                    polb[order] = self._get_pol( 'B', ramps, mode, timeoffset*turn, turn, order, periodic)
+                    print(order,polb[order])
+            listpola.append(np.copy(pola))
+            listpolb.append(np.copy(polb))
+        return {'PolynomA':listpola,'PolynomB':listpolb}
 
 
     def __init__(self, family_name: str, mode: int, **kwargs):
