@@ -1,15 +1,17 @@
 function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
-%        [pola_array,polb_array] = atinspectvariablethinmultipole(element)
+% [pola_array,polb_array] = ATINSPECTVARIABLETHINMULTIPOLE(element)
 %
-%        Get the atvariablethinmultipole polynom values per turn.
+% Get the ATVARIABLETHINMULTIPOLE polynom values per turn.
 %
-%        Keyword arguments
-%            turns(int): Default 1. Number of turns to calculate.
-%            T0(float): revolution time in seconds. Use only in SINE mode.
-%            tparticle(float): Default 0. Time of the particle in seconds.
+% ARGUMENTS:
+%    element: an atvariablethinmultipole element.
+% OPTIONAL ARGUMENTS:
+%    turns(int): Default 1. Number of turns to calculate.
+%    T0(float): revolution time in seconds. Only needed in SINE mode.
+%    tparticle(float): Default 0. Time of the particle in seconds.
 %
-%        Returns
-%            Two cell arrays with the values of PolynomA and PolynomB per turn.
+% RETURNS
+%    Two cell arrays with the values of PolynomA and PolynomB per turn.
     p = inputParser;
     addOptional(p,'turns',1,@(x) isnumeric(x) && isscalar(x) && (x > 0));
     if element.Mode == 0
@@ -21,7 +23,7 @@ function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
     addOptional(p,'tparticle',0,@(x) isnumeric(x));
     parse(p,varargin{:});
     par = p.Results;
-    
+
     turns = par.turns;
     if element.Mode == 0
         T0 = par.T0;
@@ -30,7 +32,7 @@ function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
     end
     tparticle = par.tparticle;
     mode = element.Mode;
-    
+
     switch mode
       case 0
         % revolution time
@@ -41,27 +43,27 @@ function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
       otherwise
         timeoffset = 0;
     end
-    
+
     if isfield(element,'Ramps')
       ramps = element.Ramps;
     else
       ramps = 0;
     end
-    
+
     if isfield(element,'Periodic')
       periodic = element.Periodic;
     else
       periodic = 0;
     end
-    
+
     maxorder = element.MaxOrder;
-    
+
     pola = nan(1,maxorder+1);
     polb = nan(1,maxorder+1);
-    
+
     listpola = cell(1, turns);
     listpolb = cell(1, turns);
-    
+
     for turn = 0:turns-1
       for order = 0:maxorder
         if isfield(element,'AmplitudeA')
