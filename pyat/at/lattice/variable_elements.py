@@ -168,6 +168,7 @@ class VariableThinMultipole(Element):
         """
         turns = kwargs.setdefault("turns", 1)
         mode = self.Mode
+        timeoffset = 0
         if mode == 0:
             # revolution time
             trevol = float(kwargs["T0"])
