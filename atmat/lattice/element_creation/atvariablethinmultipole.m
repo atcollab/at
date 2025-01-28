@@ -142,6 +142,9 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % no effect on the particle in turns exceeding the function definition.
 % If Periodic is set to True, the sequence is repeated.
 %
+% One could use the method inspect_polynom_values to check the polynom values
+% used in every turn.
+%
 % See also:
 %  ATINSPECTVARIABLETHINMULTIPOLE
 
