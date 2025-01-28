@@ -167,9 +167,13 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
                'PolynomA',[],'PolynomB',[],rsrc{:});
 
 
-    function setsine(rsrc, ab)
+    function rsrc = setsine(rsrc, ab)
         if ~isfield(rsrc,strcat('Frequency',ab))
             error(strcat('Please provide a value for Frequency',ab))
+        end
+        funcarg=strcat('Phase',ab);
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
         end
         funcarg=strcat('Sin',ab,'above');
         if ~isfield(rsrc,funcarg)
@@ -200,7 +204,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
             if strcmpi(mode,'SINE')
-                setsine(rsrc,ab);
+                rsrc = setsine(rsrc,ab);
             end
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
