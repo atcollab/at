@@ -12,6 +12,10 @@ function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
 %
 % RETURNS
 %    Two cell arrays with the values of PolynomA and PolynomB per turn.
+%
+% See Also:
+%   ATVARIABLETHINMULTIPOLE
+%
     p = inputParser;
     addOptional(p,'turns',1,@(x) isnumeric(x) && isscalar(x) && (x > 0));
     if element.Mode == 0
