@@ -219,8 +219,6 @@ warning(oldwarns.state,oldwarns.identifier);
             incdir=homeb;
         elseif exist('/opt/local/include/libomp/omp.h', 'file') % MacPorts
             incdir='/opt/local/include/libomp';
-            libdir='/opt/local/lib';
-            libname='omp';
         else
             error('AT:MissingLibrary', strjoin({'', ...
                 'libomp.dylib must be installed with your favourite package manager:', '', ...
