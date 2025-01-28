@@ -23,7 +23,11 @@ function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
     par = p.Results;
     
     turns = par.turns;
-    T0 = par.T0;
+    if element.Mode == 0
+        T0 = par.T0;
+    else
+        T0 = 0;
+    end
     tparticle = par.tparticle;
     mode = element.Mode;
     
@@ -137,7 +141,7 @@ function ampout = get_pol(element , ab, ramps, mode, t, turn, order, periodic)
             funcderiv3 = element.(strcat("Func",ab,"deriv3") );
             funcderiv4 = element.(strcat("Func",ab,"deriv4") );
             functdelay = element.(strcat("Func",ab,"TimeDelay") );
-            turnidx = mod(turn, nsamples);
+            turnidx = mod(turn, nsamples)+1;
 
             t = t - functdelay;
             t2 = t * t;
