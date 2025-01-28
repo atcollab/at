@@ -3,6 +3,8 @@ function [listpola,listpolb] = atinspectvariablethinmultipole(element,varargin)
 %
 % Get the ATVARIABLETHINMULTIPOLE polynom values per turn.
 %
+% Translations (T1,T2) and rotations (R1,R2) in the element are ignored.
+%
 % ARGUMENTS:
 %    element: an atvariablethinmultipole element.
 % OPTIONAL ARGUMENTS:
