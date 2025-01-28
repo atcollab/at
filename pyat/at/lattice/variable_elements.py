@@ -181,7 +181,7 @@ class VariableThinMultipole(Element):
             timeoffset = float(kwargs.setdefault("tparticle", 0))
         ramps = getattr(self, "Ramps", 0)
         periodic = getattr(self, "Periodic", False)
-        maxorder = self.MaxOrder
+        maxorder = getattr(self, "MaxOrder")
 
         pola = np.full(maxorder + 1, np.nan)
         polb = np.full(maxorder + 1, np.nan)
