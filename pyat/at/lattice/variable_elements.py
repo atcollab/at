@@ -169,7 +169,7 @@ class VariableThinMultipole(Element):
             Dictionary with a list of PolynomA and PolynomB per turn.
         """
         turns = kwargs.setdefault("turns", 1)
-        mode = self.Mode
+        mode = getattr(self, "Mode")
         timeoffset = 0
         if mode == 0:
             # revolution time
