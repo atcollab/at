@@ -310,7 +310,6 @@ class VariableThinMultipole(Element):
                     polb[order] = self._get_pol(
                         "B", ramps, mode, timeoffset * turn, turn, order, periodic
                     )
-                    print(order, polb[order])
             listpola.append(np.copy(pola))
             listpolb.append(np.copy(polb))
         return {"PolynomA": listpola, "PolynomB": listpolb}
