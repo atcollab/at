@@ -158,6 +158,8 @@ class VariableThinMultipole(Element):
         """
         Get the polynom values per turn.
 
+        Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
+
         Keyword arguments
             turns(int): Default 1. Number of turns to calculate.
             T0(float): revolution time in seconds. Use only in SINE mode.
@@ -266,6 +268,9 @@ class VariableThinMultipole(Element):
         By default the array is assumed non periodic, the function has no effect
         on the particle in turns exceeding the function definition. If
         ``Periodic`` is set to True, the sequence is repeated.
+
+        One could use the method inspect_polynom_values to check the polynom values
+        used in every turn.
 
 
         Parameters:
