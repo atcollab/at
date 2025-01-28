@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from enum import IntEnum
 from typing import Any
 
@@ -52,159 +51,7 @@ class VariableThinMultipole(Element):
         Periodic=bool,
     )
 
-    def _get_amp(self, amp: float, ramps: _array, t: float):
-        """get_amp returns the input value `amp` when ramps is False.
-
-        If ramps is True, it returns a value linearly interpolated
-        accoding to the ramping turn.
-
-        Parameters
-            amp: amplitude component.
-            ramps: array containing the turns that define the ramp
-            t: turn
-
-        Returns
-            amp if no ramp.
-            amp multiplied by the ramp state.
-        """
-        ampt = amp
-        if ramps != 0:
-            if t <= ramps[0]:
-                ampt = 0.0
-            elif t <= ramps[1]:
-                ampt = amp * (t - ramps[0]) / (ramps[1] - ramps[0])
-            elif t <= ramps[2]:
-                ampt = amp
-            elif t <= ramps[3]:
-                ampt = amp - amp * (t - ramps[2]) / (ramps[3] - ramps[2])
-            else:
-                ampt = 0.0
-        return ampt
-
-    def _get_pol(
-        self,
-        ab: str,
-        ramps: _array,
-        mode: int,
-        t: float,
-        turn: int,
-        order: int,
-        periodic: bool,
-    ):
-        """
-        Return the polynom component of a given order.
-
-        Parameters
-            ab: either 'A' or 'B' indicating the polynom.
-            ramps: array containing the ramp definition.
-            mode: value to specify the type of variable element.
-            t: time for this mode
-            turn: turn to check
-            order: order of the polynom
-            periodic: whether the sequence is periodic or not.
-
-        Returns
-            the amplitude for the polynom component
-        """
-        allamp = getattr(self, "Amplitude" + ab)
-        amp = allamp[order]
-        ampout = 0
-        # check if amp is zero
-        if amp == 0:
-            return ampout
-
-        # get the ramp value
-        ampout = self._get_amp(amp, ramps, turn)
-
-        if mode == 0:
-            # sin mode parameters
-            whole_sin_above = getattr(self, "Sin" + ab + "above")
-            freq = getattr(self, "Frequency" + ab)
-            ph = getattr(self, "Phase" + ab)
-            sinval = np.sin(2 * np.pi * freq * t + ph)
-            if sinval >= whole_sin_above:
-                ampout = ampout * sinval
-            else:
-                ampout = 0
-        elif mode == 1:
-            ampout = np.nan
-        elif mode == 2:
-            nsamples = getattr(self, "NSamples" + ab)
-            if periodic or turn < nsamples:
-                func = getattr(self, "Func" + ab)
-                funcderiv1 = np.array(getattr(self, "Func" + ab + "deriv1"))
-                funcderiv2 = np.array(getattr(self, "Func" + ab + "deriv2"))
-                funcderiv3 = np.array(getattr(self, "Func" + ab + "deriv3"))
-                funcderiv4 = np.array(getattr(self, "Func" + ab + "deriv4"))
-                functdelay = float(getattr(self, "Func" + ab + "TimeDelay"))
-                turnidx = np.mod(turn, nsamples)
-
-                t = t - functdelay
-                t2 = t * t
-                ampout = ampout * (
-                    func[turnidx]
-                    + funcderiv1[turnidx] * t
-                    + 0.5 * funcderiv2[turnidx] * t2
-                    + 1.0 / 6.0 * funcderiv3[turnidx] * t2 * t
-                    + 1.0 / 24.0 * funcderiv4[turnidx] * t2 * t2
-                )
-            else:
-                ampout = 0.0
-        else:
-            ampout = 0.0
-        return ampout
-
-    def inspect_polynom_values(self, **kwargs):
-        """
-        Get the polynom values per turn.
-
-        Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
-
-        Keyword arguments
-            turns(int): Default 1. Number of turns to calculate.
-            T0(float): revolution time in seconds. Use only in SINE mode.
-            tparticle(float): Default 0. Time of the particle in seconds.
-
-        Returns
-            Dictionary with a list of PolynomA and PolynomB per turn.
-        """
-        turns = kwargs.setdefault("turns", 1)
-        mode = getattr(self, "Mode")
-        timeoffset = 0
-        if mode == 0:
-            # revolution time
-            trevol = float(kwargs["T0"])
-            tparticle = float(kwargs.setdefault("tparticle", 0))
-            timeoffset = trevol + tparticle
-        elif mode == 2:
-            # particle time
-            timeoffset = float(kwargs.setdefault("tparticle", 0))
-        ramps = getattr(self, "Ramps", 0)
-        periodic = getattr(self, "Periodic", False)
-        maxorder = getattr(self, "MaxOrder")
-
-        pola = np.full(maxorder + 1, np.nan)
-        polb = np.full(maxorder + 1, np.nan)
-
-        listpola = []
-        listpolb = []
-
-        for turn in range(turns):
-            for order in range(maxorder + 1):
-                if hasattr(self, "AmplitudeA"):
-                    pola[order] = self._get_pol(
-                        "A", ramps, mode, timeoffset * turn, turn, order, periodic
-                    )
-                if hasattr(self, "AmplitudeB"):
-                    polb[order] = self._get_pol(
-                        "B", ramps, mode, timeoffset * turn, turn, order, periodic
-                    )
-                    print(order, polb[order])
-            listpola.append(np.copy(pola))
-            listpolb.append(np.copy(polb))
-        return {"PolynomA": listpola, "PolynomB": listpolb}
-
-    def __init__(self, family_name: str, mode: int, **kwargs):
+    def __init__(self, family_name: str, mode: int or ACMode, **kwargs):
         r"""VariableThinMultipole initialization.
 
         Default pass method: ``VariableThinMPolePass``.
@@ -275,7 +122,7 @@ class VariableThinMultipole(Element):
 
         Parameters:
             family_name(str):  Element name
-            mode(ACMode): defines the mode. Default ACMode.SINE:
+            mode(at.ACMode): defines the mode. Default ACMode.SINE:
 
               * :py:attr:`.ACMode.SINE`: sine function
               * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
@@ -417,3 +264,155 @@ class VariableThinMultipole(Element):
             if ramps is not None:
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
+
+    def inspect_polynom_values(self, **kwargs) -> dict[str, list]:
+        """
+        Get the polynom values per turn.
+
+        Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
+
+        Keyword arguments:
+            turns(int): Default 1. Number of turns to calculate.
+            T0(float): revolution time in seconds. Use only in SINE mode.
+            tparticle(float): Default 0. Time of the particle in seconds.
+
+        Returns:
+            Dictionary with a list of PolynomA and PolynomB per turn.
+        """
+        turns = kwargs.setdefault("turns", 1)
+        mode = self.Mode
+        timeoffset = 0
+        if mode == 0:
+            # revolution time
+            trevol = float(kwargs["T0"])
+            tparticle = float(kwargs.setdefault("tparticle", 0))
+            timeoffset = trevol + tparticle
+        elif mode == 2:
+            # particle time
+            timeoffset = float(kwargs.setdefault("tparticle", 0))
+        ramps = getattr(self, "Ramps", 0)
+        periodic = getattr(self, "Periodic", False)
+        maxorder = self.MaxOrder
+
+        pola = np.full(maxorder + 1, np.nan)
+        polb = np.full(maxorder + 1, np.nan)
+
+        listpola = []
+        listpolb = []
+
+        for turn in range(turns):
+            for order in range(maxorder + 1):
+                if hasattr(self, "AmplitudeA"):
+                    pola[order] = self._get_pol(
+                        "A", ramps, mode, timeoffset * turn, turn, order, periodic
+                    )
+                if hasattr(self, "AmplitudeB"):
+                    polb[order] = self._get_pol(
+                        "B", ramps, mode, timeoffset * turn, turn, order, periodic
+                    )
+                    print(order, polb[order])
+            listpola.append(np.copy(pola))
+            listpolb.append(np.copy(polb))
+        return {"PolynomA": listpola, "PolynomB": listpolb}
+
+    def _get_amp(self, amp: float, ramps: _array, _time: float) -> float:
+        """get_amp returns the input value `amp` when ramps is False.
+
+        If ramps is True, it returns a value linearly interpolated
+        accoding to the ramping turn.
+
+        Parameters:
+            amp: amplitude component.
+            ramps: array containing the turns that define the ramp
+            _time: turn
+
+        Returns:
+            amp if no ramp.
+            amp multiplied by the ramp state.
+        """
+        ampt = amp
+        if ramps != 0:
+            if _time <= ramps[0]:
+                ampt = 0.0
+            elif _time <= ramps[1]:
+                ampt = amp * (_time - ramps[0]) / (ramps[1] - ramps[0])
+            elif _time <= ramps[2]:
+                ampt = amp
+            elif _time <= ramps[3]:
+                ampt = amp - amp * (_time - ramps[2]) / (ramps[3] - ramps[2])
+            else:
+                ampt = 0.0
+        return ampt
+
+    def _get_pol(
+        self,
+        a_b: str,
+        ramps: _array,
+        mode: int,
+        _time: float,
+        turn: int,
+        order: int,
+        periodic: bool,
+    ) -> float:
+        """
+        Return the polynom component of a given order.
+
+        Parameters:
+            a_b: either 'A' or 'B' indicating the polynom.
+            ramps: array containing the ramp definition.
+            mode: value to specify the type of variable element.
+            _time: time for this mode
+            turn: turn to check
+            order: order of the polynom
+            periodic: whether the sequence is periodic or not.
+
+        Returns:
+            the amplitude for the polynom component
+        """
+        allamp = getattr(self, "Amplitude" + a_b)
+        amp = allamp[order]
+        ampout = 0
+        # check if amp is zero
+        if amp == 0:
+            return ampout
+
+        # get the ramp value
+        ampout = self._get_amp(amp, ramps, turn)
+
+        if mode == 0:
+            # sin mode parameters
+            whole_sin_above = getattr(self, "Sin" + a_b + "above")
+            freq = getattr(self, "Frequency" + a_b)
+            phase = getattr(self, "Phase" + a_b)
+            sinval = np.sin(2 * np.pi * freq * _time + phase)
+            if sinval >= whole_sin_above:
+                ampout = ampout * sinval
+            else:
+                ampout = 0
+        elif mode == 1:
+            ampout = np.nan
+        elif mode == 2:
+            nsamples = getattr(self, "NSamples" + a_b)
+            if periodic or turn < nsamples:
+                func = getattr(self, "Func" + a_b)
+                funcderiv1 = np.array(getattr(self, "Func" + a_b + "deriv1"))
+                funcderiv2 = np.array(getattr(self, "Func" + a_b + "deriv2"))
+                funcderiv3 = np.array(getattr(self, "Func" + a_b + "deriv3"))
+                funcderiv4 = np.array(getattr(self, "Func" + a_b + "deriv4"))
+                functdelay = float(getattr(self, "Func" + a_b + "TimeDelay"))
+                turnidx = np.mod(turn, nsamples)
+
+                _time = _time - functdelay
+                _time_2 = _time * _time
+                ampout = ampout * (
+                    func[turnidx]
+                    + funcderiv1[turnidx] * _time
+                    + 0.5 * funcderiv2[turnidx] * _time_2
+                    + 1.0 / 6.0 * funcderiv3[turnidx] * _time_2 * _time
+                    + 1.0 / 24.0 * funcderiv4[turnidx] * _time_2 * _time_2
+                )
+            else:
+                ampout = 0.0
+        else:
+            ampout = 0.0
+        return ampout
