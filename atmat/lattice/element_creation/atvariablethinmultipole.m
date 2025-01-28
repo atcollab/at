@@ -141,8 +141,9 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % by default the array is assumed non periodic. The function has
 % no effect on the particle in turns exceeding the function definition.
 % If Periodic is set to True, the sequence is repeated.
-
 %
+% See also:
+%  ATINSPECTVARIABLETHINMULTIPOLE
 
 % Input parser for option
 [method,rsrc]=getargs(varargin,'VariableThinMPolePass', ...
