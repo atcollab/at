@@ -34,7 +34,7 @@ used for correction. It's available for all magnets, though not present by defau
 except in :py:class:`.Corrector` magnets. For other magnets, the attribute should be
 explicitly created.
 
-There are options in :py:class:`OrbitResponseMatrix`to include the RF frequency in the
+There are options in :py:class:`OrbitResponseMatrix` to include the RF frequency in the
 variable list, and the sum of correction angles in the list of observables:
 
 >>> resp_h = OrbitResponseMatrix(ring, "h", cavrefs=at.RFCavity, steersum=True)
@@ -46,10 +46,13 @@ A combined horizontal+vertical response matrix is obtained with:
 Matrix Building
 ^^^^^^^^^^^^^^^
 
-The response matrix may be built by two methods:
+The response matrix may be built by three methods:
 
-1. :py:meth:`~ResponseMatrix.build` computes the matrix using tracking.
-2. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
+1. :py:meth:`~ResponseMatrix.build` computes the matrix using tracking
+   (any :py:class:`ResponseMatrix`)
+2. :py:meth:`~OrbitResponseMatrix.build_analytical` analytically computes the matrix
+   using formulas from [1]_ (:py:class:`OrbitResponseMatrix` only)
+3. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
    saved values or experimentally measured values
 
 Normalisation
@@ -134,7 +137,7 @@ import numpy as np
 from .observables import TrajectoryObservable, OrbitObservable, LatticeObservable
 from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
-from ..lattice import AtError, Lattice, Refpts, AxisDef, plane_
+from ..lattice import AtError, Lattice, Refpts, AxisDef, plane_, All
 from ..lattice import Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableList
@@ -639,7 +642,10 @@ class OrbitResponseMatrix(ResponseMatrix):
             )
             variables.append(cavvar)
 
+        self.plane = pl
+        self.steerrefs = ids
         self.nbsteers = nbsteers
+        self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
         super().__init__(ring, variables, observables)
 
@@ -670,6 +676,62 @@ class OrbitResponseMatrix(ResponseMatrix):
             self.stsumweight = (
                 self.stsumweight * normobs[-1] / np.mean(normobs[:-1]) / stsum_ampl
             )
+
+    def build_analytical(self, **kwargs) -> None:
+        """Build analytically the response matrix.
+
+        Keyword Args:
+            dp (float):     Momentum deviation. Defaults to :py:obj:`None`
+            dct (float):    Path lengthening. Defaults to :py:obj:`None`
+            df (float):     Deviation from the nominal RF frequency.
+              Defaults to :py:obj:`None`
+
+        References:
+            .. [1] A. Franchi, S.M. Liuzzo, Z, Marti, *"Analytic formulas for
+               the rapid evaluation of the orbit response matrix and chromatic functions
+               from lattice parameters in circular accelerators"*,
+               arXiv:1711.06589 [physics.acc-ph]
+        """
+
+        def tauwj(muj, muw):
+            tau = muj - muw
+            if tau < 0.0:
+                tau += 2.0 * pi_tune
+            return tau - pi_tune
+
+        ring = self.ring
+        pl = self.plane
+        _, ringdata, elemdata = ring.linopt6(All, **kwargs)
+        pi_tune = math.pi * ringdata.tune[pl]
+        dataj = elemdata[self.steerrefs]
+        dataw = elemdata[self.bpmrefs]
+        dispj = dataj.dispersion[:, 2 * pl]
+        dispw = dataw.dispersion[:, 2 * pl]
+        lw = np.array([elem.Length for elem in ring.select(self.steerrefs)])
+        taufunc = np.frompyfunc(tauwj, 2, 1)
+
+        sqbetaw = np.sqrt(dataw.beta[:, pl])
+        ts = lw / sqbetaw / 2.0
+        tc = sqbetaw - dataw.alpha[:, pl] * ts
+        twj = np.astype(taufunc.outer(dataj.mu[:, pl], dataw.mu[:, pl]), np.float64)
+        jcwj = tc * np.cos(twj) + ts * np.sin(twj)
+        coefj = np.sqrt(dataj.beta[:, pl]) / (2.0 * np.sin(pi_tune))
+        resp = coefj[:, np.newaxis] * jcwj
+        if ring.is_6d:
+            alpha_c = ring.disable_6d(copy=True).get_mcf()
+            resp += np.outer(dispj, dispw) / (alpha_c * ring.circumference)
+            if len(self.variables) > self.nbsteers:
+                rfrsp = -dispj / (alpha_c * ring.rf_frequency)
+                resp = np.concatenate((resp, rfrsp[:, np.newaxis]), axis=1)
+        if len(self.observables) > 1:
+            sumst = np.ones(resp.shape[1], np.float64)
+            if len(self.variables) > self.nbsteers:
+                sumst[-1] = 0.0
+            resp = np.concatenate((resp, sumst[np.newaxis]), axis=0)
+        self._response = resp
+        nobs, nvar = self._response.shape
+        self._obsmask = np.ones(nobs, dtype=bool)
+        self._varmask = np.ones(nvar, dtype=bool)
 
     @property
     def bpmweight(self):
