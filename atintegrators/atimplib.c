@@ -72,13 +72,13 @@ static void rotate_table_history(long nturns,long nslice,double *turnhistory,dou
 };
 
 static void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
-               double *smax, double *z_cuts){
+               double *smax, double *z_cuts, double *bunch_spos){
     double *rtmp;
     int i, ib;
     if(z_cuts){
         for(i=0;i<nbunch; i++){
-            smin[i] = z_cuts[0];
-            smax[i] = z_cuts[1];
+            smin[i] = z_cuts[0]+bunch_spos[i];
+            smax[i] = z_cuts[1]+bunch_spos[i];
         }
     }else{
         for(i=0;i<nbunch; i++){
@@ -123,7 +123,7 @@ static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     double *smax = atMalloc(nbunch*sizeof(double));
     double *hz = atMalloc(nbunch*sizeof(double));
     double *np_bunch = atMalloc(nbunch*sizeof(double));
-    getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts);     
+    getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts,bunch_spos);     
     
     for(i=0;i<nbunch;i++){
         hz[i] = (smax[i]-smin[i])/(nslice);
