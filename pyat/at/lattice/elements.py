@@ -15,18 +15,18 @@ from collections.abc import Generator, Iterable
 from copy import copy, deepcopy
 from typing import Any, Optional
 
-import numpy
+import numpy as np
 
 # noinspection PyProtectedMember
 from .variables import _nop
 
-_zero6 = numpy.zeros(6)
-_eye6 = numpy.eye(6, order="F")
+_zero6 = np.zeros(6)
+_eye6 = np.eye(6, order="F")
 
 
-def _array(value, shape=(-1,), dtype=numpy.float64):
+def _array(value, shape=(-1,), dtype=np.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return numpy.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
+    return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
         shape, order="F"
     )
 
@@ -411,7 +411,7 @@ class Element:
         keywords = {
             k: v
             for k, v in attrs.items()
-            if not numpy.array_equal(v, getattr(defelem, k, None))
+            if not np.array_equal(v, getattr(defelem, k, None))
         }
         return self.__class__.__name__, arguments, keywords
 
@@ -467,6 +467,7 @@ class Element:
 
     @property
     def dx(self):
+        """Horizontal element shift"""
         return self._getshift(0)
 
     @dx.setter
@@ -475,6 +476,7 @@ class Element:
 
     @property
     def dy(self):
+        """Vertical element shift"""
         return self._getshift(2)
 
     @dy.setter
@@ -483,18 +485,19 @@ class Element:
 
     @property
     def tilt(self):
+        """Element tilt"""
         r1 = getattr(self, "R1", _eye6)
         r2 = getattr(self, "R2", _eye6)
         c = r2[0, 0] + r1[0, 0]
         s = r2[2, 0] - r1[2, 0]
-        return numpy.atan2(s, c)
+        return np.atan2(s, c)
 
     @tilt.setter
     def tilt(self, value):
         r1 = getattr(self, "R1", _eye6.copy())
         r2 = getattr(self, "R2", _eye6.copy())
-        ct, st = numpy.cos(value), numpy.sin(value)
-        r44 = numpy.diag([ct, ct, ct, ct])
+        ct, st = np.cos(value), np.sin(value)
+        r44 = np.diag([ct, ct, ct, ct])
         r44[0, 2] = r44[1, 3] = st
         r44[2, 0] = r44[3, 1] = -st
         r1[:4, :4] = r44
@@ -534,7 +537,7 @@ class LongElement(Element):
             delattr(element, attr)
             return attr, val
 
-        frac = numpy.asarray(frac, dtype=float)
+        frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
         fin = dict(
@@ -542,7 +545,7 @@ class LongElement(Element):
         )
         fout = dict(popattr(el, key) for key in vars(self) if key in self._exit_fields)
         # Split element
-        element_list = [el._part(f, numpy.sum(frac)) for f in frac]
+        element_list = [el._part(f, np.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
         for key, value in fin.items():
             setattr(element_list[0], key, value)
@@ -559,7 +562,7 @@ class LongElement(Element):
             elif f1 is None or f2 is None:  # only one
                 return False
             else:  # both
-                return numpy.all(f1 == f2)
+                return np.all(f1 == f2)
 
         if not (type(other) is type(self) and self.PassMethod == other.PassMethod):
             return False
@@ -592,13 +595,13 @@ class BeamMoments(Element):
         Default PassMethod: ``BeamMomentsPass``
         """
         kwargs.setdefault("PassMethod", "BeamMomentsPass")
-        self._stds = numpy.zeros((6, 1, 1), order="F")
-        self._means = numpy.zeros((6, 1, 1), order="F")
+        self._stds = np.zeros((6, 1, 1), order="F")
+        self._means = np.zeros((6, 1, 1), order="F")
         super().__init__(family_name, **kwargs)
 
     def set_buffers(self, nturns, nbunch):
-        self._stds = numpy.zeros((6, nbunch, nturns), order="F")
-        self._means = numpy.zeros((6, nbunch, nturns), order="F")
+        self._stds = np.zeros((6, nbunch, nturns), order="F")
+        self._means = np.zeros((6, nbunch, nturns), order="F")
 
     @property
     def stds(self):
@@ -637,20 +640,20 @@ class SliceMoments(Element):
         self.startturn = self._startturn
         self.endturn = self._endturn
         self._dturns = self.endturn - self.startturn
-        self._stds = numpy.zeros((3, nslice, self._dturns), order="F")
-        self._means = numpy.zeros((3, nslice, self._dturns), order="F")
-        self._spos = numpy.zeros((nslice, self._dturns), order="F")
-        self._weights = numpy.zeros((nslice, self._dturns), order="F")
+        self._stds = np.zeros((3, nslice, self._dturns), order="F")
+        self._means = np.zeros((3, nslice, self._dturns), order="F")
+        self._spos = np.zeros((nslice, self._dturns), order="F")
+        self._weights = np.zeros((nslice, self._dturns), order="F")
         self.set_buffers(self._endturn, 1)
 
     def set_buffers(self, nturns, nbunch):
         self.endturn = min(self.endturn, nturns)
         self._dturns = self.endturn - self.startturn
         self._nbunch = nbunch
-        self._stds = numpy.zeros((3, nbunch * self.nslice, self._dturns), order="F")
-        self._means = numpy.zeros((3, nbunch * self.nslice, self._dturns), order="F")
-        self._spos = numpy.zeros((nbunch * self.nslice, self._dturns), order="F")
-        self._weights = numpy.zeros((nbunch * self.nslice, self._dturns), order="F")
+        self._stds = np.zeros((3, nbunch * self.nslice, self._dturns), order="F")
+        self._means = np.zeros((3, nbunch * self.nslice, self._dturns), order="F")
+        self._spos = np.zeros((nbunch * self.nslice, self._dturns), order="F")
+        self._weights = np.zeros((nbunch * self.nslice, self._dturns), order="F")
 
     @property
     def stds(self):
@@ -784,11 +787,11 @@ class Drift(LongElement):
         """
         frac, elements = zip(*insert_list)
         lg = [0.0 if el is None else el.Length for el in elements]
-        fr = numpy.asarray(frac, dtype=float)
-        lg = 0.5 * numpy.asarray(lg, dtype=float) / self.Length
-        drfrac = numpy.hstack((fr - lg, 1.0)) - numpy.hstack((0.0, fr + lg))
+        fr = np.asarray(frac, dtype=float)
+        lg = 0.5 * np.asarray(lg, dtype=float) / self.Length
+        drfrac = np.hstack((fr - lg, 1.0)) - np.hstack((0.0, fr + lg))
         long_elems = drfrac != 0.0
-        drifts = numpy.ndarray((len(drfrac),), dtype="O")
+        drifts = np.ndarray((len(drfrac),), dtype="O")
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
         line = [None] * nline  # type: list[Optional[Element]]
@@ -837,12 +840,12 @@ class ThinMultipole(Element):
         """
 
         def getpol(poly):
-            nonzero = numpy.flatnonzero(poly != 0.0)
+            nonzero = np.flatnonzero(poly != 0.0)
             return poly, len(poly), nonzero[-1] if len(nonzero) > 0 else -1
 
         def lengthen(poly, dl):
             if dl > 0:
-                return numpy.concatenate((poly, numpy.zeros(dl)))
+                return np.concatenate((poly, np.zeros(dl)))
             else:
                 return poly
 
@@ -1252,7 +1255,7 @@ class M66(Element):
         Default PassMethod: ``Matrix66Pass``
         """
         if m66 is None:
-            m66 = numpy.identity(6)
+            m66 = np.identity(6)
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
         super().__init__(family_name, **kwargs)
@@ -1365,24 +1368,24 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
         if taux == 0.0:
             dampx = 1
         else:
-            dampx = numpy.exp(-1 / taux)
+            dampx = np.exp(-1 / taux)
 
         assert tauy >= 0.0, "tauy must be greater than or equal to 0"
         if tauy == 0.0:
             dampy = 1
         else:
-            dampy = numpy.exp(-1 / tauy)
+            dampy = np.exp(-1 / tauy)
 
         assert tauz >= 0.0, "tauz must be greater than or equal to 0"
         if tauz == 0.0:
             dampz = 1
         else:
-            dampz = numpy.exp(-1 / tauz)
+            dampz = np.exp(-1 / tauz)
 
         kwargs.setdefault("PassMethod", self.default_pass[True])
         kwargs.setdefault("U0", U0)
         kwargs.setdefault(
-            "damp_mat_diag", numpy.array([dampx, dampx, dampy, dampy, dampz, dampz])
+            "damp_mat_diag", np.array([dampx, dampx, dampy, dampy, dampz, dampz])
         )
 
         super().__init__(family_name, **kwargs)
@@ -1503,7 +1506,7 @@ class QuantumDiffusion(_DictLongtMotion, Element):
     default_pass = {False: "IdentityPass", True: "QuantDiffPass"}
     _conversions = dict(Element._conversions, Lmatp=_array66)
 
-    def __init__(self, family_name: str, lmatp: numpy.ndarray, **kwargs):
+    def __init__(self, family_name: str, lmatp: np.ndarray, **kwargs):
         """Quantum diffusion element
 
         Args:
