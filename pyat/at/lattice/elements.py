@@ -20,6 +20,9 @@ import numpy
 # noinspection PyProtectedMember
 from .variables import _nop
 
+_zero6 = numpy.zeros(6)
+_eye6 = numpy.eye(6, order="F")
+
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
@@ -447,6 +450,57 @@ class Element:
     def is_collective(self) -> bool:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
+
+    def _getshift(self, idx):
+        t1 = getattr(self, "T1", _zero6)
+        t2 = getattr(self, "T2", _zero6)
+        return 0.5 * (t2[idx] - t1[idx])
+
+    def _setshift(self, value, idx):
+        t1 = getattr(self, "T1", _zero6.copy())
+        t2 = getattr(self, "T2", _zero6.copy())
+        sm = t2[idx] + t1[idx]
+        t2[idx] = 0.5 * (sm + value)
+        t1[idx] = 0.5 * (sm - value)
+        self.T1 = t1
+        self.T2 = t2
+
+    @property
+    def dx(self):
+        return self._getshift(0)
+
+    @dx.setter
+    def dx(self, value):
+        self._setshift(value, 0)
+
+    @property
+    def dy(self):
+        return self._getshift(2)
+
+    @dy.setter
+    def dy(self, value):
+        self._setshift(value, 2)
+
+    @property
+    def tilt(self):
+        r1 = getattr(self, "R1", _eye6)
+        r2 = getattr(self, "R2", _eye6)
+        c = r2[0, 0] + r1[0, 0]
+        s = r2[2, 0] - r1[2, 0]
+        return numpy.atan2(s, c)
+
+    @tilt.setter
+    def tilt(self, value):
+        r1 = getattr(self, "R1", _eye6.copy())
+        r2 = getattr(self, "R2", _eye6.copy())
+        ct, st = numpy.cos(value), numpy.sin(value)
+        r44 = numpy.diag([ct, ct, ct, ct])
+        r44[0, 2] = r44[1, 3] = st
+        r44[2, 0] = r44[3, 1] = -st
+        r1[:4, :4] = r44
+        r2[:4, :4] = r44.T
+        self.R1 = r1
+        self.R2 = r2
 
 
 class LongElement(Element):
