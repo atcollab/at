@@ -602,9 +602,6 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
-        ids = ring.get_uint32_index(steerrefs)
-        nbsteers = len(ids)
-        deltas = np.broadcast_to(steerdelta, nbsteers)
         if steersum and stsumweight is None or cavrefs and cavdelta is None:
             cavd, stsw = set_norm()
 
@@ -628,6 +625,9 @@ class OrbitResponseMatrix(ResponseMatrix):
             observables.append(sumobs)
 
         # Variables
+        ids = ring.get_uint32_index(steerrefs)
+        nbsteers = len(ids)
+        deltas = np.broadcast_to(steerdelta, nbsteers)
         variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
@@ -642,12 +642,11 @@ class OrbitResponseMatrix(ResponseMatrix):
             )
             variables.append(cavvar)
 
+        super().__init__(ring, variables, observables)
         self.plane = pl
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
-
-        super().__init__(ring, variables, observables)
 
     def normalise(
         self, cav_ampl: float | None = 2.0, stsum_ampl: float | None = 2.0
@@ -813,9 +812,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
               also the steerer weight. Must be broadcastable to the number of steerers.
         """
 
-        def steerer(ik):
+        def steerer(ik, delta):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name)
+            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
@@ -826,12 +825,16 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         )
         observables = ObservableList([bpms])
         # Variables
-        steeridx = ring.get_uint32_index(steerrefs)
-        variables = VariableList(steerer(idx) for idx in steeridx)
-
-        self.steerdelta = steerdelta
+        ids = ring.get_uint32_index(steerrefs)
+        nbsteers = len(ids)
+        deltas = np.broadcast_to(steerdelta, nbsteers)
+        variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
 
         super().__init__(ring, variables, observables)
+        self.plane = plane
+        self.steerrefs = ids
+        self.nbsteers = nbsteers
+        self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
     @property
     def bpmweight(self):
