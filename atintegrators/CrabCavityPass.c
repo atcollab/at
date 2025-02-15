@@ -120,8 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		double *Voltages = atGetDoubleArray(ElemData,"Voltages"); check_error();
 		double Frequency = atGetDouble(ElemData,"Frequency"); check_error();
 		/* Optional fields */
-		double Energy = atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
-		double Energy = atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
+		double Energy = atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
 		double Phase = atGetOptionalDouble(ElemData,"Phase",0.0); check_error();
 		double SigPhi = atGetOptionalDouble(ElemData,"SigPhi",0.0); check_error();
 		double SigVV = atGetOptionalDouble(ElemData,"SigVV",0.0); check_error();
@@ -132,7 +131,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
 	    CrabCavityPass(r_in, Length, Voltages[0]/Energy, Voltages[1]/Energy,
-	        Frequency, Phase, SigPhi, SigVV, num_particles);
+	        Frequency, Phase, SigPhi, SigVV, &pcg32_global, num_particles);
     }
     else if (nrhs == 0) {
 	    plhs[0] = mxCreateCellMatrix(3,1);
