@@ -14,7 +14,8 @@ struct elem
     double Vy;
     double Frequency;
     double Energy;
-    double Phase;
+    double TimeLag;
+    double PhaseLag;
     double SigPhi;
     double SigVV;
 };
@@ -37,7 +38,7 @@ static void CrabCavityPass(double *r_in, double le, double nvx, double nvy,
 	double k = TWOPI*freq/C0;
 
     if (sigphi > 0.0)
-        phi = phi + atrandn_r(rng, 0.0, sigphi);
+        phi += atrandn_r(rng, 0.0, sigphi);
     if (sigvv > 0.0) {
         nvx *= atrandn_r(rng, 1.0, sigvv);
         nvy *= atrandn_r(rng, 1.0, sigvv);
@@ -75,15 +76,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {
     double energy;
+    double lag, t0f, phiref;
 
     if (!Elem) {
-        double Length, *Voltages, Energy, Frequency, Phase, SigPhi, SigVV;
+        double Length, *Voltages, Energy, Frequency, TimeLag, PhaseLag, SigPhi, SigVV;
 		Length = atGetDouble(ElemData,"Length"); check_error();
 		Voltages = atGetDoubleArray(ElemData,"Voltages"); check_error();
 		Frequency = atGetDouble(ElemData,"Frequency"); check_error();
 		/* Optional fields */
 		Energy = atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
-		Phase = atGetOptionalDouble(ElemData,"Phase",0.0); check_error();
+        TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0.0); check_error();
+        PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0.0); check_error();
 		SigPhi = atGetOptionalDouble(ElemData,"SigPhi",0.0); check_error();
 		SigVV = atGetOptionalDouble(ElemData,"SigVV",0.0); check_error();
 
@@ -93,13 +96,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->Vy=Voltages[1];
         Elem->Energy=Energy;
         Elem->Frequency=Frequency;
-        Elem->Phase=Phase;
+        Elem->TimeLag=TimeLag;
+        Elem->PhaseLag=PhaseLag;
         Elem->SigPhi=SigPhi;
         Elem->SigVV=SigVV;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
+    t0f = Elem->Frequency * Param->T0;
+    lag = TWOPI*Elem->Frequency*Elem->TimeLag/C0 + Elem->PhaseLag;
+    phiref = TWOPI * (t0f - round(t0f)) * Param->nturn - lag;
     CrabCavityPass(r_in, Elem->Length, Elem->Vx/energy, Elem->Vy/energy,
-        Elem->Frequency, Elem->Phase, Elem->SigPhi, Elem->SigVV, Param->common_rng, num_particles);
+        Elem->Frequency, phiref, Elem->SigPhi, Elem->SigVV, Param->common_rng, num_particles);
     return Elem;
 }
 
@@ -111,6 +118,7 @@ MODULE_DEF(CrabCavityPass)        /* Dummy module initialisation */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs >= 2) {
+        double lag, phiref;
         double *r_in;
         double rest_energy = 0.0;
         double charge = -1.0;
@@ -121,7 +129,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		double Frequency = atGetDouble(ElemData,"Frequency"); check_error();
 		/* Optional fields */
 		double Energy = atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
-		double Phase = atGetOptionalDouble(ElemData,"Phase",0.0); check_error();
+		double TimeLag = atGetOptionalDouble(ElemData,"TimeLag",0.0); check_error();
+		double PhaseLag = atGetOptionalDouble(ElemData,"PhaseLag",0.0); check_error();
 		double SigPhi = atGetOptionalDouble(ElemData,"SigPhi",0.0); check_error();
 		double SigVV = atGetOptionalDouble(ElemData,"SigVV",0.0); check_error();
         if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
@@ -130,8 +139,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
+        lag = TWOPI*Frequency*TimeLag/C0 + PhaseLag;
+        phiref = -lag;
 	    CrabCavityPass(r_in, Length, Voltages[0]/Energy, Voltages[1]/Energy,
-	        Frequency, Phase, SigPhi, SigVV, &pcg32_global, num_particles);
+	        Frequency, phiref, SigPhi, SigVV, &pcg32_global, num_particles);
     }
     else if (nrhs == 0) {
 	    plhs[0] = mxCreateCellMatrix(3,1);
@@ -139,11 +150,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    mxSetCell(plhs[0],1,mxCreateString("Voltages"));
 	    mxSetCell(plhs[0],2,mxCreateString("Frequency"));
 	    if (nlhs > 1) { /* optional fields */
-	        plhs[1] = mxCreateCellMatrix(4,1);
+	        plhs[1] = mxCreateCellMatrix(5,1);
     	    mxSetCell(plhs[0],0,mxCreateString("Energy"));
-            mxSetCell(plhs[1],1,mxCreateString("Phase"));
-			mxSetCell(plhs[1],2,mxCreateString("SigPhi"));
-			mxSetCell(plhs[1],3,mxCreateString("SigVV"));
+            mxSetCell(plhs[1],1,mxCreateString("TimeLag"));
+            mxSetCell(plhs[1],2,mxCreateString("PhaseLag"));
+			mxSetCell(plhs[1],3,mxCreateString("SigPhi"));
+			mxSetCell(plhs[1],4,mxCreateString("SigVV"));
 	    }
     }
     else {
