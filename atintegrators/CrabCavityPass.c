@@ -96,10 +96,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy, beta0, gamma0, betgam0;
     double t0f, lag, phiref, nvx, nvy;
     long HarmNumber;
-    double SigPhi, SigVV;
+    double Frequency, SigPhi, SigVV;
 
     if (!Elem) {
-        double Length, *Voltages, Energy, Frequency, TimeLag, PhaseLag;
+        double Length, *Voltages, Energy, TimeLag, PhaseLag;
 		Length = atGetDouble(ElemData,"Length"); check_error();
 		Voltages = atGetDoubleArray(ElemData,"Voltages"); check_error();
 		Frequency = atGetDouble(ElemData,"Frequency"); check_error();
@@ -123,6 +123,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->SigVV=SigVV;
     }
     else {
+        Frequency=Elem->Frequency;
         SigPhi=Elem->SigPhi;
         SigVV=Elem->SigVV;
     }
@@ -137,8 +138,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         betgam0 = gamma0;
         beta0 = 1.0;
     }
-    t0f = Elem->Frequency * Param->T0;
-    lag = TWOPI*Elem->Frequency*Elem->TimeLag/beta0/C0 + Elem->PhaseLag;
+    t0f = Frequency * Param->T0;
+    lag = TWOPI*Frequency*Elem->TimeLag/beta0/C0 + Elem->PhaseLag;
     phiref = TWOPI * (t0f - Elem->HarmNumber) * Param->nturn - lag;
     nvx = Elem->Vx/energy/beta0/beta0;
     nvy = Elem->Vy/energy/beta0/beta0;
@@ -150,7 +151,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         nvy *= atrandn_r(Param->common_rng, 1.0, SigVV);
     }
 
-    CrabCavityPass(r_in, Elem->Length, nvx, nvy, Elem->Frequency, betgam0, phiref, num_particles);
+    CrabCavityPass(r_in, Elem->Length, nvx, nvy, Frequency, betgam0, phiref, num_particles);
     return Elem;
 }
 
@@ -163,7 +164,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs >= 2) {
         double betgam0, beta0, gamma0;
-        double lag, phiref;
+        double lag, phiref, nvx, nvy;
         double *r_in;
         double rest_energy = 0.0;
         double charge = -1.0;
@@ -193,9 +194,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         lag = TWOPI*Frequency*TimeLag/beta0/C0 + PhaseLag;
         phiref = -lag;
-        normvx = Voltages[0] / Energy / beta0 / beta0;
-        normvy = Voltages[1] / Energy / beta0 / beta0;
-	    CrabCavityPass(r_in, Length, normvx, normvy, Frequency, betgam0, phiref, num_particles);
+        nvx = Voltages[0] / Energy / beta0 / beta0;
+        nvy = Voltages[1] / Energy / beta0 / beta0;
+	    CrabCavityPass(r_in, Length, nvx, nvy, Frequency, betgam0, phiref, num_particles);
     }
     else if (nrhs == 0) {
 	    plhs[0] = mxCreateCellMatrix(3,1);
