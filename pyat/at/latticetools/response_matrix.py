@@ -48,7 +48,7 @@ Matrix Building
 
 The response matrix may be built by three methods:
 
-1. :py:meth:`~ResponseMatrix.build` computes the matrix using tracking
+1. :py:meth:`~ResponseMatrix.build_tracking` computes the matrix using tracking
    (any :py:class:`ResponseMatrix`)
 2. :py:meth:`~OrbitResponseMatrix.build_analytical` analytically computes the matrix
    using formulas from [1]_ (:py:class:`OrbitResponseMatrix` only)
@@ -210,11 +210,15 @@ class _SvdSolver(abc.ABC):
         self._varmask = None
 
     @abc.abstractmethod
-    def build(self) -> None:
+    def build_tracking(self) -> None:
         """Build the response matrix."""
         nobs, nvar = self._response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
+
+    def build_analytical(self) -> None:
+        """Build the response matrix."""
+        raise NotImplementedError("build_analytical not implemented for self.__class__.__name__")
 
     @property
     @abc.abstractmethod
@@ -255,7 +259,9 @@ class _SvdSolver(abc.ABC):
         """Response matrix."""
         resp = self._response
         if resp is None:
-            raise AtError("No response matrix yet: run build() or load() first")
+            raise AtError(
+                "No response matrix yet: run build_tracking() or load() first"
+            )
         return resp
 
     @property
@@ -302,7 +308,7 @@ class _SvdSolver(abc.ABC):
               be appended to the filename if it does not already have one.
         """
         if self._response is None:
-            raise AtError("No response matrix: run build() first")
+            raise AtError("No response matrix: run build_tracking() or load() first")
         np.save(file, self._response)
 
     def load(self, file) -> None:
@@ -417,7 +423,7 @@ class ResponseMatrix(_SvdSolver):
                 self.variables.increment(corr, ring=ring)
         return sumcorr
 
-    def build(
+    def build_tracking(
         self,
         use_mp: bool = False,
         pool_size: int | None = None,
@@ -481,14 +487,14 @@ class ResponseMatrix(_SvdSolver):
             results = _resp(ring.deepcopy(), self.observables, self.variables, **kwargs)
 
         self._response = np.stack(results, axis=-1)
-        super().build()
+        super().build_tracking()
 
     def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
         # noinspection PyUnresolvedReferences
         r"""Exclude items from :py:class:`.Observable`\ s.
 
         After excluding observation points, the matrix must be rebuilt with
-        :py:meth:`build`.
+        :py:meth:`build_tracking`.
 
         Args:
             obsname:    :py:class:`.Observable` name.
@@ -583,7 +589,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         def set_norm():
             bpm = LocalOpticsObservable(bpmrefs, "beta", plane=pl)
-            sts = LocalOpticsObservable(ids, "beta", plane=pl)
+            sts = LocalOpticsObservable(steerrefs, "beta", plane=pl)
             dsp = LocalOpticsObservable(bpmrefs, "dispersion", plane=2 * pl)
             tun = GlobalOpticsObservable("tune", plane=pl)
             obs = ObservableList([bpm, sts, dsp, tun])
@@ -602,6 +608,9 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
+        ids = ring.get_uint32_index(steerrefs)
+        nbsteers = len(ids)
+        deltas = np.broadcast_to(steerdelta, nbsteers)
         if steersum and stsumweight is None or cavrefs and cavdelta is None:
             cavd, stsw = set_norm()
 
@@ -625,9 +634,6 @@ class OrbitResponseMatrix(ResponseMatrix):
             observables.append(sumobs)
 
         # Variables
-        ids = ring.get_uint32_index(steerrefs)
-        nbsteers = len(ids)
-        deltas = np.broadcast_to(steerdelta, nbsteers)
         variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
