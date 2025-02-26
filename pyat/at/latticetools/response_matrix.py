@@ -51,7 +51,8 @@ The response matrix may be built by three methods:
 1. :py:meth:`~ResponseMatrix.build_tracking` computes the matrix using tracking
    (any :py:class:`ResponseMatrix`)
 2. :py:meth:`~OrbitResponseMatrix.build_analytical` analytically computes the matrix
-   using formulas from [1]_ (:py:class:`OrbitResponseMatrix` only)
+   using formulas from [1]_ (:py:class:`OrbitResponseMatrix` and
+   :py:class:`TrajectoryResponseMatrix` only)
 3. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
    saved values or experimentally measured values
 
@@ -210,15 +211,18 @@ class _SvdSolver(abc.ABC):
         self._varmask = None
 
     @abc.abstractmethod
-    def build_tracking(self) -> None:
+    def build_tracking(self):
         """Build the response matrix."""
         nobs, nvar = self._response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
+        return self._response
 
-    def build_analytical(self) -> None:
+    def build_analytical(self):
         """Build the response matrix."""
-        raise NotImplementedError("build_analytical not implemented for self.__class__.__name__")
+        raise NotImplementedError(
+            f"build_analytical not implemented for {self.__class__.__name__}"
+        )
 
     @property
     @abc.abstractmethod
@@ -429,7 +433,7 @@ class ResponseMatrix(_SvdSolver):
         pool_size: int | None = None,
         start_method: str | None = None,
         **kwargs,
-    ) -> None:
+    ):
         """Build the response matrix.
 
         Args:
@@ -450,6 +454,9 @@ class ResponseMatrix(_SvdSolver):
               Defaults to :py:obj:`None`
             r_in (Orbit):   Initial trajectory, used for
               :py:class:`TrajectoryResponseMatrix`, Default: zeros(6)
+
+        Returns:
+            response:       Response matrix
         """
         self.buildargs = kwargs
         self.observables.evaluate(self.ring)
@@ -487,7 +494,7 @@ class ResponseMatrix(_SvdSolver):
             results = _resp(ring.deepcopy(), self.observables, self.variables, **kwargs)
 
         self._response = np.stack(results, axis=-1)
-        super().build_tracking()
+        return super().build_tracking()
 
     def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
         # noinspection PyUnresolvedReferences
@@ -682,7 +689,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 self.stsumweight * normobs[-1] / np.mean(normobs[:-1]) / stsum_ampl
             )
 
-    def build_analytical(self, **kwargs) -> None:
+    def build_analytical(self, **kwargs):
         """Build analytically the response matrix.
 
         Keyword Args:
@@ -690,6 +697,9 @@ class OrbitResponseMatrix(ResponseMatrix):
             dct (float):    Path lengthening. Defaults to :py:obj:`None`
             df (float):     Deviation from the nominal RF frequency.
               Defaults to :py:obj:`None`
+
+        Returns:
+            response:       Response matrix
 
         References:
             .. [1] A. Franchi, S.M. Liuzzo, Z, Marti, *"Analytic formulas for
@@ -708,8 +718,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         pl = self.plane
         _, ringdata, elemdata = ring.linopt6(All, **kwargs)
         pi_tune = math.pi * ringdata.tune[pl]
-        dataj = elemdata[self.steerrefs]
-        dataw = elemdata[self.bpmrefs]
+        dataw = elemdata[self.steerrefs]
+        dataj = elemdata[self.bpmrefs]
         dispj = dataj.dispersion[:, 2 * pl]
         dispw = dataw.dispersion[:, 2 * pl]
         lw = np.array([elem.Length for elem in ring.select(self.steerrefs)])
@@ -824,6 +834,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
         pl = plane_(plane, "index")
         plcode = plane_(plane, "code")
+        ids = ring.get_uint32_index(steerrefs)
+        nbsteers = len(ids)
+        deltas = np.broadcast_to(steerdelta, nbsteers)
         # Observables
         nm = f"{plcode}_positions"
         bpms = TrajectoryObservable(
@@ -831,16 +844,53 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         )
         observables = ObservableList([bpms])
         # Variables
-        ids = ring.get_uint32_index(steerrefs)
-        nbsteers = len(ids)
-        deltas = np.broadcast_to(steerdelta, nbsteers)
         variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
 
         super().__init__(ring, variables, observables)
-        self.plane = plane
+        self.plane = pl
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
+
+    def build_analytical(self, **kwargs):
+        """Build analytically the response matrix.
+
+        Keyword Args:
+            dp (float):     Momentum deviation. Defaults to :py:obj:`None`
+            dct (float):    Path lengthening. Defaults to :py:obj:`None`
+            df (float):     Deviation from the nominal RF frequency.
+              Defaults to :py:obj:`None`
+
+        Returns:
+            response:       Response matrix
+
+        References:
+            .. [1] A. Franchi, S.M. Liuzzo, Z, Marti, *"Analytic formulas for
+               the rapid evaluation of the orbit response matrix and chromatic functions
+               from lattice parameters in circular accelerators"*,
+               arXiv:1711.06589 [physics.acc-ph]
+        """
+        ring = self.ring
+        pl = self.plane
+        twiss_in = kwargs.pop("twiss_in", {"beta": np.ones(2), "alpha": np.zeros(2)})
+        _, _, elemdata = ring.linopt6(All, twiss_in=twiss_in, **kwargs)
+        dataj = elemdata[self.bpmrefs]
+        dataw = elemdata[self.steerrefs]
+        lw = np.array([elem.Length for elem in ring.select(self.steerrefs)])
+
+        sqbetaw = np.sqrt(dataw.beta[:, pl])
+        ts = lw / sqbetaw / 2.0
+        tc = sqbetaw - dataw.alpha[:, pl] * ts
+        twj = dataj.mu[:, pl].reshape(-1, 1) - dataw.mu[:, pl]
+        jcwj = tc * np.sin(twj) - ts * np.cos(twj)
+        coefj = np.sqrt(dataj.beta[:, pl])
+        resp = coefj[:, np.newaxis] * jcwj
+        resp[twj < 0.0] = 0.0
+        self._response = resp
+        nobs, nvar = self._response.shape
+        self._obsmask = np.ones(nobs, dtype=bool)
+        self._varmask = np.ones(nvar, dtype=bool)
+        return resp
 
     @property
     def bpmweight(self):
