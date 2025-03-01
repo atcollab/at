@@ -109,9 +109,22 @@ After solving, orbit correction is available, for instance with
 * :py:meth:`~ResponseMatrix.correction_matrix` which returns the correction matrix
   (pseudo-inverse of the response matrix),
 * :py:meth:`~ResponseMatrix.get_correction` which returns a correction vector when
-  given observed values,
+  given error values,
 * :py:meth:`~ResponseMatrix.correct` which computes and optionally applies a correction
   for the provided :py:class:`.Lattice`.
+
+Exclusion of variables and observables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Variables may be added to a set of excluded values, and similarly for observables.
+Excluded an item does not change the response matrix. The values are excluded from the
+pseudo-inversion of the response, possibly reducing thenumber of singular values.
+After inversion the correction matrix is expanded to its original size by inserting
+zero lines and columns at the location of excluded items. This way:
+
+- error and correction vectors keep the same size independently of excluded values,
+- excluded error values are ignored,
+- excluded corrections are set to zero.
 """
 
 from __future__ import annotations
@@ -128,17 +141,20 @@ import copy
 import multiprocessing
 import concurrent.futures
 import abc
+import warnings
 from collections.abc import Sequence, Generator
 from itertools import chain
 from functools import partial
 import math
 
 import numpy as np
+from numpy.ma.core import logical_not
 
+from .observables import ElementObservable
 from .observables import TrajectoryObservable, OrbitObservable, LatticeObservable
 from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
-from ..lattice import AtError, Lattice, Refpts, AxisDef, plane_, All
+from ..lattice import AtError, AtWarning, Lattice, Refpts, AxisDef, plane_, All
 from ..lattice import Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableList
@@ -147,6 +163,8 @@ _orbit_correctors = checkattr("KickAngle")
 
 _globring: Lattice | None = None
 _globobs: ObservableList | None = None
+
+warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def sequence_split(seq: Sequence, nslices: int) -> Generator[Sequence, None, None]:
@@ -202,27 +220,14 @@ def _resp_fork(variables: VariableList, **kwargs):
 class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
 
-    def __init__(self):
+    def __init__(self, nobs, nvar):
+        self._shape = (nobs, nvar)
         self._response = None
         self.v = None
         self.singular_values = None
         self.uh = None
-        self._obsmask = None
-        self._varmask = None
-
-    @abc.abstractmethod
-    def build_tracking(self):
-        """Build the response matrix."""
-        nobs, nvar = self._response.shape
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
-        return self._response
-
-    def build_analytical(self):
-        """Build the response matrix."""
-        raise NotImplementedError(
-            f"build_analytical not implemented for {self.__class__.__name__}"
-        )
 
     @property
     @abc.abstractmethod
@@ -231,6 +236,11 @@ class _SvdSolver(abc.ABC):
     @property
     @abc.abstractmethod
     def obsweights(self): ...
+
+    @property
+    def shape(self):
+        """Shape of the response matrix."""
+        return self._shape
 
     def solve(self) -> None:
         """Compute the singular values of the response matrix."""
@@ -259,14 +269,20 @@ class _SvdSolver(abc.ABC):
         return obs, var
 
     @property
-    def response(self):
+    def response(self) -> np.ndarray:
         """Response matrix."""
         resp = self._response
         if resp is None:
-            raise AtError(
-                "No response matrix yet: run build_tracking() or load() first"
-            )
+            raise AtError("No matrix yet: run build() or load() first")
         return resp
+
+    @response.setter
+    def response(self, response: np.ndarray) -> None:
+        l1, c1 = self._shape
+        l2, c2 = response.shape
+        if l1 != l1 or c1 != c2:
+            raise ValueError("Input matrix has incompatible shape")
+        self._response = response
 
     @property
     def weighted_response(self):
@@ -287,7 +303,10 @@ class _SvdSolver(abc.ABC):
             self.solve()
         if nvals is None:
             nvals = len(self.singular_values)
-        return self.v[:, :nvals] @ self.uh[:nvals, :]
+        cormat = np.zeros(self._shape)
+        selected = np.ix_(self._obsmask, self._varmask)
+        cormat[selected] = self.v[:, :nvals] @ self.uh[:nvals, :]
+        return cormat
 
     def get_correction(self, observed, nvals: int | None = None):
         """Compute the correction of the given observation.
@@ -322,10 +341,8 @@ class _SvdSolver(abc.ABC):
             file:   file-like object, string, or :py:class:`pathlib.Path`: the file to
               read. A file object must always be opened in binary mode.
         """
-        self._response = np.load(file)
-        nobs, nvar = self._response.shape
-        self._obsmask = np.ones(nobs, dtype=bool)
-        self._varmask = np.ones(nvar, dtype=bool)
+        resp = np.load(file)
+        self.response = resp
 
 
 class ResponseMatrix(_SvdSolver):
@@ -351,6 +368,14 @@ class ResponseMatrix(_SvdSolver):
             variables:      List of :py:class:`~.variables.VariableBase`\ s
             observables:    List of :py:class:`.Observable`\s
         """
+
+        def limits(obslist):
+            beg = 0
+            for obs in obslist:
+                end = beg + obs.value.size
+                yield beg, end
+                beg = end
+
         # for efficiency of parallel computation, the variable's refpts must be integer
         for var in variables:
             var.refpts = ring.get_uint32_index(var.refpts)
@@ -360,11 +385,12 @@ class ResponseMatrix(_SvdSolver):
         self.buildargs = {}
         variables.get(ring=ring, initial=True)
         observables.evaluate(ring=ring, initial=True)
-        super().__init__()
+        super().__init__(len(observables.flat_values), len(variables))
+        self._ob = [self._obsmask[beg:end] for beg, end in limits(self.observables)]
 
     def __iadd__(self, other: ResponseMatrix):
-        if not isinstance(other, type(self)):
-            mess = "Cannot add a {} to an {}}"
+        if not isinstance(other, ResponseMatrix):
+            mess = "Cannot add {} and {}}"
             raise TypeError(mess.format(type(other), type(self)))
         self.variables += other.variables
         self.observables += other.observables
@@ -379,11 +405,6 @@ class ResponseMatrix(_SvdSolver):
     def __str__(self):
         no, nv = self.shape
         return f"{type(self).__name__}({no} observables, {nv} variables)"
-
-    @property
-    def shape(self):
-        """Shape of the response matrix."""
-        return len(self.observables.flat_values), len(self.variables)
 
     @property
     def varweights(self):
@@ -433,7 +454,7 @@ class ResponseMatrix(_SvdSolver):
         pool_size: int | None = None,
         start_method: str | None = None,
         **kwargs,
-    ):
+    ) -> np.ndarray:
         """Build the response matrix.
 
         Args:
@@ -493,32 +514,100 @@ class ResponseMatrix(_SvdSolver):
             ring = ring.replace(boolrefs)
             results = _resp(ring.deepcopy(), self.observables, self.variables, **kwargs)
 
-        self._response = np.stack(results, axis=-1)
-        return super().build_tracking()
+        resp = np.stack(results, axis=-1)
+        self.response = resp
+        return resp
 
-    def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
+    def build_analytical(self) -> np.ndarray:
+        """Build the response matrix."""
+        raise NotImplementedError(
+            f"build_analytical not implemented for {self.__class__.__name__}"
+        )
+
+    def exclude_obs(self, *, name: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
-        r"""Exclude items from :py:class:`.Observable`\ s.
+        r"""Add an observable item to the set of excluded values
 
-        After excluding observation points, the matrix must be rebuilt with
-        :py:meth:`build_tracking`.
+        After excluding observation points, the matrix must be inverted again using
+        :py:meth:`solve`.
 
         Args:
-            obsname:    :py:class:`.Observable` name.
-            excluded:   location of elements to exclude
+            name:       :py:class:`.Observable` name or index in the observable list.
+            refpts:     location of elements to exclude for
+              :py:class:`.ElementObservable` objects, otherwise ignored.
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h", Monitor, Corrector)
-            >>> resp.exclude_obs("x_orbit", "BPM_02")
+            >>> resp.exclude_obs(name="x_orbit", refpts="BPM_02")
 
             Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude the monitor with name "BPM_02"
         """
-        self.observables.exclude(obsname, excluded)
-        # Force a full rebuild
-        self.singular_values = None
-        self._response = None
+
+        def exclude(ob, msk):
+            inimask = msk.copy()
+            if isinstance(ob, ElementObservable) and not ob.summary:
+                boolref = self.ring.get_bool_index(refpts)
+                # noinspection PyProtectedMember
+                msk &= np.logical_not(boolref[ob._boolrefs])
+            else:
+                msk[:] = False
+            if np.all(msk == inimask):
+                warnings.warn(AtWarning("No new excluded value"), stacklevel=1)
+            # Force a new computation
+            self.singular_values = None
+
+        if not isinstance(name, str):
+            exclude(self.observables[name], self._ob[name])
+        else:
+            for obs, mask in zip(self.observables, self._ob):
+                if obs.name == name:
+                    exclude(obs, mask)
+                    break
+            else:
+                raise ValueError(f"Observable {name} not found")
+
+    @property
+    def excluded_obs(self) -> dict:
+        """Directory of excluded observables.
+
+        The dictionary keys are the observable names, the values are the integer
+        indices of excluded items (empty list if no exclusion).
+        """
+
+        def ex(obs, mask):
+            if isinstance(obs, ElementObservable) and not obs.summary:
+                refpts = self.ring.get_bool_index(None)
+                # noinspection PyProtectedMember
+                refpts[obs._boolrefs] = np.logical_not(mask)
+                refpts = self.ring.get_uint32_index(refpts)
+            else:
+                refpts = np.arange(0 if np.all(mask) else mask.size, dtype=np.uint32)
+            return refpts
+
+        return {ob.name: ex(ob, mask) for ob, mask in zip(self.observables, self._ob)}
+
+    def exclude_vars(self, *names) -> None:
+        """Add variables to the set of excluded variables.
+
+        Args:
+            *names:  Names of variables to exclude.
+
+        After excluding variables, the matrix must be inverted again using
+        :py:meth:`solve`.
+        """
+        nameset = set(names)
+        mask = np.array([var.name in nameset for var in self.variables])
+        miss = nameset - {var.name for var, ok in zip(self.variables, mask) if ok}
+        if miss:
+            raise ValueError(f"Unknown variables: {miss}")
+        self._varmask &= logical_not(mask)
+
+    @property
+    def excluded_vars(self) -> list:
+        """List of excluded variables"""
+        return [var.name for var, ok in zip(self.variables, self._varmask) if not ok]
 
 
 class OrbitResponseMatrix(ResponseMatrix):
@@ -529,11 +618,11 @@ class OrbitResponseMatrix(ResponseMatrix):
     vertical matrices.
 
     Variables are a set of steerers and optionally the RF frequency. Steerer
-    variables are named ``hxxxx`` or ``vxxxx`` where xxxx is the index in the
+    variables are named ``xnnnn`` or ``ynnnn`` where nnnn is the index in the
     lattice. The RF frequency variable is named ``RF frequency``.
 
     Observables are the closed orbit position at selected points, named
-    ``h_orbit`` for the horizontal plane or ``v_orbit`` for vertical plane,
+    ``x_orbit`` for the horizontal plane or ``y_orbit`` for the vertical plane,
     and optionally the sum of steerer angles named ``sum(h_kicks)`` or
     ``sum(v_kicks)``
     """
@@ -661,6 +750,41 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
+    def exclude_obs(self, *, name: int | str = 0, refpts: Refpts = None) -> None:
+        # noinspection PyUnresolvedReferences
+        r"""Add an observable item to the set of excluded values.
+
+        After excluding observation points, the matrix must be rebuilt with
+        :py:meth:`build_tracking`.
+
+        Args:
+            name:    If 0 (default), act on Monitors. Otherwise,
+              it must be 1 or "sum(x_kicks)"  or "sum(y_kicks)"
+            refpts:    location of Monitors to exclude
+
+        Example:
+            >>> resp = OrbitResponseMatrix(ring, "h")
+            >>> resp.exclude_obs("BPM_02")
+
+            Create an horizontal :py:class:`OrbitResponseMatrix` from
+            :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
+            and exclude all monitors with name "BPM_02"
+        """
+        super().exclude_obs(name=name, refpts=refpts)
+
+    def exclude_vars(self, refpts: Refpts) -> None:
+        """Add correctors to the set of excluded variables.
+
+        Args:
+            refpts:  location of correctors to exclude
+
+        After excluding correctors, the matrix must be inverted again using
+        :py:meth:`solve`.
+        """
+        plcode = plane_(self.plane, "code")
+        names = [f"{plcode}{ik:04}" for ik in self.ring.get_uint32_index(refpts)]
+        super().exclude_vars(*names)
+
     def normalise(
         self, cav_ampl: float | None = 2.0, stsum_ampl: float | None = 2.0
     ) -> None:
@@ -689,7 +813,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 self.stsumweight * normobs[-1] / np.mean(normobs[:-1]) / stsum_ampl
             )
 
-    def build_analytical(self, **kwargs):
+    def build_analytical(self, **kwargs) -> np.ndarray:
         """Build analytically the response matrix.
 
         Keyword Args:
@@ -743,10 +867,8 @@ class OrbitResponseMatrix(ResponseMatrix):
             if len(self.variables) > self.nbsteers:
                 sumst[-1] = 0.0
             resp = np.concatenate((resp, sumst[np.newaxis]), axis=0)
-        self._response = resp
-        nobs, nvar = self._response.shape
-        self._obsmask = np.ones(nobs, dtype=bool)
-        self._varmask = np.ones(nvar, dtype=bool)
+        self.response = resp
+        return resp
 
     @property
     def bpmweight(self):
@@ -852,7 +974,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
-    def build_analytical(self, **kwargs):
+    def build_analytical(self, **kwargs) -> np.ndarray:
         """Build analytically the response matrix.
 
         Keyword Args:
@@ -886,11 +1008,41 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         coefj = np.sqrt(dataj.beta[:, pl])
         resp = coefj[:, np.newaxis] * jcwj
         resp[twj < 0.0] = 0.0
-        self._response = resp
-        nobs, nvar = self._response.shape
-        self._obsmask = np.ones(nobs, dtype=bool)
-        self._varmask = np.ones(nvar, dtype=bool)
+        self.response = resp
         return resp
+
+    def exclude_obs(self, *, name: int | str = 0, refpts: Refpts = None) -> None:
+        # noinspection PyUnresolvedReferences
+        r"""Add a monitor to the set of excluded values.
+
+        After excluding observation points, the matrix must be rebuilt with
+        :py:meth:`build_tracking`.
+
+        Args:
+            refpts:    location of Monitors to exclude
+
+        Example:
+            >>> resp = TrajectoryResponseMatrix(ring, "v")
+            >>> resp.exclude_obs("BPM_02")
+
+            Create a vertical :py:class:`TrajectoryResponseMatrix` from
+            :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
+            and exclude all monitors with name "BPM_02"
+        """
+        super().exclude_obs(name=name, refpts=refpts)
+
+    def exclude_vars(self, refpts: Refpts) -> None:
+        """Add correctors to the set of excluded variables.
+
+        Args:
+            refpts:  location of correctors to exclude
+
+        After excluding correctors, the matrix must be inverted again using
+        :py:meth:`solve`.
+        """
+        plcode = plane_(self.plane, "code")
+        names = [f"{plcode}{ik:04}" for ik in self.ring.get_uint32_index(refpts)]
+        super().exclude_vars(*names)
 
     @property
     def bpmweight(self):
