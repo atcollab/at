@@ -15,55 +15,55 @@ This module also defines two commonly used response matrices:
 defined by providing the desired Observables and Variables to the
 :py:class:`ResponseMatrix` base class.
 
+Generic response matrix
+-----------------------
+
+The :py:class:`ResponseMatrix` class defines a general-purpose response matrix, based
+on a :py:class:`.VariableList` of quantities which will be independently varied, and an
+:py:class:`.ObservableList` of quantities which will be recorded for each step.
+
+For instance let's take the horizontal displacements of all quadrupoles as variables:
+
+>>> variables = VariableList(
+...     RefptsVariable(ik, "dx", name=f"dx_{ik}", delta=0.0001)
+...     for ik in ring.get_uint32_index(at.Quadrupole)
+... )
+
+The variables are the horizontal displacement ``dx`` of all quadrupoles. The variable
+name is set to *dx_nnnn* where *nnnn* is the index of the quadruple in the lattice.
+The step is set to 0.0001 m.
+
+Let's take the horizontal positions at all beam position monitors as observables:
+
+>>> observables = at.ObservableList([at.OrbitObservable(at.Monitor, axis="x")])
+
+This is a single observable named *orbit[x]* by default, with multiple values.
+
 Instantiation
 ^^^^^^^^^^^^^
 
-The simplest orbit response matrix can be instantiated with:
+>>> resp_dx = at.ResponseMatrix(ring, variables, observables)
 
->>> resp_v = OrbitResponseMatrix(ring, "v")
-
-By default, the observables are all the :py:class:`.Monitor` elements, and the
-variables are all the elements having a *KickAngle* attribute. This is equivalent to:
-
->>> resp_v = OrbitResponseMatrix(
-...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
-... )
-
-If correction is desired, the variable elements must have the *KickAngle* attribute
-used for correction. It's available for all magnets, though not present by default
-except in :py:class:`.Corrector` magnets. For other magnets, the attribute should be
-explicitly created.
-
-There are options in :py:class:`OrbitResponseMatrix` to include the RF frequency in the
-variable list, and the sum of correction angles in the list of observables:
-
->>> resp_h = OrbitResponseMatrix(ring, "h", cavrefs=at.RFCavity, steersum=True)
-
-A combined horizontal+vertical response matrix is obtained with:
-
->>> resp_hv = resp_h + resp_v
+At that point, the response matrix is empty.
 
 Matrix Building
 ^^^^^^^^^^^^^^^
 
-The response matrix may be built by three methods:
+The response matrix may be filled by several means:
 
-1. :py:meth:`~ResponseMatrix.build_tracking` computes the matrix using tracking
-   (any :py:class:`ResponseMatrix`)
-2. :py:meth:`~OrbitResponseMatrix.build_analytical` analytically computes the matrix
-   using formulas from [1]_ (:py:class:`OrbitResponseMatrix` and
-   :py:class:`TrajectoryResponseMatrix` only)
-3. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
-   saved values or experimentally measured values
+#. Direct assignment of an array to the :py:attr:`~.ResponseMatrix.response` property.
+   The shape of the array is checked.
+#. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
+   saved values or experimentally measured values,
+#. :py:meth:`~ResponseMatrix.build_tracking` computes the matrix using tracking,
+#. For some specialized response matrices a
+   :py:meth:`~OrbitResponseMatrix.build_analytical` method is available.
 
-Normalisation
-^^^^^^^^^^^^^
+Matrix normalisation
+^^^^^^^^^^^^^^^^^^^^
 
 To be correctly inverted, the response matrix must be correctly normalised: the norms
 of its columns must be of the same order of magnitude, and similarly for the rows.
-This is critical when including the RF frequency response which is not commensurate
-with steerer response. Similarly for rows, the sum of steerers is not commensurate with
-monitor readings.
 
 Normalisation is done by adjusting the weights :math:`w_v` for the variables
 :math:`\mathbf{V}` and :math:`w_o` for the observables :math:`\mathbf{O}`.
@@ -86,25 +86,17 @@ using:
   norms for variables and observables. These should be less than 10.
 * :py:meth:`~.ResponseMatrix.plot_norm`
 
-By default, the normalisation is done automatically by adjusting the RF frequency step
-and the weight of the steerer sum based on the analytical response matrix. Explicitly
-specifying the *cavdelta* and *stsumweight* prevents this automatical normalisation.
-
-After building the response matrix, and before solving, normalisation may be applied
-with the :py:meth:`~.OrbitResponseMatrix.normalise` method. The default normalisation
-gives a higher priority to RF response and steerer sum.
-
 Both natural and weighted response matrices can be retrieved with the
 :py:attr:`~ResponseMatrix.response` and :py:attr:`~ResponseMatrix.weighted_response`
 properties.
 
-Inversion
-^^^^^^^^^
+Matrix pseudo-inversion
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The :py:meth:`~ResponseMatrix.solve` method computes the singular values of the
 weighted response matrix.
 
-After solving, orbit correction is available, for instance with
+After solving, correction is available, for instance with
 
 * :py:meth:`~ResponseMatrix.correction_matrix` which returns the correction matrix
   (pseudo-inverse of the response matrix),
@@ -117,7 +109,7 @@ Exclusion of variables and observables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Variables may be added to a set of excluded values, and similarly for observables.
-Excluded an item does not change the response matrix. The values are excluded from the
+Excluding an item does not change the response matrix. The values are excluded from the
 pseudo-inversion of the response, possibly reducing thenumber of singular values.
 After inversion the correction matrix is expanded to its original size by inserting
 zero lines and columns at the location of excluded items. This way:
@@ -125,6 +117,16 @@ zero lines and columns at the location of excluded items. This way:
 - error and correction vectors keep the same size independently of excluded values,
 - excluded error values are ignored,
 - excluded corrections are set to zero.
+
+Variables can be added to the set of excluded variables using
+:py:meth:`~.ResponseMatrix.exclude_vars` and observables using
+:py:meth:`~.ResponseMatrix.exclude_obs`.
+
+After excluding items, the pseudo-inverse is discarded so one must recompute it again
+by calling :py:meth:`~ResponseMatrix.solve`.
+
+The exclusion masks can be reset with  :py:meth:`~.ResponseMatrix.reset_vars` and
+:py:meth:`~.ResponseMatrix.reset_obs`.
 """
 
 from __future__ import annotations
@@ -137,7 +139,6 @@ __all__ = [
 ]
 
 import os
-import copy
 import multiprocessing
 import concurrent.futures
 import abc
@@ -223,11 +224,25 @@ class _SvdSolver(abc.ABC):
     def __init__(self, nobs, nvar):
         self._shape = (nobs, nvar)
         self._response = None
-        self.v = None
-        self.singular_values = None
-        self.uh = None
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
+        self.v = None
+        self.uh = None
+        self.singular_values = None
+
+    def reset_vars(self):
+        """Reset the variable exclusion mask: enable variables"""
+        self._varmask = np.ones(self.shape[1], dtype=bool)
+        self.v = None
+        self.uh = None
+        self.singular_values = None
+
+    def reset_obs(self):
+        """Reset the observable exclusion mask: enable observables"""
+        self._obsmask = np.ones(self.shape[0], dtype=bool)
+        self.v = None
+        self.uh = None
+        self.singular_values = None
 
     @property
     @abc.abstractmethod
@@ -247,8 +262,8 @@ class _SvdSolver(abc.ABC):
         resp = self.weighted_response
         selected = np.ix_(self._obsmask, self._varmask)
         u, s, vh = np.linalg.svd(resp[selected], full_matrices=False)
-        self.v = vh.T * (1 / s) * self.varweights.reshape(-1, 1)
-        self.uh = u.T / self.obsweights
+        self.v = vh.T * (1 / s) * self.varweights[self._varmask].reshape(-1, 1)
+        self.uh = u.T / self.obsweights[self._obsmask]
         self.singular_values = s
 
     def check_norm(self) -> tuple[np.ndarray, np.ndarray]:
@@ -281,15 +296,17 @@ class _SvdSolver(abc.ABC):
         l1, c1 = self._shape
         l2, c2 = response.shape
         if l1 != l1 or c1 != c2:
-            raise ValueError("Input matrix has incompatible shape")
+            raise ValueError(
+                f"Input matrix has incompatible shape. Expected: {self.shape}"
+            )
         self._response = response
 
     @property
-    def weighted_response(self):
+    def weighted_response(self) -> np.ndarray:
         """Weighted response matrix."""
         return self.response * (self.varweights / self.obsweights.reshape(-1, 1))
 
-    def correction_matrix(self, nvals: int | None = None):
+    def correction_matrix(self, nvals: int | None = None) -> np.ndarray:
         """Return the correction matrix (pseudo-inverse of the response matrix).
 
         Args:
@@ -308,7 +325,9 @@ class _SvdSolver(abc.ABC):
         cormat[selected] = self.v[:, :nvals] @ self.uh[:nvals, :]
         return cormat
 
-    def get_correction(self, observed, nvals: int | None = None):
+    def get_correction(
+        self, observed: np.ndarray, nvals: int | None = None
+    ) -> np.ndarray:
         """Compute the correction of the given observation.
 
         Args:
@@ -322,7 +341,7 @@ class _SvdSolver(abc.ABC):
         return -self.correction_matrix(nvals=nvals) @ observed
 
     def save(self, file) -> None:
-        """Save a response matrix.
+        """Save a response matrix in the NumPy .npy format.
 
         Args:
             file:   file-like object, string, or :py:class:`pathlib.Path`: File to
@@ -335,14 +354,13 @@ class _SvdSolver(abc.ABC):
         np.save(file, self._response)
 
     def load(self, file) -> None:
-        """Load a response matrix.
+        """Load a response matrix saved in the NumPy .npy format.
 
         Args:
             file:   file-like object, string, or :py:class:`pathlib.Path`: the file to
               read. A file object must always be opened in binary mode.
         """
-        resp = np.load(file)
-        self.response = resp
+        self.response = np.load(file)
 
 
 class ResponseMatrix(_SvdSolver):
@@ -388,19 +406,16 @@ class ResponseMatrix(_SvdSolver):
         super().__init__(len(observables.flat_values), len(variables))
         self._ob = [self._obsmask[beg:end] for beg, end in limits(self.observables)]
 
-    def __iadd__(self, other: ResponseMatrix):
-        if not isinstance(other, ResponseMatrix):
-            mess = "Cannot add {} and {}}"
-            raise TypeError(mess.format(type(other), type(self)))
-        self.variables += other.variables
-        self.observables += other.observables
-        self._response = None
-        return self
-
     def __add__(self, other: ResponseMatrix):
-        nresp = copy.copy(self)
-        nresp += other
-        return nresp
+        if not isinstance(other, ResponseMatrix):
+            raise TypeError(
+                f"Cannot add {type(other).__name__} and {type(self).__name__}"
+            )
+        return ResponseMatrix(
+            self.ring,
+            VariableList(self.variables + other.variables),
+            self.observables + other.observables
+        )
 
     def __str__(self):
         no, nv = self.shape
@@ -611,20 +626,36 @@ class ResponseMatrix(_SvdSolver):
 
 
 class OrbitResponseMatrix(ResponseMatrix):
+    # noinspection PyUnresolvedReferences
     r"""Orbit response matrix.
 
     An :py:class:`OrbitResponseMatrix` applies to a single plane, horizontal or
     vertical. A combined response matrix is obtained by adding horizontal and
-    vertical matrices.
+    vertical matrices. However, the resulting matrix has the :py:class:`ResponseMatrix`
+    class, which implies that the :py:class:`OrbitResponseMatrix` specific methods are
+    not available.
 
     Variables are a set of steerers and optionally the RF frequency. Steerer
     variables are named ``xnnnn`` or ``ynnnn`` where nnnn is the index in the
     lattice. The RF frequency variable is named ``RF frequency``.
 
     Observables are the closed orbit position at selected points, named
-    ``x_orbit`` for the horizontal plane or ``y_orbit`` for the vertical plane,
+    ``orbit[x]`` for the horizontal plane or ``orbit[y]`` for the vertical plane,
     and optionally the sum of steerer angles named ``sum(h_kicks)`` or
     ``sum(v_kicks)``
+
+    The variable elements must have the *KickAngle* attribute used for correction.
+    It's available for all magnets, though not present by default
+    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
+    should be explicitly created.
+
+    By default, the observables are all the :py:class:`.Monitor` elements, and the
+    variables are all the elements having a *KickAngle* attribute.
+    This is equivalent to:
+
+    >>> resp_v = OrbitResponseMatrix(
+    ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
+    ... )
     """
 
     def __init__(
@@ -711,9 +742,8 @@ class OrbitResponseMatrix(ResponseMatrix):
             cavd, stsw = set_norm()
 
         # Observables
-        nm = f"{plcode}_orbit"
         bpms = OrbitObservable(
-            bpmrefs, axis=2 * pl, name=nm, target=bpmtarget, weight=bpmweight
+            bpmrefs, axis=2 * pl, target=bpmtarget, weight=bpmweight
         )
         observables = ObservableList([bpms])
         if steersum:
@@ -826,7 +856,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             response:       Response matrix
 
         References:
-            .. [1] A. Franchi, S.M. Liuzzo, Z, Marti, *"Analytic formulas for
+            .. [#Franchi] A. Franchi, S.M. Liuzzo, Z. Marti, *"Analytic formulas for
                the rapid evaluation of the orbit response matrix and chromatic functions
                from lattice parameters in circular accelerators"*,
                arXiv:1711.06589 [physics.acc-ph]
@@ -910,15 +940,26 @@ class OrbitResponseMatrix(ResponseMatrix):
 class TrajectoryResponseMatrix(ResponseMatrix):
     """Trajectory response matrix.
 
-    Variables are a set of steerers,
+    A :py:class:`TrajectoryResponseMatrix` applies to a single plane, horizontal or
+    vertical. A combined response matrix is obtained by adding horizontal and vertical
+    matrices. However, the resulting matrix has the :py:class:`ResponseMatrix`
+    class, which implies that the :py:class:`OrbitResponseMatrix` specific methods are
+    not available.
 
-    Observables are the trajectory position at selected points, named
-    ``h_positions`` for the horizontal plane or ``v_positions`` for vertical
-    plane.
+    Variables are a set of steerers. Steerer variables are named ``xnnnn`` or
+    ``ynnnn`` where *nnnn* is the index in the lattice.
 
-    A :py:class:`TrajectoryResponseMatrix` applies to a single plane,
-    horizontal or vertical. A combined response matrix is obtained by adding
-    horizontal and vertical matrices
+    Observables are the trajectory position at selected points, named ``trajectory[x]``
+    for the horizontal plane or ``trajectory[y]`` for the vertical plane.
+
+    The variable elements must have the *KickAngle* attribute used for correction.
+    It's available for all magnets, though not present by default
+    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
+    should be explicitly created.
+
+    By default, the observables are all the :py:class:`.Monitor` elements, and the
+    variables are all the elements having a *KickAngle* attribute.
+
     """
 
     def __init__(
@@ -960,9 +1001,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         nbsteers = len(ids)
         deltas = np.broadcast_to(steerdelta, nbsteers)
         # Observables
-        nm = f"{plcode}_positions"
         bpms = TrajectoryObservable(
-            bpmrefs, axis=2 * pl, name=nm, target=bpmtarget, weight=bpmweight
+            bpmrefs, axis=2 * pl, target=bpmtarget, weight=bpmweight
         )
         observables = ObservableList([bpms])
         # Variables
@@ -985,12 +1025,6 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
         Returns:
             response:       Response matrix
-
-        References:
-            .. [1] A. Franchi, S.M. Liuzzo, Z, Marti, *"Analytic formulas for
-               the rapid evaluation of the orbit response matrix and chromatic functions
-               from lattice parameters in circular accelerators"*,
-               arXiv:1711.06589 [physics.acc-ph]
         """
         ring = self.ring
         pl = self.plane
@@ -1004,9 +1038,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         ts = lw / sqbetaw / 2.0
         tc = sqbetaw - dataw.alpha[:, pl] * ts
         twj = dataj.mu[:, pl].reshape(-1, 1) - dataw.mu[:, pl]
-        jcwj = tc * np.sin(twj) - ts * np.cos(twj)
+        jswj = tc * np.sin(twj) - ts * np.cos(twj)
         coefj = np.sqrt(dataj.beta[:, pl])
-        resp = coefj[:, np.newaxis] * jcwj
+        resp = coefj[:, np.newaxis] * jswj
         resp[twj < 0.0] = 0.0
         self.response = resp
         return resp
