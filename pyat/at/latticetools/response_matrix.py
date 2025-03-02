@@ -110,7 +110,7 @@ Exclusion of variables and observables
 
 Variables may be added to a set of excluded values, and similarly for observables.
 Excluding an item does not change the response matrix. The values are excluded from the
-pseudo-inversion of the response, possibly reducing thenumber of singular values.
+pseudo-inversion of the response, possibly reducing the number of singular values.
 After inversion the correction matrix is expanded to its original size by inserting
 zero lines and columns at the location of excluded items. This way:
 
@@ -231,14 +231,14 @@ class _SvdSolver(abc.ABC):
         self.singular_values = None
 
     def reset_vars(self):
-        """Reset the variable exclusion mask: enable variables"""
+        """Reset the variable exclusion mask: enable all variables"""
         self._varmask = np.ones(self.shape[1], dtype=bool)
         self.v = None
         self.uh = None
         self.singular_values = None
 
     def reset_obs(self):
-        """Reset the observable exclusion mask: enable observables"""
+        """Reset the observable exclusion mask: enable all observables"""
         self._obsmask = np.ones(self.shape[0], dtype=bool)
         self.v = None
         self.uh = None
