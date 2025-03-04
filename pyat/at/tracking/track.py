@@ -35,12 +35,11 @@ def _atpass_spawn(ring, seed, rank, rin, **kwargs):
     return rin, result
 
 
-def _pass(ring, r_in, pool_size, start_method, **kwargs):
+def _pass(ring, r_in, pool_size, start_method, seed, **kwargs):
     ctx = multiprocessing.get_context(start_method)
     # Split input in as many slices as processes
     args = enumerate(numpy.array_split(r_in, pool_size, axis=1))
     # Generate a new starting point for C RNGs
-    seed = random.common.integers(0, high=_imax, dtype=int)
     global _globring
     _globring = ring
     if ctx.get_start_method() == 'fork':
@@ -63,7 +62,7 @@ def _element_pass(element: Element, r_in, **kwargs):
 
 @fortran_align
 def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
-                  refpts: Refpts = End, no_varelem=True, **kwargs):
+                  refpts: Refpts = End, no_varelem=True, seed: int | None = None, **kwargs):
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
     if no_varelem:
         lattice = disable_varelem(lattice)
@@ -71,26 +70,32 @@ def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
         if sum(variable_refs(lattice)) > 0:
             kwargs['reuse'] = False
     refs = get_uint32_index(lattice, refpts)
+    if seed is not None:
+        reset_rng(seed=seed)
     return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
 
 
 @fortran_align
 def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
-                   refpts: Refpts = End, pool_size: int = None,
+                   refpts: Refpts = End, seed: int | None = None, pool_size: int = None,
                    start_method: str = None, **kwargs):
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
     kwargs['reuse'] = kwargs.pop('keep_lattice', False)
     rshape = r_in.shape
     if len(rshape) >= 2 and rshape[1] > 1 and not any_collective:
+        if seed is None:
+            seed = random.common.integers(0, high=_imax, dtype=int)
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
                             DConstant.patpass_poolsize)
         if start_method is None:
             start_method = DConstant.patpass_startmethod
-        return _pass(lattice, r_in, pool_size, start_method, nturns=nturns,
+        return _pass(lattice, r_in, pool_size, start_method, seed=seed, nturns=nturns,
                      refpts=refpts, **kwargs)
     else:
+        if seed is not None:
+            reset_rng(seed=seed)
         if any_collective:
             warn(AtWarning('Collective PassMethod found: use single process'))
         else:
@@ -125,6 +130,8 @@ def lattice_track(lattice: Iterable[Element], r_in,
         in_place (bool): If True *r_in* is modified in-place and
           reports the coordinates at the end of the element.
           (default: False)
+        seed (int | None): Seed for the random generators. If None (default)
+          continue the sequence
         keep_lattice (bool):    Use elements persisted from a previous
           call. If :py:obj:`True`, assume that the lattice has not changed
           since the previous call.
