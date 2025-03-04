@@ -52,6 +52,7 @@ typedef double mxDouble;
 #define RINGPROPERTIES prhs[9]
 #define TURN prhs[10]
 #define KEEPCOUNTER prhs[11]
+#define SEED prhs[12]
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
 									exceeds this limit it is marked as lost */
@@ -249,6 +250,7 @@ static mxDouble *passhook(mxArray *mxPassArg[], mxArray *mxElem, mxArray *func)
 @param[in]      [9] RINGPROPERTIES
 @param[in]     [10] TURN
 @param[in]     [11] KEEPCOUNTER
+@param[in]     [12] SEED
 */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -281,6 +283,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int num_particles = mxGetN(INITCONDITIONS);
     int counter = (nrhs >= 11) ? (int)mxGetScalar(TURN) : 0;
     int keep_counter = (nrhs >= 12) ? (int)mxGetScalar(KEEPCOUNTER) : 0;
+    int seed = (nrhs >= 13) ? (int)mxGetScalar(SEED) : -1;
     int np6 = num_particles*6;
     int ihist, lhist;
     mxDouble *histbuf = NULL;
@@ -306,7 +309,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.nbunch = 1;
     param.num_turns = num_turns;
     param.bdiff = NULL;
-
+    
+    if (seed >= 0) {
+        pcg32_srandom_r(&common_state, seed, AT_RNG_INC);
+        pcg32_srandom_r(&thread_state, seed, 0);
+    }
     if (keep_counter)
         param.nturn = last_turn;
     else
