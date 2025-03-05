@@ -1,24 +1,29 @@
 from __future__ import annotations
+
+__all__ = [
+    "lattice_track",
+    "element_track",
+    "internal_lpass",
+    "internal_epass",
+    "internal_plpass",
+]
+
+import multiprocessing
+from collections.abc import Iterable
+from functools import partial
+from warnings import warn
+
 import numpy
-from .atpass import atpass as _atpass, elempass as _elempass
+
+from .atpass import atpass as _atpass, elempass as _elempass, reset_rng
 from .utils import fortran_align, has_collective, format_results
 from .utils import initialize_lpass, disable_varelem, variable_refs
+from ..lattice import AtWarning, DConstant, random
 from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
-from ..lattice import AtWarning, DConstant, random
-from collections.abc import Iterable
-from typing import Optional
-from functools import partial
-import multiprocessing
-from warnings import warn
-from .atpass import reset_rng
-
-
-__all__ = ['lattice_track', 'element_track', 'internal_lpass',
-           'internal_epass', 'internal_plpass']
 
 _imax = numpy.iinfo(int).max
-_globring: Optional[list[Element]] = None
+_globring: list[Element] | None = None
 
 
 def _atpass_fork(seed, rank, rin, **kwargs):
@@ -42,7 +47,7 @@ def _pass(ring, r_in, pool_size, start_method, seed, **kwargs):
     # Generate a new starting point for C RNGs
     global _globring
     _globring = ring
-    if ctx.get_start_method() == 'fork':
+    if ctx.get_start_method() == "fork":
         passfunc = partial(_atpass_fork, seed, **kwargs)
     else:
         passfunc = partial(_atpass_spawn, ring, seed, **kwargs)
@@ -51,7 +56,7 @@ def _pass(ring, r_in, pool_size, start_method, seed, **kwargs):
         results = pool.starmap(passfunc, args)
     _globring = None
     # Gather the results
-    losses = kwargs.pop('losses', False)
+    losses = kwargs.pop("losses", False)
     return format_results(results, r_in, losses)
 
 
@@ -61,14 +66,21 @@ def _element_pass(element: Element, r_in, **kwargs):
 
 
 @fortran_align
-def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
-                  refpts: Refpts = End, no_varelem=True, seed: int | None = None, **kwargs):
-    kwargs['reuse'] = kwargs.pop('keep_lattice', False)
+def _lattice_pass(
+    lattice: list[Element],
+    r_in,
+    nturns: int = 1,
+    refpts: Refpts = End,
+    no_varelem=True,
+    seed: int | None = None,
+    **kwargs,
+):
+    kwargs["reuse"] = kwargs.pop("keep_lattice", False)
     if no_varelem:
         lattice = disable_varelem(lattice)
     else:
         if sum(variable_refs(lattice)) > 0:
-            kwargs['reuse'] = False
+            kwargs["reuse"] = False
     refs = get_uint32_index(lattice, refpts)
     if seed is not None:
         reset_rng(seed=seed)
@@ -76,36 +88,62 @@ def _lattice_pass(lattice: list[Element], r_in, nturns: int = 1,
 
 
 @fortran_align
-def _plattice_pass(lattice: list[Element], r_in, nturns: int = 1,
-                   refpts: Refpts = End, seed: int | None = None, pool_size: int = None,
-                   start_method: str = None, **kwargs):
+def _plattice_pass(
+    lattice: list[Element],
+    r_in,
+    nturns: int = 1,
+    refpts: Refpts = End,
+    seed: int | None = None,
+    pool_size: int = None,
+    start_method: str = None,
+    **kwargs,
+):
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
-    kwargs['reuse'] = kwargs.pop('keep_lattice', False)
+    kwargs["reuse"] = kwargs.pop("keep_lattice", False)
     rshape = r_in.shape
     if len(rshape) >= 2 and rshape[1] > 1 and not any_collective:
         if seed is None:
             seed = random.common.integers(0, high=_imax, dtype=int)
         if pool_size is None:
-            pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
-                            DConstant.patpass_poolsize)
+            pool_size = min(
+                len(r_in[0]), multiprocessing.cpu_count(), DConstant.patpass_poolsize
+            )
         if start_method is None:
             start_method = DConstant.patpass_startmethod
-        return _pass(lattice, r_in, pool_size, start_method, seed=seed, nturns=nturns,
-                     refpts=refpts, **kwargs)
+        return _pass(
+            lattice,
+            r_in,
+            pool_size,
+            start_method,
+            seed=seed,
+            nturns=nturns,
+            refpts=refpts,
+            **kwargs,
+        )
     else:
         if seed is not None:
             reset_rng(seed=seed)
         if any_collective:
-            warn(AtWarning('Collective PassMethod found: use single process'))
+            warn(
+                AtWarning("Collective PassMethod found: use single process"),
+                stacklevel=2,
+            )
         else:
-            warn(AtWarning('no parallel computation for a single particle'))
+            warn(
+                AtWarning("no parallel computation for a single particle"), stacklevel=2
+            )
         return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
-def lattice_track(lattice: Iterable[Element], r_in,
-                  nturns: int = 1, refpts: Refpts = End,
-                  in_place: bool = False, **kwargs):
+def lattice_track(
+    lattice: Iterable[Element],
+    r_in,
+    nturns: int = 1,
+    refpts: Refpts = End,
+    in_place: bool = False,
+    **kwargs,
+):
     """
     :py:func:`track_function` tracks particles through each element of a
     lattice or throught a single Element calling the element-specific
@@ -118,7 +156,7 @@ def lattice_track(lattice: Iterable[Element], r_in,
     Parameters:
         lattice: list of elements
         r_in: (6, N) array: input coordinates of N particles.
-          *r_in* is modified in-place only if *in_place* is 
+          *r_in* is modified in-place only if *in_place* is
           :py:obj:`True` and reports the coordinates at
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
@@ -235,52 +273,49 @@ def lattice_track(lattice: Iterable[Element], r_in,
     """
     trackdata = {}
     trackparam = {}
-    part_kw = ['energy', 'particle']
+    part_kw = ["energy", "particle"]
     try:
         npart = numpy.shape(r_in)[1]
     except IndexError:
         npart = 1
 
     [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in part_kw]
-    trackparam.update({'npart': npart})
+    trackparam.update({"npart": npart})
 
     if not in_place:
         r_in = r_in.copy()
 
     lattice = initialize_lpass(lattice, nturns, kwargs)
-    ldtype = [('islost', numpy.bool_),
-              ('turn', numpy.uint32),
-              ('elem', numpy.uint32),
-              ('coord', numpy.float64, (6,)),
-              ]
+    ldtype = [
+        ("islost", numpy.bool_),
+        ("turn", numpy.uint32),
+        ("elem", numpy.uint32),
+        ("coord", numpy.float64, (6,)),
+    ]
     loss_map = numpy.recarray((npart,), ldtype)
-    lat_kw = ['turn']
-    [trackparam.update((kw, kwargs.get(kw)))
-     for kw in kwargs if kw in lat_kw]
-    trackparam.update({'refpts': get_uint32_index(lattice, refpts),
-                       'nturns': nturns})
+    lat_kw = ["turn"]
+    [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in lat_kw]
+    trackparam.update({"refpts": get_uint32_index(lattice, refpts), "nturns": nturns})
 
-    use_mp = kwargs.pop('use_mp', False)
-    start_method = kwargs.pop('start_method', None)
-    pool_size = kwargs.pop('pool_size', None)
+    use_mp = kwargs.pop("use_mp", False)
+    start_method = kwargs.pop("start_method", None)
+    pool_size = kwargs.pop("pool_size", None)
     if use_mp:
-        kwargs.update({'pool_size': pool_size,
-                       'start_method': start_method})
-        rout = _plattice_pass(lattice, r_in, nturns=nturns,
-                              refpts=refpts, **kwargs)
+        kwargs.update({"pool_size": pool_size, "start_method": start_method})
+        rout = _plattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
     else:
-        rout = _lattice_pass(lattice, r_in, nturns=nturns,
-                             refpts=refpts, no_varelem=False,
-                             **kwargs)
+        rout = _lattice_pass(
+            lattice, r_in, nturns=nturns, refpts=refpts, no_varelem=False, **kwargs
+        )
 
-    if kwargs.get('losses', False):
+    if kwargs.get("losses", False):
         rout, lm = rout
-        lm['coord'] = lm['coord'].T
+        lm["coord"] = lm["coord"].T
         for k, v in lm.items():
             loss_map[k] = v
 
-    trackdata.update({'loss_map': loss_map})
-    trackparam.update({'rout': r_in})
+    trackdata.update({"loss_map": loss_map})
+    trackparam.update({"rout": r_in})
 
     return rout, trackparam, trackdata
 
@@ -321,7 +356,7 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
     rout = _element_pass(element, r_in, **kwargs)
     return rout
-    
+
 
 internal_lpass = _lattice_pass
 internal_epass = _element_pass
