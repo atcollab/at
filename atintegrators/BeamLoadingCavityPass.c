@@ -287,7 +287,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double normfact, phasegain, voltgain;
       double *turnhistory;
       double *z_cuts;
-      double Energy, Frequency, TimeLag, Length;
+      double Energy, Frequency, TimeLag, Length, detune_angle;
       double qfactor,rshunt,beta;
       double *vbunch;
       double *vbeam_phasor;
