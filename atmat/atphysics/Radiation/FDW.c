@@ -235,19 +235,19 @@ static void FindElemB(double *orbit_in, double le, double Lw, double Bmax,
 		{
 			wigglerM(&pWig, orbit_in, dl1, MKICK);
 			wigglerB(&pWig, orbit_in, dl1, BKICK);
-			ATsandwichmmt(MKICK,BKICK);
+			ATsandwichmmt(MKICK,BDIFF);
 		  ATaddmm(BKICK,BDIFF);
 	   	GWigMap_2nd(&pWig, orbit_in, dl1);
 
 			wigglerM(&pWig, orbit_in, dl0, MKICK);
 			wigglerB(&pWig, orbit_in, dl0, BKICK);
-			ATsandwichmmt(MKICK,BKICK);
+			ATsandwichmmt(MKICK,BDIFF);
 			ATaddmm(BKICK,BDIFF);
       GWigMap_2nd(&pWig, orbit_in, dl0);
 
 			wigglerM(&pWig, orbit_in, dl1, MKICK);
 			wigglerB(&pWig, orbit_in, dl1, BKICK);
-			ATsandwichmmt(MKICK,BKICK);
+			ATsandwichmmt(MKICK,BDIFF);
 			ATaddmm(BKICK,BDIFF);
       GWigMap_2nd(&pWig, orbit_in, dl1);
 

@@ -26,7 +26,12 @@ long=atgetcells(ring,'Length',@(elem,lg) lg>0) & refs(1:end-1); %lr-1
 needed=refs | [false;long]; %lr
 initial=[long(needed(1:end-1));false]; %needed
 final=[false;initial(1:end-1)]; %needed
-[lind,nu,xsi]=atlinopt(ring,dpp,needed,varargin{:}); %needed
+wstate=getoption('WarningDp6D');
+setoption('WarningDp6D',false);
+[ringdata, lind]=atlinopt6(ring,needed,'dp',dpp,'get_chrom',varargin{:}); %needed
+setoption('WarningDp6D',wstate);
+nu = ringdata.tune;
+xsi = ringdata.chromaticity;
 
 lindata=lind(refs(needed)); %refpts
 avebeta=cat(1,lindata.beta); %refpts
@@ -41,7 +46,7 @@ lg=initial(refs(needed)); % refpts
 
 beta0=avebeta(lg,:); %long
 alpha0=cat(1,lin0.alpha); %long
-mu0=avemu(lg,:);
+mu0=avemu(lg,:); %long
 disp0=avedisp(lg,:); %long
 
 mu1=cat(1,lin1.mu); %long

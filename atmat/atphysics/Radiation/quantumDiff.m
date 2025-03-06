@@ -11,22 +11,15 @@ function DiffMat = quantumDiff(elems, varargin)
 %   RADINDEX:   Ignored
 %   ORBITIN:    Initial 6-D closed orbit.
 %               In this mode, LINE may be a section of a ring.
-%
-%DIFFMAT=QUANTUMDIFF(...,'Energy',ENERGY)
-%   ENERGY:     Lattice energy
 
 [orb0,varargs]=getoption(varargin, 'orbit',[]);
-[energy,varargs]=getoption(varargs,'Energy',[]);
 [radindex,orb0,varargs]=getargs(varargs,[],orb0); %#ok<ASGLU>
 
 if isempty(orb0)
     orb0=findorbit6(elems);
 end
-if isempty(energy)
-    energy=atGetRingProperties(elems,'Energy');
-end
 
-BCUM=atdiffmat(elems,energy,'orbit',orb0);
+BCUM=atdiffmat(elems,'orbit',orb0);
 
 DiffMat=(BCUM+BCUM')/2;
 end

@@ -157,6 +157,7 @@ def ringparam_filter(
         else:
             yield elem
     params["_radiation"] = radiate
+    params.setdefault("periodicity", 0)
 
     if len(ringparams) > 1:
         warn(

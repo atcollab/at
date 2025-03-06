@@ -1,4 +1,4 @@
-function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts,energy) %#ok<INUSD>
+function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts) %#ok<INUSD>
 %OHMIENVELOPE calculates equilibrium beam envelope in a
 % circular accelerator using Ohmi's beam envelope formalism [1].
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
@@ -7,16 +7,14 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 % [ENVELOPE, RMSDP, RMSBL] = OHMIENVELOPE(RING,RADELEMINDEX,REFPTS)
 %
 % RING    - an AT ring.
-% RADELEMINDEX - array of length equal to length(RING) filled with ones at
-%           indexes of radiative ring elements, otherwise, zeros.
-%           See the output of atenable_6d.
-% REFPTS  - reference points along the ring. Default: 1.
+% RADELEMINDEX - ignored, kept for compatibility
+% REFPTS  - reference points along the ring. Default: 1
 %
 % ENVELOPE is a structure with fields
 % Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along
 %           the principal axis of a tilted ellips
 %           Assuming normal distribution exp(-(Z^2)/(2*SIGMA))
-% Tilt    - Tilt angle of the XY ellips [rad]
+% Tilt    - Tilt angle of the XY ellipse [rad]
 %           Positive Tilt corresponds to Corkscrew (right)
 %           rotatiom of XY plane around s-axis
 % R       - 6-by-6 equilibrium envelope matrix R
@@ -33,11 +31,10 @@ function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts
 check_6d(ring,true,'strict',0);
 
 NumElements = length(ring);
-if nargin<4, energy=atGetRingProperties(ring, 'Energy'); end
 if nargin<3, refpts=1; end
 
 orb0=findorbit(ring);
-[BCUM,Batbeg]=atdiffmat(ring,energy,'orbit',orb0);
+[BCUM,Batbeg]=atdiffmat(ring,'orbit',orb0);
 [mring, ms, orbit] = findm66(ring,1:NumElements+1,'orbit',orb0);
 
 % ------------------------------------------------------------------------
@@ -53,12 +50,12 @@ orb0=findorbit(ring);
 % -----------------------------------------------------------------------
 AA = inv(mring);
 BB = -mring';
-CC = AA*BCUM;
+CC = AA*BCUM; %#ok<MINV>
 
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
-rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch length
 
 mt=squeeze(num2cell(ms,[1 2]));
 [rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);

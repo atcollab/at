@@ -45,7 +45,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, double E0, int num_particles)
+        double *KickAngle, double scaling, double gamma, int num_particles)
 {
     double irho = bending_angle / le;
     double phi2 = 0.5 * bending_angle;
@@ -57,6 +57,8 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
     double K2 = SL*KICK2;
     double B0 = B[0];
     double A0 = A[0];
+    double rad_const = RAD_CONST*pow(gamma, 3);
+    double diff_const = DIF_CONST*pow(gamma, 5);
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
@@ -69,7 +71,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
     irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,x0ref,refdz,\
     FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,\
-    LR,le,phi2,E0)
+    LR,le,phi2,rad_const,diff_const)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -98,11 +100,11 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
             r6[0] += x0ref;
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
                 exact_drift(r6, L1);
-                ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
+                ex_strthinkickrad(r6, A, B, max_order, 0.0, K1, rad_const, diff_const, NULL);
                 exact_drift(r6, L2);
-                ex_strthinkickrad(r6, A, B, 0.0, K2, E0, max_order);
+                ex_strthinkickrad(r6, A, B, max_order, 0.0, K2, rad_const, diff_const, NULL);
                 exact_drift(r6, L2);
-                ex_strthinkickrad(r6, A, B, 0.0, K1, E0, max_order);
+                ex_strthinkickrad(r6, A, B, max_order, 0.0, K1, rad_const, diff_const, NULL);
                 exact_drift(r6, L1);
             }
             r6[0] -= x0ref;
@@ -141,7 +143,7 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
-    double energy;
+    double gamma;
     if (!Elem) {
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -200,7 +202,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    energy = atEnergy(Param->energy, Elem->Energy);
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
 
     ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
@@ -209,7 +211,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->gK,Elem->x0ref,Elem->refdz,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, energy, num_particles);
+            Elem->KickAngle, Elem->Scaling, gamma, num_particles);
     return Elem;
 }
 
@@ -223,6 +225,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nrhs >= 2) {
         double rest_energy = 0.0;
         double charge = -1.0;
+        double Gamma;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -261,14 +264,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        Gamma = atGamma(Energy, Energy, rest_energy);
         r_in = mxGetDoubles(plhs[0]);
+
         ExactRectangularBendRad(r_in, Length, BendingAngle, PolynomA, PolynomB,
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             FringeBendEntrance, FringeBendExit,
             FringeQuadEntrance, FringeQuadExit,
             gK, x0ref, refdz,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, Energy, num_particles);
+            KickAngle, Scaling, Gamma, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;

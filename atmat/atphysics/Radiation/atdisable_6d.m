@@ -33,6 +33,7 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 %   'quadpass'       pass method for quadrupoles. Default 'auto'
 %   'sextupass'      pass method for sextupoles. Default 'auto'
 %   'octupass'       pass method for bending magnets. Default 'auto'
+%   'multipolepass'  pass method for multipole magnets. Default 'auto'
 %   'wigglerpass'	 pass method for wigglers. Default 'auto'
 %   'quantdiffpass'  pass method for quantum diffusion. Default 'auto'
 %   'energylosspass' pass method for atenergyloss element. Default 'auto'
@@ -59,6 +60,7 @@ function [newring,radelemIndex,cavitiesIndex] = atdisable_6d(ring,varargin)
 
 % Process the keyword arguments
 [allpass,varargs]=getoption(varargin,'allpass',[]);
+[multipolepass,varargs]=getoption(varargs,'multipolepass',default_pass('auto'));
 [octupass,varargs]=getoption(varargs,'octupass',default_pass('auto'));
 [sextupass,varargs]=getoption(varargs,'sextupass',default_pass('auto'));
 [quadpass,varargs]=getoption(varargs,'quadpass',default_pass('auto'));
@@ -78,6 +80,7 @@ modfun.Bend=autoMultipolePass(bendpass);
 modfun.Quadrupole=autoMultipolePass(quadpass);
 modfun.Sextupole=autoMultipolePass(sextupass);
 modfun.Octupole=autoMultipolePass(octupass);
+modfun.Multipole=autoMultipolePass(multipolepass);
 modfun.Wiggler=autoMultipolePass(wigglerpass);
 modfun.QuantDiff=autoIdentityPass(quantdiffpass);
 modfun.EnergyLoss=autoIdentityPass(energylosspass);

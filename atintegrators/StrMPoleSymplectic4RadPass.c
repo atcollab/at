@@ -1,7 +1,7 @@
-#include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkickrad.c"	/* strthinkickrad.c */
+#include "diff_str_kick.c"
+#include "diff_drift.c"
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 struct elem
@@ -35,7 +35,8 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, double E0, int num_particles)
+        double *KickAngle, double scaling, double gamma, int num_particles,
+        double *bdiff)
 {
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
@@ -46,27 +47,32 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     double B0 = B[0];
     double A0 = A[0];
+    double rad_const = RAD_CONST*pow(gamma, 3);
+    double diff_const = DIF_CONST*pow(gamma, 5);
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
-    A,B,L1,L2,K1,K2,max_order,num_int_steps,E0,scaling,\
+    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,bdiff,\
+    A,B,L1,L2,K1,K2,max_order,num_int_steps,rad_const, diff_const,scaling,\
     FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
-            int m;
+
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, scaling);
+
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
+
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+
             if (FringeQuadEntrance && B[1]!=0) {
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
@@ -74,14 +80,14 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
                     QuadFringePassP(r6, B[1]);
             }
             /* integrator */
-            for (m=0; m < num_int_steps; m++) { /* Loop over slices */
-                    ATdrift6(r6,L1);
-                    strthinkickrad(r6, A, B, K1, E0, max_order);
-                    ATdrift6(r6,L2);
-                    strthinkickrad(r6, A, B, K2, E0, max_order);
-                    ATdrift6(r6,L2);
-                    strthinkickrad(r6, A, B, K1, E0, max_order);
-                    ATdrift6(r6,L1);
+            for (int m=0; m < num_int_steps; m++) { /* Loop over slices */
+                    diff_drift(r6,L1, bdiff);
+                    diff_str_kick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
+                    diff_drift(r6,L2, bdiff);
+                    diff_str_kick(r6, A, B, max_order, K2, rad_const, diff_const, bdiff);
+                    diff_drift(r6,L2, bdiff);
+                    diff_str_kick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
+                    diff_drift(r6,L1, bdiff);
             }
             if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
@@ -89,12 +95,15 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
                 else
                     QuadFringePassN(r6, B[1]);
             }
+
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
+
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
@@ -109,7 +118,8 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
-    double energy;
+    double gamma;
+    double *bdiff = Param->bdiff;
     if (!Elem) {
         double Length, Energy, Scaling;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
@@ -155,7 +165,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    energy = atEnergy(Param->energy, Elem->Energy);
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
 
     StrMPoleSymplectic4RadPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps,
@@ -163,7 +173,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->fringeIntM0, Elem->fringeIntP0,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, energy, num_particles);
+            Elem->KickAngle, Elem->Scaling, gamma, num_particles, bdiff);
     return Elem;
 }
 
@@ -178,9 +188,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double rest_energy = 0.0;
         double charge = -1.0;
         double *r_in;
+        double Gamma;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length, Scaling, Energy;
+        double Length, Energy, Scaling;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
         double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
@@ -208,6 +219,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        Gamma = atGamma(Energy, Energy, rest_energy);
         r_in = mxGetDoubles(plhs[0]);
 
         StrMPoleSymplectic4RadPass(r_in, Length, PolynomA, PolynomB,
@@ -215,7 +227,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             FringeQuadEntrance, FringeQuadExit,
             fringeIntM0, fringeIntP0,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, Energy, num_particles);
+            KickAngle, Scaling, Gamma, num_particles, NULL);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(6,1);

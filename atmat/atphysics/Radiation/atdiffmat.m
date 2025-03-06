@@ -1,22 +1,31 @@
-function [BCUM,Batbeg] = atdiffmat(ring,energy,varargin)
+function [BCUM,Batbeg] = atdiffmat(ring,varargin)
 %quantumDiff    Compute the radiation-diffusion matrix
 %
-%[BCUM,BS]=ATDIFFMAT(RING,ENERGY)
+%[BCUM,BS]=ATDIFFMAT(RING)
 %   RING:       Closed ring AT structure, containing radiative elements and
 %               RF cavity. Radiative elements are identified by a
 %               PassMethod ending with 'RadPass'.
-%   ENERGY:     Lattice energy
 %
 %   BCUM:       Cumulated diffusion matrix
 %   BS:         Cumulative diffusion matrix at the beginning of each element
 %
-%[BCUM,BS]=ATDIFFMAT(...,'orbit',ORBITIN)
+%[BCUM,BS]=ATDIFFMAT(RING,'orbit',ORBITIN)
 %   ORBITIN:    Initial 6-D closed orbit.
 %               In this mode, RING may be a section of a ring.
+
+newmethods = {'BndMPoleSymplectic4RadPass', ...
+              'StrMPoleSymplectic4RadPass', ...
+              'ExactMultipoleRadPass',...
+              'GWigSymplecticRadPass',...
+              'EnergyLossRadPass'};
 
 NumElements=length(ring);
 
 [orb0,varargs]=getoption(varargin, 'orbit', []); %#ok<ASGLU>
+
+test_mode = getoption('test_mode');
+[energy,cell_length,particle]=atGetRingProperties(ring,'energy','cell_length','particle');
+
 if isempty(orb0)
     orbit=num2cell(findorbit6(ring, 1:NumElements),1)';
 else
@@ -31,21 +40,32 @@ BCUM = zeros(6,6);
 Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
 
     function btx=cumulb(elem,orbit)
-        if endsWith(elem.PassMethod,'RadPass')
-            if isfield(elem,'Bmax')
-                b=FDW(elem,orbit,energy);  % For wigglers
-            else
-                b=findmpoleraddiffmatrix(elem, orbit, energy);  % For other elements
-            end
+        passm = elem.PassMethod;
+        if ~endsWith(passm, 'RadPass')
+            bdiff = zr;
+        elseif ~test_mode
+            % New method
+            bdiff = diffusion_matrix(substitute(elem),orbit,energy,particle,cell_length,0.0);
         else
-            b=zr;
+            % Old method
+            if isfield(elem, 'Bmax')
+                bdiff = FDW(elem, orbit, energy);
+            else
+                bdiff = findmpoleraddiffmatrix(elem,orbit,energy);
+            end
         end
         % Calculate 6-by-6 linear transfer matrix in each element
         % near the equilibrium orbit
-        m=findelemm66(elem,elem.PassMethod,orbit);
+        m=findelemm66(elem,passm,orbit);
         % Cumulative diffusion matrix of the entire ring
-        BCUM = m*BCUM*m' + b;
+        BCUM = m*BCUM*m' + bdiff;
         btx=BCUM;
+    end
+    
+    function elem=substitute(elem)
+        if ~any(strcmp(elem.PassMethod, newmethods))
+            elem.PassMethod = 'BndMPoleSymplectic4RadPass';
+        end
     end
 end
 

@@ -73,7 +73,9 @@ static double B2perp(double bx, double by, double irho,
 //  return (SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr))/v_norm2 ;
 }
 
-static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+//static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+static void ex_bndthinkickrad(double* r, double* A, double* B, int max_order,
+                              double L, double irho, double rad_const, double diff_const, double *bdiff)
 
 /*****************************************************************************
 Calculate multipole kick in a curved element (bending magnet)
@@ -106,7 +108,6 @@ the polynomial terms in PolynomB.
    double ReSum = B[max_order];
    double ReSumTemp;
    double x ,xpr, y, ypr, p_norm, B2P;
-   double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
 
    for (i=max_order-1; i>=0; i--) {
    	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
@@ -124,7 +125,7 @@ the polynomial terms in PolynomB.
    B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
 
    /* Momentum loss */
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * (1.0+x*irho) * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
+   r[4] -= rad_const * SQR(1+r[4]) * B2P * (1.0+x*irho) * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
 //   r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
@@ -137,7 +138,9 @@ the polynomial terms in PolynomB.
    r[3] +=  L*ImSum;
 }
 
-static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
+//static void ex_strthinkickrad(double* r, const double* A, const double* B, double B0, double L, double E0, int max_order)
+static void ex_strthinkickrad(double* r, const double* A, const double* B, int max_order,
+                              double B0, double L, double rad_const, double diff_const, double *bdiff)
 /*****************************************************************************
  Calculate and apply a multipole kick to a 6-dimentional
  phase space vector in a straight element ( quadrupole)
@@ -153,7 +156,6 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
    double ImSum = A[max_order];
    double ReSumTemp;
    double x ,xpr, y, ypr, p_norm, B2P;
-   double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
 
    for (int i=max_order-1; i>=0; i--) {
       ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
@@ -171,7 +173,7 @@ static void ex_strthinkickrad(double* r, const double* A, const double* B, doubl
    B2P = StrB2perp(ImSum, ReSum+B0 , x , xpr, y ,ypr);
 
    /* Momentum loss */
-   r[4] = r[4] - CRAD * SQR(1+r[4]) * B2P * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
+   r[4] -= rad_const * SQR(1+r[4]) * B2P * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
 
    /* recalculate momentums from angles after losing energy for radiation 	*/
    p_norm = 1/(1+r[4]);
