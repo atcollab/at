@@ -201,7 +201,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.zeros(2)
         self._vgen = numpy.zeros(2)
         self._vcav = numpy.array([self.Voltage,
-                                  numpy.pi/2-self._phis-self.detune_angle])
+                                  numpy.pi/2-self._phis])
         self.clear_history(ring=ring)
         
     def is_compatible(self, other):

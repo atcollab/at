@@ -105,7 +105,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         psi = vgenk[1];
     }
     /*Track RF cavity is always done. */
-    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi-detune_angle,nturn,circumference/C0,num_particles);
+    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi+detune_angle,nturn,circumference/C0,num_particles);
     
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
@@ -141,7 +141,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             }
         }
         if(cavitymode==1){
-            update_vgen(vbeamk,vcavk,vgenk,phasegain,voltgain); 
+            update_vgen(vbeamk,vcavk,vgenk,phasegain,voltgain,detune_angle); 
         }
         if(buffersize>0){
             write_buffer(vbeamk, vbeam_buffer, 2, buffersize);
