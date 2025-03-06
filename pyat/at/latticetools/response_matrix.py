@@ -253,7 +253,7 @@ class _SvdSolver(abc.ABC):
     def obsweights(self): ...
 
     @property
-    def shape(self):
+    def shape(self) -> tuple:
         """Shape of the response matrix."""
         return self._shape
 
@@ -373,6 +373,8 @@ class ResponseMatrix(_SvdSolver):
     of their :py:class:`~.variables.VariableBase`\ s and :py:class:`.Observable`\s to
     produce combined responses.
     """
+    variables: VariableList  #: List of matrix :py:class:`Variable <.VariableBase>`\ s
+    observables: ObservableList  #: List of matrix :py:class:`.Observable`\s
 
     def __init__(
         self,
@@ -383,7 +385,7 @@ class ResponseMatrix(_SvdSolver):
         r"""
         Args:
             ring:           Design lattice, used to compute the response
-            variables:      List of :py:class:`~.variables.VariableBase`\ s
+            variables:      List of :py:class:`Variable <.VariableBase>`\ s
             observables:    List of :py:class:`.Observable`\s
         """
 
@@ -539,7 +541,7 @@ class ResponseMatrix(_SvdSolver):
             f"build_analytical not implemented for {self.__class__.__name__}"
         )
 
-    def exclude_obs(self, *, name: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values
 
@@ -547,13 +549,17 @@ class ResponseMatrix(_SvdSolver):
         :py:meth:`solve`.
 
         Args:
-            name:       :py:class:`.Observable` name or index in the observable list.
+            obsid:      :py:class:`.Observable` name or index in the observable list.
             refpts:     location of elements to exclude for
               :py:class:`.ElementObservable` objects, otherwise ignored.
 
+        Raises:
+            ValueError: No observable with the given name.
+            IndexError: Observableindex out of range.
+
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h", Monitor, Corrector)
-            >>> resp.exclude_obs(name="x_orbit", refpts="BPM_02")
+            >>> resp.exclude_obs(obsid="x_orbit", refpts="BPM_02")
 
             Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
@@ -573,15 +579,15 @@ class ResponseMatrix(_SvdSolver):
             # Force a new computation
             self.singular_values = None
 
-        if not isinstance(name, str):
-            exclude(self.observables[name], self._ob[name])
+        if not isinstance(obsid, str):
+            exclude(self.observables[obsid], self._ob[obsid])
         else:
             for obs, mask in zip(self.observables, self._ob):
-                if obs.name == name:
+                if obs.name == obsid:
                     exclude(obs, mask)
                     break
             else:
-                raise ValueError(f"Observable {name} not found")
+                raise ValueError(f"Observable {obsid} not found")
 
     @property
     def excluded_obs(self) -> dict:
@@ -603,17 +609,26 @@ class ResponseMatrix(_SvdSolver):
 
         return {ob.name: ex(ob, mask) for ob, mask in zip(self.observables, self._ob)}
 
-    def exclude_vars(self, *names) -> None:
+    def exclude_vars(self, *varid: int | str) -> None:
+        # noinspection PyUnresolvedReferences
         """Add variables to the set of excluded variables.
 
         Args:
-            *names:  Names of variables to exclude.
+            *varid:  :py:class:`Variable <.VariableBase>` names or variable indices
+              in the variable list
 
         After excluding variables, the matrix must be inverted again using
         :py:meth:`solve`.
-        """
-        nameset = set(names)
+
+        Examples:
+            >>> resp.exclude_vars(0, "var1", -1)
+
+            Exclude the 1st variable, the variable named "var1" and the last variable.
+            """
+        nameset = set(nm for nm in varid if isinstance(nm, str))
+        varidx = [nm for nm in varid if not isinstance(nm, str)]
         mask = np.array([var.name in nameset for var in self.variables])
+        mask[varidx] = True
         miss = nameset - {var.name for var, ok in zip(self.variables, mask) if ok}
         if miss:
             raise ValueError(f"Unknown variables: {miss}")
@@ -780,17 +795,21 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
-    def exclude_obs(self, *, name: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 
-        After excluding observation points, the matrix must be rebuilt with
-        :py:meth:`build_tracking`.
+        After excluding observation points, the matrix must be inverted again using
+        :py:meth:`solve`.
 
         Args:
-            name:    If 0 (default), act on Monitors. Otherwise,
+            obsid:      If 0 (default), act on Monitors. Otherwise,
               it must be 1 or "sum(x_kicks)"  or "sum(y_kicks)"
             refpts:    location of Monitors to exclude
+
+        Raises:
+            ValueError: No observable with the given name.
+            IndexError: Observableindex out of range.
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h")
@@ -800,20 +819,32 @@ class OrbitResponseMatrix(ResponseMatrix):
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude all monitors with name "BPM_02"
         """
-        super().exclude_obs(name=name, refpts=refpts)
+        super().exclude_obs(obsid=obsid, refpts=refpts)
 
-    def exclude_vars(self, refpts: Refpts) -> None:
+    def exclude_vars(self, *varid: int | str, refpts: Refpts = None) -> None:
+        # noinspection PyUnresolvedReferences
         """Add correctors to the set of excluded variables.
 
         Args:
+            *varid:  :py:class:`Variable <.VariableBase>` names or variable indices
+              in the variable list
             refpts:  location of correctors to exclude
 
         After excluding correctors, the matrix must be inverted again using
         :py:meth:`solve`.
+
+        Examples:
+            >>> resp.exclude_vars(0, "x0097", -1)
+
+            Exclude the 1st variable, the variable named "x0097" and the last variable.
+
+            >>> resp.exclude_vars(refpts="SD1E")
+
+            Exclude all variables associated with the element named "SD1E".
         """
         plcode = plane_(self.plane, "code")
         names = [f"{plcode}{ik:04}" for ik in self.ring.get_uint32_index(refpts)]
-        super().exclude_vars(*names)
+        super().exclude_vars(*varid, *names)
 
     def normalise(
         self, cav_ampl: float | None = 2.0, stsum_ampl: float | None = 2.0
@@ -1045,15 +1076,19 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.response = resp
         return resp
 
-    def exclude_obs(self, *, name: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add a monitor to the set of excluded values.
 
-        After excluding observation points, the matrix must be rebuilt with
-        :py:meth:`build_tracking`.
+        After excluding observation points, the matrix must be inverted again using
+        :py:meth:`solve`.
 
         Args:
             refpts:    location of Monitors to exclude
+
+        Raises:
+            ValueError: No observable with the given name.
+            IndexError: Observableindex out of range.
 
         Example:
             >>> resp = TrajectoryResponseMatrix(ring, "v")
@@ -1063,20 +1098,32 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude all monitors with name "BPM_02"
         """
-        super().exclude_obs(name=name, refpts=refpts)
+        super().exclude_obs(obsid=0, refpts=refpts)
 
-    def exclude_vars(self, refpts: Refpts) -> None:
+    def exclude_vars(self, *varid: int | str, refpts: Refpts = None) -> None:
+        # noinspection PyUnresolvedReferences
         """Add correctors to the set of excluded variables.
 
         Args:
+            *varid:  :py:class:`Variable <.VariableBase>` names or variable indices
+              in the variable list
             refpts:  location of correctors to exclude
 
         After excluding correctors, the matrix must be inverted again using
         :py:meth:`solve`.
+
+        Examples:
+            >>> resp.exclude_vars(0, "x0103", -1)
+
+            Exclude the 1st variable, the variable named "x0103" and the last variable.
+
+            >>> resp.exclude_vars(refpts="SD1E")
+
+            Exclude all variables associated with the element named "SD1E".
         """
         plcode = plane_(self.plane, "code")
         names = [f"{plcode}{ik:04}" for ik in self.ring.get_uint32_index(refpts)]
-        super().exclude_vars(*names)
+        super().exclude_vars(*varid, *names)
 
     @property
     def bpmweight(self):
