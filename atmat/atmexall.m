@@ -149,7 +149,7 @@ warning(oldwarns.state,oldwarns.identifier);
                 compile(compargs, pmeth);
             catch errcomp
                 if fail
-                    rethrow(err);
+                    rethrow(errcomp);
                 else
                     fprintf(2, 'Could not compile %s:\n%s\n', pmeth, errcomp.message);
                 end
