@@ -221,7 +221,7 @@ def _resp_fork(variables: VariableList, **kwargs):
 class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
 
-    def __init__(self, nobs, nvar):
+    def __init__(self, nobs: int, nvar: int):
         self._shape = (nobs, nvar)
         self._response = None
         self._obsmask = np.ones(nobs, dtype=bool)
@@ -253,7 +253,7 @@ class _SvdSolver(abc.ABC):
     def obsweights(self): ...
 
     @property
-    def shape(self) -> tuple:
+    def shape(self) -> tuple[int, int]:
         """Shape of the response matrix."""
         return self._shape
 
@@ -424,18 +424,18 @@ class ResponseMatrix(_SvdSolver):
         return f"{type(self).__name__}({no} observables, {nv} variables)"
 
     @property
-    def varweights(self):
+    def varweights(self) -> np.ndarray:
         """Variable weights."""
         return self.variables.deltas
 
     @property
-    def obsweights(self):
+    def obsweights(self) -> np.ndarray:
         """Observable weights."""
         return self.observables.flat_weights
 
     def correct(
         self, ring: Lattice, nvals: int = None, niter: int = 1, apply: bool = False
-    ):
+    ) -> np.ndarray:
         """Compute and optionally apply the correction.
 
         Args:
@@ -932,7 +932,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         return resp
 
     @property
-    def bpmweight(self):
+    def bpmweight(self) -> np.ndarray:
         """Weight of position readings."""
         return self.observables[0].weight
 
@@ -941,7 +941,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.observables[0].weight = value
 
     @property
-    def stsumweight(self):
+    def stsumweight(self) -> np.ndarray:
         """Weight of steerer summation."""
         return self.observables[1].weight
 
@@ -950,7 +950,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.observables[1].weight = value
 
     @property
-    def steerdelta(self):
+    def steerdelta(self) -> np.ndarray:
         """Step and weight of steerers."""
         return self.variables[: self.nbsteers].deltas
 
@@ -959,7 +959,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.variables[: self.nbsteers].deltas = value
 
     @property
-    def cavdelta(self):
+    def cavdelta(self) -> np.ndarray:
         """Step and weight of RF frequency deviation."""
         return self.variables[self.nbsteers].delta
 
@@ -1126,7 +1126,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         super().exclude_vars(*varid, *names)
 
     @property
-    def bpmweight(self):
+    def bpmweight(self) -> np.ndarray:
         """Weight of position readings."""
         return self.observables[0].weight
 
@@ -1135,7 +1135,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.observables[0].weight = value
 
     @property
-    def steerdelta(self):
+    def steerdelta(self) -> np.ndarray:
         """Step and weight on steerers."""
         return self.variables.deltas
 

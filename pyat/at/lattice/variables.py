@@ -459,7 +459,7 @@ class VariableList(list):
         return self.status()
 
     @property
-    def deltas(self) -> Sequence[Number]:
+    def deltas(self) -> np.typing.NDArray[Number]:
         """delta values of the variables"""
         return np.array([var.delta for var in self])
 
