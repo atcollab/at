@@ -94,6 +94,7 @@ from collections.abc import Iterable, Sequence, Callable
 from typing import Union
 
 import numpy as np
+import numpy.typing as npt
 
 Number = Union[int, float]
 
@@ -459,7 +460,7 @@ class VariableList(list):
         return self.status()
 
     @property
-    def deltas(self) -> np.typing.NDArray[Number]:
+    def deltas(self) -> npt.NDArray[Number]:
         """delta values of the variables"""
         return np.array([var.delta for var in self])
 

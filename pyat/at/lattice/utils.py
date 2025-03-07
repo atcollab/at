@@ -31,6 +31,7 @@ location is defined as the entrance of the selected element. *refpts* may be:
 
 """
 import numpy
+import numpy.typing as npt
 import functools
 import re
 from typing import Callable, Optional, Sequence, Iterator
@@ -44,8 +45,8 @@ from .elements import Element, Dipole
 _GEOMETRY_EPSIL = 1.0e-3
 
 ElementFilter = Callable[[Element], bool]
-BoolRefpts = numpy.typing.NDArray[bool]
-Uint32Refpts = numpy.typing.NDArray[numpy.uint32]
+BoolRefpts = npt.NDArray[bool]
+Uint32Refpts = npt.NDArray[numpy.uint32]
 
 
 __all__ = ['All', 'End', 'AtError', 'AtWarning', 'axis_descr',
