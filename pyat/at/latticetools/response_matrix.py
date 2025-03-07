@@ -149,6 +149,7 @@ from functools import partial
 import math
 
 import numpy as np
+import numpy.typing as npt
 from numpy.ma.core import logical_not
 
 from .observables import ElementObservable
@@ -220,6 +221,7 @@ def _resp_fork(variables: VariableList, **kwargs):
 
 class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
+    _response: npt.NDArray[float] | None
 
     def __init__(self, nobs: int, nvar: int):
         self._shape = (nobs, nvar)
@@ -284,7 +286,7 @@ class _SvdSolver(abc.ABC):
         return obs, var
 
     @property
-    def response(self) -> np.ndarray:
+    def response(self) -> npt.NDArray[float]:
         """Response matrix."""
         resp = self._response
         if resp is None:
@@ -292,7 +294,7 @@ class _SvdSolver(abc.ABC):
         return resp
 
     @response.setter
-    def response(self, response: np.ndarray) -> None:
+    def response(self, response: npt.NDArray[float]) -> None:
         l1, c1 = self._shape
         l2, c2 = response.shape
         if l1 != l1 or c1 != c2:
@@ -306,7 +308,7 @@ class _SvdSolver(abc.ABC):
         """Weighted response matrix."""
         return self.response * (self.varweights / self.obsweights.reshape(-1, 1))
 
-    def correction_matrix(self, nvals: int | None = None) -> np.ndarray:
+    def correction_matrix(self, nvals: int | None = None) -> npt.NDArray[float]:
         """Return the correction matrix (pseudo-inverse of the response matrix).
 
         Args:
@@ -327,7 +329,7 @@ class _SvdSolver(abc.ABC):
 
     def get_correction(
         self, observed: np.ndarray, nvals: int | None = None
-    ) -> np.ndarray:
+    ) -> npt.NDArray[float]:
         """Compute the correction of the given observation.
 
         Args:
