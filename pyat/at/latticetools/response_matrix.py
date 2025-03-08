@@ -464,7 +464,7 @@ class ResponseMatrix(_SvdSolver):
             raise ValueError("needs: apply is True")
         obs = self.observables
         if apply:
-            self.variables.get(ring=ring)
+            self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
         for _ in range(niter):
             obs.evaluate(ring, **self.eval_args)
@@ -787,7 +787,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 cavrefs,
                 "Frequency",
                 name="RF frequency",
-                delta=cavdelta if cavdelta else 2.0 * cavd,
+                delta=cavdelta if cavdelta else 4.0 * cavd,
             )
             variables.append(cavvar)
 
