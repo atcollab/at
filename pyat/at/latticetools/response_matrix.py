@@ -143,7 +143,7 @@ import multiprocessing
 import concurrent.futures
 import abc
 import warnings
-from collections.abc import Sequence, Generator
+from collections.abc import Sequence, Generator, Callable
 from typing import Any, ClassVar
 from itertools import chain
 from functools import partial
@@ -451,29 +451,31 @@ class ResponseMatrix(_SvdSolver):
             ring:       Lattice description. The response matrix observables
               will be evaluated for *ring* and the deviation from target will
               be corrected
-            nvals:      Desired number of singular values. If :py:obj:`None`,
-              use all singular values
             apply:      If :py:obj:`True`, apply the correction to *ring*
             niter:      Number of iterations. For more than one iteration,
               *apply* must be :py:obj:`True`
+            nvals:      Desired number of singular values. If :py:obj:`None`,
+              use all singular values. *nvals* may be a scalar or an iterable with
+              *niter* values.
 
         Returns:
             correction: Vector of correction values
         """
         if niter > 1 and not apply:
-            raise ValueError("needs: apply is True")
+            raise ValueError("If niter > 1, 'apply' must be True")
         obs = self.observables
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
-        for it in range(niter):
+        for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,))):
+            print(f'step {it+1}, nvals = {nv}')
             obs.evaluate(ring, **self.eval_args)
             err = obs.flat_deviations
             if np.any(np.isnan(err)):
                 raise AtError(
                     f"Step {it + 1}: Invalid observables, cannot compute correction"
                 )
-            corr = self.get_correction(obs.flat_deviations, nvals=nvals)
+            corr = self.get_correction(obs.flat_deviations, nvals=nv)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
                 self.variables.increment(corr, ring=ring)
@@ -547,6 +549,45 @@ class ResponseMatrix(_SvdSolver):
             f"build_analytical not implemented for {self.__class__.__name__}"
         )
 
+    def _on_obs(self, fun: Callable, *args, obsid: int | str = 0):
+        """Apply a function to the selected observable"""
+        if not isinstance(obsid, str):
+            return fun(self.observables[obsid], *args)
+        else:
+            for obs in self.observables:
+                if obs.name == obsid:
+                    return fun(obs, *args)
+            else:
+                raise ValueError(f"Observable {obsid} not found")
+
+    def get_target(self, *, obsid: int | str = 0) -> FloatArray:
+        r"""Return the target of the specified observable
+
+        Args:
+            obsid:  :py:class:`.Observable` name or index in the observable list.
+
+        Returns:
+            target: observable target
+        """
+        def _get(obs):
+            return obs.target
+
+        return self._on_obs(_get, obsid=obsid)
+
+    def set_target(self, target: npt.ArrayLike, *, obsid: int | str = 0) -> None:
+        r"""Set the target of the specified observable
+
+        Args:
+            target: observable target. Must be broadcastable to the shape of the
+              observable value.
+            obsid:  :py:class:`.Observable` name or index in the observable list.
+        """
+
+        def _set(obs, targ):
+            obs.target = targ
+
+        return self._on_obs(_set, target, obsid=obsid)
+
     def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values
@@ -581,7 +622,7 @@ class ResponseMatrix(_SvdSolver):
             else:
                 msk[:] = False
             if np.all(msk == inimask):
-                warnings.warn(AtWarning("No new excluded value"), stacklevel=1)
+                warnings.warn(AtWarning("No new excluded value"), stacklevel=3)
             # Force a new computation
             self.singular_values = None
 
