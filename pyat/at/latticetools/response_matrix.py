@@ -466,8 +466,13 @@ class ResponseMatrix(_SvdSolver):
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
-        for _ in range(niter):
+        for it in range(niter):
             obs.evaluate(ring, **self.eval_args)
+            err = obs.flat_deviations
+            if np.any(np.isnan(err)):
+                raise AtError(
+                    f"Step {it + 1}: Invalid observables, cannot compute correction"
+                )
             corr = self.get_correction(obs.flat_deviations, nvals=nvals)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
@@ -787,7 +792,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 cavrefs,
                 "Frequency",
                 name="RF frequency",
-                delta=cavdelta if cavdelta else 4.0 * cavd,
+                delta=cavdelta if cavdelta else 2.0 * cavd,
             )
             variables.append(cavvar)
 
