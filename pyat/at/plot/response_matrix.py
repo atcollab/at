@@ -68,7 +68,7 @@ def plot_obs_analysis(
     if resp.singular_values is None:
         resp.solve()
     obs = resp.observables
-    obs.evaluate(lattice, **resp.buildargs)
+    obs.evaluate(lattice, **resp.eval_args)
     corr = resp.uh @ obs.flat_deviations
     if ax is None:
         fig, ax = plt.subplots()

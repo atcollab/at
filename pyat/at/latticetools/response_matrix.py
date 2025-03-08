@@ -144,22 +144,24 @@ import concurrent.futures
 import abc
 import warnings
 from collections.abc import Sequence, Generator
+from typing import Any, ClassVar
 from itertools import chain
 from functools import partial
 import math
 
 import numpy as np
 import numpy.typing as npt
-from numpy.ma.core import logical_not
 
 from .observables import ElementObservable
 from .observables import TrajectoryObservable, OrbitObservable, LatticeObservable
 from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
-from ..lattice import AtError, AtWarning, Lattice, Refpts, AxisDef, plane_, All
-from ..lattice import Monitor, checkattr
+from ..lattice import AtError, AtWarning, Refpts, Uint32Refpts, All
+from ..lattice import AxisDef, plane_, Lattice, Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableList
+
+FloatArray = npt.NDArray[np.float64]
 
 _orbit_correctors = checkattr("KickAngle")
 
@@ -221,16 +223,19 @@ def _resp_fork(variables: VariableList, **kwargs):
 
 class _SvdSolver(abc.ABC):
     """SVD solver for response matrices."""
-    _response: npt.NDArray[float] | None
+
+    _shape: tuple[int, int]
+    _obsmask: npt.NDArray[bool]
+    _varmask: npt.NDArray[bool]
+    _response: FloatArray | None = None
+    v: FloatArray | None = None
+    uh: FloatArray | None = None
+    singular_values: FloatArray | None = None
 
     def __init__(self, nobs: int, nvar: int):
         self._shape = (nobs, nvar)
-        self._response = None
         self._obsmask = np.ones(nobs, dtype=bool)
         self._varmask = np.ones(nvar, dtype=bool)
-        self.v = None
-        self.uh = None
-        self.singular_values = None
 
     def reset_vars(self):
         """Reset the variable exclusion mask: enable all variables"""
@@ -286,7 +291,7 @@ class _SvdSolver(abc.ABC):
         return obs, var
 
     @property
-    def response(self) -> npt.NDArray[float]:
+    def response(self) -> FloatArray:
         """Response matrix."""
         resp = self._response
         if resp is None:
@@ -294,7 +299,7 @@ class _SvdSolver(abc.ABC):
         return resp
 
     @response.setter
-    def response(self, response: npt.NDArray[float]) -> None:
+    def response(self, response: FloatArray) -> None:
         l1, c1 = self._shape
         l2, c2 = response.shape
         if l1 != l1 or c1 != c2:
@@ -308,7 +313,7 @@ class _SvdSolver(abc.ABC):
         """Weighted response matrix."""
         return self.response * (self.varweights / self.obsweights.reshape(-1, 1))
 
-    def correction_matrix(self, nvals: int | None = None) -> npt.NDArray[float]:
+    def correction_matrix(self, nvals: int | None = None) -> FloatArray:
         """Return the correction matrix (pseudo-inverse of the response matrix).
 
         Args:
@@ -322,14 +327,14 @@ class _SvdSolver(abc.ABC):
             self.solve()
         if nvals is None:
             nvals = len(self.singular_values)
-        cormat = np.zeros(self._shape)
-        selected = np.ix_(self._obsmask, self._varmask)
+        cormat = np.zeros(self._shape[::-1])
+        selected = np.ix_(self._varmask, self._obsmask)
         cormat[selected] = self.v[:, :nvals] @ self.uh[:nvals, :]
         return cormat
 
     def get_correction(
         self, observed: np.ndarray, nvals: int | None = None
-    ) -> npt.NDArray[float]:
+    ) -> FloatArray:
         """Compute the correction of the given observation.
 
         Args:
@@ -375,8 +380,11 @@ class ResponseMatrix(_SvdSolver):
     of their :py:class:`~.variables.VariableBase`\ s and :py:class:`.Observable`\s to
     produce combined responses.
     """
+
+    ring: Lattice
     variables: VariableList  #: List of matrix :py:class:`Variable <.VariableBase>`\ s
     observables: ObservableList  #: List of matrix :py:class:`.Observable`\s
+    eval_args: dict[str, Any] = {}
 
     def __init__(
         self,
@@ -404,7 +412,6 @@ class ResponseMatrix(_SvdSolver):
         self.ring = ring
         self.variables = variables
         self.observables = observables
-        self.buildargs = {}
         variables.get(ring=ring, initial=True)
         observables.evaluate(ring=ring, initial=True)
         super().__init__(len(observables.flat_values), len(variables))
@@ -418,7 +425,7 @@ class ResponseMatrix(_SvdSolver):
         return ResponseMatrix(
             self.ring,
             VariableList(self.variables + other.variables),
-            self.observables + other.observables
+            self.observables + other.observables,
         )
 
     def __str__(self):
@@ -460,7 +467,7 @@ class ResponseMatrix(_SvdSolver):
             self.variables.get(ring=ring)
         sumcorr = np.array([0.0])
         for _ in range(niter):
-            obs.evaluate(ring, **self.buildargs)
+            obs.evaluate(ring, **self.eval_args)
             corr = self.get_correction(obs.flat_deviations, nvals=nvals)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
@@ -473,7 +480,7 @@ class ResponseMatrix(_SvdSolver):
         pool_size: int | None = None,
         start_method: str | None = None,
         **kwargs,
-    ) -> np.ndarray:
+    ) -> FloatArray:
         """Build the response matrix.
 
         Args:
@@ -498,8 +505,9 @@ class ResponseMatrix(_SvdSolver):
         Returns:
             response:       Response matrix
         """
-        self.buildargs = kwargs
+        self.eval_args = kwargs
         self.observables.evaluate(self.ring)
+        ring = self.ring.deepcopy()
 
         if use_mp:
             global _globring
@@ -509,35 +517,26 @@ class ResponseMatrix(_SvdSolver):
                 pool_size = min(len(self.variables), os.cpu_count())
             obschunks = sequence_split(self.variables, pool_size)
             if ctx.get_start_method() == "fork":
-                _globring = self.ring
+                _globring = ring
                 _globobs = self.observables
                 _single_resp = partial(_resp_fork, **kwargs)
-
             else:
-                _single_resp = partial(_resp, self.ring, self.observables, **kwargs)
+                _single_resp = partial(_resp, ring, self.observables, **kwargs)
             with concurrent.futures.ProcessPoolExecutor(
                 max_workers=pool_size,
                 mp_context=ctx,
             ) as pool:
                 results = list(chain(*pool.map(_single_resp, obschunks)))
-            # with ctx.Pool(pool_size) as pool:
-            #     results = pool.map(_single_resp, self.variables)
             _globring = None
             _globobs = None
         else:
-            ring = self.ring
-            boolrefs = ring.get_bool_index(None)
-            for var in self.variables:
-                boolrefs |= ring.get_bool_index(var.refpts)
-
-            ring = ring.replace(boolrefs)
-            results = _resp(ring.deepcopy(), self.observables, self.variables, **kwargs)
+            results = _resp(ring, self.observables, self.variables, **kwargs)
 
         resp = np.stack(results, axis=-1)
         self.response = resp
         return resp
 
-    def build_analytical(self) -> np.ndarray:
+    def build_analytical(self) -> FloatArray:
         """Build the response matrix."""
         raise NotImplementedError(
             f"build_analytical not implemented for {self.__class__.__name__}"
@@ -626,7 +625,7 @@ class ResponseMatrix(_SvdSolver):
             >>> resp.exclude_vars(0, "var1", -1)
 
             Exclude the 1st variable, the variable named "var1" and the last variable.
-            """
+        """
         nameset = set(nm for nm in varid if isinstance(nm, str))
         varidx = [nm for nm in varid if not isinstance(nm, str)]
         mask = np.array([var.name in nameset for var in self.variables])
@@ -634,7 +633,7 @@ class ResponseMatrix(_SvdSolver):
         miss = nameset - {var.name for var, ok in zip(self.variables, mask) if ok}
         if miss:
             raise ValueError(f"Unknown variables: {miss}")
-        self._varmask &= logical_not(mask)
+        self._varmask &= np.logical_not(mask)
 
     @property
     def excluded_vars(self) -> list:
@@ -674,6 +673,9 @@ class OrbitResponseMatrix(ResponseMatrix):
     ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
     ... )
     """
+
+    bpmrefs: Uint32Refpts
+    steerrefs: Uint32Refpts
 
     def __init__(
         self,
@@ -759,9 +761,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             cavd, stsw = set_norm()
 
         # Observables
-        bpms = OrbitObservable(
-            bpmrefs, axis=2 * pl, target=bpmtarget, weight=bpmweight
-        )
+        bpms = OrbitObservable(bpmrefs, axis=2 * pl, target=bpmtarget, weight=bpmweight)
         observables = ObservableList([bpms])
         if steersum:
             # noinspection PyUnboundLocalVariable
@@ -876,7 +876,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 self.stsumweight * normobs[-1] / np.mean(normobs[:-1]) / stsum_ampl
             )
 
-    def build_analytical(self, **kwargs) -> np.ndarray:
+    def build_analytical(self, **kwargs) -> FloatArray:
         """Build analytically the response matrix.
 
         Keyword Args:
@@ -995,6 +995,10 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
     """
 
+    bpmrefs: Uint32Refpts
+    steerrefs: Uint32Refpts
+    _default_twiss_in: ClassVar[dict] = {"beta": np.ones(2), "alpha": np.zeros(2)}
+
     def __init__(
         self,
         ring: Lattice,
@@ -1047,7 +1051,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
-    def build_analytical(self, **kwargs) -> np.ndarray:
+    def build_analytical(self, **kwargs) -> FloatArray:
         """Build analytically the response matrix.
 
         Keyword Args:
@@ -1061,7 +1065,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         """
         ring = self.ring
         pl = self.plane
-        twiss_in = kwargs.pop("twiss_in", {"beta": np.ones(2), "alpha": np.zeros(2)})
+        twiss_in = self.eval_args.get("twiss_in", self._default_twiss_in)
         _, _, elemdata = ring.linopt6(All, twiss_in=twiss_in, **kwargs)
         dataj = elemdata[self.bpmrefs]
         dataw = elemdata[self.steerrefs]

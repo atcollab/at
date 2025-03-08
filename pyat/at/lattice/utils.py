@@ -50,6 +50,7 @@ Uint32Refpts = npt.NDArray[numpy.uint32]
 
 
 __all__ = ['All', 'End', 'AtError', 'AtWarning', 'axis_descr',
+           'BoolRefpts', 'Uint32Refpts',
            'check_radiation', 'check_6d',
            'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
