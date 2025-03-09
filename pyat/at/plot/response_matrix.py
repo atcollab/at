@@ -68,8 +68,9 @@ def plot_obs_analysis(
     if resp.singular_values is None:
         resp.solve()
     obs = resp.observables
-    obs.evaluate(lattice, **resp.eval_args)
-    corr = resp.uh @ obs.flat_deviations
+    # noinspection PyProtectedMember
+    obs.evaluate(lattice, **resp._eval_args)
+    corr = resp._uh @ obs.flat_deviations
     if ax is None:
         fig, ax = plt.subplots()
     ax.bar(range(len(corr)), corr)
@@ -98,7 +99,7 @@ def plot_var_analysis(
     var = resp.variables
     if ax is None:
         fig, ax = plt.subplots()
-    corr = (resp.v * resp.singular_values).T @ var.get(lattice)
+    corr = (resp._v * resp.singular_values).T @ var.get(lattice)
     ax.bar(range(len(corr)), corr)
     if logscale:
         ax.set_yscale("log")

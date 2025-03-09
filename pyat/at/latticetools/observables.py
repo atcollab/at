@@ -312,6 +312,9 @@ class Observable:
               sent to the evaluation function
             initial:    It :py:obj:`None`, store the result as the initial
               value
+
+        Returns:
+            value:      The value of the observable.
         """
         for d in data:
             if isinstance(d, Exception):
@@ -847,7 +850,9 @@ class LatticeObservable(ElementObservable):
 
         Example:
 
-            >>> obs = LatticeObservable(at.Sextupole, "KickAngle", index=0, statfun=np.sum)
+            >>> obs = LatticeObservable(
+            ...     at.Sextupole, "KickAngle", index=0, statfun=np.sum
+            ... )
 
             Observe the sum of horizontal kicks in Sextupoles
         """

@@ -30,7 +30,7 @@ For instance let's take the horizontal displacements of all quadrupoles as varia
 ... )
 
 The variables are the horizontal displacement ``dx`` of all quadrupoles. The variable
-name is set to *dx_nnnn* where *nnnn* is the index of the quadruple in the lattice.
+name is set to *dx_nnnn* where *nnnn* is the index of the quadrupole in the lattice.
 The step is set to 0.0001 m.
 
 Let's take the horizontal positions at all beam position monitors as observables:
@@ -228,8 +228,9 @@ class _SvdSolver(abc.ABC):
     _obsmask: npt.NDArray[bool]
     _varmask: npt.NDArray[bool]
     _response: FloatArray | None = None
-    v: FloatArray | None = None
-    uh: FloatArray | None = None
+    _v: FloatArray | None = None
+    _uh: FloatArray | None = None
+    #: Singular values of the response matrix
     singular_values: FloatArray | None = None
 
     def __init__(self, nobs: int, nvar: int):
@@ -240,15 +241,15 @@ class _SvdSolver(abc.ABC):
     def reset_vars(self):
         """Reset the variable exclusion mask: enable all variables"""
         self._varmask = np.ones(self.shape[1], dtype=bool)
-        self.v = None
-        self.uh = None
+        self._v = None
+        self._uh = None
         self.singular_values = None
 
     def reset_obs(self):
         """Reset the observable exclusion mask: enable all observables"""
         self._obsmask = np.ones(self.shape[0], dtype=bool)
-        self.v = None
-        self.uh = None
+        self._v = None
+        self._uh = None
         self.singular_values = None
 
     @property
@@ -269,11 +270,11 @@ class _SvdSolver(abc.ABC):
         resp = self.weighted_response
         selected = np.ix_(self._obsmask, self._varmask)
         u, s, vh = np.linalg.svd(resp[selected], full_matrices=False)
-        self.v = vh.T * (1 / s) * self.varweights[self._varmask].reshape(-1, 1)
-        self.uh = u.T / self.obsweights[self._obsmask]
+        self._v = vh.T * (1 / s) * self.varweights[self._varmask].reshape(-1, 1)
+        self._uh = u.T / self.obsweights[self._obsmask]
         self.singular_values = s
 
-    def check_norm(self) -> tuple[np.ndarray, np.ndarray]:
+    def check_norm(self) -> tuple[FloatArray, FloatArray]:
         """Display the norm of the rows and columns of the weighted response matrix.
 
         Adjusting the variables and observable weights to equalize the norms
@@ -309,7 +310,7 @@ class _SvdSolver(abc.ABC):
         self._response = response
 
     @property
-    def weighted_response(self) -> np.ndarray:
+    def weighted_response(self) -> FloatArray:
         """Weighted response matrix."""
         return self.response * (self.varweights / self.obsweights.reshape(-1, 1))
 
@@ -329,11 +330,11 @@ class _SvdSolver(abc.ABC):
             nvals = len(self.singular_values)
         cormat = np.zeros(self._shape[::-1])
         selected = np.ix_(self._varmask, self._obsmask)
-        cormat[selected] = self.v[:, :nvals] @ self.uh[:nvals, :]
+        cormat[selected] = self._v[:, :nvals] @ self._uh[:nvals, :]
         return cormat
 
     def get_correction(
-        self, observed: np.ndarray, nvals: int | None = None
+        self, observed: FloatArray, nvals: int | None = None
     ) -> FloatArray:
         """Compute the correction of the given observation.
 
@@ -384,7 +385,7 @@ class ResponseMatrix(_SvdSolver):
     ring: Lattice
     variables: VariableList  #: List of matrix :py:class:`Variable <.VariableBase>`\ s
     observables: ObservableList  #: List of matrix :py:class:`.Observable`\s
-    eval_args: dict[str, Any] = {}
+    _eval_args: dict[str, Any] = {}
 
     def __init__(
         self,
@@ -433,7 +434,7 @@ class ResponseMatrix(_SvdSolver):
         return f"{type(self).__name__}({no} observables, {nv} variables)"
 
     @property
-    def varweights(self) -> np.ndarray:
+    def varweights(self):
         """Variable weights."""
         return self.variables.deltas
 
@@ -444,7 +445,7 @@ class ResponseMatrix(_SvdSolver):
 
     def correct(
         self, ring: Lattice, nvals: int = None, niter: int = 1, apply: bool = False
-    ) -> np.ndarray:
+    ) -> FloatArray:
         """Compute and optionally apply the correction.
 
         Args:
@@ -469,7 +470,7 @@ class ResponseMatrix(_SvdSolver):
         sumcorr = np.array([0.0])
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,))):
             print(f'step {it+1}, nvals = {nv}')
-            obs.evaluate(ring, **self.eval_args)
+            obs.evaluate(ring, **self._eval_args)
             err = obs.flat_deviations
             if np.any(np.isnan(err)):
                 raise AtError(
@@ -512,7 +513,7 @@ class ResponseMatrix(_SvdSolver):
         Returns:
             response:       Response matrix
         """
-        self.eval_args = kwargs
+        self._eval_args = kwargs
         self.observables.evaluate(self.ring)
         ring = self.ring.deepcopy()
 
@@ -720,8 +721,8 @@ class OrbitResponseMatrix(ResponseMatrix):
     ... )
     """
 
-    bpmrefs: Uint32Refpts
-    steerrefs: Uint32Refpts
+    bpmrefs: Uint32Refpts  #: location of position monitors
+    steerrefs: Uint32Refpts  #: location of steerers
 
     def __init__(
         self,
@@ -731,7 +732,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         steerrefs: Refpts = _orbit_correctors,
         *,
         cavrefs: Refpts = None,
-        bpmweight: float = 1.0,
+        bpmweight: float | Sequence[float] = 1.0,
         bpmtarget: float | Sequence[float] = 0.0,
         steerdelta: float | Sequence[float] = 0.0001,
         cavdelta: float | None = None,
@@ -761,8 +762,6 @@ class OrbitResponseMatrix(ResponseMatrix):
               is also the cavity weight. Default: automatically computed.
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
-            cavdelta:   Step on RF frequency for matrix computation [Hz]. This
-              is also the cavity weight
             steersum:   If :py:obj:`True`, the sum of steerers is appended to the
               Observables.
             stsumweight: Weight on steerer summation. Default: automatically computed.
@@ -980,39 +979,39 @@ class OrbitResponseMatrix(ResponseMatrix):
         return resp
 
     @property
-    def bpmweight(self) -> np.ndarray:
+    def bpmweight(self) -> FloatArray:
         """Weight of position readings."""
         return self.observables[0].weight
 
     @bpmweight.setter
-    def bpmweight(self, value):
+    def bpmweight(self, value: npt.ArrayLike):
         self.observables[0].weight = value
 
     @property
-    def stsumweight(self) -> np.ndarray:
+    def stsumweight(self) -> FloatArray:
         """Weight of steerer summation."""
         return self.observables[1].weight
 
     @stsumweight.setter
-    def stsumweight(self, value):
+    def stsumweight(self, value: float):
         self.observables[1].weight = value
 
     @property
-    def steerdelta(self) -> np.ndarray:
+    def steerdelta(self) -> FloatArray:
         """Step and weight of steerers."""
         return self.variables[: self.nbsteers].deltas
 
     @steerdelta.setter
-    def steerdelta(self, value):
+    def steerdelta(self, value: npt.ArrayLike):
         self.variables[: self.nbsteers].deltas = value
 
     @property
-    def cavdelta(self) -> np.ndarray:
+    def cavdelta(self) -> FloatArray:
         """Step and weight of RF frequency deviation."""
         return self.variables[self.nbsteers].delta
 
     @cavdelta.setter
-    def cavdelta(self, value):
+    def cavdelta(self, value: float):
         self.variables[self.nbsteers].delta = value
 
 
@@ -1111,7 +1110,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         """
         ring = self.ring
         pl = self.plane
-        twiss_in = self.eval_args.get("twiss_in", self._default_twiss_in)
+        twiss_in = self._eval_args.get("twiss_in", self._default_twiss_in)
         _, _, elemdata = ring.linopt6(All, twiss_in=twiss_in, **kwargs)
         dataj = elemdata[self.bpmrefs]
         dataw = elemdata[self.steerrefs]
@@ -1178,12 +1177,12 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         super().exclude_vars(*varid, *names)
 
     @property
-    def bpmweight(self) -> np.ndarray:
+    def bpmweight(self) -> FloatArray:
         """Weight of position readings."""
         return self.observables[0].weight
 
     @bpmweight.setter
-    def bpmweight(self, value):
+    def bpmweight(self, value: npt.ArrayLike):
         self.observables[0].weight = value
 
     @property
