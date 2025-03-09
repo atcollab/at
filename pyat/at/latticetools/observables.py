@@ -620,8 +620,8 @@ class OrbitObservable(ElementObservable):
 
             Observe the horizontal closed orbit at monitor locations
         """
-        name = self._set_name(name, "orbit", axis_(axis, "code"))
-        fun = _ArrayAccess(axis_(axis, "index"))
+        name = self._set_name(name, "orbit", axis_(axis, key="code"))
+        fun = _ArrayAccess(axis_(axis, key="index"))
         needs = {Need.ORBIT}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -670,8 +670,8 @@ class MatrixObservable(ElementObservable):
             Observe the transfer matrix from origin to monitor locations and
             extract T[0,1]
         """
-        name = self._set_name(name, "matrix", axis_(axis, "code"))
-        fun = _ArrayAccess(axis_(axis, "index"))
+        name = self._set_name(name, "matrix", axis_(axis, key="code"))
+        fun = _ArrayAccess(axis_(axis, key="index"))
         needs = {Need.MATRIX}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -704,12 +704,12 @@ class _GlobalOpticsObservable(Observable):
         shape of *value*.
         """
         needs = {Need.GLOBALOPTICS}
-        name = self._set_name(name, param, plane_(plane, "code"))
+        name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = _RecordAccess(param, plane_(plane, "index"))
+            fun = _RecordAccess(param, plane_(plane, key="index"))
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
         super().__init__(fun, needs=needs, name=name, **kwargs)
@@ -807,11 +807,11 @@ class LocalOpticsObservable(ElementObservable):
             ax_ = plane_
 
         needs = {Need.LOCALOPTICS}
-        name = self._set_name(name, param, ax_(plane, "code"))
+        name = self._set_name(name, param, ax_(plane, key="code"))
         if callable(param):
             fun = param
         else:
-            fun = _RecordAccess(param, _all_rows(ax_(plane, "index")))
+            fun = _RecordAccess(param, _all_rows(ax_(plane, key="index")))
             if param == "mu" or all_points:
                 needs.add(Need.ALL_POINTS)
             if param in {"W", "Wp", "dalpha", "dbeta", "dmu", "ddispersion", "dR"}:
@@ -892,8 +892,8 @@ class TrajectoryObservable(ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
         """
-        name = self._set_name(name, "trajectory", axis_(axis, "code"))
-        fun = _ArrayAccess(axis_(axis, "index"))
+        name = self._set_name(name, "trajectory", axis_(axis, key="code"))
+        fun = _ArrayAccess(axis_(axis, key="index"))
         needs = {Need.TRAJECTORY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -945,11 +945,11 @@ class EmittanceObservable(Observable):
 
             Observe the horizontal emittance
         """
-        name = self._set_name(name, param, plane_(plane, "code"))
+        name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
             fun = param
         else:
-            fun = _RecordAccess(param, plane_(plane, "index"))
+            fun = _RecordAccess(param, plane_(plane, key="index"))
         needs = {Need.EMITTANCE}
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
@@ -1012,10 +1012,10 @@ def GlobalOpticsObservable(
     """
     if param == "tune" and use_integer:
         # noinspection PyProtectedMember
-        name = ElementObservable._set_name(name, param, plane_(plane, "code"))
+        name = ElementObservable._set_name(name, param, plane_(plane, key="code"))
         return LocalOpticsObservable(
             End,
-            _Tune(plane_(plane, "index")),
+            _Tune(plane_(plane, key="index")),
             name=name,
             summary=True,
             all_points=True,
