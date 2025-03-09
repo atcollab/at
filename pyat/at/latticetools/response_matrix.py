@@ -797,8 +797,8 @@ class OrbitResponseMatrix(ResponseMatrix):
             sw = np.linalg.norm(deltas) / vo / korb
             return cd, sw
 
-        pl = plane_(plane, "index")
-        plcode = plane_(plane, "code")
+        pl = plane_(plane, key="index")
+        plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
         deltas = np.broadcast_to(steerdelta, nbsteers)
@@ -889,7 +889,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
             Exclude all variables associated with the element named "SD1E".
         """
-        plcode = plane_(self.plane, "code")
+        plcode = plane_(self.plane, key="code")
         names = [f"{plcode}{ik:04}" for ik in self.ring.get_uint32_index(refpts)]
         super().exclude_vars(*varid, *names)
 
@@ -1077,8 +1077,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             name = f"{plcode}{ik:04}"
             return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
 
-        pl = plane_(plane, "index")
-        plcode = plane_(plane, "code")
+        pl = plane_(plane, key="index")
+        plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
         deltas = np.broadcast_to(steerdelta, nbsteers)
@@ -1172,7 +1172,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
             Exclude all variables associated with the element named "SD1E".
         """
-        plcode = plane_(self.plane, "code")
+        plcode = plane_(self.plane, key="code")
         names = [f"{plcode}{ik:04}" for ik in self.ring.get_uint32_index(refpts)]
         super().exclude_vars(*varid, *names)
 
