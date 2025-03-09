@@ -254,11 +254,11 @@ class _SvdSolver(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def varweights(self): ...
+    def varweights(self) -> np.ndarray: ...
 
     @property
     @abc.abstractmethod
-    def obsweights(self): ...
+    def obsweights(self) -> np.ndarray: ...
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -270,7 +270,7 @@ class _SvdSolver(abc.ABC):
         resp = self.weighted_response
         selected = np.ix_(self._obsmask, self._varmask)
         u, s, vh = np.linalg.svd(resp[selected], full_matrices=False)
-        self._v = vh.T * (1 / s) * self.varweights[self._varmask].reshape(-1, 1)
+        self._v = vh.T * (1.0 / s) * self.varweights[self._varmask].reshape(-1, 1)
         self._uh = u.T / self.obsweights[self._obsmask]
         self.singular_values = s
 
@@ -434,7 +434,7 @@ class ResponseMatrix(_SvdSolver):
         return f"{type(self).__name__}({no} observables, {nv} variables)"
 
     @property
-    def varweights(self):
+    def varweights(self) -> np.ndarray:
         """Variable weights."""
         return self.variables.deltas
 
