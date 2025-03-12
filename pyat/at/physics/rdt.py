@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, asdict
 
 
-__all__ = ["get_rdts", "RDTType"]
+__all__ = ["get_rdts", "RDTType", "RDT_names", "RDT_code"]
 
 
 class RDTType(Enum):
@@ -32,6 +32,18 @@ class RDTType(Enum):
     GEOMETRIC1 = 4
     GEOMETRIC2 = 5
     TUNESHIFT = 6
+
+
+RDT_names = {
+    RDTType.FOCUSING: ("h20000", "h00200"),
+    RDTType.COUPLING: ("h10010", "h10100"),
+    RDTType.CHROMATIC: ("h11001", "h00111", "h20001", "h00201", "h10002"),
+    RDTType.GEOMETRIC1: ("h21000", "h30000", "h10110", "h10020", "h10200"),
+    RDTType.GEOMETRIC2: ("h22000", "h11110", "h00220", "h31000", "h40000",
+                         "h20110", "h11200", "h20020", "h20200", "h00310", "h00400"),
+    RDTType.TUNESHIFT: ("dnux_dJx", "dnux_dJy", "dnuy_dJy"),
+}
+RDT_code = {nm: code for code, names in RDT_names.items() for nm in names}
 
 
 def _get_polynom(elem, attr, index):
