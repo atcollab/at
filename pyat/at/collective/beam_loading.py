@@ -231,8 +231,15 @@ class BeamLoadingElement(RFCavity, Collective):
             a = self.Voltage*numpy.cos(theta-self._phis)
             b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
             psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
+            if numpy.isnan(psi):
+                psi = 0.0
+                warning_string = 'Unusual cavity configuration found.' + \
+                                 'Setting initial psi to 0 to avoid NaNs'
+                warnings.warn(AtWarning(warning_string))
+
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
+            print(a,b,psi,vgen)
         elif self._cavitymode == 2:
             vgen = 0
             psi = 0
