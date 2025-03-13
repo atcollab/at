@@ -79,15 +79,16 @@ RefIndex = Union[int, Tuple[int, ...], slice]
 # functions are replaced be module-level callable class instances:
 
 
-class _ModFun:
-    """General and pickleable evaluation function."""
+class _Convolve:
 
-    def __init__(self, fun, statfun):
+    def __init__(self, modfun, fun, *args, **kwargs):
+        self.modfun = modfun
         self.fun = fun
-        self.statfun = statfun
+        self.args = args
+        self.kwargs = kwargs
 
     def __call__(self, *a):
-        return self.statfun(self.fun(*a), axis=0)
+        return self.modfun(self.fun(*a), *self.args, **self.kwargs)
 
 
 class _ArrayAccess:
@@ -190,11 +191,16 @@ class Need(Enum):
     ALL_POINTS = 8
     #:  Associated with LOCALOPTICS, require the *get_chrom* keyword
     CHROMATICITY = 9
-    #:  Associatef with LOCALOPTICS, require the *get_w* keyword
+    #:  Associated with LOCALOPTICS, require the *get_w* keyword
     W_FUNCTIONS = 10
-    #:  Specify :py:meth:`~.Lattice.get_geometry` computation and provide its ? output
+    #:  Specify :py:meth:`~.Lattice.get_geometry` computation and provide its output
     #:  to the evaluation function
     GEOMETRY = 11
+    #:  Specify :py:func:`RDT <.get_rdts>` computation and provide its output to
+    #: the evaluati0on function
+    RDT = 12
+    #:  Associated with RDT: request 2nd order calculation
+    RDT_2ND_ORDER = 13
 
 
 class Observable:
@@ -209,6 +215,7 @@ class Observable:
         weight: npt.ArrayLike = 1.0,
         bounds=(0.0, 0.0),
         needs: Set[Need] | None = None,
+        procfun: Callable | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -254,14 +261,17 @@ class Observable:
         *data* argument.
         """
         name = fun.__name__ if name is None else name
+        if procfun:
+            name = f"{procfun.__name__}({name})"
+            fun = _Convolve(procfun, fun)
         self.fun: Callable = fun  #: Evaluation function
         self.needs: Set[Need] = needs or set()  #: Set of requirements
         self.name: str = name  #: Observable name
         self.target: npt.ArrayLike | None = target  #: Target value
-        self.w: npt.ArrayLike = weight
+        self.w: npt.NDArray = np.asarray(weight)
         self.lbound, self.ubound = bounds
-        self.initial: npt.NDArray[float] | None = None
-        self._value: npt.NDArray[float] | Exception | None = None
+        self.initial: npt.NDArray | None = None
+        self._value: npt.NDArray | Exception | None = None
         self._shape: tuple[int, ...] | None = None
         self.args = args
         self.kwargs = kwargs
@@ -318,7 +328,7 @@ class Observable:
         """Setup function called when the observable is added to a list."""
         pass
 
-    def evaluate(self, *data, initial: bool = False) -> npt.NDArray[float] | Exception:
+    def evaluate(self, *data, initial: bool = False) -> npt.NDArray | Exception:
         """Compute and store the value of the observable.
 
         The direct evaluation of a single :py:class:`Observable` is normally
@@ -360,34 +370,34 @@ class Observable:
         return self.value is not None
 
     @staticmethod
-    def check_value(value: npt.NDArray[float] | Exception) -> npt.NDArray[float]:
+    def check_value(value: npt.NDArray | Exception) -> npt.NDArray:
         if isinstance(value, Exception):
             raise type(value)(value.args[0]) from value
         return value
 
     @property
-    def value(self) -> npt.NDArray[float]:
+    def value(self) -> npt.NDArray:
         """Value of the observable."""
         return self.check_value(self._value)
 
     @property
-    def weight(self) -> npt.NDArray[float]:
+    def weight(self) -> npt.NDArray:
         """Observable weight."""
         return np.broadcast_to(self.w, self._value.shape)  # type: ignore
 
     @weight.setter
     def weight(self, w: npt.ArrayLike):
-        self.w = w
+        self.w = np.asarray(w)
 
     @property
-    def weighted_value(self) -> npt.NDArray[float]:
+    def weighted_value(self) -> npt.NDArray:
         """Weighted value of the Observable, computed as
         :pycode:`weighted_value = value/weight`.
         """
         return self.value / self.w
 
     @property
-    def deviation(self) -> npt.NDArray[float]:
+    def deviation(self) -> npt.NDArray:
         """Deviation from target value, computed as
         :pycode:`deviation = value-target`.
         """
@@ -407,14 +417,15 @@ class Observable:
         return deviation
 
     @property
-    def weighted_deviation(self) -> npt.NDArray[float]:
+    def weighted_deviation(self) -> npt.NDArray:
         """:pycode:`weighted_deviation = (value-target)/weight`."""
         return self.deviation / self.w
 
     @property
-    def residual(self) -> npt.NDArray[float]:
+    def residual(self) -> npt.NDArray:
         """residual, computed as :pycode:`residual = ((value-target)/weight)**2`."""
-        return (self.deviation / self.w) ** 2
+        # absolute necessary for complex data
+        return np.absolute(self.weighted_deviation) ** 2
 
     @staticmethod
     def _set_name(name, param, index):
@@ -504,6 +515,7 @@ class ElementObservable(Observable):
         name: str | None = None,
         summary: bool = False,
         statfun: Callable | None = None,
+        procfun: Callable | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -528,10 +540,13 @@ class ElementObservable(Observable):
         shape of *value*.
         """
         name = fun.__name__ if name is None else name
+        if procfun:
+            name = f"{procfun.__name__}({name})"
+            fun = _Convolve(procfun, fun)
         if statfun:
             summary = True
             name = f"{statfun.__name__}({name})"
-            fun = _ModFun(fun, statfun)
+            fun = _Convolve(statfun, fun, axis=0)
         super().__init__(fun, name=name, **kwargs)
         self.summary = summary
         self.refpts = refpts
