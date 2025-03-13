@@ -35,6 +35,7 @@ import numpy.typing as npt
 
 # noinspection PyProtectedMember
 from .observables import Observable, ElementObservable, Need
+from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
 from ..lattice import Lattice, Orbit, Refpts, All
 from ..physics import linopt6
@@ -166,7 +167,9 @@ class ObservableList(list):
         self.opticsrefs = None
         self.passrefs = None
         self.matrixrefs = None
+        self.rdtrefs = None
         self.needs = None
+        self.rdt_type = set()
         self.method = method
         self.orbit = orbit
         self.twiss_in = twiss_in
@@ -178,15 +181,19 @@ class ObservableList(list):
     def _setup(self, ring: Lattice):
         # Compute the union of all needs
         needs = set()
+        rdt_type = set()
         for obs in self:
             needs |= obs.needs
             if isinstance(obs, ElementObservable):
                 needs.add(Need.RING)
+            if isinstance(obs, RDTObservable):
+                rdt_type.add(obs._rdt_type)
 
         if (needs & self.needs_ring) and ring is None:
             raise ValueError("At least one Observable needs a ring argument")
 
         self.needs = needs
+        self.rdt_type = rdt_type
         if ring is None:
             # Initialise each observable
             for obs in self:
@@ -194,7 +201,7 @@ class ObservableList(list):
         else:
             # Initialise each observable and make a summary all refpoints
             noref = ring.get_bool_index(None)
-            orbitrefs = opticsrefs = passrefs = matrixrefs = noref
+            orbitrefs = opticsrefs = passrefs = matrixrefs = rdtrefs = noref
             for obs in self:
                 obs._setup(ring)
                 obsneeds = obs.needs
@@ -210,8 +217,11 @@ class ObservableList(list):
                             opticsrefs |= obs._boolrefs
                     if Need.TRAJECTORY in obsneeds:
                         passrefs |= obs._boolrefs
+                    if Need.RDT in obsneeds:
+                        rdtrefs |= obs._boolrefs
             self.orbitrefs = orbitrefs
             self.opticsrefs = opticsrefs
+            self.rdtrefs = rdtrefs
             self.passrefs = passrefs
             self.matrixrefs = matrixrefs
 
@@ -309,6 +319,8 @@ class ObservableList(list):
                 data.append(emdata)
             if Need.GEOMETRY in obsneeds:
                 data.append(geodata[obsrefs])
+            if Need.RDT in obsneeds:
+                data.append(check_error(rdtdata, obsrefs[self.rdtrefs]))
             return obs.evaluate(*data, initial=initial)
 
         @frequency_control
@@ -320,7 +332,9 @@ class ObservableList(list):
         ):
             """Optics computations."""
             keep_lattice = False
-            trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = None
+            trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = rdtdata = (
+                None
+            )
             twiss_in = kwargs.get("twiss_in", self.twiss_in)
             o0 = kwargs.get("orbit", self.orbit)
             o0 = getattr(twiss_in, "closed_orbit", None) if o0 is None else o0
@@ -400,12 +414,27 @@ class ObservableList(list):
                 # Geometry computation
                 geodata, _ = ring.get_geometry()
 
-            return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata
+            if Need.RDT in needs:
+                # RDT computation
+                use_mp = kwargs.get("use_mp", False)
+                pool_size = kwargs.get("pool_size", None)
+                try:
+                    _, _, rdtdata = ring.get_rdts(
+                        refpts=self.rdtrefs,
+                        rdt_type=self.rdt_type,
+                        second_order=Need.RDT_2ND_ORDER in needs,
+                        use_mp=use_mp,
+                        pool_size=pool_size,
+                    )
+                except Exception as err:
+                    rdtdata = err
+
+            return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata
 
         if self.needs is None or initial:
             self._setup(ring)
 
-        trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
+        trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata = ringeval(
             ring, dp=dp, dct=dct, df=df
         )
         return _ObsResults(obseval(ring, ob) for ob in self)
