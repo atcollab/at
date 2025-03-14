@@ -33,7 +33,7 @@ RDT_names = {
 RDT_code = {nm: code for code, names in RDT_names.items() for nm in names}
 
 _postproc = {
-    "complex": None,
+    None: None,
     "real": np.real,
     "imag": np.imag,
     "abs": np.absolute,
@@ -58,7 +58,7 @@ class RDTObservable(ElementObservable):
         refpts: Refpts,
         param: str,
         name: str | None = None,
-        proc: str = "complex",
+        kind: str | None = None,
         second_order: bool = False,
         **kwargs,
     ):
@@ -71,6 +71,12 @@ class RDTObservable(ElementObservable):
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
+            kind:           processing of complex output: If *kind* is None (default),
+              no processing. Otherwise, it can be:
+              * "real": take the real part of the observable
+              * "imag": take the imaginary part of the observable
+              * "angle": take the angle of the observable
+              * "abs": take the module value of the observable
             second_order:   Compute second order terms. Computation is significantly
               longer using this method
 
@@ -134,7 +140,7 @@ class RDTObservable(ElementObservable):
         needs = {Need.RDT}
         if second_order:
             needs.add(Need.RDT_2ND_ORDER)
-        procfun = _postproc[proc]
+        procfun = _postproc[kind]
         name = self._set_name(name, param, None)
         fun = partial(_rdt_access, param)
 
