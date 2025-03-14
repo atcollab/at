@@ -630,6 +630,6 @@ def test_rdt(hmba_lattice):
     mult0 = ring.get_uint32_index(at.Multipole)[0]
     _, _, rdt32 = ring.get_rdts(mult0, at.RDTType.ALL)
 
-    for k in rdt.keys():
+    for k in rdt.dtype.names:
         assert_close(np.absolute(rdt[k]), np.absolute(rdt32[k]), rtol=1.0e-8)
         assert_close(np.absolute(rdt[k]), np.absolute(rdtsd[k]), atol=1.0e-8)
