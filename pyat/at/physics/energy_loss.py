@@ -82,7 +82,8 @@ def get_energy_loss(
         particle = ring.particle
         delta = 0.0
         for e in ring:
-            if e.PassMethod.endswith("RadPass"):
+            if np.logical_or(e.PassMethod.endswith("RadPass"),
+                             e.PassMethod.endswith('RadiationPass')):
                 ot = e.track(np.zeros(6), energy=energy, particle=particle)
                 delta += ot[4]
         return -delta * energy
