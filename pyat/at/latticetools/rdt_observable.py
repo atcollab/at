@@ -58,7 +58,6 @@ class RDTObservable(ElementObservable):
         refpts: Refpts,
         param: str,
         name: str | None = None,
-        kind: str | None = None,
         second_order: bool = False,
         **kwargs,
     ):
@@ -81,8 +80,11 @@ class RDTObservable(ElementObservable):
               longer using this method
 
         Keyword Args:
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -96,6 +98,7 @@ class RDTObservable(ElementObservable):
 
         .. _rdt_param:
         .. rubric:: RDT parameter names
+
         **h20000**          at.RDTType.FOCUSING
         **h00200**
 
@@ -140,9 +143,8 @@ class RDTObservable(ElementObservable):
         needs = {Need.RDT}
         if second_order:
             needs.add(Need.RDT_2ND_ORDER)
-        procfun = _postproc[kind]
         name = self._set_name(name, param, None)
         fun = partial(_rdt_access, param)
 
-        super().__init__(fun, refpts, needs=needs, name=name, procfun=procfun, **kwargs)
+        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
         self._rdt_type = RDT_code[param]
