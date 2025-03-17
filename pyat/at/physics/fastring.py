@@ -127,8 +127,8 @@ def simple_ring(
     dispxp: float = 0.0,
     dispy: float = 0.0,
     dispyp: float = 0.0,
-    Qpx: float = 0.0,
-    Qpy: float = 0.0,
+    Qpx: float | Sequence[float] = 0.0,
+    Qpy: float | Sequence[float] = 0.0,
     A1: float = 0.0,
     A2: float = 0.0,
     A3: float = 0.0,
@@ -141,9 +141,7 @@ def simple_ring(
     U0: float = 0.0,
     name: str = "",
     particle: str | Particle = "relativistic",
-    TimeLag: float | Sequence[float] = 0.0,
-    chromx_arr: Sequence[float] = 0.0,
-    chromy_arr: Sequence[float] = 0.0
+    TimeLag: float | Sequence[float] = 0.0
 ) -> Lattice:
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -173,8 +171,14 @@ def simple_ring(
         dispxp: horizontal dispersion prime, Default=0
         dispy: vertical dispersion [m], Default=0
         dispyp: vertical dispersion prime, Default=0
-        Qpx: horizontal linear chromaticity, Default=0
-        Qpy: vertical linear chromaticity, Default=0
+        Qpx: If single value, it is horizontal linear chromaticity
+          If an array is given it corresponds to a list of horizontal 
+          non linear chromaticities [Q',Q'',Q''',...]. This is expanded
+          following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc. Default=0.0
+        Qpy: If single value, it is vertical linear chromaticity
+          If an array is given it corresponds to a list of horizontal 
+          non linear chromaticities [Q',Q'',Q''',...]. This is expanded
+          following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc. Default=0.0
         A1: horizontal amplitude detuning coefficient, Default=0
         A2: cross term for amplitude detuning coefficient, Default=0
         A3: vertical amplitude detuning coefficient, Default=0
@@ -295,8 +299,8 @@ def simple_ring(
         tauz=tauz,
     )
 
-    chromx_arr = np.ravel(chromx_arr)
-    chromy_arr = np.ravel(chromy_arr)
+    chromx_arr = np.ravel(Qpx)
+    chromy_arr = np.ravel(Qpy)
     chrom_maxorder = max(chromx_arr.size, chromy_arr.size)
 
     if not np.any(chromx_arr):
