@@ -13,7 +13,7 @@ struct elem
   double EnergyLossFactor;
 };
 
-void SimpleRadiationPass(double *r_in,
+void SimpleRadiationRadPass(double *r_in,
            double *damp_mat_diag, double dispx, double dispxp,
            double dispy, double dispyp, double EnergyLossFactor, int num_particles)
 
@@ -99,11 +99,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->EnergyLossFactor=U0/Param->energy;
             Elem->damp_mat_diag=damp_mat_diag;
         }
-        SimpleRadiationPass(r_in, Elem->damp_mat_diag, Elem->dispx, Elem->dispxp, Elem->dispy, Elem->dispyp, Elem->EnergyLossFactor, num_particles);
+        SimpleRadiationRadPass(r_in, Elem->damp_mat_diag, Elem->dispx, Elem->dispxp, Elem->dispy, Elem->dispyp, Elem->EnergyLossFactor, num_particles);
     return Elem;
 }
 
-MODULE_DEF(SimpleRadiationPass)        /* Dummy module initialisation */
+MODULE_DEF(SimpleRadiationRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -129,7 +129,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        SimpleRadiationPass(r_in, damp_mat_diag, dispx, dispxp, dispy, dispyp, EnergyLossFactor, num_particles);
+        SimpleRadiationRadPass(r_in, damp_mat_diag, dispx, dispxp, dispy, dispyp, EnergyLossFactor, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
