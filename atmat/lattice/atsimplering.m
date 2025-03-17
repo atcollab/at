@@ -93,6 +93,19 @@ else
     emity=real(-1i*lambda(2));
 end
 
+chrom_maxorder = max(length(qpx), length(qpy));
+
+if length(qpx) < chrom_maxorder
+    chromx_arr = [qpx zeros(1,chrom_maxorder - length(qpx))];
+else
+    chromx_arr = [qpx];
+end
+if length(qpy) < chrom_maxorder
+    chromy_arr = [qpy zeros(1,chrom_maxorder - length(qpy))];
+else
+    chromy_arr = [qpy];
+end
+
 [vrf,hnum]=broadcast(vrf(:),hnum(:));
 frf = hnum * clight / circumference;
 
@@ -115,7 +128,7 @@ lin_elem=atM66('Linear',m66,'Length',circumference);
 nonlin_elem=atbaselem('NonLinear','DeltaQPass','Class','NonLinear',...
     'Betax',betax,'Betay',betay,...
     'Alphax',alphax,'Alphay',alphay,...
-    'Qpx',qpx,'Qpy',qpy,...
+    'chromx_arr',chromx_arr,'chromy_arr',chromy_arr,...
     'A1',A1,'A2',A2,'A3',A3);
 simple_rad = atbaselem('SR','SimpleRadiationRadPass','Class','SimpleRadiation',...
     'dispx',dispx,'dispxp',dispxp,'dispy',dispy,'dispyp',dispyp,...
