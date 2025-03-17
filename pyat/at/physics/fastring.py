@@ -142,6 +142,8 @@ def simple_ring(
     name: str = "",
     particle: str | Particle = "relativistic",
     TimeLag: float | Sequence[float] = 0.0,
+    chromx_arr: Sequence[float] = 0.0,
+    chromy_arr: Sequence[float] = 0.0
 ) -> Lattice:
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -195,6 +197,12 @@ def simple_ring(
           or a Particle object
         TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
           or sequence of scalars (as with harmonic_number and Vrf).
+        chromx_arr: List of horizontal chromaticities [Q',Q'',Q''',...]
+           will be expanded following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc
+           If this is provided, Qpx is ignored.
+        chromy_arr: List of vertical chromaticities [Q',Q'',Q''',...]
+           will be expanded following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc
+           If this is provided, Qpy is ignored          
 
     If the given emitx, emity or espread is 0, then no equlibrium emittance
     is applied in this plane.
@@ -287,6 +295,21 @@ def simple_ring(
         tauz=tauz,
     )
 
+    chromx_arr = np.array(np.atleast_1d(chromx_arr), dtype=float)
+    chromy_arr = np.array(np.atleast_1d(chromy_arr), dtype=float)
+    chrom_maxorder = np.amax([len(chromx_arr), len(chromy_arr)])
+
+    if not np.any(chromx_arr):
+        chromx_arr = np.zeros(chrom_maxorder)
+        chromx_arr[0] = Qpx
+        
+    if not np.any(chromy_arr):
+        chromy_arr = np.zeros(chrom_maxorder)
+        chromy_arr[0] = Qpy
+
+    chromx_arr = np.pad(chromx_arr, (0, chrom_maxorder-len(chromx_arr)))
+    chromy_arr = np.pad(chromy_arr, (0, chrom_maxorder-len(chromy_arr)))
+
     # Generate the detuning element
     nonlin_elem = Element(
         "NonLinear",
@@ -295,11 +318,12 @@ def simple_ring(
         Betay=betay,
         Alphax=alphax,
         Alphay=alphay,
-        Qpx=Qpx,
-        Qpy=Qpy,
+        chromx_arr=chromx_arr,
+        chromy_arr=chromy_arr,
         A1=A1,
         A2=A2,
         A3=A3,
+        chrom_maxorder=chrom_maxorder,
     )
 
     # Assemble all elements into the lattice object

@@ -198,8 +198,8 @@ def chromaticity(
                 get_tune(ring, method=method, dp=dp + dpi, remove_dc=True, **kwargs)
             )
         fit = np.polyfit(dpa, qz, order)[::-1]
-        fitx = fit[:, 0] / factorial(np.arange(order + 1))
-        fity = fit[:, 1] / factorial(np.arange(order + 1))
+        fitx = fit[:, 0] * factorial(np.arange(order + 1))
+        fity = fit[:, 1] * factorial(np.arange(order + 1))
         return np.array([fitx, fity]), dpa, np.array(qz)
 
 
