@@ -1342,7 +1342,7 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
         Element._conversions, U0=float, damp_mat_diag=lambda v: _array(v, shape=(6,))
     )
 
-    default_pass = {False: "IdentityPass", True: "SimpleRadiationPass"}
+    default_pass = {False: "IdentityPass", True: "SimpleRadiationRadPass"}
 
     def __init__(
         self,
@@ -1363,7 +1363,7 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
             tauz:          Longitudinal damping time [turns]
             U0:            Energy loss per turn [eV]
 
-        Default PassMethod: ``SimpleRadiationPass``
+        Default PassMethod: ``SimpleRadiationRadPass``
         """
         assert taux >= 0.0, "taux must be greater than or equal to 0"
         if taux == 0.0:
