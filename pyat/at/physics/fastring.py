@@ -200,13 +200,7 @@ def simple_ring(
           'relativistic', 'electron', 'positron', 'proton'
           or a Particle object
         TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
-          or sequence of scalars (as with harmonic_number and Vrf).
-        chromx_arr: List of horizontal chromaticities [Q',Q'',Q''',...]
-           will be expanded following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc
-           If this is provided, Qpx is ignored.
-        chromy_arr: List of vertical chromaticities [Q',Q'',Q''',...]
-           will be expanded following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc
-           If this is provided, Qpy is ignored          
+          or sequence of scalars (as with harmonic_number and Vrf).      
 
     If the given emitx, emity or espread is 0, then no equlibrium emittance
     is applied in this plane.
