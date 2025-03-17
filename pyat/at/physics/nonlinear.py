@@ -218,7 +218,7 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
     if orbit is None:
         orbit, _ = find_orbit(ring)
     lindata0, _, _ = ring.linopt6(get_chrom=False, orbit=orbit)
-    xsi = get_chrom(ring.radiation_off(copy=True))
+    xsi = get_chrom(ring.disable_6d(copy=True))
     r0, r1, x, q_dx, y, q_dy = detuning(
         ring.radiation_off(copy=True), xm=1.0e-4, ym=1.0e-4, npoints=3
     )
@@ -229,12 +229,13 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
         Betay=lindata0.beta[1],
         Alphax=lindata0.alpha[0],
         Alphay=lindata0.alpha[1],
-        Qpx=xsi[0],
-        Qpy=xsi[1],
+        chromx_arr=np.array([xsi[0]]),
+        chromy_arr=np.array([xsi[1]]),
         A1=r1[0][0],
         A2=r1[0][1],
         A3=r1[1][1],
         T1=-orbit,
         T2=orbit,
+        chrom_maxorder=1
     )
     return nonlin_elem
