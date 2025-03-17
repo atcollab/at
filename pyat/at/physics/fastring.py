@@ -295,9 +295,9 @@ def simple_ring(
         tauz=tauz,
     )
 
-    chromx_arr = np.array(np.atleast_1d(chromx_arr), dtype=float)
-    chromy_arr = np.array(np.atleast_1d(chromy_arr), dtype=float)
-    chrom_maxorder = np.amax([len(chromx_arr), len(chromy_arr)])
+    chromx_arr = np.ravel(chromx_arr)
+    chromy_arr = np.ravel(chromy_arr)
+    chrom_maxorder = max(chromx_arr.size, chromy_arr.size)
 
     if not np.any(chromx_arr):
         chromx_arr = np.zeros(chrom_maxorder)
