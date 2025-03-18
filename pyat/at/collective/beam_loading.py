@@ -154,6 +154,8 @@ class BeamLoadingElement(RFCavity, Collective):
             cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
             buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
                 (default 0)
+            detune_angle:      Fixed detuning from optimal tuning angle. [rad]
+            
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -165,9 +167,9 @@ class BeamLoadingElement(RFCavity, Collective):
             raise TypeError('cavitymode has to be an ' +
                             'instance of CavityMode')
         zcuts = kwargs.pop('ZCuts', None)
-        phil = kwargs.pop('phil', 0)
         energy = ring.energy
         harmonic_number = numpy.round(frequency*ring.circumference/clight)
+        self.detune_angle = kwargs.pop('detune_angle', 0)
         self.Rshunt = rshunt
         self.Qfactor = qfactor
         self.NormFact = kwargs.pop('NormFact', 1.0)
@@ -199,7 +201,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.zeros(2)
         self._vgen = numpy.zeros(2)
         self._vcav = numpy.array([self.Voltage,
-                                  numpy.pi/2-self._phis-phil])
+                                  numpy.pi/2-self._phis])
         self.clear_history(ring=ring)
         
     def is_compatible(self, other):
@@ -229,8 +231,15 @@ class BeamLoadingElement(RFCavity, Collective):
             a = self.Voltage*numpy.cos(theta-self._phis)
             b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
             psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
+            if numpy.isnan(psi):
+                psi = 0.0
+                warning_string = 'Unusual cavity configuration found.' + \
+                                 'Setting initial psi to 0 to avoid NaNs'
+                warnings.warn(AtWarning(warning_string))
+
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
+            print(a,b,psi,vgen)
         elif self._cavitymode == 2:
             vgen = 0
             psi = 0
