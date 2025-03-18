@@ -123,7 +123,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        chrom_maxorder=atGetOptionalLong(ElemData,"chrom_maxorder", 5); check_error();
+        chrom_maxorder=atGetOptionalLong(ElemData,"chrom_maxorder", 1); check_error();
                 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Alphax=alphax;
@@ -176,7 +176,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        chrom_maxorder=atGetOptionalLong(ElemData,"chrom_maxorder", 5); check_error();
+        chrom_maxorder=atGetOptionalLong(ElemData,"chrom_maxorder", 1); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
