@@ -113,7 +113,7 @@ static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *h
 
 
 static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn, 
-        int *xnturn, int *xnelem, bool *xlost, double *xlostcoord)
+        int *xnturn, int *xnelem, bool *xlost, double *xlostcoord, double *hist)
 {
     unsigned int n, c;
     for (c=0; c<np; c++) {/* Loop over particles */
@@ -124,7 +124,8 @@ static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn,
                     xlost[c] = 1;
                     xnturn[c] = num_turn;
                     xnelem[c] = num_elem;
-                    memcpy(xlostcoord+6*c,r6,6*sizeof(double));
+                    /* memcpy(xlostcoord+6*c,r6,6*sizeof(double)); */
+                    memcpy(xlostcoord+6*c,hist+6*c,6*sizeof(double));
                     r6[0] = NAN;
                     r6[1] = 0;
                     r6[2] = 0;
@@ -411,7 +412,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     param.rest_energy=0.0;
     param.charge=-1.0;
     param.num_turns=num_turns;
-    param.bdiff = NULL;
     
     if (keep_counter)
         param.nturn = last_turn;
@@ -424,7 +424,16 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
     drin = PyArray_DATA(rin);
-
+     // Initialize hist array
+    npy_intp hist_dims[2] = {6, num_particles};
+    PyObject *hist_array = PyArray_EMPTY(2, hist_dims, NPY_DOUBLE, 1);
+    if (hist_array == NULL) {
+        printf("Failed to allocate memory for hist_array\n");
+        return NULL;
+    }
+    double *hist = PyArray_DATA((PyArrayObject *)hist_array);
+    memcpy(hist, drin, np6 * sizeof(double));
+    
     if (refs) {
         if (PyArray_TYPE(refs) != NPY_UINT32) {
             return PyErr_Format(PyExc_ValueError, "refpts is not a uint32 array");
@@ -442,6 +451,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     outdims[3] = num_turns;
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
+
 
     if(losses){
         pdims[0]= num_particles;
@@ -580,11 +590,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 if (!res) return print_error(elem_index, rout);       /* trackFunction failed */
                 Py_DECREF(res);
             } else {
+                memcpy(hist, drin, np6*sizeof(double));
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             }
             if (losses) {
-                checkiflost(drin, num_particles, elem_index, param.nturn, ixnturn, ixnelem, bxlost, dxlostcoord);
+                checkiflost(drin, num_particles, elem_index, param.nturn, ixnturn, ixnelem, bxlost, dxlostcoord, hist);
             } else {
                 setlost(drin, num_particles);
             }
@@ -624,8 +635,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         Py_DECREF(xnturn);
         Py_DECREF(xnelem);
         Py_DECREF(xlostcoord);
+        Py_DECREF(hist_array);
         return tout;          
     } else {
+        Py_DECREF(hist_array);
         return rout;
     }
 }
@@ -646,13 +659,10 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    param.common_rng=&common_state;
-    param.thread_rng=&thread_state;
     param.nturn = 0;
     param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;
-    param.bdiff=NULL;
     particle=NULL;
     energy=NULL;
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$O!O!", kwlist,
@@ -700,84 +710,6 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     }
     Py_INCREF(rin);
     return (PyObject *) rin;
-}
-
-static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
-    PyObject *element;
-    PyObject *energy;
-    PyObject *particle;
-    PyArrayObject *rin;
-    npy_uint32 num_particles;
-    track_function integrator;
-    PyObject *pyintegrator;
-    PyObject *PyPassMethod;
-    const double *drin;
-    double orb[6];
-    struct parameters param;
-    struct LibraryListElement *LibraryListPtr;
-    npy_intp dims[2] = {6, 6};
-    PyObject *pbdiff = PyArray_ZEROS(2, dims, NPY_DOUBLE ,1);
-    double *bdiff = (double *)PyArray_DATA((PyArrayObject *)pbdiff);
-
-    param.nturn = 0;
-    param.energy=0.0;
-    param.rest_energy=0.0;
-    param.charge=-1.0;
-    param.bdiff=bdiff;
-    particle=NULL;
-    energy=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$O!O!", kwlist,
-        element_type, &element,  &PyArray_Type, &rin,
-        &PyFloat_Type ,&energy, particle_type, &particle)) {
-        return NULL;
-    }
-    if (PyArray_DIM(rin,0) != 6) {
-        return PyErr_Format(PyExc_ValueError, "rin is not 6D");
-    }
-    if (PyArray_TYPE(rin) != NPY_DOUBLE) {
-        return PyErr_Format(PyExc_ValueError, "rin is not a double array");
-    }
-    if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
-        return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
-    }
-    num_particles = (PyArray_SIZE(rin)/6);
-    if (num_particles != 1) {
-        return PyErr_Format(PyExc_ValueError, "Number of particles should be 1");
-    }
-
-    set_energy_particle(NULL, energy, particle, &param);
-
-    drin = (const double *)PyArray_DATA(rin);
-    for (int i=0; i<6; i++) orb[i] = drin[i];
-
-    param.RingLength = 0.0;
-    param.T0 = 0.0;
-    param.beam_current=0.0;
-    param.nbunch=1;
-    param.bunch_spos = (double[1]){0.0};
-    param.bunch_currents = (double[1]){0.0};
-    for (int i = 0; i < 36; i++) bdiff[i] = 0.0;
-
-    PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
-    if (!PyPassMethod) return NULL;
-    LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
-    Py_DECREF(PyPassMethod);
-
-    if (!LibraryListPtr) return NULL;
-    integrator = LibraryListPtr->FunctionHandle;
-    pyintegrator = LibraryListPtr->PyFunctionHandle;
-    if (pyintegrator) {
-        PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
-        if (!res) return NULL;
-        Py_DECREF(res);
-    } else {
-        struct elem *elem_data = integrator(element, NULL, orb, 1, &param);
-        if (!elem_data) return NULL;
-        free(elem_data);
-    }
-    return pbdiff;
 }
 
 static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -842,18 +774,6 @@ static PyMethodDef AtMethods[] = {
     {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("elempass(element, r_in)\n\n"
               "Track input particles r_in through a single element.\n\n"
-              "Parameters:\n"
-              "    element (Element):   AT element\n"
-              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
-              "      On return, rin contains the final coordinates of the particles\n"
-              "    energy (float):      nominal energy [eV]\n"
-              "    particle (Optional[Particle]):  circulating particle\n\n"
-              ":meta private:"
-            )},
-    {"diffusion_matrix",  (PyCFunction)at_diffmatrix, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("diffusion_matrix(element, r_in)\n\n"
-              "Track a particles r_in through a single element,\n"
-              "computes the diffusion matrix\n\n"
               "Parameters:\n"
               "    element (Element):   AT element\n"
               "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
@@ -931,3 +851,4 @@ PyMODINIT_FUNC PyInit_atpass(void)
 
     return m;
 }
+
