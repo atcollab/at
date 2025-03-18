@@ -297,14 +297,6 @@ def simple_ring(
     chromy_arr = np.ravel(Qpy)
     chrom_maxorder = max(chromx_arr.size, chromy_arr.size)
 
-    if not np.any(chromx_arr):
-        chromx_arr = np.zeros(chrom_maxorder)
-        chromx_arr[0] = Qpx
-        
-    if not np.any(chromy_arr):
-        chromy_arr = np.zeros(chrom_maxorder)
-        chromy_arr[0] = Qpy
-
     chromx_arr = np.pad(chromx_arr, (0, chrom_maxorder-len(chromx_arr)))
     chromy_arr = np.pad(chromy_arr, (0, chrom_maxorder-len(chromy_arr)))
 
