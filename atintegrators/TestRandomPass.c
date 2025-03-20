@@ -1,4 +1,4 @@
-/* RandomPass.c
+ /* RandomPass.c
    Accelerator Toolbox
 
    Test of random generators
@@ -21,7 +21,7 @@ static void RandomPass(double *r_in,
         pcg32_random_t* thread_rng,
         int num_particles)
 {	
-    double common_val = atrandn_r(common_rng, 0.0, 0.001);
+    double common_val;
 #ifdef MPI
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -29,6 +29,7 @@ static void RandomPass(double *r_in,
     int rank = 0;
 #endif /* MPI */
 
+    common_val = atrandn_r(common_rng, 0.0, 0.001);
     for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
         double *r6 = r_in+c*6;
         r6[0] = atrandn_r(thread_rng, 0.0, 0.001);
@@ -37,6 +38,7 @@ static void RandomPass(double *r_in,
         r6[5] = 0.01*c;
     }
 
+    common_val = atrandn_r(common_rng, 0.0, 0.001);
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none)                      \
     shared(r_in, num_particles, common_val, thread_rng)
     for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
