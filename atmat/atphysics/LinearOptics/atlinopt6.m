@@ -128,8 +128,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
                 freqs=atgetfieldvalues(ring,cavities,'Frequency');
                 dff=-DPStep*mcf(atradoff(ring));
                 % Scale all frequencies by the same factor
-                rgup=atsetfieldvalues(ring,cavities,freqs*(1.0+0.5*dff));
-                rgdn=atsetfieldvalues(ring,cavities,freqs*(1.0-0.5*dff));
+                rgup=atsetfieldvalues(ring,cavities,'Frequency',freqs*(1.0+0.5*dff));
+                rgdn=atsetfieldvalues(ring,cavities,'Frequency',freqs*(1.0-0.5*dff));
                 [~,o1P]=findorbit6(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit6(rgdn,'guess',orbitin,varargs{:});
                 if get_w

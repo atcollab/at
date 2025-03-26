@@ -1570,12 +1570,17 @@ def get_chrom(
         print("Warning fft method not accurate to get the chromaticity")
 
     if ring.is_6d:
-        f0 = ring.get_rf_frequency(cavpts=cavpts)
-        df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
-        rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
+        dff = dp_step * ring.disable_6d(copy=True).slip_factor
+        cavities = get_bool_index(ring, RFCavity)
+        freqs = get_value_refpts(ring, cavities, "Frequency")
+        rgup = set_value_refpts(
+            ring, cavities, "Frequency", freqs * (1.0 + 0.5 * dff), copy=True
+        )
+        rgdn = set_value_refpts(
+            ring, cavities, "Frequency", freqs * (1.0 - 0.5 * dff), copy=True
+        )
         o0up, _ = find_orbit6(rgup, **kwargs)
         tune_up = get_tune(rgup, method=method, orbit=o0up, **kwargs)
-        rgdn = ring.set_rf_frequency(f0 - 0.5 * df, cavpts=cavpts, copy=True)
         o0dn, _ = find_orbit6(rgdn, **kwargs)
         tune_down = get_tune(rgdn, method=method, orbit=o0dn, **kwargs)
         dp_step = o0up[4] - o0dn[4]
