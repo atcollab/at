@@ -73,8 +73,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %   Specify the RF frequency deviation
 %
 %  REFERENCES
-%   [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
-%   [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
+%   [1] Etienne Forest, Phys. Rev. E 58, 2481  Published 1 August 1998
+%   [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 
 %       Published 3 February 2006
 %   [3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %
@@ -231,7 +231,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
             % Get the initial RF frequency
             cavities=ring(atgetcells(ring, 'Frequency'));
             freqs=atgetfieldvalues(cavities,'Frequency');
-            f=freqs(1);
+            f=min(freqs);
         end
 
         function [chrom,w]=chrom_w(ringup,ringdn,orbup,orbdn,refpts)
