@@ -21,25 +21,9 @@ struct elem
     double SigVV;
 };
 
-typedef void (*kickfun)(double *r_in, double nvx, double nvy, double k, double betgam0, double phi);
-
-static void relativistic_kick(double *r_in, double nvx, double nvy, double k, double betgam0, double phi)
+static void relativistic_kick(double *r_in, double nvx, double nvy, double k, double phi)
 {
     double omega_t = k*r_in[5] + phi;
-    double cos_ot = cos(omega_t);
-    double sin_ot = sin(omega_t);
-    double ddpp = -(nvy*r_in[2]+nvx*r_in[0])*k*cos_ot/(1.0+r_in[4]);
-
-    r_in[1] += nvx*sin_ot;
-    r_in[3] += nvy*sin_ot;
-    r_in[4] += ddpp;
-}
-
-static void non_relativistic_kick(double *r_in, double nvx, double nvy, double k, double betgam0, double phi)
-{
-    double betgami = betgam0*(1.0 + r_in[4]);
-    double betai = betgami/sqrt(1.0 + betgami*betgami);
-    double omega_t = k*r_in[5]/betai + phi;
     double cos_ot = cos(omega_t);
     double sin_ot = sin(omega_t);
     double ddpp = -(nvy*r_in[2]+nvx*r_in[0])*k*cos_ot/(1.0+r_in[4]);
@@ -60,48 +44,36 @@ void CrabCavityPass(
     double philag,
     int nturn,
     double T0,
+    double s,
     double gamma0,
     int num_particles)
 {
-    double beta0, betgam0, phiref;
+    double phitot;
     double k = TWOPI*freq/C0;
-    kickfun ff;
 
-    if (isfinite(gamma0)) {
-        betgam0 = sqrt(gamma0*gamma0 - 1.0);
-        beta0 = betgam0 / gamma0;
-        ff = &non_relativistic_kick;
-        nvx = nvx/beta0/beta0;
-        nvy = nvy/beta0/beta0;
-    }
-    else {
-        betgam0 = gamma0;
-        beta0 = 1.0;
-        ff = &relativistic_kick;
-    }
-    phiref = TWOPI*(freq*T0 - h)*nturn - k*lag/beta0 - philag;
+    phitot = TWOPI*(freq*T0 - h)*nturn - k*lag - philag;
 
     if (le == 0.0) {
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) \
-            default(none) shared(r_in, num_particles, normv, k, betgam0, phiref)
+            default(none) shared(r_in, num_particles, normv, k, phitot)
         for (int c = 0; c < num_particles; c++) {
             double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0]))
-                /* Longitudinal momentum kick */
-                ff(r6, nvx, nvy, k, betgam0, phiref);
+                /* Transverse kick */
+                relativistic_kick(r6, nvx, nvy, k, phitot);
         }
     }
     else {
         double halflength = le/2;
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) \
-            default(none) shared(r_in, num_particles, normv, k, betgam0, phiref, halflength)
+            default(none) shared(r_in, num_particles, normv, k, phitot, halflength)
         for (int c = 0; c < num_particles; c++) {
             double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0]))  {
                 /* Propagate through a drift equal to half cavity length */
                 drift6(r6, halflength);
-                /* Longitudinal momentum kick */
-                ff(r6, nvx, nvy, k, betgam0, phiref);
+                /* Transverse kick */
+                relativistic_kick(r6, nvx, nvy, k, phitot);
                 /* Propagate through a drift equal to half cavity length */
                 drift6(r6, halflength);
             }
@@ -158,7 +130,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
 
     CrabCavityPass(r_in, Elem->Length, nvx/energy, nvy/energy, Elem->Frequency, Elem->HarmNumber,
-        Elem->TimeLag, PhaseLag, Param->nturn, Param->T0, energy/Param->rest_energy, num_particles);
+        Elem->TimeLag, PhaseLag, Param->nturn, Param->T0, Param->s_coord, energy/Param->rest_energy, num_particles);
     return Elem;
 }
 
@@ -193,7 +165,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nvx = Voltages[0] / Energy;
         nvy = Voltages[1] / Energy;
 	    CrabCavityPass(r_in, Length, nvx, nvy, Frequency, HarmNumber, TimeLag, PhaseLag,
-	        0, 0.0, Energy/rest_energy, num_particles);
+	        0, 0.0, 0.0, Energy/rest_energy, num_particles);
     }
     else if (nrhs == 0) {
 	    plhs[0] = mxCreateCellMatrix(3,1);
