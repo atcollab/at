@@ -46,7 +46,7 @@ end
         [oldchrom,varargs]=getflag(varargin,'chrom');
         [chrom,varargs]=getflag(varargs,'get_chrom');
         [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct','df'});
-        [cavargs,varargs]=getoption(varargs,{'cavpts'});
+        [~,varargs]=getoption(varargs,{'cavpts'});  % Ignore the cavpts keyword
         [DPStep,~]=getoption(varargs,'DPStep');
         is_6d=getoption(varargs,'is_6d',[]); % Always set by frequency_control, keep in varargs
         if is_6d
@@ -61,10 +61,12 @@ end
 
         if chrom || oldchrom || nargout == 2
             if is_6d
-                frf=get_rf_frequency(ring);
-                DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,cavargs{:});
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,cavargs{:});
+                cavities=atgetcells(ring,'Frequency');
+                freqs=atgetfieldvalues(ring,cavities,'Frequency');
+                dff=-DPStep*mcf(atradoff(ring));
+                % Scale all frequencies by the same factor
+                rgup=atsetfieldvalues(ring,cavities,'Frequency',freqs*(1.0+0.5*dff));
+                rgdn=atsetfieldvalues(ring,cavities,'Frequency',freqs*(1.0-0.5*dff));
                 [~,o1P]=findorbit6(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit6(rgdn,'guess',orbitin,varargs{:});
                 deltap=o1P(5)-o1M(5);
@@ -77,13 +79,6 @@ end
             tuneP=tunefunc(ring,'orbit',o1P,varargs{:});
             tuneM=tunefunc(ring,'orbit',o1M,varargs{:});
             chrom = (tuneP - tuneM)/deltap;
-        end
-
-        function f=get_rf_frequency(ring)
-            % Get the initial RF frequency
-            cavities=ring(atgetcells(ring, 'Frequency'));
-            freqs=atgetfieldvalues(cavities,'Frequency');
-            f=freqs(1);
         end
 
     function tune=tune4(ring,varargin)

@@ -16,10 +16,10 @@ from .harmonic_analysis import get_tunes_harmonic
 from .matrix import find_m44, find_m66
 from .orbit import find_orbit4, find_orbit6
 from ..constants import clight
-from ..lattice import AtError
-from ..lattice import AtWarning, Lattice, Orbit, check_6d, get_s_pos
-from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
-from ..lattice import frequency_control
+from ..lattice import AtError, AtWarning, RFCavity
+from ..lattice import Lattice, Orbit, Refpts, check_6d, get_s_pos
+from ..lattice import DConstant, get_bool_index, get_uint32_index
+from ..lattice import frequency_control, set_value_refpts, get_value_refpts
 from ..tracking import internal_lpass
 
 __all__ = [
@@ -103,7 +103,6 @@ _WX_DTYPE = [
 
 _IDX_DTYPE = [("idx", np.uint32)]
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
-
 
 
 def _twiss22(t12, alpha0, beta0):
@@ -521,10 +520,15 @@ def _linopt(
     tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
 
     if (get_chrom or get_w) and mt.shape == (6, 6):
-        f0 = ring.get_rf_frequency(cavpts=cavpts)
-        df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
-        rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
-        rgdn = ring.set_rf_frequency(f0 - 0.5 * df, cavpts=cavpts, copy=True)
+        dff = dp_step * ring.disable_6d(copy=True).slip_factor
+        cavities = get_bool_index(ring, RFCavity)
+        freqs = get_value_refpts(ring, cavities, "Frequency")
+        rgup = set_value_refpts(
+            ring, cavities, "Frequency", freqs * (1.0 + 0.5 * dff), copy=True
+        )
+        rgdn = set_value_refpts(
+            ring, cavities, "Frequency", freqs * (1.0 - 0.5 * dff), copy=True
+        )
         if o0up is None:
             o0up, _ = get_orbit(rgup, guess=orbit, orbit=o0up, **kwargs)
             o0dn, _ = get_orbit(rgdn, guess=orbit, orbit=o0dn, **kwargs)
@@ -1176,6 +1180,7 @@ def linopt(
         mname="m44",
         **kwargs,
     )
+    # noinspection PyUnresolvedReferences
     return eld0, bd.tune, bd.chromaticity, eld
 
 
@@ -1565,12 +1570,17 @@ def get_chrom(
         print("Warning fft method not accurate to get the chromaticity")
 
     if ring.is_6d:
-        f0 = ring.get_rf_frequency(cavpts=cavpts)
-        df = dp_step * ring.disable_6d(copy=True).slip_factor * f0
-        rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
+        dff = dp_step * ring.disable_6d(copy=True).slip_factor
+        cavities = get_bool_index(ring, RFCavity)
+        freqs = get_value_refpts(ring, cavities, "Frequency")
+        rgup = set_value_refpts(
+            ring, cavities, "Frequency", freqs * (1.0 + 0.5 * dff), copy=True
+        )
+        rgdn = set_value_refpts(
+            ring, cavities, "Frequency", freqs * (1.0 - 0.5 * dff), copy=True
+        )
         o0up, _ = find_orbit6(rgup, **kwargs)
         tune_up = get_tune(rgup, method=method, orbit=o0up, **kwargs)
-        rgdn = ring.set_rf_frequency(f0 - 0.5 * df, cavpts=cavpts, copy=True)
         o0dn, _ = find_orbit6(rgdn, **kwargs)
         tune_down = get_tune(rgdn, method=method, orbit=o0dn, **kwargs)
         dp_step = o0up[4] - o0dn[4]
