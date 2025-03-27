@@ -10,9 +10,9 @@ _defref = np.array([], dtype=np.uint32)
 
 def atpass(
     line: list[Element],
-    r_in: np.ndarray[np.float64],
+    r_in: np.ndarray,
     nturns: int,
-    refpts: np.ndarray[np.uint32] = _defref,
+    refpts: np.ndarray = _defref,
     turn: int | None = None,
     energy: float | None = None,
     particle: Particle | None = None,
@@ -25,13 +25,13 @@ def atpass(
 ): ...
 def elempass(
     element: Element,
-    r_in: np.ndarray[np.float64],
+    r_in: np.ndarray,
     energy: float | None = None,
     particle: Particle | None = None,
 ): ...
 def diffusion_matrix(
     element: Element,
-    r_in: np.ndarray[np.float64],
+    r_in: np.ndarray,
     energy: float | None = None,
     particle: Particle | None = None,
 ): ...
