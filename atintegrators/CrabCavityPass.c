@@ -55,7 +55,7 @@ void CrabCavityPass(
 
     if (le == 0.0) {
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) \
-            default(none) shared(r_in, num_particles, normv, k, phitot)
+            default(none) shared(r_in, num_particles, nvx, nvy, k, phitot)
         for (int c = 0; c < num_particles; c++) {
             double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0]))
@@ -66,7 +66,7 @@ void CrabCavityPass(
     else {
         double halflength = le/2;
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) \
-            default(none) shared(r_in, num_particles, normv, k, phitot, halflength)
+            default(none) shared(r_in, num_particles, nvx, nvy, k, phitot, halflength)
         for (int c = 0; c < num_particles; c++) {
             double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0]))  {
