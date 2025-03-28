@@ -213,6 +213,7 @@ gpusource = (gpu_pass_methods +
 cudaext = Extension(
     name='at.tracking.gpu',
     sources=gpusource + [join('atgpu', 'CudaGPU.cpp')],
+    include_dirs=[numpy.get_include()],
     define_macros=macros + cuda_macros,
     extra_compile_args=cppflags + cuda_cppflags,
     extra_link_args=cuda_lflags

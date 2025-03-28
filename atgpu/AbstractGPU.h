@@ -2,7 +2,7 @@
 #define AT_GPU_GPUWRAPPER_H
 #include <string>
 #include <vector>
-
+#include <cstdint>
 // Abstract class for GPU context
 // Abstract OpenCL or CUDA API
 

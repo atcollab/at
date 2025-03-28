@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef AT_GPU_ELEMENT_H
 #define AT_GPU_ELEMENT_H
 
