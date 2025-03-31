@@ -1,6 +1,6 @@
-#include <cstdint>
 #ifndef AT_GPU_ELEMENT_H
 #define AT_GPU_ELEMENT_H
+#include <cstdint>
 
 // Include file shared with host and GPU
 // Define GPU<->Host memory exchange
