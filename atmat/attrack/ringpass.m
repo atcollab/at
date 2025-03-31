@@ -48,7 +48,10 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 % ROUT=RINGPASS(...,'reuse') is kept for compatibilty with previous
 % versions. It has no effect.
 %
-% ROUT=RINGPASS(...,'turn',turn)    Initial turn number. Default 0.
+% ROUT=RINGPASS(...,'seed',SEED)  The random generators are reset to start
+%   with SEED.
+%
+% ROUT=RINGPASS(...,'turn',TURN)    Initial turn number. Default 0.
 %   The turn number is necessary to compute the absolute path length used
 %   by RFCavityPass. Ignored if KeepCounter is set.
 %
@@ -59,6 +62,9 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 % To resume an interrupted tracking (for instance to get intermediate
 % results), one must use one of the 'turn' option or 'KeepCounter' flag to
 % ensure the continuity of the turn number.
+%
+% ROUT=RINGPASS(...,'omp_num_threads',NTHREADS)  Number of OpenMP threads.
+%   By default, OpenMP chooses the number of threads.
 %
 % ROUT=RINGPASS(...,'Silent') does not output the particle coordinates at
 %    each turn but only at the end of the tracking
@@ -83,6 +89,7 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 [turn,args]=getoption(args,'turn',0);
 [keep_counter,args]=getflag(args,'KeepCounter');
 [omp_num_threads,args]=getoption(args,'omp_num_threads');
+[seed,args]=getoption(args,'seed',-1);
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
 nturns=getargs(args(~funcargs),1);
 [prefunc,postfunc]=getargs(args(funcargs),cell(0),cell(0));
@@ -104,7 +111,7 @@ try
                                 turn,double(keep_counter),gpuid,4);
     else
       [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts, ...
-          prefunc,postfunc,nhist,omp_num_threads,props,turn,double(keep_counter));
+          prefunc,postfunc,nhist,omp_num_threads,props,turn,double(keep_counter),seed);
     end
     
     if nargout>1
