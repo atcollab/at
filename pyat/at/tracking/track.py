@@ -201,7 +201,7 @@ def lattice_track(
           is used. It can be globally set using the variable
           *at.lattice.DConstant.patpass_poolsize*
         use_gpu (bool): Flag to activate GPU processing (default: False)
-	    gpu_pool: List of GPU to use (default [0])
+        gpu_pool: List of GPU to use (default [0])
         start_method:           python multiprocessing start method.
           :py:obj:`None` uses the python default that is considered safe.
           Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -373,6 +373,7 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
     rout = _element_pass(element, r_in, **kwargs)
     return rout
 
+
 def gpu_info():
     """
     :py:func:`gpu_info` returns list of GPU present on the system and their corresponding information. If GPU
@@ -388,6 +389,7 @@ def gpu_info():
         return _gpuinfo()
     else:
         return []
+
 
 internal_lpass = _lattice_pass
 internal_epass = _element_pass

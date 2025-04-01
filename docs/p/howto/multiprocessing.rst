@@ -127,6 +127,7 @@ building the `OpenCL SDK <https://github.com/KhronosGroup/OpenCL-SDK>`_::
 Then you need to set the environment variable ``OCL_PATH`` to the SDK install path if you don't use a standard install::
 
     export OCL_PATH=<sdk_intall_path>
+
 or (on Windows)::
 
     set OCL_PATH=C:\clpeak\build\sdk_instal
@@ -155,10 +156,13 @@ NVidia `CUDA`_ toolkit must be preliminary installed on the system from `NVidia 
 Set the environment variable ``CUDA_PATH``::
 
     export CUDA_PATH=/cvmfs/hpc.esrf.fr/software/packages/ubuntu20.04/x86_64/cuda/12.3.1
+
 or on Windows::
 
     set CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3
+
 Install PyAT using the ``cuda`` flag::
 
     pip install --config-settings cuda=1 .
+
 You can check the install using the method ``at.tracking.gpu_info()`` as described above.

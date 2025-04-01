@@ -247,6 +247,7 @@ cudaext = Extension(
     name="at.tracking.gpu",
     sources=gpusource + [join("atgpu", "CudaGPU.cpp")],
     define_macros=macros + cuda_macros,
+    include_dirs=[np.get_include()],
     extra_compile_args=cppflags + cuda_cppflags,
     extra_link_args=cuda_lflags,
 )
