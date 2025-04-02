@@ -1,6 +1,7 @@
 #ifndef AT_GPU_ABSTRACTELEMENT_H
 #define AT_GPU_ABSTRACTELEMENT_H
 #include <string>
+#include <cstdint>
 #include "Element.h"
 #include "AbstractInterface.h"
 #include "AbstractGPU.h"

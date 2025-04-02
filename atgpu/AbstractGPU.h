@@ -1,5 +1,6 @@
 #ifndef AT_GPU_GPUWRAPPER_H
 #define AT_GPU_GPUWRAPPER_H
+#include <cstdint>
 #include <string>
 #include <vector>
 

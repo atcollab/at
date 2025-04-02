@@ -2,6 +2,7 @@
 #define AT_GPU_SYMPLECTICINTEGRATOR_H
 #include <string>
 #include <vector>
+#include <cstdint>
 #include "Element.h"
 
 class SymplecticIntegrator {
