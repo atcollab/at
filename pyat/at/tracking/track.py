@@ -91,7 +91,7 @@ def _lattice_pass(
     refs = get_uint32_index(lattice, refpts)
     if seed is not None:
         reset_rng(seed=seed)
-    use_gpu = kwargs.pop('use_gpu', False)
+    use_gpu = kwargs.pop("use_gpu", False)
     if use_gpu:
         if not (iscuda() or isopencl()):
             raise AtError("No GPU support enabled")
@@ -376,14 +376,17 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
 def gpu_info():
     """
-    :py:func:`gpu_info` returns list of GPU present on the system and their corresponding information. If GPU
-    support is not enabled or if no capable device are present on the system, an empty list is returned.
+    :py:func:`gpu_info` returns list of GPU present on the system and their
+    corresponding information. If GPU support is not enabled or if no capable device
+    are present on the system, an empty list is returned.
 
     Returns:
-        gpu: [gpu name,hardware version (CUDA device),compute unit number,platform]. The number of compute
-        units is not the so-called number of "CUDA cores". The number of threads that can be executed simultaneously
-        depends on the hardware and on the type of used instructions. For best performance, it is recommended to
-        track a number of particles which is multiple of 64 (or 128) times the number of compute units.
+        gpu: [gpu name,hardware version (CUDA device),compute unit number,platform].
+          The number of compute units is not the so-called number of "CUDA cores".
+          The number of threads that can be executed simultaneously depends on the
+          hardware and on the type of used instructions. For best performance, it is
+          recommended to track a number of particles which is multiple of 64 (or 128)
+          times the number of compute units.
     """
     if iscuda() or isopencl():
         return _gpuinfo()
