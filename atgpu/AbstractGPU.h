@@ -11,7 +11,7 @@
 
 typedef struct {
   std::string name;        // GPU Name
-  std::string version;     // Compute capabilities (CUDA)
+  std::string version;     // Compute capabilities (CUDA)@guney1911
   uint32_t    mpNumber;    // Multi processor number
   std::string platform;    // Platform name
 } GPU_INFO;
