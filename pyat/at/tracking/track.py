@@ -7,6 +7,7 @@ __all__ = [
     "internal_epass",
     "internal_plpass",
     "gpu_info",
+    "gpu_core_count",
 ]
 
 import multiprocessing
@@ -372,6 +373,24 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
 
     rout = _element_pass(element, r_in, **kwargs)
     return rout
+
+def gpu_core_count(gpuPool: list[int] | None):
+    """
+    :py:func:`gpu_core_count` returns number of GPU core.
+
+    Parameters:
+        gpuPool: List of selected GPUs. If None, first GPU is selected.
+    """
+    gpus = gpu_info()
+    nbgpu = len(gpus)
+    nbcore = 0
+    if gpuPool is None:
+        gpuPool = [0]
+    for g in gpuPool:
+        if g<0 or g>=nbgpu:
+            raise AtError("Invalid GPU id " + str(g) + ", must be in [0.." + str(nbgpu-1) + "]")
+        nbcore += gpus[g][2] # Compute unit number
+    return nbcore
 
 
 def gpu_info():
