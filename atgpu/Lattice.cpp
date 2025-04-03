@@ -300,6 +300,9 @@ void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
   double t0 = AbstractGPU::get_ticks();
 #endif
 
+  if(nbParticles==0)
+    return;
+
   // Copy rin to gpu mem
   void *gpuRin;
   gpu->allocDevice(&gpuRin, nbParticles * 6 * sizeof(AT_FLOAT));
