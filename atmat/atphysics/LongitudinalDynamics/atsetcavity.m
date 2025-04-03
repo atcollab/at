@@ -1,9 +1,6 @@
 function ring = atsetcavity(ring,varargin)
 %ATSECAVITY Set the parameters of RF cavities
 %
-%WARNING: This function modifies the time reference,
-%this should be avoided
-%
 %ATSETCAVITY may be used in two modes:
 %
 %Upgrade mode
@@ -42,9 +39,6 @@ function ring = atsetcavity(ring,varargin)
 %
 %  NOTES
 %  1. In this mode, the radiation state of the lattice is not modified.
-%  2. When dp is specified, the RF frequency is computed with the
-%     slip factor, so that the resulting dp may slightly differ from the
-%     specified value.
 %
 %
 %Compatibility mode
@@ -102,9 +96,9 @@ if isempty(varargs)             % New syntax
         lcell=findspos(ring,length(ring)+1);
         frev=beta0*CLIGHT/lcell;
         if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            hh=props_harmnumber(harmcell,cell_h);
+            hh = cellfun(@getcavh, cavities);
             if isfinite(df)
-                frev = frev + df/hh;
+                frev = frev + df/min(hh);
             elseif isfinite(dct)
                 frev=frev * lcell/(lcell+dct);
             elseif isfinite(dp)
@@ -168,6 +162,14 @@ end
                 error('AT:NoCavity','Harmonic number is unknown')
             end
             cellharm=cell_h;
+        end
+    end
+
+    function h=getcavh(cav,frev)
+        if isfield(cav,'HarmNumber')
+            h=cav.HarmNumber;
+        else
+            h=round(cav.Frequency/frev);
         end
     end
 end
