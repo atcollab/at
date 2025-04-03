@@ -13,6 +13,7 @@ __all__ = [
 import multiprocessing
 from typing import Sequence
 
+import at.tracking.track
 import numpy as np
 
 from .boundary import GridMode
@@ -36,7 +37,8 @@ def get_acceptance(
     grid_mode: GridMode = GridMode.RADIAL,
     use_mp: bool = False,
     use_gpu: bool = False,
-    verbose: bool = True,
+    gpu_pool: list[int] | None = None,
+    verbose: bool = False,
     divider: int = 2,
     shift_zero: float = 1.0e-6,
     start_method: str | None = None,
@@ -74,6 +76,7 @@ def get_acceptance(
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
           default use :py:func:`.lattice_pass`).
         use_gpu:        Use GPU
+        gpu_pool:       List of GPU id to use. If None specified, gets first GPU
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -126,9 +129,11 @@ def get_acceptance(
             if nproc == 1:
                 print("Consider use_mp=False for single core computations")
         elif use_gpu:
-            nprocu = 1
+            nprocu = at.tracking.gpu_core_count(gpu_pool)
+            print(f"\n{nprocu} GPU cores found")
             print('GPU acceptance calculation selected...')
             kwargs['use_gpu'] = True
+            kwargs['gpu_pool'] = gpu_pool if gpu_pool is not None else [0]
         else:
             nprocu = 1
             print("Single process acceptance calculation selected...")
@@ -185,6 +190,8 @@ def get_1d_acceptance(
     offset: Sequence[float] = None,
     grid_mode: GridMode | None = GridMode.RADIAL,
     use_mp: bool | None = False,
+    use_gpu: bool | None = False,
+    gpu_pool: list[int] | None = None,
     verbose: bool | None = False,
     divider: int | None = 2,
     shift_zero: float | None = 1.0e-6,
@@ -218,6 +225,8 @@ def get_1d_acceptance(
           default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        use_gpu:        Use GPU
+        gpu_pool:       List of GPU id to use. If None specified, gets first GPU
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -249,7 +258,9 @@ def get_1d_acceptance(
          do most of the work in a single function call and allows for
          full parallelization.
     """
-    if not use_mp:
+    if not (use_mp or use_gpu):
+        if verbose:
+            print("No parallel calculation selected, force to GridMode.RECURSIVE")
         grid_mode = GridMode.RECURSIVE
     assert len(np.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
     assert np.isscalar(resolution), "1D acceptance: scalar args required"
@@ -269,6 +280,8 @@ def get_1d_acceptance(
         refpts=refpts,
         grid_mode=grid_mode,
         use_mp=use_mp,
+        use_gpu=use_gpu,
+        gpu_pool=gpu_pool,
         verbose=verbose,
         start_method=start_method,
         divider=divider,
@@ -308,6 +321,8 @@ def get_horizontal_acceptance(
           default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        use_gpu:        Use GPU
+        gpu_pool:       List of GPU id to use. If None specified, gets first GPU
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -372,6 +387,8 @@ def get_vertical_acceptance(
           default use :py:func:`.lattice_pass`). In case multiprocessing
           is not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        use_gpu:        Use GPU
+        gpu_pool:       List of GPU id to use. If None specified, gets first GPU
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -436,6 +453,8 @@ def get_momentum_acceptance(
           default use :py:func:`.lattice_pass`). In case multiprocessing is
           not enabled, ``grid_mode`` is forced to
           :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
+        use_gpu:        Use GPU
+        gpu_pool:       List of GPU id to use. If None specified, gets first GPU
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
