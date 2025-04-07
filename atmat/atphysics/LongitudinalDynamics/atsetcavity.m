@@ -65,7 +65,9 @@ function ring = atsetcavity(ring,varargin)
 % Speed of light
 CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 
-[cavpts,varargs]=getoption(varargin,'cavpts',[]);
+[ncells,cell_h,beta0,maincavs]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta','cavpts');
+
+[cavpts,varargs]=getoption(varargin,'cavpts',maincavs);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
 [harmnumber,varargs]=getoption(varargs, 'HarmNumber',[]);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
@@ -75,11 +77,6 @@ CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 [dct,varargs]=getoption(varargs,'dct',NaN);
 [df,varargs]=getoption(varargs,'df',NaN);
 
-if isempty(cavpts)
-    [ncells,cell_h,beta0,cavpts]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta','cavpts');
-else
-    [ncells,cell_h,beta0]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta');
-end
 cavities=ring(cavpts);
 ncavs=length(cavities);
 if ncavs == 0
@@ -87,31 +84,31 @@ if ncavs == 0
 end
 
 if isempty(varargs)             % New syntax
-    if isempty(harmnumber)
-        harmcell=[];
-    else
-        harmcell=harmnumber/ncells;
+    if ~isempty(harmnumber)
+        cavities=atsetfieldvalues(cavities, 'HarmNumber', harmnumber/ncells);
     end
     if ~isempty(frequency)
-        lcell=findspos(ring,length(ring)+1);
-        frev=beta0*CLIGHT/lcell;
-        if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            hh = cellfun(@getcavh, cavities);
-            if isfinite(df)
-                frev = frev + df/min(hh);
-            elseif isfinite(dct)
-                frev=frev * lcell/(lcell+dct);
-            elseif isfinite(dp)
-                % Find the path lengthening for dp
-                [~,rnorad]=check_radiation(ring,false,'force');
-                [~,orbitin]=findorbit4(rnorad,dp, 'strict', -1);
-                orbitout=ringpass(rnorad,orbitin);
-                dct=orbitout(6);
-                frev=frev * lcell/(lcell+dct);
+        if ischar(frequency) || isstring(frequency)
+            if strcmp(frequency,'nominal')
+                lcell=findspos(ring,length(ring)+1);
+                frev=beta0*CLIGHT/lcell;
+                hh = cellfun(@getcavh, cavities);
+                if isfinite(df)
+                    frev = frev + df/min(hh);
+                elseif isfinite(dct)
+                    frev=frev * lcell/(lcell+dct);
+                elseif isfinite(dp)
+                    % Find the path lengthening for dp
+                    [~,rnorad]=check_radiation(ring,false,'force');
+                    [~,orbitin]=findorbit4(rnorad,dp, 'strict', -1);
+                    orbitout=ringpass(rnorad,orbitin);
+                    dct=orbitout(6);
+                    frev=frev * lcell/(lcell+dct);
+                end
+                frequency = hh * frev;
+            else
+                error('AT:Frequency', 'Wrong frequency specifiation')
             end
-            frequency = hh * frev;
-        else
-            harmcell=round(frequency/frev);
         end
         cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     end
@@ -151,19 +148,12 @@ end
 
 % Update the ring properties if HarmNumber has changed
 idx=atlocateparam(ring);
-if ~(isempty(idx) || isempty(harmcell) || ...
-    (harmcell == cell_h))
-    ring=atSetRingProperties(ring,'cell_harmnumber',harmcell);
-end
-
-    function cellharm=props_harmnumber(cellharm, cell_h)
-        if isempty(cellharm)
-            if ~isfinite(cell_h)
-                error('AT:NoCavity','Harmonic number is unknown')
-            end
-            cellharm=cell_h;
-        end
+if ~isempty(idx)
+    h=unique(atgetfieldvalues(ring,maincavs,'HarmNumber'));
+    if h(1) ~= cell_h 
+        ring=atSetRingProperties(ring,'cell_harmnumber',h(1));
     end
+end
 
     function h=getcavh(cav,frev)
         if isfield(cav,'HarmNumber')
