@@ -22,7 +22,7 @@ public:
   uint32_t getNbElement();
   // Load (or reload) lattice in GPU. Lattice structure (element number, polynomial orders, kick angles and misalignment
   // configuration) must remain the same.
-  void fillGPUMemory();
+  uint64_t fillGPUMemory();
   // Generate and compile GPU code
   void generateGPUKernel();
   // Run the simulation

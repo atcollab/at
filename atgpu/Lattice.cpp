@@ -260,7 +260,7 @@ void Lattice::generateGPUKernel() {
 
 }
 
-void Lattice::fillGPUMemory() {
+uint64_t Lattice::fillGPUMemory() {
 
   // Size of all element (no buffers)
   uint64_t elemSize = elements.size() * sizeof( ELEMENT );
@@ -288,6 +288,8 @@ void Lattice::fillGPUMemory() {
   gpu->hostToDevice(gpuRing,memPtr,size);
   gpu->mapBuffer(&gpuRing,(uint32_t)elements.size());
   free(memPtr);
+
+  return size;
 
 }
 

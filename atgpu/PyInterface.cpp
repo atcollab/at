@@ -138,7 +138,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                  "energy", "particle", "keep_counter",
                                  "reuse","losses",
                                  "bunch_spos", "bunch_currents", "gpu_pool",
-                                 "tracking_starts","integrator",
+                                 "tracking_starts","integrator","verbose",
                                  nullptr};
 
   NPY_TYPES floatType;
@@ -164,13 +164,14 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   int num_turns;
   int keep_lattice=0;
   int keep_counter=0;
+  int verbose=0;
   int counter=0;
   int losses=0;
   int integratorType=4;
   double t0,t1;
 
   // Get input args
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!O!i", const_cast<char **>(kwlist),
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!O!ip", const_cast<char **>(kwlist),
                                    &PyList_Type, &lattice,
                                    &PyArray_Type, &rin,
                                    &num_turns,
@@ -185,7 +186,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                    &PyArray_Type, &bcurrents,
                                    &PyList_Type, &gpupool,
                                    &PyArray_Type, &trackstarts,
-                                   &integratorType
+                                   &integratorType,
+                                   &verbose
                                    )) {
     return nullptr;
   }
@@ -250,7 +252,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   // Integrator
   if( integratorType!=integrator.getType() ) {
-    if( keep_lattice )
+    if( verbose && keep_lattice )
       cout << "Warning, lattice is recreated when integrator type is changed" << endl;
     delete gpuLattice;
     gpuLattice = nullptr;
@@ -278,6 +280,9 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
       }
       gpuLattice->generateGPUKernel();
 
+      if( verbose )
+        cout << "Lattice created on " << gpuLattice->getGPUContext()->name() << " [" << nElements << " elements]" << endl;
+
     } catch (string& errStr) {
       delete gpuLattice;
       gpuLattice = nullptr;
@@ -289,7 +294,9 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   // Load lattice on the GPU
   try {
-    gpuLattice->fillGPUMemory();
+    uint64_t size = gpuLattice->fillGPUMemory();
+    if( verbose )
+      cout << "Lattice successfully loaded on " << gpuLattice->getGPUContext()->name() << " [" << size << " bytes]" << endl;
   } catch (string& errStr) {
     string err =  "at_gpupass() fill GPU memory failed: " + errStr;
     return PyErr_Format(PyExc_RuntimeError,err.c_str());
@@ -301,7 +308,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   try {
 
-    //cout << "Tracking " << num_particles << " particles on " << gpuLattice->getGPUContext()->name() << " #" << gpuId << endl;
+    if( verbose )
+      cout << "Tracking " << num_particles << " particles for " << num_turns << " turns on " << gpuLattice->getGPUContext()->name() << " #" << gpuId << endl;
 
     npy_intp outdims[4] = {6,(npy_intp)(num_particles),num_refs,num_turns};
     PyObject *rout = PyArray_EMPTY(4, outdims, floatType, 1);
