@@ -107,16 +107,18 @@ if isempty(varargs)             % New syntax
                 end
                 frequency = hh * frev;
             else
-                error('AT:Frequency', 'Wrong frequency specifiation')
+                error('AT:Frequency', 'Wrong frequency specifiation: ''%s''',frequency);
             end
         end
         cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     end
     if ~isempty(vring)
-        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncells/ncavs);
+        if numel(vring) ~= ncavs, vring=vring/ncavs; end
+        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncells);
     end
     if ~isempty(vcell)
-        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncavs);
+        if numel(vcell) ~= ncavs, vcell=vcell/ncavs; end
+        cavities=atsetfieldvalues(cavities, 'Voltage', vcell);
     end
     if ~isempty(timelag)
         cavities=atsetfieldvalues(cavities, 'TimeLag', timelag);
