@@ -99,6 +99,7 @@ def _lattice_pass(
     refpts: Refpts = End,
     no_varelem=True,
     seed: int | None = None,
+    use_gpu: bool = False,
     **kwargs,
 ):
     kwargs["reuse"] = kwargs.pop("keep_lattice", False)
@@ -110,7 +111,6 @@ def _lattice_pass(
     refs = get_uint32_index(lattice, refpts)
     if seed is not None:
         reset_rng(seed=seed)
-    use_gpu = kwargs.pop("use_gpu", False)
     if use_gpu:
         if not (iscuda() or isopencl()):
             raise AtError("No GPU support enabled")
@@ -344,9 +344,8 @@ def lattice_track(
         kwargs.update({"pool_size": pool_size, "start_method": start_method})
         rout = _plattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
     else:
-        kwargs["use_gpu"] = use_gpu
         rout = _lattice_pass(
-            lattice, r_in, nturns=nturns, refpts=refpts, no_varelem=False, **kwargs
+            lattice, r_in, nturns=nturns, refpts=refpts, use_gpu=use_gpu, no_varelem=False, **kwargs
         )
 
     if kwargs.get("losses", False):

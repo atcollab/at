@@ -128,12 +128,12 @@ def get_acceptance(
     if verbose:
         nproc = multiprocessing.cpu_count()
         print(f"\n{nproc} cpu found for acceptance calculation")
-        if use_mp==MPMode.CPU:
+        if use_mp is MPMode.CPU:
             nprocu = nproc
             print("Multi-process acceptance calculation selected...")
             if nproc == 1:
                 print("Consider use_mp=False for single core computations")
-        elif use_mp==MPMode.GPU:
+        elif use_mp is MPMode.GPU:
             nprocu = at.tracking.gpu_core_count(gpu_pool)
             print(f"\n{nprocu} GPU cores found")
             print('GPU acceptance calculation selected...')
@@ -193,7 +193,7 @@ def get_1d_acceptance(
     dp: float | None = None,
     offset: Sequence[float] = None,
     grid_mode: GridMode | None = GridMode.RADIAL,
-    use_mp: bool | MPMode | None = False,
+    use_mp: bool | MPMode = False,
     gpu_pool: list[int] | None = None,
     verbose: bool | None = False,
     divider: int | None = 2,
@@ -262,7 +262,7 @@ def get_1d_acceptance(
          do most of the work in a single function call and allows for
          full parallelization.
     """
-    if use_mp is None or use_mp == False:
+    if not use_mp:
         if verbose:
             print("No parallel calculation selected, force to GridMode.RECURSIVE")
         grid_mode = GridMode.RECURSIVE
