@@ -107,6 +107,12 @@ def _record_access(param, index, data):
     return val if index is None else val[index]
 
 
+def _fun_access(fun, index, data):
+    """Access a selected item in the output of a user-defined function"""
+    val = fun(data)
+    return val if index is None else val[index]
+
+
 def _muf_access(_, index, data):
     mu = _record_access("mu", index, data)
     return np.remainder(mu, 2.0 * np.pi)
@@ -430,7 +436,10 @@ class Observable:
             else:
                 subscript = f"[{index}]"
             if callable(param):
-                base = param.__name__
+                try:
+                    base = param.__name__
+                except AttributeError:
+                    base = "<function>"
             else:
                 base = param
             name = base + subscript
@@ -894,7 +903,7 @@ class LocalOpticsObservable(ElementObservable):
         name = self._set_name(name, param, ax_(plane, key="code"))
         index = _all_rows(ax_(plane, key="index"))
         if callable(param):
-            fun = param
+            fun = partial(_fun_access, param, ax_(plane, key="index"))
         else:
             fun = partial(_opdata.get(param, _record_access), param, index)
             if param in {"mu", "mu2pi"} or all_points:
