@@ -131,7 +131,7 @@ def _plattice_pass(
     start_method: str = None,
     **kwargs,
 ):
-    kwargs.pop("verbose")
+    verbose = kwargs.pop("verbose",False)
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
     kwargs["reuse"] = kwargs.pop("keep_lattice", False)
