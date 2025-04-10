@@ -5,8 +5,12 @@ function ring = atsetcavity(ring,varargin)
 %
 %Upgrade mode
 %===================================================
+% By default, ATSETCAVITY will act on the "main" cavities: they are defined by the
+% cavpts ring property, or if absent by cavities at the lowest frequency.
+%
 %NEWRING=ATSETCAVITY(RING,...,'Frequency',FREQUENCY,...)
-%   Set the cavity frequency [Hz].
+%   Set the cavity frequency [Hz]. FREQUENCY is a scalar or an array as
+%   long as the list of selected cavities
 %
 %NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal',...)
 %   Set the cavity frequency to the nominal value according to
@@ -22,20 +26,24 @@ function ring = atsetcavity(ring,varargin)
 %   Set the cavity frequency to the nominal value + df
 %
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
-%   Set the total voltage (all cells) [V]
-%   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
+%   Set the total voltage (all cells) [V]. VOLTAGE will be distributed over the
+%   cells: CELL_VOLTAGE = VOLTAGE / PERIODICITY.
+%   Then if CELL_VOLTAGE is a scalar, it will be equally shared among the
+%   selected cavities. Otherwise it is an array as long as the list of
+%   selected cavities.
 %
 %NEWRING=ATSETCAVITY(RING,...,'HarmNumber',H,...)
-%   Set the harmonic number
+%   Set the harmonic number. H is a scalar or an array as
+%   long as the list of selected cavities
 %
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
-%   Set the time lag [m]
+%   Set the time lag [m], . TIMELAG is a scalar or an array as
+%   long as the list of selected cavities
 %
 %NEWRING=ATSETCAVITY(RING,...,'cavpts',CAVPTS)
-%   CAVPTS is the location of RF cavities. The default is to act on the
-%   "main" cavities: if there is is a 'cavpts' ring property. it defined
-%   the main cavities, otherwise the main cavities are cavities with the
-%   lowest frequency
+%   CAVPTS is the location of the selected RF cavities. The default is to act on the
+%   "main" cavities: they are defined by the cavpts ring property, or if absent by
+%   cavities at the lowest frequency.
 %
 %  NOTES
 %  1. In this mode, the radiation state of the lattice is not modified.
