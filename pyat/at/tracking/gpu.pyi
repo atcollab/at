@@ -23,4 +23,5 @@ def gpupass(
     gpu_pool: list[int] | None = None,
     tracking_starts=None,
     integrator=4,
+    verbose: bool = False
 ): ...

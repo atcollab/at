@@ -314,6 +314,7 @@ def grid_boundary_search(
     )
 
     if verbose:
+        kwargs["verbose"] = verbose
         print("\nRunning grid boundary search:")
         if len(obspt) == 1:
             if obspt[0] is None:

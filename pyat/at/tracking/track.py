@@ -8,12 +8,14 @@ __all__ = [
     "internal_plpass",
     "gpu_info",
     "gpu_core_count",
+    "MPMode"
 ]
 
 import multiprocessing
 from collections.abc import Iterable
 from functools import partial
 from warnings import warn
+from enum import Enum
 
 import numpy
 
@@ -25,6 +27,22 @@ from ..lattice import Lattice, Element, Refpts, End
 from ..lattice import get_uint32_index
 from ..cconfig import iscuda
 from ..cconfig import isopencl
+
+
+class MPMode(Enum):
+    """
+    Multi Processing mode
+    """
+    CPU = 1  #: CPU multiprocessing
+    GPU = 2  #: GPU multiprocessing
+
+# Possible values for the use_mp flag, converts to use_mp,use_gpu bool pair
+_mp_table = {
+    False : (False, False),
+    True: (True, False),
+    MPMode.CPU: (True, False),
+    MPMode.GPU: (False, True),
+}
 
 if iscuda() or isopencl():
     from .gpu import gpupass as _gpupass
@@ -113,6 +131,7 @@ def _plattice_pass(
     start_method: str = None,
     **kwargs,
 ):
+    kwargs.pop("verbose")
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
     kwargs["reuse"] = kwargs.pop("keep_lattice", False)
@@ -196,13 +215,14 @@ def lattice_track(
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
-        use_mp (bool): Flag to activate multiprocessing (default: False)
+        use_mp (bool | MPMode):  Flag to activate multiprocessing
+          (default: False)
         pool_size:              number of processes used when
-          *use_mp* is :py:obj:`True`. If None, ``min(npart,nproc)``
-          is used. It can be globally set using the variable
-          *at.lattice.DConstant.patpass_poolsize*
-        use_gpu (bool): Flag to activate GPU processing (default: False)
-        gpu_pool: List of GPU to use (default [0])
+          *use_mp* is :py:obj:`True` or :py:attr:`MPMode.CPU`. If None,
+          ``min(npart,nproc)`` is used. It can be globally set using the
+          variable *at.lattice.DConstant.patpass_poolsize*
+        gpu_pool: List of GPU to use when *use_mp* is :py:attr:`MPMode.GPU`.
+          If none, first GPU is selected.
         start_method:           python multiprocessing start method.
           :py:obj:`None` uses the python default that is considered safe.
           Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
@@ -288,6 +308,10 @@ def lattice_track(
          the true voltage in each bucket and distributes the particles in the
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
+
+    use_mp = kwargs.pop("use_mp", False)
+    use_mp, use_gpu = _mp_table[use_mp]
+
     trackdata = {}
     trackparam = {}
     part_kw = ["energy", "particle"]
@@ -314,13 +338,13 @@ def lattice_track(
     [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in lat_kw]
     trackparam.update({"refpts": get_uint32_index(lattice, refpts), "nturns": nturns})
 
-    use_mp = kwargs.pop("use_mp", False)
     start_method = kwargs.pop("start_method", None)
     pool_size = kwargs.pop("pool_size", None)
     if use_mp:
         kwargs.update({"pool_size": pool_size, "start_method": start_method})
         rout = _plattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
     else:
+        kwargs["use_gpu"] = use_gpu
         rout = _lattice_pass(
             lattice, r_in, nturns=nturns, refpts=refpts, no_varelem=False, **kwargs
         )
