@@ -122,7 +122,7 @@ def get_acceptance(
         kwargs["start_method"] = start_method
 
     # For backward compatibility (use_mp can be a boolean)
-    if isinstance(use_mp,bool) and use_mp:
+    if use_mp is True:
         use_mp = MPMode.CPU
 
     if verbose:
