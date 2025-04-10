@@ -497,7 +497,7 @@ class RingObservable(Observable):
             Defines an Observable for the momentum compaction factor.
         """
         needs = {Need.RING}
-        name = fun.__name__ if name is None else name
+        name = self._set_name(name, fun, None)
         super().__init__(fun, name=name, needs=needs, **kwargs)
 
 
@@ -509,7 +509,6 @@ class ElementObservable(Observable):
         fun: Callable,
         refpts: Refpts,
         name: str | None = None,
-        summary: bool = False,
         statfun: Callable | None = None,
         **kwargs,
     ):
@@ -536,9 +535,11 @@ class ElementObservable(Observable):
         """
         name = fun.__name__ if name is None else name
         if statfun:
-            summary = True
+            summary = kwargs.pop("summary", True)
             name = f"{statfun.__name__}({name})"
             fun = _ModFun(fun, statfun)
+        else:
+            summary = kwargs.pop("summary", False)
         super().__init__(fun, name=name, **kwargs)
         self.summary = summary
         self.refpts = refpts
@@ -738,8 +739,7 @@ class _GlobalOpticsObservable(Observable):
         r"""Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ringdata, ring=ring)` and returning the value of
-              the Observable
+              :pycode:`value = fun(ringdata, ring=ring)[plane]`
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
@@ -760,7 +760,7 @@ class _GlobalOpticsObservable(Observable):
         needs = {Need.GLOBALOPTICS}
         name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
-            fun = param
+            fun = partial(_fun_access, param, plane_(plane, key="index"))
             needs.add(Need.CHROMATICITY)
         else:
             fun = partial(_record_access, param, plane_(plane, key="index"))
@@ -857,15 +857,16 @@ class LocalOpticsObservable(ElementObservable):
         .. _localoptics_eval:
         .. rubric:: User-defined evaluation function
 
-        It is called as:
+        The observable value is computed as:
 
-        :pycode:`value = fun(elemdata)`
+        :pycode:`value = fun(elemdata)[plane]`
 
         - *elemdata* is the output of :py:func:`.get_optics`, evaluated at the *refpts*
           of the observable,
         - *value* is the value of the Observable and must have one line per
           refpoint. Alternatively, it may be a single line, but then the
           *summary* keyword must be set to :py:obj:`True`.
+        - the *plane* keyword then selects the desired values in the function output.
 
         Examples:
 
@@ -886,7 +887,7 @@ class LocalOpticsObservable(ElementObservable):
             >>>
             >>> allobs.append(
             ...     LocalOpticsObservable(
-            ...         [33, 101], phase_advance, all_points=True, summary=True
+            ...         [33, 101], phase_advance, plane="y", all_points=True, summary=True
             ...     )
             ... )
 
