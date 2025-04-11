@@ -377,8 +377,10 @@ void PyInterface::setObject(PyObject *obj) {
 int PyInterface::getInt(const std::string& name) {
 
   PyObject *attr = PyObject_GetAttrString(self, name.c_str());
-  if (!attr)
-    throw(name + " attribute not found");
+  if (!attr) {
+    if (PyErr_Occurred()) PyErr_Clear(); // Reset python error
+    throw (name + " attribute not found");
+  }
   Py_DECREF(attr);
   return (int)PyLong_AsLong(attr);
 
@@ -387,8 +389,10 @@ int PyInterface::getInt(const std::string& name) {
 std::string PyInterface::getString(const std::string& name) {
 
   PyObject *attr = PyObject_GetAttrString(self, name.c_str());
-  if (!attr)
-    throw(name + " attribute not found");
+  if (!attr) {
+    if (PyErr_Occurred()) PyErr_Clear(); // Reset python error
+    throw (name + " attribute not found");
+  }
   Py_DECREF(attr);
   return PyUnicode_AsUTF8(attr);
 
@@ -398,8 +402,12 @@ std::string PyInterface::getString(const std::string& name) {
 double PyInterface::getDouble(const std::string& name) {
 
   PyObject *attr = PyObject_GetAttrString(self, name.c_str());
-  if (!attr)
+  if (!attr) {
+    if (PyErr_Occurred()) PyErr_Clear(); // Reset python error
     throw string(name + " attribute not found");
+  }
+
+
   Py_DECREF(attr);
   return (AT_FLOAT)PyFloat_AsDouble(attr);
 
@@ -408,8 +416,10 @@ double PyInterface::getDouble(const std::string& name) {
 double *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<int64_t>& shape) {
 
   PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString(self, name.c_str());
-  if (array == nullptr)
+  if (array == nullptr) {
+    if (PyErr_Occurred()) PyErr_Clear(); // Reset python error
     throw string(name + " array attribute not found");
+  }
 
   if ((PyArray_FLAGS(array) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
     Py_DECREF(array);
@@ -442,8 +452,10 @@ double *PyInterface::getNativeDoubleArray(const std::string& name,std::vector<in
 float *PyInterface::getNativeFloatArray(const std::string& name,std::vector<int64_t>& shape) {
 
   PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString(self, name.c_str());
-  if (array == nullptr)
+  if (array == nullptr) {
+    if (PyErr_Occurred()) PyErr_Clear(); // Reset python error
     throw string(name + " array attribute not found");
+  }
 
   if ((PyArray_FLAGS(array) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
     Py_DECREF(array);
