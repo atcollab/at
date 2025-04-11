@@ -13,11 +13,10 @@ __all__ = [
 import multiprocessing
 from typing import Sequence
 
-import at.tracking.track
 import numpy as np
 
 from .boundary import GridMode
-from ..tracking import MPMode
+from ..tracking import MPMode, gpu_core_count
 
 # noinspection PyProtectedMember
 from .boundary import boundary_search
@@ -134,10 +133,10 @@ def get_acceptance(
             if nproc == 1:
                 print("Consider use_mp=False for single core computations")
         elif use_mp is MPMode.GPU:
-            nprocu = at.tracking.gpu_core_count(gpu_pool)
+            nprocu = gpu_core_count(gpu_pool)
             print(f"\n{nprocu} GPU cores found")
-            print('GPU acceptance calculation selected...')
-            kwargs['gpu_pool'] = gpu_pool if gpu_pool is not None else [0]
+            print("GPU acceptance calculation selected...")
+            kwargs["gpu_pool"] = gpu_pool if gpu_pool is not None else [0]
         else:
             nprocu = 1
             print("Single process acceptance calculation selected...")
@@ -271,9 +270,9 @@ def get_1d_acceptance(
     assert np.isscalar(amplitude), "1D acceptance: scalar args required"
     npoint = np.ceil(amplitude / resolution)
     if grid_mode is not GridMode.RECURSIVE:
-        assert (
-            npoint > 1
-        ), "Grid has only one point: increase amplitude or reduce resolution"
+        assert npoint > 1, (
+            "Grid has only one point: increase amplitude or reduce resolution"
+        )
     b, s, g = get_acceptance(
         ring,
         plane,

@@ -8,7 +8,7 @@ __all__ = [
     "internal_plpass",
     "gpu_info",
     "gpu_core_count",
-    "MPMode"
+    "MPMode",
 ]
 
 import multiprocessing
@@ -33,12 +33,14 @@ class MPMode(Enum):
     """
     Multi Processing mode
     """
+
     CPU = 1  #: CPU multiprocessing
     GPU = 2  #: GPU multiprocessing
 
+
 # Possible values for the use_mp flag, converts to use_mp,use_gpu bool pair
 _mp_table = {
-    False : (False, False),
+    False: (False, False),
     True: (True, False),
     MPMode.CPU: (True, False),
     MPMode.GPU: (False, True),
@@ -131,7 +133,7 @@ def _plattice_pass(
     start_method: str = None,
     **kwargs,
 ):
-    verbose = kwargs.pop("verbose",False)
+    verbose = kwargs.pop("verbose", False)
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
     kwargs["reuse"] = kwargs.pop("keep_lattice", False)
@@ -345,7 +347,13 @@ def lattice_track(
         rout = _plattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
     else:
         rout = _lattice_pass(
-            lattice, r_in, nturns=nturns, refpts=refpts, use_gpu=use_gpu, no_varelem=False, **kwargs
+            lattice,
+            r_in,
+            nturns=nturns,
+            refpts=refpts,
+            use_gpu=use_gpu,
+            no_varelem=False,
+            **kwargs,
         )
 
     if kwargs.get("losses", False):
@@ -397,6 +405,7 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
     rout = _element_pass(element, r_in, **kwargs)
     return rout
 
+
 def gpu_core_count(gpuPool: list[int] | None):
     """
     :py:func:`gpu_core_count` returns number of GPU core.
@@ -410,9 +419,11 @@ def gpu_core_count(gpuPool: list[int] | None):
     if gpuPool is None:
         gpuPool = [0]
     for g in gpuPool:
-        if g<0 or g>=nbgpu:
-            raise AtError("Invalid GPU id " + str(g) + ", must be in [0.." + str(nbgpu-1) + "]")
-        nbcore += gpus[g][2] # Compute unit number
+        if g < 0 or g >= nbgpu:
+            raise AtError(
+                "Invalid GPU id " + str(g) + ", must be in [0.." + str(nbgpu - 1) + "]"
+            )
+        nbcore += gpus[g][2]  # Compute unit number
     return nbcore
 
 
