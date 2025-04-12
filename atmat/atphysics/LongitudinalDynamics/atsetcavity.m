@@ -59,10 +59,9 @@ function ring = atsetcavity(ring,varargin)
 %
 %  NOTES
 %  1. This mode is deprecated and should be replaced by
-%       RING=ATSETCAVITY(RING,'Frequency','nominal',...
-%           'HarmNumber',HARM_NUMBER*PERIODICITY, 'Voltage',RFV/PERIODICITY)
+%       RING=ATSETCAVITY(RING,'Frequency','nominal','HarmNumber',HARM_NUMBER, 'Voltage',RFV)
 %       RING=atSetCavityPhase(RING) (optional)
-%       RING=atradon(RING)          (optional)
+%       RING=atenable_6d(RING)      (optional)
 %  2. All the N cavities will have a voltage RFV/N
 %  3. sets the synchronous phase of the cavity assuming radiation is turned
 %     on radflag says whether or not we want radiation on, which affects
