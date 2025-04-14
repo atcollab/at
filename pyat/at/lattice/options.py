@@ -11,7 +11,7 @@ from contextvars import ContextVar
 
 from numpy.random import Generator, PCG64, SeedSequence
 
-from ..cconfig import ismpi, isopenmp
+from ..cconfig import ismpi, isopenmp, iscuda, isopencl
 
 if ismpi():
     from mpi4py import MPI
@@ -100,6 +100,14 @@ class _Dst:
         return isopenmp()
 
     @property
+    def cuda(self) -> bool:
+        return iscuda()
+
+    @property
+    def opencl(self) -> bool:
+        return isopencl()
+
+    @property
     def rank(self) -> int:
         return self._rank
 
@@ -129,6 +137,8 @@ Attributes:
     patpass_startmethod: Default start method for the multiprocessing
     mpi:                 :py:obj:`True` if MPI is active
     openmp:              :py:obj:`True` if OpenMP is active
+    cuda:                :py:obj:`True` if CUDA is active
+    opencl:              :py:obj:`True` if OpenCL is active
 
 Methods:
     reset(attrname):    Reset the attribute to its default value
