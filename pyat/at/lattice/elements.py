@@ -325,6 +325,13 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
+    @classmethod
+    def get_subclasses(cls) -> Generator[type[Element], None, None]:
+        """Iterator over the subclasses of this element"""
+        for subclass in cls.__subclasses__():
+            yield from subclass.get_subclasses()
+        yield cls
+
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
 
@@ -1545,28 +1552,3 @@ class EnergyLoss(_DictLongtMotion, Element):
 
 
 Radiative.register(EnergyLoss)
-
-
-def build_class_map():  # Missing class aliases (Bend)
-    global CLASS_MAP
-
-    def subclasses_recursive(cl):
-        direct = cl.__subclasses__()
-        indirect = []
-        for subclass in direct:
-            indirect.extend(subclasses_recursive(subclass))
-        return frozenset([cl] + direct + indirect)
-
-    cls_list = subclasses_recursive(Element)
-    CLASS_MAP = {cls.__name__: cls for cls in cls_list}
-
-
-def get_class_map():
-    return CLASS_MAP
-
-
-# build_class_map()
-
-CLASS_MAP = {
-    k: v for k, v in locals().items() if isinstance(v, type) and issubclass(v, Element)
-}
