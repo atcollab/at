@@ -64,6 +64,7 @@ def frequency_control(func):
 class Frf(Enum):
     """Enum class for frequency setting"""
 
+    #:  Constant used as a frequency value, standing for the nominal frequency
     NOMINAL = "nominal"
 
 
@@ -183,7 +184,8 @@ def set_rf_frequency(
 
     Parameters:
         ring:           Lattice description
-        frequency:      RF frequency [Hz]. Default: nominal frequency.
+        frequency:      RF frequency [Hz]. Use :py:obj:`.Frf.NOMINAL` to specify the
+          nominal frequency corresponding to the given off-momentum.
 
     Keyword Args:
         dp (float | None):  Momentum deviation. Defaults to :py:obj:`None`
@@ -263,7 +265,8 @@ def set_cavity(
 
     Parameters:
         ring:           lattice description
-        Frequency:      RF frequency [Hz]
+        Frequency:      RF frequency [Hz]. Use :py:obj:`.Frf.NOMINAL` to specify the
+          nominal frequency corresponding to the given off-momentum.
         Voltage:        Total RF voltage [V]
         TimeLag:        RF time shift expressed as path lengthening [m]
         cavpts:         Cavity location. If None, look for :pycode:`ring.cavpts`, or
