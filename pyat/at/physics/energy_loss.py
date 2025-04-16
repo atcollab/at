@@ -105,7 +105,7 @@ def get_timelag_fromU0(
     method: ELossMethod | None = ELossMethod.TRACKING,
     cavpts: Refpts | None = None,
     divider: int | None = 4,
-    ts_tol: float | None = 1.0e-9,
+    ts_tol: float | None = 1.0e-4,
 ) -> tuple[Sequence[float], float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
