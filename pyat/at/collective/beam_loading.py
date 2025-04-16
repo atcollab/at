@@ -155,6 +155,14 @@ class BeamLoadingElement(RFCavity, Collective):
             buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
                 (default 0)
             detune_angle:      Fixed detuning from optimal tuning angle. [rad]
+                For a negative slope of the RF voltage at the synchronous position,
+                the optimum detuning is negative. Applying a positive detune_angle 
+                will therefore reduce the detuning. The reverse is true for positive
+                RF slope.
+            ts (float):        The timelag of the synchronous particle in the full
+                RF system [m]. If not specified, it will be calculated using 
+                get_timelag_fromU0. Defines the expected position of the beam to be
+                used for the beam loading setpoints.        
             
         Returns:
             bl_elem (Element): beam loading element
@@ -167,6 +175,7 @@ class BeamLoadingElement(RFCavity, Collective):
             raise TypeError('cavitymode has to be an ' +
                             'instance of CavityMode')
         zcuts = kwargs.pop('ZCuts', None)
+        ts = kwargs.pop('ts', None)
         energy = ring.energy
         harmonic_number = numpy.round(frequency*ring.circumference/clight)
         self.detune_angle = kwargs.pop('detune_angle', 0)
@@ -195,8 +204,10 @@ class BeamLoadingElement(RFCavity, Collective):
                                                  voltage, frequency,
                                                  harmonic_number,
                                                  energy, **kwargs)
-        _, ts = get_timelag_fromU0(ring)
-        self._phis = 2*numpy.pi*self.Frequency*(ts+self.TimeLag)/clight
+        if ts is None:                                        
+            _, ts = get_timelag_fromU0(ring)
+        self._ts = ts
+        self._phis = 2*numpy.pi*self.Frequency*(self._ts+self.TimeLag)/clight
         self._vbeam_phasor = numpy.zeros(2)
         self._vbeam = numpy.zeros(2)
         self._vgen = numpy.zeros(2)
@@ -236,10 +247,10 @@ class BeamLoadingElement(RFCavity, Collective):
                 warning_string = 'Unusual cavity configuration found.' + \
                                  'Setting initial psi to 0 to avoid NaNs'
                 warnings.warn(AtWarning(warning_string))
-
+            psi += self.detune_angle
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
-            print(a,b,psi,vgen)
+
         elif self._cavitymode == 2:
             vgen = 0
             psi = 0
