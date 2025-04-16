@@ -1,15 +1,16 @@
 function ring = atsetcavity(ring,varargin)
 %ATSECAVITY Set the parameters of RF cavities
 %
-%WARNING: This function modifies the time reference,
-%this should be avoided
-%
 %ATSETCAVITY may be used in two modes:
 %
 %Upgrade mode
 %===================================================
+% By default, ATSETCAVITY will act on the "main" cavities: they are defined by the
+% cavpts ring property, or if absent by cavities at the lowest frequency.
+%
 %NEWRING=ATSETCAVITY(RING,...,'Frequency',FREQUENCY,...)
-%   Set the cavity frequency [Hz].
+%   Set the cavity frequency [Hz]. FREQUENCY is a scalar or an array as
+%   long as the list of selected cavities
 %
 %NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal',...)
 %   Set the cavity frequency to the nominal value according to
@@ -25,26 +26,27 @@ function ring = atsetcavity(ring,varargin)
 %   Set the cavity frequency to the nominal value + df
 %
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
-%   Set the total voltage (all cells) [V]
-%   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
+%   Set the total voltage (all cells) [V]. VOLTAGE will be distributed over the
+%   cells: CELL_VOLTAGE = VOLTAGE / PERIODICITY.
+%   Then if CELL_VOLTAGE is a scalar, it will be equally shared among the
+%   selected cavities. Otherwise it is an array as long as the list of
+%   selected cavities.
 %
 %NEWRING=ATSETCAVITY(RING,...,'HarmNumber',H,...)
-%   Set the harmonic number
+%   Set the harmonic number. H is a scalar or an array as
+%   long as the list of selected cavities
 %
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
-%   Set the time lag [m]
+%   Set the time lag [m], . TIMELAG is a scalar or an array as
+%   long as the list of selected cavities
 %
 %NEWRING=ATSETCAVITY(RING,...,'cavpts',CAVPTS)
-%   CAVPTS is the location of RF cavities. The default is to act on the
-%   "main" cavities: if there is is a 'cavpts' ring property. it defined
-%   the main cavities, otherwise the main cavities are cavities with the
-%   lowest frequency
+%   CAVPTS is the location of the selected RF cavities. The default is to act on the
+%   "main" cavities: they are defined by the cavpts ring property, or if absent by
+%   cavities at the lowest frequency.
 %
 %  NOTES
 %  1. In this mode, the radiation state of the lattice is not modified.
-%  2. When dp is specified, the RF frequency is computed with the
-%     slip factor, so that the resulting dp may slightly differ from the
-%     specified value.
 %
 %
 %Compatibility mode
@@ -57,10 +59,9 @@ function ring = atsetcavity(ring,varargin)
 %
 %  NOTES
 %  1. This mode is deprecated and should be replaced by
-%       RING=ATSETCAVITY(RING,'Frequency','nominal',...
-%           'HarmNumber',HARM_NUMBER*PERIODICITY, 'Voltage',RFV/PERIODICITY)
+%       RING=ATSETCAVITY(RING,'Frequency','nominal','HarmNumber',HARM_NUMBER, 'Voltage',RFV)
 %       RING=atSetCavityPhase(RING) (optional)
-%       RING=atradon(RING)          (optional)
+%       RING=atenable_6d(RING)      (optional)
 %  2. All the N cavities will have a voltage RFV/N
 %  3. sets the synchronous phase of the cavity assuming radiation is turned
 %     on radflag says whether or not we want radiation on, which affects
@@ -71,7 +72,9 @@ function ring = atsetcavity(ring,varargin)
 % Speed of light
 CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 
-[cavpts,varargs]=getoption(varargin,'cavpts',[]);
+[ncells,cell_h,beta0,maincavs]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta','cavpts');
+
+[cavpts,varargs]=getoption(varargin,'cavpts',maincavs);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
 [harmnumber,varargs]=getoption(varargs, 'HarmNumber',[]);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
@@ -81,11 +84,6 @@ CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 [dct,varargs]=getoption(varargs,'dct',NaN);
 [df,varargs]=getoption(varargs,'df',NaN);
 
-if isempty(cavpts)
-    [ncells,cell_h,beta0,cavpts]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta','cavpts');
-else
-    [ncells,cell_h,beta0]=atGetRingProperties(ring,'Periodicity','cell_harmnumber','beta');
-end
 cavities=ring(cavpts);
 ncavs=length(cavities);
 if ncavs == 0
@@ -93,39 +91,41 @@ if ncavs == 0
 end
 
 if isempty(varargs)             % New syntax
-    if isempty(harmnumber)
-        harmcell=[];
-    else
-        harmcell=harmnumber/ncells;
+    if ~isempty(harmnumber)
+        cavities=atsetfieldvalues(cavities, 'HarmNumber', harmnumber/ncells);
     end
     if ~isempty(frequency)
-        lcell=findspos(ring,length(ring)+1);
-        frev=beta0*CLIGHT/lcell;
-        if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            hh=props_harmnumber(harmcell,cell_h);
-            if isfinite(df)
-                frev = frev + df/hh;
-            elseif isfinite(dct)
-                frev=frev * lcell/(lcell+dct);
-            elseif isfinite(dp)
-                % Find the path lengthening for dp
-                [~,rnorad]=check_radiation(ring,false,'force');
-                [~,orbitin]=findorbit4(rnorad,dp, 'strict', -1);
-                orbitout=ringpass(rnorad,orbitin);
-                dct=orbitout(6);
-                frev=frev * lcell/(lcell+dct);
+        if ischar(frequency) || isstring(frequency)
+            if strcmp(frequency,'nominal')
+                lcell=findspos(ring,length(ring)+1);
+                frev=beta0*CLIGHT/lcell;
+                hh = cellfun(@getcavh, cavities);
+                if isfinite(df)
+                    frev = frev + df/min(hh);
+                elseif isfinite(dct)
+                    frev=frev * lcell/(lcell+dct);
+                elseif isfinite(dp)
+                    % Find the path lengthening for dp
+                    [~,rnorad]=check_radiation(ring,false,'force');
+                    [~,orbitin]=findorbit4(rnorad,dp, 'strict', -1);
+                    orbitout=ringpass(rnorad,orbitin);
+                    dct=orbitout(6);
+                    frev=frev * lcell/(lcell+dct);
+                end
+                frequency = hh * frev;
+            else
+                error('AT:Frequency', 'Wrong frequency specifiation: ''%s''',frequency);
             end
-            frequency = hh * frev;
-        else
-            harmcell=round(frequency/frev);
         end
         cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     end
     if ~isempty(vring)
-        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncells/ncavs);
+        if numel(vring) ~= ncavs, vring=vring/ncavs; end
+        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncells);
     end
     if ~isempty(vcell)
-        cavities=atsetfieldvalues(cavities, 'Voltage', vring/ncavs);
+        if numel(vcell) ~= ncavs, vcell=vcell/ncavs; end
+        cavities=atsetfieldvalues(cavities, 'Voltage', vcell);
     end
     if ~isempty(timelag)
         cavities=atsetfieldvalues(cavities, 'TimeLag', timelag);
@@ -157,17 +157,18 @@ end
 
 % Update the ring properties if HarmNumber has changed
 idx=atlocateparam(ring);
-if ~(isempty(idx) || isempty(harmcell) || ...
-    (harmcell == cell_h))
-    ring=atSetRingProperties(ring,'cell_harmnumber',harmcell);
+if ~isempty(idx)
+    h=unique(atgetfieldvalues(ring,maincavs,'HarmNumber'));
+    if h(1) ~= cell_h 
+        ring=atSetRingProperties(ring,'cell_harmnumber',h(1));
+    end
 end
 
-    function cellharm=props_harmnumber(cellharm, cell_h)
-        if isempty(cellharm)
-            if ~isfinite(cell_h)
-                error('AT:NoCavity','Harmonic number is unknown')
-            end
-            cellharm=cell_h;
+    function h=getcavh(cav,frev)
+        if isfield(cav,'HarmNumber')
+            h=cav.HarmNumber;
+        else
+            h=round(cav.Frequency/frev);
         end
     end
 end
