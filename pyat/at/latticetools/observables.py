@@ -110,6 +110,12 @@ def _record_access(param, index, data):
     return val if index is None else val[index]
 
 
+def _fun_access(fun, index, data):
+    """Access a selected item in the output of a user-defined function"""
+    val = fun(data)
+    return val if index is None else val[index]
+
+
 def _muf_access(_, index, data):
     mu = _record_access("mu", index, data)
     return np.remainder(mu, 2.0 * np.pi)
@@ -227,7 +233,7 @@ class Need(Enum):
     #:  to the evaluation function
     GEOMETRY = 11
     #:  Specify :py:func:`RDT <.get_rdts>` computation and provide its output to
-    #: the evaluati0on function
+    #:  the evaluation function
     RDT = 12
     #:  Associated with RDT: request 2nd order calculation
     RDT_2ND_ORDER = 13
@@ -301,10 +307,10 @@ class Observable:
         self.needs: Set[Need] = needs or set()  #: Set of requirements
         self.name: str = name  #: Observable name
         self.target: npt.ArrayLike | None = target  #: Target value
-        self.w: npt.NDArray = np.asarray(weight)
+        self.w: npt.NDArray[float] = np.asarray(weight, dtype=float)
         self.lbound, self.ubound = bounds
-        self.initial: npt.NDArray | None = None
-        self._value: npt.NDArray | Exception | None = None
+        self.initial: npt.NDArray[float] | None = None
+        self._value: npt.NDArray[float] | Exception | None = None
         self._shape: tuple[int, ...] | None = None
         self.args = args
         self.kwargs = kwargs
@@ -361,7 +367,7 @@ class Observable:
         """Setup function called when the observable is added to a list."""
         pass
 
-    def evaluate(self, *data, initial: bool = False) -> npt.NDArray | Exception:
+    def evaluate(self, *data, initial: bool = False) -> npt.NDArray[float] | Exception:
         """Compute and store the value of the observable.
 
         The direct evaluation of a single :py:class:`Observable` is normally
@@ -379,7 +385,7 @@ class Observable:
         """
         for d in data:
             if isinstance(d, Exception):
-                message = f"{self.name} -> Evaluation failed: {d.args[0]}"
+                message = f"Evaluation of {self.name} failed: {d.args[0]}"
                 err = type(d)(message).with_traceback(d.__traceback__)
                 self._value = err
                 return err
@@ -403,34 +409,34 @@ class Observable:
         return self.value is not None
 
     @staticmethod
-    def check_value(value: npt.NDArray | Exception) -> npt.NDArray:
+    def check_value(value: npt.NDArray[float] | Exception) -> npt.NDArray[float]:
         if isinstance(value, Exception):
             raise type(value)(value.args[0]) from value
         return value
 
     @property
-    def value(self) -> npt.NDArray:
+    def value(self) -> npt.NDArray[float]:
         """Value of the observable."""
         return self.check_value(self._value)
 
     @property
-    def weight(self) -> npt.NDArray:
+    def weight(self) -> npt.NDArray[float]:
         """Observable weight."""
         return np.broadcast_to(self.w, self._value.shape)  # type: ignore
 
     @weight.setter
     def weight(self, w: npt.ArrayLike):
-        self.w = np.asarray(w)
+        self.w = np.asarray(w, dtype=float)
 
     @property
-    def weighted_value(self) -> npt.NDArray:
+    def weighted_value(self) -> npt.NDArray[float]:
         """Weighted value of the Observable, computed as
         :pycode:`weighted_value = value/weight`.
         """
         return self.value / self.w
 
     @property
-    def deviation(self) -> npt.NDArray:
+    def deviation(self) -> npt.NDArray[float]:
         """Deviation from target value, computed as
         :pycode:`deviation = value-target`.
         """
@@ -450,12 +456,12 @@ class Observable:
         return deviation
 
     @property
-    def weighted_deviation(self) -> npt.NDArray:
+    def weighted_deviation(self) -> npt.NDArray[float]:
         """:pycode:`weighted_deviation = (value-target)/weight`."""
         return self.deviation / self.w
 
     @property
-    def residual(self) -> npt.NDArray:
+    def residual(self) -> npt.NDArray[float]:
         """residual, computed as :pycode:`residual = ((value-target)/weight)**2`."""
         # absolute necessary for complex data
         return np.absolute(self.weighted_deviation) ** 2
@@ -476,7 +482,10 @@ class Observable:
             else:
                 subscript = f"[{index}]"
             if callable(param):
-                base = param.__name__
+                try:
+                    base = param.__name__
+                except AttributeError:
+                    base = "<function>"
             else:
                 base = param
             name = base + subscript
@@ -536,7 +545,7 @@ class RingObservable(Observable):
             Defines an Observable for the momentum compaction factor.
         """
         needs = {Need.RING}
-        name = fun.__name__ if name is None else name
+        name = self._set_name(name, fun, None)
         super().__init__(fun, name=name, needs=needs, **kwargs)
 
 
@@ -548,7 +557,6 @@ class ElementObservable(Observable):
         fun: Callable,
         refpts: Refpts,
         name: str | None = None,
-        summary: bool = False,
         statfun: Callable | str | None = None,
         procfun: Callable | str | None = None,
         **kwargs,
@@ -584,9 +592,11 @@ class ElementObservable(Observable):
             fun = _Convolve(procfun, fun)
         statfun = _get_fun(statfun, _statproc)
         if statfun:
-            summary = True
+            summary = kwargs.pop("summary", True)
             name = f"{statfun.__name__}({name})"
             fun = _Convolve(statfun, fun, axis=0)
+        else:
+            summary = kwargs.pop("summary", False)
         super().__init__(fun, name=name, **kwargs)
         self.summary = summary
         self.refpts = refpts
@@ -816,7 +826,7 @@ class _GlobalOpticsObservable(Observable):
         needs = {Need.GLOBALOPTICS}
         name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
-            fun = param
+            fun = partial(_fun_access, param, plane_(plane, key="index"))
             needs.add(Need.CHROMATICITY)
         else:
             fun = partial(_record_access, param, plane_(plane, key="index"))
@@ -916,15 +926,16 @@ class LocalOpticsObservable(ElementObservable):
         .. _localoptics_eval:
         .. rubric:: User-defined evaluation function
 
-        It is called as:
+        The observable value is computed as:
 
-        :pycode:`value = fun(elemdata)`
+        :pycode:`value = fun(elemdata)[plane]`
 
         - *elemdata* is the output of :py:func:`.get_optics`, evaluated at the *refpts*
           of the observable,
         - *value* is the value of the Observable and must have one line per
           refpoint. Alternatively, it may be a single line, but then the
           *summary* keyword must be set to :py:obj:`True`.
+        - the *plane* keyword then selects the desired values in the function output.
 
         Examples:
 
@@ -945,7 +956,7 @@ class LocalOpticsObservable(ElementObservable):
             >>>
             >>> allobs.append(
             ...     LocalOpticsObservable(
-            ...         [33, 101], phase_advance, all_points=True, summary=True
+            ...         [33, 101], phase_advance, plane="y", all_points=True, summary=True
             ...     )
             ... )
 
@@ -962,7 +973,7 @@ class LocalOpticsObservable(ElementObservable):
         name = self._set_name(name, param, ax_(plane, key="code"))
         index = _all_rows(ax_(plane, key="index"))
         if callable(param):
-            fun = param
+            fun = partial(_fun_access, param, ax_(plane, key="index"))
         else:
             fun = partial(_opdata.get(param, _record_access), param, index)
             if param in {"mu", "mu2pi"} or all_points:
