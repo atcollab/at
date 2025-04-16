@@ -79,6 +79,7 @@ class _Dst:
     DPStep: float = 3.0e-6  # Momentum step for dispersion and chromaticity
     OrbConvergence: float = 1.0e-12  # Convergence criterion for orbit
     OrbMaxIter: int = 20  # Max. number of iterations for orbit
+    TStol: float = 1.0e-9  # Tolerance for synchronous phase search
     omp_num_threads: int = int(os.environ.get("OMP_NUM_THREADS", "0"))
     patpass_poolsize: int = multiprocessing.cpu_count()
     patpass_startmethod: str | None = None
