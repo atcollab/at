@@ -47,7 +47,7 @@ global THERING %#ok<GVMIS>
     function varargout=doit(ring,is6d,Ux,varargin)
         e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
         e_radius=PhysConstant.classical_electron_radius.value;                  % m
-        hbar=PhysConstant.Planck_constant_over2pi_times_c_in_MeV_fm.value;
+        hbar=PhysConstant.reduced_Planck_constant_times_c_in_MeV_fm.value;
         cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
 
         Cq=55/32/sqrt(3)*hbar/e_mass*1E-9;   % m
