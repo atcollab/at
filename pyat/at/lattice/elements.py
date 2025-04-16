@@ -327,7 +327,10 @@ class Element:
 
     @classmethod
     def get_subclasses(cls) -> Generator[type[Element], None, None]:
-        """Iterator over the subclasses of this element"""
+        """Iterator over the subclasses of this element
+
+        Because of multiple inheritance, some classes may appear several times
+        """
         for subclass in cls.__subclasses__():
             yield from subclass.get_subclasses()
         yield cls
@@ -1297,8 +1300,6 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         """
         Args:
             family_name:    Name of the element
-
-        Optional Args:
             betax:         Horizontal beta function at element [m]
             betay:         Vertical beta function at element [m]
             emitx:         Horizontal equilibrium emittance [m.rad]
@@ -1363,8 +1364,6 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
         """
         Args:
             family_name:    Name of the element
-
-        Optional Args:
             taux:          Horizontal damping time [turns]
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
