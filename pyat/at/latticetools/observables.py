@@ -79,15 +79,16 @@ RefIndex = Union[int, Tuple[int, ...], slice]
 # functions are replaced be module-level callable class instances:
 
 
-class _ModFun:
-    """General and pickleable evaluation function."""
+class _Convolve:
 
-    def __init__(self, fun, statfun):
+    def __init__(self, modfun, fun, *args, **kwargs):
+        self.modfun = modfun
         self.fun = fun
-        self.statfun = statfun
+        self.args = args
+        self.kwargs = kwargs
 
     def __call__(self, *a):
-        return self.statfun(self.fun(*a), axis=0)
+        return self.modfun(self.fun(*a), *self.args, **self.kwargs)
 
 
 class _ArrayAccess:
@@ -134,6 +135,26 @@ _opdata = {
     "mu2pif": _mu2pif_access,
 }
 
+_arrayproc = {
+    None: None,
+    "real": np.real,
+    "imag": np.imag,
+    "abs": np.absolute,
+    "angle": np.angle,
+    "log": np.log,
+    "exp": np.exp,
+    "sqrt": np.sqrt,
+}
+
+_statproc = {
+    None: None,
+    "mean": np.mean,
+    "std": np.std,
+    "var": np.var,
+    "min": np.min,
+    "max": np.max,
+}
+
 
 def _all_rows(index: RefIndex | None):
     """Prepends "all rows" (":") to an index tuple."""
@@ -143,6 +164,14 @@ def _all_rows(index: RefIndex | None):
         return (slice(None),) + index
     else:
         return slice(None), index
+
+
+def _get_fun(fname, fdict) -> Callable:
+    """Get a processing from its name"""
+    if callable(fname):
+        return fname
+    else:
+        return fdict[fname]
 
 
 class _Tune:
@@ -196,9 +225,9 @@ class Need(Enum):
     ALL_POINTS = 8
     #:  Associated with LOCALOPTICS, require the *get_chrom* keyword
     CHROMATICITY = 9
-    #:  Associatef with LOCALOPTICS, require the *get_w* keyword
+    #:  Associated with LOCALOPTICS, require the *get_w* keyword
     W_FUNCTIONS = 10
-    #:  Specify :py:meth:`~.Lattice.get_geometry` computation and provide its ? output
+    #:  Specify :py:meth:`~.Lattice.get_geometry` computation and provide its output
     #:  to the evaluation function
     GEOMETRY = 11
 
@@ -215,6 +244,7 @@ class Observable:
         weight: npt.ArrayLike = 1.0,
         bounds=(0.0, 0.0),
         needs: Set[Need] | None = None,
+        procfun: Callable | str | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -229,6 +259,8 @@ class Observable:
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
               :py:class:`Need` enumeration
@@ -260,11 +292,15 @@ class Observable:
         *data* argument.
         """
         name = fun.__name__ if name is None else name
+        procfun = _get_fun(procfun, _arrayproc)
+        if procfun:
+            name = f"{procfun.__name__}({name})"
+            fun = _Convolve(procfun, fun)
         self.fun: Callable = fun  #: Evaluation function
         self.needs: Set[Need] = needs or set()  #: Set of requirements
         self.name: str = name  #: Observable name
         self.target: npt.ArrayLike | None = target  #: Target value
-        self.w: npt.ArrayLike = weight
+        self.w: npt.NDArray[float] = np.asarray(weight, dtype=float)
         self.lbound, self.ubound = bounds
         self.initial: npt.NDArray[float] | None = None
         self._value: npt.NDArray[float] | Exception | None = None
@@ -383,7 +419,7 @@ class Observable:
 
     @weight.setter
     def weight(self, w: npt.ArrayLike):
-        self.w = w
+        self.w = np.asarray(w, dtype=float)
 
     @property
     def weighted_value(self) -> npt.NDArray[float]:
@@ -398,10 +434,12 @@ class Observable:
         :pycode:`deviation = value-target`.
         """
         vnow = self.value
-        vsh = vnow.shape
-        if self.target is None:
-            deviation = np.broadcast_to(0.0, vsh)
+        if vnow is None:
+            deviation = None
+        elif self.target is None:
+            deviation = np.broadcast_to(0.0, vnow.shape)
         else:
+            vsh = vnow.shape
             diff = np.atleast_1d(vnow - np.broadcast_to(self.target, vsh))
             lb = diff - self.lbound
             ub = diff - self.ubound
@@ -418,7 +456,8 @@ class Observable:
     @property
     def residual(self) -> npt.NDArray[float]:
         """residual, computed as :pycode:`residual = ((value-target)/weight)**2`."""
-        return (self.deviation / self.w) ** 2
+        # absolute necessary for complex data
+        return np.absolute(self.weighted_deviation) ** 2
 
     @staticmethod
     def _set_name(name, param, index):
@@ -468,6 +507,8 @@ class RingObservable(Observable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -509,7 +550,8 @@ class ElementObservable(Observable):
         fun: Callable,
         refpts: Refpts,
         name: str | None = None,
-        statfun: Callable | None = None,
+        statfun: Callable | str | None = None,
+        procfun: Callable | str | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -518,8 +560,11 @@ class ElementObservable(Observable):
               See ":ref:`Selecting elements in a lattice <refpts>`"
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`.
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -534,10 +579,15 @@ class ElementObservable(Observable):
         shape of *value*.
         """
         name = fun.__name__ if name is None else name
+        procfun = _get_fun(procfun, _arrayproc)
+        if procfun:
+            name = f"{procfun.__name__}({name})"
+            fun = _Convolve(procfun, fun)
+        statfun = _get_fun(statfun, _statproc)
         if statfun:
             summary = kwargs.pop("summary", True)
             name = f"{statfun.__name__}({name})"
-            fun = _ModFun(fun, statfun)
+            fun = _Convolve(statfun, fun, axis=0)
         else:
             summary = kwargs.pop("summary", False)
         super().__init__(fun, name=name, **kwargs)
@@ -657,8 +707,11 @@ class OrbitObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -705,8 +758,11 @@ class MatrixObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -739,7 +795,8 @@ class _GlobalOpticsObservable(Observable):
         r"""Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ringdata, ring=ring)[plane]`
+              :pycode:`value = fun(ringdata, ring=ring)` and returning the value of
+              the Observable
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
@@ -753,6 +810,8 @@ class _GlobalOpticsObservable(Observable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -802,8 +861,11 @@ class LocalOpticsObservable(ElementObservable):
         Keyword Args:
             summary:        Set to :py:obj:`True` if the user-defined
              evaluation function returns a single item (see below)
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -937,8 +999,11 @@ class LatticeObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
 
         Example:
 
@@ -976,8 +1041,11 @@ class TrajectoryObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -1014,8 +1082,11 @@ class EmittanceObservable(Observable):
               name will be generated.
 
         Keyword Args:
-            statfun:        Post-processing function called on the value of the
-              observable. Example: :pycode:`statfun=numpy.mean`
+            procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
+            statfun:        Statistics post-processing function. it can be a numpy
+              function or a function name in {"mean", "std", "var", "min", "max"}.
+              Example: :pycode:`statfun=numpy.mean`.
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -1083,6 +1154,8 @@ def GlobalOpticsObservable(
         bounds:         Tuple of lower and upper bounds. The parameter
           is constrained in the interval
           [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+        procfun:        Post-processing function. It can be any numpy ufunc or a
+              function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
 
     The *target*, *weight* and *bounds* inputs must be broadcastable to the
     shape of *value*.
