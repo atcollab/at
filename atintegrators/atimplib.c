@@ -451,7 +451,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 };
 
 
-static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
+static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain,double detune_angle){
     double vbeamr = vbeam[0]*cos(vbeam[1]);
     double vbeami = vbeam[0]*sin(vbeam[1]);
     double vcavr = vcav[0]*cos(vcav[1]);
@@ -459,7 +459,7 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
     double vgenr = vcavr - vbeamr;
     double vgeni = vcavi - vbeami; 
     double vga = sqrt(vgenr*vgenr+vgeni*vgeni);   
-    double vgp = atan2(vgeni,vgenr)-vcav[1];
+    double vgp = atan2(vgeni,vgenr)-vcav[1]+detune_angle;
     vgen[0] += (vga-vgen[0])*voltgain;
     vgen[1] += (vgp-vgen[1])*phasegain;
 }
