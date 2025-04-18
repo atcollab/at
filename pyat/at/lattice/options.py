@@ -133,6 +133,7 @@ Attributes:
     DPStep:              Momentum step for dispersion and chromaticity
     OrbConvergence:      Convergence criterion for orbit
     OrbMaxIter:          Max. number of iterations for orbit
+    TStol:               Tolerance for synchronous phase search
     omp_num_threads:     Default number of OpenMP threads
     patpass_poolsize:    Default size of multiprocessing pool
     patpass_startmethod: Default start method for the multiprocessing
