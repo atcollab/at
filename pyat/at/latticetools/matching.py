@@ -1,4 +1,15 @@
-"""Matching of lattice parameters."""
+"""Matching of lattice parameters.
+
+The matching acts on a :py:class:`.VariableList` to statisfy the constraints
+expressed in an :py:class:`.ObservableList`.
+
+Examples of use of such classes are available in:
+
+* :doc:`/p/notebooks/variables`
+* :doc:`/p/notebooks/observables`
+
+Examples of matching are given in :doc:`/p/notebooks/matching`.
+"""
 
 from __future__ import annotations
 
@@ -98,6 +109,10 @@ def match(
         df:             Deviation from the nominal RF frequency.
         **kwargs:       Keyword arguments sent to
           :py:func:`~scipy.optimize.least_squares`
+
+    Examples:
+
+        See :doc:`/p/notebooks/matching`
     """
     if copy:
         # Check that there is no ElementVariable
