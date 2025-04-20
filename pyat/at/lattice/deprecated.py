@@ -1,3 +1,4 @@
+import numpy
 from .lattice_object import Lattice
 from .elements import Element
 from .utils import Refpts, BoolRefpts, Uint32Refpts
