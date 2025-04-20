@@ -40,6 +40,7 @@ from itertools import compress
 from operator import attrgetter
 from fnmatch import fnmatch
 from .elements import Element, Dipole
+from .transformation import transform_elem
 
 _GEOMETRY_EPSIL = 1.0e-3
 
@@ -56,8 +57,8 @@ __all__ = ['All', 'End', 'AtError', 'AtWarning', 'axis_descr',
            'checkattr', 'checktype', 'checkname',
            'get_elements', 'get_s_pos',
            'refpts_count', 'refpts_iterator',
-           'set_shift', 'set_tilt', 'set_rotation', 'rotate_translate_elem',
-           'tilt_elem', 'shift_elem', 'rotate_elem',
+           'set_shift', 'set_tilt', 'set_rotation', 'transform_elem',
+           'tilt_elem', 'shift_elem',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
            'get_geometry', 'setval', 'getval']
 
@@ -930,265 +931,6 @@ def get_s_pos(ring: Sequence[Element], refpts: Refpts = All,
     s_pos = numpy.concatenate(([0.0], s_pos))
     return s_pos[get_bool_index(ring, refpts, regex=regex)]
 
-def _rotation(rotations):
-    """
-    3D rotation matrix (extrinsic rotation) using the Tait–Bryan angles convention
-    For more details, refer to https://en.wikipedia.org/wiki/Euler_angles
-    alpha: Rotation about the X-axis (pitch).
-    beta Rotation about the Y-axis (yaw).
-    gamma: Rotation about the Z-axis (roll/tilt).
-    """
-    alpha, beta, gamma = rotations  # ZYX intrinsic rotations (pitch, yaw, tilt)
-    R_x = numpy.array([
-        [1, 0, 0],
-        [0, numpy.cos(alpha), -numpy.sin(alpha)],
-        [0, numpy.sin(alpha), numpy.cos(alpha)]
-        ])
-    R_y = numpy.array([
-        [numpy.cos(beta), 0, numpy.sin(beta)],
-        [0, 1, 0],
-        [-numpy.sin(beta), 0, numpy.cos(beta)]
-        ])
-    R_z = numpy.array([
-        [numpy.cos(gamma), -numpy.sin(gamma), 0],
-        [numpy.sin(gamma), numpy.cos(gamma), 0],
-        [0, 0, 1]
-        ])
-    return R_x @ R_y @ R_z
-
-def _translation_vector(ld, r3d, xaxis_xyz, yaxis_xyz, offsets):
-    """
-    Translation vector resulting from the joint effect of a longitudinal
-    displacement (in the rotated frame), 3D offsets w.r.t the element face
-    considered and the 3D rotation matrix.
-    ld: Longitudinal displacement [m]
-    r3d: 3D rotation matrix
-    xaxis_xyz: x projection over the (x,y,z) basis (i.e. numpy.array([1, 0, 0]))
-    yaxis_xyz: y projection over the (x,y,z) basis (i.e. numpy.array([0, 1, 0]))
-    offsets: 3D offsets w.r.t the element face [m]
-    """
-    tD0 = numpy.array([
-        -numpy.dot(offsets, xaxis_xyz), 0, -numpy.dot(offsets, yaxis_xyz), 
-         0, 0, 0
-        ])
-    T0 = numpy.array([
-        ld * r3d[2, 0] / r3d[2, 2], r3d[2, 0], ld * r3d[2, 1] / r3d[2, 2],
-        r3d[2, 1], 0, ld / r3d[2, 2]
-    ])
-    return T0 + tD0
-
-def _r_matrix(ld, r3d):
-    """
-    Rotation matrix operator to be applied to the element transfer matrix.
-    Can take into account the effect of a longitudinal displacement introduced 
-    by a bending angle.
-    """
-    return numpy.array([
-        [r3d[1, 1]/r3d[2, 2], ld*r3d[1, 1]/r3d[2, 2]**2, -r3d[0, 1]/r3d[2, 2], -ld*r3d[0, 1]/r3d[2, 2]**2, 0, 0],
-        [0, r3d[0, 0], 0, r3d[1, 0], r3d[2, 0], 0],
-        [-r3d[1, 0]/r3d[2, 2], -ld*r3d[1, 0]/r3d[2, 2]**2, r3d[0, 0]/r3d[2, 2], ld*r3d[0, 0]/r3d[2, 2]**2, 0, 0],
-        [0, r3d[0, 1], 0, r3d[1, 1], r3d[2, 1], 0],
-        [0, 0, 0, 0, 1, 0],
-        [-r3d[0, 2]/r3d[2, 2], -ld*r3d[0, 2]/r3d[2, 2]**2, -r3d[1, 2]/r3d[2, 2], -ld*r3d[1, 2]/r3d[2, 2]**2, 0, 1]
-    ])
-
-def rotate_translate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
-                yaw: float = 0.0, relative: bool = False) -> None:
-    r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
-    The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis and the yaw is a rotation around
-    the *y*-axis.
-
-    A positive angle represents a clockwise rotation when
-    looking in the direction of the rotation axis.
-
-    The transformations are not all commmutative. The rotations are applied in 
-    the order *Z* -> *Y* -> *X* (tilt -> yaw -> pitch). The element is 
-    rotated around its mid-point.
-
-    If *relative* is :py:obj:`True`, the previous angle and shifts
-    are rebuilt form the *R* and *T* matrix and incremented by the
-    input arguments.
-
-    The shift is always conserved regardless of the value of *relative*.
-
-    The transformations are applied by changing the particle coordinates
-    at the entrance of the element and restoring them at the end.
-    
-    The implementation follows the one described in:
-    https://doi.org/10.1016/j.nima.2022.167487
-
-    Parameters:
-        elem:           Element to be tilted
-        tilt:           Tilt angle [rad]
-        pitch:          Pitch angle [rad]
-        yaw:            Yaw angle [rad]
-        relative:       If :py:obj:`True`, the rotation is added to the
-          previous one
-    """
-
-    elem_length = getattr(elem, "Length", 0)
-    elem_bending_angle = getattr(elem, 'BendingAngle', 0)
-    
-    x_axis = numpy.array([1, 0, 0])
-    y_axis = numpy.array([0, 1, 0])
-    z_axis = numpy.array([0, 0, 1])
-    
-    # Extract current transformations if relative=True
-    tilt0, pitch0, yaw0 = 0.0, 0.0, 0.0
-    t10, t20 = numpy.zeros(6), numpy.zeros(6)
-    if relative:
-        # Check if all transformation matrices/vectors exist
-        if (
-            hasattr(elem, 'R1') and hasattr(elem, 'R2') and 
-            hasattr(elem, 'T1') and hasattr(elem, 'T2')
-            ):
-            # Reverse-engineer current angles from R1 (ZYX Euler angles)
-            tilt0 = numpy.arctan2(-elem.R1[3, 1], elem.R1[1, 1])
-            yaw0 = numpy.arcsin(-elem.R1[5, 0] / elem.R1[2,2] * elem.R1[1,1])
-            pitch0 = numpy.arctan2(-elem.R1[1, 2], elem.R1[2, 2])
-    
-            # Use existing translations
-            t10 = elem.T1.copy()
-            t20 = elem.T2.copy()
-
-    # Apply new rotations (XYZ intrinsic order)
-    tilt_total = tilt0 + tilt
-    pitch_total = pitch0 + pitch
-    yaw_total = yaw0 + yaw
-    rotations = [pitch_total, yaw_total, tilt_total]  # X, Y, Z convention
-    
-    # Define offsets (to be implemented when dx, dy, dz attributes will be 
-    # available in pyAT)
-    offsets = numpy.array([0., 0., 0.]) # until then, only zeros
-
-    # Compute entrance rotation matrix and effective longitudinal displacement
-    # in the rotated frame
-    r3d_entrance = _rotation(rotations)
-    ld_entrance = numpy.dot(numpy.dot(r3d_entrance, z_axis), offsets)
-
-    # Calculate the rotated transfer matrix and translation vectors at the
-    # element entrance
-    R1 = _r_matrix(ld_entrance, r3d_entrance)
-    T1 = _translation_vector(ld_entrance, r3d_entrance, numpy.dot(
-        r3d_entrance, x_axis), numpy.dot(r3d_entrance, y_axis
-                                      ), offsets
-                                      )
-    
-    # Rotated transfer matrix linked to a bending angle
-    RB = _rotation([0, -elem_bending_angle, 0])
-    
-    # Rotate the element, calculate effect of a bending angle, rotate back 
-    # the element    
-    r3d_exit = numpy.dot(RB.T, numpy.dot(r3d_entrance.T, RB))
-    
-    # Calculate the displacement vector caused by a bending angle
-    # For no bending angle, return [0, 0, elem_length]
-    OPp = numpy.array([(elem_length * (numpy.cos(elem_bending_angle) - 1) / elem_bending_angle if elem_bending_angle else 0),
-                    0,
-                    elem_length * (numpy.sin(elem_bending_angle) / elem_bending_angle if elem_bending_angle else 1)])
-
-    # Calculate the net displacement of the element exit relative to its entrance
-    OpPp = OPp - numpy.dot(r3d_entrance, OPp) - offsets
-    
-    # Calculate the effective longitudinal displacement after bending
-    ld_exit = numpy.dot(numpy.dot(RB, z_axis), OpPp)
-    
-    # Calculate the rotated transfer matrix and translation vectors at the
-    # element exit, accouting for any 
-    T2 = _translation_vector(ld_exit, r3d_exit, numpy.dot(RB, x_axis), numpy.dot(RB, y_axis), OpPp)
-    R2 = _r_matrix(ld_exit, r3d_exit)
-
-    # Update element
-    elem.R1 = R1
-    elem.R2 = R2
-    elem.T1 = T1
-    elem.T2 = T2
-
-
-def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
-                yaw: float = 0.0, relative: bool = False) -> None:
-    r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
-    The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis and the yaw is a rotation around
-    the *y*-axis.
-
-    A positive angle represents a clockwise rotation when
-    looking in the direction of the rotation axis.
-
-    The transformations are not all commmutative, the pitch and yaw
-    are applied first and the tilt is always the last transformation
-    applied. The element is rotated around its mid-point.
-
-    If *relative* is :py:obj:`True`, the previous angle and shifts
-    are rebuilt form the *R* and *T* matrix and incremented by the
-    input arguments.
-
-    The shift is always conserved regardless of the value of *relative*.
-
-    The transformations are applied by changing the particle coordinates
-    at the entrance of the element and restoring them at the end. Following
-    the small angles approximation the longitudinal shift of the particle
-    coordinates is neglected and the element length is unchanged.
-
-    Parameters:
-        elem:           Element to be tilted
-        tilt:           Tilt angle [rad]
-        pitch:          Pitch angle [rad]
-        yaw:            Yaw angle [rad]
-        relative:       If :py:obj:`True`, the rotation is added to the
-          previous one
-    """
-    # noinspection PyShadowingNames
-    def _get_rm_tv(le, tilt, pitch, yaw):
-        tilt = numpy.around(tilt, decimals=15)
-        pitch = numpy.around(pitch, decimals=15)
-        yaw = numpy.around(yaw, decimals=15)
-        ct, st = numpy.cos(tilt), numpy.sin(tilt)
-        ap, ay = 0.5*le*numpy.tan(pitch), 0.5*le*numpy.tan(yaw)
-        rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
-        rr1[0, 2] = st
-        rr1[1, 3] = st
-        rr1[2, 0] = -st
-        rr1[3, 1] = -st
-        rr2 = rr1.T
-        t1 = numpy.array([ay, numpy.sin(-yaw), -ap, numpy.sin(pitch), 0, 0])
-        t2 = numpy.array([ay, numpy.sin(yaw), -ap, numpy.sin(-pitch), 0, 0])
-        rt1 = numpy.eye(6, order='F')
-        rt1[1, 4] = t1[1]
-        rt1[3, 4] = t1[3]
-        rt2 = numpy.eye(6, order='F')
-        rt2[1, 4] = t2[1]
-        rt2[3, 4] = t2[3]
-        return rr1 @ rt1, rt2 @ rr2, t1, t2
-
-    tilt0 = 0.0
-    pitch0 = 0.0
-    yaw0 = 0.0
-    t10 = numpy.zeros(6)
-    t20 = numpy.zeros(6)
-    if hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-        rr10 = numpy.eye(6, order='F')
-        rr10[:4, :4] = elem.R1[:4, :4]
-        rt10 = rr10.T @ elem.R1
-        tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
-        yaw0 = numpy.arcsin(-rt10[1, 4])
-        pitch0 = numpy.arcsin(rt10[3, 4])
-        _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)
-    if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
-        t10 = elem.T1-t10
-        t20 = elem.T2-t20
-    if relative:
-        tilt += tilt0
-        pitch += pitch0
-        yaw += yaw0
-
-    r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)
-    elem.R1 = r1
-    elem.R2 = r2
-    elem.T1 = t1+t10
-    elem.T2 = t2+t20
-
 
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
     r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
@@ -1209,7 +951,7 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
         relative:       If :py:obj:`True`, the rotation is added to the
           existing one
     """
-    rotate_elem(elem, tilt=rots, relative=relative)
+    transform_elem(elem, tilt=rots, relative=relative)
 
 
 def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
@@ -1254,7 +996,7 @@ def set_rotation(ring: Sequence[Element], tilts=0.0,
     pitches = numpy.broadcast_to(pitches, (len(ring),))
     yaws = numpy.broadcast_to(yaws, (len(ring),))
     for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
-        rotate_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
+        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
 
 
 def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
@@ -1269,7 +1011,7 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
     """
     tilts = numpy.broadcast_to(tilts, (len(ring),))
     for el, tilt in zip(ring, tilts):
-        tilt_elem(el, tilt, relative=relative)
+        transform_elem(el, tilt=tilt, relative=relative)
 
 
 def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
