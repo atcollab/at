@@ -575,8 +575,12 @@ class ElementObservable(Observable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
-        The *target*, *weight* and *bounds* inputs must be broadcastable to the
-        shape of *value*.
+        .. rubric:: Shape of the value
+
+        A :pycode:`nrefs` dimension, with :pycode:`nrefs` the number
+        of reference points, is prepended to the shape of the output of *fun*,
+        **even if nrefs == 1**. The *target*, *weight* and *bounds* inputs must be
+        broadcastable to the shape of *value*.
         """
         name = fun.__name__ if name is None else name
         procfun = _get_fun(procfun, _arrayproc)
@@ -720,8 +724,14 @@ class OrbitObservable(ElementObservable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
-        The *target*, *weight* and *bounds* inputs must be broadcastable to the
-        shape of *value*.
+        .. rubric:: Shape of the value
+
+        If *axis* is :py:obj:`None` (whole orbit vector), then *value* has shape
+        :pycode:`(nrefs, 6)` with :pycode:`nrefs` number of reference points: a
+        :pycode:`nrefs` dimension is prepended to the shape of the orbit vector,
+        **even if nrefs == 1**. A single coordinate has shape :pycode:`(nrefs,)`.
+        The *target*, *weight* and *bounds* inputs must be broadcastable to the shape
+        of *value*.
 
         Example:
             >>> obs = OrbitObservable(at.Monitor, axis=0)
@@ -874,8 +884,15 @@ class LocalOpticsObservable(ElementObservable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
-        The *target*, *weight* and *bounds* inputs must be broadcastable to the
-        shape of *value*.
+        .. rubric:: Shape of the value
+
+        If the requested attribute has shape :pycode:`shp`, then
+        *value* has shape :pycode:`(nrefs,) + shp` with :pycode:`nrefs` number of
+        reference points: a  :pycode:`nrefs` dimension is prepended to the shape of
+        the attribute, **even if nrefs == 1**. The *target*, *weight* and *bounds*
+        inputs must be broadcastable to the shape of *value*. For instance, a *target*
+        with shape :pycode:`shp` will automatically broadcast and apply  to all
+        reference points.
 
         .. _localoptics_param:
         .. rubric:: Optics parameter name
