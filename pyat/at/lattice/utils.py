@@ -354,7 +354,7 @@ def make_copy(copy: bool) -> Callable:
                     ring = ring.replace(refpts)
                 except AttributeError:
                     check = get_bool_index(ring, refpts)
-                    ring = [el.deepcopy() if ok else el 
+                    ring = [el.deepcopy() if ok else el
                             for el, ok in zip(ring, check)]
                 func(ring, refpts, *args, **kwargs)
                 return ring
@@ -897,7 +897,8 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
     # noinspection PyShadowingNames
     @make_copy(copy)
     def apply(ring, refpts, values, regex):
-        for elm, val in zip(refpts_iterator(ring, refpts, regex=regex), values):
+        for elm, val in zip(refpts_iterator(ring, refpts, regex=regex),
+                            values):
             setf(elm, val)
 
     return apply(ring, refpts, attrvalues, regex)

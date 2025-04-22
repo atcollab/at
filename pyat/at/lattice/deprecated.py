@@ -85,6 +85,7 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
     """
     return get_uint32_index(ring, refpts, regex=regex)
 
+
 def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
                 yaw: float = 0.0, relative: bool = False) -> None:
     r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
@@ -167,6 +168,7 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     elem.R2 = r2
     elem.T1 = t1+t10
     elem.T2 = t2+t20
+
 
 Lattice.uint32_refpts = get_uint32_index
 Lattice.bool_refpts = get_bool_index
