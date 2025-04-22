@@ -50,7 +50,7 @@ def _translation_vector(ld, r3d, offsets):
     X_axis = numpy.dot(r3d, numpy.array([1, 0, 0]))
     Y_axis = numpy.dot(r3d, numpy.array([0, 1, 0]))
     tD0 = numpy.array([
-        -numpy.dot(offsets, X_axis), 0, -numpy.dot(offsets, Y_axis), 
+        -offsets @ X_axis, 0, -offsets @ Y_axis, 
          0, 0, 0
         ])
     T0 = numpy.array([
@@ -188,7 +188,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
     if relative:
         if hasattr(elem, '_r3d'):
             if midpoint == 'center':
-                r3d = numpy.dot(RB_half.T, numpy.dot(elem._r3d, RB_half))
+                r3d = RB_half.T @ elem._r3d @ RB_half
             elif midpoint == 'entrance':     
                 r3d = elem._r3d
             else:
@@ -207,24 +207,21 @@ def transform_elem(elem: Element, midpoint: str = "center",
     rotations = [pitch_total, yaw_total, tilt_total]  # X, Y, Z convention
     
     if midpoint == 'center':
-        # Compute entrance rotation matrix in the rotated frame
-        r3d_entrance = numpy.dot(
-            RB_half, numpy.dot(_rotation(rotations), RB_half.T)
-            ) # Eq. (31)
+        # Compute entrance rotation matrix in the rotated frame     
+        r3d_entrance = RB_half @ _rotation(rotations) @ RB_half.T # Eq. (31)
         
         if elem_bending_angle:    
             Rc = elem_length / elem_bending_angle
-            OO0 =  Rc * numpy.sin(elem_bending_angle / 2) * numpy.dot(
-                RB_half, z_axis
-                ) # Eq. (34)
+            OO0 =  Rc * numpy.sin(elem_bending_angle / 2) * \
+                RB_half @ z_axis # Eq. (34)
             P0P = -Rc * numpy.sin(elem_bending_angle / 2) * \
-                numpy.dot(numpy.dot(r3d_entrance, RB_half), z_axis) # Eq. (36)           
+                r3d_entrance @ RB_half @ z_axis # Eq. (36)
         else:
             OO0 =  elem_length / 2 * z_axis # Eq. (34)
-            P0P = -elem_length / 2 * numpy.dot(r3d_entrance, z_axis) # Eq. (36)   
+            P0P = -elem_length / 2 * r3d_entrance @ z_axis # Eq. (36)   
         
         # Transform offset to magnet entrance
-        OP = OO0 + P0P + numpy.dot(RB_half, offsets) # Eq. (33)
+        OP = OO0 + P0P + RB_half @ offsets # Eq. (33)
         
     elif midpoint == 'entrance':     
         r3d_entrance = _rotation(rotations) # Eq. (3)
@@ -235,24 +232,23 @@ def transform_elem(elem: Element, midpoint: str = "center",
 
     # R1, T1
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
-    X_axis = numpy.dot(r3d_entrance, x_axis)
-    Y_axis = numpy.dot(r3d_entrance, y_axis)
-    Z_axis = numpy.dot(r3d_entrance, z_axis)
-
-    ld_entrance = numpy.dot(Z_axis, OP) # Eq. (33)
+    X_axis = r3d_entrance @ x_axis
+    Y_axis = r3d_entrance @ y_axis
+    Z_axis = r3d_entrance @ z_axis
+                       
+    ld_entrance = Z_axis @ OP # Eq. (33)
             
     R1 = _r_matrix(ld_entrance, r3d_entrance)
-    T1 = numpy.dot(numpy.linalg.inv(R1), _translation_vector(
+    T1 = numpy.linalg.inv(R1) @ _translation_vector(
         ld_entrance, r3d_entrance, OP)
-        )
     
     # R2, T2
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
-    X_axis = numpy.dot(RB, x_axis)
-    Y_axis = numpy.dot(RB, y_axis)
-    Z_axis = numpy.dot(RB, z_axis)
+    X_axis = RB @ x_axis
+    Y_axis = RB @ y_axis
+    Z_axis = RB @ z_axis
     
-    r3d_exit = numpy.dot(RB.T, numpy.dot(r3d_entrance.T, RB)) # Eq. (18) or (32)
+    r3d_exit = RB.T @ r3d_entrance.T @ RB # Eq. (18) or (32)
     
     if elem_bending_angle:
         Rc = elem_length / elem_bending_angle
@@ -264,10 +260,10 @@ def transform_elem(elem: Element, midpoint: str = "center",
     else:
         OPp = elem_length * z_axis # Eq. (24)
 
-    OOp = numpy.dot(r3d_entrance, OPp) + OP # Eq. (25)
+    OOp = r3d_entrance @ OPp + OP # Eq. (25)
     OpPp = OPp - OOp
 
-    ld_exit = numpy.dot(Z_axis, OpPp) # Eq. (23) or (37)
+    ld_exit = Z_axis @ OpPp # Eq. (23) or (37)
     
     R2 = _r_matrix(ld_exit, r3d_exit)
     T2 = _translation_vector(ld_exit, r3d_exit, OpPp)
