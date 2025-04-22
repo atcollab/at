@@ -182,7 +182,6 @@ def transform_elem(elem: Element, midpoint: str = "center",
     
     # Extract current transformations if relative=True
     tilt0, pitch0, yaw0 = 0.0, 0.0, 0.0
-    t10, t20 = numpy.zeros(6), numpy.zeros(6)
     if relative:
         if hasattr(elem, '_r3d'):
             if midpoint == 'center':
