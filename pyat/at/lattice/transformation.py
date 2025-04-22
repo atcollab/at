@@ -1,6 +1,5 @@
-import numpy
-#import re
-from typing import Union, Tuple, List, Type
+from __future__ import annotations
+import numpy as np
 from .elements import Element
 
 def _rotation(rotations):
@@ -17,19 +16,19 @@ def _rotation(rotations):
     gamma: Rotation about the Z-axis (roll/tilt).
     """
     alpha, beta, gamma = rotations  # ZYX intrinsic rotations (pitch, yaw, tilt)
-    R_x = numpy.array([
+    R_x = np.array([
         [1, 0, 0],
-        [0, numpy.cos(alpha), -numpy.sin(alpha)],
-        [0, numpy.sin(alpha), numpy.cos(alpha)]
+        [0, np.cos(alpha), -np.sin(alpha)],
+        [0, np.sin(alpha), np.cos(alpha)]
         ])
-    R_y = numpy.array([
-        [numpy.cos(beta), 0, numpy.sin(beta)],
+    R_y = np.array([
+        [np.cos(beta), 0, np.sin(beta)],
         [0, 1, 0],
-        [-numpy.sin(beta), 0, numpy.cos(beta)]
+        [-np.sin(beta), 0, np.cos(beta)]
         ])
-    R_z = numpy.array([
-        [numpy.cos(gamma), -numpy.sin(gamma), 0],
-        [numpy.sin(gamma), numpy.cos(gamma), 0],
+    R_z = np.array([
+        [np.cos(gamma), -np.sin(gamma), 0],
+        [np.sin(gamma), np.cos(gamma), 0],
         [0, 0, 1]
         ])
     return R_x @ R_y @ R_z
@@ -47,11 +46,11 @@ def _translation_vector(ld, r3d, offsets, X_axis, Y_axis):
     r3d: 3D rotation matrix
     offsets: 3D offsets [m]
     """
-    tD0 = numpy.array([
+    tD0 = np.array([
         -offsets @ X_axis, 0, -offsets @ Y_axis, 
          0, 0, 0
         ])
-    T0 = numpy.array([
+    T0 = np.array([
         ld * r3d[2, 0] / r3d[2, 2], r3d[2, 0], ld * r3d[2, 1] / r3d[2, 2],
         r3d[2, 1], 0, ld / r3d[2, 2]
     ])
@@ -69,7 +68,7 @@ def _r_matrix(ld, r3d):
     r3d: 3D rotation matrix
     Corresponds to Eq. (9)
     """
-    return numpy.array([
+    return np.array([
         [
             r3d[1, 1] / r3d[2, 2],
             ld * r3d[1, 1] / r3d[2, 2] ** 2,
@@ -174,11 +173,11 @@ def transform_elem(elem: Element, midpoint: str = "center",
     RB_half = _rotation([0, -elem_bending_angle / 2, 0]) # Eq. (12)
     
     # Define transverse offsets (element translation)
-    offsets = numpy.array([dx, dy, 0.])
+    offsets = np.array([dx, dy, 0.])
     
-    x_axis = numpy.array([1, 0, 0])
-    y_axis = numpy.array([0, 1, 0])
-    z_axis = numpy.array([0, 0, 1])
+    x_axis = np.array([1, 0, 0])
+    y_axis = np.array([0, 1, 0])
+    z_axis = np.array([0, 0, 1])
     
     # Extract current transformations if relative=True
     tilt0, pitch0, yaw0 = 0.0, 0.0, 0.0
@@ -193,9 +192,9 @@ def transform_elem(elem: Element, midpoint: str = "center",
                                  "'center' or 'entrance'.")
 
             # Reverse-engineer current angles from r3d
-            tilt0 = numpy.arctan2(-r3d[0, 1], r3d[0, 0])
-            yaw0 = numpy.arcsin(r3d[0,2])
-            pitch0 = numpy.arctan2(-r3d[1, 2], r3d[2, 2])
+            tilt0 = np.arctan2(-r3d[0, 1], r3d[0, 0])
+            yaw0 = np.arcsin(r3d[0,2])
+            pitch0 = np.arctan2(-r3d[1, 2], r3d[2, 2])
 
     # Apply new rotations (XYZ intrinsic order)
     tilt_total = tilt0 + tilt
@@ -209,9 +208,9 @@ def transform_elem(elem: Element, midpoint: str = "center",
         
         if elem_bending_angle:    
             Rc = elem_length / elem_bending_angle
-            OO0 =  Rc * numpy.sin(elem_bending_angle / 2) * \
+            OO0 =  Rc * np.sin(elem_bending_angle / 2) * \
                 RB_half @ z_axis # Eq. (34)
-            P0P = -Rc * numpy.sin(elem_bending_angle / 2) * \
+            P0P = -Rc * np.sin(elem_bending_angle / 2) * \
                 r3d_entrance @ RB_half @ z_axis # Eq. (36)
         else:
             OO0 =  elem_length / 2 * z_axis # Eq. (34)
@@ -236,7 +235,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
     ld_entrance = Z_axis @ OP # Eq. (33)
             
     R1 = _r_matrix(ld_entrance, r3d_entrance)
-    T1 = numpy.linalg.inv(R1) @ _translation_vector(
+    T1 = np.linalg.inv(R1) @ _translation_vector(
         ld_entrance, r3d_entrance, OP, X_axis, Y_axis)
     
     # R2, T2
@@ -249,10 +248,10 @@ def transform_elem(elem: Element, midpoint: str = "center",
     
     if elem_bending_angle:
         Rc = elem_length / elem_bending_angle
-        OPp = numpy.array(
-            [Rc * (numpy.cos(elem_bending_angle) - 1), 
+        OPp = np.array(
+            [Rc * (np.cos(elem_bending_angle) - 1), 
              0, 
-             elem_length * numpy.sin(elem_bending_angle) / elem_bending_angle]
+             elem_length * np.sin(elem_bending_angle) / elem_bending_angle]
             ) # Eq. (24)
     else:
         OPp = elem_length * z_axis # Eq. (24)
