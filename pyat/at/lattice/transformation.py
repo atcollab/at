@@ -151,13 +151,14 @@ def transform_elem(elem: Element,
     *r3d* matrix and incremented by the input arguments.
     *relative* only allows to add the previous angles, not the transverse 
     shifts.
-    The shift is always conserved regardless of the value of *relative*.
+    The shift is always absolute regardless of the value of *relative*.
     
     pyAT describes the ultra-relativistic beam dynamics in 6D phase space 
     coordinates, which differ from 3D spatial angles in an expansion with 
     respect to the energy to first order by a factor (1 + $\\delta$) , where 
-    $\\delta$ is the relative energy offset. In general this introduces a small 
-    angle error, but could create an undesired effect for large energy offsets.
+    $\\delta$ is the relative energy offset. In general this introduces 
+    a spurious dispersion (angle proportional to $\\delta$), but could create 
+    an undesired effect for large energy offsets.
     
     The implementation follows the one described in:
     https://doi.org/10.1016/j.nima.2022.167487
