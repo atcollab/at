@@ -34,7 +34,7 @@ def _rotation(rotations):
         ])
     return R_x @ R_y @ R_z
 
-def _translation_vector(ld, r3d, offsets):
+def _translation_vector(ld, r3d, offsets, X_axis, Y_axis):
     """
     The implementation follows the one described in:
     https://doi.org/10.1016/j.nima.2022.167487
@@ -47,8 +47,6 @@ def _translation_vector(ld, r3d, offsets):
     r3d: 3D rotation matrix
     offsets: 3D offsets [m]
     """
-    X_axis = numpy.dot(r3d, numpy.array([1, 0, 0]))
-    Y_axis = numpy.dot(r3d, numpy.array([0, 1, 0]))
     tD0 = numpy.array([
         -offsets @ X_axis, 0, -offsets @ Y_axis, 
          0, 0, 0
@@ -240,7 +238,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
             
     R1 = _r_matrix(ld_entrance, r3d_entrance)
     T1 = numpy.linalg.inv(R1) @ _translation_vector(
-        ld_entrance, r3d_entrance, OP)
+        ld_entrance, r3d_entrance, OP, X_axis, Y_axis)
     
     # R2, T2
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
@@ -266,7 +264,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
     ld_exit = Z_axis @ OpPp # Eq. (23) or (37)
     
     R2 = _r_matrix(ld_exit, r3d_exit)
-    T2 = _translation_vector(ld_exit, r3d_exit, OpPp)
+    T2 = _translation_vector(ld_exit, r3d_exit, OpPp, X_axis, Y_axis)
 
     # Update element
     elem.R1 = R1
