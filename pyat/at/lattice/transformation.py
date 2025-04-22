@@ -120,7 +120,7 @@ def _r_matrix(ld, r3d):
     ])
     
 def transform_elem(elem: Element, midpoint: str = "center",
-                   dx: float = 0.0, dy: float = 0.0,                       
+                   dx: float = 0.0, dy: float = 0.0, dz: float = 0.0,                      
                    tilt: float = 0.0, pitch: float = 0.0, yaw: float = 0.0,
                    relative: bool = False) -> None:
     r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
@@ -158,6 +158,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
         midpoint:       Midpoint reference (entrance/center)
         dx:             Horizontal shift [m]
         dy:             Vertical shift [m]
+        dz:             Longitudinal shift [m]
         tilt:           Tilt angle [rad]
         pitch:          Pitch angle [rad]
         yaw:            Yaw angle [rad]
@@ -173,7 +174,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
     RB_half = _rotation([0, -elem_bending_angle / 2, 0]) # Eq. (12)
     
     # Define transverse offsets (element translation)
-    offsets = np.array([dx, dy, 0.])
+    offsets = np.array([dx, dy, dz])
     
     x_axis = np.array([1, 0, 0])
     y_axis = np.array([0, 1, 0])
