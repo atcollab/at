@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+from enum import Enum
 from .elements import Element
 
 def _rotation(rotations):
@@ -45,6 +46,9 @@ def _translation_vector(ld, r3d, offsets, X_axis, Y_axis):
     ld: Longitudinal displacement [m]
     r3d: 3D rotation matrix
     offsets: 3D offsets [m]
+    X_axis: X unit axis in rotated frame expressed in the xyz coordinate system
+    Y_axis: Y unit axis in rotated frame expressed in the xyz coordinate system
+
     """
     tD0 = np.array([
         -offsets @ X_axis, 0, -offsets @ Y_axis, 
@@ -118,8 +122,14 @@ def _r_matrix(ld, r3d):
             1,
         ],
     ])
+
+class reference_point(Enum):
+    """Enum class for reference option"""
+    CENTRE = 'CENTRE'
+    ENTRANCE = 'ENTRANCE'
     
-def transform_elem(elem: Element, midpoint: str = "center",
+def transform_elem(elem: Element, 
+                   reference: reference_point = reference_point.CENTRE,
                    dx: float = 0.0, dy: float = 0.0, dz: float = 0.0,                      
                    tilt: float = 0.0, pitch: float = 0.0, yaw: float = 0.0,
                    relative: bool = False) -> None:
@@ -134,7 +144,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
     The transformations are not all commmutative. The rotations are applied in 
     the order *Z* -> *Y* -> *X* (tilt -> yaw -> pitch). The element is rotated 
     around its mid-point. The mid-point can either be the element entrance 
-    (entry face of the downstream drift element) or center (axis joining the 
+    (entry face of the downstream drift element) or centre (axis joining the 
     entry and exit points of the element).
 
     If *relative* is :py:obj:`True`, the previous angles are rebuilt from the 
@@ -155,7 +165,8 @@ def transform_elem(elem: Element, midpoint: str = "center",
 
     Parameters:
         elem:           Element to be tilted
-        midpoint:       Midpoint reference (entrance/center)
+        reference:      Transformation reference, either 
+                        reference_point.ENTRANCE or reference_point.CENTRE
         dx:             Horizontal shift [m]
         dy:             Vertical shift [m]
         dz:             Longitudinal shift [m]
@@ -184,13 +195,14 @@ def transform_elem(elem: Element, midpoint: str = "center",
     tilt0, pitch0, yaw0 = 0.0, 0.0, 0.0
     if relative:
         if hasattr(elem, '_r3d'):
-            if midpoint == 'center':
+            if reference.name == 'CENTRE':
                 r3d = RB_half.T @ elem._r3d @ RB_half
-            elif midpoint == 'entrance':     
+            elif reference.name == 'ENTRANCE':     
                 r3d = elem._r3d
             else:
-                raise ValueError("Unsupported midpoint, please choose either "
-                                 "'center' or 'entrance'.")
+                raise ValueError("Unsupported reference, please choose either "
+                                 "reference_point.CENTRE or "
+                                 "reference_point.ENTRANCE.")
 
             # Reverse-engineer current angles from r3d
             tilt0 = np.arctan2(-r3d[0, 1], r3d[0, 0])
@@ -203,7 +215,7 @@ def transform_elem(elem: Element, midpoint: str = "center",
     yaw_total = yaw0 + yaw
     rotations = [pitch_total, yaw_total, tilt_total]  # X, Y, Z convention
     
-    if midpoint == 'center':
+    if reference.name == 'CENTRE':
         # Compute entrance rotation matrix in the rotated frame     
         r3d_entrance = RB_half @ _rotation(rotations) @ RB_half.T # Eq. (31)
         
@@ -220,12 +232,13 @@ def transform_elem(elem: Element, midpoint: str = "center",
         # Transform offset to magnet entrance
         OP = OO0 + P0P + RB_half @ offsets # Eq. (33)
         
-    elif midpoint == 'entrance':     
+    elif reference.name == 'ENTRANCE':     
         r3d_entrance = _rotation(rotations) # Eq. (3)
         OP = offsets # Eq. (2)
     else:
-        raise ValueError("Unsupported midpoint, please choose either 'center' "
-                         "or 'entrance'.")
+        raise ValueError("Unsupported reference, please choose either "
+                         "reference_point.CENTRE or "
+                         "reference_point.ENTRANCE.")
 
     # R1, T1
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
