@@ -85,7 +85,7 @@ def match(
     *,
     copy: bool = False,
     **kwargs,
-):
+) -> Lattice | None:
     """Match constraints by varying variables.
 
     Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
@@ -110,6 +110,13 @@ def match(
         **kwargs:       Keyword arguments sent to
           :py:func:`~scipy.optimize.least_squares`
 
+    Returns:
+        Modified Lattice if copy=True, None otherwise
+
+    Raises:
+        TypeError: If copy=True and ElementVariable is present
+        RuntimeError: If optimisation fails
+
     Examples:
 
         See :doc:`/p/notebooks/matching`
@@ -124,3 +131,4 @@ def match(
         return newring
     else:
         _match(ring, variables, constraints, **kwargs)
+        return None
