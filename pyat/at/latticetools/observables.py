@@ -398,10 +398,10 @@ class Observable:
         return val
 
     def check(self) -> bool:
-        """Check the evaluation
+        """Check if evaluation is done
 
         Returns:
-            ok: :py:obj:`True` if is evaluation done, :py:obj:`False` otherwise
+            ok: :py:obj:`True` if evaluation is done, :py:obj:`False` otherwise.
 
         Raises:
             AtError:    if the value is doubtful: evaluation failed, empty value…
@@ -439,6 +439,8 @@ class Observable:
     def deviation(self) -> npt.NDArray[float]:
         """Deviation from target value, computed as
         :pycode:`deviation = value-target`.
+
+        If *target* is :py:obj:`None`, the deviation is zero for any value.
         """
         vnow = self.value
         if vnow is None:
@@ -457,12 +459,18 @@ class Observable:
 
     @property
     def weighted_deviation(self) -> npt.NDArray[float]:
-        """:pycode:`weighted_deviation = (value-target)/weight`."""
+        """:pycode:`weighted_deviation = (value-target)/weight`.
+
+        If *target* is :py:obj:`None`, the weighted deviation is zero for any value.
+        """
         return self.deviation / self.w
 
     @property
     def residual(self) -> npt.NDArray[float]:
-        """residual, computed as :pycode:`residual = ((value-target)/weight)**2`."""
+        """residual, computed as :pycode:`residual = ((value-target)/weight)**2`.
+
+        If *target* is :py:obj:`None`, the residual is zero for any value.
+        """
         # absolute necessary for complex data
         return np.absolute(self.weighted_deviation) ** 2
 

@@ -32,14 +32,6 @@ RDT_names = {
 }
 RDT_code = {nm: code for code, names in RDT_names.items() for nm in names}
 
-_postproc = {
-    None: None,
-    "real": np.real,
-    "imag": np.imag,
-    "abs": np.absolute,
-    "angle": np.angle
-}
-
 
 def _rdt_access(param, data):
     return getattr(data, param)
@@ -65,17 +57,9 @@ class RDTObservable(ElementObservable):
         r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
-            param:          ef:`RDT name <rdt_param>`
-            plane:          Index in the parameter array, If :py:obj:`Ellipsis`,
-              the whole array is specified
+            param:          :ref:`RDT name <rdt_param>`
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
-            kind:           processing of complex output: If *kind* is None (default),
-              no processing. Otherwise, it can be:
-              * "real": take the real part of the observable
-              * "imag": take the imaginary part of the observable
-              * "angle": take the angle of the observable
-              * "abs": take the module value of the observable
             second_order:   Compute second order terms. Computation is significantly
               longer using this method
 

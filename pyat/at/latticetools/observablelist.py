@@ -440,7 +440,7 @@ class ObservableList(list):
         return _ObsResults(obseval(ring, ob) for ob in self)
 
     def check(self) -> bool:
-        """Check the evaluation
+        """Check if all observables are evaluated.
 
         Returns:
             ok: :py:obj:`True` if evaluation is done, :py:obj:`False` otherwise
