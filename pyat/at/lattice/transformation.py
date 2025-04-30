@@ -135,6 +135,36 @@ def _r_matrix(ld, r3d):
         ]
     )
 
+def _ld_and_r3d_from_r_matrix(r_matrix):
+    """
+    Extracts the longitudinal displacement (ld) and 3D rotation matrix (r3d)
+    from the rotation matrix operator (`_r_matrix(ld, r3d)`).
+    
+    Args:
+        r_matrix (np.ndarray): 6x6 rotation matrix operator (R1 or R2).
+        
+    Returns:
+        ld (float): Longitudinal displacement.
+        r3d (np.ndarray): 3x3 rotation matrix.
+    """
+    
+    r3d = np.eye(3)
+    
+    r3d[0, 0] = r_matrix[1, 1]
+    r3d[1, 0] = r_matrix[1, 3]
+    r3d[2, 0] = r_matrix[1, 4]
+    
+    r3d[0, 1] = r_matrix[3, 1]
+    r3d[1, 1] = r_matrix[3, 3]
+    r3d[2, 1] = r_matrix[3, 4]
+    
+    r3d[0, 2] = -r_matrix[5, 0] * r_matrix[1, 1] / r_matrix[2, 2]
+    r3d[1, 2] = -r_matrix[5, 2] * r_matrix[1, 1] / r_matrix[2, 2]
+    r3d[2, 2] = r_matrix[1, 1] / r_matrix[2, 2]
+    
+    ld = r_matrix[2, 1] * r_matrix[1, 3] / r_matrix[2, 0]
+    
+    return ld, r3d
 
 class ReferencePoint(Enum):
     """Enum class for reference option"""
