@@ -136,7 +136,7 @@ def _r_matrix(ld, r3d):
     )
 
 
-class reference_point(Enum):
+class ReferencePoint(Enum):
     """Enum class for reference option"""
 
     CENTRE = "CENTRE"
@@ -145,7 +145,7 @@ class reference_point(Enum):
 
 def transform_elem(
     elem: Element,
-    reference: reference_point = reference_point.CENTRE,
+    reference: ReferencePoint = ReferencePoint.CENTRE,
     dx: float = 0.0,
     dy: float = 0.0,
     dz: float = 0.0,
@@ -188,7 +188,7 @@ def transform_elem(
     Parameters:
         elem:           Element to be tilted
         reference:      Transformation reference, either
-                        reference_point.ENTRANCE or reference_point.CENTRE
+                        ReferencePoint.ENTRANCE or ReferencePoint.CENTRE
         dx:             Horizontal shift [m]
         dy:             Vertical shift [m]
         dz:             Longitudinal shift [m]
@@ -217,15 +217,15 @@ def transform_elem(
     tilt0, pitch0, yaw0 = 0.0, 0.0, 0.0
     if relative:
         if hasattr(elem, "_r3d"):
-            if reference.name == "CENTRE":
+            if reference is ReferencePoint.CENTRE:
                 r3d = RB_half.T @ elem._r3d @ RB_half
-            elif reference.name == "ENTRANCE":
+            elif reference is ReferencePoint.ENTRANCE:
                 r3d = elem._r3d
             else:
                 raise ValueError(
                     "Unsupported reference, please choose either "
-                    "reference_point.CENTRE or "
-                    "reference_point.ENTRANCE."
+                    "ReferencePoint.CENTRE or "
+                    "ReferencePoint.ENTRANCE."
                 )
 
             # Reverse-engineer current angles from r3d
@@ -239,7 +239,7 @@ def transform_elem(
     yaw_total = yaw0 + yaw
     rotations = [pitch_total, yaw_total, tilt_total] # X, Y, Z convention
 
-    if reference.name == "CENTRE":
+    if reference is ReferencePoint.CENTRE:
         # Compute entrance rotation matrix in the rotated frame
         r3d_entrance = RB_half @ _rotation(rotations) @ RB_half.T # Eq. (31)
 
@@ -256,14 +256,14 @@ def transform_elem(
         # Transform offset to magnet entrance
         OP = OO0 + P0P + RB_half @ offsets # Eq. (33)
 
-    elif reference.name == "ENTRANCE":
+    elif reference is ReferencePoint.ENTRANCE:
         r3d_entrance = _rotation(rotations) # Eq. (3)
         OP = offsets # Eq. (2)
     else:
         raise ValueError(
             "Unsupported reference, please choose either "
-            "reference_point.CENTRE or "
-            "reference_point.ENTRANCE."
+            "ReferencePoint.CENTRE or "
+            "ReferencePoint.ENTRANCE."
         )
 
     # R1, T1
