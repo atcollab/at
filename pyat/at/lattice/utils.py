@@ -1015,7 +1015,7 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
         transform_elem(el, tilt=tilt, relative=relative)
 
 
-def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
+def set_shift(ring: Sequence[Element], dxs, dys, dzs, relative=False) -> None:
     r"""Sets the translations of a list of elements.
 
     Parameters:
