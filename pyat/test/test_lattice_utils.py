@@ -240,7 +240,7 @@ def test_set_shift(simple_ring):
     numpy.testing.assert_equal(simple_ring[5].T1, -a)
     numpy.testing.assert_equal(simple_ring[5].T2, a)
     ring = [simple_ring[3]]
-    set_shift(ring, 3, 5)
+    set_shift(ring, 3, 5, 0)
     a = numpy.array([3.0, 0.0, 5.0, 0.0, 0.0, 0.0])
     numpy.testing.assert_equal(simple_ring[3].T1, -a)
     numpy.testing.assert_equal(simple_ring[3].T2, a)
