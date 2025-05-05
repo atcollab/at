@@ -300,12 +300,6 @@ def transform_elem(
             yaw0 = np.arcsin(r3d[0, 2])
             pitch0 = np.arctan2(-r3d[1, 2], r3d[2, 2])
 
-        else:
-            print(
-                "Cannot apply a relative transformation without a prior"
-                "transformation, assume an absolute transformation instead."
-            )
-
     # Apply new offsets and rotations (XYZ intrinsic order)
     offsets_total = offsets + offsets0
     tilt_total = tilt0 + tilt
