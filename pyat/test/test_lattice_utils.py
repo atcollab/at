@@ -199,7 +199,7 @@ def test_tilt_elem():
 def test_shift_elem():
     elem = elt.Drift("Drift", 1.0)
     # Test shift_elem function
-    shift_elem(elem, 1.0, 0.5)
+    shift_elem(elem, 1.0, 0.5, 0.0)
     a = numpy.array([1.0, 0.0, 0.5, 0.0, 0.0, 0.0])
     numpy.testing.assert_equal(elem.T1, -a)
     numpy.testing.assert_equal(elem.T2, a)
@@ -232,6 +232,7 @@ def test_set_shift(simple_ring):
         simple_ring,
         numpy.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.5]),
         numpy.array([0.0, 0.0, 0.0, 2.0, 0.0, 1.0]),
+        numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
     )
     a = numpy.array([0.5, 0.0, 1.0, 0.0, 0.0, 0.0])
     numpy.testing.assert_equal(simple_ring[3].T1, -a * 2)
