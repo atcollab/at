@@ -1,0 +1,152 @@
+from __future__ import annotations
+
+from typing import Any
+from collections.abc import Callable
+import numpy as np
+from .variables import VariableBase
+
+
+class ParamBase(VariableBase):
+    """Read-only base class for parameters
+
+    It is used for computed parameters, and should not be instantiated
+    otherwise. See :py:class:`.Variable` for a description of inherited
+    methods
+    """
+
+    _counter = 0
+    _prefix = "calc"
+
+    def __init__(
+        self,
+        evaluate: _Evaluate,
+        *,
+        name: str = "",
+        conversion: Callable[[Any], Number] = _nop,
+        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        delta: Number = 1.0,
+    ):
+        """
+
+        Args:
+            evaluate:   Evaluator function
+            name:       Name of the parameter
+            conversion: data conversion function
+            bounds:     Lower and upper bounds of the parameter value
+            delta:      Initial variation step
+        """
+        if not isinstance(evaluate, _Evaluate):
+            raise TypeError("'Evaluate' must be an _Evaluate object")
+        self._evaluate = evaluate
+        self._conversion = conversion
+        super(ParamBase, self).__init__(name=name, bounds=bounds, delta=delta)
+
+    def _getfun(self, **kwargs):
+        return self._conversion(self._evaluate())
+
+    @property
+    def _safe_value(self):
+        return self._getfun()
+
+    def set_conversion(self, conversion: Callable[[Number], Number]):
+        """Set the data type. Called when a parameter is assigned to an
+        :py:class:`.Element` attribute"""
+        if conversion is not self._conversion:
+            if self._conversion is _nop:
+                self._conversion = conversion
+            else:
+                raise ValueError("Cannot change the data type of the parameter")
+
+
+class Param(ParamBase):
+    """Standalone scalar parameter
+
+    See :py:class:`.Variable` for a description of inherited methods
+    """
+
+    _counter = 0
+    _prefix = "param"
+
+    def __init__(
+        self,
+        value: Number,
+        *,
+        name: str = "",
+        conversion: Callable[[Number], Number] = _nop,
+        bounds: tuple[float, float] = (-np.inf, np.inf),
+        delta: float = 1.0,
+    ):
+        """
+        Args:
+            value:      Initial value of the parameter
+            name:       Name of the parameter
+            conversion: data conversion function
+            bounds:     Lower and upper bounds of the parameter value
+            delta:      Initial variation step
+        """
+        super(Param, self).__init__(
+            _Scalar(value), name=name, conversion=conversion, bounds=bounds, delta=delta
+        )
+        self._history.append(self._evaluate())
+
+    def _getfun(self, ring=None):
+        return self._evaluate()
+
+    def _setfun(self, value, ring=None):
+        self._evaluate = _Scalar(self._conversion(value))
+
+    def set_conversion(self, conversion: Callable[[Number], Number]):
+        oldv = self._evaluate()
+        super(Param, self).set_conversion(conversion)
+        self._evaluate = _Scalar(conversion(oldv))
+
+
+class _PArray(np.ndarray):
+    """Subclass of ndarray which reports to its parent ParamArray"""
+
+    # This is the array obtained with an element get_attribute.
+    # It is also the one used when setting an item of an array attribute.
+
+    def __new__(cls, value, dtype=np.float64):
+        obj = np.array(value, dtype=dtype, order="F").view(cls)
+        obj._parent = value
+        return obj
+
+    def __array_finalize__(self, obj):
+        self._parent = getattr(obj, "_parent", None)
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        if self._parent is not None:
+            self._parent[key] = value
+
+    def __repr__(self):
+        # Simulate a standard ndarray
+        return repr(self.view(np.ndarray))
+
+
+class ParamArray(np.ndarray):
+    """Simulate a numpy array where items may be parametrised"""
+
+    def __new__(cls, value, shape=(-1,), dtype=np.float64):
+        obj = np.asfortranarray(value, dtype=object).reshape(shape).view(cls)
+        obj._value = _PArray(obj, dtype=dtype)
+        return obj
+
+    def __array_finalize__(self, obj):
+        val = getattr(obj, "_value", None)
+        if val is not None:
+            self._value = _PArray(self, dtype=val.dtype)
+
+    @property
+    def value(self):
+        self._value[:] = self
+        return self._value
+
+    def __repr__(self):
+        return repr(self.value)
+
+    def __str__(self):
+        it = np.nditer(self, flags=["refs_ok"], order="C")
+        contents = " ".join([str(el) for el in it])
+        return f"[{contents}]"
