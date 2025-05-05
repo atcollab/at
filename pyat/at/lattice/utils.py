@@ -974,7 +974,7 @@ def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0,
 
 
 def set_rotation(ring: Sequence[Element], tilts=0.0, pitches=0.0, yaws=0.0,
-                 *, relative=False) -> None:
+                 relative=False) -> None:
     r"""Sets the tilts of a list of elements.
 
     Parameters:
