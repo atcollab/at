@@ -483,6 +483,15 @@ class Element:
     @dy.setter
     def dy(self, value: float) -> None:
         self._setshift(value, 2)
+        
+    @property
+    def dz(self) -> float:
+        """Longitudinal element shift"""
+        return -self._getshift(5)
+
+    @dz.setter
+    def dz(self, value: float) -> None:
+        self._setshift(-value, 5)
 
     @property
     def tilt(self) -> float:
