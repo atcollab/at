@@ -388,4 +388,3 @@ def transform_elem(
     elem.R2 = R2
     elem.T1 = T1
     elem.T2 = T2
-    elem._r3d = r3d_entrance
