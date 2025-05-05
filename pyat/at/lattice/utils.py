@@ -955,8 +955,8 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
     transform_elem(elem, tilt=rots, relative=relative)
 
 
-def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
-               relative: bool = False) -> None:
+def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0, 
+               dz: float = 0.0, relative: bool = False) -> None:
     r"""Sets the transverse displacement of an :py:class:`.Element`
 
     The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
@@ -964,18 +964,13 @@ def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
 
     Parameters:
         elem:           Element to be shifted
-        deltax:         Horizontal displacement [m]
-        deltaz:         Vertical displacement [m]
+        dx:             Horizontal displacement [m]
+        dy:             Vertical displacement [m]
+        dz:             Longitudinal displacement [m]
         relative:       If :py:obj:`True`, the translation is added to the
           existing one
     """
-    tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
-    if relative and hasattr(elem, 'T1') and hasattr(elem, 'T2'):
-        elem.T1 -= tr
-        elem.T2 += tr
-    else:
-        elem.T1 = -tr
-        elem.T2 = tr
+    transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def set_rotation(ring: Sequence[Element], tilts=0.0,
