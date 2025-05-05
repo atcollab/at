@@ -1022,15 +1022,18 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
         ring:           Lattice description
         dxs:            Sequence of horizontal displacements values as long as
           ring or scalar value applied to all elements [m]
-        dzs:            Sequence of vertical displacements values as long as
+        dys:            Sequence of vertical displacements values as long as
           ring or scalar value applied to all elements [m]
+        dzs:            Sequence of longitudinal displacements values as long 
+          as ring or scalar value applied to all elements [m]
         relative:       If :py:obj:`True`, the displacement is added to the
           existing one
     """
     dxs = numpy.broadcast_to(dxs, (len(ring),))
+    dys = numpy.broadcast_to(dys, (len(ring),))
     dzs = numpy.broadcast_to(dzs, (len(ring),))
-    for el, dx, dy in zip(ring, dxs, dzs):
-        shift_elem(el, dx, dy, relative=relative)
+    for el, dx, dy, dz in zip(ring, dxs, dys, dzs):
+        transform_elem(el, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def get_geometry(ring: List[Element],
