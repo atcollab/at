@@ -955,8 +955,8 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
     transform_elem(elem, tilt=rots, relative=relative)
 
 
-def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0, 
-               dz: float = 0.0, relative: bool = False) -> None:
+def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0,
+               dz: float = 0.0, *, relative: bool = False) -> None:
     r"""Sets the transverse displacement of an :py:class:`.Element`
 
     The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
@@ -973,8 +973,8 @@ def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0,
     transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
-def set_rotation(ring: Sequence[Element], tilts=0.0,
-                 pitches=0.0, yaws=0.0, relative=False) -> None:
+def set_rotation(ring: Sequence[Element], tilts=0.0, pitches=0.0, yaws=0.0,
+                 *, relative=False) -> None:
     r"""Sets the tilts of a list of elements.
 
     Parameters:
@@ -1010,7 +1010,8 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
         transform_elem(el, tilt=tilt, relative=relative)
 
 
-def set_shift(ring: Sequence[Element], dxs, dys, dzs=0., relative=False) -> None:
+def set_shift(ring: Sequence[Element], dxs, dys, dzs=0., *,
+              relative=False) -> None:
     r"""Sets the translations of a list of elements.
 
     Parameters:
