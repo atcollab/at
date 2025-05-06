@@ -450,17 +450,6 @@ class ObservableList(list):
         """
         return all(obs.check() for obs in self)
 
-    def check(self) -> bool:
-        """Check the evaluation
-
-        Returns:
-            ok: :py:obj:`True` if evaluation is done, :py:obj:`False` otherwise
-
-        Raises:
-            AtError:    any value is doubtful: evaluation failed, empty value…
-        """
-        return all(obs.check() for obs in self)
-
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
         """Set the excluded mask on the selected observable."""
