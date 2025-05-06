@@ -1,3 +1,4 @@
+"""Resonance Driving Terms"""
 from __future__ import annotations
 
 import numpy as np
@@ -5,32 +6,26 @@ import multiprocessing
 from functools import partial
 from ..lattice import Lattice, Refpts, Multipole, All
 from enum import Enum
-from collections.abc import Sequence
-from dataclasses import dataclass, asdict
+from collections.abc import Container
 
 
 __all__ = ["get_rdts", "RDTType"]
 
 
 class RDTType(Enum):
-    """Enum class for RDT type
-    RDTType.ALL: all available RDTs
-    RDTType.FOCUSING: Normal quadrupole RDTs
-    RDTType.COUPLING: Linear coupling RDTs
-    RDTType.CHROMATIC: Chromatic RDTs
-    RDTType.GEOMETRIC1: Geometric RDTs from sextupoles
-    RDTType.GEOMETRIC2: Geometric RDTs from octupoles
-    optionally includes the second order contribution of sextupoles
-    RDTType.TUNESHIFT: Amplitude detuning coefficients
-    optionally includes the second order contribution of sextupoles
-    """
+    """Enum class for RDT type"""
 
-    ALL = 0
-    FOCUSING = 1
-    COUPLING = 2
-    CHROMATIC = 3
+    ALL = 0  #: all available RDTs
+    FOCUSING = 1  #: Normal quadrupole RDTs
+    COUPLING = 2  #: Linear coupling RDTs
+    CHROMATIC = 3  #: Chromatic RDTs
+    #: Geometric RDTs from sextupoles
     GEOMETRIC1 = 4
+    #: Geometric RDTs from octupoles
+    #: optionally includes the second order contribution of sextupoles
     GEOMETRIC2 = 5
+    #: Amplitude detuning coefficients
+    #: optionally includes the second order contribution of sextupoles
     TUNESHIFT = 6
 
 
@@ -43,7 +38,7 @@ def _get_polynom(elem, attr, index):
 
 
 def _compute_pf(tune, nperiods):
-    "This uses the formula Sum(x^k, k=1->p) = x(x^p-1)/(x-1)"
+    """This uses the formula Sum(x^k, k=1->p) = x(x^p-1)/(x-1)"""
     pf = np.ones((9, 9), dtype=complex)
     if nperiods != 1:
         for i in range(9):
@@ -307,20 +302,20 @@ def _computedrivingterms(
             dphix = [abs(phixm[i] - phixm) for i in range(nelem)]
             dphiy = [abs(phiym[i] - phiym) for i in range(nelem)]
             rdts["dnux_dJx"] += np.sum([
-                -b3f[i] / 16 * sqbx[i]  * bbx[i]
+                -b3f[i] / 16 * sqbx[i] * bbx[i]
                 * (3 * np.cos(dphix[i] - np.pi * nux) / np.sin(np.pi * nux)
                    + np.cos(3 * dphix[i] - 3 * np.pi * nux)
                    / np.sin(3 * np.pi * nux))
                 for i in range(nelem)]
             )
             rdts["dnux_dJy"] += np.sum([
-                b3f[i]  / 8 * sqbx[i]  * betaym[i]
-                * (2 * betaxm * np.cos(dphix[i]  - np.pi * nux)
+                b3f[i] / 8 * sqbx[i] * betaym[i]
+                * (2 * betaxm * np.cos(dphix[i] - np.pi * nux)
                    / np.sin(np.pi * nux)
-                   - betaym * np.cos(dphix[i]  + 2 * dphiy[i]
+                   - betaym * np.cos(dphix[i] + 2 * dphiy[i]
                                      - np.pi * (nux + 2 * nuy))
                    / np.sin(np.pi * (nux + 2 * nuy))
-                   + betaym * np.cos(dphix[i]  - 2 * dphiy[i]
+                   + betaym * np.cos(dphix[i] - 2 * dphiy[i]
                                      - np.pi * (nux - 2 * nuy))
                    / np.sin(np.pi * (nux - 2 * nuy)))
                 for i in range(nelem)]
@@ -396,106 +391,100 @@ def _get_rdtlist(
 def get_rdts(
     ring: Lattice,
     refpts: Refpts,
-    rdt_type: Sequence[RDTType] | RDTType,
+    rdt_type: Container[RDTType] | RDTType,
     second_order: bool = False,
     use_mp: bool = False,
     pool_size: int = None,
 ):
-    """
+    """Get the lattice Resonance Driving Terms
+
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
-    from ELEGANT. For consistency, pyAT keeps the sign convention of the AT MATLAB interface
+    from ELEGANT. For consistency, pyAT keeps the sign convention of the AT MATLAB
+    interface.
 
-    Refs [1]_ and [2]_ were used to calculate the magnitude of first and second order rdts and
-    Ref. [3]_ for the focusing rdt, however, different sign conventions are used along the references
-    and in the original implementation. To overcome this issue, first and second order rdts
-    are provided as a total and also separately so the user can redefine these conventions if needed.
+    Refs [#]_ and [#]_ were used to calculate the magnitude of first and second order
+    rdts and Ref. [#]_ for the focusing rdt, however, different sign conventions are
+    used along the references and in the original implementation. To overcome this
+    issue, first and second order rdts are provided as a total and also separately
+    so the user can redefine these conventions if needed.
 
-    The resonance base of GEOMETRIC2 rdts is explained in Eq. (54) of Ref [4]_.
+    The resonance base of :py:obj:`~RDTType.GEOMETRIC2` rdts is explained in Eq. (54)
+    of Ref [#]_.
 
-    The periodicity property of the lattice is automatically taken into account in the rdt
-    calculation, however the calculation of the second order contribution of sextupoles
-    to the GEOMETRIC2 and DETUNING RDT types can only be derived for periodicity=1
-    (i.e. full ring provided)
-
-    Usage:
-      >>> get_rdts(ring, reftps, [RDTType.COUPLING, RDTType.CHROMATIC])
+    The periodicity property of the lattice is automatically taken into account in the
+    rdt calculation, however the calculation of the second order contribution of
+    sextupoles to the :py:obj:`~RDTType.GEOMETRIC2` and :py:obj:`~RDTType.TUNESHIFT`
+    RDT types can only be derived for periodicity=1 (i.e. full ring provided).
 
     Parameters:
-        ring: :code:`at.Lattice` object
+        ring: :py:class:`.Lattice` object
         refpts: Element refpts at which the RDTs are calculated
-        rdt_type: Type of RDTs to be calculated. The type can be
-        :code:`Sequence[at.RDTType] | at.RDTType`.
-        Possible RDT types are:
-            at.RDTType.ALL: all available RDTs
-            at.RDTType.FOCUSING: Normal quadrupole RDTs
-            at.RDTType.COUPLING: Linear coupling RDTs from skew quadrupoles
-            at.RDTType.CHROMATIC: Chromatic RDTs from sextupoles and normal quadrupoles
-            at.RDTType.GEOMETRIC1: Geometric RDTs from sextupoles
-            at.RDTType.GEOMETRIC2: Geometric RDTs from octupoles
-              the second order contribution of sextupoles is added when
-              :code:`second_order = True`
-            at.RDTType.TUNESHIFT: Amplitude detuning coefficients
-              the second order contribution of sextupoles is added when
-              :code:`second_order = True`
+        rdt_type: Type of RDTs to be calculated.
+          Possible RDT types are:
+
+          * :py:obj:`RDTType.ALL`: all available RDTs
+          * :py:obj:`RDTType.FOCUSING`: Normal quadrupole RDTs
+          * :py:obj:`RDTType.COUPLING`: Linear coupling RDTs from skew quadrupoles
+          * :py:obj:`RDTType.CHROMATIC`: Chromatic RDTs from sextupoles and normal
+            quadrupoles
+          * :py:obj:`RDTType.GEOMETRIC1`: Geometric RDTs from sextupoles
+          * :py:obj:`RDTType.GEOMETRIC2`: Geometric RDTs from octupoles. The second
+            order contribution of sextupoles is added when *second_order* is True
+          * :py:obj:`RDTType.TUNESHIFT`: Amplitude detuning coefficients. The second
+            order contribution of sextupoles is added when *second_order* is True
 
     Keyword Args:
-        second_order: Compute second order terms (default: False).
-          Computation is significantly longer using this method
-        use_mp: Activate parallel calculation
-        pool_size: Number of processes used for parallelization
+        second_order (bool): Compute second order terms. Computation is significantly
+          longer using this method,
+        use_mp (bool):       Activate parallel calculation,
+        pool_size (int):     Number of processes used for parallelization.
 
     Returns:
-        rdts: rdt data (complex) at refpts
-        rdts2: (complex) contribution from sextupole second order terms
-          Available only for GEOMETRIC2 terms
-        rdttot: (complex) total rdts
+        rdts (complex): rdt data at refpts,
+        rdts2 (complex): contribution from sextupole second order terms
+          Available only for :py:obj:`~RDTType.GEOMETRIC2` and
+          :py:obj:`~RDTType.TUNESHIFT` terms,
+        rdttot (complex): total rdts.
 
-        **rdts** is a dictionary with keys:
-        =================   ======
-        **refpts**          location of the rdt
+    **rdts** is a :py:class:`record array <numpy.recarray>` with fields:
 
-        **h20000**          at.RDTType.FOCUSING
-        **h00200**
+    for :py:obj:`~RDTType.FOCUSING`:
+        `h20000`, `h00200`
 
-        **h10010**          at.RDTType.COUPLING
-        **h10100**
+    for :py:obj:`~RDTType.COUPLING`:
+        `h10010`, `h10100`
 
-        **h11001**          at.RDTType.CHROMATIC
-        **h00111**
-        **h20001**
-        **h00201**
-        **h10002**
+    for :py:obj:`~RDTType.CHROMATIC`:
+        `h11001`, `h00111`, `h20001`, `h00201`, `h10002`
 
-        **h21000**          at.RDTType.GEOMETRIC1
-        **h30000**
-        **h10110**
-        **h10020**
-        **h10200**
+    for :py:obj:`~RDTType.GEOMETRIC1`:
+        `h21000`, `h30000`, `h10110`, `h10020`, `h10200`
 
-        **h22000**          at.RDTType.GEOMETRIC2
-        **h11110**
-        **h00220**
-        **h31000**
-        **h40000**
-        **h20110**
-        **h11200**
-        **h20020**
-        **h20200**
-        **h00310**
-        **h00400**
+    for :py:obj:`~RDTType.GEOMETRIC2`:
+        `h22000`, `h11110`, `h00220`, `h31000`, `h40000`, `h20110`
+        `h11200`, `h20020`, `h20200`, `h00310`, `h00400`
 
-        **dnux_dJx**        at.RDTType.DETUNING
-        **dnux_dJy**
-        **dnuy_dJy**
-        =================   ======
+    for :py:obj:`~RDTType.TUNESHIFT`:
+        `dnux_dJx`, `dnux_dJy`, `dnuy_dJy`
+
+    Example:
+
+        >>> get_rdts(ring, reftps, [RDTType.COUPLING, RDTType.CHROMATIC])
 
     References:
-        **[1]** J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per W.Guo (NSLS)
-        **[2]** Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order terms
-        **[3]** A. Franchi et al. arxiv 1711.06589, PRAB 17.074001
-        **[4]** Chunxi Wang and Alex Chao. Notes on Lie algebraic analysis of achromats. SLAC/AP-100. Jan/1995
+        .. [#] J.Bengtsson, SLS Note 9 / 97, March 7, 1997, with corrections per
+           W.Guo (NSLS)
+
+        .. [#] Revised to follow C.X.Wang AOP - TN - 2009 - 020 for second - order
+           terms
+
+        .. [#] A.Franchi et al. arxiv 1711.06589, PRAB 17.074001
+
+        .. [#] Chunxi Wang and Alex Chao. Notes on Lie algebraic analysis of achromats.
+           SLAC/AP-100. Jan/1995
     """
-    rdt_type = np.atleast_1d(rdt_type)
+    if not isinstance(rdt_type, Container):
+        rdt_type = {rdt_type}
     nperiods = ring.periodicity
     if second_order:
         assert nperiods == 1, "Second order available only for ring.periodicity=1"
@@ -552,7 +541,8 @@ def get_rdts(
     rdts = {}
     rdts2 = {}
     rdttot = {}
-    for k in rdtlist[0].keys():
+    keylist = rdtlist[0].keys()
+    for k in keylist:
         val = [rdt.get(k, None) for rdt in rdtlist]
         val2 = [rdt.get(k, None) for rdt in rdtlist2]
         if val[0] is not None:
@@ -563,7 +553,10 @@ def get_rdts(
             rdttot[k] += np.array(val2, dtype=complex)
     rdts2["refpts"] = rdts["refpts"]
     rdttot["refpts"] = rdts["refpts"]
-    return rdts, rdts2, rdttot
+    ardts = np.rec.fromarrays(rdts.values(), names=list(keylist))
+    ardts2 = np.rec.fromarrays(rdts2.values(), names=list(keylist))
+    ardttot = np.rec.fromarrays(rdttot.values(), names=list(keylist))
+    return ardts, ardts2, ardttot
 
 
 Lattice.get_rdts = get_rdts
