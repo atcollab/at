@@ -1,9 +1,67 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Union
+import abc
 from collections.abc import Callable
+from operator import add, sub, mul, truediv, pos, neg
 import numpy as np
 from .variables import VariableBase
+
+Number = Union[int, float]
+
+
+def _nop(value):
+    return value
+
+
+class _Evaluate(abc.ABC):
+    @abc.abstractmethod
+    def __call__(self): ...
+
+
+class _Scalar(_Evaluate):
+    __slots__ = "value"
+
+    def __init__(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError("The parameter value must be a scalar")
+        self.value = value
+
+    def __call__(self):
+        return self.value
+
+
+class _BinaryOp(_Evaluate):
+    __slots__ = ["oper", "left", "right"]
+
+    @staticmethod
+    def _set_type(value):
+        if isinstance(value, (int, float)):
+            return _Scalar(value)
+        elif isinstance(value, VariableBase):
+            return value
+        else:
+            msg = "Param Operation not defined for type {0}".format(type(value))
+            raise TypeError(msg)
+
+    def __init__(self, oper, left, right):
+        self.oper = oper
+        self.right = self._set_type(right)
+        self.left = self._set_type(left)
+
+    def __call__(self):
+        return self.oper(self.left.value, self.right.value)
+
+
+class _UnaryOp(_Evaluate):
+    __slots__ = ["oper", "param"]
+
+    def __init__(self, oper, param):
+        self.oper = oper
+        self.param = param
+
+    def __call__(self):
+        return self.oper(self.param.value)
 
 
 class ParamBase(VariableBase):
@@ -56,6 +114,54 @@ class ParamBase(VariableBase):
                 self._conversion = conversion
             else:
                 raise ValueError("Cannot change the data type of the parameter")
+
+    def __add__(self, other):
+        fun = _BinaryOp(add, self, other)
+        return ParamBase(fun)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __pos__(self):
+        return ParamBase(_UnaryOp(pos, self))
+
+    def __neg__(self):
+        return ParamBase(_UnaryOp(neg, self))
+
+    def __sub__(self, other):
+        fun = _BinaryOp(sub, self, other)
+        return ParamBase(fun)
+
+    def __rsub__(self, other):
+        fun = _BinaryOp(sub, other, self)
+        return ParamBase(fun)
+
+    def __mul__(self, other):
+        fun = _BinaryOp(mul, self, other)
+        return ParamBase(fun)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        fun = _BinaryOp(truediv, self, other)
+        return ParamBase(fun)
+
+    def __rtruediv__(self, other):
+        fun = _BinaryOp(add, other, self)
+        return ParamBase(fun)
+
+    def __float__(self):
+        return float(self._safe_value)
+
+    def __int__(self):
+        return int(self._safe_value)
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
+
+    def __repr__(self):
+        return repr(self._safe_value)
 
 
 class Param(ParamBase):
