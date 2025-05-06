@@ -251,7 +251,7 @@ class Observable:
         weight: npt.ArrayLike = 1.0,
         bounds=(0.0, 0.0),
         needs: Set[Need] | None = None,
-        procfun: Callable | str | None = None,
+        postfun: Callable | str | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -266,7 +266,7 @@ class Observable:
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
@@ -299,10 +299,10 @@ class Observable:
         *data* argument.
         """
         name = fun.__name__ if name is None else name
-        procfun = _get_fun(procfun, _arrayproc)
-        if procfun:
-            name = f"{procfun.__name__}({name})"
-            fun = _Convolve(procfun, fun)
+        postfun = _get_fun(postfun, _arrayproc)
+        if postfun:
+            name = f"{postfun.__name__}({name})"
+            fun = _Convolve(postfun, fun)
         self.fun: Callable = fun  #: Evaluation function
         self.needs: Set[Need] = needs or set()  #: Set of requirements
         self.name: str = name  #: Observable name
@@ -522,7 +522,7 @@ class RingObservable(Observable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
@@ -566,7 +566,7 @@ class ElementObservable(Observable):
         refpts: Refpts,
         name: str | None = None,
         statfun: Callable | str | None = None,
-        procfun: Callable | str | None = None,
+        postfun: Callable | str | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -575,7 +575,7 @@ class ElementObservable(Observable):
               See ":ref:`Selecting elements in a lattice <refpts>`"
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -594,10 +594,10 @@ class ElementObservable(Observable):
         shape of *value*.
         """
         name = fun.__name__ if name is None else name
-        procfun = _get_fun(procfun, _arrayproc)
-        if procfun:
-            name = f"{procfun.__name__}({name})"
-            fun = _Convolve(procfun, fun)
+        postfun = _get_fun(postfun, _arrayproc)
+        if postfun:
+            name = f"{postfun.__name__}({name})"
+            fun = _Convolve(postfun, fun)
         statfun = _get_fun(statfun, _statproc)
         if statfun:
             summary = kwargs.pop("summary", True)
@@ -722,7 +722,7 @@ class OrbitObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -773,7 +773,7 @@ class MatrixObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -825,7 +825,7 @@ class _GlobalOpticsObservable(Observable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
@@ -876,7 +876,7 @@ class LocalOpticsObservable(ElementObservable):
         Keyword Args:
             summary:        Set to :py:obj:`True` if the user-defined
              evaluation function returns a single item (see below)
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -1014,7 +1014,7 @@ class LatticeObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -1056,7 +1056,7 @@ class TrajectoryObservable(ElementObservable):
               name will be generated.
 
         Keyword Args:
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
                function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -1097,7 +1097,7 @@ class EmittanceObservable(Observable):
               name will be generated.
 
         Keyword Args:
-            procfun:        Post-processing function. It can be any numpy ufunc or a
+            postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
               function or a function name in {"mean", "std", "var", "min", "max"}.
@@ -1169,7 +1169,7 @@ def GlobalOpticsObservable(
         bounds:         Tuple of lower and upper bounds. The parameter
           is constrained in the interval
           [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
-        procfun:        Post-processing function. It can be any numpy ufunc or a
+        postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
 
     The *target*, *weight* and *bounds* inputs must be broadcastable to the
