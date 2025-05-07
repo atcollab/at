@@ -13,6 +13,7 @@ _y_axis = np.array([0.0, 1.0, 0.0])
 _z_axis = np.array([0.0, 0.0, 1.0])
 
 
+# noinspection PyPep8Naming
 def _rotation(rotations):
     """
     The implementation follows the one described in:
@@ -48,6 +49,7 @@ def _rotation(rotations):
     return R_x @ R_y @ R_z
 
 
+# noinspection PyPep8Naming
 def _translation_vector(ld, r3d, offsets, X_axis, Y_axis):
     """
     The implementation follows the one described in:
@@ -55,7 +57,7 @@ def _translation_vector(ld, r3d, offsets, X_axis, Y_axis):
     All the comments featuring 'Eq' points to the paper's equations.
 
     Translation vector resulting from the joint effect of a longitudinal
-    displacement (in the rotated frame), 3D offsets and the 3D rotation matrix.
+    displacement (in the rotated frame), 3D offsets, and the 3D rotation matrix.
     Corresponds to Eqs. (8-11)
     ld: Longitudinal displacement [m]
     r3d: 3D rotation matrix
@@ -77,6 +79,7 @@ def _translation_vector(ld, r3d, offsets, X_axis, Y_axis):
     return T0 + tD0
 
 
+# noinspection PyPep8Naming
 def _offsets_from_translation_vector(T, ld, r3d, X_axis, Y_axis, Z_axis):
     """
     Retrieve the 3D offsets from the T1 translation vector.
@@ -172,6 +175,7 @@ class ReferencePoint(Enum):
     ENTRANCE = "ENTRANCE"
 
 
+# noinspection PyPep8Naming
 def get_offsets_rotations(
     elem: Element,
     reference: ReferencePoint = ReferencePoint.CENTRE,
@@ -243,6 +247,7 @@ def get_offsets_rotations(
     return offsets, tilt, yaw, pitch
 
 
+# noinspection PyPep8Naming
 def transform_elem(
     elem: Element,
     reference: ReferencePoint = ReferencePoint.CENTRE,
@@ -255,38 +260,35 @@ def transform_elem(
     *,
     relative: bool = False,
 ) -> None:
-    r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
+    r"""Set the displacements and angles of an :py:class:`.Element`.
+
     The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis and the yaw is a rotation around
-    the *y*-axis.
+    rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis.
 
     A positive angle represents a clockwise rotation when
     looking in the direction of the rotation axis.
 
-    The transformations are not all commmutative. The translations are appled before
+    The transformations are not all commutative. The translations are applied before
     the rotations. The rotations are applied in the order *Z* -> *Y* -> *X*
     (tilt -> yaw -> pitch). The element is rotated around its mid-point. The mid-point
     can either be the element entrance or its centre (axis joining the entry and exit
     points of the element).
 
-    If *relative* is :py:obj:`True`, the previous angles are rebuilt from the
-    *r3d* matrix and incremented by the input arguments.
-    *relative* only allows to add the previous angles, not the transverse
-    shifts.
-    The shift is always absolute regardless of the value of *relative*.
+    If *relative* is :py:obj:`True`, the previous translations and angles are rebuilt
+    from the *r3d* matrix and incremented by the input arguments.
 
-    pyAT describes the ultra-relativistic beam dynamics in 6D phase space
+    PyAT describes the ultra-relativistic beam dynamics in 6D phase space
     coordinates, which differ from 3D spatial angles in an expansion with
-    respect to the energy to first order by a factor :math:`(1 + \delta)` , where
-    :math:`\delta` is the relative energy offset. This introduces
-    a spurious dispersion (angle proportional to :math:`\delta`).
+    respect to the energy to first order by a factor :math:`(1 + \delta)`, where
+    :math:`\delta` is the relative momentum deviation. This introduces
+    spurious dispersion (angle proportional to :math:`\delta`).
 
     The implementation follows the one described in:
     https://doi.org/10.1016/j.nima.2022.167487
-    All the comments featuring 'Eq' points to the paper's equations.
+    All the comments featuring 'Eq' point to the paper's equations.
 
     Parameters:
-        elem:           Element to be ytansformed.
+        elem:           Element to be transformed.
         reference:      Transformation reference, either
                         :py:obj:`ReferencePoint.CENTRE` or
                         :py:obj:`ReferencePoint.ENTRANCE`.
@@ -296,11 +298,11 @@ def transform_elem(
         tilt:           Tilt angle [rad]. Default: no change.
         pitch:          Pitch angle [rad]. Default: no change.
         yaw:            Yaw angle [rad]. Default: no change
-        relative:       If :py:obj:`True`, the rotation is added to. the
-          previous one.
+        relative:       If :py:obj:`True`, the input values are added to the
+          previous ones.
 
     See Also:
-        :py:func':`get_offsets_rotations`:
+        :py:func:`get_offsets_rotations`
     """
     if relative:
 
@@ -413,7 +415,7 @@ def _set_dx(elem: Element, value: float) -> None:
 
 
 def _get_dy(elem: Element) -> float:
-    """Horizontal element shift"""
+    """Vertical element shift"""
     offsets, _, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
     return offsets[1]
 
@@ -423,7 +425,7 @@ def _set_dy(elem: Element, value: float) -> None:
 
 
 def _get_dz(elem: Element) -> float:
-    """Horizontal element shift"""
+    """Longitudinal element shift"""
     offsets, _, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
     return offsets[2]
 
@@ -433,7 +435,7 @@ def _set_dz(elem: Element, value: float) -> None:
 
 
 def _get_tilt(elem: Element) -> float:
-    """Horizontal element shift"""
+    """Element tilt"""
     _, tilt, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
     return tilt
 
@@ -442,6 +444,7 @@ def _set_tilt(elem: Element, value: float) -> None:
     transform_elem(elem, ReferencePoint.CENTRE, tilt=value)
 
 
+Element.transform = transform_elem
 Element.dx = property(_get_dx, _set_dx)
 Element.dy = property(_get_dy, _set_dy)
 Element.dz = property(_get_dz, _set_dz)

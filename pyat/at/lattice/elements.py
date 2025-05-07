@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import abc
 import re
-import math
 from abc import ABC
 from collections.abc import Generator, Iterable
 from copy import copy, deepcopy
@@ -53,7 +52,7 @@ class LongtMotion(ABC):
     """Abstract Base class for all Element classes whose instances may modify
     the particle momentum
 
-    Allows to identify elements potentially inducing longitudinal motion.
+    Allows identifying elements potentially inducing longitudinal motion.
 
     Subclasses of :py:class:`LongtMotion` must provide two methods for
     enabling longitudinal motion:
@@ -467,7 +466,7 @@ class LongElement(Element):
         Other arguments and keywords are given to the base class
         """
         kwargs.setdefault("Length", length)
-        # Ancestor may be either Element of ThinMultipole
+        # Ancestor may be either Element or ThinMultipole
         # noinspection PyArgumentList
         super().__init__(family_name, *args, **kwargs)
 
@@ -562,7 +561,7 @@ class BeamMoments(Element):
 
 
 class SliceMoments(Element):
-    """Element to compute slices mean and std"""
+    """Element computing the mean and std of slices"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["nslice"]
     _conversions = dict(Element._conversions, nslice=int)

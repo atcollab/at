@@ -163,7 +163,7 @@ def _type_error(refpts, types):
 
 
 # setval and getval return pickleable functions: no inner, nested function
-# are allowed. So nested functions are replaced be module-level callable
+# is allowed. So nested functions are replaced be module-level callable
 # class instances
 class _AttrItemGetter:
     __slots__ = ["attrname", "index"]
@@ -620,7 +620,7 @@ def checkattr(attrname: str, attrvalue=None) -> ElementFilter:
 
         >>> elts = filter(checkattr("K", 0.0), ring)
 
-        Returns an iterator over all elements in ring that have a
+        Returns an iterator over all elements of ring that have a
         :pycode:`K` attribute equal to 0.0
     """
     if attrvalue is None:
@@ -675,7 +675,7 @@ def checkname(pattern: str, regex: bool = False) -> ElementFilter:
 
         >>> qps = filter(checkname("QF*"), ring)
 
-        Returns an iterator over all with name starting with ``QF``.
+        Returns an iterator over all the elements with name starting with ``QF``.
     """
     if regex:
         return functools.partial(_chkregex, pattern)
@@ -1107,7 +1107,7 @@ def get_geometry(
         start_coordinates:  *x*, *y*, *angle* at starting point. *x*
           and *y* are ignored if *centered* is :py:obj:`True`.
         centered:           if :py:obj:`True` the coordinates origin is the
-          center of the ring.
+          centre of the ring.
         regex: Use regular expression for *refpts* string matching instead of
           Unix shell-style wildcards.
 
