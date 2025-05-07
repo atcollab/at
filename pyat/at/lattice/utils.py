@@ -48,6 +48,7 @@ import numpy
 import numpy.typing as npt
 
 from .elements import Element, Dipole
+from .transformation import transform_elem
 
 _GEOMETRY_EPSIL = 1.0e-3
 
@@ -79,7 +80,7 @@ __all__ = [
     "set_rotation",
     "tilt_elem",
     "shift_elem",
-    "rotate_elem",
+    "transform_elem",
     "get_value_refpts",
     "set_value_refpts",
     "Refpts",
@@ -941,96 +942,6 @@ def get_s_pos(
     return s_pos[get_bool_index(ring, refpts, regex=regex)]
 
 
-def rotate_elem(
-    elem: Element,
-    tilt: float = 0.0,
-    pitch: float = 0.0,
-    yaw: float = 0.0,
-    relative: bool = False,
-) -> None:
-    r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
-    The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis and the yaw is a rotation around
-    the *y*-axis.
-
-    A positive angle represents a clockwise rotation when
-    looking in the direction of the rotation axis.
-
-    The transformations are not all commmutative, the pitch and yaw
-    are applied first and the tilt is always the last transformation
-    applied. The element is rotated around its mid-point.
-
-    If *relative* is :py:obj:`True`, the previous angle and shifts
-    are rebuilt form the *R* and *T* matrix and incremented by the
-    input arguments.
-
-    The shift is always conserved regardless of the value of *relative*.
-
-    The transformations are applied by changing the particle coordinates
-    at the entrance of the element and restoring them at the end. Following
-    the small angles approximation the longitudinal shift of the particle
-    coordinates is neglected and the element length is unchanged.
-
-    Parameters:
-        elem:           Element to be tilted
-        tilt:           Tilt angle [rad]
-        pitch:          Pitch angle [rad]
-        yaw:            Yaw angle [rad]
-        relative:       If :py:obj:`True`, the rotation is added to the
-          previous one
-    """
-
-    # noinspection PyShadowingNames
-    def _get_rm_tv(le, tilt, pitch, yaw):
-        tilt = numpy.around(tilt, decimals=15)
-        pitch = numpy.around(pitch, decimals=15)
-        yaw = numpy.around(yaw, decimals=15)
-        ct, st = numpy.cos(tilt), numpy.sin(tilt)
-        ap, ay = 0.5 * le * numpy.tan(pitch), 0.5 * le * numpy.tan(yaw)
-        rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
-        rr1[0, 2] = st
-        rr1[1, 3] = st
-        rr1[2, 0] = -st
-        rr1[3, 1] = -st
-        rr2 = rr1.T
-        t1 = numpy.array([ay, numpy.sin(-yaw), -ap, numpy.sin(pitch), 0, 0])
-        t2 = numpy.array([ay, numpy.sin(yaw), -ap, numpy.sin(-pitch), 0, 0])
-        rt1 = numpy.eye(6, order="F")
-        rt1[1, 4] = t1[1]
-        rt1[3, 4] = t1[3]
-        rt2 = numpy.eye(6, order="F")
-        rt2[1, 4] = t2[1]
-        rt2[3, 4] = t2[3]
-        return rr1 @ rt1, rt2 @ rr2, t1, t2
-
-    tilt0 = 0.0
-    pitch0 = 0.0
-    yaw0 = 0.0
-    t10 = numpy.zeros(6)
-    t20 = numpy.zeros(6)
-    if hasattr(elem, "R1") and hasattr(elem, "R2"):
-        rr10 = numpy.eye(6, order="F")
-        rr10[:4, :4] = elem.R1[:4, :4]
-        rt10 = rr10.T @ elem.R1
-        tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
-        yaw0 = numpy.arcsin(-rt10[1, 4])
-        pitch0 = numpy.arcsin(rt10[3, 4])
-        _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)
-    if hasattr(elem, "T1") and hasattr(elem, "T2"):
-        t10 = elem.T1 - t10
-        t20 = elem.T2 - t20
-    if relative:
-        tilt += tilt0
-        pitch += pitch0
-        yaw += yaw0
-
-    r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)
-    elem.R1 = r1
-    elem.R2 = r2
-    elem.T1 = t1 + t10
-    elem.T2 = t2 + t20
-
-
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
     r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
 
@@ -1050,12 +961,11 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
         relative:       If :py:obj:`True`, the rotation is added to the
           existing one
     """
-    rotate_elem(elem, tilt=rots, relative=relative)
+    transform_elem(elem, tilt=rots, relative=relative)
 
 
-def shift_elem(
-    elem: Element, deltax: float = 0.0, deltaz: float = 0.0, relative: bool = False
-) -> None:
+def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0,
+               dz: float = 0.0, *, relative: bool = False) -> None:
     r"""Sets the transverse displacement of an :py:class:`.Element`
 
     The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
@@ -1063,18 +973,13 @@ def shift_elem(
 
     Parameters:
         elem:           Element to be shifted
-        deltax:         Horizontal displacement [m]
-        deltaz:         Vertical displacement [m]
+        dx:             Horizontal displacement [m]
+        dy:             Vertical displacement [m]
+        dz:             Longitudinal displacement [m]
         relative:       If :py:obj:`True`, the translation is added to the
           existing one
     """
-    tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
-    if relative and hasattr(elem, "T1") and hasattr(elem, "T2"):
-        elem.T1 -= tr
-        elem.T2 += tr
-    else:
-        elem.T1 = -tr
-        elem.T2 = tr
+    transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def set_rotation(
@@ -1097,7 +1002,7 @@ def set_rotation(
     pitches = numpy.broadcast_to(pitches, (len(ring),))
     yaws = numpy.broadcast_to(yaws, (len(ring),))
     for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
-        rotate_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
+        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
 
 
 def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
@@ -1112,25 +1017,29 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
     """
     tilts = numpy.broadcast_to(tilts, (len(ring),))
     for el, tilt in zip(ring, tilts):
-        tilt_elem(el, tilt, relative=relative)
+        transform_elem(el, tilt=tilt, relative=relative)
 
 
-def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
+def set_shift(ring: Sequence[Element], dxs, dys, dzs=0., *,
+              relative=False) -> None:
     r"""Sets the translations of a list of elements.
 
     Parameters:
         ring:           Lattice description
         dxs:            Sequence of horizontal displacements values as long as
           ring or scalar value applied to all elements [m]
-        dzs:            Sequence of vertical displacements values as long as
+        dys:            Sequence of vertical displacements values as long as
           ring or scalar value applied to all elements [m]
+        dzs:            Sequence of longitudinal displacements values as long 
+          as ring or scalar value applied to all elements [m]
         relative:       If :py:obj:`True`, the displacement is added to the
           existing one
     """
     dxs = numpy.broadcast_to(dxs, (len(ring),))
+    dys = numpy.broadcast_to(dys, (len(ring),))
     dzs = numpy.broadcast_to(dzs, (len(ring),))
-    for el, dx, dy in zip(ring, dxs, dzs):
-        shift_elem(el, dx, dy, relative=relative)
+    for el, dx, dy, dz in zip(ring, dxs, dys, dzs):
+        transform_elem(el, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def get_geometry(
