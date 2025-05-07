@@ -19,7 +19,11 @@ useclass=any(strcmpi(varargin,'UseClass'));
 if isfield(elem,'BendingAngle')
     atclass='Bend';
 elseif isfield(elem,'Frequency')
-    atclass='RFCavity';
+    if isfield(elem, 'Voltages')
+        atclass='CrabCavity';
+    else
+        atclass='RFCavity';
+    end
 elseif isfield(elem,'KickAngle')
     atclass='Corrector';
 elseif isfield(elem,'Periodicity')
