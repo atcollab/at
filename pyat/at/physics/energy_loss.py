@@ -13,6 +13,7 @@ from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
+from at.lattice import DConstant
 
 
 class ELossMethod(Enum):
@@ -105,7 +106,7 @@ def get_timelag_fromU0(
     method: ELossMethod | None = ELossMethod.TRACKING,
     cavpts: Refpts | None = None,
     divider: int | None = 4,
-    ts_tol: float | None = 1.0e-9,
+    ts_tol: float | None = None,
 ) -> tuple[Sequence[float], float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
@@ -119,7 +120,10 @@ def get_timelag_fromU0(
         cavpts:             Cavity location. If None, use all cavities.
           This allows to ignore harmonic cavities.
         divider: number of segments to search for ts
-        ts_tol: relative tolerance for ts calculation
+        ts_tol: relative tolerance for ts calculation, default is 1.0-9
+          If the search fails to find the synchronous phase the tolerance
+          can be increased using the keyword argument or by setting
+          `at.DConstant.TStol`
     Returns:
         timelag (float):    (ncav,) array of *Timelag* values
         ts (float):         Time difference with the present value
@@ -145,6 +149,8 @@ def get_timelag_fromU0(
 
     if cavpts is None:
         cavpts = get_bool_index(ring, RFCavity)
+    if ts_tol is None:
+        ts_tol = DConstant.TStol
     u0 = get_energy_loss(ring, method=method) / ring.periodicity
     freq = np.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = np.array([cav.Voltage for cav in ring.select(cavpts)])

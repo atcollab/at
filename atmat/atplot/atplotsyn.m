@@ -28,7 +28,7 @@ nlines=length(get(ax,'Children'));
 
 sl=findspos(ring(:,1),1:size(ring,1)+1);
 ll=diff(sl);
-sok=(sl(2:end)>xlim(1)) & (sl(1:end-1)<xlim(2));
+sok=(sl(2:end)>=xlim(1)) & (sl(1:end-1)<=xlim(2));
 sl=sl(sok);
 ll=ll(sok);
 rok=ring(sok);

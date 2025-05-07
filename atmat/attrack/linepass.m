@@ -58,6 +58,12 @@ function [Rout,varargout] = linepass(line,Rin,varargin)
 % ROUT=LINEPASS(...,'reuse') is kept for compatibilty with previous
 % versions. It has no effect.
 %
+% ROUT=LINEPASS(...,'seed',SEED)  The random generators are reset to start 
+%   with SEED.
+%
+% ROUT=LINEPASS(...,'omp_num_threads',NTHREADS)  Number of OpenMP threads.
+%   By default, OpenMP chooses the number of threads.
+%
 % Rfin=LINEPASS(...,PREFUNC)
 % Rfin=LINEPASS(...,PREFUNC,POSTFUNC)
 % Rfin=LINEPASS(...,cell(0),POSTFUNC)
@@ -75,6 +81,7 @@ function [Rout,varargout] = linepass(line,Rin,varargin)
 [dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
 [nhist,args]=getoption(args,'nhist',1);
 [omp_num_threads,args]=getoption(args,'omp_num_threads');
+[seed,args]=getoption(args,'seed',-1);
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
 refpts=getargs(args(~funcargs),length(line)+1);
 [prefunc,postfunc]=getargs(args(funcargs),cell(0),cell(0));
@@ -88,7 +95,7 @@ props=atCheckRingProperties(line);
 
 try
     [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts, ...
-        prefunc,postfunc,nhist,omp_num_threads,props,0);
+        prefunc,postfunc,nhist,omp_num_threads,props,0,0,seed);
     
     if nargout>1
         if nargout>2, varargout{2}=lossinfo; end

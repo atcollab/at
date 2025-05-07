@@ -12,3 +12,4 @@ else:
     from .specific import *
     from .standalone import *
     from .resonances import *
+    from .response_matrix import *

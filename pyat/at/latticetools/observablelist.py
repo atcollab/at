@@ -26,22 +26,57 @@ __all__ = [
     "ObservableList",
 ]
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from functools import reduce
 from typing import Callable
 
 import numpy as np
+import numpy.typing as npt
 
 # noinspection PyProtectedMember
 from .observables import Observable, ElementObservable, Need
+from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
 from ..lattice import Lattice, Orbit, Refpts, All
 from ..physics import linopt6
 from ..tracking import internal_lpass
 
 
-def _flatten(vals, order="F"):
+def _flatten(vals, order="F") -> npt.NDArray[float]:
     return np.concatenate([np.reshape(v, -1, order=order) for v in vals])
+
+
+class _ObsResIter(Iterator):
+    """Iterator object for the _ObsResult class"""
+
+    def __init__(self, obsiter):
+        self.base = obsiter
+
+    def __next__(self):
+        # Raises the stored error when reaching a missing value
+        return Observable.check_value(next(self.base))
+
+
+class _ObsResults(tuple):
+    """Tuple-like object for the output of  ObservableList.evaluate
+
+    _ObsResult implements a special treatment when the evaluation ends with an error.
+    The error is stored instead of the value. This object raises the error a posteriori,
+    when accessing the missing value.
+    """
+
+    def __getitem__(self, item):
+        # Raises the stored error when accessing a missing value
+        if isinstance(item, slice):
+            return _ObsResults(super().__getitem__(item))
+        else:
+            return Observable.check_value(super().__getitem__(item))
+
+    def __iter__(self):
+        return _ObsResIter(super().__iter__())
+
+    def __repr__(self):
+        return repr(tuple(super().__iter__()))
 
 
 class ObservableList(list):
@@ -132,7 +167,9 @@ class ObservableList(list):
         self.opticsrefs = None
         self.passrefs = None
         self.matrixrefs = None
+        self.rdtrefs = None
         self.needs = None
+        self.rdt_type = set()
         self.method = method
         self.orbit = orbit
         self.twiss_in = twiss_in
@@ -144,15 +181,19 @@ class ObservableList(list):
     def _setup(self, ring: Lattice):
         # Compute the union of all needs
         needs = set()
+        rdt_type = set()
         for obs in self:
             needs |= obs.needs
             if isinstance(obs, ElementObservable):
                 needs.add(Need.RING)
+            if isinstance(obs, RDTObservable):
+                rdt_type.add(obs._rdt_type)
 
         if (needs & self.needs_ring) and ring is None:
             raise ValueError("At least one Observable needs a ring argument")
 
         self.needs = needs
+        self.rdt_type = rdt_type
         if ring is None:
             # Initialise each observable
             for obs in self:
@@ -160,7 +201,7 @@ class ObservableList(list):
         else:
             # Initialise each observable and make a summary all refpoints
             noref = ring.get_bool_index(None)
-            orbitrefs = opticsrefs = passrefs = matrixrefs = noref
+            orbitrefs = opticsrefs = passrefs = matrixrefs = rdtrefs = noref
             for obs in self:
                 obs._setup(ring)
                 obsneeds = obs.needs
@@ -176,8 +217,11 @@ class ObservableList(list):
                             opticsrefs |= obs._boolrefs
                     if Need.TRAJECTORY in obsneeds:
                         passrefs |= obs._boolrefs
+                    if Need.RDT in obsneeds:
+                        rdtrefs |= obs._boolrefs
             self.orbitrefs = orbitrefs
             self.opticsrefs = opticsrefs
+            self.rdtrefs = rdtrefs
             self.passrefs = passrefs
             self.matrixrefs = matrixrefs
 
@@ -254,7 +298,7 @@ class ObservableList(list):
             """Evaluate a single observable."""
 
             def check_error(data, refpts):
-                return data if isinstance(data, AtError) else data[refpts]
+                return data if isinstance(data, Exception) else data[refpts]
 
             obsneeds = obs.needs
             obsrefs = getattr(obs, "_boolrefs", None)
@@ -275,6 +319,8 @@ class ObservableList(list):
                 data.append(emdata)
             if Need.GEOMETRY in obsneeds:
                 data.append(geodata[obsrefs])
+            if Need.RDT in obsneeds:
+                data.append(check_error(rdtdata, obsrefs[self.rdtrefs]))
             return obs.evaluate(*data, initial=initial)
 
         @frequency_control
@@ -286,7 +332,9 @@ class ObservableList(list):
         ):
             """Optics computations."""
             keep_lattice = False
-            trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = None
+            trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = rdtdata = (
+                None
+            )
             twiss_in = kwargs.get("twiss_in", self.twiss_in)
             o0 = kwargs.get("orbit", self.orbit)
             o0 = getattr(twiss_in, "closed_orbit", None) if o0 is None else o0
@@ -366,15 +414,41 @@ class ObservableList(list):
                 # Geometry computation
                 geodata, _ = ring.get_geometry()
 
-            return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata
+            if Need.RDT in needs:
+                # RDT computation
+                use_mp = kwargs.get("use_mp", False)
+                pool_size = kwargs.get("pool_size", None)
+                try:
+                    _, _, rdtdata = ring.get_rdts(
+                        refpts=self.rdtrefs,
+                        rdt_type=self.rdt_type,
+                        second_order=Need.RDT_2ND_ORDER in needs,
+                        use_mp=use_mp,
+                        pool_size=pool_size,
+                    )
+                except Exception as err:
+                    rdtdata = err
+
+            return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata
 
         if self.needs is None or initial:
             self._setup(ring)
 
-        trajs, orbits, rgdata, eldata, emdata, mxdata, geodata = ringeval(
+        trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata = ringeval(
             ring, dp=dp, dct=dct, df=df
         )
-        return [obseval(ring, ob) for ob in self]
+        return _ObsResults(obseval(ring, ob) for ob in self)
+
+    def check(self) -> bool:
+        """Check if all observables are evaluated.
+
+        Returns:
+            ok: :py:obj:`True` if evaluation is done, :py:obj:`False` otherwise
+
+        Raises:
+            AtError:    any value is doubtful: evaluation failed, empty value…
+        """
+        return all(obs.check() for obs in self)
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
@@ -384,16 +458,26 @@ class ObservableList(list):
                 obs._excluded = excluded
         self.needs = None
 
-    def _select(self, *obsnames: str):
-        """Return an iterable over selected observables."""
-        if obsnames:
-            sel = set(obsnames)
-            return (obs for obs in self if obs.name in sel)
+    def _lookup(self, *ids: int | str) -> list[Observable]:
+        """Observable lookup function"""
+
+        def select(id):
+            if isinstance(id, str):
+                for obs in self:
+                    if obs.name == id:
+                        return obs
+                else:
+                    raise KeyError(id)
+            else:
+                return self[id]
+
+        if ids:
+            return [select(id) for id in ids]
         else:
             return self
 
-    def _substitute(self, attrname: str, *obsnames: str, err: float | None = None):
-        for obs in self._select(*obsnames):
+    def _collect(self, attrname: str, *obsid: str | int, err: float | None = None):
+        def val(obs):
             try:
                 res = getattr(obs, attrname)
             except AtError:
@@ -402,163 +486,170 @@ class ObservableList(list):
                 else:
                     # noinspection PyProtectedMember
                     shp = obs._shape
-                    res = np.broadcast_to(err, () if shp is None else shp)
-            yield res
+                    res = err if shp is None else np.broadcast_to(err, shp)
+            return res
 
-    def get_shapes(self, *obsnames: str) -> list:
+        obslist = self._lookup(*obsid)
+        return tuple(val(obs) for obs in obslist)
+
+    def get_shapes(self, *obsid: str | int) -> tuple:
         """Return the shapes of all values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
+            *obsid: name or index of selected observables (Default all)
         """
-        return list(self._substitute("_shape", *obsnames))
+        return self._collect("_shape", *obsid)
 
-    def get_flat_shape(self, *obsnames: str):
+    def get_flat_shape(self, *obsid: str | int):
         """Return the shape of the flattened values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
+            *obsid: name or index of selected observables (Default all)
         """
         vals = (
             reduce(lambda x, y: x * y, shp, 1)
-            for shp in self._substitute("_shape", *obsnames)
+            for shp in self._collect("_shape", *obsid)
         )
         return (sum(vals),)
 
-    def get_values(self, *obsnames: str, err: float | None = None) -> list:
+    def get_values(self, *obsid: str | int, err: float | None = None) -> tuple:
         """Return the values of observables.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
+
+        Raises:
+            Exception: Any exception raised during evaluation, unless *err* has been
+              set.
         """
-        return list(self._substitute("value", *obsnames, err=err))
+        return self._collect("value", *obsid, err=err)
 
     def get_flat_values(
-        self, *obsnames: str, err: float | None = None, order: str = "F"
-    ) -> np.ndarray:
+        self, *obsid: str | int, err: float | None = None, order: str = "F"
+    ) -> npt.NDArray[float]:
         """Return a 1-D array of Observable values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
-            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
+            order:  Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return _flatten(self._substitute("value", *obsnames, err=err), order=order)
+        return _flatten(self._collect("value", *obsid, err=err), order=order)
 
-    def get_weighted_values(self, *obsnames: str, err: float | None = None) -> list:
+    def get_weighted_values(self, *obsid: str | int, err: float | None = None) -> tuple:
         """Return the weighted values of observables.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
-        return list(self._substitute("weighted_value", *obsnames, err=err))
+        return self._collect("weighted_value", *obsid, err=err)
 
     def get_flat_weighted_values(
-        self, *obsnames: str, err: float | None = None, order: str = "F"
-    ) -> np.ndarray:
+        self, *obsid: str | int, err: float | None = None, order: str = "F"
+    ) -> npt.NDArray[float]:
         """Return a 1-D array of Observable weighted values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
-            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
+            order:  Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return _flatten(
-            self._substitute("weighted_value", *obsnames, err=err), order=order
-        )
+        return _flatten(self._collect("weighted_value", *obsid, err=err), order=order)
 
-    def get_deviations(self, *obsnames: str, err: float | None = None) -> list:
+    def get_deviations(self, *obsid: str | int, err: float | None = None) -> tuple:
         """Return the deviations from target values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
-        return list(self._substitute("deviation", *obsnames, err=err))
+        return self._collect("deviation", *obsid, err=err)
 
     def get_flat_deviations(
-        self, *obsnames: str, err: float | None = None, order: str = "F"
-    ) -> np.ndarray:
+        self, *obsid: str | int, err: float | None = None, order: str = "F"
+    ) -> npt.NDArray[float]:
         """Return a 1-D array of deviations from target values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
-            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
+            order:  Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return _flatten(self._substitute("deviation", *obsnames, err=err), order=order)
+        return _flatten(self._collect("deviation", *obsid, err=err), order=order)
 
-    def get_weighted_deviations(self, *obsnames: str, err: float | None = None) -> list:
+    def get_weighted_deviations(
+        self, *obsid: str | int, err: float | None = None
+    ) -> tuple:
         """Return the weighted deviations from target values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
-        return list(self._substitute("weighted_deviation", *obsnames, err=err))
+        return self._collect("weighted_deviation", *obsid, err=err)
 
     def get_flat_weighted_deviations(
-        self, *obsnames: str, err: float | None = None, order: str = "F"
-    ) -> np.ndarray:
+        self, *obsid: str | int, err: float | None = None, order: str = "F"
+    ) -> npt.NDArray[float]:
         """Return a 1-D array of weighted deviations from target values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
-            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
+            order:  Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
         return _flatten(
-            self._substitute("weighted_deviation", *obsnames, err=err), order=order
+            self._collect("weighted_deviation", *obsid, err=err), order=order
         )
 
-    def get_weights(self, *obsnames: str) -> list:
+    def get_weights(self, *obsid: str | int) -> tuple:
         """Return the weights of observables.
 
         Args:
-            *obsnames: names of selected observables (Default all)
+            *obsid: name or index of selected observables (Default all)
         """
-        return list(self._substitute("weight", *obsnames))
+        return self._collect("weight", *obsid)
 
-    def get_flat_weights(self, *obsnames: str, order: str = "F") -> np.ndarray:
+    def get_flat_weights(
+        self, *obsid: str | int, order: str = "F"
+    ) -> npt.NDArray[float]:
         """Return a 1-D array of Observable weights.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
+            *obsid: name or index of selected observables (Default all)
+            order:  Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return _flatten(self._substitute("weight", *obsnames), order=order)
+        return _flatten(self._collect("weight", *obsid), order=order)
 
-    def get_residuals(self, *obsnames: str, err: float | None = None) -> list:
+    def get_residuals(self, *obsid: str | int, err: float | None = None) -> tuple:
         """Return the residuals of observables.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+             *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
-        return list(self._substitute("residual", *obsnames, err=err))
+        return self._collect("residual", *obsid, err=err)
 
-    def get_sum_residuals(self, *obsnames: str, err: float | None = None) -> float:
+    def get_sum_residuals(self, *obsid: str | int, err: float | None = None) -> float:
         """Return the sum of residual values.
 
         Args:
-            *obsnames: names of selected observables (Default all)
-            err: Default observable value to be used when the evaluation failed. By
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
-        return sum(
-            np.sum(res) for res in self._substitute("residual", *obsnames, err=err)
-        )
+        return sum(np.sum(res) for res in self._collect("residual", *obsid, err=err))
 
     shapes = property(get_shapes, doc="Shapes of all values")
     flat_shape = property(get_flat_shape, doc="Shape of the flattened values")

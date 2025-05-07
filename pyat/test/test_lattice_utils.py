@@ -1,6 +1,8 @@
 import numpy
 import pytest
 
+import math
+from at.lattice import elements as elt
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
@@ -176,20 +178,38 @@ def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_using_bool_refpts():
     )
 
 
-def test_tilt_elem(simple_ring):
-    tilt_elem(simple_ring[0], (numpy.pi / 4))
-    v = 1 / 2**0.5
+def test_tilt_elem():
+    elem = elt.Drift("Drift", 1.0)
+    # Test tilt_elem function
+    tilt_elem(elem, math.pi / 4.0)
+    v = math.sqrt(2.0) / 2.0
     a = numpy.diag([v, v, v, v, 1.0, 1.0])
     a[0, 2], a[1, 3], a[2, 0], a[3, 1] = v, v, -v, -v
-    numpy.testing.assert_allclose(simple_ring[0].R1, a)
-    numpy.testing.assert_allclose(simple_ring[0].R2, a.T)
+    numpy.testing.assert_allclose(elem.R1, a, atol=1.0e-15)
+    numpy.testing.assert_allclose(elem.R2, a.T, atol=1.0e-15)
+    numpy.testing.assert_allclose(elem.tilt, numpy.pi / 4.0)
+    # Test tilt property
+    elem.tilt = math.pi / 2.0
+    a = numpy.diag([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+    a[0, 2], a[1, 3], a[2, 0], a[3, 1] = 1.0, 1.0, -1.0, -1.0
+    numpy.testing.assert_allclose(elem.R1, a, atol=1.0e-15)
+    numpy.testing.assert_allclose(elem.R2, a.T, atol=1.0e-15)
 
 
-def test_shift_elem(simple_ring):
-    shift_elem(simple_ring[2], 1.0, 0.5)
+def test_shift_elem():
+    elem = elt.Drift("Drift", 1.0)
+    # Test shift_elem function
+    shift_elem(elem, 1.0, 0.5)
     a = numpy.array([1.0, 0.0, 0.5, 0.0, 0.0, 0.0])
-    numpy.testing.assert_equal(simple_ring[2].T1, -a)
-    numpy.testing.assert_equal(simple_ring[2].T2, a)
+    numpy.testing.assert_equal(elem.T1, -a)
+    numpy.testing.assert_equal(elem.T2, a)
+    numpy.testing.assert_equal(elem.dx, a[0])
+    numpy.testing.assert_equal(elem.dy, a[2])
+    # Test dx, dy properties
+    elem.dx = -2.0
+    elem.dy = -1.0
+    numpy.testing.assert_equal(elem.T1, 2 * a)
+    numpy.testing.assert_equal(elem.T2, -2 * a)
 
 
 def test_set_tilt(simple_ring):

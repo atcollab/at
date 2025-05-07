@@ -11,7 +11,7 @@ from contextvars import ContextVar
 
 from numpy.random import Generator, PCG64, SeedSequence
 
-from ..cconfig import ismpi, isopenmp
+from ..cconfig import ismpi, isopenmp, iscuda, isopencl
 
 if ismpi():
     from mpi4py import MPI
@@ -79,6 +79,7 @@ class _Dst:
     DPStep: float = 3.0e-6  # Momentum step for dispersion and chromaticity
     OrbConvergence: float = 1.0e-12  # Convergence criterion for orbit
     OrbMaxIter: int = 20  # Max. number of iterations for orbit
+    TStol: float = 1.0e-9  # Tolerance for synchronous phase search
     omp_num_threads: int = int(os.environ.get("OMP_NUM_THREADS", "0"))
     patpass_poolsize: int = multiprocessing.cpu_count()
     patpass_startmethod: str | None = None
@@ -98,6 +99,14 @@ class _Dst:
     @property
     def openmp(self) -> bool:
         return isopenmp()
+
+    @property
+    def cuda(self) -> bool:
+        return iscuda()
+
+    @property
+    def opencl(self) -> bool:
+        return isopencl()
 
     @property
     def rank(self) -> int:
@@ -124,11 +133,14 @@ Attributes:
     DPStep:              Momentum step for dispersion and chromaticity
     OrbConvergence:      Convergence criterion for orbit
     OrbMaxIter:          Max. number of iterations for orbit
+    TStol:               Tolerance for synchronous phase search
     omp_num_threads:     Default number of OpenMP threads
     patpass_poolsize:    Default size of multiprocessing pool
     patpass_startmethod: Default start method for the multiprocessing
     mpi:                 :py:obj:`True` if MPI is active
     openmp:              :py:obj:`True` if OpenMP is active
+    cuda:                :py:obj:`True` if CUDA is active
+    opencl:              :py:obj:`True` if OpenCL is active
 
 Methods:
     reset(attrname):    Reset the attribute to its default value

@@ -131,8 +131,8 @@ def test_fastring(engine, request, lattices):
         assert_close(r[2].Alphay, rml[-1]["Alphay"], rtol=1.0e-6)
         assert_close(r[2].Betax, rml[-1]["Betax"], rtol=1.0e-10)
         assert_close(r[2].Betay, rml[-1]["Betay"], rtol=1.0e-10)
-        assert_close(r[2].Qpx, rml[-1]["Qpx"], rtol=1.0e-5)
-        assert_close(r[2].Qpy, rml[-1]["Qpy"], rtol=1.0e-5)
+        assert_close(r[2].chromx_arr, rml[-1]["chromx_arr"], rtol=1.0e-5)
+        assert_close(r[2].chromy_arr, rml[-1]["chromy_arr"], rtol=1.0e-5)
         assert_close(r[2].T1, np.squeeze(rml[-1]["T1"]), rtol=1.0e-8, atol=1.0e-11)
         assert_close(r[2].T2, np.squeeze(rml[-1]["T2"]), rtol=1.0e-8, atol=1.0e-11)
         if len(r) >= 4:
