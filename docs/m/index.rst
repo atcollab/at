@@ -34,3 +34,4 @@ higher-level functions to provide physics results.
    releases/r2.4
    releases/r2.5
    releases/r2.6
+   releases/r2.7
