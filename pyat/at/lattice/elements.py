@@ -452,28 +452,6 @@ class Element:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
 
-    @property
-    def tilt(self) -> float:
-        """Element tilt"""
-        r1 = getattr(self, "R1", _eye6)
-        r2 = getattr(self, "R2", _eye6)
-        c = float(r2[0, 0] + r1[0, 0])
-        s = float(r2[2, 0] - r1[2, 0])
-        return math.atan2(s, c)
-
-    @tilt.setter
-    def tilt(self, value: float) -> None:
-        r1 = getattr(self, "R1", _eye6.copy())
-        r2 = getattr(self, "R2", _eye6.copy())
-        ct, st = math.cos(value), math.sin(value)
-        r44 = np.diag([ct, ct, ct, ct])
-        r44[0, 2] = r44[1, 3] = st
-        r44[2, 0] = r44[3, 1] = -st
-        r1[:4, :4] = r44
-        r2[:4, :4] = r44.T
-        self.R1 = r1
-        self.R2 = r2
-
 
 class LongElement(Element):
     """Base class for long elements"""

@@ -304,11 +304,11 @@ def transform_elem(
     """
     if relative:
 
-        def set(ini, val):
+        def _set(ini, val):
             return ini if val is None else ini + val
     else:
 
-        def set(ini, val):
+        def _set(ini, val):
             return ini if val is None else val
 
     elem_length = getattr(elem, "Length", 0)
@@ -324,12 +324,8 @@ def transform_elem(
     )
 
     # Apply new offsets and rotations (XYZ intrinsic order)
-    offsets = np.array([set(v0, v) for v0, v in zip(offsets0, [dx, dy, dz])])
-    rotations = [
-        set(pitch0, pitch),
-        set(yaw0, yaw),
-        set(tilt0, tilt),
-    ]
+    offsets = np.array([_set(v0, v) for v0, v in zip(offsets0, [dx, dy, dz])])
+    rotations = [_set(pitch0, pitch), _set(yaw0, yaw), _set(tilt0, tilt)]
 
     if reference is ReferencePoint.CENTRE:
         # Compute entrance rotation matrix in the rotated frame
