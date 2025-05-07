@@ -1,4 +1,15 @@
-"""Matching of lattice parameters."""
+"""Matching of lattice parameters.
+
+The matching acts on a :py:class:`.VariableList` to statisfy the constraints
+expressed in an :py:class:`.ObservableList`.
+
+Examples of use of such classes are available in:
+
+* :doc:`/p/notebooks/variables`
+* :doc:`/p/notebooks/observables`
+
+Examples of matching are given in :doc:`/p/notebooks/matching`.
+"""
 
 from __future__ import annotations
 
@@ -36,6 +47,7 @@ def _match(
     bounds = np.array([var.bounds for var in variables])
 
     constraints.evaluate(ring, initial=True, dp=dp, dct=dct, df=df)
+    constraints.check()
     ntargets = constraints.flat_values.size
 
     if method is None:
@@ -73,7 +85,7 @@ def match(
     *,
     copy: bool = False,
     **kwargs,
-):
+) -> Lattice | None:
     """Match constraints by varying variables.
 
     Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
@@ -97,6 +109,17 @@ def match(
         df:             Deviation from the nominal RF frequency.
         **kwargs:       Keyword arguments sent to
           :py:func:`~scipy.optimize.least_squares`
+
+    Returns:
+        Modified Lattice if copy=True, None otherwise
+
+    Raises:
+        TypeError: If copy=True and ElementVariable is present
+        RuntimeError: If optimisation fails
+
+    Examples:
+
+        See :doc:`/p/notebooks/matching`
     """
     if copy:
         # Check that there is no ElementVariable
@@ -108,3 +131,4 @@ def match(
         return newring
     else:
         _match(ring, variables, constraints, **kwargs)
+        return None
