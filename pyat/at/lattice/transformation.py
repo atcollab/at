@@ -1,7 +1,16 @@
 from __future__ import annotations
-import numpy as np
+
+__all__ = ["ReferencePoint", "get_offsets_rotations", "transform_elem"]
+
 from enum import Enum
+
+import numpy as np
+
 from .elements import Element
+
+_x_axis = np.array([1.0, 0.0, 0.0])
+_y_axis = np.array([0.0, 1.0, 0.0])
+_z_axis = np.array([0.0, 0.0, 1.0])
 
 
 def _rotation(rotations):
@@ -27,8 +36,7 @@ def _rotation(rotations):
         ]
     )
     R_y = np.array(
-        [[np.cos(beta), 0, np.sin(beta)], [0, 1, 0], 
-         [-np.sin(beta), 0, np.cos(beta)]]
+        [[np.cos(beta), 0, np.sin(beta)], [0, 1, 0], [-np.sin(beta), 0, np.cos(beta)]]
     )
     R_z = np.array(
         [
@@ -114,14 +122,7 @@ def _r_matrix(ld, r3d):
                 0,
                 0,
             ],
-            [
-                0,
-                r3d[0, 0],
-                0,
-                r3d[1, 0],
-                r3d[2, 0],
-                0,
-            ],
+            [0, r3d[0, 0], 0, r3d[1, 0], r3d[2, 0], 0],
             [
                 -r3d[1, 0] / r3d[2, 2],
                 -ld * r3d[1, 0] / r3d[2, 2] ** 2,
@@ -130,22 +131,8 @@ def _r_matrix(ld, r3d):
                 0,
                 0,
             ],
-            [
-                0,
-                r3d[0, 1],
-                0,
-                r3d[1, 1],
-                r3d[2, 1],
-                0,
-            ],
-            [
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-            ],
+            [0, r3d[0, 1], 0, r3d[1, 1], r3d[2, 1], 0],
+            [0, 0, 0, 0, 1, 0],
             [
                 -r3d[0, 2] / r3d[2, 2],
                 -ld * r3d[0, 2] / r3d[2, 2] ** 2,
@@ -185,15 +172,87 @@ class ReferencePoint(Enum):
     ENTRANCE = "ENTRANCE"
 
 
+def get_offsets_rotations(
+    elem: Element,
+    reference: ReferencePoint = ReferencePoint.CENTRE,
+    *,
+    RB_half: np.ndarray = None,
+) :
+    """
+    Return the offsets and rotations of a given element.
+
+    This function returns the offsets [dx, dy, dz] and angular rotations (tilt, yaw,
+    pitch) of the element.
+
+    Args:
+        elem: The beamline element.
+        reference:  Transformation reference, either
+                    :py:obj:`ReferencePoint.CENTRE` or
+                    :py:obj:`ReferencePoint.ENTRANCE`. This must be identical to
+                    the value used when the element was transformed.
+
+    Returns:
+        offsets (np.ndarray): [dx, dy, dz] array.
+        tilt (float): Tilt angle (rotation about the Z-axis) in radians.
+        yaw (float): Yaw angle (rotation about the Y-axis) in radians.
+        pitch (float): Pitch angle (rotation about the X-axis) in radians.
+
+    Raises:
+        ValueError: If the `reference` argument is neither `ReferencePoint.CENTRE` nor
+            `ReferencePoint.ENTRANCE`.
+    """
+    if RB_half is None:
+        elem_bending_angle = getattr(elem, "BendingAngle", 0.0)
+        RB_half = _rotation([0.0, -elem_bending_angle / 2.0, 0.0])  # Eq. (12)
+
+    try:
+        T1 = elem.T1
+    except AttributeError:
+        T1 = np.zeros(6)
+    try:
+        R1 = elem.R1
+    except AttributeError:
+        R1 = np.eye(6)
+
+    ld, r3d_tmp = _ld_and_r3d_from_r_matrix(R1)
+    if reference is ReferencePoint.CENTRE:
+        r3d = RB_half.T @ r3d_tmp @ RB_half
+
+        X_axis = RB_half.T @ _x_axis
+        Y_axis = RB_half.T @ _y_axis
+        Z_axis = RB_half.T @ _z_axis
+
+    elif reference is ReferencePoint.ENTRANCE:
+        r3d = r3d_tmp
+
+        X_axis = r3d @ _x_axis
+        Y_axis = r3d @ _y_axis
+        Z_axis = r3d @ _z_axis
+
+    else:
+        raise ValueError(
+            "Unsupported reference, please choose either "
+            "ReferencePoint.CENTRE or "
+            "ReferencePoint.ENTRANCE."
+        )
+
+    offsets = _offsets_from_translation_vector(T1, ld, r3d, X_axis, Y_axis, Z_axis)
+    tilt = np.arctan2(-r3d[0, 1], r3d[0, 0])
+    yaw = np.arcsin(r3d[0, 2])
+    pitch = np.arctan2(-r3d[1, 2], r3d[2, 2])
+    return offsets, tilt, yaw, pitch
+
+
 def transform_elem(
     elem: Element,
     reference: ReferencePoint = ReferencePoint.CENTRE,
-    dx: float = 0.0,
-    dy: float = 0.0,
-    dz: float = 0.0,
-    tilt: float = 0.0,
-    pitch: float = 0.0,
-    yaw: float = 0.0,
+    dx: float | None = None,
+    dy: float | None = None,
+    dz: float | None = None,
+    tilt: float | None = None,
+    pitch: float | None = None,
+    yaw: float | None = None,
+    *,
     relative: bool = False,
 ) -> None:
     r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
@@ -204,11 +263,11 @@ def transform_elem(
     A positive angle represents a clockwise rotation when
     looking in the direction of the rotation axis.
 
-    The transformations are not all commmutative. The rotations are applied in
-    the order *Z* -> *Y* -> *X* (tilt -> yaw -> pitch). The element is rotated
-    around its mid-point. The mid-point can either be the element entrance
-    (entry face of the downstream drift element) or centre (axis joining the
-    entry and exit points of the element).
+    The transformations are not all commmutative. The translations are appled before
+    the rotations. The rotations are applied in the order *Z* -> *Y* -> *X*
+    (tilt -> yaw -> pitch). The element is rotated around its mid-point. The mid-point
+    can either be the element entrance or its centre (axis joining the entry and exit
+    points of the element).
 
     If *relative* is :py:obj:`True`, the previous angles are rebuilt from the
     *r3d* matrix and incremented by the input arguments.
@@ -218,28 +277,39 @@ def transform_elem(
 
     pyAT describes the ultra-relativistic beam dynamics in 6D phase space
     coordinates, which differ from 3D spatial angles in an expansion with
-    respect to the energy to first order by a factor (1 + $\\delta$) , where
-    $\\delta$ is the relative energy offset. In general this introduces
-    a spurious dispersion (angle proportional to $\\delta$), but could create
-    an undesired effect for large energy offsets.
+    respect to the energy to first order by a factor :math:`(1 + \delta)` , where
+    :math:`\delta` is the relative energy offset. This introduces
+    a spurious dispersion (angle proportional to :math:`\delta`).
 
     The implementation follows the one described in:
     https://doi.org/10.1016/j.nima.2022.167487
     All the comments featuring 'Eq' points to the paper's equations.
 
     Parameters:
-        elem:           Element to be tilted
+        elem:           Element to be ytansformed.
         reference:      Transformation reference, either
-                        ReferencePoint.ENTRANCE or ReferencePoint.CENTRE
-        dx:             Horizontal shift [m]
-        dy:             Vertical shift [m]
-        dz:             Longitudinal shift [m]
-        tilt:           Tilt angle [rad]
-        pitch:          Pitch angle [rad]
-        yaw:            Yaw angle [rad]
-        relative:       If :py:obj:`True`, the rotation is added to the
-          previous one
+                        :py:obj:`ReferencePoint.CENTRE` or
+                        :py:obj:`ReferencePoint.ENTRANCE`.
+        dx:             Horizontal shift [m]. Default: no change.
+        dy:             Vertical shift [m]. Default: no change.
+        dz:             Longitudinal shift [m]. Default: no change.
+        tilt:           Tilt angle [rad]. Default: no change.
+        pitch:          Pitch angle [rad]. Default: no change.
+        yaw:            Yaw angle [rad]. Default: no change
+        relative:       If :py:obj:`True`, the rotation is added to. the
+          previous one.
+
+    See Also:
+        :py:func':`get_offsets_rotations`:
     """
+    if relative:
+
+        def set(ini, val):
+            return ini if val is None else ini + val
+    else:
+
+        def set(ini, val):
+            return ini if val is None else val
 
     elem_length = getattr(elem, "Length", 0)
     elem_bending_angle = getattr(elem, "BendingAngle", 0)
@@ -248,64 +318,18 @@ def transform_elem(
     RB = _rotation([0, -elem_bending_angle, 0])  # Eq. (12)
     RB_half = _rotation([0, -elem_bending_angle / 2, 0])  # Eq. (12)
 
-    # Define transverse offsets (element translation)
-    offsets = np.array([dx, dy, dz])
-
-    x_axis = np.array([1, 0, 0])
-    y_axis = np.array([0, 1, 0])
-    z_axis = np.array([0, 0, 1])
-
-    # Extract current transformations if relative=True
-    offsets0 = np.array([0.0, 0.0, 0.0])
-    tilt0, pitch0, yaw0 = 0.0, 0.0, 0.0
-    if relative:
-        if (
-            hasattr(elem, "R1")
-            and hasattr(elem, "R2")
-            and hasattr(elem, "T1")
-            and hasattr(elem, "T2")
-        ):
-            ld, r3d_tmp = _ld_and_r3d_from_r_matrix(elem.R1)
-            if reference is ReferencePoint.CENTRE:
-                r3d = RB_half.T @ r3d_tmp @ RB_half
-
-                X_axis = RB_half.T @ x_axis
-                Y_axis = RB_half.T @ y_axis
-                Z_axis = RB_half.T @ z_axis
-
-                offsets0 = _offsets_from_translation_vector(
-                    elem.T1, ld, r3d, X_axis, Y_axis, Z_axis
-                )
-
-            elif reference is ReferencePoint.ENTRANCE:
-                r3d = r3d_tmp
-
-                X_axis = r3d @ x_axis
-                Y_axis = r3d @ y_axis
-                Z_axis = r3d @ z_axis
-
-                offsets0 = _offsets_from_translation_vector(
-                    elem.T1, ld, r3d, X_axis, Y_axis, Z_axis
-                )
-
-            else:
-                raise ValueError(
-                    "Unsupported reference, please choose either "
-                    "ReferencePoint.CENTRE or "
-                    "ReferencePoint.ENTRANCE."
-                )
-
-            # Reverse-engineer current angles from r3d
-            tilt0 = np.arctan2(-r3d[0, 1], r3d[0, 0])
-            yaw0 = np.arcsin(r3d[0, 2])
-            pitch0 = np.arctan2(-r3d[1, 2], r3d[2, 2])
+    # Get the current transformation
+    offsets0, tilt0, yaw0, pitch0 = get_offsets_rotations(
+        elem, reference, RB_half=RB_half
+    )
 
     # Apply new offsets and rotations (XYZ intrinsic order)
-    offsets_total = offsets + offsets0
-    tilt_total = tilt0 + tilt
-    pitch_total = pitch0 + pitch
-    yaw_total = yaw0 + yaw
-    rotations = [pitch_total, yaw_total, tilt_total]  # X, Y, Z convention
+    offsets = np.array([set(v0, v) for v0, v in zip(offsets0, [dx, dy, dz])])
+    rotations = [
+        set(pitch0, pitch),
+        set(yaw0, yaw),
+        set(tilt0, tilt),
+    ]
 
     if reference is ReferencePoint.CENTRE:
         # Compute entrance rotation matrix in the rotated frame
@@ -313,22 +337,20 @@ def transform_elem(
 
         if elem_bending_angle:
             Rc = elem_length / elem_bending_angle
-            OO0 = Rc * np.sin(elem_bending_angle / 2) * \
-                RB_half @ z_axis  # Eq. (34)
+            OO0 = Rc * np.sin(elem_bending_angle / 2) * RB_half @ _z_axis  # Eq. (34)
             P0P = (
-                -Rc * np.sin(elem_bending_angle / 2) * \
-                r3d_entrance @ RB_half @ z_axis
+                -Rc * np.sin(elem_bending_angle / 2) * r3d_entrance @ RB_half @ _z_axis
             )  # Eq. (36)
         else:
-            OO0 = elem_length / 2 * z_axis  # Eq. (34)
-            P0P = -elem_length / 2 * r3d_entrance @ z_axis  # Eq. (36)
+            OO0 = elem_length / 2 * _z_axis  # Eq. (34)
+            P0P = -elem_length / 2 * r3d_entrance @ _z_axis  # Eq. (36)
 
         # Transform offset to magnet entrance
-        OP = OO0 + P0P + RB_half @ offsets_total  # Eq. (33)
+        OP = OO0 + P0P + RB_half @ offsets  # Eq. (33)
 
     elif reference is ReferencePoint.ENTRANCE:
         r3d_entrance = _rotation(rotations)  # Eq. (3)
-        OP = offsets_total  # Eq. (2)
+        OP = offsets  # Eq. (2)
     else:
         raise ValueError(
             "Unsupported reference, please choose either "
@@ -338,9 +360,9 @@ def transform_elem(
 
     # R1, T1
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
-    X_axis = r3d_entrance @ x_axis
-    Y_axis = r3d_entrance @ y_axis
-    Z_axis = r3d_entrance @ z_axis
+    X_axis = r3d_entrance @ _x_axis
+    Y_axis = r3d_entrance @ _y_axis
+    Z_axis = r3d_entrance @ _z_axis
 
     ld_entrance = Z_axis @ OP  # Eq. (33)
 
@@ -351,9 +373,9 @@ def transform_elem(
 
     # R2, T2
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
-    X_axis = RB @ x_axis
-    Y_axis = RB @ y_axis
-    Z_axis = RB @ z_axis
+    X_axis = RB @ _x_axis
+    Y_axis = RB @ _y_axis
+    Z_axis = RB @ _z_axis
 
     r3d_exit = RB.T @ r3d_entrance.T @ RB  # Eq. (18) or (32)
 
@@ -367,7 +389,7 @@ def transform_elem(
             ]
         )  # Eq. (24)
     else:
-        OPp = elem_length * z_axis  # Eq. (24)
+        OPp = elem_length * _z_axis  # Eq. (24)
 
     OOp = r3d_entrance @ OPp + OP  # Eq. (25)
     OpPp = OPp - OOp
@@ -382,3 +404,49 @@ def transform_elem(
     elem.R2 = R2
     elem.T1 = T1
     elem.T2 = T2
+
+
+def _get_dx(elem: Element) -> float:
+    """Horizontal element shift"""
+    offsets, _, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
+    return offsets[0]
+
+
+def _set_dx(elem: Element, value: float) -> None:
+    transform_elem(elem, ReferencePoint.CENTRE, dx=value)
+
+
+def _get_dy(elem: Element) -> float:
+    """Horizontal element shift"""
+    offsets, _, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
+    return offsets[1]
+
+
+def _set_dy(elem: Element, value: float) -> None:
+    transform_elem(elem, ReferencePoint.CENTRE, dy=value)
+
+
+def _get_dz(elem: Element) -> float:
+    """Horizontal element shift"""
+    offsets, _, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
+    return offsets[2]
+
+
+def _set_dz(elem: Element, value: float) -> None:
+    transform_elem(elem, ReferencePoint.CENTRE, dz=value)
+
+
+def _get_tilt(elem: Element) -> float:
+    """Horizontal element shift"""
+    _, tilt, _, _ = get_offsets_rotations(elem, ReferencePoint.CENTRE)
+    return tilt
+
+
+def _set_tilt(elem: Element, value: float) -> None:
+    transform_elem(elem, ReferencePoint.CENTRE, tilt=value)
+
+
+Element.dx = property(_get_dx, _set_dx)
+Element.dy = property(_get_dy, _set_dy)
+Element.dz = property(_get_dz, _set_dz)
+Element.tilt = property(_get_tilt, _set_tilt)

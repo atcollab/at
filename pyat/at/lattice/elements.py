@@ -452,38 +452,6 @@ class Element:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
 
-    def _getshift(self, idx: int):
-        t1 = getattr(self, "T1", _zero6)
-        t2 = getattr(self, "T2", _zero6)
-        return 0.5 * float(t2[idx] - t1[idx])
-
-    def _setshift(self, value: float, idx: int) -> None:
-        t1 = getattr(self, "T1", _zero6.copy())
-        t2 = getattr(self, "T2", _zero6.copy())
-        sm = 0.5 * (t2[idx] + t1[idx])
-        t2[idx] = sm + value
-        t1[idx] = sm - value
-        self.T1 = t1
-        self.T2 = t2
-
-    @property
-    def dx(self) -> float:
-        """Horizontal element shift"""
-        return self._getshift(0)
-
-    @dx.setter
-    def dx(self, value: float) -> None:
-        self._setshift(value, 0)
-
-    @property
-    def dy(self) -> float:
-        """Vertical element shift"""
-        return self._getshift(2)
-
-    @dy.setter
-    def dy(self, value: float) -> None:
-        self._setshift(value, 2)
-
     @property
     def tilt(self) -> float:
         """Element tilt"""

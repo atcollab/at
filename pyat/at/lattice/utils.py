@@ -39,7 +39,8 @@ from enum import Enum
 from fnmatch import fnmatch
 from itertools import compress
 from operator import attrgetter
-from typing import Optional, Union
+from typing import Union
+
 # Necessary for type aliases in python <= 3.8 :
 # from collections.abc import Callable, Sequence, Iterator
 from typing import Callable, Sequence, Iterator, Type
@@ -48,7 +49,7 @@ import numpy
 import numpy.typing as npt
 
 from .elements import Element, Dipole
-from .transformation import transform_elem
+from .transformation import transform_elem, get_offsets_rotations, ReferencePoint
 
 _GEOMETRY_EPSIL = 1.0e-3
 
@@ -80,10 +81,12 @@ __all__ = [
     "set_rotation",
     "tilt_elem",
     "shift_elem",
+    "get_offsets_rotations",
     "transform_elem",
     "get_value_refpts",
     "set_value_refpts",
     "Refpts",
+    "ReferencePoint",
     "get_geometry",
     "setval",
     "getval",
@@ -173,7 +176,7 @@ class _AttrItemGetter:
         return getattr(elem, self.attrname)[self.index]
 
 
-def getval(attrname: str, index: Optional[int] = None) -> Callable:
+def getval(attrname: str, index: int | None = None) -> Callable:
     """Return a callable object which fetches item *index* of
     attribute *attrname* of its operand. Examples:
 
@@ -209,7 +212,7 @@ class _AttrItemSetter:
         getattr(elem, self.attrname)[self.index] = value
 
 
-def setval(attrname: str, index: Optional[int] = None) -> Callable:
+def setval(attrname: str, index: int | None = None) -> Callable:
     """Return a callable object which sets the value of  item *index* of
     attribute *attrname* of its 1st argument to it 2nd orgument.
 
@@ -589,7 +592,7 @@ def get_bool_index(
     return boolrefs
 
 
-def checkattr(attrname: str, attrvalue: Optional = None) -> ElementFilter:
+def checkattr(attrname: str, attrvalue=None) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the presence or the value of an attribute
 
@@ -626,7 +629,7 @@ def checkattr(attrname: str, attrvalue: Optional = None) -> ElementFilter:
         return functools.partial(_chkattrval, attrname, attrvalue)
 
 
-def checktype(eltype: Union[type, tuple[type, ...]]) -> ElementFilter:
+def checktype(eltype: type | tuple[type, ...]) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the type of an element
 
@@ -832,7 +835,7 @@ def get_value_refpts(
     ring: Sequence[Element],
     refpts: Refpts,
     attrname: str,
-    index: Optional[int] = None,
+    index: int | None = None,
     regex: bool = False,
 ):
     r"""Extracts attribute values from selected
@@ -862,7 +865,7 @@ def set_value_refpts(
     refpts: Refpts,
     attrname: str,
     attrvalues,
-    index: Optional[int] = None,
+    index: int | None = None,
     increment: bool = False,
     copy: bool = False,
     regex: bool = False,
@@ -957,88 +960,133 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
         elem:           Element to be tilted
         rots:           Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
           to a corkscrew rotation of the element looking in the direction of
-          the beam
+          the beam. Use :py:obj:`None` to keep the current value.
         relative:       If :py:obj:`True`, the rotation is added to the
           existing one
+
+    See Also:
+        :py:func:`shift_elem`
+        :py:func:`.transform_elem`
     """
     transform_elem(elem, tilt=rots, relative=relative)
 
 
-def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0,
-               dz: float = 0.0, *, relative: bool = False) -> None:
-    r"""Sets the transverse displacement of an :py:class:`.Element`
+def shift_elem(
+    elem: Element,
+    dx: float | None = 0.0,
+    dy: float | None = 0.0,
+    dz: float | None = 0.0,
+    *,
+    relative: bool = False,
+) -> None:
+    r"""Sets the displacements of an :py:class:`.Element`
 
     The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
     attributes.
 
     Parameters:
         elem:           Element to be shifted
-        dx:             Horizontal displacement [m]
-        dy:             Vertical displacement [m]
-        dz:             Longitudinal displacement [m]
+        dx:             Horizontal displacement [m]. Use :py:obj:`None` to keep
+          the current value.
+        dy:             Vertical displacement [m]. Use :py:obj:`None` to keep
+          the current value.
+        dz:             Longitudinal displacement [m]. Use :py:obj:`None` to keep
+          the current value.
         relative:       If :py:obj:`True`, the translation is added to the
           existing one
+
+    See Also:
+        :py:func:`tilt_elem`
+        :py:func:`.transform_elem`
     """
     transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def set_rotation(
-    ring: Sequence[Element], tilts=0.0, pitches=0.0, yaws=0.0, relative=False
+    ring: Sequence[Element],
+    tilts=0.0,
+    pitches=0.0,
+    yaws=0.0,
+    *,
+    refpts: Refpts = All,
+    relative=False,
+) -> None:
+    r"""Sets the rotations of a list of elements.
+
+    Parameters:
+        ring:       Lattice description.
+        tilts:      Scalar or Sequence of tilt values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        pitches:    Scalar or Sequence of pitch values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        yaws:       Scalar or Sequence of yaw values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        relative:   If :py:obj:`True`, the rotations are added to the existing ones.
+
+    See Also:
+        :py:func:`set_tilt`
+        :py:func:`set_shift`
+    """
+    nb = _refcount(ring, refpts, endpoint=False)
+    tilts = numpy.broadcast_to(tilts, (nb,))
+    pchs = numpy.broadcast_to(pitches, (nb,))
+    yaws = numpy.broadcast_to(yaws, (nb,))
+    for el, tilt, pitch, yaw in zip(refpts_iterator(ring, refpts), tilts, pchs, yaws):
+        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
+
+
+def set_tilt(
+    ring: Sequence[Element], tilts, *, refpts: Refpts = All, relative=False
 ) -> None:
     r"""Sets the tilts of a list of elements.
 
     Parameters:
-        ring:           Lattice description
-        tilts:          Sequence of tilt values as long as ring or
-          scalar tilt value applied to all elements, default=0
-        pitches:          Sequence of pitch values as long as ring or
-          scalar tilt value applied to all elements, default=0
-        yaws:          Sequence of yaw values as long as ring or
-          scalar tilt value applied to all elements, default=0
-        relative:       If :py:obj:`True`, the rotations are added to the
-          existing ones
+        ring:       Lattice description.
+        tilts:      Scalar or Sequence of tilt values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        relative:   If :py:obj:`True`, the rotation is added to the existing one.
+
+    See Also:
+        :py:func:`set_rotation`
+        :py:func:`set_shift`
     """
-    tilts = numpy.broadcast_to(tilts, (len(ring),))
-    pitches = numpy.broadcast_to(pitches, (len(ring),))
-    yaws = numpy.broadcast_to(yaws, (len(ring),))
-    for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
-        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
-
-
-def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
-    r"""Sets the tilts of a list of elements.
-
-    Parameters:
-        ring:           Lattice description
-        tilts:          Sequence of tilt values as long as ring or
-          scalar tilt value applied to all elements
-        relative:       If :py:obj:`True`, the rotation is added to the
-          existing one
-    """
-    tilts = numpy.broadcast_to(tilts, (len(ring),))
-    for el, tilt in zip(ring, tilts):
+    nb = _refcount(ring, refpts, endpoint=False)
+    tilts = numpy.broadcast_to(tilts, (nb,))
+    for el, tilt in zip(refpts_iterator(ring, refpts), tilts):
         transform_elem(el, tilt=tilt, relative=relative)
 
 
-def set_shift(ring: Sequence[Element], dxs, dys, dzs=0., *,
-              relative=False) -> None:
+def set_shift(
+    ring: Sequence[Element], dxs, dys, dzs=None, *, refpts: Refpts = All, relative=False
+) -> None:
     r"""Sets the translations of a list of elements.
 
     Parameters:
-        ring:           Lattice description
-        dxs:            Sequence of horizontal displacements values as long as
-          ring or scalar value applied to all elements [m]
-        dys:            Sequence of vertical displacements values as long as
-          ring or scalar value applied to all elements [m]
-        dzs:            Sequence of longitudinal displacements values as long 
-          as ring or scalar value applied to all elements [m]
-        relative:       If :py:obj:`True`, the displacement is added to the
-          existing one
+        ring:       Lattice description.
+        dxs:        Scalar or Sequence of horizontal displacements values applied
+          to the selected elements. Use :py:obj:`None` to keep the current values [m].
+        dys:        Scalar or Sequence of vertical displacements values applied
+          to the selected elements. Use :py:obj:`None` to keep the current values [m].
+        dzs:        Scalar or Sequence of longitudinal displacements values applied
+          to the selected elements. Use :py:obj:`None` to keep the current values [m].
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        relative:   If :py:obj:`True`, the displacement is added to the
+          existing one.
+
+    See Also:
+        :py:func:`set_rotation`
+        :py:func:`set_tilt`
     """
-    dxs = numpy.broadcast_to(dxs, (len(ring),))
-    dys = numpy.broadcast_to(dys, (len(ring),))
-    dzs = numpy.broadcast_to(dzs, (len(ring),))
-    for el, dx, dy, dz in zip(ring, dxs, dys, dzs):
+    nb = _refcount(ring, refpts, endpoint=False)
+    dxs = numpy.broadcast_to(dxs, (nb,))
+    dys = numpy.broadcast_to(dys, (nb,))
+    dzs = numpy.broadcast_to(dzs, (nb,))
+    for el, dx, dy, dz in zip(refpts_iterator(ring, refpts), dxs, dys, dzs):
         transform_elem(el, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
