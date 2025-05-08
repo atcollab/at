@@ -1,4 +1,14 @@
-"""Element translations and rotations."""
+"""Element translations and rotations.
+
+.. Caution::
+
+    The geometrical transformation are not commutative. When combining several
+    transformations on the same element by using multiple function calls, the
+    transformations are applied in a fixed order, independent of the order of the
+    function calls:
+
+    .. centered:: translations -> tilt (z-axis) -> yaw (y-axis) -> pitch (x-axis)
+"""
 
 from __future__ import annotations
 
@@ -508,6 +518,9 @@ def set_rotation(
           See ":ref:`Selecting elements in a lattice <refpts>`"
         relative:   If :py:obj:`True`, the rotations are added to the existing ones.
 
+    .. versionadded:: 0.7.0
+       The *refpts* argument
+
     See Also:
         :py:func:`set_tilt`
         :py:func:`set_shift`
@@ -532,6 +545,9 @@ def set_tilt(
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
         relative:   If :py:obj:`True`, the rotation is added to the existing one.
+
+    .. versionadded:: 0.7.0
+       The *refpts* argument
 
     See Also:
         :py:func:`set_rotation`
@@ -560,6 +576,9 @@ def set_shift(
           See ":ref:`Selecting elements in a lattice <refpts>`"
         relative:   If :py:obj:`True`, the translation is added to the
           existing one.
+
+    .. versionadded:: 0.7.0
+       The *refpts* argument
 
     See Also:
         :py:func:`set_rotation`
