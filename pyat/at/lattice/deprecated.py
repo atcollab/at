@@ -45,7 +45,7 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args,
         >>> refpts = get_cells(ring, 'Frequency')
 
         Returns a numpy array of booleans where all elements having a
-        :pycode:`Frequency` attribute are :py:obj:`True`
+        :pycode:`Frequency` attribute :py:obj:`True`
 
         >>> refpts = get_cells(ring, 'K', 0.0)
 
@@ -88,27 +88,27 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
 
 def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
                 yaw: float = 0.0, relative: bool = False) -> None:
-    r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
+    r"""Set the tilt, pitch, and yaw angle of an :py:class:`.Element`.
     The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis and the yaw is a rotation around
+    rotation around the *x*-axis, and the yaw is a rotation around
     the *y*-axis.
 
     A positive angle represents a clockwise rotation when
     looking in the direction of the rotation axis.
 
-    The transformations are not all commmutative, the pitch and yaw
-    are applied first and the tilt is always the last transformation
+    The transformations are not all commutative, the pitch and yaw
+    are applied first, and the tilt is always the last transformation
     applied. The element is rotated around its mid-point.
 
     If *relative* is :py:obj:`True`, the previous angle and shifts
-    are rebuilt form the *R* and *T* matrix and incremented by the
+    are rebuilt from the *R* and *T* matrix and incremented by the
     input arguments.
 
     The shift is always conserved regardless of the value of *relative*.
 
     The transformations are applied by changing the particle coordinates
     at the entrance of the element and restoring them at the end. Following
-    the small angles approximation the longitudinal shift of the particle
+    the small angles approximation, the longitudinal shift of the particle
     coordinates is neglected and the element length is unchanged.
 
     Parameters:
@@ -168,28 +168,6 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     elem.R2 = r2
     elem.T1 = t1+t10
     elem.T2 = t2+t20
-    
-def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
-               relative: bool = False) -> None:
-    r"""Sets the transverse displacement of an :py:class:`.Element`
-
-    The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
-    attributes.
-
-    Parameters:
-        elem:           Element to be shifted
-        deltax:         Horizontal displacement [m]
-        deltaz:         Vertical displacement [m]
-        relative:       If :py:obj:`True`, the translation is added to the
-          existing one
-    """
-    tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
-    if relative and hasattr(elem, 'T1') and hasattr(elem, 'T2'):
-        elem.T1 -= tr
-        elem.T2 += tr
-    else:
-        elem.T1 = -tr
-        elem.T2 = tr
 
 
 Lattice.uint32_refpts = get_uint32_index

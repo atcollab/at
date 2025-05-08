@@ -1,3 +1,5 @@
+"""Element translations and rotations."""
+
 from __future__ import annotations
 
 __all__ = [
@@ -180,10 +182,10 @@ def _ld_and_r3d_from_r_matrix(r_matrix):
 
 
 class ReferencePoint(Enum):
-    """Enum class for reference option"""
+    """Definition of the reference point for the geometric transformations."""
 
-    CENTRE = "CENTRE"
-    ENTRANCE = "ENTRANCE"
+    CENTRE = "CENTRE"  #: Origin at the centre of the element.
+    ENTRANCE = "ENTRANCE"  #: Origin at the entrance of the element.
 
 
 # noinspection PyPep8Naming
@@ -193,8 +195,7 @@ def get_offsets_rotations(
     *,
     RB_half: np.ndarray = None,
 ):
-    """
-    Return the offsets and rotations of a given element.
+    r"""Return the offsets and rotations of a given element.
 
     This function returns the offsets [dx, dy, dz] and angular rotations (tilt, yaw,
     pitch) of the element.
