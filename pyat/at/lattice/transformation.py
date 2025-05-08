@@ -2,7 +2,7 @@
 
 .. Caution::
 
-    The geometrical transformation are not commutative. When combining several
+    The geometrical transformations are not commutative. When combining several
     transformations on the same element by using multiple function calls, the
     transformations are applied in a fixed order, independent of the order of the
     function calls:
