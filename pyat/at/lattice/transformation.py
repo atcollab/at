@@ -1,12 +1,23 @@
 from __future__ import annotations
 
-__all__ = ["ReferencePoint", "get_offsets_rotations", "transform_elem"]
+__all__ = [
+    "ReferencePoint",
+    "get_offsets_rotations",
+    "transform_elem",
+    "shift_elem",
+    "tilt_elem",
+    "set_shift",
+    "set_tilt",
+    "set_rotation",
+]
 
 from enum import Enum
+from collections.abc import Sequence
 
 import numpy as np
 
 from .elements import Element
+from .utils import Refpts, All, refpts_iterator, _refcount
 
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
@@ -181,7 +192,7 @@ def get_offsets_rotations(
     reference: ReferencePoint = ReferencePoint.CENTRE,
     *,
     RB_half: np.ndarray = None,
-) :
+):
     """
     Return the offsets and rotations of a given element.
 
@@ -204,6 +215,11 @@ def get_offsets_rotations(
     Raises:
         ValueError: If the `reference` argument is neither `ReferencePoint.CENTRE` nor
             `ReferencePoint.ENTRANCE`.
+
+    .. Attention::
+
+        The *reference* argument must be identical to the one used when displacing the
+        element. Otherwise, the result is unpredictable.
     """
     if RB_half is None:
         elem_bending_angle = getattr(elem, "BendingAngle", 0.0)
@@ -260,7 +276,7 @@ def transform_elem(
     *,
     relative: bool = False,
 ) -> None:
-    r"""Set the displacements and angles of an :py:class:`.Element`.
+    r"""Set the translations and rotations of an :py:class:`.Element`.
 
     The tilt is a rotation around the *s*-axis, the pitch is a
     rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis.
@@ -301,6 +317,12 @@ def transform_elem(
         relative:       If :py:obj:`True`, the input values are added to the
           previous ones.
 
+    .. Attention::
+
+        When combining several transformations by using multiple calls to
+        :py:func:`transform_elem`, the *reference* argument must be identical for all.
+        Otherwise, the result is unpredictable.
+
     See Also:
         :py:func:`get_offsets_rotations`
     """
@@ -308,6 +330,7 @@ def transform_elem(
 
         def _set(ini, val):
             return ini if val is None else ini + val
+
     else:
 
         def _set(ini, val):
@@ -402,6 +425,151 @@ def transform_elem(
     elem.R2 = R2
     elem.T1 = T1
     elem.T2 = T2
+
+
+def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
+    r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
+
+    The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
+    attributes.
+
+    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\
+    -sin\theta & cos\theta \end{pmatrix}`,
+    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\
+    sin\theta & cos\theta \end{pmatrix}`
+
+    Parameters:
+        elem:           Element to be tilted
+        rots:           Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
+          to a corkscrew rotation of the element looking in the direction of
+          the beam. Use :py:obj:`None` to keep the current value.
+        relative:       If :py:obj:`True`, the rotation is added to the
+          existing one
+
+    See Also:
+        :py:func:`shift_elem`
+        :py:func:`.transform_elem`
+    """
+    transform_elem(elem, tilt=rots, relative=relative)
+
+
+def shift_elem(
+    elem: Element,
+    dx: float | None = 0.0,
+    dy: float | None = 0.0,
+    dz: float | None = 0.0,
+    *,
+    relative: bool = False,
+) -> None:
+    r"""Sets the translations of an :py:class:`.Element`
+
+    The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
+    attributes.
+
+    Parameters:
+        elem:           Element to be shifted
+        dx:             Horizontal translation [m]. Use :py:obj:`None` to keep
+          the current value.
+        dy:             Vertical translation [m]. Use :py:obj:`None` to keep
+          the current value.
+        dz:             Longitudinal translation [m]. Use :py:obj:`None` to keep
+          the current value.
+        relative:       If :py:obj:`True`, the translation is added to the
+          existing one
+
+    See Also:
+        :py:func:`tilt_elem`
+        :py:func:`.transform_elem`
+    """
+    transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
+
+
+def set_rotation(
+    ring: Sequence[Element],
+    tilts=0.0,
+    pitches=0.0,
+    yaws=0.0,
+    *,
+    refpts: Refpts = All,
+    relative=False,
+) -> None:
+    r"""Sets the rotations of a list of elements.
+
+    Parameters:
+        ring:       Lattice description.
+        tilts:      Scalar or Sequence of tilt values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        pitches:    Scalar or Sequence of pitch values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        yaws:       Scalar or Sequence of yaw values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        relative:   If :py:obj:`True`, the rotations are added to the existing ones.
+
+    See Also:
+        :py:func:`set_tilt`
+        :py:func:`set_shift`
+    """
+    nb = _refcount(ring, refpts, endpoint=False)
+    tilts = np.broadcast_to(tilts, (nb,))
+    pchs = np.broadcast_to(pitches, (nb,))
+    yaws = np.broadcast_to(yaws, (nb,))
+    for el, tilt, pitch, yaw in zip(refpts_iterator(ring, refpts), tilts, pchs, yaws):
+        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
+
+
+def set_tilt(
+    ring: Sequence[Element], tilts, *, refpts: Refpts = All, relative=False
+) -> None:
+    r"""Sets the tilts of a list of elements.
+
+    Parameters:
+        ring:       Lattice description.
+        tilts:      Scalar or Sequence of tilt values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        relative:   If :py:obj:`True`, the rotation is added to the existing one.
+
+    See Also:
+        :py:func:`set_rotation`
+        :py:func:`set_shift`
+    """
+    nb = _refcount(ring, refpts, endpoint=False)
+    tilts = np.broadcast_to(tilts, (nb,))
+    for el, tilt in zip(refpts_iterator(ring, refpts), tilts):
+        transform_elem(el, tilt=tilt, relative=relative)
+
+
+def set_shift(
+    ring: Sequence[Element], dxs, dys, dzs=None, *, refpts: Refpts = All, relative=False
+) -> None:
+    r"""Sets the translations of a list of elements.
+
+    Parameters:
+        ring:       Lattice description.
+        dxs:        Scalar or Sequence of horizontal translations values applied
+          to the selected elements. Use :py:obj:`None` to keep the current values [m].
+        dys:        Scalar or Sequence of vertical translations values applied
+          to the selected elements. Use :py:obj:`None` to keep the current values [m].
+        dzs:        Scalar or Sequence of longitudinal translations values applied
+          to the selected elements. Use :py:obj:`None` to keep the current values [m].
+        refpts:     Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        relative:   If :py:obj:`True`, the translation is added to the
+          existing one.
+
+    See Also:
+        :py:func:`set_rotation`
+        :py:func:`set_tilt`
+    """
+    nb = _refcount(ring, refpts, endpoint=False)
+    dxs = np.broadcast_to(dxs, (nb,))
+    dys = np.broadcast_to(dys, (nb,))
+    dzs = np.broadcast_to(dzs, (nb,))
+    for el, dx, dy, dz in zip(refpts_iterator(ring, refpts), dxs, dys, dzs):
+        transform_elem(el, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def _get_dx(elem: Element) -> float:

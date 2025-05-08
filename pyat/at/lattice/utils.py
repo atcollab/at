@@ -49,7 +49,6 @@ import numpy
 import numpy.typing as npt
 
 from .elements import Element, Dipole
-from .transformation import transform_elem, get_offsets_rotations, ReferencePoint
 
 _GEOMETRY_EPSIL = 1.0e-3
 
@@ -76,17 +75,9 @@ __all__ = [
     "get_s_pos",
     "refpts_count",
     "refpts_iterator",
-    "set_shift",
-    "set_tilt",
-    "set_rotation",
-    "tilt_elem",
-    "shift_elem",
-    "get_offsets_rotations",
-    "transform_elem",
     "get_value_refpts",
     "set_value_refpts",
     "Refpts",
-    "ReferencePoint",
     "get_geometry",
     "setval",
     "getval",
@@ -321,6 +312,7 @@ def set_6d(is_6d: bool) -> Callable:
                 return func(rg, *args, **kwargs)
 
             return wrapper
+
     else:
 
         def setrad_decorator(func):
@@ -364,6 +356,7 @@ def make_copy(copy: bool) -> Callable:
                 return ring
 
             return wrapper
+
     else:
 
         def copy_decorator(func):
@@ -943,151 +936,6 @@ def get_s_pos(
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
     return s_pos[get_bool_index(ring, refpts, regex=regex)]
-
-
-def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
-    r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
-
-    The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
-    attributes.
-
-    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\
-    -sin\theta & cos\theta \end{pmatrix}`,
-    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\
-    sin\theta & cos\theta \end{pmatrix}`
-
-    Parameters:
-        elem:           Element to be tilted
-        rots:           Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
-          to a corkscrew rotation of the element looking in the direction of
-          the beam. Use :py:obj:`None` to keep the current value.
-        relative:       If :py:obj:`True`, the rotation is added to the
-          existing one
-
-    See Also:
-        :py:func:`shift_elem`
-        :py:func:`.transform_elem`
-    """
-    transform_elem(elem, tilt=rots, relative=relative)
-
-
-def shift_elem(
-    elem: Element,
-    dx: float | None = 0.0,
-    dy: float | None = 0.0,
-    dz: float | None = 0.0,
-    *,
-    relative: bool = False,
-) -> None:
-    r"""Sets the displacements of an :py:class:`.Element`
-
-    The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
-    attributes.
-
-    Parameters:
-        elem:           Element to be shifted
-        dx:             Horizontal displacement [m]. Use :py:obj:`None` to keep
-          the current value.
-        dy:             Vertical displacement [m]. Use :py:obj:`None` to keep
-          the current value.
-        dz:             Longitudinal displacement [m]. Use :py:obj:`None` to keep
-          the current value.
-        relative:       If :py:obj:`True`, the translation is added to the
-          existing one
-
-    See Also:
-        :py:func:`tilt_elem`
-        :py:func:`.transform_elem`
-    """
-    transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
-
-
-def set_rotation(
-    ring: Sequence[Element],
-    tilts=0.0,
-    pitches=0.0,
-    yaws=0.0,
-    *,
-    refpts: Refpts = All,
-    relative=False,
-) -> None:
-    r"""Sets the rotations of a list of elements.
-
-    Parameters:
-        ring:       Lattice description.
-        tilts:      Scalar or Sequence of tilt values applied to the
-          selected elements. Use :py:obj:`None` to keep the current values.
-        pitches:    Scalar or Sequence of pitch values applied to the
-          selected elements. Use :py:obj:`None` to keep the current values.
-        yaws:       Scalar or Sequence of yaw values applied to the
-          selected elements. Use :py:obj:`None` to keep the current values.
-        refpts:     Element selection key.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-        relative:   If :py:obj:`True`, the rotations are added to the existing ones.
-
-    See Also:
-        :py:func:`set_tilt`
-        :py:func:`set_shift`
-    """
-    nb = _refcount(ring, refpts, endpoint=False)
-    tilts = numpy.broadcast_to(tilts, (nb,))
-    pchs = numpy.broadcast_to(pitches, (nb,))
-    yaws = numpy.broadcast_to(yaws, (nb,))
-    for el, tilt, pitch, yaw in zip(refpts_iterator(ring, refpts), tilts, pchs, yaws):
-        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
-
-
-def set_tilt(
-    ring: Sequence[Element], tilts, *, refpts: Refpts = All, relative=False
-) -> None:
-    r"""Sets the tilts of a list of elements.
-
-    Parameters:
-        ring:       Lattice description.
-        tilts:      Scalar or Sequence of tilt values applied to the
-          selected elements. Use :py:obj:`None` to keep the current values.
-        refpts:     Element selection key.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-        relative:   If :py:obj:`True`, the rotation is added to the existing one.
-
-    See Also:
-        :py:func:`set_rotation`
-        :py:func:`set_shift`
-    """
-    nb = _refcount(ring, refpts, endpoint=False)
-    tilts = numpy.broadcast_to(tilts, (nb,))
-    for el, tilt in zip(refpts_iterator(ring, refpts), tilts):
-        transform_elem(el, tilt=tilt, relative=relative)
-
-
-def set_shift(
-    ring: Sequence[Element], dxs, dys, dzs=None, *, refpts: Refpts = All, relative=False
-) -> None:
-    r"""Sets the translations of a list of elements.
-
-    Parameters:
-        ring:       Lattice description.
-        dxs:        Scalar or Sequence of horizontal displacements values applied
-          to the selected elements. Use :py:obj:`None` to keep the current values [m].
-        dys:        Scalar or Sequence of vertical displacements values applied
-          to the selected elements. Use :py:obj:`None` to keep the current values [m].
-        dzs:        Scalar or Sequence of longitudinal displacements values applied
-          to the selected elements. Use :py:obj:`None` to keep the current values [m].
-        refpts:     Element selection key.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-        relative:   If :py:obj:`True`, the displacement is added to the
-          existing one.
-
-    See Also:
-        :py:func:`set_rotation`
-        :py:func:`set_tilt`
-    """
-    nb = _refcount(ring, refpts, endpoint=False)
-    dxs = numpy.broadcast_to(dxs, (nb,))
-    dys = numpy.broadcast_to(dys, (nb,))
-    dzs = numpy.broadcast_to(dzs, (nb,))
-    for el, dx, dy, dz in zip(refpts_iterator(ring, refpts), dxs, dys, dzs):
-        transform_elem(el, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def get_geometry(
