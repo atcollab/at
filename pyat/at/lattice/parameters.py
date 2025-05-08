@@ -5,6 +5,7 @@ import abc
 from collections.abc import Callable
 from operator import add, sub, mul, truediv, pos, neg
 import numpy as np
+from .elements import Element
 from .variables import VariableBase
 
 Number = Union[int, float]
@@ -256,3 +257,25 @@ class ParamArray(np.ndarray):
         it = np.nditer(self, flags=["refs_ok"], order="C")
         contents = " ".join([str(el) for el in it])
         return f"[{contents}]"
+
+
+def __setattr__(self, key, value):
+    try:
+        if isinstance(value, ParamBase):
+            value.set_conversion(self._conversions.get(key, _nop))
+        else:
+            value = self._conversions.get(key, _nop)(value)
+    except Exception as exc:
+        exc.args = ('In element {0}, parameter {1}: {2}'.format(
+            self.FamName, key, exc),)
+        raise
+    else:
+        super(Element, self).__setattr__(key, value)
+
+
+def __getattribute__(self, key):
+    attr = super(Element, self).__getattribute__(key)
+    if isinstance(attr, (ParamBase, ParamArray)):
+        return attr.value
+    else:
+        return attr
