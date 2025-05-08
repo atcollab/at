@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import abc
 import re
-import math
 from abc import ABC
 from collections.abc import Generator, Iterable
 from copy import copy, deepcopy
@@ -53,7 +52,7 @@ class LongtMotion(ABC):
     """Abstract Base class for all Element classes whose instances may modify
     the particle momentum
 
-    Allows to identify elements potentially inducing longitudinal motion.
+    Allows identifying elements potentially inducing longitudinal motion.
 
     Subclasses of :py:class:`LongtMotion` must provide two methods for
     enabling longitudinal motion:
@@ -452,60 +451,6 @@ class Element:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
 
-    def _getshift(self, idx: int):
-        t1 = getattr(self, "T1", _zero6)
-        t2 = getattr(self, "T2", _zero6)
-        return 0.5 * float(t2[idx] - t1[idx])
-
-    def _setshift(self, value: float, idx: int) -> None:
-        t1 = getattr(self, "T1", _zero6.copy())
-        t2 = getattr(self, "T2", _zero6.copy())
-        sm = 0.5 * (t2[idx] + t1[idx])
-        t2[idx] = sm + value
-        t1[idx] = sm - value
-        self.T1 = t1
-        self.T2 = t2
-
-    @property
-    def dx(self) -> float:
-        """Horizontal element shift"""
-        return self._getshift(0)
-
-    @dx.setter
-    def dx(self, value: float) -> None:
-        self._setshift(value, 0)
-
-    @property
-    def dy(self) -> float:
-        """Vertical element shift"""
-        return self._getshift(2)
-
-    @dy.setter
-    def dy(self, value: float) -> None:
-        self._setshift(value, 2)
-
-    @property
-    def tilt(self) -> float:
-        """Element tilt"""
-        r1 = getattr(self, "R1", _eye6)
-        r2 = getattr(self, "R2", _eye6)
-        c = float(r2[0, 0] + r1[0, 0])
-        s = float(r2[2, 0] - r1[2, 0])
-        return math.atan2(s, c)
-
-    @tilt.setter
-    def tilt(self, value: float) -> None:
-        r1 = getattr(self, "R1", _eye6.copy())
-        r2 = getattr(self, "R2", _eye6.copy())
-        ct, st = math.cos(value), math.sin(value)
-        r44 = np.diag([ct, ct, ct, ct])
-        r44[0, 2] = r44[1, 3] = st
-        r44[2, 0] = r44[3, 1] = -st
-        r1[:4, :4] = r44
-        r2[:4, :4] = r44.T
-        self.R1 = r1
-        self.R2 = r2
-
 
 class LongElement(Element):
     """Base class for long elements"""
@@ -521,7 +466,7 @@ class LongElement(Element):
         Other arguments and keywords are given to the base class
         """
         kwargs.setdefault("Length", length)
-        # Ancestor may be either Element of ThinMultipole
+        # Ancestor may be either Element or ThinMultipole
         # noinspection PyArgumentList
         super().__init__(family_name, *args, **kwargs)
 
@@ -616,7 +561,7 @@ class BeamMoments(Element):
 
 
 class SliceMoments(Element):
-    """Element to compute slices mean and std"""
+    """Element computing the mean and std of slices"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["nslice"]
     _conversions = dict(Element._conversions, nslice=int)

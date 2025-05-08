@@ -46,7 +46,8 @@ from .utils import get_s_pos, get_elements, get_value_refpts, set_value_refpts
 
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
-from .utils import refpts_iterator, checktype, set_shift, set_tilt, get_geometry
+from .utils import refpts_iterator, checktype, get_geometry
+from .transformation import set_rotation, set_tilt, set_shift
 from ..constants import clight, e_mass
 
 _TWO_PI_ERROR = 1.0e-4
@@ -1580,6 +1581,7 @@ Lattice.get_bool_index = get_bool_index
 Lattice.refcount = _refcount
 Lattice.set_shift = set_shift
 Lattice.set_tilt = set_tilt
+Lattice.set_rotation = set_rotation
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.select = refpts_iterator

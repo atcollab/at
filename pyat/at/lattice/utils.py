@@ -39,7 +39,8 @@ from enum import Enum
 from fnmatch import fnmatch
 from itertools import compress
 from operator import attrgetter
-from typing import Optional, Union
+from typing import Union
+
 # Necessary for type aliases in python <= 3.8 :
 # from collections.abc import Callable, Sequence, Iterator
 from typing import Callable, Sequence, Iterator, Type
@@ -48,7 +49,6 @@ import numpy
 import numpy.typing as npt
 
 from .elements import Element, Dipole
-from .transformation import transform_elem
 
 _GEOMETRY_EPSIL = 1.0e-3
 
@@ -75,12 +75,6 @@ __all__ = [
     "get_s_pos",
     "refpts_count",
     "refpts_iterator",
-    "set_shift",
-    "set_tilt",
-    "set_rotation",
-    "tilt_elem",
-    "shift_elem",
-    "transform_elem",
     "get_value_refpts",
     "set_value_refpts",
     "Refpts",
@@ -160,7 +154,7 @@ def _type_error(refpts, types):
 
 
 # setval and getval return pickleable functions: no inner, nested function
-# are allowed. So nested functions are replaced be module-level callable
+# is allowed. So nested functions are replaced be module-level callable
 # class instances
 class _AttrItemGetter:
     __slots__ = ["attrname", "index"]
@@ -173,7 +167,7 @@ class _AttrItemGetter:
         return getattr(elem, self.attrname)[self.index]
 
 
-def getval(attrname: str, index: Optional[int] = None) -> Callable:
+def getval(attrname: str, index: int | None = None) -> Callable:
     """Return a callable object which fetches item *index* of
     attribute *attrname* of its operand. Examples:
 
@@ -209,7 +203,7 @@ class _AttrItemSetter:
         getattr(elem, self.attrname)[self.index] = value
 
 
-def setval(attrname: str, index: Optional[int] = None) -> Callable:
+def setval(attrname: str, index: int | None = None) -> Callable:
     """Return a callable object which sets the value of  item *index* of
     attribute *attrname* of its 1st argument to it 2nd orgument.
 
@@ -318,6 +312,7 @@ def set_6d(is_6d: bool) -> Callable:
                 return func(rg, *args, **kwargs)
 
             return wrapper
+
     else:
 
         def setrad_decorator(func):
@@ -361,6 +356,7 @@ def make_copy(copy: bool) -> Callable:
                 return ring
 
             return wrapper
+
     else:
 
         def copy_decorator(func):
@@ -589,7 +585,7 @@ def get_bool_index(
     return boolrefs
 
 
-def checkattr(attrname: str, attrvalue: Optional = None) -> ElementFilter:
+def checkattr(attrname: str, attrvalue=None) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the presence or the value of an attribute
 
@@ -617,7 +613,7 @@ def checkattr(attrname: str, attrvalue: Optional = None) -> ElementFilter:
 
         >>> elts = filter(checkattr("K", 0.0), ring)
 
-        Returns an iterator over all elements in ring that have a
+        Returns an iterator over all elements of ring that have a
         :pycode:`K` attribute equal to 0.0
     """
     if attrvalue is None:
@@ -626,7 +622,7 @@ def checkattr(attrname: str, attrvalue: Optional = None) -> ElementFilter:
         return functools.partial(_chkattrval, attrname, attrvalue)
 
 
-def checktype(eltype: Union[type, tuple[type, ...]]) -> ElementFilter:
+def checktype(eltype: type | tuple[type, ...]) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     r"""Checks the type of an element
 
@@ -672,7 +668,7 @@ def checkname(pattern: str, regex: bool = False) -> ElementFilter:
 
         >>> qps = filter(checkname("QF*"), ring)
 
-        Returns an iterator over all with name starting with ``QF``.
+        Returns an iterator over all the elements with name starting with ``QF``.
     """
     if regex:
         return functools.partial(_chkregex, pattern)
@@ -832,7 +828,7 @@ def get_value_refpts(
     ring: Sequence[Element],
     refpts: Refpts,
     attrname: str,
-    index: Optional[int] = None,
+    index: int | None = None,
     regex: bool = False,
 ):
     r"""Extracts attribute values from selected
@@ -862,7 +858,7 @@ def set_value_refpts(
     refpts: Refpts,
     attrname: str,
     attrvalues,
-    index: Optional[int] = None,
+    index: int | None = None,
     increment: bool = False,
     copy: bool = False,
     regex: bool = False,
@@ -942,106 +938,6 @@ def get_s_pos(
     return s_pos[get_bool_index(ring, refpts, regex=regex)]
 
 
-def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
-    r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
-
-    The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
-    attributes.
-
-    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\
-    -sin\theta & cos\theta \end{pmatrix}`,
-    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\
-    sin\theta & cos\theta \end{pmatrix}`
-
-    Parameters:
-        elem:           Element to be tilted
-        rots:           Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
-          to a corkscrew rotation of the element looking in the direction of
-          the beam
-        relative:       If :py:obj:`True`, the rotation is added to the
-          existing one
-    """
-    transform_elem(elem, tilt=rots, relative=relative)
-
-
-def shift_elem(elem: Element, dx: float = 0.0, dy: float = 0.0,
-               dz: float = 0.0, *, relative: bool = False) -> None:
-    r"""Sets the transverse displacement of an :py:class:`.Element`
-
-    The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
-    attributes.
-
-    Parameters:
-        elem:           Element to be shifted
-        dx:             Horizontal displacement [m]
-        dy:             Vertical displacement [m]
-        dz:             Longitudinal displacement [m]
-        relative:       If :py:obj:`True`, the translation is added to the
-          existing one
-    """
-    transform_elem(elem, dx=dx, dy=dy, dz=dz, relative=relative)
-
-
-def set_rotation(
-    ring: Sequence[Element], tilts=0.0, pitches=0.0, yaws=0.0, relative=False
-) -> None:
-    r"""Sets the tilts of a list of elements.
-
-    Parameters:
-        ring:           Lattice description
-        tilts:          Sequence of tilt values as long as ring or
-          scalar tilt value applied to all elements, default=0
-        pitches:          Sequence of pitch values as long as ring or
-          scalar tilt value applied to all elements, default=0
-        yaws:          Sequence of yaw values as long as ring or
-          scalar tilt value applied to all elements, default=0
-        relative:       If :py:obj:`True`, the rotations are added to the
-          existing ones
-    """
-    tilts = numpy.broadcast_to(tilts, (len(ring),))
-    pitches = numpy.broadcast_to(pitches, (len(ring),))
-    yaws = numpy.broadcast_to(yaws, (len(ring),))
-    for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
-        transform_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
-
-
-def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
-    r"""Sets the tilts of a list of elements.
-
-    Parameters:
-        ring:           Lattice description
-        tilts:          Sequence of tilt values as long as ring or
-          scalar tilt value applied to all elements
-        relative:       If :py:obj:`True`, the rotation is added to the
-          existing one
-    """
-    tilts = numpy.broadcast_to(tilts, (len(ring),))
-    for el, tilt in zip(ring, tilts):
-        transform_elem(el, tilt=tilt, relative=relative)
-
-
-def set_shift(ring: Sequence[Element], dxs, dys, dzs=0., *,
-              relative=False) -> None:
-    r"""Sets the translations of a list of elements.
-
-    Parameters:
-        ring:           Lattice description
-        dxs:            Sequence of horizontal displacements values as long as
-          ring or scalar value applied to all elements [m]
-        dys:            Sequence of vertical displacements values as long as
-          ring or scalar value applied to all elements [m]
-        dzs:            Sequence of longitudinal displacements values as long 
-          as ring or scalar value applied to all elements [m]
-        relative:       If :py:obj:`True`, the displacement is added to the
-          existing one
-    """
-    dxs = numpy.broadcast_to(dxs, (len(ring),))
-    dys = numpy.broadcast_to(dys, (len(ring),))
-    dzs = numpy.broadcast_to(dzs, (len(ring),))
-    for el, dx, dy, dz in zip(ring, dxs, dys, dzs):
-        transform_elem(el, dx=dx, dy=dy, dz=dz, relative=relative)
-
-
 def get_geometry(
     ring: list[Element],
     refpts: Refpts = All,
@@ -1059,7 +955,7 @@ def get_geometry(
         start_coordinates:  *x*, *y*, *angle* at starting point. *x*
           and *y* are ignored if *centered* is :py:obj:`True`.
         centered:           if :py:obj:`True` the coordinates origin is the
-          center of the ring.
+          centre of the ring.
         regex: Use regular expression for *refpts* string matching instead of
           Unix shell-style wildcards.
 
