@@ -67,7 +67,7 @@ class _UnaryOp(_Evaluate):
 class ParamBase(VariableBase):
     """Read-only base class for parameters
 
-    It is used for computed parameters, and should not be instantiated
+    It is used for computed parameters and should not be instantiated
     otherwise. See :py:class:`.Variable` for a description of inherited
     methods
     """
