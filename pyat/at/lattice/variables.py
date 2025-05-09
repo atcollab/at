@@ -91,34 +91,40 @@ __all__ = [
 import abc
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
-from typing import Union
+from typing import TypeVar, Generic
 
 import numpy as np
 import numpy.typing as npt
 
-Number = Union[int, float]
+Number = TypeVar("Number", int, float)
+ValueGetter = Callable[..., Number]
+ValueSetter = Callable[[Number, ...], None]
 
 
 def _nop(value):
     return value
 
 
-class VariableBase(abc.ABC):
+class VariableBase(Generic[Number], abc.ABC):
     """A Variable abstract base class
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
     :py:meth:`~VariableBase._getfun` methods
     """
 
+    # Class constants
+    DEFAULT_BOUNDS = (-np.inf, np.inf)
+    DEFAULT_DELTA = 1.0
+    COUNTER_PREFIX = "var"
+
     _counter = 0
-    _prefix = "var"
 
     def __init__(
         self,
         *,
         name: str = "",
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
-        delta: Number = 1.0,
+        bounds: tuple[Number, Number] = DEFAULT_BOUNDS,
+        delta: Number = DEFAULT_DELTA,
         history_length: int = None,
         ring=None,
     ):
@@ -132,7 +138,7 @@ class VariableBase(abc.ABC):
             ring:       provided to an attempt to get the initial value of the
               variable
         """
-        self.name: str = self._setname(name)  #: Variable name
+        self.name: str = self._generate_name(name)  #: Variable name
         self.bounds: tuple[Number, Number] = bounds  #: Variable bounds
         self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
@@ -145,12 +151,15 @@ class VariableBase(abc.ABC):
             pass
 
     @classmethod
-    def _setname(cls, name):
+    def _generate_name(cls, name: str) -> str:
+        """Generate unique name for variable"""
         cls._counter += 1
-        if name:
-            return name
-        else:
-            return f"{cls._prefix}{cls._counter}"
+        return name if name else f"{cls.COUNTER_PREFIX}{cls._counter}"
+
+    def _check_bounds(self, value: Number) -> None:
+        """Verify value is within bounds"""
+        if value < self.bounds[0] or value > self.bounds[1]:
+            raise ValueError(f"Value {value} must be in range {self.bounds}")
 
     # noinspection PyUnusedLocal
     def _setfun(self, value: Number, ring=None):
@@ -199,8 +208,7 @@ class VariableBase(abc.ABC):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
         """
-        if value < self.bounds[0] or value > self.bounds[1]:
-            raise ValueError(f"set value must be in {self.bounds}")
+        self._check_bounds(value)
         self._setfun(value, ring=ring)
         if np.isnan(self._initial):
             self._initial = value
@@ -227,8 +235,7 @@ class VariableBase(abc.ABC):
             self._initial = value
             self._history = deque([value], self.history_length)
         if check_bounds:
-            if value < self.bounds[0] or value > self.bounds[1]:
-                raise ValueError(f"value out of {self.bounds}")
+            self._check_bounds(value)
         return value
 
     value = property(get, set, doc="Actual value")
@@ -236,10 +243,9 @@ class VariableBase(abc.ABC):
     @property
     def _safe_value(self):
         try:
-            v = self._history[-1]
+            return self._history[-1]
         except IndexError:
-            v = np.nan
-        return v
+            return np.nan
 
     def set_previous(self, ring=None) -> None:
         """Reset to the value before the last one
@@ -350,8 +356,8 @@ class CustomVariable(VariableBase):
 
     def __init__(
         self,
-        setfun: Callable,
-        getfun: Callable,
+        setfun: ValueSetter,
+        getfun: ValueGetter,
         *args,
         name: str = "",
         bounds: tuple[Number, Number] = (-np.inf, np.inf),
