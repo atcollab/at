@@ -20,7 +20,7 @@ import numpy as np
 
 # noinspection PyProtectedMember
 from .variables import _nop
-from .parameters import _array
+from .parameters import ParamArray as _array
 
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
