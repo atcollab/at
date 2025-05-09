@@ -66,8 +66,9 @@ class ParamBase(VariableBase):
     methods
     """
 
+    COUNTER_PREFIX = "calc"
+
     _counter = 0
-    _prefix = "calc"
 
     def __init__(
         self,
@@ -162,15 +163,16 @@ class Param(ParamBase):
     See :py:class:`.Variable` for a description of inherited methods
     """
 
+    COUNTER_PREFIX = "param"
+
     _counter = 0
-    _prefix = "param"
 
     def __init__(
         self,
         value: Number,
         *,
         name: str = "",
-        conversion: Callable[[Number], Number] = _nop,
+        conversion: Callable[[Any], Number] = _nop,
         bounds: tuple[Number, Number] = (-np.inf, np.inf),
         delta: Number = 1.0,
     ):
