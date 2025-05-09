@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 import abc
 from collections.abc import Callable
 from operator import add, sub, mul, truediv, pos, neg
 import numpy as np
-from .variables import VariableBase, _nop
-
-Number = Union[int, float]
+from .variables import Number, VariableBase, _nop
 
 
 class _Evaluate(abc.ABC):
@@ -102,7 +100,7 @@ class ParamBase(VariableBase):
     def _safe_value(self):
         return self._getfun()
 
-    def set_conversion(self, conversion: Callable[[Number], Number]):
+    def set_conversion(self, conversion: Callable[[Any], Number]):
         """Set the data type. Called when a parameter is assigned to an
         :py:class:`.Element` attribute"""
         if conversion is not self._conversion:
@@ -115,8 +113,7 @@ class ParamBase(VariableBase):
         fun = _BinaryOp(add, self, other)
         return ParamBase(fun)
 
-    def __radd__(self, other):
-        return self.__add__(other)
+    __radd__ = __add__
 
     def __pos__(self):
         return ParamBase(_UnaryOp(pos, self))
@@ -136,8 +133,7 @@ class ParamBase(VariableBase):
         fun = _BinaryOp(mul, self, other)
         return ParamBase(fun)
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
+    __rmul__ = __mul__
 
     def __truediv__(self, other):
         fun = _BinaryOp(truediv, self, other)
@@ -175,8 +171,8 @@ class Param(ParamBase):
         *,
         name: str = "",
         conversion: Callable[[Number], Number] = _nop,
-        bounds: tuple[float, float] = (-np.inf, np.inf),
-        delta: float = 1.0,
+        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        delta: Number = 1.0,
     ):
         """
         Args:
