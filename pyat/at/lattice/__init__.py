@@ -10,12 +10,13 @@ from .options import *
 from .particle_object import Particle
 # from .variables import *
 from .variables import VariableList
+from .parameters import *
 from .elements import *
 from .rectangular_bend import *
 from .crabcavity_element import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *
-from .parameters import *
+from .parameterise import *
 from .lattice_object import *
 # from .lattice_variables import *
 from .cavity_access import *
