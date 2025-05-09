@@ -15,8 +15,9 @@ from .elements import *
 from .rectangular_bend import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *
-from .parameterise import *
+from .element_parameterise import *
 from .lattice_object import *
+from .lattice_parameterise import *
 # from .lattice_variables import *
 from .cavity_access import *
 from .variable_elements import *
