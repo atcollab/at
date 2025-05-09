@@ -20,16 +20,17 @@ import numpy as np
 
 # noinspection PyProtectedMember
 from .variables import _nop
+from .parameters import _array
 
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
 
 
-def _array(value, shape=(-1,), dtype=np.float64):
-    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
-        shape, order="F"
-    )
+# def _array(value, shape=(-1,), dtype=np.float64):
+#     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+#     return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
+#         shape, order="F"
+#     )
 
 
 def _array66(value):
