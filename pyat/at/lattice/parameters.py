@@ -10,11 +10,6 @@ from .variables import VariableBase, _nop
 Number = Union[int, float]
 
 
-def _array(value, shape=(-1,), dtype=np.float64):
-    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return ParamArray(value, shape=shape, dtype=dtype)
-
-
 class _Evaluate(abc.ABC):
     @abc.abstractmethod
     def __call__(self): ...
