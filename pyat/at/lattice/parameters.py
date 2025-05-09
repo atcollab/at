@@ -144,7 +144,7 @@ class ParamBase(VariableBase):
         return ParamBase(fun)
 
     def __rtruediv__(self, other):
-        fun = _BinaryOp(add, other, self)
+        fun = _BinaryOp(truediv, other, self)
         return ParamBase(fun)
 
     def __float__(self):
