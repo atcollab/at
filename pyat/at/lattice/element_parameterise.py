@@ -6,7 +6,7 @@ from .variables import _nop
 from .parameters import Param, ParamBase, ParamArray
 
 
-def set_parameter(self, attrname: str, value, index: int = None) -> None:
+def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
     """Set an element's parameter
 
     This allows setting a parameter into an item of an array attribute.
