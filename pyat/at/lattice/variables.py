@@ -98,7 +98,7 @@ import numpy.typing as npt
 
 Number = TypeVar("Number", int, float)
 ValueGetter = Callable[..., Number]
-ValueSetter = Callable[[Number, ...], None]
+ValueSetter = Callable[..., None]
 
 
 def _nop(value):
@@ -125,7 +125,7 @@ class VariableBase(Generic[Number], abc.ABC):
         name: str = "",
         bounds: tuple[Number, Number] = DEFAULT_BOUNDS,
         delta: Number = DEFAULT_DELTA,
-        history_length: int = None,
+        history_length: int | None = None,
         ring=None,
     ):
         """
@@ -362,7 +362,7 @@ class CustomVariable(VariableBase):
         name: str = "",
         bounds: tuple[Number, Number] = (-np.inf, np.inf),
         delta: Number = 1.0,
-        history_length: int = None,
+        history_length: int | None = None,
         ring=None,
         **kwargs,
     ):

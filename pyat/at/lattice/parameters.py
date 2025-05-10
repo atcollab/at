@@ -58,7 +58,7 @@ class _UnaryOp(_Evaluate):
         return self.oper(self.param.value)
 
 
-class ParamBase(VariableBase):
+class ParamBase(VariableBase[Number]):
     """Read-only base class for parameters
 
     It is used for computed parameters and should not be instantiated
@@ -157,7 +157,7 @@ class ParamBase(VariableBase):
         return repr(self._safe_value)
 
 
-class Param(ParamBase):
+class Param(ParamBase[Number]):
     """Standalone scalar parameter
 
     See :py:class:`.Variable` for a description of inherited methods
