@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["set_parameter", "get_parameter", "is_parametrised", "parametrise"]
+__all__ = ["set_parameter", "get_parameter", "is_parameterised", "parameterise"]
 
 import numpy as np
 
@@ -56,7 +56,7 @@ def get_parameter(self, attrname: str, index: int | None = None):
     return attr
 
 
-def is_parametrised(self, attrname: str | None = None,
+def is_parameterised(self, attrname: str | None = None,
                     index: int | None = None) -> bool:
     """Check for the parametrisation of an element
 
@@ -68,7 +68,7 @@ def is_parametrised(self, attrname: str | None = None,
     """
     if attrname is None:
         for attr in self.__dict__:
-            if self.is_parametrised(attr):
+            if self.is_parameterised(attr):
                 return True
         return False
     else:
@@ -81,17 +81,17 @@ def is_parametrised(self, attrname: str | None = None,
             return False
 
 
-def parametrise(self, attrname: str, index: int | None = None,
+def parameterise(self, attrname: str, index: int | None = None,
                 name: str = '') -> ParamBase:
     """Convert an attribute into a parameter
 
     The value of the attribute is kept unchanged. If the attribute is
-    already parametrised, the existing parameter is returned.
+    already parameterised, the existing parameter is returned.
 
     Args:
         attrname:   Attribute name
         index:      Index in an array. If :py:obj:`None`, the
-          whole attribute is parametrised
+          whole attribute is parameterised
         name:       Name of the created parameter
 
     Returns:
@@ -115,7 +115,7 @@ def parametrise(self, attrname: str, index: int | None = None,
     return attr
 
 
-def unparametrise(self, attrname: str | None = None,
+def unparameterise(self, attrname: str | None = None,
                   index: int | None = None) -> None:
     """Freeze the parameter values
 
@@ -175,7 +175,7 @@ Element.__setattr__ = _setattr
 Element.__getattribute__ = _getattribute
 Element.set_parameter = set_parameter
 Element.get_parameter = get_parameter
-Element.is_parametrised = is_parametrised
-Element.parametrise = parametrise
-Element.unparametrise = unparametrise
+Element.is_parameterised = is_parameterised
+Element.parameterise = parameterise
+Element.unparameterise = unparameterise
 Element._get_attribute = _get_attribute

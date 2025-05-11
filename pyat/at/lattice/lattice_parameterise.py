@@ -22,7 +22,7 @@ def set_parameter(self, refpts: Refpts, attrname: str, value,
         elem.set_parameter(attrname, value, index=index)
 
 
-def parametrise(self, refpts: Refpts, attrname: str,
+def parameterise(self, refpts: Refpts, attrname: str,
                 index: int | None = None, name: str = '') -> Param:
     """Convert an attribute of the selected elements into a parameter
 
@@ -49,7 +49,7 @@ def parametrise(self, refpts: Refpts, attrname: str,
     return attr
 
 
-def unparametrise(self, refpts, attrname: str | None = None,
+def unparameterise(self, refpts, attrname: str | None = None,
                   index: int | None = None) -> None:
     """Freeze the value of attributes of the selected elements
 
@@ -61,9 +61,9 @@ def unparametrise(self, refpts, attrname: str | None = None,
           attribute is frozen
     """
     for elem in self.select(refpts):
-        elem.unparametrise(attrname=attrname, index=index)
+        elem.unparameterise(attrname=attrname, index=index)
 
 
 Lattice.set_parameter = set_parameter
-Lattice.parametrise = parametrise
-Lattice.unparametrise = unparametrise
+Lattice.parameterise = parameterise
+Lattice.unparameterise = unparameterise
