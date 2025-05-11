@@ -25,11 +25,20 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         setattr(self, attrname, value)
     else:
         attr = self._get_attribute(attrname)
+        if not isinstance(attr, ParamArray) and isinstance(value, ParamBase):
+            attr = ParamArray(attr, shape=attr.shape, dtype=attr.dtype)
+            setattr(self, attrname, attr)
         attr[index] = value
 
 
 def _get_attribute(self, attrname: str, index: int | None = None):
-    attr = self.__dict__[attrname]
+    try:
+        attr = self.__dict__[attrname]
+    except KeyError:
+        try:
+            attr = self._parameters[attrname]
+        except KeyError:
+            raise AttributeError(attrname) from None
     if index is not None:
         attr = attr[index]
     return attr
@@ -67,18 +76,10 @@ def is_parametrised(self, attrname: str | None = None,
           whole attribute is tested for parametrisation
     """
     if attrname is None:
-        for attr in self.__dict__:
-            if self.is_parametrised(attr):
-                return True
-        return False
+        return len(self._parameters) > 0
     else:
         attr = self._get_attribute(attrname, index=index)
-        if isinstance(attr, ParamBase):
-            return True
-        elif isinstance(attr, np.ndarray):
-            return any(isinstance(item, ParamBase) for item in attr.flat)
-        else:
-            return False
+        return isinstance(attr, (ParamBase, ParamArray))
 
 
 def parametrise(self, attrname: str, index: int | None = None,
@@ -148,6 +149,8 @@ def unparametrise(self, attrname: str | None = None,
             item = attr[index]
             if isinstance(item, ParamBase):
                 attr[index] = item.value
+            if any(not isinstance(item, ParamBase) for item in attr.flat):
+                unparam_attr(attrname, attr)
 
 
 def _setattr(self, key, value):
@@ -161,18 +164,28 @@ def _setattr(self, key, value):
             self.FamName, key, exc),)
         raise
     else:
-        super(Element, self).__setattr__(key, value)
+        if isinstance(value, (ParamBase, ParamArray)):
+            self._parameters[key] = value
+            try:
+                delattr(self, key)
+            except AttributeError:
+                pass
+        else:
+            super(Element, self).__setattr__(key, value)
+            try:
+               del self._parameters[key]
+            except KeyError:
+                pass
 
 
-def _getattribute(self, key):
-    attr = super(Element, self).__getattribute__(key)
-    if isinstance(attr, (ParamBase, ParamArray)):
-        return attr.value
-    else:
-        return attr
+def _getattr(self, key):
+    try:
+        return self._parameters[key].value
+    except KeyError:
+        raise AttributeError(key) from None
 
 Element.__setattr__ = _setattr
-Element.__getattribute__ = _getattribute
+Element.__getattr__ = _getattr
 Element.set_parameter = set_parameter
 Element.get_parameter = get_parameter
 Element.is_parametrised = is_parametrised
