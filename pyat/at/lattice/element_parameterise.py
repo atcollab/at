@@ -138,7 +138,7 @@ def unparametrise(self, attrname: str | None = None,
                     attr[ij] = item.value
 
     if attrname is None:
-        for attrname, attr in self._parameters.items():
+        for attrname, attr in self.__dict__.items():
             unparam_attr(attrname, attr)
     else:
         attr = self._get_attribute(attrname)
