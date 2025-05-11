@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+__all__ = ["ParamBase", "Param", "ParamArray", "AttributeArray"]
+
 from typing import Any
 import abc
 from collections.abc import Callable
@@ -199,6 +201,23 @@ class Param(ParamBase[Number]):
         oldv = self._evaluate()
         super(Param, self).set_conversion(conversion)
         self._evaluate = _Scalar(conversion(oldv))
+
+
+class _SafeArray(np.ndarray):
+    """Subclass of ndarray which forbids setting parameters as items"""
+
+    def __setitem__(self, key, value):
+        if isinstance(value, ParamBase):
+            raise TypeError("Cannot set a parameter into an array")
+        super().__setitem__(key, value)
+
+
+def AttributeArray(value, shape=(-1,), dtype=float):
+    v = np.asfortranarray(value).reshape(shape, order="F")
+    if v.dtype == np.dtype('O'):
+        return ParamArray(v, shape=shape, dtype=dtype)
+    else:
+        return v.astype(dtype, copy=False).view(_SafeArray)
 
 
 class _PArray(np.ndarray):
