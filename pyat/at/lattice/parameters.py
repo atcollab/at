@@ -245,7 +245,7 @@ class _PArray(np.ndarray):
 
 
 class ParamArray(np.ndarray):
-    """Simulate a numpy array where items may be parametrised"""
+    """Simulate a numpy array where items may be parameterised"""
 
     def __new__(cls, value, shape=(-1,), dtype=np.float64):
         obj = np.asfortranarray(value, dtype=object).reshape(shape).view(cls)
