@@ -12,6 +12,7 @@ from .particle_object import Particle
 from .variables import VariableList
 from .elements import *
 from .rectangular_bend import *
+from .crabcavity_element import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .transformation import *
