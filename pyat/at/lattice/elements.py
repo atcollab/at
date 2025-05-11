@@ -19,8 +19,8 @@ import numpy as np
 
 # noinspection PyProtectedMember
 from .variables import _nop
-from .parameters import ParamArray as _array
-
+# from .parameters import ParamArray as _array
+from .parameters import AttributeArray as _array
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
 
@@ -289,6 +289,13 @@ class Element:
     _entrance_fields = ["T1", "R1"]
     _exit_fields = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
+    __slots__ = "_parameters"
+
+    def __new__(cls, *args, **kwargs):
+        obj = super().__new__(cls)
+        # _parameters must be created before any other attribute is set
+        obj._parameters = {}
+        return obj
 
     def __init__(self, family_name: str, **kwargs):
         """
@@ -324,6 +331,11 @@ class Element:
         keywords += [f"{k}={v!r}" for k, v in kwargs.items()]
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
+
+    def _cleanvars(self):
+        v = vars(self).copy()
+        v.update(self._parameters)
+        return v
 
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
@@ -365,15 +377,16 @@ class Element:
         else:
             el = self
         # Remove and swap entrance and exit attributes
+        attrs = el._cleanvars()
         fin = dict(
             swapattr(el, kout, kin)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
-            if kin in vars(el) and kin not in el._no_swap
+            if kin in attrs and kin not in el._no_swap
         )
         fout = dict(
             swapattr(el, kin, kout)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
-            if kout in vars(el) and kout not in el._no_swap
+            if kout in attrs and kout not in el._no_swap
         )
         # Apply swapped entrance and exit attributes
         for key, value in fin.items():
@@ -418,7 +431,7 @@ class Element:
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v = vars(self).copy()
+        v =self._cleanvars()
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
@@ -487,10 +500,9 @@ class LongElement(Element):
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        fin = dict(
-            popattr(el, key) for key in vars(self) if key in self._entrance_fields
-        )
-        fout = dict(popattr(el, key) for key in vars(self) if key in self._exit_fields)
+        attrs = el._cleanvars()
+        fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
+        fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
         element_list = [el._part(f, np.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
