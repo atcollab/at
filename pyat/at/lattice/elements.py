@@ -20,8 +20,7 @@ import numpy as np
 
 # noinspection PyProtectedMember
 from .variables import _nop
-# from .parameters import ParamArray as _array
-from .parameters import AttributeArray as _array
+from .parameters import ParamArray as _array
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
 
@@ -290,13 +289,6 @@ class Element:
     _entrance_fields = ["T1", "R1"]
     _exit_fields = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
-    __slots__ = "_parameters"
-
-    def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls)
-        # _parameters must be created before any other attribute is set
-        obj._parameters = {}
-        return obj
 
     def __init__(self, family_name: str, **kwargs):
         """
@@ -332,11 +324,6 @@ class Element:
         keywords += [f"{k}={v!r}" for k, v in kwargs.items()]
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
-
-    def _cleanvars(self):
-        v = vars(self).copy()
-        v.update(self._parameters)
-        return v
 
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
@@ -378,7 +365,7 @@ class Element:
         else:
             el = self
         # Remove and swap entrance and exit attributes
-        attrs = el._cleanvars()
+        attrs = vars(el)
         fin = dict(
             swapattr(el, kout, kin)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
@@ -432,7 +419,7 @@ class Element:
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v =self._cleanvars()
+        v = vars(self).copy()
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
@@ -555,7 +542,7 @@ class LongElement(Element):
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        attrs = el._cleanvars()
+        attrs = vars(el).copy()
         fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
         fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
