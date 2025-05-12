@@ -144,7 +144,7 @@ class VariableBase(Generic[Number], abc.ABC):
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
-        self._history = deque([], self.history_length)
+        self._history: deque[Number] = deque([], self.history_length)
         try:
             self.get(ring=ring, initial=True)
         except ValueError:
@@ -167,7 +167,7 @@ class VariableBase(Generic[Number], abc.ABC):
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, ring=None) -> Number: ...
+    def _getfun(self, **kwargs) -> Number: ...
 
     @property
     def history(self) -> list[Number]:
@@ -345,7 +345,7 @@ class VariableBase(Generic[Number], abc.ABC):
         return repr(self._safe_value)
 
 
-class CustomVariable(VariableBase):
+class CustomVariable(VariableBase[Number]):
     r"""A Variable with user-defined get and set functions
 
     This is a convenience function allowing user-defined *get* and *set*
