@@ -1,162 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["ParamBase", "Param", "ParamArray", "AttributeArray"]
+__all__ = ["Param", "ParamArray", "AttributeArray"]
 
 from typing import Any
-import abc
 from collections.abc import Callable
-from operator import add, sub, mul, truediv, pos, neg
 import numpy as np
-from .variables import Number, VariableBase, _nop
-
-
-class _Evaluate(abc.ABC):
-    @abc.abstractmethod
-    def __call__(self): ...
-
-
-class _Scalar(_Evaluate):
-    __slots__ = "value"
-
-    def __init__(self, value):
-        if not isinstance(value, (int, float)):
-            raise TypeError("The parameter value must be a scalar")
-        self.value = value
-
-    def __call__(self):
-        return self.value
-
-
-class _BinaryOp(_Evaluate):
-    __slots__ = ["oper", "left", "right"]
-
-    @staticmethod
-    def _set_type(value):
-        if isinstance(value, (int, float)):
-            return _Scalar(value)
-        elif isinstance(value, VariableBase):
-            return value
-        else:
-            msg = "Param Operation not defined for type {0}".format(type(value))
-            raise TypeError(msg)
-
-    def __init__(self, oper, left, right):
-        self.oper = oper
-        self.right = self._set_type(right)
-        self.left = self._set_type(left)
-
-    def __call__(self):
-        return self.oper(self.left.value, self.right.value)
-
-
-class _UnaryOp(_Evaluate):
-    __slots__ = ["oper", "param"]
-
-    def __init__(self, oper, param):
-        self.oper = oper
-        self.param = param
-
-    def __call__(self):
-        return self.oper(self.param.value)
-
-
-class ParamBase(VariableBase[Number]):
-    """Read-only base class for parameters
-
-    It is used for computed parameters and should not be instantiated
-    otherwise. See :py:class:`.Variable` for a description of inherited
-    methods
-    """
-
-    COUNTER_PREFIX = "calc"
-
-    _counter = 0
-
-    def __init__(
-        self,
-        evaluate: _Evaluate,
-        *,
-        name: str = "",
-        conversion: Callable[[Any], Number] = _nop,
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
-        delta: Number = 1.0,
-    ):
-        """
-
-        Args:
-            evaluate:   Evaluator function
-            name:       Name of the parameter
-            conversion: data conversion function
-            bounds:     Lower and upper bounds of the parameter value
-            delta:      Initial variation step
-        """
-        if not isinstance(evaluate, _Evaluate):
-            raise TypeError("'Evaluate' must be an _Evaluate object")
-        self._evaluate = evaluate
-        self._conversion = conversion
-        super(ParamBase, self).__init__(name=name, bounds=bounds, delta=delta)
-
-    def _getfun(self, **kwargs):
-        return self._conversion(self._evaluate())
-
-    @property
-    def _safe_value(self):
-        return self._getfun()
-
-    def set_conversion(self, conversion: Callable[[Any], Number]):
-        """Set the data type. Called when a parameter is assigned to an
-        :py:class:`.Element` attribute"""
-        if conversion is not self._conversion:
-            if self._conversion is _nop:
-                self._conversion = conversion
-            else:
-                raise ValueError("Cannot change the data type of the parameter")
-
-    def __add__(self, other):
-        fun = _BinaryOp(add, self, other)
-        return ParamBase(fun)
-
-    __radd__ = __add__
-
-    def __pos__(self):
-        return ParamBase(_UnaryOp(pos, self))
-
-    def __neg__(self):
-        return ParamBase(_UnaryOp(neg, self))
-
-    def __sub__(self, other):
-        fun = _BinaryOp(sub, self, other)
-        return ParamBase(fun)
-
-    def __rsub__(self, other):
-        fun = _BinaryOp(sub, other, self)
-        return ParamBase(fun)
-
-    def __mul__(self, other):
-        fun = _BinaryOp(mul, self, other)
-        return ParamBase(fun)
-
-    __rmul__ = __mul__
-
-    def __truediv__(self, other):
-        fun = _BinaryOp(truediv, self, other)
-        return ParamBase(fun)
-
-    def __rtruediv__(self, other):
-        fun = _BinaryOp(truediv, other, self)
-        return ParamBase(fun)
-
-    def __float__(self):
-        return float(self._safe_value)
-
-    def __int__(self):
-        return int(self._safe_value)
-
-    def __str__(self):
-        return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
-
-    def __repr__(self):
-        return repr(self._safe_value)
+from .variables import Number, ParamBase, _Constant, _nop
 
 
 class Param(ParamBase[Number]):
@@ -186,21 +35,25 @@ class Param(ParamBase[Number]):
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
-        super(Param, self).__init__(
-            _Scalar(value), name=name, conversion=conversion, bounds=bounds, delta=delta
+        super().__init__(
+            _Constant(conversion(value)),
+            name=name,
+            conversion=conversion,
+            bounds=bounds,
+            delta=delta,
         )
-        self._history.append(self._evaluate())
+        self._history.append(self._evaluator())
 
     def _getfun(self, ring=None):
-        return self._evaluate()
+        return self._evaluator()
 
     def _setfun(self, value, ring=None):
-        self._evaluate = _Scalar(self._conversion(value))
+        self._evaluator = _Constant(self._conversion(value))
 
     def set_conversion(self, conversion: Callable[[Number], Number]):
-        oldv = self._evaluate()
+        oldv = self._evaluator()
         super(Param, self).set_conversion(conversion)
-        self._evaluate = _Scalar(conversion(oldv))
+        self._evaluate = _Constant(conversion(oldv))
 
 
 class _SafeArray(np.ndarray):
@@ -214,7 +67,7 @@ class _SafeArray(np.ndarray):
 
 def AttributeArray(value, shape=(-1,), dtype=float):
     v = np.asfortranarray(value).reshape(shape, order="F")
-    if v.dtype == np.dtype('O'):
+    if v.dtype == "O":
         return ParamArray(v, shape=shape, dtype=dtype)
     else:
         return v.astype(dtype, copy=False).view(_SafeArray)
@@ -226,7 +79,7 @@ class _PArray(np.ndarray):
     # This is the array obtained with an element get_attribute.
     # It is also the one used when setting an item of an array attribute.
 
-    def __new__(cls, value, dtype=np.float64):
+    def __new__(cls, value, dtype=float):
         obj = np.array(value, dtype=dtype, order="F").view(cls)
         obj._parent = value
         return obj
@@ -235,6 +88,7 @@ class _PArray(np.ndarray):
         self._parent = getattr(obj, "_parent", None)
 
     def __setitem__(self, key, value):
+        # report the value to the parent
         super().__setitem__(key, value)
         if self._parent is not None:
             self._parent[key] = value
@@ -245,10 +99,10 @@ class _PArray(np.ndarray):
 
 
 class ParamArray(np.ndarray):
-    """Simulate a numpy array where items may be parameterised"""
+    """Simulate a numpy array where items may be parametrised"""
 
-    def __new__(cls, value, shape=(-1,), dtype=np.float64):
-        obj = np.asfortranarray(value, dtype=object).reshape(shape).view(cls)
+    def __new__(cls, value, shape=(-1,), dtype=float):
+        obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
         obj._value = _PArray(obj, dtype=dtype)
         return obj
 
