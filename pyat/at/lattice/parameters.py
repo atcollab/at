@@ -2,7 +2,7 @@ from __future__ import annotations
 
 __all__ = ["ParamBase", "Param", "ParamArray", "AttributeArray"]
 
-from typing import Any
+from typing import Any, Generic
 import abc
 from collections.abc import Callable
 from operator import add, sub, mul, truediv, pos, neg
@@ -10,12 +10,12 @@ import numpy as np
 from .variables import Number, VariableBase, _nop
 
 
-class _Evaluate(abc.ABC):
+class _Evaluator(Generic[Number], abc.ABC):
     @abc.abstractmethod
-    def __call__(self): ...
+    def __call__(self) -> Number: ...
 
 
-class _Scalar(_Evaluate):
+class _Constant(_Evaluator[Number]):
     __slots__ = "value"
 
     def __init__(self, value):
@@ -23,41 +23,39 @@ class _Scalar(_Evaluate):
             raise TypeError("The parameter value must be a scalar")
         self.value = value
 
-    def __call__(self):
+    def __call__(self) -> Number:
         return self.value
 
 
-class _BinaryOp(_Evaluate):
-    __slots__ = ["oper", "left", "right"]
+class _BinaryOperator(_Evaluator[Number]):
+    __slots__ = ["operator", "left_operand", "right_operand"]
 
     @staticmethod
-    def _set_type(value):
+    def _convert_to_evaluator(value):
         if isinstance(value, (int, float)):
-            return _Scalar(value)
+            return _Constant(value)
         elif isinstance(value, VariableBase):
             return value
-        else:
-            msg = "Param Operation not defined for type {0}".format(type(value))
-            raise TypeError(msg)
+        raise TypeError(f"Parameter operation not defined for type {type(value)}")
 
-    def __init__(self, oper, left, right):
-        self.oper = oper
-        self.right = self._set_type(right)
-        self.left = self._set_type(left)
+    def __init__(self, operator, left, right):
+        self.operator = operator
+        self.right_operand = self._convert_to_evaluator(right)
+        self.left_operand = self._convert_to_evaluator(left)
 
-    def __call__(self):
-        return self.oper(self.left.value, self.right.value)
+    def __call__(self) -> Number:
+        return self.operator(self.left_operand.value, self.right_operand.value)
 
 
-class _UnaryOp(_Evaluate):
-    __slots__ = ["oper", "param"]
+class _UnaryOperator(_Evaluator[Number]):
+    __slots__ = ["operator", "operand"]
 
-    def __init__(self, oper, param):
-        self.oper = oper
-        self.param = param
+    def __init__(self, operator, operand):
+        self.operator = operator
+        self.operand = operand
 
-    def __call__(self):
-        return self.oper(self.param.value)
+    def __call__(self) -> Number:
+        return self.operator(self.operand.value)
 
 
 class ParamBase(VariableBase[Number]):
@@ -71,10 +69,12 @@ class ParamBase(VariableBase[Number]):
     COUNTER_PREFIX = "calc"
 
     _counter = 0
+    _evaluator: _Evaluator[Number]
+    _conversion: Callable[[Any], Number]
 
     def __init__(
         self,
-        evaluate: _Evaluate,
+        evaluator: _Evaluator[Number],
         *,
         name: str = "",
         conversion: Callable[[Any], Number] = _nop,
@@ -84,20 +84,20 @@ class ParamBase(VariableBase[Number]):
         """
 
         Args:
-            evaluate:   Evaluator function
+            evaluator:  Evaluator function
             name:       Name of the parameter
             conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
-        if not isinstance(evaluate, _Evaluate):
+        if not isinstance(evaluator, _Evaluator):
             raise TypeError("'Evaluate' must be an _Evaluate object")
-        self._evaluate = evaluate
+        self._evaluator = evaluator
         self._conversion = conversion
-        super(ParamBase, self).__init__(name=name, bounds=bounds, delta=delta)
+        super().__init__(name=name, bounds=bounds, delta=delta)
 
-    def _getfun(self, **kwargs):
-        return self._conversion(self._evaluate())
+    def _getfun(self, **kwargs) -> Number:
+        return self._conversion(self._evaluator())
 
     @property
     def _safe_value(self):
@@ -113,37 +113,37 @@ class ParamBase(VariableBase[Number]):
                 raise ValueError("Cannot change the data type of the parameter")
 
     def __add__(self, other):
-        fun = _BinaryOp(add, self, other)
+        fun = _BinaryOperator(add, self, other)
         return ParamBase(fun)
 
     __radd__ = __add__
 
     def __pos__(self):
-        return ParamBase(_UnaryOp(pos, self))
+        return ParamBase(_UnaryOperator(pos, self))
 
     def __neg__(self):
-        return ParamBase(_UnaryOp(neg, self))
+        return ParamBase(_UnaryOperator(neg, self))
 
     def __sub__(self, other):
-        fun = _BinaryOp(sub, self, other)
+        fun = _BinaryOperator(sub, self, other)
         return ParamBase(fun)
 
     def __rsub__(self, other):
-        fun = _BinaryOp(sub, other, self)
+        fun = _BinaryOperator(sub, other, self)
         return ParamBase(fun)
 
     def __mul__(self, other):
-        fun = _BinaryOp(mul, self, other)
+        fun = _BinaryOperator(mul, self, other)
         return ParamBase(fun)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        fun = _BinaryOp(truediv, self, other)
+        fun = _BinaryOperator(truediv, self, other)
         return ParamBase(fun)
 
     def __rtruediv__(self, other):
-        fun = _BinaryOp(truediv, other, self)
+        fun = _BinaryOperator(truediv, other, self)
         return ParamBase(fun)
 
     def __float__(self):
@@ -186,21 +186,25 @@ class Param(ParamBase[Number]):
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
-        super(Param, self).__init__(
-            _Scalar(value), name=name, conversion=conversion, bounds=bounds, delta=delta
+        super().__init__(
+            _Constant(value),
+            name=name,
+            conversion=conversion,
+            bounds=bounds,
+            delta=delta,
         )
-        self._history.append(self._evaluate())
+        self._history.append(self._evaluator())
 
-    def _getfun(self, ring=None):
-        return self._evaluate()
+    def _getfun(self, **kwargs) -> Number:
+        return self._evaluator()
 
     def _setfun(self, value, ring=None):
-        self._evaluate = _Scalar(self._conversion(value))
+        self._evaluator = _Constant(self._conversion(value))
 
-    def set_conversion(self, conversion: Callable[[Number], Number]):
-        oldv = self._evaluate()
-        super(Param, self).set_conversion(conversion)
-        self._evaluate = _Scalar(conversion(oldv))
+    def set_conversion(self, conversion: Callable[[Any], Number]):
+        oldv = self._evaluator()
+        super().set_conversion(conversion)
+        self._evaluator = _Constant(conversion(oldv))
 
 
 class _SafeArray(np.ndarray):
@@ -214,7 +218,7 @@ class _SafeArray(np.ndarray):
 
 def AttributeArray(value, shape=(-1,), dtype=float):
     v = np.asfortranarray(value).reshape(shape, order="F")
-    if v.dtype == np.dtype('O'):
+    if v.dtype == np.dtype("O"):
         return ParamArray(v, shape=shape, dtype=dtype)
     else:
         return v.astype(dtype, copy=False).view(_SafeArray)
