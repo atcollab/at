@@ -6,8 +6,9 @@ from .lattice_object import Lattice
 from .parameters import Param
 
 
-def set_parameter(self, refpts: Refpts, attrname: str, value,
-                  index: int | None = None) -> None:
+def set_parameter(
+    self, refpts: Refpts, attrname: str, value, index: int | None = None
+) -> None:
     """Set a parameter as an attribute of the selected elements
 
     Args:
@@ -22,8 +23,9 @@ def set_parameter(self, refpts: Refpts, attrname: str, value,
         elem.set_parameter(attrname, value, index=index)
 
 
-def parameterise(self, refpts: Refpts, attrname: str,
-                index: int | None = None, name: str = '') -> Param:
+def parameterise(
+    self, refpts: Refpts, attrname: str, index: int | None = None, name: str = ""
+) -> Param:
     """Convert an attribute of the selected elements into a parameter
 
     A single parameter is created and assigned to all the selected
@@ -49,8 +51,9 @@ def parameterise(self, refpts: Refpts, attrname: str,
     return attr
 
 
-def unparameterise(self, refpts, attrname: str | None = None,
-                  index: int | None = None) -> None:
+def unparameterise(
+    self, refpts, attrname: str | None = None, index: int | None = None
+) -> None:
     """Freeze the value of attributes of the selected elements
 
     Args:
