@@ -50,10 +50,10 @@ class Param(ParamBase[Number]):
     def _setfun(self, value, ring=None):
         self._evaluator = _Constant(self._conversion(value))
 
-    def set_conversion(self, conversion: Callable[[Number], Number]):
+    def set_conversion(self, conversion: Callable[[Any], Number]):
         oldv = self._evaluator()
-        super(Param, self).set_conversion(conversion)
-        self._evaluate = _Constant(conversion(oldv))
+        super().set_conversion(conversion)
+        self._evaluator = _Constant(conversion(oldv))
 
 
 class _SafeArray(np.ndarray):
