@@ -16,8 +16,7 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         attrname:   Attribute name
         value:      Parameter or value to be set
         index:      Index into an array attribute. If *value* is a
-          parameter, the attribute is converted to a
-          :py:class:`.ParamArray`.
+          parameter, the array attribute is converted to a :py:class:`.ParamArray`.
     """
     if index is None:
         setattr(self, attrname, value)

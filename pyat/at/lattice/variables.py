@@ -163,7 +163,6 @@ class VariableBase(Generic[Number], abc.ABC):
     """
 
     # Class constants
-    DEFAULT_BOUNDS = (-np.inf, np.inf)
     DEFAULT_DELTA = 1.0
     COUNTER_PREFIX = "var"
 
@@ -173,7 +172,7 @@ class VariableBase(Generic[Number], abc.ABC):
         self,
         *,
         name: str = "",
-        bounds: tuple[Number, Number] = DEFAULT_BOUNDS,
+        bounds: tuple[Number, Number] | None = None,
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
         ring=None,
@@ -189,7 +188,9 @@ class VariableBase(Generic[Number], abc.ABC):
               variable
         """
         self.name: str = self._generate_name(name)  #: Variable name
-        self.bounds: tuple[Number, Number] = bounds  #: Variable bounds
+        if bounds is None:
+            bounds = (None, None)
+        self.bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
         self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
@@ -208,8 +209,11 @@ class VariableBase(Generic[Number], abc.ABC):
 
     def _check_bounds(self, value: Number) -> None:
         """Verify value is within bounds"""
-        if value < self.bounds[0] or value > self.bounds[1]:
-            raise ValueError(f"Value {value} must be in range {self.bounds}")
+        min, max = self.bounds
+        if min is not None and value < min:
+            raise ValueError(f"Value {value} must be larger or equal to {min}")
+        if max is not None and value > max:
+            raise ValueError(f"Value {value} must be smaller or equal to {max}")
 
     # noinspection PyUnusedLocal
     def _setfun(self, value: Number, ring=None):
@@ -449,7 +453,7 @@ class ParamBase(VariableBase[Number]):
         *,
         name: str = "",
         conversion: Callable[[Any], Number] = _nop,
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
     ):
         """
@@ -499,7 +503,7 @@ class CustomVariable(VariableBase[Number]):
         getfun: ValueGetter,
         *args,
         name: str = "",
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
         history_length: int | None = None,
         ring=None,

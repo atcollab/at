@@ -24,7 +24,7 @@ class Param(ParamBase[Number]):
         *,
         name: str = "",
         conversion: Callable[[Any], Number] = _nop,
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
     ):
         """
