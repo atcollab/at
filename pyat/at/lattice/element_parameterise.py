@@ -36,7 +36,7 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         array[index] = value
 
 
-def _get_attribute(self, attrname: str, index: int | None = None):
+def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
     try:
         attr = self.__dict__[attrname]
     except KeyError:
@@ -71,7 +71,7 @@ def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
         The parameter object
 
     Raises:
-        TypeError: If the attribute is not a parameter
+        TypeError if the attribute is not a Parameter
     """
     attr = self._get_attribute(attrname, index=index)
     if not isinstance(attr, ParamBase):
@@ -122,8 +122,9 @@ def parameterise(
         array attribute
 
     Raises:
-        TypeError: If the attribute value cannot be converted to a parameter
-        IndexError: If the index is out of range for an array attribute
+        TypeError: If the attribute value is not a valid parameter type (Number)
+        IndexError: If the index is out of bounds for an array attribute
+        AttributeError: If the attribute does not exist
     """
     vini = self._get_attribute(attrname, index=index)
 
@@ -142,7 +143,11 @@ def parameterise(
 
 
 def unparameterise(self, attrname: str | None = None, index: int | None = None) -> None:
-    """Freeze the parameter values
+    """Freeze the parameter values by replacing parameters with their current values.
+
+    This function replaces parameters with their current values, effectively
+    "freezing" them. This is useful when you want to convert a parameterised
+    element back to a regular element with fixed values.
 
     Args:
         attrname:   Attribute name. If :py:obj:`None`, all the attributes
@@ -174,7 +179,7 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
                 setattr(self, attrname, attr.value)
 
 
-def _setattr(self, key, value):
+def _setattr(self, key: str, value: Any) -> None:
     try:
         # Try to convert the value
         if isinstance(value, ParamBase):
