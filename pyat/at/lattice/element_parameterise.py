@@ -26,20 +26,30 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         attrname:   Attribute name
         value:      Parameter or value to be set
         index:      Index into an array attribute. If *value* is a
-          parameter, the attribute is converted to a
-          :py:class:`.ParamArray`.
+          parameter, the array attribute is converted to a :py:class:`.ParamArray`.
     """
     if index is None:
         setattr(self, attrname, value)
     else:
-        attr = self._get_attribute(attrname)
-        attr[index] = value
+        array = self._get_attribute(attrname)
+        try:
+            array[index] = value
+        except IndexError as exc:
+            raise IndexError(
+                f"Index {index} out of bounds for {self.FamName}.{attrname}"
+            ) from exc
 
 
 def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
-    attr = self.__dict__[attrname]
+    try:
+        attr = self.__dict__[attrname]
+    except KeyError:
+        raise AttributeError(f"{self.FamName} has no attribute '{attrname}'") from None
     if index is not None:
-        attr = attr[index]
+        try:
+            attr = attr[index]
+        except IndexError as exc:
+            raise IndexError(f"{self.FamName}.{attrname}: {exc}") from None
     return attr
 
 
@@ -55,6 +65,9 @@ def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
         attrname:   Attribute name
         index:      Index in an array attribute. If :py:obj:`None`, the
           whole attribute is set
+
+    Returns:
+        The parameter object
 
     Raises:
         TypeError if the attribute is not a Parameter
@@ -108,14 +121,14 @@ def parameterise(
         name:       Name of the created parameter
 
     Returns:
-        param:      A :py:class:`.ParamArray` for an array attribute,
-          a :py:class:`.Param` for a scalar attribute or an item in an
-          array attribute
+        A :py:class:`.ParamArray` for an array attribute,
+        a :py:class:`.Param` for a scalar attribute or an item in an
+        array attribute
 
     Raises:
         TypeError: If the attribute value is not a valid parameter type (Number)
         IndexError: If the index is out of bounds for an array attribute
-        KeyError: If the attribute does not exist
+        AttributeError: If the attribute does not exist
     """
     vini = self._get_attribute(attrname, index=index)
 
@@ -123,23 +136,14 @@ def parameterise(
         return vini
 
     try:
-        attr = Param(vini, name=name)
+        param = Param(vini, name=name)
     except TypeError as exc:
         raise TypeError(
             f"Cannot parameterise {self.FamName}.{attrname}: {exc}"
-        ) from exc
+        ) from None
 
-    if index is None:
-        setattr(self, attrname, attr)
-    else:
-        try:
-            varr = self._get_attribute(attrname)
-            varr[index] = attr
-        except IndexError as exc:
-            raise IndexError(
-                f"Index {index} out of bounds for {self.FamName}.{attrname}"
-            ) from exc
-    return attr
+    self.set_parameter(attrname, param, index=index)
+    return param
 
 
 def unparameterise(self, attrname: str | None = None, index: int | None = None) -> None:
@@ -169,13 +173,16 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
                     attr[ij] = item.value
 
     if attrname is None:
+        # freeze all the attributes
         for attrname, attr in self.__dict__.items():
             unparam_attr(attrname, attr)
     else:
         attr = self._get_attribute(attrname)
         if index is None:
+            # freeze a scalar attribute
             unparam_attr(attrname, attr)
         else:
+            # freeze an item in an array attribute
             item = attr[index]
             if isinstance(item, ParamBase):
                 attr[index] = item.value
@@ -183,14 +190,17 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 
 def _setattr(self, key: str, value: Any) -> None:
     try:
+        # Try to convert the value
         if isinstance(value, ParamBase):
             value.set_conversion(self._conversions.get(key, _nop))
         else:
             value = self._conversions.get(key, _nop)(value)
     except Exception as exc:
+        # Conversion failed - provide a more descriptive error message
         exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
         raise
     else:
+        # Conversion succeeded
         super(Element, self).__setattr__(key, value)
 
 
