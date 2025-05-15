@@ -5,6 +5,7 @@ __all__ = ["Param", "ParamArray", "AttributeArray"]
 from typing import Any
 from collections.abc import Callable
 import numpy as np
+import numpy.typing as npt
 from .variables import Number, ParamBase, _Constant, _nop
 
 
@@ -26,7 +27,7 @@ class Param(ParamBase[Number]):
         conversion: Callable[[Any], Number] = _nop,
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
-    ):
+    ) -> None:
         """
         Args:
             value:      Initial value of the parameter
@@ -57,15 +58,35 @@ class Param(ParamBase[Number]):
 
 
 class _SafeArray(np.ndarray):
-    """Subclass of ndarray which forbids setting parameters as items"""
+    """Subclass of ndarray which forbids setting parameters as items.
 
-    def __setitem__(self, key, value):
+    This array type is used for element attributes that should not contain
+    parameters. It raises a TypeError if a parameter is assigned to any element.
+    """
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        """Set an item in the array, preventing parameter assignment."""
         if isinstance(value, ParamBase):
             raise TypeError("Cannot set a parameter into an array")
         super().__setitem__(key, value)
 
 
-def AttributeArray(value, shape=(-1,), dtype=float):
+def AttributeArray(
+    value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
+) -> np.ndarray:
+    """Create an array of attributes, which may contain parameters.
+
+    This function creates either a ParamArray (if the input contains parameters)
+    or a _SafeArray (if the input contains only regular values).
+
+    Args:
+        value: Input array or sequence
+        shape: Shape of the output array
+        dtype: Data type of the output array
+
+    Returns:
+        Either a ParamArray or a _SafeArray depending on the input
+    """
     v = np.asfortranarray(value).reshape(shape, order="F")
     if v.dtype == "O":
         return ParamArray(v, shape=shape, dtype=dtype)
@@ -74,52 +95,82 @@ def AttributeArray(value, shape=(-1,), dtype=float):
 
 
 class _PArray(np.ndarray):
-    """Subclass of ndarray which reports to its parent ParamArray"""
+    """Subclass of ndarray which reports changes back to its parent ParamArray.
 
-    # This is the array obtained with an element get_attribute.
-    # It is also the one used when setting an item of an array attribute.
+    This array is used as the value property of ParamArray. When items in this array
+    are modified, the changes are propagated back to the parent ParamArray.
 
-    def __new__(cls, value, dtype=float):
-        obj = np.array(value, dtype=dtype, order="F").view(cls)
+    This is the array obtained with an element get_attribute.
+    It is also the one used when setting an item of an array attribute.
+    """
+
+    def __new__(cls, value: Any, dtype: npt.DTypeLike = float):
+        """Create a new _PArray instance.
+
+        Args:
+            value: The parent ParamArray
+            dtype: Data type of the array
+
+        Returns:
+            A new _PArray instance
+        """
+        obj = np.array(value, dtype=dtype).view(cls)
         obj._parent = value
         return obj
 
-    def __array_finalize__(self, obj):
+    def __array_finalize__(self, obj: Any) -> None:
         self._parent = getattr(obj, "_parent", None)
 
-    def __setitem__(self, key, value):
-        # report the value to the parent
+    def __setitem__(self, key: Any, value: Any) -> None:
         super().__setitem__(key, value)
+        # report the value to the parent
         if self._parent is not None:
             self._parent[key] = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # Simulate a standard ndarray
         return repr(self.view(np.ndarray))
 
 
 class ParamArray(np.ndarray):
-    """Simulate a numpy array where items may be parametrised"""
+    """Simulate a numpy array where items may be parameterised.
 
-    def __new__(cls, value, shape=(-1,), dtype=float):
+    This class allows creating arrays that can contain Parameter objects. It provides
+    a `value` property that returns a numeric array with the current values of all
+    parameters. Changes to the numeric array are propagated back to the parameters.
+
+    This is primarily used for element attributes that can be parameterised.
+    """
+
+    def __new__(
+        cls, value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
+    ):
+        """Create a new ParamArray instance."""
         obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
-        obj._value = _PArray(obj, dtype=dtype)
+        obj._dtype = dtype
         return obj
 
-    def __array_finalize__(self, obj):
-        val = getattr(obj, "_value", None)
-        if val is not None:
-            self._value = _PArray(self, dtype=val.dtype)
+    def __array_finalize__(self, obj: Any) -> None:
+        self._dtype = getattr(obj, "_dtype", float)
 
     @property
-    def value(self):
-        self._value[:] = self
-        return self._value
+    def value(self) -> np.ndarray:
+        """Get a numeric array with the current values of all parameters.
 
-    def __repr__(self):
+        This property returns a _PArray that contains the numeric values of all
+        parameters in the array. Changes to this array are propagated back to
+        the parameters.
+
+        Returns:
+            A numeric array with the current parameter values
+        """
+        # Update the numeric array with current parameter values
+        return _PArray(self, dtype=self._dtype)
+
+    def __repr__(self) -> str:
         return repr(self.value)
 
-    def __str__(self):
+    def __str__(self) -> str:
         it = np.nditer(self, flags=["refs_ok"], order="C")
         contents = " ".join([str(el) for el in it])
         return f"[{contents}]"

@@ -150,7 +150,7 @@ class _Constant(_Evaluator[Number]):
         """
         if not isinstance(value, (int, float)):
             raise TypeError("The parameter value must be a scalar")
-        self.value = value
+        self.value: Number = value
 
     def __call__(self) -> Number:
         return self.value
@@ -160,7 +160,7 @@ class _BinaryOperator(_Evaluator[Number]):
     __slots__ = ["operator", "left_operand", "right_operand"]
 
     @staticmethod
-    def _convert_to_evaluator(value) -> _Evaluator[Number]:
+    def _convert_to_evaluator(value):
         """Convert a value to an evaluator"""
         if isinstance(value, (int, float)):
             return _Constant(value)
@@ -168,7 +168,7 @@ class _BinaryOperator(_Evaluator[Number]):
             return value
         raise TypeError(f"Parameter operation not defined for type {type(value)}")
 
-    def __init__(self, operator, left, right):
+    def __init__(self, operator, left, right) -> None:
         """Initialize a binary operator
 
         Args:
@@ -187,7 +187,7 @@ class _BinaryOperator(_Evaluator[Number]):
 class _UnaryOperator(_Evaluator[Number]):
     __slots__ = ["operator", "operand"]
 
-    def __init__(self, operator, operand):
+    def __init__(self, operator, operand) -> None:
         """Initialize a unary operator
 
         Args:
@@ -222,7 +222,7 @@ class VariableBase(Generic[Number], abc.ABC):
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
         ring=None,
-    ):
+    ) -> None:
         """
         Parameters:
             name:       Name of the Variable
@@ -535,7 +535,7 @@ class ParamBase(VariableBase[Number]):
         conversion: Callable[[Any], Number] = _nop,
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
-    ):
+    ) -> None:
         """
 
         Args:
@@ -588,7 +588,7 @@ class CustomVariable(VariableBase[Number]):
         history_length: int | None = None,
         ring=None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Parameters:
             getfun:     Function for getting the variable value. Called as
