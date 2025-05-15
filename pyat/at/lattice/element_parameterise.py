@@ -1,6 +1,14 @@
 from __future__ import annotations
 
-__all__ = ["set_parameter", "get_parameter", "is_parameterised", "parameterise"]
+__all__ = [
+    "set_parameter",
+    "get_parameter",
+    "is_parameterised",
+    "parameterise",
+    "unparameterise",
+]
+
+from typing import Any
 
 from .elements import Element
 from .variables import _nop
@@ -41,7 +49,7 @@ def _get_attribute(self, attrname: str, index: int | None = None):
     return attr
 
 
-def get_parameter(self, attrname: str, index: int | None = None):
+def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
     """Extract a parameter of an element
 
     Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
@@ -53,6 +61,12 @@ def get_parameter(self, attrname: str, index: int | None = None):
         attrname:   Attribute name
         index:      Index in an array attribute. If :py:obj:`None`, the
           whole attribute is set
+
+    Returns:
+        The parameter object
+
+    Raises:
+        TypeError: If the attribute is not a parameter
     """
     attr = self._get_attribute(attrname, index=index)
     if not isinstance(attr, ParamBase):
@@ -72,6 +86,9 @@ def is_parameterised(
           if any attribute is parametrized
         index:      Index in an array attribute. If :py:obj:`None`, the
           whole attribute is tested for parametrisation
+
+    Returns:
+        True if the element, attribute, or array item is parameterised, False otherwise
     """
     if attrname is None:
         return len(self._parameters) > 0
@@ -95,10 +112,13 @@ def parameterise(
         name:       Name of the created parameter
 
     Returns:
-        param:      A :py:class:`.ParamArray` for an array attribute,
-          a :py:class:`.Param` for a scalar attribute or an item in an
-          array attribute
+        A :py:class:`.ParamArray` for an array attribute,
+        a :py:class:`.Param` for a scalar attribute or an item in an
+        array attribute
 
+    Raises:
+        TypeError: If the attribute value cannot be converted to a parameter
+        IndexError: If the index is out of range for an array attribute
     """
     vini = self._get_attribute(attrname, index=index)
 
@@ -150,16 +170,14 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 
 def _setattr(self, key, value):
     try:
-        # Try to convert the valus
+        # Try to convert the value
         if isinstance(value, ParamBase):
             value.set_conversion(self._conversions.get(key, _nop))
         else:
             value = self._conversions.get(key, _nop)(value)
     except Exception as exc:
-        # Conversion failed
-        exc.args = (
-            "In element {0}, parameter {1}: {2}".format(self.FamName, key, exc),
-        )
+        # Conversion failed - provide a more descriptive error message
+        exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
         raise
     else:
         # Conversion succeeded
@@ -169,6 +187,7 @@ def _setattr(self, key, value):
             try:
                 delattr(self, key)
             except AttributeError:
+                # Attribute doesn't exist, which is fine
                 pass
         else:
             # Store the attribute and remove the parameter
@@ -176,10 +195,11 @@ def _setattr(self, key, value):
             try:
                 del self._parameters[key]
             except KeyError:
+                # Parameter doesn't exist, which is fine
                 pass
 
 
-def _getattr(self, key):
+def _getattr(self, key) -> Any:
     try:
         return self._parameters[key].value
     except KeyError:
