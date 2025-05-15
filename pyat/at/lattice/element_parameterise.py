@@ -13,8 +13,8 @@ from typing import Any
 import numpy as np
 
 from .elements import Element
-from .parameters import Param, ParamBase, ParamArray
 from .variables import _nop
+from .parameters import Param, ParamBase, ParamArray
 
 
 def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
@@ -90,6 +90,9 @@ def is_parameterised(
           if any attribute is parametrized
         index:      Index in an array attribute. If :py:obj:`None`, the
           whole attribute is tested for parametrisation
+
+    Returns:
+        True if the element, attribute, or array item is parameterised, False otherwise
     """
     if attrname is None:
         for attr in self.__dict__:
