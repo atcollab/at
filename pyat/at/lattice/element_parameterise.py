@@ -43,7 +43,9 @@ def _get_attribute(self, attrname: str, index: int | None = None):
         try:
             attr = self._parameters[attrname]
         except KeyError:
-            raise AttributeError(attrname) from None
+            raise AttributeError(
+                f"{self.FamName} has no attribute '{attrname}'"
+            ) from None
     if index is not None:
         try:
             attr = attr[index]
