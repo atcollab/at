@@ -289,7 +289,7 @@ class Element:
     _entrance_fields = ["T1", "R1"]
     _exit_fields = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
-    __slots__ = "_parameters"
+    __slots__ = ["_parameters", "__dict__"]
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
