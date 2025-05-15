@@ -207,7 +207,7 @@ def _setattr(self, key: str, value: Any) -> None:
                 pass
         else:
             # Store the attribute and remove the parameter
-            super(Element, self).__setattr__(key, value)
+            object.__setattr__(self, key, value)
             try:
                 del self._parameters[key]
             except KeyError:
