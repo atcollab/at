@@ -29,11 +29,11 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
     if index is None:
         setattr(self, attrname, value)
     else:
-        attr = self._get_attribute(attrname)
-        if not isinstance(attr, ParamArray) and isinstance(value, ParamBase):
-            attr = ParamArray(attr, shape=attr.shape, dtype=attr.dtype)
-            setattr(self, attrname, attr)
-        attr[index] = value
+        array = self._get_attribute(attrname)
+        if not isinstance(array, ParamArray) and isinstance(value, ParamBase):
+            array = ParamArray(array, shape=array.shape, dtype=array.dtype)
+            setattr(self, attrname, array)
+        array[index] = value
 
 
 def _get_attribute(self, attrname: str, index: int | None = None):
@@ -45,7 +45,10 @@ def _get_attribute(self, attrname: str, index: int | None = None):
         except KeyError:
             raise AttributeError(attrname) from None
     if index is not None:
-        attr = attr[index]
+        try:
+            attr = attr[index]
+        except IndexError as exc:
+            raise IndexError(f"{self.FamName}.{attrname}: {exc}") from None
     return attr
 
 
@@ -125,14 +128,15 @@ def parameterise(
     if isinstance(vini, ParamBase):
         return vini
 
-    attr = Param(vini, name=name)  # raises TypeError if vini is not a Number
+    try:
+        param = Param(vini, name=name)
+    except TypeError as exc:
+        raise TypeError(
+            f"Cannot parameterise {self.FamName}.{attrname}: {exc}"
+        ) from None
 
-    if index is None:
-        setattr(self, attrname, attr)
-    else:
-        varr = self._get_attribute(attrname)
-        varr[index] = attr  # raises IndexError it the attr is not an array
-    return attr
+    self.set_parameter(attrname, param, index=index)
+    return param
 
 
 def unparameterise(self, attrname: str | None = None, index: int | None = None) -> None:
