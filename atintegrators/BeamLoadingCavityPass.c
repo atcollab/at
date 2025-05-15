@@ -15,6 +15,7 @@ struct elem
   int blmode;
   int cavitymode;
   int buffersize;
+  int usebuffer;
   double normfact;
   double phasegain;
   double voltgain;
@@ -63,6 +64,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     long nturnsw = Elem->nturnsw;
     long blmode = Elem->blmode;
     long buffersize = Elem->buffersize;
+    long usebuffer = Elem->usebuffer;
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
@@ -84,7 +86,9 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vcavk = Elem->vcav;
     double *vgenk = Elem->vgen;
     double detune_angle = Elem->detune_angle;
-    double tot_current=0.0;
+    int bufferlengthnow = 0;
+    double vbeam_set[] = {vbeam_phasor[0], vbeam_phasor[1]};
+    double tot_current = 0.0;
     int i;
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
     int c;
@@ -140,14 +144,48 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
                 r6[4] += kz[islice]; 
             }
         }
-        if(cavitymode==1){
-            update_vgen(vbeamk,vcavk,vgenk,phasegain,voltgain,detune_angle); 
-        }
+        
+        // First write the values to the buffer
         if(buffersize>0){
             write_buffer(vbeamk, vbeam_buffer, 2, buffersize);
             write_buffer(vgenk, vgen_buffer, 2, buffersize);
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
+        }   
+
+        if(usebuffer){
+            // Compute the length of the buffer as we will not act until 
+            // the buffer is full. (2 arrays of vbeam and psi)
+            
+            
+            bufferlengthnow = 0;
+            for (c=0; c<2*buffersize; c++){
+                if (vbeam_buffer[c]!=0.0){
+                    bufferlengthnow += 1;
+                }
+            }
+            bufferlengthnow /= 2;
+            // Now compute the mean vbeam and mean psi and set it to vbeam_set
+            if(bufferlengthnow==buffersize){
+                for (c=0; c<buffersize; c++) {
+                    vbeam_set[0] += vbeam_buffer[2*c];
+                    vbeam_set[1] += vbeam_buffer[2*c+1];   
+                }
+                vbeam_set[0] /= buffersize ; 
+                vbeam_set[1] /= buffersize ;                 
+            }
         }
+        else {
+            vbeam_set[0] = vbeamk[0];
+            vbeam_set[1] = vbeamk[1];
+        }
+        
+        
+        if(cavitymode==1){
+            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,detune_angle); 
+        }     
+
+
+        
         atFree(buffer);
     }
 }
@@ -161,7 +199,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy;
     int nturn=Param->nturn;
     if (!Elem) {
-        long nslice,nturns,blmode,cavitymode, buffersize;
+        long nslice,nturns,blmode,cavitymode, buffersize, usebuffer;
         double wakefact;
         double normfact, phasegain, voltgain;
         double *turnhistory;
@@ -186,6 +224,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         nturns=atGetLong(ElemData,"_nturns"); check_error();
         blmode=atGetLong(ElemData,"_blmode"); check_error();
         buffersize=atGetLong(ElemData,"_buffersize"); check_error();
+        usebuffer=atGetLong(ElemData,"_usebuffer"); check_error();
         cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
@@ -238,6 +277,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vbeam_phasor = vbeam_phasor;
         Elem->cavitymode = cavitymode;
         Elem->buffersize = buffersize;
+        Elem->usebuffer = usebuffer;
         Elem->vgen_buffer = vgen_buffer;
         Elem->vbeam_buffer = vbeam_buffer;
         Elem->vbunch_buffer = vbunch_buffer;
@@ -282,7 +322,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
       
-      long nslice,nturns,blmode,cavitymode, buffersize;
+      long nslice,nturns,blmode,cavitymode,buffersize,usebuffer;
       double wakefact;
       double normfact, phasegain, voltgain;
       double *turnhistory;
@@ -306,6 +346,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       nturns=atGetLong(ElemData,"_nturns"); check_error();
       blmode=atGetLong(ElemData,"_blmode"); check_error();
       buffersize=atGetLong(ElemData,"_buffersize"); check_error();
+      use=atGetLong(ElemData,"_usebuffer"); check_error();Q
       cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
       wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
       qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
@@ -352,6 +393,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->voltgain = voltgain;
       Elem->vbeam_phasor = vbeam_phasor;
       Elem->buffersize = buffersize;
+      Elem->usebuffer = usebuffer;
       Elem->vgen_buffer = vgen_buffer;
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
@@ -369,7 +411,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(24,1);
+      plhs[0] = mxCreateCellMatrix(25,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -394,6 +436,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],21,mxCreateString("_vbeam_buffer"));
       mxSetCell(plhs[0],22,mxCreateString("_vbunch_buffer"));
       mxSetCell(plhs[0],23,mxCreateString("_buffersize"));
+      mxSetCell(plhs[0],24,mxCreateString("_buffersize"));
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(3,1);

@@ -403,7 +403,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         vbi[ib] = 0.0;
         totalWb[ib] = 0.0;
     }
-    
+
     for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
         ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
@@ -439,7 +439,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     vbeamkc /= (totalW);
     vbeamk[0] = cabs(vbeamkc);
     vbeamk[1] = carg(vbeamkc);   
-    
+
     for(i=0;i<nbunch;i++){
         double vr = vbr[i]/totalWb[i];
         double vi = vbi[i]/totalWb[i];
