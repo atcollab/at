@@ -33,7 +33,12 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         if not isinstance(array, ParamArray) and isinstance(value, ParamBase):
             array = ParamArray(array, shape=array.shape, dtype=array.dtype)
             setattr(self, attrname, array)
-        array[index] = value
+        try:
+            array[index] = value
+        except IndexError as exc:
+            raise IndexError(
+                f"Index {index} out of bounds for {self.FamName}.{attrname}"
+            ) from exc
 
 
 def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
