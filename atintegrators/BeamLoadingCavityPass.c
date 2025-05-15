@@ -346,7 +346,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       nturns=atGetLong(ElemData,"_nturns"); check_error();
       blmode=atGetLong(ElemData,"_blmode"); check_error();
       buffersize=atGetLong(ElemData,"_buffersize"); check_error();
-      use=atGetLong(ElemData,"_usebuffer"); check_error();Q
+      usebuffer=atGetLong(ElemData,"_usebuffer"); check_error();
       cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
       wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
       qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
