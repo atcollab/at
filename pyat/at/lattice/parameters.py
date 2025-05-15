@@ -70,6 +70,10 @@ class _SafeArray(np.ndarray):
             raise TypeError("Cannot set a parameter into an array")
         super().__setitem__(key, value)
 
+    def __repr__(self) -> str:
+        # Simulate a standard ndarray
+        return repr(self.view(np.ndarray))
+
 
 def AttributeArray(
     value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
