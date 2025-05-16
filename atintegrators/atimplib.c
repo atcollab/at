@@ -467,7 +467,11 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
 static void compute_buffer_mean(double *out_array, double *buffer, long buffersize, long numcolumns){
 
     int c,p;
-
+    
+    for (p=0; p<numcolumns; p++) {
+        out_array[p] = 0.0;
+    }
+    
     for (c=0; c<buffersize; c++) {
         for (p=0; p<numcolumns; p++) {
             out_array[p] += buffer[2*c+p];
