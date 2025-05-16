@@ -168,17 +168,12 @@ erad = _cst["classical electron radius"][0]  # [m]
 prad = erad * emass / pmass  # [m]
 
 
-class MadParameter(str):
+class MadParameter:
     """MAD parameter
 
     A MAD parameter is an expression which can be evaluated n the context
     of a MAD parser
     """
-
-    def __new__(cls, parser, expr):
-        return super().__new__(cls, expr)
-
-    # noinspection PyUnusedLocal
     def __init__(self, parser: _MadParser, expr: str):
         """Args:
             parser: MadParser instance defining the context for evaluation
@@ -187,13 +182,14 @@ class MadParameter(str):
         The expression may contain MAD parameter names, arithmetic operators and
         mathematical functions known by MAD
         """
+        self.expr = expr
         self.parser = parser
 
     def __float__(self):
-        return float(self.parser.evaluate(self))
+        return float(self.parser.evaluate(self.expr))
 
     def __int__(self):
-        return int(self.parser.evaluate(self))
+        return int(self.parser.evaluate(self.expr))
 
     def __add__(self, other):
         return float(self) + float(other)
@@ -231,8 +227,14 @@ class MadParameter(str):
     def __pos__(self):
         return +float(self)
 
+    def __str__(self):
+        return self.expr
+
+    def __repr__(self):
+        return f"{self.evaluate()}"
+
     def evaluate(self):
-        return self.parser.evaluate(self)
+        return self.parser.evaluate(self.expr)
 
 
 def sinc(x: float) -> float:
