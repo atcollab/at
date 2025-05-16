@@ -156,23 +156,11 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             // Compute the length of the buffer as we will not act until 
             // the buffer is full. (2 arrays of vbeam and psi)
             
-            
-            bufferlengthnow = 0;
-            for (c=0; c<2*buffersize; c++){
-                if (vbeam_buffer[c]!=0.0){
-                    bufferlengthnow += 1;
-                }
-            }
-            bufferlengthnow /= 2;
-            // Now compute the mean vbeam and mean psi and set it to vbeam_set
-            if(bufferlengthnow==buffersize){
-                for (c=0; c<buffersize; c++) {
-                    vbeam_set[0] += vbeam_buffer[2*c];
-                    vbeam_set[1] += vbeam_buffer[2*c+1];   
-                }
-                vbeam_set[0] /= buffersize ; 
-                vbeam_set[1] /= buffersize ;                 
-            }
+            bufferlengthnow = check_buffer_length(vbeam_buffer, buffersize, 2);
+
+            if ( bufferlengthnow == buffersize){
+                compute_buffer_mean(vbeam_set, vbeam_buffer, buffersize, 2);
+            } 
         }
         else {
             vbeam_set[0] = vbeamk[0];
