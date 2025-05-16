@@ -379,7 +379,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double energy, double beta, double *vbeamk, double *vbunch){ 
                           
     #ifndef _MSC_VER  
-    int i,ib,is;
+    int i,ib;
     double wi;
     double selfkick;
     int sliceperturn = nslice*nbunch;
@@ -403,7 +403,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         vbi[ib] = 0.0;
         totalWb[ib] = 0.0;
     }
-    
+
     for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
         ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
@@ -439,7 +439,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     vbeamkc /= (totalW);
     vbeamk[0] = cabs(vbeamkc);
     vbeamk[1] = carg(vbeamkc);   
-    
+
     for(i=0;i<nbunch;i++){
         double vr = vbr[i]/totalWb[i];
         double vi = vbi[i]/totalWb[i];
@@ -463,3 +463,37 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
     vgen[0] += (vga-vgen[0])*voltgain;
     vgen[1] += (vgp-vgen[1])*phasegain;
 }
+
+static void compute_buffer_mean(double *out_array, double *buffer, long buffersize, long numcolumns){
+
+    int c,p;
+    
+    for (p=0; p<numcolumns; p++) {
+        out_array[p] = 0.0;
+    }
+    
+    for (c=0; c<buffersize; c++) {
+        for (p=0; p<numcolumns; p++) {
+            out_array[p] += buffer[2*c+p];
+        }
+    }
+    
+    for (p=0; p<numcolumns; p++) {
+        out_array[p] /= buffersize ; 
+    }
+}
+
+int check_buffer_length(double *buffer, long buffersize, long numcolumns){
+    int c;
+    int bufferlengthnow=0;
+    for (c=0; c<numcolumns*buffersize; c++){
+        if (buffer[c]!=0.0){
+            bufferlengthnow += 1;
+        }
+    }
+    bufferlengthnow /= numcolumns;
+    return bufferlengthnow;
+}
+
+
+

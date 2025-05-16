@@ -163,7 +163,9 @@ class BeamLoadingElement(RFCavity, Collective):
                 RF system [m]. If not specified, it will be calculated using 
                 get_timelag_fromU0. Defines the expected position of the beam to be
                 used for the beam loading setpoints.        
-            
+            use_buffer (bool): If True, then the vgen and vbeam used for the feedback
+                is taken to be the mean value of the respective buffer.
+                
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -195,6 +197,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
         self._buffersize = buffersize
+        self._usebuffer = kwargs.pop('usebuffer', False) 
         self._vgen_buffer = numpy.zeros(1)
         self._vbeam_buffer = numpy.zeros(1)
         self._vbunch_buffer = numpy.zeros(1)
@@ -257,9 +260,11 @@ class BeamLoadingElement(RFCavity, Collective):
         else:
             vgen = self.Voltage
             psi = 0
-            
+
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
-                                   numpy.pi-psi])
+                                   numpy.pi+psi])
+        self._vbeam_phasor = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
+                                   numpy.pi+psi])                      
         self._vgen = numpy.array([vgen, psi])
 
     @property
