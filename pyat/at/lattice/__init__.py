@@ -9,7 +9,8 @@ from .axisdef import *
 from .options import *
 from .particle_object import Particle
 # from .variables import *
-from .variables import VariableList
+from .parser import *
+from .variables import VariableList, ParamBase
 from .parameters import *
 from .elements import *
 from .rectangular_bend import *

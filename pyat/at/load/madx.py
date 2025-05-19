@@ -148,7 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem
+from ..lattice import Lattice, Particle, elements as elt, tilt_elem, StrParameter
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -168,28 +168,17 @@ erad = _cst["classical electron radius"][0]  # [m]
 prad = erad * emass / pmass  # [m]
 
 
-class MadParameter:
+class MadParameter(StrParameter):
     """MAD parameter
 
-    A MAD parameter is an expression which can be evaluated n the context
+    A MAD parameter is an expression which can be evaluated ifn the context
     of a MAD parser
     """
-    def __init__(self, parser: _MadParser, expr: str):
-        """Args:
-            parser: MadParser instance defining the context for evaluation
-            expr:   expression to be evaluated
-
-        The expression may contain MAD parameter names, arithmetic operators and
-        mathematical functions known by MAD
-        """
-        self.expr = expr
-        self.parser = parser
-
     def __float__(self):
-        return float(self.parser.evaluate(self.expr))
+        return float(self.value)
 
     def __int__(self):
-        return int(self.parser.evaluate(self.expr))
+        return int(self.value)
 
     def __add__(self, other):
         return float(self) + float(other)
@@ -231,10 +220,10 @@ class MadParameter:
         return self.expr
 
     def __repr__(self):
-        return f"{self.evaluate()}"
+        return f"{self.value}"
 
     def evaluate(self):
-        return self.parser.evaluate(self.expr)
+        return self.value
 
 
 def sinc(x: float) -> float:
@@ -339,7 +328,7 @@ class _MadElement(ElementDescr):
 
         def mpeval(v):
             if isinstance(v, MadParameter):
-                return v.evaluate()
+                return v.value
             elif isinstance(v, str):
                 return v
             elif isinstance(v, Sequence):
@@ -859,7 +848,7 @@ class _Beam:
 
 
 class _MadParser(LowerCaseParser, UnorderedParser):
-    """Common class for both MAD8 anf MAD-X parsers"""
+    """Common class for both MAD8 and MAD-X parsers"""
 
     _delimiter = ";"
     _linecomment = ("!", "//")

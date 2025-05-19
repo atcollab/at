@@ -27,7 +27,7 @@ from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Lattice, elements as elt, params_filter
+from ..lattice import Lattice, elements as elt, params_filter, StrParser
 
 _dot = re.compile(r'("?)(\.?[a-zA-Z_][\w.:]*)\1')  # look for MAD identifiers
 _colon = re.compile(r":(?!=)")  # split on :=
@@ -332,7 +332,7 @@ class SequenceDescr(AnyDescr, list):
         return getattr(self, "l", 0.0)
 
 
-class BaseParser(DictNoDot):
+class BaseParser(DictNoDot, StrParser):
     """Generic file parser
 
     Analyses files with the following MAD-like format:
