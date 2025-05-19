@@ -18,7 +18,7 @@ from typing import Any, Optional
 import numpy as np
 
 # noinspection PyProtectedMember
-from .variables import _nop
+from .parser import _nop
 from .parameters import AttributeArray as _array
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")

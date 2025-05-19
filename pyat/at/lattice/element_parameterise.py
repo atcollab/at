@@ -11,8 +11,9 @@ __all__ = [
 from typing import Any
 
 from .elements import Element
-from .variables import _nop
-from .parameters import Param, ParamBase, ParamArray
+from .parser import ParamDef, _nop
+from .variables import ParamBase
+from .parameters import Param, ParamArray
 
 
 def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
@@ -26,19 +27,25 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         index:      Index into an array attribute. If *value* is a
           parameter, the array attribute is converted to a :py:class:`.ParamArray`.
     """
-    if index is None:
-        setattr(self, attrname, value)
-    else:
-        array = self._get_attribute(attrname)
-        if not isinstance(array, ParamArray) and isinstance(value, ParamBase):
-            array = ParamArray(array, shape=array.shape, dtype=array.dtype)
-            setattr(self, attrname, array)
+
+    def setitem(array, index, value):
         try:
             array[index] = value
         except IndexError as exc:
             raise IndexError(
                 f"Index {index} out of bounds for {self.FamName}.{attrname}"
             ) from exc
+
+    if index is None:
+        setattr(self, attrname, value)
+    else:
+        array = self._get_attribute(attrname)
+        if not isinstance(array, ParamArray) and isinstance(value, ParamDef):
+            array = ParamArray(array, shape=array.shape, dtype=array.dtype)
+            setitem(array, index, value)
+            setattr(self, attrname, array)
+        else:
+            setitem(array, index, value)
 
 
 def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
@@ -59,7 +66,7 @@ def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
     return attr
 
 
-def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
+def get_parameter(self, attrname: str, index: int | None = None) -> ParamDef:
     """Extract a parameter of an element
 
     Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
@@ -79,7 +86,7 @@ def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
         TypeError if the attribute is not a Parameter
     """
     attr = self._get_attribute(attrname, index=index)
-    if not isinstance(attr, ParamBase):
+    if not isinstance(attr, ParamDef):
         idx = "" if index is None else f"[{index}]"
         message = f"\n\n{self.FamName}.{attrname}{idx} is not a parameter.\n"
         raise TypeError(message)
@@ -104,7 +111,7 @@ def is_parameterised(
         return len(self._parameters) > 0
     else:
         attr = self._get_attribute(attrname, index=index)
-        return isinstance(attr, (ParamBase, ParamArray))
+        return isinstance(attr, (ParamDef, ParamArray))
 
 
 def parameterise(
@@ -133,7 +140,7 @@ def parameterise(
     """
     vini = self._get_attribute(attrname, index=index)
 
-    if isinstance(vini, ParamBase):
+    if isinstance(vini, ParamDef):
         return vini
 
     try:
@@ -168,7 +175,7 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
             setattr(self, attrname, attr.value)
     else:
         attr = self._get_attribute(attrname)
-        if not isinstance(attr, (ParamBase, ParamArray)):
+        if not isinstance(attr, (ParamDef, ParamArray)):
             # silently ignore non-parameter attributes
             return
         if index is None:
@@ -177,9 +184,9 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
         else:
             # freeze an item in an array attribute
             item = attr[index]
-            if isinstance(item, ParamBase):
+            if isinstance(item, ParamDef):
                 attr[index] = item.value
-            if not any(isinstance(item, ParamBase) for item in attr.flat):
+            if not any(isinstance(item, ParamDef) for item in attr.flat):
                 # freeze the whole array attribute if none of its items is a parameter
                 setattr(self, attrname, attr.value)
 
@@ -187,9 +194,9 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 def _setattr(self, key: str, value: Any) -> None:
     try:
         # Try to convert the value
-        if isinstance(value, ParamBase):
+        if isinstance(value, ParamDef):
             value.set_conversion(self._conversions.get(key, _nop))
-        else:
+        elif not isinstance(value, ParamArray):
             value = self._conversions.get(key, _nop)(value)
     except Exception as exc:
         # Conversion failed - provide a more descriptive error message
@@ -197,7 +204,7 @@ def _setattr(self, key: str, value: Any) -> None:
         raise
     else:
         # Conversion succeeded
-        if isinstance(value, (ParamBase, ParamArray)):
+        if isinstance(value, (ParamDef, ParamArray)):
             # Store the parameter and remove the attribute
             self._parameters[key] = value
             try:

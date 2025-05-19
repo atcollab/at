@@ -94,28 +94,17 @@ import abc
 from operator import add, sub, mul, truediv, pos, neg
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
-from typing import Any, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
+from .parser import ParamDef, _nop
+
+# Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
 ValueGetter = Callable[..., Number]
 ValueSetter = Callable[..., None]
-
-
-def _nop(value: Any) -> Any:
-    """No-operation function that returns its input unchanged
-
-    This function is used as a default conversion function in ParamBase.
-
-    Args:
-        value: Any value
-
-    Returns:
-        The input value unchanged
-    """
-    return value
 
 
 class _Evaluator(Generic[Number], abc.ABC):
@@ -222,6 +211,7 @@ class VariableBase(Generic[Number], abc.ABC):
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
         ring=None,
+        **kwargs,
     ) -> None:
         """
         Parameters:
@@ -246,6 +236,7 @@ class VariableBase(Generic[Number], abc.ABC):
             self.get(ring=ring, initial=True)
         except ValueError:
             pass
+        super().__init__(**kwargs)
 
     @classmethod
     def _generate_name(cls, name: str) -> str:
@@ -513,7 +504,7 @@ class VariableBase(Generic[Number], abc.ABC):
         return repr(self._safe_value)
 
 
-class ParamBase(VariableBase[Number]):
+class ParamBase(VariableBase[Number], ParamDef):
     """Read-only base class for parameters
 
     It is used for computed parameters and should not be instantiated
@@ -557,15 +548,6 @@ class ParamBase(VariableBase[Number]):
     @property
     def _safe_value(self):
         return self._getfun()
-
-    def set_conversion(self, conversion: Callable[[Any], Number]):
-        """Set the data type. Called when a parameter is assigned to an
-        :py:class:`.Element` attribute"""
-        if conversion is not self._conversion:
-            if self._conversion is _nop:
-                self._conversion = conversion
-            else:
-                raise ValueError("Cannot change the data type of the parameter")
 
 
 class CustomVariable(VariableBase[Number]):
