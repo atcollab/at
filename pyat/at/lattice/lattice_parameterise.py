@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from .utils import getval, Refpts
+from .utils import getval, Refpts, All
 from .lattice_object import Lattice
 from .parameters import Param
 
@@ -52,7 +52,7 @@ def parameterise(
 
 
 def unparameterise(
-    self, refpts, attrname: str | None = None, index: int | None = None
+    self, refpts=All, attrname: str | None = None, index: int | None = None
 ) -> None:
     """Freeze the value of attributes of the selected elements
 
