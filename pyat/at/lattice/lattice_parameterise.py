@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 import numpy as np
 from .utils import getval, Refpts, All
 from .lattice_object import Lattice
@@ -7,7 +8,7 @@ from .parameters import Param
 
 
 def set_parameter(
-    self, refpts: Refpts, attrname: str, value, index: int | None = None
+    self, refpts: Refpts, attrname: str, value: Any, index: int | None = None
 ) -> None:
     """Set a parameter as an attribute of the selected elements
 
@@ -100,4 +101,5 @@ def unparameterise(
 
 Lattice.set_parameter = set_parameter
 Lattice.parameterise = parameterise
+Lattice.is_parameterised = is_parameterised
 Lattice.unparameterise = unparameterise
