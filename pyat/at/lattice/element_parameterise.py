@@ -13,7 +13,7 @@ from typing import Any
 from .elements import Element
 from .parser import ParamDef, _nop
 from .variables import ParamBase
-from .parameters import Param, ParamArray
+from .parameters import Param, ParamArray, _ACCEPTED
 
 
 def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
@@ -140,7 +140,7 @@ def parameterise(
     """
     vini = self._get_attribute(attrname, index=index)
 
-    if isinstance(vini, ParamDef):
+    if isinstance(vini, ParamBase):
         return vini
 
     try:
@@ -194,7 +194,7 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 def _setattr(self, key: str, value: Any) -> None:
     try:
         # Try to convert the value
-        if isinstance(value, ParamDef):
+        if isinstance(value, _ACCEPTED):
             value.set_conversion(self._conversions.get(key, _nop))
         elif not isinstance(value, ParamArray):
             value = self._conversions.get(key, _nop)(value)

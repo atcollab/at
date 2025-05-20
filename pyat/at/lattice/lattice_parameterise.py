@@ -32,8 +32,9 @@ def parameterise(
     elements. Its initial value is the mean of the original values.
 
     Args:
-        refpts:     Element selector
-        attrname:   Attribute name
+        refpts:     Element selector. The default value is `All`, which includes
+          all elements.
+        attrname:   Name of the attribute to parameterise.
         index:      Index into an array attribute. If *value* is a
           parameter, the attribute is converted to a
           :py:class:`.ParamArray`.
@@ -51,13 +52,43 @@ def parameterise(
     return attr
 
 
+def is_parameterised(
+    self, refpts: Refpts = All, attrname: str | None = None, index: int | None = None
+) -> bool:
+    """Checks if any of the selected elements is parameterised.
+
+    This method evaluates whether any of the elements within the specified
+    reference points are parameterised based on the provided attribute name
+    and index. It iterates over the selected elements and checks their
+    parameterisation status. The function returns True if at least one element
+    is parameterised; otherwise, it returns False.
+
+    Args:
+        refpts:     Element selector. The default value is `All`, which includes
+          all elements.
+        attrname:   Name of the attribute to check. If :py:obj:`None`, all the
+          attributes are checked.
+        index:      Index in an array. If :py:obj:`None`, the whole
+          attribute is checked
+
+    Returns:
+        bool: True if any of the selected elements is parameterised, False
+        otherwise.
+    """
+    for elem in self.select(refpts):
+        if elem.is_parameterised(attrname=attrname, index=index):
+            return True
+    return False
+
+
 def unparameterise(
-    self, refpts=All, attrname: str | None = None, index: int | None = None
+    self, refpts: Refpts = All, attrname: str | None = None, index: int | None = None
 ) -> None:
     """Freeze the value of attributes of the selected elements
 
     Args:
-        refpts:     Element selector
+        refpts:     Element selector. The default value is `All`, which includes
+          all elements.
         attrname:   Attribute name. If :py:obj:`None`, all the attributes
           are frozen
         index:      Index in an array. If :py:obj:`None`, the whole
