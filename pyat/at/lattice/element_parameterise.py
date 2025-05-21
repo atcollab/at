@@ -13,8 +13,9 @@ from typing import Any
 import numpy as np
 
 from .elements import Element
-from .variables import _nop
-from .parameters import Param, ParamBase, ParamArray
+from .parser import ParamDef, _nop
+from .variables import ParamBase
+from .parameters import Param, ParamArray, _ACCEPTED
 
 
 def set_parameter(self, attrname: str, value, index: int | None = None) -> None:

@@ -6,7 +6,10 @@ from typing import Any
 from collections.abc import Callable
 import numpy as np
 import numpy.typing as npt
-from .variables import Number, ParamBase, _Constant, _nop
+from .parser import ParamDef, _nop
+from .variables import ParamBase, _Constant, Number
+
+_ACCEPTED = ParamDef
 
 
 class Param(ParamBase[Number]):
@@ -92,7 +95,7 @@ def AttributeArray(
         Either a ParamArray or a _SafeArray depending on the input
     """
     v = np.asfortranarray(value).reshape(shape, order="F")
-    if v.dtype == "O":
+    if any(isinstance(el, _ACCEPTED) for el in v.flat):
         return ParamArray(v, shape=shape, dtype=dtype)
     else:
         return v.astype(dtype, copy=False).view(_SafeArray)
