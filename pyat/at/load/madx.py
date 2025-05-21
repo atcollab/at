@@ -174,53 +174,6 @@ class MadParameter(StrParameter):
     A MAD parameter is an expression which can be evaluated ifn the context
     of a MAD parser
     """
-    def __float__(self):
-        return float(self.value)
-
-    def __int__(self):
-        return int(self.value)
-
-    def __add__(self, other):
-        return float(self) + float(other)
-
-    def __radd__(self, other):
-        return float(other) + float(self)
-
-    def __mul__(self, other):
-        return float(self) * float(other)
-
-    def __rmul__(self, other):
-        return float(other) * float(self)
-
-    def __sub__(self, other):
-        return float(self) - float(other)
-
-    def __rsub__(self, other):
-        return float(other) - float(self)
-
-    def __truediv__(self, other):
-        return float(self) / float(other)
-
-    def __rtruediv__(self, other):
-        return float(other) / float(self)
-
-    def __pow__(self, other):
-        return pow(float(self), other)
-
-    def __rpow__(self, other):
-        return pow(float(other), float(self))
-
-    def __neg__(self):
-        return -float(self)
-
-    def __pos__(self):
-        return +float(self)
-
-    def __str__(self):
-        return self.expr
-
-    def __repr__(self):
-        return f"{self.value}"
 
     def evaluate(self):
         return self.value
@@ -366,9 +319,7 @@ class quadrupole(_MadElement):
     @mad_element
     def to_at(self, l, k1=0.0, k1s=0.0, **params):  # noqa: E741
         atparams = {}
-        k1s = float(k1s)  # MadParameter conversion  # MadParameter conversion
-        if k1s != 0.0:
-            atparams["PolynomA"] = [0.0, k1s]
+        atparams["PolynomA"] = [0.0, k1s]
         return [elt.Quadrupole(self.name, l, k1, **atparams, **self.meval(params))]
 
     @classmethod
@@ -464,9 +415,7 @@ class sbend(_MadElement):
         k2 = float(k2)  # MadParameter conversion
         if k2 != 0.0:
             atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
-        k1s = float(k1s)  # MadParameter conversion
-        if k1s != 0.0:
-            atparams["PolynomA"] = [0.0, k1s]
+        atparams["PolynomA"] = [0.0, k1s]
 
         return [
             elt.Dipole(

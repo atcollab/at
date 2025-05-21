@@ -129,6 +129,52 @@ class StrParameter(ParamDef):
         self.parser = parser
         super().__init__(conversion=conversion)
 
+    def __str__(self):
+        return self.expr
+
+    def __repr__(self):
+        return f"{self.value}"
+
+    def __float__(self):
+        return float(self.value)
+
+    def __int__(self):
+        return int(self.value)
+
+    def __add__(self, other):
+        return self.__class__(self.parser, f"({self.expr})+({other})")
+
+    __radd__ = __add__
+
+    def __sub__(self, other):
+        return self.__class__(self.parser, f"({self.expr})-({other})")
+
+    def __rsub__(self, other):
+        return self.__class__(self.parser, f"({other})-({self.expr})")
+
+    def __mul__(self, other):
+        return self.__class__(self.parser, f"({self.expr})*({other})")
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        return self.__class__(self.parser, f"({self.expr})/({other})")
+
+    def __rtruediv__(self, other):
+        return self.__class__(self.parser, f"({other})/({self.expr})")
+
+    def __pow__(self, other):
+        return self.__class__(self.parser, f"({self.expr})**({other})")
+
+    def __rpow__(self, other):
+        return self.__class__(self.parser, f"({other})**({self.expr})")
+
+    def __neg__(self):
+        return self.__class__(self.parser, f"-({self.expr})")
+
+    def __pos__(self):
+        return self.__class__(self.parser, f"({self.expr})")
+
     def get(self, **kwargs) -> Any:
         """Get the current value of the parameter
 
