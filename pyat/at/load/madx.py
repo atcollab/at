@@ -24,7 +24,7 @@ Combined function magnets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MAD has little support for combined function magnets. When exporting a lattice in MAD
-format, the main field component for each magnet class in kept but other components
+format, the main field component for each magnet class is kept but other components
 disappear, except in the few cases handled by MAD (quadrupole and sextupole
 components in ``SBEND`` or ``RBEND``, skew quad component in ``QUADRUPOLE``, see the
 MAD user's reference manual for more).
@@ -97,7 +97,7 @@ sbend(name=PR.BHT91.F, l=2.1975925, angle='angle.prbhf', k1='k1prbhf+k1prpfwf-k1
 
 >>> parser["angle.prbhf"] = 0.032
 
-All MAD parameters can be interactively modified and their last value will be taken
+All MAD parameters can be interactively modified, and their last value will be taken
 into account when generating a PyAT lattice.
 
 The :py:meth:`MadxParser.lattice` method creates a :py:class:`.Lattice` from a ``LINE``
@@ -171,7 +171,7 @@ prad = erad * emass / pmass  # [m]
 class MadParameter(StrParameter):
     """MAD parameter
 
-    A MAD parameter is an expression which can be evaluated ifn the context
+    A MAD parameter is an expression which can be evaluated in the context
     of a MAD parser
     """
 
