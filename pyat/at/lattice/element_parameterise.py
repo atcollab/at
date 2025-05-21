@@ -54,7 +54,7 @@ def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
     return attr
 
 
-def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
+def get_parameter(self, attrname: str, index: int | None = None) -> ParamDef:
     """Extract a parameter of an element
 
     Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
@@ -74,7 +74,7 @@ def get_parameter(self, attrname: str, index: int | None = None) -> ParamBase:
         TypeError if the attribute is not a Parameter
     """
     attr = self._get_attribute(attrname, index=index)
-    if not isinstance(attr, ParamBase):
+    if not isinstance(attr, ParamDef):
         idx = "" if index is None else f"[{index}]"
         message = f"\n\n{self.FamName}.{attrname}{idx} is not a parameter.\n"
         raise TypeError(message)
@@ -102,10 +102,10 @@ def is_parameterised(
         return False
     else:
         attr = self._get_attribute(attrname, index=index)
-        if isinstance(attr, ParamBase):
+        if isinstance(attr, ParamDef):
             return True
         elif isinstance(attr, np.ndarray):
-            return any(isinstance(item, ParamBase) for item in attr.flat)
+            return any(isinstance(item, ParamDef) for item in attr.flat)
         else:
             return False
 
@@ -168,11 +168,11 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 
     def unparam_attr(attrname: str, attr: Any) -> None:
         """Helper function to unparameterise a single attribute."""
-        if isinstance(attr, ParamBase):
+        if isinstance(attr, ParamDef):
             setattr(self, attrname, attr.value)
         elif isinstance(attr, np.ndarray):
             for i, item in enumerate(attr.flat):
-                if isinstance(item, ParamBase):
+                if isinstance(item, ParamDef):
                     ij = np.unravel_index(i, attr.shape)
                     attr[ij] = item.value
 
@@ -188,14 +188,14 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
         else:
             # freeze an item in an array attribute
             item = attr[index]
-            if isinstance(item, ParamBase):
+            if isinstance(item, ParamDef):
                 attr[index] = item.value
 
 
 def _setattr(self, key: str, value: Any) -> None:
     try:
         # Try to convert the value
-        if isinstance(value, ParamBase):
+        if isinstance(value, _ACCEPTED):
             value.set_conversion(self._conversions.get(key, _nop))
         else:
             value = self._conversions.get(key, _nop)(value)
@@ -210,7 +210,7 @@ def _setattr(self, key: str, value: Any) -> None:
 
 def _getattribute(self, key: str) -> Any:
     attr = super(Element, self).__getattribute__(key)
-    if isinstance(attr, (ParamBase, ParamArray)):
+    if isinstance(attr, (ParamDef, ParamArray)):
         return attr.value
     else:
         return attr
