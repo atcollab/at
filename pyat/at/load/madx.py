@@ -223,7 +223,7 @@ def poly_from_mad(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
     """Convert polynomials from MAD to AT"""
     f = 1.0
     for n, vx in enumerate(x):
-        yield factor * float(vx / f)
+        yield factor * (vx / f)
         f *= n + 1
 
 
@@ -232,7 +232,7 @@ def p_to_at(a: float | Sequence[float]) -> np.ndarray:
     if not isinstance(a, Sequence):
         # In case of a single element, we have a scalar instead of a tuple
         a = (a,)
-    return np.fromiter(poly_from_mad(a), dtype=float)
+    return np.array(list(poly_from_mad(a)))
 
 
 def p_dict(keys: Iterable[str], a: Iterable[float]) -> dict[str, float]:
@@ -269,7 +269,7 @@ class _MadElement(ElementDescr):
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
-        half_length = 0.5 * self.length
+        half_length = 0.5 * float(self.length)  # MadParameter conversion
         offset = offset + refer * half_length + self.at
         frm = getattr(self, "from")
         if frm is not None:
@@ -318,8 +318,7 @@ class marker(_MadElement):
 class quadrupole(_MadElement):
     @mad_element
     def to_at(self, l, k1=0.0, k1s=0.0, **params):  # noqa: E741
-        atparams = {}
-        atparams["PolynomA"] = [0.0, k1s]
+        atparams = {"PolynomA": [0.0, k1s]}
         return [elt.Quadrupole(self.name, l, k1, **atparams, **self.meval(params))]
 
     @classmethod
@@ -334,10 +333,7 @@ class quadrupole(_MadElement):
 class sextupole(_MadElement):
     @mad_element
     def to_at(self, l, k2=0.0, k2s=0.0, **params):  # noqa: E741
-        atparams = {}
-        k2s = float(k2s)  # MadParameter conversion
-        if k2s != 0.0:
-            atparams["PolynomA"] = [0.0, 0.0, k2s / 2.0]
+        atparams = {"PolynomA": [0.0, 0.0, k2s / 2.0]}
         return [elt.Sextupole(self.name, l, k2 / 2.0, **atparams, **self.meval(params))]
 
     @classmethod
@@ -412,9 +408,7 @@ class sbend(_MadElement):
         if hgap is not None:
             fintx = params.pop("fintx", fint)
             atparams.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
-        k2 = float(k2)  # MadParameter conversion
-        if k2 != 0.0:
-            atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
+        atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
         atparams["PolynomA"] = [0.0, k1s]
 
         return [
@@ -519,7 +513,7 @@ class rfcavity(_MadElement):
 class monitor(_MadElement):
     @mad_element
     def to_at(self, l=0.0, **params):  # noqa: E741
-        hl = 0.5 * l  # MadParameter conversion
+        hl = 0.5 * l
         if hl == 0.0:
             return [elt.Monitor(self.name, **self.meval(params))]
         else:
@@ -945,7 +939,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             elif cav.HarmNumber == 0:
                 cav.HarmNumber = round(cav.Frequency / rev)
 
-    def lattice(self, use: str = "ring", **kwargs):
+    def lattice(self, use: str = "ring", parameterised: bool = False, **kwargs):
         """Create a lattice from the selected sequence
 
         Parameters:
@@ -974,6 +968,8 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         # noinspection PyUnboundLocalVariable
         if radiate:
             lat.enable_6d(copy=False)
+        if not parameterised:
+            lat.unparameterise()
         return lat
 
 
