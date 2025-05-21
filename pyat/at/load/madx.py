@@ -24,7 +24,7 @@ Combined function magnets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MAD has little support for combined function magnets. When exporting a lattice in MAD
-format, the main field component for each magnet class in kept but other components
+format, the main field component for each magnet class is kept but other components
 disappear, except in the few cases handled by MAD (quadrupole and sextupole
 components in ``SBEND`` or ``RBEND``, skew quad component in ``QUADRUPOLE``, see the
 MAD user's reference manual for more).
@@ -97,7 +97,7 @@ sbend(name=PR.BHT91.F, l=2.1975925, angle='angle.prbhf', k1='k1prbhf+k1prpfwf-k1
 
 >>> parser["angle.prbhf"] = 0.032
 
-All MAD parameters can be interactively modified and their last value will be taken
+All MAD parameters can be interactively modified, and their last value will be taken
 into account when generating a PyAT lattice.
 
 The :py:meth:`MadxParser.lattice` method creates a :py:class:`.Lattice` from a ``LINE``
@@ -148,7 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem
+from ..lattice import Lattice, Particle, elements as elt, tilt_elem, StrParameter
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -168,71 +168,15 @@ erad = _cst["classical electron radius"][0]  # [m]
 prad = erad * emass / pmass  # [m]
 
 
-class MadParameter(str):
+class MadParameter(StrParameter):
     """MAD parameter
 
-    A MAD parameter is an expression which can be evaluated n the context
+    A MAD parameter is an expression which can be evaluated in the context
     of a MAD parser
     """
 
-    def __new__(cls, parser, expr):
-        return super().__new__(cls, expr)
-
-    # noinspection PyUnusedLocal
-    def __init__(self, parser: _MadParser, expr: str):
-        """Args:
-            parser: MadParser instance defining the context for evaluation
-            expr:   expression to be evaluated
-
-        The expression may contain MAD parameter names, arithmetic operators and
-        mathematical functions known by MAD
-        """
-        self.parser = parser
-
-    def __float__(self):
-        return float(self.parser.evaluate(self))
-
-    def __int__(self):
-        return int(self.parser.evaluate(self))
-
-    def __add__(self, other):
-        return float(self) + float(other)
-
-    def __radd__(self, other):
-        return float(other) + float(self)
-
-    def __mul__(self, other):
-        return float(self) * float(other)
-
-    def __rmul__(self, other):
-        return float(other) * float(self)
-
-    def __sub__(self, other):
-        return float(self) - float(other)
-
-    def __rsub__(self, other):
-        return float(other) - float(self)
-
-    def __truediv__(self, other):
-        return float(self) / float(other)
-
-    def __rtruediv__(self, other):
-        return float(other) / float(self)
-
-    def __pow__(self, other):
-        return pow(float(self), other)
-
-    def __rpow__(self, other):
-        return pow(float(other), float(self))
-
-    def __neg__(self):
-        return -float(self)
-
-    def __pos__(self):
-        return +float(self)
-
     def evaluate(self):
-        return self.parser.evaluate(self)
+        return self.value
 
 
 def sinc(x: float) -> float:
@@ -279,7 +223,7 @@ def poly_from_mad(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
     """Convert polynomials from MAD to AT"""
     f = 1.0
     for n, vx in enumerate(x):
-        yield factor * float(vx / f)
+        yield factor * (vx / f)
         f *= n + 1
 
 
@@ -288,7 +232,7 @@ def p_to_at(a: float | Sequence[float]) -> np.ndarray:
     if not isinstance(a, Sequence):
         # In case of a single element, we have a scalar instead of a tuple
         a = (a,)
-    return np.fromiter(poly_from_mad(a), dtype=float)
+    return np.array(list(poly_from_mad(a)))
 
 
 def p_dict(keys: Iterable[str], a: Iterable[float]) -> dict[str, float]:
@@ -325,7 +269,7 @@ class _MadElement(ElementDescr):
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
-        half_length = 0.5 * self.length
+        half_length = 0.5 * float(self.length)  # MadParameter conversion
         offset = offset + refer * half_length + self.at
         frm = getattr(self, "from")
         if frm is not None:
@@ -337,7 +281,7 @@ class _MadElement(ElementDescr):
 
         def mpeval(v):
             if isinstance(v, MadParameter):
-                return v.evaluate()
+                return v.value
             elif isinstance(v, str):
                 return v
             elif isinstance(v, Sequence):
@@ -374,10 +318,7 @@ class marker(_MadElement):
 class quadrupole(_MadElement):
     @mad_element
     def to_at(self, l, k1=0.0, k1s=0.0, **params):  # noqa: E741
-        atparams = {}
-        k1s = float(k1s)  # MadParameter conversion  # MadParameter conversion
-        if k1s != 0.0:
-            atparams["PolynomA"] = [0.0, k1s]
+        atparams = {"PolynomA": [0.0, k1s]}
         return [elt.Quadrupole(self.name, l, k1, **atparams, **self.meval(params))]
 
     @classmethod
@@ -392,10 +333,7 @@ class quadrupole(_MadElement):
 class sextupole(_MadElement):
     @mad_element
     def to_at(self, l, k2=0.0, k2s=0.0, **params):  # noqa: E741
-        atparams = {}
-        k2s = float(k2s)  # MadParameter conversion
-        if k2s != 0.0:
-            atparams["PolynomA"] = [0.0, 0.0, k2s / 2.0]
+        atparams = {"PolynomA": [0.0, 0.0, k2s / 2.0]}
         return [elt.Sextupole(self.name, l, k2 / 2.0, **atparams, **self.meval(params))]
 
     @classmethod
@@ -470,12 +408,8 @@ class sbend(_MadElement):
         if hgap is not None:
             fintx = params.pop("fintx", fint)
             atparams.update(FullGap=2.0 * hgap, FringeInt1=fint, FringeInt2=fintx)
-        k2 = float(k2)  # MadParameter conversion
-        if k2 != 0.0:
-            atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
-        k1s = float(k1s)  # MadParameter conversion
-        if k1s != 0.0:
-            atparams["PolynomA"] = [0.0, k1s]
+        atparams["PolynomB"] = [0.0, k1, k2 / 2.0]
+        atparams["PolynomA"] = [0.0, k1s]
 
         return [
             elt.Dipole(
@@ -579,7 +513,7 @@ class rfcavity(_MadElement):
 class monitor(_MadElement):
     @mad_element
     def to_at(self, l=0.0, **params):  # noqa: E741
-        hl = 0.5 * l  # MadParameter conversion
+        hl = 0.5 * l
         if hl == 0.0:
             return [elt.Monitor(self.name, **self.meval(params))]
         else:
@@ -857,7 +791,7 @@ class _Beam:
 
 
 class _MadParser(LowerCaseParser, UnorderedParser):
-    """Common class for both MAD8 anf MAD-X parsers"""
+    """Common class for both MAD8 and MAD-X parsers"""
 
     _delimiter = ";"
     _linecomment = ("!", "//")
@@ -1005,7 +939,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             elif cav.HarmNumber == 0:
                 cav.HarmNumber = round(cav.Frequency / rev)
 
-    def lattice(self, use: str = "ring", **kwargs):
+    def lattice(self, use: str = "ring", parameterised: bool = False, **kwargs):
         """Create a lattice from the selected sequence
 
         Parameters:
@@ -1034,6 +968,8 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         # noinspection PyUnboundLocalVariable
         if radiate:
             lat.enable_6d(copy=False)
+        if not parameterised:
+            lat.unparameterise()
         return lat
 
 
