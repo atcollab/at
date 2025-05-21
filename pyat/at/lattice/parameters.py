@@ -9,7 +9,7 @@ import numpy.typing as npt
 from .parser import ParamDef, _nop
 from .variables import ParamBase, _Constant, Number
 
-_ACCEPTED = ParamBase
+_ACCEPTED = ParamDef
 
 
 class Param(ParamBase[Number]):
