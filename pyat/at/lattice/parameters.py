@@ -2,10 +2,13 @@ from __future__ import annotations
 
 __all__ = ["Param", "ParamArray", "AttributeArray"]
 
-from typing import Any
 from collections.abc import Callable
+from typing import Any
+import weakref
+
 import numpy as np
 import numpy.typing as npt
+
 from .parser import ParamDef, _nop
 from .variables import ParamBase, _Constant, Number
 
@@ -111,7 +114,7 @@ class _PArray(np.ndarray):
     It is also the one used when setting an item of an array attribute.
     """
 
-    def __new__(cls, value: Any, dtype: npt.DTypeLike = float):
+    def __new__(cls, parent: Any, dtype: npt.DTypeLike = float):
         """Create a new _PArray instance.
 
         Args:
@@ -121,8 +124,8 @@ class _PArray(np.ndarray):
         Returns:
             A new _PArray instance
         """
-        obj = np.array(value, dtype=dtype).view(cls)
-        obj._parent = value
+        obj = np.array(parent, dtype=dtype).view(cls)
+        obj._parent = weakref.proxy(parent)
         return obj
 
     def __array_finalize__(self, obj: Any) -> None:
@@ -154,11 +157,13 @@ class ParamArray(np.ndarray):
     ):
         """Create a new ParamArray instance."""
         obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
-        obj._dtype = dtype
+        obj._value = _PArray(obj, dtype=dtype)
         return obj
 
     def __array_finalize__(self, obj: Any) -> None:
-        self._dtype = getattr(obj, "_dtype", float)
+        val = getattr(obj, "_value", None)
+        if val is not None:
+            self._value = _PArray(self, dtype=val.dtype)
 
     @property
     def value(self) -> np.ndarray:
@@ -172,7 +177,8 @@ class ParamArray(np.ndarray):
             A numeric array with the current parameter values
         """
         # Update the numeric array with current parameter values
-        return _PArray(self, dtype=self._dtype)
+        self._value[:] = self
+        return self._value
 
     def __repr__(self) -> str:
         return repr(self.value)
