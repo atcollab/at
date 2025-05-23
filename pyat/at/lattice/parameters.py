@@ -157,11 +157,13 @@ class ParamArray(np.ndarray):
     ):
         """Create a new ParamArray instance."""
         obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
-        obj._value = _PArray(obj, dtype=dtype)
+        obj._dtype = dtype
         return obj
 
     def __array_finalize__(self, obj: Any) -> None:
-        pass
+        dtype = getattr(obj, "_dtype", float)
+        self._dtype = dtype
+        self._value = _PArray(self, dtype=dtype)
 
     @property
     def value(self) -> np.ndarray:
