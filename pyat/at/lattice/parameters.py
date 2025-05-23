@@ -124,12 +124,22 @@ class _PArray(np.ndarray):
         Returns:
             A new _PArray instance
         """
+
+        def cb(obj):
+            print("deleting parent", obj)
+
+        print("New _PArray from", type(parent))
         obj = np.array(parent, dtype=dtype).view(cls)
-        obj._parent = weakref.proxy(parent)
+        obj._parent = weakref.proxy(parent, cb)
         return obj
 
+    def __del__(self):
+        print("deleting _PArray")
+
     def __array_finalize__(self, obj: Any) -> None:
-        self._parent = getattr(obj, "_parent", None)
+        print("finalize _PArray from", type(obj), obj)
+        if obj is None:
+            return
 
     def __setitem__(self, key: Any, value: Any) -> None:
         super().__setitem__(key, value)
@@ -156,14 +166,17 @@ class ParamArray(np.ndarray):
         cls, value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
     ):
         """Create a new ParamArray instance."""
+        print("New ParamArray")
         obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
         obj._value = _PArray(obj, dtype=dtype)
         return obj
 
+
     def __array_finalize__(self, obj: Any) -> None:
-        val = getattr(obj, "_value", None)
-        if val is not None:
-            self._value = _PArray(self, dtype=val.dtype)
+        print("finalize ParamArray from", type(obj), obj)
+
+    def __del__(self):
+        print("deleting ParamArray")
 
     @property
     def value(self) -> np.ndarray:
@@ -177,7 +190,9 @@ class ParamArray(np.ndarray):
             A numeric array with the current parameter values
         """
         # Update the numeric array with current parameter values
-        self._value[:] = self
+        print("getting value")
+        self._value[...] = self[...]
+        print("got value")
         return self._value
 
     def __repr__(self) -> str:
