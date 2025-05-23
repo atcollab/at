@@ -118,28 +118,18 @@ class _PArray(np.ndarray):
         """Create a new _PArray instance.
 
         Args:
-            value: The parent ParamArray
+            parent: The parent ParamArray
             dtype: Data type of the array
 
         Returns:
             A new _PArray instance
         """
-
-        def cb(obj):
-            print("deleting parent", obj)
-
-        print("New _PArray from", type(parent))
         obj = np.array(parent, dtype=dtype).view(cls)
-        obj._parent = weakref.proxy(parent, cb)
+        obj._parent = weakref.proxy(parent)
         return obj
 
-    def __del__(self):
-        print("deleting _PArray")
-
     def __array_finalize__(self, obj: Any) -> None:
-        print("finalize _PArray from", type(obj), obj)
-        if obj is None:
-            return
+        pass
 
     def __setitem__(self, key: Any, value: Any) -> None:
         super().__setitem__(key, value)
@@ -166,17 +156,12 @@ class ParamArray(np.ndarray):
         cls, value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
     ):
         """Create a new ParamArray instance."""
-        print("New ParamArray")
         obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
         obj._value = _PArray(obj, dtype=dtype)
         return obj
 
-
     def __array_finalize__(self, obj: Any) -> None:
-        print("finalize ParamArray from", type(obj), obj)
-
-    def __del__(self):
-        print("deleting ParamArray")
+        pass
 
     @property
     def value(self) -> np.ndarray:
@@ -190,9 +175,14 @@ class ParamArray(np.ndarray):
             A numeric array with the current parameter values
         """
         # Update the numeric array with current parameter values
-        print("getting value")
-        self._value[...] = self[...]
-        print("got value")
+        # self._value[...] = self[...]
+        with np.nditer(
+            (self._value, self),
+            ["external_loop", "refs_ok"],
+            [["writeonly"], ["readonly"]],
+        ) as it:
+            for x, y in it:
+                x[...] = y[...]
         return self._value
 
     def __repr__(self) -> str:
