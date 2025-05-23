@@ -103,8 +103,6 @@ from .parser import ParamDef, _nop
 
 # Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
-ValueGetter = Callable[..., Number]
-ValueSetter = Callable[..., None]
 
 
 class _Evaluator(Generic[Number], abc.ABC):
@@ -561,8 +559,8 @@ class CustomVariable(VariableBase[Number]):
 
     def __init__(
         self,
-        setfun: ValueSetter,
-        getfun: ValueGetter,
+        setfun: Callable[..., None],
+        getfun: Callable[..., Number],
         *args,
         name: str = "",
         bounds: tuple[Number, Number] | None = None,
