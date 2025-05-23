@@ -165,6 +165,10 @@ class ParamArray(np.ndarray):
         self._dtype = dtype
         self._value = _PArray(self, dtype=dtype)
 
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._value = _PArray(self, dtype=self._dtype)
+
     @property
     def value(self) -> np.ndarray:
         """Get a numeric array with the current values of all parameters.
