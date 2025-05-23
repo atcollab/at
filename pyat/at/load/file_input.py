@@ -38,6 +38,20 @@ _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
 
 
+def _no_default(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        self._use_default = self.always_force
+        print("Set self._use_default")
+        try:
+            return func(self, *args, **kwargs)
+        finally:
+            self._use_default = True
+            print("Reset self._use_default")
+
+    return wrapper
+
+
 def set_argparser(argparser):
     """Decorator which adds an "argparser" attribute to a function"""
 
@@ -435,19 +449,21 @@ class BaseParser(DictNoDot, StrParser):
         self.postponed = []
         self.in_file = []
 
-    @staticmethod
-    def _no_default(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            self._use_default = self.always_force
-            print("Set self._use_default")
-            try:
-                return func(self, *args, **kwargs)
-            finally:
-                self._use_default = True
-                print("Reset self._use_default")
-
-        return wrapper
+    # Defined externally because python >= 38 does not allow static methods
+    # as decorators
+    # @staticmethod
+    # def _no_default(func):
+    #     @wraps(func)
+    #     def wrapper(self, *args, **kwargs):
+    #         self._use_default = self.always_force
+    #         print("Set self._use_default")
+    #         try:
+    #             return func(self, *args, **kwargs)
+    #         finally:
+    #             self._use_default = True
+    #             print("Reset self._use_default")
+    #
+    #     return wrapper
 
     def clear(self):
         """Clear the database: remove all parameters and objects"""

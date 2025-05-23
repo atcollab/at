@@ -178,7 +178,7 @@ class ParamArray(np.ndarray):
         # self._value[...] = self[...]
         with np.nditer(
             (self._value, self),
-            ["external_loop", "refs_ok"],
+            ["external_loop", "refs_ok", "zerosize_ok"],
             [["writeonly"], ["readonly"]],
         ) as it:
             for x, y in it:
@@ -189,6 +189,4 @@ class ParamArray(np.ndarray):
         return repr(self.value)
 
     def __str__(self) -> str:
-        it = np.nditer(self, flags=["refs_ok"], order="C")
-        contents = " ".join([str(el) for el in it])
-        return f"[{contents}]"
+        return np.array2string(self, formatter={"object": str})
