@@ -135,6 +135,7 @@ from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
 import re
+from typing import Any
 
 import numpy as np
 
@@ -269,7 +270,7 @@ class _MadElement(ElementDescr):
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
-        half_length = 0.5 * float(self.length)  # MadParameter conversion
+        half_length = 0.5 * self.length
         offset = offset + refer * half_length + self.at
         frm = getattr(self, "from")
         if frm is not None:
@@ -827,17 +828,21 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         self.current_sequence = None
         self["beam"]()
 
+    def check_constant(self, expr: str) -> Any:
+        expr = self._format_command(self._gen_expr(expr))
+        return eval(expr)
+
     def _assign_deferred(self, value: str):
         """Deferred assignment"""
         if value[0] == "(" and value[-1] == ")":
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                MadParameter(self, v) for v in restore(matches, *value.split(","))
+                MadParameter.parameter(self, v) for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
-            return MadParameter(self, value)
+            return MadParameter.parameter(self, value)
 
     def _argparser(self, argcount, argstr: str, **kwargs):
         key, *value = split_ignoring_parentheses(
