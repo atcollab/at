@@ -149,7 +149,14 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem, StrParameter
+from ..lattice import (
+    Lattice,
+    Particle,
+    elements as elt,
+    tilt_elem,
+    StrParameter,
+    AtWarning,
+)
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -653,7 +660,7 @@ class _Sequence(SequenceDescr):
                     None, fname, *anames, no_global=True, copy=True
                 )
             except Exception as exc:
-                mess = (f"In sequence {self.name!r}: \"{fname}, {', '.join(anames)}\"",)
+                mess = (f'In sequence {self.name!r}: "{fname}, {", ".join(anames)}"',)
                 exc.args += mess
                 raise
             if isinstance(elem, _Sequence):
@@ -664,12 +671,13 @@ class _Sequence(SequenceDescr):
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
-            if dl > 1.0e-5:
+            if abs(dl) > 1.0e-5:
                 yield from drift(name=f"drift_{drcounter}", l=dl).expand(parser)
                 drcounter += 1
-            elif dl < -1.0e-5:
-                elemtype = type(el).__name__.upper()
-                raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
+                if dl < 0.0:
+                    eltype = type(el).__name__.upper()
+                    wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-dl} m")
+                    warnings.warn(wrn)
 
         drcounter = 0
         end = 0.0
@@ -838,7 +846,8 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                MadParameter.parameter(self, v) for v in restore(matches, *value.split(","))
+                MadParameter.parameter(self, v)
+                for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
@@ -1054,6 +1063,7 @@ def load_madx(
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
+    parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD-X files
@@ -1094,7 +1104,7 @@ def load_madx(
         if key in kwargs
     }
     parser.parse_files(*files, **kwargs)
-    return parser.lattice(use=use, **params)
+    return parser.lattice(use=use, parameterised=parameterised, **params)
 
 
 def longmultipole(kwargs):
