@@ -43,12 +43,10 @@ def _no_default(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         self._use_default = self.always_force
-        print("Set self._use_default")
         try:
             return func(self, *args, **kwargs)
         finally:
             self._use_default = True
-            print("Reset self._use_default")
 
     return wrapper
 
