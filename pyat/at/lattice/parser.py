@@ -39,6 +39,11 @@ class StrParser(abc.ABC):
         """
         ...
 
+    @abc.abstractmethod
+    def check_constant(self, expr: str) -> Any:
+        """Check if an expression is constant"""
+        ...
+
 
 class ParamDef(abc.ABC):
     """Abstract base class for parameter definitions
@@ -54,6 +59,14 @@ class ParamDef(abc.ABC):
             conversion: Function to convert values to the appropriate type
         """
         self._conversion = conversion
+
+    def __copy__(self):
+        # Parameters are not copied
+        return self
+
+    def __deepcopy__(self, memo):
+        # Parameters are not deep-copied
+        return self,
 
     @abc.abstractmethod
     def get(self, **kwargs) -> Any:
@@ -174,6 +187,27 @@ class StrParameter(ParamDef):
 
     def __pos__(self):
         return self.__class__(self.parser, f"({self.expr})")
+
+    def __gt__(self, other):
+        return self.value > other
+
+    def __ge__(self, other):
+        return self.value >= other
+
+    def __lt__(self, other):
+        return self.value < other
+
+    def __le__(self, other):
+        return self.value <= other
+
+    @classmethod
+    def parameter(cls, parser, expr: str):
+        try:
+            val = parser.check_constant(expr)
+        except NameError:
+            return cls(parser, expr)
+        else:
+            return val
 
     def get(self, **kwargs) -> Any:
         """Get the current value of the parameter
