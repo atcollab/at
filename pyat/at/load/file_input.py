@@ -23,6 +23,7 @@ from os.path import join, abspath, normpath, dirname
 import re
 from itertools import repeat, count
 from functools import wraps
+from typing import Any
 from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 
 import numpy as np
@@ -36,6 +37,18 @@ _colon = re.compile(r":(?!=)")  # split on :=
 # For decoding error messages:
 _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
+
+
+def _no_default(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        self._use_default = self.always_force
+        try:
+            return func(self, *args, **kwargs)
+        finally:
+            self._use_default = True
+
+    return wrapper
 
 
 def set_argparser(argparser):
@@ -435,19 +448,21 @@ class BaseParser(DictNoDot, StrParser):
         self.postponed = []
         self.in_file = []
 
-    @staticmethod
-    def _no_default(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            self._use_default = self.always_force
-            print("Set self._use_default")
-            try:
-                return func(self, *args, **kwargs)
-            finally:
-                self._use_default = True
-                print("Reset self._use_default")
-
-        return wrapper
+    # Defined externally because python >= 38 does not allow static methods
+    # as decorators
+    # @staticmethod
+    # def _no_default(func):
+    #     @wraps(func)
+    #     def wrapper(self, *args, **kwargs):
+    #         self._use_default = self.always_force
+    #         print("Set self._use_default")
+    #         try:
+    #             return func(self, *args, **kwargs)
+    #         finally:
+    #             self._use_default = True
+    #             print("Reset self._use_default")
+    #
+    #     return wrapper
 
     def clear(self):
         """Clear the database: remove all parameters and objects"""
@@ -463,6 +478,27 @@ class BaseParser(DictNoDot, StrParser):
 
         Overload this method for specific languages"""
         return expr
+
+    def _check_constant(self, expr: str) -> Any:
+        """Check if an expression is constant
+
+        This method attempts to evaluate the expression in a context where no variables
+        are defined. If the evaluation succeeds, the expression is considered constant
+        and the evaluated value is returned. If the evaluation fails with a NameError,
+        the expression is considered non-constant (i.e., it depends on variables).
+
+        Args:
+            expr: The string expression to evaluate
+
+        Returns:
+            The result of evaluating the expression if it's constant
+
+        Raises:
+            NameError: If the expression contains variables
+        """
+        expr = self._format_command(self._gen_expr(expr))
+        # Try to evaluate with only built-ins, not parser variables
+        return eval(expr, self.env, {})
 
     def evaluate(self, expr: str):
         """Evaluate the right side of an expression
@@ -634,18 +670,18 @@ class BaseParser(DictNoDot, StrParser):
 
         # handle label
         if left:
-            id = 1
+            idx = 1
             label = b[0].replace(" ", "")
         else:
-            id = 0
+            idx = 0
             label = None
 
         # ignore MAD qualifiers
-        while b[id] in ["const", "int", "real"]:
-            id += 1
+        while b[idx] in ["const", "int", "real"]:
+            idx += 1
 
         # process statement
-        self._decode(label, *b[id:])
+        self._decode(label, *b[idx:])
         return True
 
     def _finalise(self, final: bool = True) -> None:
