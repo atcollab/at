@@ -155,17 +155,31 @@ class StrParameter(ParamDef):
         return int(self.value)
 
     def __add__(self, other):
+        if str(other) == "0.0":
+            return self
+        if self.expr == "0.0":
+            return other
         return self.__class__(self.parser, f"({self.expr})+({other})")
 
     __radd__ = __add__
 
     def __sub__(self, other):
+        if str(other) == "0.0":
+            return self
+        if self.expr == "0.0":
+            return -other
         return self.__class__(self.parser, f"({self.expr})-({other})")
 
     def __rsub__(self, other):
         return self.__class__(self.parser, f"({other})-({self.expr})")
 
     def __mul__(self, other):
+        if str(other) == "0.0":
+            return 0.0
+        if self.expr == "1.0":
+            return other
+        if str(other) == "1.0":
+            return self
         return self.__class__(self.parser, f"({self.expr})*({other})")
 
     __rmul__ = __mul__
@@ -187,6 +201,9 @@ class StrParameter(ParamDef):
 
     def __pos__(self):
         return self.__class__(self.parser, f"({self.expr})")
+
+    def __abs__(self):
+        return self.__class__(self.parser, f"abs({self.expr})")
 
     def __gt__(self, other):
         return self.value > other
