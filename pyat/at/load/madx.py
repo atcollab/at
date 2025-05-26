@@ -2,7 +2,7 @@
 r"""Using `MAD-X`_ files with PyAT
 ==================================
 
-PyAT can read lattice descriptions in Mad-X format (.seq files), and can export
+PyAT can read lattice descriptions in Mad-X format (.seq files) and can export
 lattices in MAD-X format.
 
 However, because of intrinsic differences between PyAT and MAD-X, some
@@ -148,7 +148,8 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem, StrParameter
+from ..lattice import Lattice, Particle, tilt_elem, StrParameter, AtWarning
+from ..lattice import elements as elt
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -269,7 +270,7 @@ class _MadElement(ElementDescr):
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
-        half_length = 0.5 * float(self.length)  # MadParameter conversion
+        half_length = 0.5 * self.length
         offset = offset + refer * half_length + self.at
         frm = getattr(self, "from")
         if frm is not None:
@@ -652,7 +653,7 @@ class _Sequence(SequenceDescr):
                     None, fname, *anames, no_global=True, copy=True
                 )
             except Exception as exc:
-                mess = (f"In sequence {self.name!r}: \"{fname}, {', '.join(anames)}\"",)
+                mess = (f'In sequence {self.name!r}: "{fname}, {", ".join(anames)}"',)
                 exc.args += mess
                 raise
             if isinstance(elem, _Sequence):
@@ -663,12 +664,13 @@ class _Sequence(SequenceDescr):
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
-            if dl > 1.0e-5:
+            if abs(dl) > 1.0e-5:
                 yield from drift(name=f"drift_{drcounter}", l=dl).expand(parser)
                 drcounter += 1
-            elif dl < -1.0e-5:
-                elemtype = type(el).__name__.upper()
-                raise ValueError(f"{elemtype}({el.name!r}) is overlapping by {-dl} m")
+                if dl < 0.0:
+                    eltype = type(el).__name__.upper()
+                    wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-dl} m")
+                    warnings.warn(wrn, stacklevel=3)
 
         drcounter = 0
         end = 0.0
@@ -833,11 +835,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                MadParameter(self, v) for v in restore(matches, *value.split(","))
+                MadParameter.parameter(self, v)
+                for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
-            return MadParameter(self, value)
+            return MadParameter.parameter(self, value)
 
     def _argparser(self, argcount, argstr: str, **kwargs):
         key, *value = split_ignoring_parentheses(
@@ -1049,6 +1052,7 @@ def load_madx(
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
+    parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD-X files
@@ -1089,7 +1093,7 @@ def load_madx(
         if key in kwargs
     }
     parser.parse_files(*files, **kwargs)
-    return parser.lattice(use=use, **params)
+    return parser.lattice(use=use, parameterised=parameterised, **params)
 
 
 def longmultipole(kwargs):

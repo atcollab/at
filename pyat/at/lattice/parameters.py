@@ -2,10 +2,13 @@ from __future__ import annotations
 
 __all__ = ["Param", "ParamArray", "AttributeArray"]
 
-from typing import Any
 from collections.abc import Callable
+from typing import Any
+import weakref
+
 import numpy as np
 import numpy.typing as npt
+
 from .parser import ParamDef, _nop
 from .variables import ParamBase, _Constant, Number
 
@@ -111,22 +114,22 @@ class _PArray(np.ndarray):
     It is also the one used when setting an item of an array attribute.
     """
 
-    def __new__(cls, value: Any, dtype: npt.DTypeLike = float):
+    def __new__(cls, parent: Any, dtype: npt.DTypeLike = float):
         """Create a new _PArray instance.
 
         Args:
-            value: The parent ParamArray
+            parent: The parent ParamArray
             dtype: Data type of the array
 
         Returns:
             A new _PArray instance
         """
-        obj = np.array(value, dtype=dtype).view(cls)
-        obj._parent = value
+        obj = np.array(parent, dtype=dtype).view(cls)
+        obj._parent = weakref.proxy(parent)
         return obj
 
     def __array_finalize__(self, obj: Any) -> None:
-        self._parent = getattr(obj, "_parent", None)
+        pass
 
     def __setitem__(self, key: Any, value: Any) -> None:
         super().__setitem__(key, value)
@@ -158,7 +161,13 @@ class ParamArray(np.ndarray):
         return obj
 
     def __array_finalize__(self, obj: Any) -> None:
-        self._dtype = getattr(obj, "_dtype", float)
+        dtype = getattr(obj, "_dtype", float)
+        self._dtype = dtype
+        self._value = _PArray(self, dtype=dtype)
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self._value = _PArray(self, dtype=self._dtype)
 
     @property
     def value(self) -> np.ndarray:
@@ -172,12 +181,18 @@ class ParamArray(np.ndarray):
             A numeric array with the current parameter values
         """
         # Update the numeric array with current parameter values
-        return _PArray(self, dtype=self._dtype)
+        # self._value[...] = self[...]
+        with np.nditer(
+            (self._value, self),
+            ["external_loop", "refs_ok", "zerosize_ok"],
+            [["writeonly"], ["readonly"]],
+        ) as it:
+            for x, y in it:
+                x[...] = y[...]
+        return self._value
 
     def __repr__(self) -> str:
         return repr(self.value)
 
     def __str__(self) -> str:
-        it = np.nditer(self, flags=["refs_ok"], order="C")
-        contents = " ".join([str(el) for el in it])
-        return f"[{contents}]"
+        return np.array2string(self, formatter={"object": str})
