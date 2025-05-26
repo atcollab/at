@@ -27,6 +27,7 @@ class StrParser(abc.ABC):
     This class defines the interface for parsers that can evaluate string expressions.
     Concrete implementations should provide the evaluate method.
     """
+
     @abc.abstractmethod
     def evaluate(self, expr: str) -> Any:
         """Evaluate a string expression in the context of this parser
@@ -40,8 +41,23 @@ class StrParser(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def check_constant(self, expr: str) -> Any:
-        """Check if an expression is constant"""
+    def _check_constant(self, expr: str) -> Any:
+        """Check if an expression is constant
+
+        This method attempts to evaluate the expression in a context where no variables
+        are defined. If the evaluation succeeds, the expression is considered constant
+        and the evaluated value is returned. If the evaluation fails with a NameError,
+        the expression is considered non-constant (i.e., it depends on variables).
+
+        Args:
+            expr: The string expression to evaluate
+
+        Returns:
+            The result of evaluating the expression if it's constant
+
+        Raises:
+            NameError: If the expression contains variables
+        """
         ...
 
 
@@ -52,6 +68,7 @@ class ParamDef(abc.ABC):
     as element attributes. It provides methods for getting and setting values,
     as well as for converting values to the appropriate type.
     """
+
     def __init__(self, *, conversion: Callable[[Any], Any] = _nop):
         """Initialise a parameter definition
 
@@ -66,7 +83,7 @@ class ParamDef(abc.ABC):
 
     def __deepcopy__(self, memo):
         # Parameters are not deep-copied
-        return self,
+        return (self,)
 
     @abc.abstractmethod
     def get(self, **kwargs) -> Any:
@@ -220,7 +237,7 @@ class StrParameter(ParamDef):
     @classmethod
     def parameter(cls, parser, expr: str):
         try:
-            val = parser.check_constant(expr)
+            val = parser._check_constant(expr)
         except NameError:
             return cls(parser, expr)
         else:
