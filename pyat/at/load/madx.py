@@ -670,7 +670,7 @@ class _Sequence(SequenceDescr):
                 if dl < 0.0:
                     eltype = type(el).__name__.upper()
                     wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-dl} m")
-                    warnings.warn(wrn)
+                    warnings.warn(wrn, stacklevel=3)
 
         drcounter = 0
         end = 0.0
