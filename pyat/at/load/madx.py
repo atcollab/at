@@ -2,7 +2,7 @@
 r"""Using `MAD-X`_ files with PyAT
 ==================================
 
-PyAT can read lattice descriptions in Mad-X format (.seq files), and can export
+PyAT can read lattice descriptions in Mad-X format (.seq files) and can export
 lattices in MAD-X format.
 
 However, because of intrinsic differences between PyAT and MAD-X, some
@@ -135,7 +135,6 @@ from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
 import re
-from typing import Any
 
 import numpy as np
 
@@ -149,14 +148,8 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import (
-    Lattice,
-    Particle,
-    elements as elt,
-    tilt_elem,
-    StrParameter,
-    AtWarning,
-)
+from ..lattice import Lattice, Particle, tilt_elem, StrParameter, AtWarning
+from ..lattice import elements as elt
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -835,10 +828,6 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         super().clear()
         self.current_sequence = None
         self["beam"]()
-
-    def check_constant(self, expr: str) -> Any:
-        expr = self._format_command(self._gen_expr(expr))
-        return eval(expr)
 
     def _assign_deferred(self, value: str):
         """Deferred assignment"""
