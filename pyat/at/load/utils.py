@@ -5,7 +5,6 @@ Conversion utilities for creating pyat elements
 from __future__ import annotations
 
 __all__ = [
-    "element_classes",
     "element_from_dict",
     "element_to_dict",
     "find_class",
@@ -60,20 +59,6 @@ def _warn(index: int, message: str, elem_dict: dict) -> None:
     warn(AtWarning(warning), stacklevel=2)
 
 
-def element_classes() -> frozenset[type[Element]]:
-    """Build a set of all Element subclasses"""
-
-    # Misses class aliases (Bend, Matrix66)
-    def subclasses_recursive(cl):
-        direct = cl.__subclasses__()
-        indirect = []
-        for subclass in direct:
-            indirect.extend(subclasses_recursive(subclass))
-        return frozenset([cl] + direct + indirect)
-
-    return subclasses_recursive(Element)
-
-
 class RingParam(elt.Element):
     """Private class for Matlab RingParam element
 
@@ -123,7 +108,7 @@ _alias_map = {
 }
 
 # Map class names to Element classes
-_CLASS_MAP = {cls.__name__.lower(): cls for cls in element_classes()}
+_CLASS_MAP = {cls.__name__.lower(): cls for cls in Element.subclasses()}
 _CLASS_MAP.update(_alias_map)
 
 # Maps passmethods to Element classes

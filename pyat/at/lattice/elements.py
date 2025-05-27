@@ -91,6 +91,7 @@ class LongtMotion(ABC):
             return newelem
         # noinspection PyAttributeOutsideInit
         self.PassMethod = new_pass
+        return None
 
 
 # noinspection PyUnresolvedReferences
@@ -202,6 +203,7 @@ class _Radiative(LongtMotion):
             setpass(newelem)
             return newelem
         setpass(self)
+        return None
 
 
 class Radiative(_Radiative):
@@ -331,6 +333,17 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
+    @classmethod
+    def subclasses(cls):
+        """Yields all the class subclasses.
+
+        Some classes may appear several times because of diamond-shape inheritance
+        """
+        for subclass in cls.__subclasses__():
+            yield from subclass.subclasses()
+            yield subclass
+        yield cls
+
     def to_dict(self):
         """Return a copy of the element parameters"""
         v = vars(self).copy()
@@ -431,7 +444,7 @@ class Element:
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v =self.to_dict()
+        v = self.to_dict()
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
