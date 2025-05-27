@@ -338,9 +338,16 @@ class Element:
             yield subclass
         yield cls
 
-    def to_dict(self):
+    def keys(self):
+        """Return a set of all attribute names"""
+        return set(vars(self).keys())
+
+    def to_dict(self, freeze: bool = True):
         """Return a copy of the element parameters"""
-        return vars(self).copy()
+        if freeze:
+            return {k: getattr(self, k) for k in vars(self).keys()}
+        else:
+            return vars(self).copy()
 
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
@@ -382,7 +389,7 @@ class Element:
         else:
             el = self
         # Remove and swap entrance and exit attributes
-        attrs = el.to_dict()
+        attrs = el.keys()
         fin = dict(
             swapattr(el, kout, kin)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
@@ -422,7 +429,7 @@ class Element:
     @property
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element"""
-        attrs = dict(self.items())
+        attrs = {k: getattr(self, k) for k, v in self.items()}
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
         )
@@ -434,9 +441,9 @@ class Element:
         }
         return self.__class__.__name__, arguments, keywords
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v = self.to_dict()
+        v = self.to_dict(freeze=freeze)
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
@@ -559,7 +566,7 @@ class LongElement(Element):
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        attrs = el.to_dict()
+        attrs = el.keys()
         fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
         fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
@@ -1049,8 +1056,8 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "K", self.K
 
     def _part(self, fr, sumfr):
@@ -1126,8 +1133,8 @@ class Quadrupole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "K", self.K
 
 
@@ -1161,8 +1168,8 @@ class Sextupole(Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "H", self.H
 
 
