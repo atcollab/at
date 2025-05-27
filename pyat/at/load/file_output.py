@@ -51,7 +51,7 @@ class Exporter:
             end = 0.0
             for atelem in ring:
                 attyp = type(atelem)
-                elemdict = {k: getattr(atelem, k) for k in atelem.to_dict()}
+                elemdict = atelem.to_dict(freeze=True)
                 elms = self.generate_madelems(attyp, elemdict)
                 if isinstance(elms, ElementDescr):
                     elms = (elms,)

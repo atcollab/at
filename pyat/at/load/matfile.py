@@ -453,15 +453,7 @@ def _element_to_m(elem: Element) -> str:
         classname = elclass.__name__
         return _mat_constructor.get(classname, "".join(("at", classname.lower())))
 
-    attrs = {k: getattr(elem, k) for k, v in elem.items()}
-    # noinspection PyProtectedMember
-    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
-    defelem = elem.__class__(*args)
-    kwds = {
-        k: v
-        for k, v in attrs.items()
-        if not np.array_equal(v, getattr(defelem, k, None))
-    }
+    _, args, kwds = elem.definition
     argstrs = [convert(arg) for arg in args]
     if "PassMethod" in kwds:
         argstrs.append(convert(kwds.pop("PassMethod")))
