@@ -53,7 +53,7 @@ class LongtMotion(ABC):
     """Abstract Base class for all Element classes whose instances may modify
     the particle momentum
 
-    Allows to identify elements potentially inducing longitudinal motion.
+    Allows identifying elements potentially inducing longitudinal motion.
 
     Subclasses of :py:class:`LongtMotion` must provide two methods for
     enabling longitudinal motion:
@@ -92,6 +92,7 @@ class LongtMotion(ABC):
             return newelem
         # noinspection PyAttributeOutsideInit
         self.PassMethod = new_pass
+        return None
 
 
 # noinspection PyUnresolvedReferences
@@ -203,6 +204,7 @@ class _Radiative(LongtMotion):
             setpass(newelem)
             return newelem
         setpass(self)
+        return None
 
 
 class Radiative(_Radiative):
@@ -325,8 +327,19 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
-    def _vars(self):
-        """Return a copy of the element attributes"""
+    @classmethod
+    def subclasses(cls):
+        """Yields all the class subclasses.
+
+        Some classes may appear several times because of diamond-shape inheritance
+        """
+        for subclass in cls.__subclasses__():
+            yield from subclass.subclasses()
+            yield subclass
+        yield cls
+
+    def to_dict(self):
+        """Return a copy of the element parameters"""
         return vars(self).copy()
 
     def equals(self, other) -> bool:
@@ -369,7 +382,7 @@ class Element:
         else:
             el = self
         # Remove and swap entrance and exit attributes
-        attrs = el._vars()
+        attrs = el.to_dict()
         fin = dict(
             swapattr(el, kout, kin)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
@@ -423,7 +436,7 @@ class Element:
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v = self._vars()
+        v = self.to_dict()
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
@@ -546,7 +559,7 @@ class LongElement(Element):
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        attrs = el._vars()
+        attrs = el.to_dict()
         fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
         fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
