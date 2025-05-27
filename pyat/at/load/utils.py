@@ -246,9 +246,9 @@ def _from_contents(elem: dict) -> type[Element]:
         return elt.Element
 
 
-def find_class(
-    elem_dict: dict, quiet: bool = False, index: int | None = None
-) -> type(Element):
+def find_class(elem_dict: dict, quiet: bool = False, index: int | None = None) -> type(
+    Element
+):
     """Deduce the class of an element from its attributes
 
     `find_class` looks first at the "Class" field, if existing. It then tries to deduce
@@ -378,7 +378,7 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     Returns:
         dct (dict):     Dictionary of :py:class:`.Element` attributes
     """
-    dct = {k: encoder(v) for k, v in elem.items()}
+    dct = {k: encoder(getattr(elem, k)) for k, v in elem.items()}
     class_name = elem.__class__.__name__
     dct["Class"] = _mat_class.get(class_name, class_name)
     return dct
@@ -428,5 +428,5 @@ def restore(replmatch, *parts):
     return replaced_parts
 
 
-Element.from_dict = staticmethod(element_from_dict)
-Element.to_dict = element_to_dict
+Element.from_matlab = staticmethod(element_from_dict)
+Element.to_matlab = element_to_dict

@@ -331,7 +331,8 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
-    def _cleanvars(self):
+    def to_dict(self):
+        """Return a copy of the element parameters"""
         v = vars(self).copy()
         v.update(self._parameters)
         return v
@@ -376,7 +377,7 @@ class Element:
         else:
             el = self
         # Remove and swap entrance and exit attributes
-        attrs = el._cleanvars()
+        attrs = el.to_dict()
         fin = dict(
             swapattr(el, kout, kin)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
@@ -430,7 +431,7 @@ class Element:
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v =self._cleanvars()
+        v =self.to_dict()
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
@@ -499,7 +500,7 @@ class LongElement(Element):
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        attrs = el._cleanvars()
+        attrs = el.to_dict()
         fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
         fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
