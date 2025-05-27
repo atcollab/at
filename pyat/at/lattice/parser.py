@@ -83,7 +83,7 @@ class ParamDef(abc.ABC):
 
     def __deepcopy__(self, memo):
         # Parameters are not deep-copied
-        return (self,)
+        return self
 
     @abc.abstractmethod
     def get(self, **kwargs) -> Any:
