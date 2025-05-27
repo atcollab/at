@@ -229,8 +229,17 @@ def _getattr(self, key) -> Any:
         raise AttributeError(key) from None
 
 
+def _delattr(self, key) -> None:
+    try:
+        del self._parameters[key]
+    except KeyError:
+        object.__delattr__(self, key)
+
+
+
 Element.__setattr__ = _setattr
 Element.__getattr__ = _getattr
+Element.__delattr__ = _delattr
 Element.set_parameter = set_parameter
 Element.get_parameter = get_parameter
 Element.is_parameterised = is_parameterised
