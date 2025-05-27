@@ -363,7 +363,7 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     Returns:
         dct (dict):     Dictionary of :py:class:`.Element` attributes
     """
-    dct = {k: encoder(getattr(elem, k)) for k, v in elem.items()}
+    dct = {k: encoder(v) for k, v in elem.items(freeze=True)}
     class_name = elem.__class__.__name__
     dct["Class"] = _mat_class.get(class_name, class_name)
     return dct
