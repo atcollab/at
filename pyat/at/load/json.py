@@ -21,7 +21,6 @@ class _AtEncoder(json.JSONEncoder):
     """JSON encoder for specific AT types"""
 
     def default(self, obj):
-        print(obj, type(obj))
         if isinstance(obj, Element):
             return obj.to_dict()
         elif isinstance(obj, ParamArray):
