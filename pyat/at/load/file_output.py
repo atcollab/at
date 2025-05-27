@@ -51,7 +51,7 @@ class Exporter:
             end = 0.0
             for atelem in ring:
                 attyp = type(atelem)
-                elms = self.generate_madelems(attyp, vars(atelem).copy())
+                elms = self.generate_madelems(attyp, atelem.to_dict())
                 if isinstance(elms, ElementDescr):
                     elms = (elms,)
                 for elem in elms:
