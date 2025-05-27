@@ -316,7 +316,7 @@ class Element:
     def __str__(self):
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {v!s}" for k, v in self.items()]
+            + [f"{k:>14}: {v!s}" for k, v in self.items(freeze=False)]
         )
 
     def __repr__(self):
@@ -344,7 +344,7 @@ class Element:
     def to_dict(self, freeze: bool = True):
         """Return a copy of the element parameters"""
         if freeze:
-            return {k: getattr(self, k) for k in vars(self).keys()}
+            return {k: getattr(self, k) for k in self.keys()}
         else:
             return vars(self).copy()
 
