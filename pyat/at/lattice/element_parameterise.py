@@ -41,19 +41,6 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
             ) from exc
 
 
-def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
-    try:
-        attr = self.__dict__[attrname]
-    except KeyError:
-        raise AttributeError(f"{self.FamName} has no attribute '{attrname}'") from None
-    if index is not None:
-        try:
-            attr = attr[index]
-        except IndexError as exc:
-            raise IndexError(f"{self.FamName}.{attrname}: {exc}") from None
-    return attr
-
-
 def get_parameter(self, attrname: str, index: int | None = None) -> ParamDef:
     """Extract a parameter of an element
 
@@ -224,4 +211,3 @@ Element.get_parameter = get_parameter
 Element.is_parameterised = is_parameterised
 Element.parameterise = parameterise
 Element.unparameterise = unparameterise
-Element._get_attribute = _get_attribute
