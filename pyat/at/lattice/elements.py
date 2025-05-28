@@ -349,6 +349,19 @@ class Element:
         else:
             return vars(self).copy()
 
+    def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
+        try:
+            attr = self.__dict__[attrname]
+        except KeyError:
+            raise AttributeError(
+                f"{self.FamName} has no attribute '{attrname}'") from None
+        if index is not None:
+            try:
+                attr = attr[index]
+            except IndexError as exc:
+                raise IndexError(f"{self.FamName}.{attrname}: {exc}") from None
+        return attr
+
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
 
@@ -469,7 +482,7 @@ class Element:
 
     @property
     def longt_motion(self) -> bool:
-        """:py:obj:`True` if longitudinal motion is affected by the element"""
+        """:py:obj:`True` if the element affects the longitudinal motion"""
         return self._get_longt_motion()
 
     @property
@@ -546,7 +559,7 @@ class LongElement(Element):
         Other arguments and keywords are given to the base class
         """
         kwargs.setdefault("Length", length)
-        # Ancestor may be either Element of ThinMultipole
+        # Ancestor may be either Element or ThinMultipole
         # noinspection PyArgumentList
         super().__init__(family_name, *args, **kwargs)
 
@@ -635,12 +648,12 @@ class BeamMoments(Element):
 
     @property
     def means(self):
-        """Beam 6d center of mass"""
+        """Beam 6d centre of mass"""
         return self._means
 
 
 class SliceMoments(Element):
-    """Element to compute slices mean and std"""
+    """Element to compute the slices mean and std"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["nslice"]
     _conversions = dict(Element._conversions, nslice=int)
@@ -687,7 +700,7 @@ class SliceMoments(Element):
 
     @property
     def means(self):
-        """Slices x,y,dp center of mass"""
+        """Slices x,y,dp centre of mass"""
         return self._means.reshape((3, self._nbunch, self.nslice, self._dturns))
 
     @property
@@ -789,7 +802,7 @@ class Drift(LongElement):
             insert_list: iterable, each item of insert_list is itself an
               iterable with 2 objects:
 
-              1. the location where the center of the element
+              1. the location where the centre of the element
                  will be inserted, given as a fraction of the Drift length.
               2. an element to be inserted at that location. If :py:obj:`None`,
                  the drift will be divided but no element will be inserted.
@@ -1553,7 +1566,7 @@ class EnergyLoss(_DictLongtMotion, Element):
     def __init__(self, family_name: str, energy_loss: float, **kwargs):
         """Energy loss element
 
-        the :py:class:`EnergyLoss` element is taken into account in
+        The :py:class:`EnergyLoss` element is taken into account in
         :py:func:`.radiation_parameters`: it adds damping by contributing to the
         :math:`I_2` integral, thus reducing the equilibrium emittance. But it does not
         generate any diffusion. This makes sense only if the losses summarised in
