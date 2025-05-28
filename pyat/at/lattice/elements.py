@@ -334,6 +334,13 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
+    def __copy__(self):
+        cls = self.__class__
+        new_elem = cls.__new__(cls)
+        new_elem._parameters.update(self._parameters)
+        new_elem.__dict__.update(self.__dict__)
+        return new_elem
+
     @classmethod
     def subclasses(cls):
         """Yields all the class subclasses.
@@ -408,7 +415,7 @@ class Element:
         """Swap the faces of an element, alignment errors are ignored"""
 
         def swapattr(element, attro, attri):
-            val = getattr(element, attri)
+            val = element._get_attribute(attri)  # get the parameter itself
             delattr(element, attri)
             return attro, val
 
@@ -580,14 +587,16 @@ class LongElement(Element):
 
     def _part(self, fr, sumfr):
         pp = self.copy()
-        pp.Length = fr * self.Length
+        newl = fr * self._get_attribute("Length")
+        print(f"{newl} {newl!r}")
+        pp.Length = fr * self._get_attribute("Length")
         if hasattr(self, "KickAngle"):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
-            val = getattr(element, attr)
+            val = element._get_attribute(attr)  # get the parameter itself
             delattr(element, attr)
             return attr, val
 
