@@ -334,12 +334,9 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
-    def __copy__(self):
-        cls = self.__class__
-        new_elem = cls.__new__(cls)
-        new_elem._parameters.update(self._parameters)
-        new_elem.__dict__.update(self.__dict__)
-        return new_elem
+    def __getstate__(self):
+        # Make a copy of parameters
+        return self.__dict__, {"_parameters": self._parameters.copy()}
 
     @classmethod
     def subclasses(cls):
@@ -587,8 +584,6 @@ class LongElement(Element):
 
     def _part(self, fr, sumfr):
         pp = self.copy()
-        newl = fr * self._get_attribute("Length")
-        print(f"{newl} {newl!r}")
         pp.Length = fr * self._get_attribute("Length")
         if hasattr(self, "KickAngle"):
             pp.KickAngle = fr / sumfr * self.KickAngle
