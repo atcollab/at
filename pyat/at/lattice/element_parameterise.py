@@ -34,9 +34,8 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         try:
             array[index] = value
         except IndexError as exc:
-            raise IndexError(
-                f"Index {index} out of bounds for {self.FamName}.{attrname}"
-            ) from exc
+            exc.args = (f"Index {index} out of bounds for {self.FamName}.{attrname}",)
+            raise
 
     if index is None:
         setattr(self, attrname, value)
@@ -133,9 +132,8 @@ def parameterise(
     try:
         param = Param(vini, name=name)
     except TypeError as exc:
-        raise TypeError(
-            f"Cannot parameterise {self.FamName}.{attrname}: {exc}"
-        ) from None
+        exc.args = (f"Cannot parameterise {self.FamName}.{attrname}: {exc}",)
+        raise
 
     self.set_parameter(attrname, param, index=index)
     return param
@@ -197,11 +195,11 @@ def _setattr(self, key: str, value: Any) -> None:
         raise
     else:
         # Conversion succeeded
-        super(Element, self).__setattr__(key, value)
+       object.__setattr__(self, key, value)
 
 
 def _getattribute(self, key: str) -> Any:
-    attr = super(Element, self).__getattribute__(key)
+    attr = object.__getattribute__(self, key)
     if isinstance(attr, (ParamDef, ParamArray)):
         return attr.value
     else:
