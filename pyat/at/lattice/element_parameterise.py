@@ -126,22 +126,6 @@ def parameterise(
     return param
 
 
-def _freeze_attribute(self, attrname: str, attr: Any) -> None:
-    """Helper function to freeze a parameterised attribute.
-
-    Args:
-        attrname: Name of the attribute to freeze
-        attr: The attribute value to freeze
-    """
-    if isinstance(attr, ParamDef):
-        setattr(self, attrname, attr.value)
-    elif isinstance(attr, np.ndarray):
-        for i, item in enumerate(attr.flat):
-            if isinstance(item, ParamDef):
-                ij = np.unravel_index(i, attr.shape)
-                attr[ij] = item.value
-
-
 def unparameterise(self, attrname: str | None = None, index: int | None = None) -> None:
     """Freeze the parameter values by replacing parameters with their current values.
 
@@ -155,13 +139,24 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 
     Attributes which are not parameters are silently ignored.
     """
+
+    def _freeze_attribute(attrname: str, attr: Any) -> None:
+        """Helper function to freeze a parameterised attribute."""
+        if isinstance(attr, ParamDef):
+            setattr(self, attrname, attr.value)
+        elif isinstance(attr, np.ndarray):
+            for i, item in enumerate(attr.flat):
+                if isinstance(item, ParamDef):
+                    ij = np.unravel_index(i, attr.shape)
+                    attr[ij] = item.value
+
     if attrname is None:
         for name, attr in self.__dict__.items():
-            self._freeze_attribute(name, attr)
+            _freeze_attribute(name, attr)
     else:
         attr = self.get_parameter(attrname)
         if index is None:
-            self._freeze_attribute(attrname, attr)
+            _freeze_attribute(attrname, attr)
         else:
             item = attr[index]
             if isinstance(item, ParamDef):
@@ -192,6 +187,7 @@ def _setattr(self, attrname: str, value: Any) -> None:
         else:
             value = conversion(value)
     except Exception as exc:
+        # Conversion failed
         exc.args = (f"{self._ident(attrname)}: {exc}",)
         raise
     else:
@@ -210,14 +206,16 @@ def _getattribute(self, attrname: str) -> Any:
 
     Returns:
         The attribute value, or the parameter value if the attribute is a parameter
+
+    Raises:
+        AttributeError: If the attribute doesn't exist
     """
-    # Get the actual attribute
     try:
         attr = object.__getattribute__(self, attrname)
     except AttributeError as exc:
-        clname = self.__class__.__name__
-        elname = object.__getattribute__(self, "FamName")
-        exc.args = (f"{clname}({elname!r}) has no attribute {attrname!r}",)
+        cl = self.__class__.__name__
+        el = object.__getattribute__(self, "FamName")
+        exc.args = (f"{cl}({el!r}) has no attribute {attrname!r}",)
         raise
 
     # If it's a parameter or parameter array, return its value
@@ -233,5 +231,4 @@ Element.__getattribute__ = _getattribute
 Element.set_parameter = set_parameter
 Element.is_parameterised = is_parameterised
 Element.parameterise = parameterise
-Element._freeze_attribute = _freeze_attribute
 Element.unparameterise = unparameterise
