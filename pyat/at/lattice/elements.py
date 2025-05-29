@@ -338,6 +338,15 @@ class Element:
         # Make a copy of parameters
         return self.__dict__, {"_parameters": self._parameters.copy()}
 
+    def _ident(self, attrname: str | None = None, index: bool = None):
+        """Return an element's identifier for error messages"""
+        if attrname is None:
+            return f"{self.__class__.__name__}({self.FamName!r})"
+        elif index is None:
+            return f"{self.__class__.__name__}({self.FamName!r}).{attrname}"
+        else:
+            return f"{self.__class__.__name__}({self.FamName!r}).{attrname}[{index}]"
+
     @classmethod
     def subclasses(cls):
         """Yields all the class subclasses.
@@ -364,7 +373,21 @@ class Element:
             v.update(self._parameters)
             return v
 
-    def _get_attribute(self, attrname: str, index: int | None = None) -> Any:
+    def get_parameter(self, attrname: str, index: int | None = None) -> Any:
+        """Extract a parameter of an element
+
+        Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
+        parameter itself instead of its value. It the item is not a parameter,
+        both functions are equivalent, the value is returned.
+
+        Args:
+            attrname:   Attribute name
+            index:      Index in an array attribute. If :py:obj:`None`, the
+              whole attribute is returned
+
+        Returns:
+            The parameter object or attribute value.
+        """
         try:
             attr = self.__dict__[attrname]
         except KeyError:
@@ -372,13 +395,13 @@ class Element:
                 attr = self._parameters[attrname]
             except KeyError:
                 raise AttributeError(
-                    f"{self.FamName} has no attribute '{attrname}'"
+                    f"{self._ident()} has no attribute {attrname!r}"
                 ) from None
         if index is not None:
             try:
                 attr = attr[index]
             except IndexError as exc:
-                raise IndexError(f"{self.FamName}.{attrname}: {exc}") from None
+                raise IndexError(f"{self._ident(attrname)}: {exc}") from None
         return attr
 
     def equals(self, other) -> bool:
@@ -412,7 +435,7 @@ class Element:
         """Swap the faces of an element, alignment errors are ignored"""
 
         def swapattr(element, attro, attri):
-            val = element._get_attribute(attri)  # get the parameter itself
+            val = element.get_parameter(attri)  # get the parameter itself
             delattr(element, attri)
             return attro, val
 
@@ -584,14 +607,14 @@ class LongElement(Element):
 
     def _part(self, fr, sumfr):
         pp = self.copy()
-        pp.Length = fr * self._get_attribute("Length")
+        pp.Length = fr * self.get_parameter("Length")
         if hasattr(self, "KickAngle"):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
-            val = element._get_attribute(attr)  # get the parameter itself
+            val = element.get_parameter(attr)  # get the parameter itself
             delattr(element, attr)
             return attr, val
 
