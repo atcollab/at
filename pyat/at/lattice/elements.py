@@ -393,7 +393,7 @@ class Element:
         """Swap the faces of an element, alignment errors are ignored"""
 
         def swapattr(element, attro, attri):
-            val = getattr(element, attri)
+            val = element._get_attribute(attri)  # get the parameter itself
             delattr(element, attri)
             return attro, val
 
@@ -565,14 +565,14 @@ class LongElement(Element):
 
     def _part(self, fr, sumfr):
         pp = self.copy()
-        pp.Length = fr * self.Length
+        pp.Length = fr * self._get_attribute("Length")
         if hasattr(self, "KickAngle"):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
-            val = getattr(element, attr)
+            val = element._get_attribute(attr)  # get the parameter itself
             delattr(element, attr)
             return attr, val
 

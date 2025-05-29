@@ -29,16 +29,20 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         index:      Index into an array attribute. If *value* is a
           parameter, the array attribute is converted to a :py:class:`.ParamArray`.
     """
-    if index is None:
-        setattr(self, attrname, value)
-    else:
-        array = self._get_attribute(attrname)
+
+    def setitem(array, index, value):
         try:
             array[index] = value
         except IndexError as exc:
             raise IndexError(
                 f"Index {index} out of bounds for {self.FamName}.{attrname}"
             ) from exc
+
+    if index is None:
+        setattr(self, attrname, value)
+    else:
+        array = self._get_attribute(attrname)
+        setitem(array, index, value)
 
 
 def get_parameter(self, attrname: str, index: int | None = None) -> ParamDef:
