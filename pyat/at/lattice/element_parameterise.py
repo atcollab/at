@@ -48,7 +48,7 @@ def set_parameter(self, attrname: str, value: Any, index: int | None = None) -> 
     else:
         array = self.get_parameter(attrname)
         if not isinstance(array, ParamArray) and isinstance(value, ParamDef):
-            # Convert the array to a ParamArray if it's not already one'
+            # Convert the array to a ParamArray if it's not already one
             array = ParamArray(array, shape=array.shape, dtype=array.dtype)
             set_array_item(array, index, value)
             setattr(self, attrname, array)
@@ -137,6 +137,7 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
     """
     if attrname is None:
         # freeze all the attributes
+        # make a copy of the parameters dict to avoid modifications during iteration
         for name, attr in self._parameters.copy().items():
             setattr(self, name, attr.value)
     else:
@@ -204,7 +205,7 @@ def _setattr(self, attrname: str, value: Any) -> None:
                 pass
 
 
-def _getattr(self, attrname) -> Any:
+def _getattr(self, attrname: str) -> Any:
     """Override __getattr__ to handle parameter values.
 
     This method returns the value of parameters instead of the parameter objects
@@ -215,6 +216,9 @@ def _getattr(self, attrname) -> Any:
 
     Returns:
         The attribute value, or the parameter value if the attribute is a parameter
+
+    Raises:
+        AttributeError: If the attribute doesn't exist
     """
     try:
         return self._parameters[attrname].value
@@ -224,7 +228,17 @@ def _getattr(self, attrname) -> Any:
         raise AttributeError(f"{cl}({el!r}) has no attribute {attrname!r}") from exc
 
 
-def _delattr(self, attrname) -> None:
+def _delattr(self, attrname: str) -> None:
+    """Override __delattr__ to handle parameter deletions.
+
+    This method deletes either a parameter or a regular attribute.
+
+    Args:
+        attrname: Name of the attribute to delete
+
+    Raises:
+        AttributeError: If the attribute doesn't exist
+    """
     try:
         del self._parameters[attrname]
     except KeyError:
