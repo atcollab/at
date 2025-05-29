@@ -51,13 +51,13 @@ class Param(ParamBase[Number]):
         )
         self._history.append(self._evaluator())
 
-    def _getfun(self, ring=None):
+    def _getfun(self, ring=None) -> Number:
         return self._evaluator()
 
-    def _setfun(self, value, ring=None):
+    def _setfun(self, value, ring=None) -> None:
         self._evaluator = _Constant(self._conversion(value))
 
-    def set_conversion(self, conversion: Callable[[Any], Number]):
+    def set_conversion(self, conversion: Callable[[Any], Number]) -> None:
         oldv = self._evaluator()
         super().set_conversion(conversion)
         self._evaluator = _Constant(conversion(oldv))
@@ -69,7 +69,7 @@ def AttributeArray(
     """Create an array of attributes, which may contain parameters.
 
     This function creates either a ParamArray (if the input contains parameters)
-    or a _SafeArray (if the input contains only regular values).
+    or a SafeArray (if the input contains only regular values).
 
     Args:
         value: Input array or sequence
@@ -77,7 +77,7 @@ def AttributeArray(
         dtype: Data type of the output array
 
     Returns:
-        Either a ParamArray or a _SafeArray depending on the input
+        Either a ParamArray or a SafeArray depending on the input
     """
 
     class SafeArray(np.ndarray):
@@ -124,15 +124,15 @@ class ParamArray(np.ndarray):
         It is also the one used when setting an item of an array attribute.
         """
 
-        def __new__(cls, parent: Any, dtype: npt.DTypeLike = float):
-            """Create a new _PArray instance.
+        def __new__(cls, parent: "ParamArray", dtype: npt.DTypeLike = float):
+            """Create a new ValueArray instance.
 
             Args:
                 parent: The parent ParamArray
                 dtype: Data type of the array
 
             Returns:
-                A new _PArray instance
+                A new ValueArray instance
             """
             obj = np.array(parent, dtype=dtype).view(cls)
             obj._parent = weakref.proxy(parent)
@@ -164,7 +164,7 @@ class ParamArray(np.ndarray):
         self._dtype = dtype
         self._value = ParamArray.ValueArray(self, dtype=dtype)
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         super().__setstate__(state)
         self._value = ParamArray.ValueArray(self, dtype=self._dtype)
 
@@ -172,7 +172,7 @@ class ParamArray(np.ndarray):
     def value(self) -> np.ndarray:
         """Get a numeric array with the current values of all parameters.
 
-        This property returns a _PArray that contains the numeric values of all
+        This property returns a ValueArray that contains the numeric values of all
         parameters in the array. Changes to this array are propagated back to
         the parameters.
 
@@ -180,7 +180,9 @@ class ParamArray(np.ndarray):
             A numeric array with the current parameter values
         """
         # Update the numeric array with current parameter values
-        # self._value[...] = self[...]
+        # We use np.nditer to iterate over both arrays simultaneously
+        # This is necessary because self may contain parameter objects
+        # that need to be evaluated to get their current values
         with np.nditer(
             (self._value, self),
             ["external_loop", "refs_ok", "zerosize_ok"],
