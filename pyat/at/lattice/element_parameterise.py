@@ -17,65 +17,76 @@ from .variables import ParamBase
 from .parameters import Param, ParamArray, _ACCEPTED
 
 
-def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
-    """Set an element's parameter
+def set_parameter(self, attrname: str, value: Any, index: int | None = None) -> None:
+    """Set an element's parameter.
 
-    This allows setting a parameter into an item of an array attribute.
+    This allows setting a parameter into an attribute or an item of an array attribute.
 
     Args:
         attrname:   Attribute name
         value:      Parameter or value to be set
         index:      Index into an array attribute. If *value* is a
           parameter, the array attribute is converted to a :py:class:`.ParamArray`.
+
+    Raises:
+        IndexError: If the provided index is out of bounds for the array attribute
+        AttributeError: If the attribute doesn't exist
     """
 
-    def setitem(array, index, value):
+    def set_array_item(array: np.ndarray, idx: int, val: Any) -> None:
+        """Helper function to set an item in an array with improved error handling."""
         try:
-            array[index] = value
+            array[idx] = val
         except IndexError as exc:
             exc.args = (f"{self._ident(attrname)}: {exc}",)
             raise
 
+    # Set the entire attribute
     if index is None:
         setattr(self, attrname, value)
+    # Set a specific index in an array attribute
     else:
         array = self.get_parameter(attrname)
-        setitem(array, index, value)
+        set_array_item(array, index, value)
 
 
 def is_parameterised(
     self, attrname: str | None = None, index: int | None = None
 ) -> bool:
-    """Check for the parametrisation of an element
+    """Check for the parameterisation of an element
 
     Args:
-        attrname:   Attribute name. If :py:obj:`None`, return :py:obj:`True`
-          if any attribute is parameterised
-        index:      Index in an array attribute. If :py:obj:`None`, the
-          whole attribute is tested for parameterisation
+        attrname:   Attribute name. If :py:obj:`None`, checks if any attribute is
+          parameterised
+        index:      Index in an array attribute. If :py:obj:`None`, tests the whole
+          attribute
 
     Returns:
         True if the attribute, or array item is parameterised, False otherwise
     """
+    # Check if any attribute is parameterised
     if attrname is None:
-        for attr in self.__dict__:
-            if self.is_parameterised(attr):
-                return True
-        return False
-    else:
-        attr = self.get_parameter(attrname, index=index)
-        if isinstance(attr, ParamDef):
-            return True
-        elif isinstance(attr, np.ndarray):
-            return any(isinstance(item, ParamDef) for item in attr.flat)
-        else:
-            return False
+        return any(self.is_parameterised(attribute) for attribute in self.__dict__)
+
+    # Get the attribute or specific index
+    attribute = self.get_parameter(attrname, index=index)
+
+    # Check if the attribute itself is a parameter
+    if isinstance(attribute, ParamDef):
+        return True
+
+    # Check if any element in the array is a parameter
+    if isinstance(attribute, np.ndarray):
+        return any(isinstance(item, ParamDef) for item in attribute.flat)
+
+    # Not parameterised
+    return False
 
 
 def parameterise(
     self, attrname: str, index: int | None = None, name: str = ""
 ) -> ParamBase:
-    """Convert an attribute into a parameter
+    """Convert attribute to parameter preserving value.
 
     The value of the attribute is kept unchanged. If the attribute is
     already parameterised, the existing parameter is returned.
@@ -96,19 +107,39 @@ def parameterise(
         IndexError: If the index is out of bounds for an array attribute
         AttributeError: If the attribute does not exist
     """
-    vini = self.get_parameter(attrname, index=index)
+    # Get the current value of the attribute or array element
+    current_value = self.get_parameter(attrname, index=index)
 
-    if isinstance(vini, ParamBase):
-        return vini
+    # If it's already a parameter, return it
+    if isinstance(current_value, ParamBase):
+        return current_value
 
+    # Create a new parameter with the current value
     try:
-        param = Param(vini, name=name)
+        param = Param(current_value, name=name)
     except TypeError as exc:
         exc.args = (f"Cannot parameterise {self._ident(attrname)}: {exc}",)
         raise
 
+    # Set the parameter in the element
     self.set_parameter(attrname, param, index=index)
     return param
+
+
+def _freeze_attribute(self, attrname: str, attr: Any) -> None:
+    """Helper function to freeze a parameterised attribute.
+
+    Args:
+        attrname: Name of the attribute to freeze
+        attr: The attribute value to freeze
+    """
+    if isinstance(attr, ParamDef):
+        setattr(self, attrname, attr.value)
+    elif isinstance(attr, np.ndarray):
+        for i, item in enumerate(attr.flat):
+            if isinstance(item, ParamDef):
+                ij = np.unravel_index(i, attr.shape)
+                attr[ij] = item.value
 
 
 def unparameterise(self, attrname: str | None = None, index: int | None = None) -> None:
@@ -119,63 +150,82 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
     element back to a regular element with fixed values.
 
     Args:
-        attrname:   Attribute name. If :py:obj:`None`, all the attributes
-          are frozen
-        index:      Index in an array. If :py:obj:`None`, the whole
-          attribute is frozen
+        attrname:   Attribute name. If :py:obj:`None`, freezes all attributes
+        index:      Index in an array. If :py:obj:`None`, freezes the whole attribute
 
     Attributes which are not parameters are silently ignored.
     """
-
-    def unparam_attr(attrname: str, attr: Any) -> None:
-        """Helper function to unparameterise a single attribute."""
-        if isinstance(attr, ParamDef):
-            setattr(self, attrname, attr.value)
-        elif isinstance(attr, np.ndarray):
-            for i, item in enumerate(attr.flat):
-                if isinstance(item, ParamDef):
-                    ij = np.unravel_index(i, attr.shape)
-                    attr[ij] = item.value
-
     if attrname is None:
-        # freeze all the attributes
-        for attrname, attr in self.__dict__.items():
-            unparam_attr(attrname, attr)
+        for name, attr in self.__dict__.items():
+            self._freeze_attribute(name, attr)
     else:
         attr = self.get_parameter(attrname)
         if index is None:
-            # freeze a scalar attribute
-            unparam_attr(attrname, attr)
+            self._freeze_attribute(attrname, attr)
         else:
-            # freeze an item in an array attribute
             item = attr[index]
             if isinstance(item, ParamDef):
                 attr[index] = item.value
 
 
 def _setattr(self, attrname: str, value: Any) -> None:
+    """Override __setattr__ to handle parameter conversions.
+
+    This method applies the appropriate conversion function to the value
+    before setting it as an attribute.
+
+    Args:
+        attrname: Name of the attribute to set
+        value: Value to set for the attribute
+
+    Raises:
+        Exception: If the conversion fails
+    """
+    # Get the conversion function for this attribute or use _nop (no operation)
     conversion = self._conversions.get(attrname, _nop)
+
     try:
-        # Try to convert the value
+        # If the value is a parameter, set its conversion function
         if isinstance(value, _ACCEPTED):
             value.set_conversion(conversion)
+        # Otherwise, apply the conversion to the value
         else:
             value = conversion(value)
     except Exception as exc:
-        # Conversion failed
         exc.args = (f"{self._ident(attrname)}: {exc}",)
         raise
     else:
-        # Conversion succeeded
-       object.__setattr__(self, attrname, value)
+        # Set the attribute with the converted value
+        object.__setattr__(self, attrname, value)
 
 
 def _getattribute(self, attrname: str) -> Any:
-    attr = object.__getattribute__(self, attrname)
+    """Override __getattribute__ to handle parameter values.
+
+    This method returns the value of parameters instead of the parameter objects
+    themselves when accessing attributes.
+
+    Args:
+        attrname: Name of the attribute to get
+
+    Returns:
+        The attribute value, or the parameter value if the attribute is a parameter
+    """
+    # Get the actual attribute
+    try:
+        attr = object.__getattribute__(self, attrname)
+    except AttributeError as exc:
+        clname = self.__class__.__name__
+        elname = object.__getattribute__(self, "FamName")
+        exc.args = (f"{clname}({elname!r}) has no attribute {attrname!r}",)
+        raise
+
+    # If it's a parameter or parameter array, return its value
     if isinstance(attr, (ParamDef, ParamArray)):
         return attr.value
-    else:
-        return attr
+
+    # Otherwise return the attribute itself
+    return attr
 
 
 Element.__setattr__ = _setattr
@@ -183,4 +233,5 @@ Element.__getattribute__ = _getattribute
 Element.set_parameter = set_parameter
 Element.is_parameterised = is_parameterised
 Element.parameterise = parameterise
+Element._freeze_attribute = _freeze_attribute
 Element.unparameterise = unparameterise
