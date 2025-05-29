@@ -2,7 +2,6 @@ from __future__ import annotations
 
 __all__ = [
     "set_parameter",
-    "get_parameter",
     "is_parameterised",
     "parameterise",
     "unparameterise",
@@ -34,41 +33,14 @@ def set_parameter(self, attrname: str, value, index: int | None = None) -> None:
         try:
             array[index] = value
         except IndexError as exc:
-            exc.args = (f"Index {index} out of bounds for {self.FamName}.{attrname}",)
+            exc.args = (f"{self._ident(attrname)}: {exc}",)
             raise
 
     if index is None:
         setattr(self, attrname, value)
     else:
-        array = self._get_attribute(attrname)
+        array = self.get_parameter(attrname)
         setitem(array, index, value)
-
-
-def get_parameter(self, attrname: str, index: int | None = None) -> ParamDef:
-    """Extract a parameter of an element
-
-    Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
-    parameter itself instead of its value. It the item is not a parameter,
-    both functions are equivalent, the value is returned. Properties cannot
-    be accessed, one must use the associated array item.
-
-    Args:
-        attrname:   Attribute name
-        index:      Index in an array attribute. If :py:obj:`None`, the
-          whole attribute is set
-
-    Returns:
-        The parameter object
-
-    Raises:
-        TypeError if the attribute is not a Parameter
-    """
-    attr = self._get_attribute(attrname, index=index)
-    if not isinstance(attr, ParamDef):
-        idx = "" if index is None else f"[{index}]"
-        message = f"\n\n{self.FamName}.{attrname}{idx} is not a parameter.\n"
-        raise TypeError(message)
-    return attr
 
 
 def is_parameterised(
@@ -78,12 +50,12 @@ def is_parameterised(
 
     Args:
         attrname:   Attribute name. If :py:obj:`None`, return :py:obj:`True`
-          if any attribute is parametrized
+          if any attribute is parameterised
         index:      Index in an array attribute. If :py:obj:`None`, the
-          whole attribute is tested for parametrisation
+          whole attribute is tested for parameterisation
 
     Returns:
-        True if the element, attribute, or array item is parameterised, False otherwise
+        True if the attribute, or array item is parameterised, False otherwise
     """
     if attrname is None:
         for attr in self.__dict__:
@@ -91,7 +63,7 @@ def is_parameterised(
                 return True
         return False
     else:
-        attr = self._get_attribute(attrname, index=index)
+        attr = self.get_parameter(attrname, index=index)
         if isinstance(attr, ParamDef):
             return True
         elif isinstance(attr, np.ndarray):
@@ -124,7 +96,7 @@ def parameterise(
         IndexError: If the index is out of bounds for an array attribute
         AttributeError: If the attribute does not exist
     """
-    vini = self._get_attribute(attrname, index=index)
+    vini = self.get_parameter(attrname, index=index)
 
     if isinstance(vini, ParamBase):
         return vini
@@ -132,7 +104,7 @@ def parameterise(
     try:
         param = Param(vini, name=name)
     except TypeError as exc:
-        exc.args = (f"Cannot parameterise {self.FamName}.{attrname}: {exc}",)
+        exc.args = (f"Cannot parameterise {self._ident(attrname)}: {exc}",)
         raise
 
     self.set_parameter(attrname, param, index=index)
@@ -170,7 +142,7 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
         for attrname, attr in self.__dict__.items():
             unparam_attr(attrname, attr)
     else:
-        attr = self._get_attribute(attrname)
+        attr = self.get_parameter(attrname)
         if index is None:
             # freeze a scalar attribute
             unparam_attr(attrname, attr)
@@ -181,8 +153,8 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
                 attr[index] = item.value
 
 
-def _setattr(self, key: str, value: Any) -> None:
-    conversion = self._conversions.get(key, _nop)
+def _setattr(self, attrname: str, value: Any) -> None:
+    conversion = self._conversions.get(attrname, _nop)
     try:
         # Try to convert the value
         if isinstance(value, _ACCEPTED):
@@ -191,15 +163,15 @@ def _setattr(self, key: str, value: Any) -> None:
             value = conversion(value)
     except Exception as exc:
         # Conversion failed
-        exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
+        exc.args = (f"{self._ident(attrname)}: {exc}",)
         raise
     else:
         # Conversion succeeded
-       object.__setattr__(self, key, value)
+       object.__setattr__(self, attrname, value)
 
 
-def _getattribute(self, key: str) -> Any:
-    attr = object.__getattribute__(self, key)
+def _getattribute(self, attrname: str) -> Any:
+    attr = object.__getattribute__(self, attrname)
     if isinstance(attr, (ParamDef, ParamArray)):
         return attr.value
     else:
@@ -209,7 +181,6 @@ def _getattribute(self, key: str) -> Any:
 Element.__setattr__ = _setattr
 Element.__getattribute__ = _getattribute
 Element.set_parameter = set_parameter
-Element.get_parameter = get_parameter
 Element.is_parameterised = is_parameterised
 Element.parameterise = parameterise
 Element.unparameterise = unparameterise
