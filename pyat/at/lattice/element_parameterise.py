@@ -174,14 +174,15 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
 
 
 def _setattr(self, key: str, value: Any) -> None:
+    conversion = self._conversions.get(key, _nop)
     try:
         # Try to convert the value
         if isinstance(value, _ACCEPTED):
-            value.set_conversion(self._conversions.get(key, _nop))
+            value.set_conversion(conversion)
         elif not isinstance(value, ParamArray):
-            value = self._conversions.get(key, _nop)(value)
+            value = conversion(value)
     except Exception as exc:
-        # Conversion failed - provide a more descriptive error message
+        # Conversion failed
         exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
         raise
     else:
