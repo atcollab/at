@@ -22,6 +22,7 @@ import numpy as np
 from .parser import _nop
 from .parameters import _ACCEPTED, ParamArray, ParamArray as _array
 from .parser import ParamDef
+
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
 
@@ -304,13 +305,6 @@ class Element:
 
         This method applies the appropriate conversion function to the value
         before setting it as an attribute.
-
-        Args:
-            attrname: Name of the attribute to set
-            value: Value to set for the attribute
-
-        Raises:
-            Exception: If the conversion fails
         """
         # Get the conversion function for this attribute or use _nop (no operation)
         conversion = self._conversions.get(attrname, _nop)
@@ -335,15 +329,6 @@ class Element:
 
         This method returns the value of parameters instead of the parameter objects
         themselves when accessing attributes.
-
-        Args:
-            attrname: Name of the attribute to get
-
-        Returns:
-            The attribute value, or the parameter value if the attribute is a parameter
-
-        Raises:
-            AttributeError: If the attribute doesn't exist
         """
         try:
             attr = object.__getattribute__(self, attrname)

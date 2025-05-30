@@ -63,6 +63,24 @@ class Param(ParamBase[Number]):
         self._evaluator = _Constant(conversion(oldv))
 
 
+class _SafeArray(np.ndarray):
+    """Subclass of ndarray which forbids setting parameters as items.
+
+    This array type is used for element attributes that should not contain
+    parameters. It raises a TypeError if a parameter is assigned to any element.
+    """
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        """Set an item in the array, preventing parameter assignment."""
+        if isinstance(value, ParamBase):
+            raise TypeError("Cannot set a parameter into an array")
+        super().__setitem__(key, value)
+
+    def __repr__(self) -> str:
+        # Simulate a standard ndarray
+        return repr(self.view(np.ndarray))
+
+
 def AttributeArray(
     value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
 ) -> np.ndarray:
@@ -80,28 +98,11 @@ def AttributeArray(
         Either a ParamArray or a SafeArray depending on the input
     """
 
-    class SafeArray(np.ndarray):
-        """Subclass of ndarray which forbids setting parameters as items.
-
-        This array type is used for element attributes that should not contain
-        parameters. It raises a TypeError if a parameter is assigned to any element.
-        """
-
-        def __setitem__(self, key: Any, value: Any) -> None:
-            """Set an item in the array, preventing parameter assignment."""
-            if isinstance(value, ParamBase):
-                raise TypeError("Cannot set a parameter into an array")
-            super().__setitem__(key, value)
-
-        def __repr__(self) -> str:
-            # Simulate a standard ndarray
-            return repr(self.view(np.ndarray))
-
     v = np.asfortranarray(value).reshape(shape, order="F")
     if any(isinstance(el, _ACCEPTED) for el in v.flat):
         return ParamArray(v, shape=shape, dtype=dtype)
     else:
-        return v.astype(dtype, copy=False).view(SafeArray)
+        return v.astype(dtype, copy=False).view(_SafeArray)
 
 
 class ParamArray(np.ndarray):
@@ -165,6 +166,9 @@ class ParamArray(np.ndarray):
         self._value = ParamArray.ValueArray(self, dtype=dtype)
 
     def __setstate__(self, state) -> None:
+        """Rebuild the value array after unpickling."""
+        # Numpy uses the __reduce__ protocol to pickle objects, so there is no control
+        # over the creation of the object. We need to rebuild the value array manually.
         super().__setstate__(state)
         self._value = ParamArray.ValueArray(self, dtype=self._dtype)
 
