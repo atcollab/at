@@ -12,9 +12,9 @@ from typing import Any
 import numpy as np
 
 from .elements import Element
-from .parser import ParamDef, _nop
+from .parser import ParamDef
 from .variables import ParamBase
-from .parameters import Param, ParamArray, _ACCEPTED
+from .parameters import Param
 
 
 def set_parameter(self, attrname: str, value: Any, index: int | None = None) -> None:
@@ -163,71 +163,6 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
                 attr[index] = item.value
 
 
-def _setattr(self, attrname: str, value: Any) -> None:
-    """Override __setattr__ to handle parameter conversions.
-
-    This method applies the appropriate conversion function to the value
-    before setting it as an attribute.
-
-    Args:
-        attrname: Name of the attribute to set
-        value: Value to set for the attribute
-
-    Raises:
-        Exception: If the conversion fails
-    """
-    # Get the conversion function for this attribute or use _nop (no operation)
-    conversion = self._conversions.get(attrname, _nop)
-
-    try:
-        # If the value is a parameter, set its conversion function
-        if isinstance(value, _ACCEPTED):
-            value.set_conversion(conversion)
-        # Otherwise, apply the conversion to the value
-        else:
-            value = conversion(value)
-    except Exception as exc:
-        # Conversion failed
-        exc.args = (f"{self._ident(attrname)}: {exc}",)
-        raise
-    else:
-        # Set the attribute with the converted value
-        object.__setattr__(self, attrname, value)
-
-
-def _getattribute(self, attrname: str) -> Any:
-    """Override __getattribute__ to handle parameter values.
-
-    This method returns the value of parameters instead of the parameter objects
-    themselves when accessing attributes.
-
-    Args:
-        attrname: Name of the attribute to get
-
-    Returns:
-        The attribute value, or the parameter value if the attribute is a parameter
-
-    Raises:
-        AttributeError: If the attribute doesn't exist
-    """
-    try:
-        attr = object.__getattribute__(self, attrname)
-    except AttributeError as exc:
-        cl = self.__class__.__name__
-        el = object.__getattribute__(self, "FamName")
-        exc.args = (f"{cl}({el!r}) has no attribute {attrname!r}",)
-        raise
-
-    # If it's a parameter or parameter array, return its value
-    if isinstance(attr, (ParamDef, ParamArray)):
-        return attr.value
-
-    # Otherwise return the attribute itself
-    return attr
-
-
-Element.__setattr__ = _setattr
-Element.__getattribute__ = _getattribute
 Element.set_parameter = set_parameter
 Element.is_parameterised = is_parameterised
 Element.parameterise = parameterise
