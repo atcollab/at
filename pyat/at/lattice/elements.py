@@ -20,16 +20,10 @@ import numpy as np
 
 # noinspection PyProtectedMember
 from .parser import _nop
-from .parameters import ParamArray as _array
+from .parameters import _ACCEPTED, ParamArray, ParamArray as _array
+from .parser import ParamDef
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
-
-
-# def _array(value, shape=(-1,), dtype=np.float64):
-#     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-#     return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
-#         shape, order="F"
-#     )
 
 
 def _array66(value):
@@ -305,14 +299,66 @@ class Element:
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
         self.update(kwargs)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, attrname: str, value: Any) -> None:
+        """Override __setattr__ to handle parameter conversions.
+
+        This method applies the appropriate conversion function to the value
+        before setting it as an attribute.
+
+        Args:
+            attrname: Name of the attribute to set
+            value: Value to set for the attribute
+
+        Raises:
+            Exception: If the conversion fails
+        """
+        # Get the conversion function for this attribute or use _nop (no operation)
+        conversion = self._conversions.get(attrname, _nop)
+
         try:
-            value = self._conversions.get(key, _nop)(value)
+            # If the value is a parameter, set its conversion function
+            if isinstance(value, _ACCEPTED):
+                value.set_conversion(conversion)
+            # Otherwise, apply the conversion to the value
+            else:
+                value = conversion(value)
         except Exception as exc:
-            exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
+            # Conversion failed
+            exc.args = (f"{self._ident(attrname)}: {exc}",)
             raise
         else:
-            super().__setattr__(key, value)
+            # Set the attribute with the converted value
+            object.__setattr__(self, attrname, value)
+
+    def __getattribute__(self, attrname: str) -> Any:
+        """Override __getattribute__ to handle parameter values.
+
+        This method returns the value of parameters instead of the parameter objects
+        themselves when accessing attributes.
+
+        Args:
+            attrname: Name of the attribute to get
+
+        Returns:
+            The attribute value, or the parameter value if the attribute is a parameter
+
+        Raises:
+            AttributeError: If the attribute doesn't exist
+        """
+        try:
+            attr = object.__getattribute__(self, attrname)
+        except AttributeError as exc:
+            cl = self.__class__.__name__
+            el = object.__getattribute__(self, "FamName")
+            exc.args = (f"{cl}({el!r}) has no attribute {attrname!r}",)
+            raise
+
+        # If it's a parameter or parameter array, return its value
+        if isinstance(attr, (ParamDef, ParamArray)):
+            return attr.value
+
+        # Otherwise return the attribute itself
+        return attr
 
     def __str__(self):
         return "\n".join(
