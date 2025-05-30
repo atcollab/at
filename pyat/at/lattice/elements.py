@@ -20,16 +20,11 @@ import numpy as np
 
 # noinspection PyProtectedMember
 from .parser import _nop
-from .parameters import AttributeArray as _array
+from .parameters import _ACCEPTED, ParamArray, AttributeArray as _array
+from .parser import ParamDef
+
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
-
-
-# def _array(value, shape=(-1,), dtype=np.float64):
-#     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-#     return np.require(value, dtype=dtype, requirements=["F", "A"]).reshape(
-#         shape, order="F"
-#     )
 
 
 def _array66(value):
@@ -312,14 +307,70 @@ class Element:
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
         self.update(kwargs)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, attrname: str, value: Any) -> None:
+        """Override __setattr__ to handle parameter conversions.
+
+        This method applies the appropriate conversion function to the value
+        before setting it as an attribute.
+        """
+        # Get the conversion function for this attribute or use _nop (no operation)
+        conversion = self._conversions.get(attrname, _nop)
+
         try:
-            value = self._conversions.get(key, _nop)(value)
+            # If the value is a parameter, set its conversion function
+            if isinstance(value, _ACCEPTED):
+                value.set_conversion(conversion)
+            # Otherwise, apply the conversion to the value
+            elif not isinstance(value, ParamArray):
+                value = conversion(value)
         except Exception as exc:
-            exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
+            # Conversion failed
+            exc.args = (f"{self._ident(attrname)}: {exc}",)
             raise
         else:
-            super().__setattr__(key, value)
+            # Conversion succeeded
+            if isinstance(value, (ParamDef, ParamArray)):
+                # Store the parameter and remove the attribute
+                self._parameters[attrname] = value
+                try:
+                    object.__delattr__(self, attrname)
+                except AttributeError:
+                    # Attribute doesn't exist, which is fine
+                    pass
+            else:
+                # Store the attribute and remove the parameter
+                object.__setattr__(self, attrname, value)
+                try:
+                    del self._parameters[attrname]
+                except KeyError:
+                    # Parameter doesn't exist, which is fine
+                    pass
+
+    def __getattr__(self, attrname: str) -> Any:
+        """Override __getattr__ to handle parameter values.
+
+        This method returns the value of parameters instead of the parameter objects
+        themselves when accessing attributes.
+        """
+        try:
+            return self._parameters[attrname].value
+        except KeyError as exc:
+            cl = self.__class__.__name__
+            el = object.__getattribute__(self, "FamName")
+            raise AttributeError(f"{cl}({el!r}) has no attribute {attrname!r}") from exc
+
+    def __delattr__(self, attrname: str) -> None:
+        """Override __delattr__ to handle parameter deletions."""
+        try:
+            object.__delattr__(self, attrname)
+        except AttributeError:
+            try:
+                del self._parameters[attrname]
+            except KeyError as exc:
+                cl = self.__class__.__name__
+                el = object.__getattribute__(self, "FamName")
+                raise AttributeError(
+                    f"{cl}({el!r}) has no attribute {attrname!r}") from exc
 
     def __str__(self):
         return "\n".join(

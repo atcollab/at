@@ -12,9 +12,9 @@ from typing import Any
 import numpy as np
 
 from .elements import Element
-from .parser import ParamDef, _nop
+from .parser import ParamDef
 from .variables import ParamBase
-from .parameters import Param, ParamArray, _ACCEPTED
+from .parameters import Param, ParamArray
 
 
 def set_parameter(self, attrname: str, value: Any, index: int | None = None) -> None:
@@ -158,96 +158,6 @@ def unparameterise(self, attrname: str | None = None, index: int | None = None) 
                 setattr(self, attrname, attr.value)
 
 
-def _setattr(self, attrname: str, value: Any) -> None:
-    """Override __setattr__ to handle parameter conversions.
-
-    This method applies the appropriate conversion function to the value
-    before setting it as an attribute.
-
-    Args:
-        attrname: Name of the attribute to set
-        value: Value to set for the attribute
-
-    Raises:
-        Exception: If the conversion fails
-    """
-    # Get the conversion function for this attribute or use _nop (no operation)
-    conversion = self._conversions.get(attrname, _nop)
-
-    try:
-        # If the value is a parameter, set its conversion function
-        if isinstance(value, _ACCEPTED):
-            value.set_conversion(conversion)
-        # Otherwise, apply the conversion to the value
-        elif not isinstance(value, ParamArray):
-            value = conversion(value)
-    except Exception as exc:
-        # Conversion failed
-        exc.args = (f"{self._ident(attrname)}: {exc}",)
-        raise
-    else:
-        # Conversion succeeded
-        if isinstance(value, (ParamDef, ParamArray)):
-            # Store the parameter and remove the attribute
-            self._parameters[attrname] = value
-            try:
-                object.__delattr__(self, attrname)
-            except AttributeError:
-                # Attribute doesn't exist, which is fine
-                pass
-        else:
-            # Store the attribute and remove the parameter
-            object.__setattr__(self, attrname, value)
-            try:
-                del self._parameters[attrname]
-            except KeyError:
-                # Parameter doesn't exist, which is fine
-                pass
-
-
-def _getattr(self, attrname: str) -> Any:
-    """Override __getattr__ to handle parameter values.
-
-    This method returns the value of parameters instead of the parameter objects
-    themselves when accessing attributes.
-
-    Args:
-        attrname: Name of the attribute to get
-
-    Returns:
-        The attribute value, or the parameter value if the attribute is a parameter
-
-    Raises:
-        AttributeError: If the attribute doesn't exist
-    """
-    try:
-        return self._parameters[attrname].value
-    except KeyError as exc:
-        cl = self.__class__.__name__
-        el = object.__getattribute__(self, "FamName")
-        raise AttributeError(f"{cl}({el!r}) has no attribute {attrname!r}") from exc
-
-
-def _delattr(self, attrname: str) -> None:
-    """Override __delattr__ to handle parameter deletions.
-
-    This method deletes either a parameter or a regular attribute.
-
-    Args:
-        attrname: Name of the attribute to delete
-
-    Raises:
-        AttributeError: If the attribute doesn't exist
-    """
-    try:
-        del self._parameters[attrname]
-    except KeyError:
-        object.__delattr__(self, attrname)
-
-
-Element.__setattr__ = _setattr
-Element.__getattr__ = _getattr
-Element.__delattr__ = _delattr
 Element.set_parameter = set_parameter
 Element.is_parameterised = is_parameterised
 Element.parameterise = parameterise
