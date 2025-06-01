@@ -124,14 +124,13 @@ See :py:func:`save_madx` for usage.
 
 from __future__ import annotations
 
-__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx"]
+__all__ = ["MadxParser", "load_madx", "save_madx"]
 
 import functools
 import warnings
 
-# functions known by MAD-X
-from math import pi, e, sqrt, exp, log, log10, sin, cos, tan  # noqa: F401
-from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc  # noqa: F401
+from math import pi, e, sqrt, exp, log, log10, sin, cos, tan
+from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
 import re
@@ -146,7 +145,7 @@ from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
-from .file_input import set_argparser, ignore_names
+from .file_input import set_argparser, ignore_class
 from .file_output import Exporter
 from ..lattice import Lattice, Particle, tilt_elem, StrParameter, AtWarning
 from ..lattice import elements as elt
@@ -154,30 +153,11 @@ from ..lattice import elements as elt
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
 # Constants known by MAD-X
-true = True
-false = False
-twopi = 2 * pi
-degrad = 180.0 / pi
-raddeg = pi / 180.0
 emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
-nmass = 1.0e-03 * _cst["neutron mass energy equivalent in MeV"][0]  # [GeV]
-umass = 1.0e-03 * _cst["atomic mass constant energy equivalent in MeV"][0]  # [GeV]
-mumass = 1.0e-03 * _cst["muon mass energy equivalent in MeV"][0]  # [GeV]
-hbar = _hb / qelect * 1.0e-09  # [GeV.s]
 erad = _cst["classical electron radius"][0]  # [m]
-prad = erad * emass / pmass  # [m]
 
-
-class MadParameter(StrParameter):
-    """MAD parameter
-
-    A MAD parameter is an expression which can be evaluated in the context
-    of a MAD parser
-    """
-
-    def evaluate(self):
-        return self.value
+_globals = globals()
 
 
 def sinc(x: float) -> float:
@@ -281,7 +261,7 @@ class _MadElement(ElementDescr):
         """Evaluation of superfluous parameters"""
 
         def mpeval(v):
-            if isinstance(v, MadParameter):
+            if isinstance(v, StrParameter):
                 return v.value
             elif isinstance(v, str):
                 return v
@@ -541,15 +521,8 @@ class instrument(monitor):
     pass
 
 
-ignore_names(
-    globals(),
-    _MadElement,
-    ["solenoid", "rfmultipole", "crabcavity", "elseparator", "collimator", "tkicker"],
-)
-
-
 @set_argparser(_keyparser)
-def value(**kwargs):
+def _value(**kwargs):
     """VALUE command"""
     kwargs.pop("copy", False)
     for key, v in kwargs.items():
@@ -792,6 +765,77 @@ class _Beam:
             beamobj[k] = v
 
 
+_madx_env = {
+    # Constants
+    "true": True,
+    "false": False,
+    "pi": pi,
+    "e": e,
+    "abs": abs,
+    "sqrt": sqrt,
+    "exp": exp,
+    "log": log,
+    "log10": log10,
+    "sin": sin,
+    "cos": cos,
+    "tan": tan,
+    "asin": asin,
+    "acos": acos,
+    "atan": atan,
+    "sinh": sinh,
+    "cosh": cosh,
+    "tanh": tanh,
+    "erf": erf,
+    "erfc": erfc,
+    "twopi": 2 * pi,
+    "degrad": 180.0 / pi,
+    "raddeg": pi / 180.0,
+    "emass": emass,  # [GeV]
+    "pmass": pmass,  # [GeV]
+    "nmass": 1.0e-03 * _cst["neutron mass energy equivalent in MeV"][0],  # [GeV]
+    "umass": 1.0e-03 * _cst["atomic mass constant energy equivalent in MeV"][0],  # [GeV]
+    "mumass": 1.0e-03 * _cst["muon mass energy equivalent in MeV"][0],  # [GeV]
+    "hbar": _hb / qelect * 1.0e-09,  # [GeV.s]
+    "erad": erad,  # [m]
+    "prad": erad * emass / pmass,  # [m]
+    "clight": clight,
+    "qelect": qelect,
+    # Elements
+    "drift": drift,
+    "marker": marker,
+    "quadrupole": quadrupole,
+    "sextupole": sextupole,
+    "octupole": octupole,
+    "multipole": multipole,
+    "sbend": sbend,
+    "rbend": rbend,
+    "kicker": kicker,
+    "hkicker": hkicker,
+    "vkicker": vkicker,
+    "rfcavity": rfcavity,
+    "monitor": monitor,
+    "hmonitor": hmonitor,
+    "vmonitor": vmonitor,
+    "instrument": instrument,
+    # Commands
+    "value": _value,
+    "__builtins__": {},
+}
+
+
+_ignore_names = [
+    "solenoid",
+    "rfmultipole",
+    "crabcavity",
+    "elseparator",
+    "collimator",
+    "tkicker",
+]
+
+_globals.update((name, ignore_class(name, _MadElement)) for name in _ignore_names)
+_madx_env.update((name, _globals[name]) for name in _ignore_names)
+
+
 class _MadParser(LowerCaseParser, UnorderedParser):
     """Common class for both MAD8 and MAD-X parsers"""
 
@@ -835,12 +879,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                MadParameter.parameter(self, v)
+                StrParameter.parameter(self, v)
                 for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
-            return MadParameter.parameter(self, value)
+            return StrParameter.parameter(self, value)
 
     def _argparser(self, argcount, argstr: str, **kwargs):
         key, *value = split_ignoring_parentheses(
@@ -1035,10 +1079,7 @@ class MadxParser(_MadParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(
-            globals(),
-            **kwargs,
-        )
+        super().__init__(_madx_env, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation"""
