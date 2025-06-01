@@ -16,7 +16,7 @@ Multipoles
 Elegant thick multipoles are limited to a single multipole order. For AT
 :py:class:`.Multipole` elements combining several orders, the lowest order is converted
 and higher orders are discarded. AT :py:class:`.ThinMultipole` elements are expanded
-to a series of thin ``MULT`` elements with 0 length.
+to a series of thin ``MULT`` elements with length 0.
 
 Elegant elements absent from AT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -39,7 +39,7 @@ When reading an Elegant file:
 - `TILT` is interpreted and converted to `R1` and `R2` attributes,
 - `DX`, `DZ` are converted to `T1`and `T2` attributes,
 - `N_SLICES`, if specified, is converted to `NumIntSteps`. If not, `NumIntSteps` is
-  left to is default value (10).
+  left to its default value (10).
 
 2. Usage
 --------
