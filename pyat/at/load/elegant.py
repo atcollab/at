@@ -417,6 +417,49 @@ RFCW = RFCA
 SOLE = SOLENOID
 MULTIPOLE = MULT
 
+_elegant_env = {
+    "DRIF": DRIF,
+    "DRIFT": DRIF,
+    "EDRIFT": DRIF,
+    "MARK": MARK,
+    "KQUAD": KQUAD,
+    "QUAD": KQUAD,
+    "QUADRUPOLE": KQUAD,
+    "KSEXT": KSEXT,
+    "SEXT": KSEXT,
+    "SEXTUPOLE": KSEXT,
+    "KQUSE": KQUSE,
+    "KOCT": KOCT,
+    "OCTUPOLE": KOCT,
+    "OCTU": KOCT,
+    "MULT": MULT,
+    "MULTIPOLE": MULT,
+    "CSBEND": CSBEND,
+    "SBEND": CSBEND,
+    "SBEN": CSBEND,
+    "CSBEN": CSBEND,
+    "CSRCSBEN": CSBEND,
+    "RBEN": RBEN,
+    "RBEND": RBEN,
+    "CRBEND": RBEN,
+    "CRBEN": RBEN,
+    "KICKER": KICKER,
+    "HKICK": HKICK,
+    "HKICKER": HKICKER,
+    "VKICK": VKICK,
+    "VKICKER": VKICKER,
+    "RFCA": RFCA,
+    "RFCW": RFCA,
+    "MONI": MONI,
+    "MONITOR": MONI,
+    "HMON": HMON,
+    "HMONITOR": HMON,
+    "VMON": VMON,
+    "VMONITOR": VMON,
+    "SOLENOID": SOLENOID,
+    "SOLE": SOLENOID,
+}
+
 
 class ElegantParser(UpperCaseParser, BaseParser):
     # noinspection PyUnresolvedReferences
@@ -451,7 +494,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(globals(), **kwargs)
+        super().__init__(_elegant_env, **kwargs)
         self.rpn = Rpn()
 
     def _assign(self, label: str, key: str, val: str):
