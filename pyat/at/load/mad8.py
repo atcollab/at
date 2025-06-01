@@ -56,6 +56,8 @@ pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
 _attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
 
+_globals = globals()
+
 
 _mad8_env = {
     # Constants
@@ -84,7 +86,6 @@ _mad8_env = {
     "pmass": pmass,  # [GeV]
     "clight": clight,
     "qelect": qelect,
-
     # Elements
     "drift": drift,
     "marker": marker,
@@ -101,10 +102,9 @@ _mad8_env = {
     "monitor": monitor,
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
-
     # Commands
     "value": _value,
-    "__builtins__": {}
+    "__builtins__": {},
 }
 
 
@@ -114,9 +114,13 @@ _ignore_names = [
     "crabcavity",
     "elseparator",
     "collimator",
-    "tkicker"]
+    "tkicker",
+]
 
-_mad8_env.update((name, ignore_class(name, _MadElement)) for name in _ignore_names)
+_globals.update(
+    (name, ignore_class(name, _MadElement, module=__name__)) for name in _ignore_names
+)
+_mad8_env.update((name, _globals[name]) for name in _ignore_names)
 
 
 class Mad8Parser(_MadParser):

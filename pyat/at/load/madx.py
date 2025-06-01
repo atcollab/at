@@ -124,7 +124,7 @@ See :py:func:`save_madx` for usage.
 
 from __future__ import annotations
 
-__all__ = ["MadParameter", "MadxParser", "load_madx", "save_madx"]
+__all__ = ["MadxParser", "load_madx", "save_madx"]
 
 import functools
 import warnings
@@ -157,16 +157,7 @@ emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 erad = _cst["classical electron radius"][0]  # [m]
 
-
-class MadParameter(StrParameter):
-    """MAD parameter
-
-    A MAD parameter is an expression which can be evaluated in the context
-    of a MAD parser
-    """
-
-    def evaluate(self):
-        return self.value
+_globals = globals()
 
 
 def sinc(x: float) -> float:
@@ -270,7 +261,7 @@ class _MadElement(ElementDescr):
         """Evaluation of superfluous parameters"""
 
         def mpeval(v):
-            if isinstance(v, MadParameter):
+            if isinstance(v, StrParameter):
                 return v.value
             elif isinstance(v, str):
                 return v
@@ -809,7 +800,6 @@ _madx_env = {
     "prad": erad * emass / pmass,  # [m]
     "clight": clight,
     "qelect": qelect,
-
     # Elements
     "drift": drift,
     "marker": marker,
@@ -827,10 +817,9 @@ _madx_env = {
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
     "instrument": instrument,
-
     # Commands
     "value": _value,
-    "__builtins__": {}
+    "__builtins__": {},
 }
 
 
@@ -840,11 +829,11 @@ _ignore_names = [
     "crabcavity",
     "elseparator",
     "collimator",
-    "tkicker"]
+    "tkicker",
+]
 
-_upd = [(name, ignore_class(name, _MadElement)) for name in _ignore_names]
-_madx_env.update(_upd)
-globals().update(_upd)
+_globals.update((name, ignore_class(name, _MadElement)) for name in _ignore_names)
+_madx_env.update((name, _globals[name]) for name in _ignore_names)
 
 
 class _MadParser(LowerCaseParser, UnorderedParser):
@@ -890,12 +879,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                MadParameter.parameter(self, v)
+                StrParameter.parameter(self, v)
                 for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
-            return MadParameter.parameter(self, value)
+            return StrParameter.parameter(self, value)
 
     def _argparser(self, argcount, argstr: str, **kwargs):
         key, *value = split_ignoring_parentheses(
