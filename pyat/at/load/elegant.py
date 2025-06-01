@@ -67,7 +67,7 @@ from scipy.constants import c as clight
 
 from .allfiles import register_format
 from .file_input import ElementDescr, BaseParser, UpperCaseParser
-from .file_input import skip_names, ignore_class
+from .file_input import skip_class, ignore_class
 from .file_output import Exporter
 from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 
@@ -75,6 +75,7 @@ from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 from .madx import sinc, _Line, p_dict, p_list
 from . import Rpn
 
+_globals = globals()
 
 # -------------------
 #  Utility functions
@@ -380,24 +381,6 @@ def ignore(kwargs):
         return DRIF.from_at(kwargs)
 
 
-skip_names(
-    globals(),
-    _ElegantElement,
-    [
-        "MAXAMP",
-        "CHARGE",
-        "RECIRC",
-        "MALIGN",
-        "SREFFECTS",
-        "PFILTER",
-        "ENERGY",
-        "SCATTER",
-        "WATCH",
-        "WAKE",
-    ],
-)
-
-
 _elegant_env = {
     "DRIF": DRIF,
     "DRIFT": DRIF,
@@ -437,12 +420,30 @@ _elegant_env = {
     "HMONITOR": HMON,
     "VMON": VMON,
     "VMONITOR": VMON,
+
+    "__builtins__": {}
 }
 
 _ignore_names = ["SOLENOID", "SCRAPER", "ECOL", "RCOL", "CSRDRIF"]
-_upd = [(name, ignore_class(name, _ElegantElement)) for name in _ignore_names]
-_elegant_env.update(_upd)
-globals().update(_upd)
+
+_globals.update((name, ignore_class(name, _ElegantElement)) for name in _ignore_names)
+_elegant_env.update((name, _globals[name]) for name in _ignore_names)
+
+_skip_names = [
+    "MAXAMP",
+    "CHARGE",
+    "RECIRC",
+    "MALIGN",
+    "SREFFECTS",
+    "PFILTER",
+    "ENERGY",
+    "SCATTER",
+    "WATCH",
+    "WAKE",
+]
+
+_globals.update((name, skip_class(name, _ElegantElement)) for name in _skip_names)
+_elegant_env.update((name, _globals[name]) for name in _skip_names)
 
 
 class ElegantParser(UpperCaseParser, BaseParser):
