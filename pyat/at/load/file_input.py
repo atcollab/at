@@ -6,8 +6,6 @@ __all__ = [
     "set_argparser",
     "skip_class",
     "ignore_class",
-    "skip_names",
-    "ignore_names",
     "AnyDescr",
     "ElementDescr",
     "SequenceDescr",
@@ -43,6 +41,7 @@ class CommentHandler(object):
     """
     Handle comments in the file.
     """
+
     def __init__(self, linecomment, blockcomment):
         if linecomment is None:
             self.linecomment = []
@@ -90,7 +89,7 @@ class CommentHandler(object):
             # Special case to avoid that empty lines break the continuation
             return None
 
-    def __call__(self, buffer, line):
+    def __call__(self, buffer: list[str], line: str) -> str | None:
         """Handles processing of input lines and appends processed data to the buffer.
 
         Non-commented parts of the line are appended to the buffer.
@@ -189,7 +188,12 @@ def set_argparser(argparser):
     return decorator
 
 
-def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
+def skip_class(
+    classname: str,
+    baseclass: type[ElementDescr],
+    module: str | None = None,
+    **kwargs,
+):
     """Generate a class for skipped elements.
 
     No AT element is generated for these elements.
@@ -210,11 +214,17 @@ def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
         print(f"Element {self.name} ({type1}) is ignored.")
         self._mentioned.add(type(self))
 
-    kwargs.update(__init__=init)
+    kwargs.update(__init__=init, __module__=module or baseclass.__module__)
     return type(classname, (baseclass,), kwargs)
 
 
-def ignore_class(classname: str, baseclass: type[ElementDescr], wrapper=None, **kwargs):
+def ignore_class(
+    classname: str,
+    baseclass: type[ElementDescr],
+    module: str | None = None,
+    wrapper=None,
+    **kwargs,
+):
     """Generate a class for ignored elements.
 
     The element generates an AT Drift or Marker element depending on its length.
@@ -246,35 +256,8 @@ def ignore_class(classname: str, baseclass: type[ElementDescr], wrapper=None, **
 
     if wrapper is not None:
         to_at = wrapper(to_at)
-    kwargs.update(__init__=init, to_at=to_at, __module__=baseclass.__module__)
+    kwargs.update(__init__=init, to_at=to_at, __module__=module or baseclass.__module__)
     return type(classname, (baseclass,), kwargs)
-
-
-def ignore_names(
-    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str], **kwargs
-) -> None:
-    """Add classes for ignored elements in the given namespace.
-
-    Args:
-        namespace:
-        baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
-        classnames: Class names of the generated classes
-    """
-    newd = dict((nm, ignore_class(nm, baseclass, **kwargs)) for nm in classnames)
-    namespace.update(newd)
-
-
-def skip_names(
-    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str], **kwargs
-) -> None:
-    """Add classes for ignored elements in the given namespace.
-
-    Args:
-        namespace:
-        baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
-        classnames: Class names of the generated classes
-    """
-    namespace.update((nm, skip_class(nm, baseclass, **kwargs)) for nm in classnames)
 
 
 class DictNoDot(dict):
