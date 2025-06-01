@@ -842,7 +842,9 @@ _ignore_names = [
     "collimator",
     "tkicker"]
 
-_madx_env.update((name, ignore_class(name, _MadElement)) for name in _ignore_names)
+_upd = [(name, ignore_class(name, _MadElement)) for name in _ignore_names]
+_madx_env.update(_upd)
+globals().update(_upd)
 
 
 class _MadParser(LowerCaseParser, UnorderedParser):
