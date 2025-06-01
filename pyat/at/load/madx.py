@@ -1079,10 +1079,7 @@ class MadxParser(_MadParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(
-            _madx_env,
-            **kwargs,
-        )
+        super().__init__(_madx_env, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation"""
