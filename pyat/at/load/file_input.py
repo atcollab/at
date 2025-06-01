@@ -39,6 +39,134 @@ _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
 
 
+class CommentHandler(object):
+    """
+    Handle comments in the file.
+    """
+    def __init__(self, linecomment, blockcomment):
+        if linecomment is None:
+            self.linecomment = []
+        elif not isinstance(linecomment, Sequence):
+            self.linecomment = [linecomment]
+        else:
+            self.linecomment = linecomment
+
+        if blockcomment is None:
+            self.handle_comments = CommentHandler.noblock_handler
+        else:
+            self.in_comment = False
+            self.begcomment, self.endcomment = blockcomment
+            self.handle_comments = CommentHandler.block_handler
+
+    def line_handler(self, line):
+        for delim in self.linecomment:
+            line, *_ = line.split(sep=delim, maxsplit=1)
+        return line
+
+    def block_handler(self, buffer, line):
+        if self.in_comment:
+            *rest, line = line.split(sep=self.endcomment, maxsplit=1)
+            in_comment = len(rest) <= 0
+            self.in_comment = in_comment
+            return "" if in_comment else line
+        else:
+            line = self.line_handler(line)
+            if line:
+                contents, *rest = line.split(sep=self.begcomment, maxsplit=1)
+                buffer.append(contents)
+                in_comment = len(rest) > 0
+                self.in_comment = in_comment
+                return rest[0] if in_comment else ""
+            else:
+                # Special case to avoid that empty lines break the continuation
+                return None
+
+    def noblock_handler(self, buffer, line):
+        line = self.line_handler(line)
+        if line:
+            buffer.append(line)
+            return ""
+        else:
+            # Special case to avoid that empty lines break the continuation
+            return None
+
+    def __call__(self, buffer, line):
+        """Handles processing of input lines and appends processed data to the buffer.
+
+        Non-commented parts of the line are appended to the buffer.
+
+        Args:
+            buffer: Mutable sequence where processed line data is appended.
+            line: String representing the current line of text to be processed.
+
+        Returns:
+            bool: True if the input line was empty. Special case where command
+              continuation must not ne interrupted.
+        """
+        while line:
+            line = self.handle_comments(self, buffer, line)
+        if line is None:
+            return None
+        else:
+            contents = "".join(buffer).strip()
+            buffer.clear()
+            return contents
+
+
+def get_comment_handler(linecomment, blockcomment):
+    if isinstance(linecomment, tuple):
+
+        def line_comment(line):
+            for linecom in linecomment:
+                line, *_ = line.split(sep=linecom, maxsplit=1)
+            return line
+
+    else:
+        if linecomment is None:
+
+            def line_comment(line):
+                return line
+
+        else:
+
+            def line_comment(line):
+                line, *_ = line.split(sep=linecomment, maxsplit=1)
+                return line
+
+    if blockcomment is None:
+        # noinspection PyUnusedLocal
+        def handle_comments(buffer, line, in_comment):
+            line = line_comment(line)
+            if line:
+                buffer.append(line_comment(line))
+                return False, ""
+            else:
+                # Special case to avoid that empty lines break the continuation
+                return False, None
+
+    else:
+
+        def handle_comments(buffer, line, in_comment):
+            if in_comment:
+                *rest, line = line.split(sep=endcomment, maxsplit=1)
+                in_comment = len(rest) <= 0
+                return in_comment, "" if in_comment > 0 else line
+            else:
+                line = line_comment(line)
+                if line:
+                    contents, *rest = line.split(sep=begcomment, maxsplit=1)
+                    buffer.append(contents)
+                    in_comment = len(rest) > 0
+                    return in_comment, rest[0] if in_comment else ""
+                else:
+                    # Special case to avoid that empty lines break the continuation
+                    return False, None
+
+        begcomment, endcomment = blockcomment
+
+    return handle_comments
+
+
 def _no_default(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -64,6 +192,8 @@ def set_argparser(argparser):
 def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
     """Generate a class for skipped elements.
 
+    No AT element is generated for these elements.
+
     Args:
         classname: Name of the generated class
         baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
@@ -84,8 +214,10 @@ def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
     return type(classname, (baseclass,), kwargs)
 
 
-def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
+def ignore_class(classname: str, baseclass: type[ElementDescr], wrapper=None, **kwargs):
     """Generate a class for ignored elements.
+
+    The element generates an AT Drift or Marker element depending on its length.
 
     Args:
         classname: Name of the generated class
@@ -100,24 +232,26 @@ def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
     def init(self, *args, **kwargs):
         baseclass.__init__(self, *args, **kwargs)
         # if type(self) not in self.mentioned:
-        if not args:  # not for replication
+        if not args:  # no message in case of element replication
             type1 = self.__class__.__name__
             type2 = "Marker" if self.get("l", 0.0) == 0.0 else "Drift"
             print(f"Element {self.name} ({type1}) is replaced by a {type2}.")
             self._mentioned.add(type(self))
 
-    def to_at(self, l=0.0, origin="", **params):  # noqa: E741
+    def to_at(self, l=0.0, **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Marker(self.name, origin=origin, **self.meval(params))]
+            return [elt.Marker(self.name, origin=self.origin, **self.meval(params))]
         else:
-            return [elt.Drift(self.name, l, origin=origin, **self.meval(params))]
+            return [elt.Drift(self.name, l, origin=self.origin, **self.meval(params))]
 
-    kwargs.update(__init__=init, to_at=to_at)
+    if wrapper is not None:
+        to_at = wrapper(to_at)
+    kwargs.update(__init__=init, to_at=to_at, __module__=baseclass.__module__)
     return type(classname, (baseclass,), kwargs)
 
 
 def ignore_names(
-    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str]
+    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str], **kwargs
 ) -> None:
     """Add classes for ignored elements in the given namespace.
 
@@ -126,11 +260,12 @@ def ignore_names(
         baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
         classnames: Class names of the generated classes
     """
-    namespace.update((nm, ignore_class(nm, baseclass)) for nm in classnames)
+    newd = dict((nm, ignore_class(nm, baseclass, **kwargs)) for nm in classnames)
+    namespace.update(newd)
 
 
 def skip_names(
-    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str]
+    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str], **kwargs
 ) -> None:
     """Add classes for ignored elements in the given namespace.
 
@@ -139,7 +274,7 @@ def skip_names(
         baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
         classnames: Class names of the generated classes
     """
-    namespace.update((nm, skip_class(nm, baseclass)) for nm in classnames)
+    namespace.update((nm, skip_class(nm, baseclass, **kwargs)) for nm in classnames)
 
 
 class DictNoDot(dict):
@@ -256,12 +391,11 @@ class ElementDescr(AnyDescr, dict):
         self.origin = origin or self.__class__.__name__
 
     def __getattr__(self, item):
-        # Allows accessing items using the attribute access syntax
-        # tried after lookup for a real attribute failed
+        # Allows accessing dict items using the attribute access syntax, used for
+        # the "ATTR=ELEM->ATTR" syntax."
         try:
             return self[item]
         except KeyError as exc:
-            # necessary for getattr to return the default value for a missing attribute
             name = self.__class__.__name__
             raise AttributeError(f"{name!r} object has no {item!r} attribute") from exc
 
@@ -378,62 +512,10 @@ class BaseParser(DictNoDot, StrParser):
             env: global namespace used for evaluating commands
             verbose: If True, print detail on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
-            *args: dict initializer
-            **kwargs: dict initializer
+            *args: dict initialiser
+            **kwargs: dict initialiser
         """
-        linecomment = self._linecomment
-        blockcomment = self._blockcomment
-        if isinstance(linecomment, tuple):
-
-            def line_comment(line):
-                for linecom in linecomment:
-                    line, *_ = line.split(sep=linecom, maxsplit=1)
-                return line
-
-        else:
-            if linecomment is None:
-
-                def line_comment(line):
-                    return line
-
-            else:
-
-                def line_comment(line):
-                    line, *_ = line.split(sep=linecomment, maxsplit=1)
-                    return line
-
-        if blockcomment is None:
-            # noinspection PyUnusedLocal
-            def handle_comments(buffer, line, in_comment):
-                line = line_comment(line)
-                if line:
-                    buffer.append(line_comment(line))
-                    return False, ""
-                else:
-                    # Special case to avoid that empty lines break the continuation
-                    return False, None
-
-        else:
-
-            def handle_comments(buffer, line, in_comment):
-                if in_comment:
-                    *rest, line = line.split(sep=endcomment, maxsplit=1)
-                    in_comment = len(rest) <= 0
-                    return in_comment, "" if in_comment > 0 else line
-                else:
-                    line = line_comment(line)
-                    if line:
-                        contents, *rest = line.split(sep=begcomment, maxsplit=1)
-                        buffer.append(contents)
-                        in_comment = len(rest) > 0
-                        return in_comment, rest[0] if in_comment else ""
-                    else:
-                        # Special case to avoid that empty lines break the continuation
-                        return False, None
-
-            begcomment, endcomment = blockcomment
-
-        self.skip_comments = handle_comments
+        self.skip_comments = CommentHandler(self._linecomment, self._blockcomment)
         self.env = env
         self.bases = [getcwd()]
         self.kwargs = kwargs
@@ -485,7 +567,7 @@ class BaseParser(DictNoDot, StrParser):
         This method attempts to evaluate the expression in a context where no variables
         are defined. If the evaluation succeeds, the expression is considered constant
         and the evaluated value is returned. If the evaluation fails with a NameError,
-        the expression is considered non-constant (i.e., it depends on variables).
+        the expression is considered non-constant (i.e. it depends on variables).
 
         Args:
             expr: The string expression to evaluate
@@ -642,7 +724,7 @@ class BaseParser(DictNoDot, StrParser):
         return line.replace(" ", "")  # Remove all spaces
 
     def _statement(self, line: str) -> bool:
-        # protect quoted items. Make sure placeholder cannot be modified
+        # Protect quoted items. Make sure placeholder cannot be modified
         line, match1 = protect(line, fence=('"', '"'), placeholder="_0_")
 
         if self._endfile is not None and line.startswith(self._endfile):
@@ -813,22 +895,11 @@ class BaseParser(DictNoDot, StrParser):
         """
         self.update(**kwargs)
         buffer = []
-        in_comment: bool = False
         ok: bool = True
-        for line_number, contents in enumerate(lines):
+        for line_number, line in enumerate(lines):
             # Handle comments
-            while contents:
-                in_comment, contents = self.skip_comments(buffer, contents, in_comment)
-            if contents is None:
-                # Special case to avoid that empty lines break the continuation
-                continue
-
-            if buffer:
-                contents = "".join(buffer).strip()
-                buffer = []
-                if not contents:
-                    continue
-            else:
+            contents = self.skip_comments(buffer, line)
+            if not contents:
                 continue
 
             # Handle delimiters
@@ -924,8 +995,8 @@ class UnorderedParser(BaseParser):
         Args:
             env: global namespace
             verbose: If True, print detail on the processing
-            *args: dict initializer
-            **kwargs: dict initializer
+            *args: dict initialiser
+            **kwargs: dict initialiser
         """
         super().__init__(env, *args, always_force=False, **kwargs)
 
@@ -948,7 +1019,7 @@ class UnorderedParser(BaseParser):
         # at the end of each file: try again previously failing commands
         replay()
 
-        # After the last file: initialize the remaining undefined variables
+        # After the last file: initialise the remaining undefined variables
         default_value = self.get(self._undef_key)
         if final:
             undefined = self._missing(verbose=self.verbose)
