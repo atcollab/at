@@ -67,7 +67,7 @@ from scipy.constants import c as clight
 
 from .allfiles import register_format
 from .file_input import ElementDescr, BaseParser, UpperCaseParser
-from .file_input import skip_names, ignore_names, ignore_class
+from .file_input import skip_names, ignore_class
 from .file_output import Exporter
 from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 
@@ -104,7 +104,7 @@ def elegant_element(func):
             if tilt != 0.0:
                 tilt_elem(el, tilt)
             if not (dx == 0.0 and dy == 0.0):
-                shift_elem(el, deltax=dx, deltaz=dy)
+                shift_elem(el, dx=dx, dy=dy)
             el.origin = self.origin
         return elems
 
@@ -380,8 +380,6 @@ def ignore(kwargs):
         return DRIF.from_at(kwargs)
 
 
-SOLENOID = ignore_class("SOLENOID", _ElegantElement)
-
 skip_names(
     globals(),
     _ElegantElement,
@@ -399,23 +397,6 @@ skip_names(
     ],
 )
 
-
-ignore_names(globals(), _ElegantElement, ["SCRAPER", "ECOL", "RCOL", "CSRDRIF"])
-
-EDRIFT = DRIFT = DRIF
-QUAD = QUADRUPOLE = KQUAD
-CSRCSBEN = CSBEN = SBEN = SBEND = CSBEND
-CRBEN = CRBEND = RBEND = RBEN
-SEXT = SEXTUPOLE = KSEXT
-OCTU = OCTUPOLE = KOCT
-HKICKER = HKICK
-VKICKER = VKICK
-MONITOR = MONI
-HMONITOR = HMON
-VMONITOR = VMON
-RFCW = RFCA
-SOLE = SOLENOID
-MULTIPOLE = MULT
 
 _elegant_env = {
     "DRIF": DRIF,
@@ -445,9 +426,9 @@ _elegant_env = {
     "CRBEN": RBEN,
     "KICKER": KICKER,
     "HKICK": HKICK,
-    "HKICKER": HKICKER,
+    "HKICKER": HKICK,
     "VKICK": VKICK,
-    "VKICKER": VKICKER,
+    "VKICKER": VKICK,
     "RFCA": RFCA,
     "RFCW": RFCA,
     "MONI": MONI,
@@ -456,9 +437,12 @@ _elegant_env = {
     "HMONITOR": HMON,
     "VMON": VMON,
     "VMONITOR": VMON,
-    "SOLENOID": SOLENOID,
-    "SOLE": SOLENOID,
 }
+
+_ignore_names = ["SOLENOID", "SCRAPER", "ECOL", "RCOL", "CSRDRIF"]
+_upd = [(name, ignore_class(name, _ElegantElement)) for name in _ignore_names]
+_elegant_env.update(_upd)
+globals().update(_upd)
 
 
 class ElegantParser(UpperCaseParser, BaseParser):
@@ -510,6 +494,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
         if label == "#INCLUDE":
             file = cmdname[1:-1] if cmdname[0] == '"' else cmdname
             self.parse_files(file, final=False)
+            return None
         else:
             return super()._command(label, cmdname, *args, **kwargs)
 
@@ -627,7 +612,7 @@ _AT2EL = {
     elt.Multipole: multipole,
     elt.RFCavity: RFCA.from_at,
     elt.Drift: DRIF.from_at,
-    elt.Bend: SBEN.from_at,
+    elt.Bend: CSBEND.from_at,
     elt.Marker: MARK.from_at,
     elt.Monitor: MONI.from_at,
     elt.Corrector: KICKER.from_at,
