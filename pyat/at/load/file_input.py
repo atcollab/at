@@ -940,8 +940,7 @@ class BaseParser(DictNoDot, StrParser):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
-        filenames = tuple(abspath(file) for file in filenames)
-        self.in_file.extend(filenames)
+        self.in_file.extend(abspath(file) for file in filenames)
         last = len(filenames) - 1
         ElementDescr._mentioned.clear()
         for nf, fn in enumerate(filenames):
