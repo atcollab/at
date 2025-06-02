@@ -183,6 +183,7 @@ def load_mad8(
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
+    parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD8 files
@@ -220,7 +221,7 @@ def load_mad8(
         if key in kwargs
     }
     parser.parse_files(*files, **kwargs)
-    return parser.lattice(use=use, **params)
+    return parser.lattice(use=use, parameterised=parameterised, **params)
 
 
 class _Mad8Exporter(_MadExporter):
