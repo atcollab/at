@@ -500,7 +500,7 @@ class BaseParser(DictNoDot, StrParser):
         """
         self.skip_comments = CommentHandler(self._linecomment, self._blockcomment)
         self.env = env
-        self.bases = [getcwd()]
+        self.bases = []
         self.kwargs = kwargs
         self.strict = strict
         self.always_force = always_force
@@ -940,11 +940,13 @@ class BaseParser(DictNoDot, StrParser):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
-        self.in_file.extend(abspath(file) for file in filenames)
         last = len(filenames) - 1
         ElementDescr._mentioned.clear()
         for nf, fn in enumerate(filenames):
-            fn = normpath(join(self.bases[-1], fn))
+            bases = self.bases
+            fn = normpath(join((bases)[-1] if bases else getcwd(), fn))
+            if not bases:
+                self.in_file.append(fn)
             self.bases.append(dirname(fn))
             print("Processing", fn)
             try:
@@ -1002,8 +1004,8 @@ class UnorderedParser(BaseParser):
         replay()
 
         # After the last file: initialise the remaining undefined variables
-        default_value = self.get(self._undef_key)
         if final:
+            default_value = self.get(self._undef_key)
             undefined = self._missing(verbose=self.verbose)
             self._print(f"{len(undefined)} missing definitions.")
             if undefined and default_value is not None:
