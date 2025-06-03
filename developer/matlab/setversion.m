@@ -30,30 +30,34 @@ if nargin < 1
     end
 end
 
-versfile=fullfile(atroot,'Contents.m');
-tmpfile=fullfile(tempdir,'Contents.m');
-fout=fopen(tmpfile,'wt');
-fin=fopen(versfile,'rt');
-line=fgetl(fin); %#ok<NASGU>                    Header: accelerator toolbox
-
-vv=textscan(fgetl(fin), '%*s %*s %s %s %s');  % Version string
-if nargin < 1 || isempty(version)
-    version=vv{1}{1};
-end
-fprintf(fout,'%% Accelerator Toolbox\n');
-fprintf(fout,'%% Version %s (%s) %s\n',version,release,datetime('today'));
-
-line=fgetl(fin);
-while ~isnumeric(line)
-    fprintf(fout,'%s\n',line);
-    line=fgetl(fin);
-end
-fclose(fin);
-fclose(fout);
-[success,message,messageid]=copyfile(tmpfile,versfile);
-if ~success
-    error(messageid,message);
-end
-delete(tmpfile);
+update_file(fullfile(atroot,'Contents.m'))
+update_file(fullfile(atroot,'..','Contents.m'))
 gen_help();
+
+    function update_file(versfile)
+        tmpfile=fullfile(tempdir,'Contents.m');
+        fout=fopen(tmpfile,'wt');
+        fin=fopen(versfile,'rt');
+        line=fgetl(fin); %#ok<NASGU>                    Header: accelerator toolbox
+        
+        vv=textscan(fgetl(fin), '%*s %*s %s %s %s');  % Version string
+        if nargin < 1 || isempty(version)
+            version=vv{1}{1};
+        end
+        fprintf(fout,'%% Accelerator Toolbox\n');
+        fprintf(fout,'%% Version %s (%s) %s\n',version,release,datetime('today'));
+        
+        line=fgetl(fin);
+        while ~isnumeric(line)
+            fprintf(fout,'%s\n',line);
+            line=fgetl(fin);
+        end
+        fclose(fin);
+        fclose(fout);
+        [success,message,messageid]=copyfile(tmpfile,versfile);
+        if ~success
+            error(messageid,message);
+        end
+        delete(tmpfile);
+    end
 end
