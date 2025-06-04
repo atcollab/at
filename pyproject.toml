@@ -68,11 +68,10 @@ namespaces = false
 machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
+build = ["*"]
 # Pypy does not have Scipy so we cannot support it.
-build = ["cp3{7,8,9,10,11,12,13}*"]
-# build = ["cp312-*"]  # Only cp312 for test
-# Skip 32-bit builds
-skip = ["*-win32", "*_i686"]
+skip = ["pp*", "cp3{7,8}-musllinux_*"]
+archs = ["auto64"]
 build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"

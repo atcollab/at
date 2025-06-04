@@ -28,7 +28,7 @@ jobs:
           python-version: 3.12
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22
+        uses: pypa/cibuildwheel@v2.23
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
