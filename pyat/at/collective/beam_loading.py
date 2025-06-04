@@ -207,7 +207,10 @@ class BeamLoadingElement(RFCavity, Collective):
             if not isinstance(fbmode, FeedbackMode):
                 raise TypeError('For an active cavity, fbmode has to be defined and an ' +
                                 'instance of FeedbackMode')
-            self._fbmode = int(fbmode)                
+            self._fbmode = int(fbmode)
+        else:
+            self._fbmode = 0              
+            
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
