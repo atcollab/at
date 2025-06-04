@@ -14,8 +14,9 @@ struct elem
   int nturnsw;
   int blmode;
   int cavitymode;
+  int fbmode;
   int buffersize;
-  int usebuffer;
+  int windowlength;
   double normfact;
   double phasegain;
   double voltgain;
@@ -60,11 +61,12 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
      * 1-d array of 6*N elements
      */   
     long cavitymode = Elem->cavitymode;
+    long blmode = Elem->blmode;
+    long fbmode = Elem->fbmode;
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw;
-    long blmode = Elem->blmode;
     long buffersize = Elem->buffersize;
-    long usebuffer = Elem->usebuffer;
+    long windowlength = Elem->windowlength;
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
@@ -152,20 +154,24 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
-        if(usebuffer){
+        // If FBMode is set to ONETURN, then set the vbeam and move on
+        if(fbmode==1){
+            vbeam_set[0] = vbeamk[0];
+            vbeam_set[1] = vbeamk[1];        
+        }
+        // If FBMode is set to WINDOW, compute the vbeam_set from the buffer
+        
+        else if(fbmode==2){
             // Compute the length of the buffer as we will not act until 
             // the buffer is full. (2 arrays of vbeam and psi)
             
             bufferlengthnow = check_buffer_length(vbeam_buffer, buffersize, 2);
 
-            if ( bufferlengthnow == buffersize){
-                compute_buffer_mean(vbeam_set, vbeam_buffer, buffersize, 2);
+            if ( bufferlengthnow >= windowlength){
+                compute_buffer_mean(vbeam_set, vbeam_buffer, windowlength, buffersize, 2);
             } 
         }
-        else {
-            vbeam_set[0] = vbeamk[0];
-            vbeam_set[1] = vbeamk[1];
-        }
+        
         
         
         if(cavitymode==1){
@@ -187,7 +193,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy;
     int nturn=Param->nturn;
     if (!Elem) {
-        long nslice,nturns,blmode,cavitymode, buffersize, usebuffer;
+        long nslice,nturns,blmode,cavitymode,fbmode, buffersize, windowlength;
         double wakefact;
         double normfact, phasegain, voltgain;
         double *turnhistory;
@@ -212,8 +218,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         nturns=atGetLong(ElemData,"_nturns"); check_error();
         blmode=atGetLong(ElemData,"_blmode"); check_error();
         buffersize=atGetLong(ElemData,"_buffersize"); check_error();
-        usebuffer=atGetLong(ElemData,"_usebuffer"); check_error();
+        windowlength=atGetLong(ElemData,"_windowlength"); check_error();
         cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
+        fbmode=atGetLong(ElemData,"_fbmode"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
         rshunt=atGetDouble(ElemData,"Rshunt"); check_error();
@@ -265,11 +272,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vbeam_phasor = vbeam_phasor;
         Elem->cavitymode = cavitymode;
         Elem->buffersize = buffersize;
-        Elem->usebuffer = usebuffer;
+        Elem->windowlength = windowlength;
         Elem->vgen_buffer = vgen_buffer;
         Elem->vbeam_buffer = vbeam_buffer;
         Elem->vbunch_buffer = vbunch_buffer;
         Elem->detune_angle = detune_angle;
+        Elem->fbmode = fbmode;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
 
@@ -310,7 +318,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
       
-      long nslice,nturns,blmode,cavitymode,buffersize,usebuffer;
+      long nslice,nturns,blmode,cavitymode,fbmode,buffersize,windowlength;
       double wakefact;
       double normfact, phasegain, voltgain;
       double *turnhistory;
@@ -334,8 +342,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       nturns=atGetLong(ElemData,"_nturns"); check_error();
       blmode=atGetLong(ElemData,"_blmode"); check_error();
       buffersize=atGetLong(ElemData,"_buffersize"); check_error();
-      usebuffer=atGetLong(ElemData,"_usebuffer"); check_error();
+      windowlength=atGetLong(ElemData,"_windowlength"); check_error();
       cavitymode=atGetLong(ElemData,"_cavitymode"); check_error();
+      fbmode=atGetLong(ElemData,"_fbmode"); check_error();
       wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
       qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
       rshunt=atGetDouble(ElemData,"Rshunt"); check_error();
@@ -381,11 +390,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->voltgain = voltgain;
       Elem->vbeam_phasor = vbeam_phasor;
       Elem->buffersize = buffersize;
-      Elem->usebuffer = usebuffer;
+      Elem->windowlength = windowlength;
       Elem->vgen_buffer = vgen_buffer;
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
       Elem->detune_angle = detune_angle;
+      Elem->fbmode = fbmode;
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
@@ -399,7 +409,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(25,1);
+      plhs[0] = mxCreateCellMatrix(26,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -407,24 +417,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],4,mxCreateString("_nturns"));
       mxSetCell(plhs[0],5,mxCreateString("_blmode"));
       mxSetCell(plhs[0],6,mxCreateString("_cavitymode"));
-      mxSetCell(plhs[0],7,mxCreateString("_wakefact"));
-      mxSetCell(plhs[0],8,mxCreateString("Qfactor"));
-      mxSetCell(plhs[0],9,mxCreateString("Rshunt"));
-      mxSetCell(plhs[0],10,mxCreateString("_beta"));
-      mxSetCell(plhs[0],11,mxCreateString("NormFact"));
-      mxSetCell(plhs[0],12,mxCreateString("PhaseGain"));
-      mxSetCell(plhs[0],13,mxCreateString("VoltGain"));
-      mxSetCell(plhs[0],14,mxCreateString("_turnhistory"));
-      mxSetCell(plhs[0],15,mxCreateString("_vbunch"));
-      mxSetCell(plhs[0],16,mxCreateString("_vbeam"));
-      mxSetCell(plhs[0],17,mxCreateString("_vcav"));
-      mxSetCell(plhs[0],18,mxCreateString("_vgen"));
-      mxSetCell(plhs[0],19,mxCreateString("_vbeam_phasor"));
-      mxSetCell(plhs[0],20,mxCreateString("_vgen_buffer"));
-      mxSetCell(plhs[0],21,mxCreateString("_vbeam_buffer"));
-      mxSetCell(plhs[0],22,mxCreateString("_vbunch_buffer"));
-      mxSetCell(plhs[0],23,mxCreateString("_buffersize"));
+      mxSetCell(plhs[0],7,mxCreateString("_fbmode"));      
+      mxSetCell(plhs[0],8,mxCreateString("_wakefact"));
+      mxSetCell(plhs[0],9,mxCreateString("Qfactor"));
+      mxSetCell(plhs[0],10,mxCreateString("Rshunt"));
+      mxSetCell(plhs[0],11,mxCreateString("_beta"));
+      mxSetCell(plhs[0],12,mxCreateString("NormFact"));
+      mxSetCell(plhs[0],13,mxCreateString("PhaseGain"));
+      mxSetCell(plhs[0],14,mxCreateString("VoltGain"));
+      mxSetCell(plhs[0],15,mxCreateString("_turnhistory"));
+      mxSetCell(plhs[0],16,mxCreateString("_vbunch"));
+      mxSetCell(plhs[0],17,mxCreateString("_vbeam"));
+      mxSetCell(plhs[0],18,mxCreateString("_vcav"));
+      mxSetCell(plhs[0],19,mxCreateString("_vgen"));
+      mxSetCell(plhs[0],20,mxCreateString("_vbeam_phasor"));
+      mxSetCell(plhs[0],21,mxCreateString("_vgen_buffer"));
+      mxSetCell(plhs[0],22,mxCreateString("_vbeam_buffer"));
+      mxSetCell(plhs[0],23,mxCreateString("_vbunch_buffer"));
       mxSetCell(plhs[0],24,mxCreateString("_buffersize"));
+      mxSetCell(plhs[0],25,mxCreateString("_windowlength"));
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(3,1);
