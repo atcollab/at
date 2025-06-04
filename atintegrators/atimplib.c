@@ -466,16 +466,16 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
 
 static void compute_buffer_mean(double *out_array, double *buffer, long windowlength, long buffersize, long numcolumns){
 
-    int c,cc,p;
-    
+    int c,p,offset;
+    offset = buffersize - windowlength;
+
     for (p=0; p<numcolumns; p++) {
         out_array[p] = 0.0;
     }
     
-    for (c=0; c<windowlength; c++) {
-        cc = buffersize-c;
+    for (c=offset; c<buffersize; c++) {
         for (p=0; p<numcolumns; p++) {
-            out_array[p] += buffer[2*cc+p];
+            out_array[p] += buffer[2*c+p];
         }
     }
     
