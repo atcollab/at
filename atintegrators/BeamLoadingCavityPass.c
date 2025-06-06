@@ -32,7 +32,7 @@ struct elem
   double Rshunt;
   double Beta;
   double phis;
-  double detune_angle;
+  double feedback_angle_offset;
   double *vbunch;
   double *vbeam_phasor;
   double *vbeam;
