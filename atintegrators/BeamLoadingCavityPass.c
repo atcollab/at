@@ -240,7 +240,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*optional attributes*/
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
-        feedback_angle_offset=atGetOptionalDouble(ElemData,"feedback_angle_offset", 0); check_error();
+        feedback_angle_offset=atGetOptionalDouble(ElemData,"feedback_angle_offset", 0.0); check_error();
         
         int dimsth[] = {Param->nbunch*nslice*nturns, 4};
         atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
