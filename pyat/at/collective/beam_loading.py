@@ -134,7 +134,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
-                 rshunt: float, detune: Optional[float] = 0, 
+                 rshunt: float, detune: Optional[float] = 0.0, 
                  blmode: Optional[BLMode] = BLMode.PHASOR,
                  cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                  fbmode: Optional[FeedbackMode] = FeedbackMode.ONETURN,
@@ -198,10 +198,9 @@ class BeamLoadingElement(RFCavity, Collective):
         zcuts = kwargs.pop('ZCuts', None)
         ts = kwargs.pop('ts', None)
         self.system_harmonic = kwargs.pop('system_harmonic', int(numpy.round(frequency/ring.rf_frequency)))
-        self.detuneHz = kwargs.pop('detune', 0)
-
+        self.detune = detune
         
-        if numpy.abs(frequency - ring.rf_frequency) > 1.0: #1 Hz is the limit for the float check         
+        if numpy.abs(frequency - self.system_harmonic*ring.rf_frequency) > 1.0: #1 Hz is the limit for the float check         
             error_string = 'Cavity must be an integer of rf_frequency, otherwise' + \
                            'the phi_s computation will be wrong. Please use the detune' + \
                            'argument when adding beamloading to a cavity that is an integer' + \
@@ -237,6 +236,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbunch = None
         self._buffersize = buffersize
         self._windowlength = kwargs.pop('windowlength', 0)
+
         if self._windowlength > self._buffersize:
             raise ValueError('The windowlength must be smaller than the buffersize') 
         self._vgen_buffer = numpy.zeros(1)
@@ -297,7 +297,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
         elif self._cavitymode == 2:
             vgen = 0
-            psi = numpy.arctan(2*self.Qfactor*(1 - self.Frequency/(self.Frequency + self.detuneHz)))
+            psi = numpy.arctan(2*self.Qfactor*(1 - self.Frequency/(self.Frequency + self.detune)))
         else:
             vgen = self.Voltage
             psi = 0
