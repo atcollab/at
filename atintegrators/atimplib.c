@@ -464,7 +464,7 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
     vgen[1] += (vgp-vgen[1])*phasegain;
 }
 
-static void update_vbeam_set(long fbmode, double *vbeam_set,
+void update_vbeam_set(long fbmode, double *vbeam_set,
                              double *vbeamk, double *vbeam_buffer,
                              long buffersize, long windowlength){
     int bufferlengthnow = 0;
