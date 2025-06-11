@@ -60,9 +60,9 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
      * r_in - 6-by-N matrix of initial conditions reshaped into
      * 1-d array of 6*N elements
      */   
-    int cavitymode = Elem->cavitymode;
-    int blmode = Elem->blmode;
-    int fbmode = Elem->fbmode;
+    long cavitymode = Elem->cavitymode;
+    long blmode = Elem->blmode;
+    long fbmode = Elem->fbmode;
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw;
     long buffersize = Elem->buffersize;
@@ -153,7 +153,8 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
-        update_vbeam_set(fbmode, vbeam_set, vbeamk, vbeam_buffer, buffersize, windowlength);
+        update_vbeam_set(fbmode, vbeam_set, vbeamk, vbeam_buffer,
+                             buffersize, windowlength);
         
         
         if(cavitymode==1){
@@ -175,8 +176,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy;
     int nturn=Param->nturn;
     if (!Elem) {
-        long nslice,nturns, buffersize, windowlength;
-        int cavitymode,fbmode,blmode;
+        long nslice,nturns,blmode,cavitymode,fbmode, buffersize, windowlength;
         double wakefact;
         double normfact, phasegain, voltgain;
         double *turnhistory;
@@ -301,8 +301,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
       
-      long nslice,nturns,buffersize,windowlength;
-      int cavitymode, blmode, fbmode;
+      long nslice,nturns,blmode,cavitymode,fbmode,buffersize,windowlength;
       double wakefact;
       double normfact, phasegain, voltgain;
       double *turnhistory;
