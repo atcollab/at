@@ -18,6 +18,10 @@ class CavityMode(IntEnum):
     ACTIVE = 1
     PASSIVE = 2
 
+class FeedbackMode(IntEnum):
+    ONETURN = 1
+    WINDOW = 2
+    
 
 def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
                     rshunt: Union[float, Sequence[float]],
@@ -132,6 +136,7 @@ class BeamLoadingElement(RFCavity, Collective):
                  frequency: float, ring: Lattice, qfactor: float,
                  rshunt: float, blmode: Optional[BLMode] = BLMode.PHASOR,
                  cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
+                 fbmode: Optional[FeedbackMode] = FeedbackMode.ONETURN,
                  buffersize: Optional[int] = 0, **kwargs):
         r"""
         Parameters:
@@ -152,6 +157,10 @@ class BeamLoadingElement(RFCavity, Collective):
                 function. For high Q resonator, the phasor method should be
                 used
             cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
+            PhaseGain (float):  Used for cavity feedbacks. States the gain on the
+                phase correction factor to be applied. 
+            VoltGain (float):  Used for cavity feedbacks. States the gain on the
+                phase correction factor to be applied. 
             buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
                 (default 0)
             detune_angle:      Fixed detuning from optimal tuning angle. [rad]
@@ -163,7 +172,12 @@ class BeamLoadingElement(RFCavity, Collective):
                 RF system [m]. If not specified, it will be calculated using 
                 get_timelag_fromU0. Defines the expected position of the beam to be
                 used for the beam loading setpoints.        
-            
+            fbmode (FeedbackMode): States the type of feedback to be used for the loop.
+                ONETURN (default) takes only the current turn, compared to WINDOW which
+                takes a sliding window.
+            windowlength (int): for WINDOW feedback mode, states the length (in turns)
+                for the sliding window. Must be smaller than buffersize. 
+                
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -174,6 +188,8 @@ class BeamLoadingElement(RFCavity, Collective):
         if not isinstance(cavitymode, CavityMode):
             raise TypeError('cavitymode has to be an ' +
                             'instance of CavityMode')
+
+                            
         zcuts = kwargs.pop('ZCuts', None)
         ts = kwargs.pop('ts', None)
         energy = ring.energy
@@ -186,6 +202,15 @@ class BeamLoadingElement(RFCavity, Collective):
         self.VoltGain = kwargs.pop('VoltGain', 1.0)
         self._blmode = int(blmode)
         self._cavitymode = int(cavitymode)
+
+        if self._cavitymode == 1:
+            if not isinstance(fbmode, FeedbackMode):
+                raise TypeError('For an active cavity, fbmode has to be defined and an ' +
+                                'instance of FeedbackMode')
+            self._fbmode = int(fbmode)
+        else:
+            self._fbmode = 0              
+            
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
@@ -195,6 +220,9 @@ class BeamLoadingElement(RFCavity, Collective):
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
         self._buffersize = buffersize
+        self._windowlength = kwargs.pop('windowlength', 0)
+        if self._windowlength > self._buffersize:
+            raise ValueError('The windowlength must be smaller than the buffersize') 
         self._vgen_buffer = numpy.zeros(1)
         self._vbeam_buffer = numpy.zeros(1)
         self._vbunch_buffer = numpy.zeros(1)
@@ -257,9 +285,11 @@ class BeamLoadingElement(RFCavity, Collective):
         else:
             vgen = self.Voltage
             psi = 0
-            
+
         self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
-                                   numpy.pi-psi])
+                                   numpy.pi+psi])
+        self._vbeam_phasor = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
+                                   numpy.pi+psi])                      
         self._vgen = numpy.array([vgen, psi])
 
     @property
