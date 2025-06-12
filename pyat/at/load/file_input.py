@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 from os import getcwd
-from os.path import join, abspath, normpath, dirname
+from os.path import join, normpath, dirname
 import re
 from itertools import repeat, count
 from functools import wraps
@@ -99,8 +99,8 @@ class CommentHandler(object):
             line: String representing the current line of text to be processed.
 
         Returns:
-            bool: True if the input line was empty. Special case where command
-              continuation must not ne interrupted.
+            Uncommented input line, or None if the line is empty (special case where
+            block comment should not be interrupted).
         """
         while line:
             line = self.handle_comments(self, buffer, line)
@@ -110,60 +110,6 @@ class CommentHandler(object):
             contents = "".join(buffer).strip()
             buffer.clear()
             return contents
-
-
-def get_comment_handler(linecomment, blockcomment):
-    if isinstance(linecomment, tuple):
-
-        def line_comment(line):
-            for linecom in linecomment:
-                line, *_ = line.split(sep=linecom, maxsplit=1)
-            return line
-
-    else:
-        if linecomment is None:
-
-            def line_comment(line):
-                return line
-
-        else:
-
-            def line_comment(line):
-                line, *_ = line.split(sep=linecomment, maxsplit=1)
-                return line
-
-    if blockcomment is None:
-        # noinspection PyUnusedLocal
-        def handle_comments(buffer, line, in_comment):
-            line = line_comment(line)
-            if line:
-                buffer.append(line_comment(line))
-                return False, ""
-            else:
-                # Special case to avoid that empty lines break the continuation
-                return False, None
-
-    else:
-
-        def handle_comments(buffer, line, in_comment):
-            if in_comment:
-                *rest, line = line.split(sep=endcomment, maxsplit=1)
-                in_comment = len(rest) <= 0
-                return in_comment, "" if in_comment > 0 else line
-            else:
-                line = line_comment(line)
-                if line:
-                    contents, *rest = line.split(sep=begcomment, maxsplit=1)
-                    buffer.append(contents)
-                    in_comment = len(rest) > 0
-                    return in_comment, rest[0] if in_comment else ""
-                else:
-                    # Special case to avoid that empty lines break the continuation
-                    return False, None
-
-        begcomment, endcomment = blockcomment
-
-    return handle_comments
 
 
 def _no_default(func):
@@ -201,6 +147,8 @@ def skip_class(
     Args:
         classname: Name of the generated class
         baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
+        module: Name of the module where the class is defined. If :py:obj:`None`, use
+          the module of the base class.
         **kwargs: dictionary of additional attributes and methods. See :py:func:`type`.
 
     Returns:
@@ -222,7 +170,6 @@ def ignore_class(
     classname: str,
     baseclass: type[ElementDescr],
     module: str | None = None,
-    wrapper=None,
     **kwargs,
 ):
     """Generate a class for ignored elements.
@@ -232,6 +179,8 @@ def ignore_class(
     Args:
         classname: Name of the generated class
         baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
+        module: Name of the module where the class is defined. If :py:obj:`None`, use
+          the module of the base class.
         **kwargs: dictionary of additional attributes and methods. See :py:func:`type`.
 
     Returns:
@@ -254,8 +203,6 @@ def ignore_class(
         else:
             return [elt.Drift(self.name, l, origin=self.origin, **self.meval(params))]
 
-    if wrapper is not None:
-        to_at = wrapper(to_at)
     kwargs.update(__init__=init, to_at=to_at, __module__=module or baseclass.__module__)
     return type(classname, (baseclass,), kwargs)
 
@@ -944,7 +891,7 @@ class BaseParser(DictNoDot, StrParser):
         ElementDescr._mentioned.clear()
         for nf, fn in enumerate(filenames):
             bases = self.bases
-            fn = normpath(join((bases)[-1] if bases else getcwd(), fn))
+            fn = normpath(join(bases[-1] if bases else getcwd(), fn))
             if not bases:
                 self.in_file.append(fn)
             self.bases.append(dirname(fn))
