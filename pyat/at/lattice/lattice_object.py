@@ -854,7 +854,8 @@ class Lattice(list):
     @property
     def nbunch(self) -> int:
         """Number of bunches"""
-        return np.count_nonzero(self._fillpattern)
+        # cast to int required from numpy version 2.3.0
+        return int(np.count_nonzero(self._fillpattern))
 
     @property
     def harmonic_number(self) -> int:
