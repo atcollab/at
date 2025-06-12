@@ -27,6 +27,10 @@ class _AtEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, Particle):
             return obj.to_dict()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)       
         else:
             return super().default(obj)
 
