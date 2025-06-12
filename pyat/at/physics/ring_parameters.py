@@ -47,9 +47,9 @@ class RingParameters:
     def __str__(self):
         vrs = vars(self).copy()
         vals = [(self._props[k], vrs.pop(k, None)) for k in self._props]
-        # Predefined attributes
+        # Process predefined attributes first
         lines = [f.format(v) for f, v in vals if v is not None]
-        # Other attributes
+        # Process other attributes
         lines += [f"{k:>25}: {getattr(self, k)}" for k in vrs]
         return "\n".join(lines)
 
@@ -57,23 +57,23 @@ class RingParameters:
 # noinspection PyPep8Naming
 def radiation_parameters(
     ring: Lattice,
-    dp: float | None = None,
     params: RingParameters | None = None,
     **kwargs,
-):
+) -> RingParameters:
     r"""Compute ring parameters from the radiation integrals
 
-    Valid for uncoupled lattices with no RF cavity or radiating element.
+    Valid with or without longitudinal motion.
 
     Parameters:
         ring:       Lattice description.
-        dp:         Momentum deviation.
         params:     :py:class:`.RingParameters` object to be updated.
           Default: create a new one
 
     Keyword Args:
-        dct (float):        Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
+        dp:                     Momentum deviation.
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to
+          :py:obj:`None`
         method (Callable):  Method for linear optics:
 
           :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
@@ -118,10 +118,10 @@ def radiation_parameters(
     """
     rp = RingParameters() if params is None else params
     _, ringdata, twiss = ring.get_optics(
-        refpts=range(len(ring) + 1), dp=dp, get_chrom=True, **kwargs
+        refpts=range(len(ring) + 1), get_chrom=True, **kwargs
     )
     rp.chromaticities = ringdata.chromaticity * ring.periodicity
-    integs = get_radiation_integrals(ring, dp=dp, twiss=twiss)
+    integs = get_radiation_integrals(ring, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = np.array(integs) * ring.periodicity
     circumference = ring.circumference
     E0 = ring.energy
@@ -146,22 +146,22 @@ def radiation_parameters(
     except AtError:
         rp.voltage = nan
         rp.phi_s = nan
-        nus = nan
+        nu_s = nan
         rp.f_s = nan
         rp.sigma_l = nan
     else:
         rp.voltage = voltage
         rp.phi_s = (pi - asin(U0 / voltage)) if U0 <= voltage else nan
-        nus = sqrt(abs(etac * ring.harmonic_number * voltage * cos(rp.phi_s)
-                       / E0 / 2.0 / pi)) / beta
-        rp.f_s = nus / revolution_period
-        rp.sigma_l = beta * abs(etac) * circumference / 2.0 / pi / nus * rp.sigma_e
+        nu_s = sqrt(abs(etac * ring.harmonic_number * voltage * cos(rp.phi_s)
+                        / E0 / 2.0 / pi)) / beta
+        rp.f_s = nu_s / revolution_period
+        rp.sigma_l = beta * abs(etac) * circumference / 2.0 / pi / nu_s * rp.sigma_e
     rp.Tau = ct / damping_partition_numbers
     rp.J = damping_partition_numbers
     rp.emittances = np.array([emitx, nan, rp.sigma_e * rp.sigma_l])
     ringtunes, _ = np.modf(ring.periodicity * ringdata.tune)
     if len(ringtunes) < 3:
-        rp.tunes = np.concatenate((ringtunes, (nus,)))
+        rp.tunes = np.concatenate((ringtunes, (nu_s,)))
     else:
         rp.tunes6 = ringtunes
     rp.fulltunes = ring.periodicity * twiss[-1].mu / 2.0 / pi
