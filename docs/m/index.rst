@@ -30,8 +30,8 @@ higher-level functions to provide physics results.
    :caption: Release notes:
    :hidden:
 
-   releases/r2.3
-   releases/r2.4
-   releases/r2.5
-   releases/r2.6
-   releases/r2.7
+   release_notes/r2.3
+   release_notes/r2.4
+   release_notes/r2.5
+   release_notes/r2.6
+   release_notes/r2.7

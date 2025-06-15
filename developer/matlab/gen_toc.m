@@ -1,6 +1,9 @@
 function gen_toc()
 %GEN_TOC	Build the HTML files used by the Matlab help browser
 
+w0=warning;  % Save the warning state
+warning('off', 'AT:NoRingParam'); % Disable RingParam warnings  
+
 [devdir,~, ~]=fileparts(mfilename('fullpath'));
 docdir = fullfile(atroot,'..','docs','atdocs','matlab');
 tocfile = fullfile(docdir,'helptoc.xml');
@@ -52,9 +55,23 @@ publish(ugname,'evalCode',false,'outputDir',docdir);
 for dd=reshape(dir(fullfile(devdir,'mlx')),1,[])
     [~,nn,xx]=fileparts(dd.name);
     if strcmp(xx,'.mlx')
-        export(fullfile(dd.folder,dd.name),fullfile(docdir,strcat(nn,'.html')));
+        src=fullfile(dd.folder,dd.name);
+        fprintf('Export %s to %s\n', src, strcat(nn,'.html'));
+        export(src,fullfile(docdir,strcat(nn,'.html')),Run=false);
     end
 end
+
+% Publish Sphinx files
+dstdir=fullfile(atroot,'..','docs','m','release_notes');
+for fn=reshape(dir(fullfile(devdir,'release_notes','*.mlx')),1,[])
+    src=fullfile(fn.folder,fn.name);
+    [~,nn,~]=fileparts(fn.name);
+    dst=fullfile(dstdir,[nn '.md']);
+    fprintf('Export %s to %s\n', src,dst)
+    export(src,dst);
+end
+
+warning(w0);  % Restore the warning state
 
     function mloop(fid,mlist)
         for item=mlist
@@ -85,11 +102,14 @@ end
         fprintf(sumid,'%%%% %s\n%% \n%%%%\n', secname);
         for mm=chapfun()
             target=fullfile(secdir,mm.id+".html");
-            export(fullfile(devdir,secdir,mm.id+".mlx"),fullfile(docdir,target));
+            source=fullfile(devdir,secdir,mm.id+".mlx");
+            fprintf('Export %s to %s\n', source, target);
+            export(source,fullfile(docdir,target),Run=false);
             fprintf(sumid,'%% <matlab:web(fullfile(docroot,''3ptoolbox'',''atacceleratortoolbox'',''doc'',''%s'')) %s>\n%%\n',target,mm.title);
             fprintf(fid,'            <tocitem target="%s">%s</tocitem>\n',target,mm.title);
         end
         fclose(sumid);
+        fprintf('Publish %s to %s\n', sumname, docdir);
         publish(sumname,'evalCode',false,'outputDir',docdir);
         fprintf(fid,'        </tocitem>\n');
         delete(sumname);
