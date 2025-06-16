@@ -14,9 +14,9 @@ higher-level functions to provide physics results.
 .. toctree::
    :maxdepth: 2
 
-   Installation
-   primer
-   demo1
+   Installation <getting_started/01_Installation>
+   AT Primer <getting_started/02_Primer>
+   Example <getting_started/03_Lattice_example>
 
 .. toctree::
    :maxdepth: 2
