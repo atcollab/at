@@ -86,7 +86,8 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vbeam_phasor = Elem->vbeam_phasor;
     double *vbeamk = Elem->vbeam;
     double *vcavk = Elem->vcav;
-    double *vgenk = Elem->vgen;    double feedback_angle_offset = Elem->feedback_angle_offset;
+    double *vgenk = Elem->vgen;    
+    double feedback_angle_offset = Elem->feedback_angle_offset;
     int bufferlengthnow = 0;
 
     double vbeam_set[] = {vbeam_phasor[0], vbeam_phasor[1]};
