@@ -44,13 +44,6 @@ catch e
     e.rethrow()
 end
 
-%Build doc search database
-try
-    builddocsearchdb(fullfile(rootdir,'docs','atdocs','matlab'));
-catch me
-    warning( me.message )
-end
-
 %% Run tests
 % fprintf( 1, 'Running tests...' );
 % [log, results] = evalc( 'runtests( fullfile( cfdir, "tests" ) )' );
