@@ -86,9 +86,9 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vbeam_phasor = Elem->vbeam_phasor;
     double *vbeamk = Elem->vbeam;
     double *vcavk = Elem->vcav;
-    double *vgenk = Elem->vgen;
-    double feedback_angle_offset = Elem->feedback_angle_offset;
+    double *vgenk = Elem->vgen;    double feedback_angle_offset = Elem->feedback_angle_offset;
     int bufferlengthnow = 0;
+
     double vbeam_set[] = {vbeam_phasor[0], vbeam_phasor[1]};
     double tot_current = 0.0;
     int i;
@@ -149,28 +149,14 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
-        // If FBMode is set to ONETURN, then set the vbeam and move on
-        if(fbmode==1){
-            vbeam_set[0] = vbeamk[0];
-            vbeam_set[1] = vbeamk[1];        
-        }
-        // If FBMode is set to WINDOW, compute the vbeam_set from the buffer
-        
-        else if(fbmode==2){
-            // Compute the length of the buffer as we will not act until 
-            // the buffer is full. (2 arrays of vbeam and psi)
-            
-            bufferlengthnow = check_buffer_length(vbeam_buffer, buffersize, 2);
 
-            if ( bufferlengthnow >= windowlength){
-                compute_buffer_mean(vbeam_set, vbeam_buffer, windowlength, buffersize, 2);
-            } 
-        }
-        
+        update_vbeam_set(fbmode, vbeam_set, vbeamk, vbeam_buffer,
+                             buffersize, windowlength);
         
         
         if(cavitymode==1){
-            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,feedback_angle_offset); 
+            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,detune_angle); 
+
         }     
 
 
@@ -390,6 +376,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
       Elem->feedback_angle_offset = feedback_angle_offset;
+
       Elem->fbmode = fbmode;
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 

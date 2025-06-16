@@ -180,6 +180,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 takes a sliding window.
             windowlength (int): for WINDOW feedback mode, states the length (in turns)
                 for the sliding window. Must be smaller than buffersize. 
+
             system_harmonic (float): Used to compute the nominal rf frequency for the 
                 given system. e.g. third of fourth harmonic of rf_frequency. If None,
                 then will be computed to the nearest integer multiple of rf_frequency.  
