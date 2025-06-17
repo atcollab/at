@@ -635,7 +635,7 @@
 %   atrelease                           - RELEASE    build, test and package a the AT package
 %   gen_help                            - Build the "help" infrastructure
 %   gen_list                            - Display a list of still non-documented AT functions
-%   gen_toc                             - Build the HTML files used by the Matlab help browser
+%   gen_doc                             - Build the HTML files used by the Matlab help browser
 %   h1_line                             - Get the H1 line for a file
 %   howtochapters                       - Describe the How to chapters
 %   setversion                          - Set the version of AT
@@ -649,7 +649,6 @@
 %   atphysics                           - Physics
 %   atradiation                         - Radiation
 %   atsummary                           - Parameter summary
-%   howtosummary                        - How to…
 %   ugsummary                           - AT User Guide
 %   
 %   AT/DOC

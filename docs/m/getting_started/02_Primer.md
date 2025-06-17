@@ -310,6 +310,7 @@ plot(quadspos,Kvals,'*r',quadspos,Kvalserr,'*b');
 
 Once a lattice is defined, electrons may be tracked through it. **ringpass** is the function that does the tracking. An example of its use is as follows:
 
+<a id="M_93f6"></a>
 ```matlab
 nturns=200;
 Z01=[.001;0;0;0;0;0];
@@ -322,6 +323,7 @@ plot([Z1(1,:); Z2(1,:); Z3(1,:)]',[Z1(2,:); Z2(2,:); Z3(2,:)]','.')
 ```
 
 ![figure_1.png](02_Primer_media/figure_1.png)
+<a id="M_54f8"></a>
 
 In this example, we started with one initial condition, and all subsequent turns are returned by ringpass. We may also start with multiple initial conditions:
 
@@ -352,10 +354,7 @@ ZZ3=Z200(:,3:3:end);
 ```
 
 
-Now the same plot as in Figure \[2\](*\#trackPlot*){reference\-type="ref"
-
-
-reference="trackPlot"} results from the plot command
+Now the same plot as in [Figure 2](#M_93f6) results from the plot command
 
 ```matlab
 plot(ZZ1(1,:),ZZ1(2,:),'.r',ZZ2(1,:),ZZ2(2,:),'.b',ZZ3(1,:),ZZ3(2,:),'.k')
@@ -596,7 +595,7 @@ elemdata
 
 -  'SPos' is the  $s$ position, 
 -  'ClosedOrbit' is the $x,x^{\prime } ,y,y^{\prime }$ coordinate vector of the closed orbit, 
--  'Dispersion' is the $\eta_x ,\eta_x^{\prime } ,\eta_y ,\eta_x^{\prime }$ coordinate vector of the dispersion, 
+-  'Dispersion' is the $\eta_x ,\eta_x^{\prime } ,\eta_y ,\eta_y^{\prime }$ coordinate vector of the dispersion, 
 -  'M' is the local $4\times 4$ transfer matrix, 
 -   'beta' gives the horizontal and vertical $\beta$ functions, 
 -  'alpha' gives the $\alpha_{x,y}$ Twiss parameters, 

@@ -1,5 +1,8 @@
-function gen_toc()
-%GEN_TOC	Build the HTML files used by the Matlab help browser
+function gen_doc()
+%GEN_DOC	Build the Matlab documentation
+%
+%Builds the HTML documentation used by the Matlab help browser and the markdown
+%documentation used by Sphinx
 
 w0=warning;  % Save the warning state
 warning('off', 'AT:NoRingParam'); % Disable RingParam warnings
@@ -14,9 +17,15 @@ if fid <= 0
 end
 fid=openmfile(tocfile,'at');
 
+% Publish top page
+src=fullfile(devdir,'mlx','AT_page.mlx');
+dst=fullfile(docdir,'AT_page.html');
+fprintf('Export %s to %s\n', src, dst);
+export(src,dst);
+
 % Getting started
 mlxloop('getting_started','Getting started',Run=true)
-sphinxloop('getting_started',Run=true);
+%sphinxloop('getting_started',Run=true);
 
 % User guide
 ugname=fullfile(devdir,'m','ugsummary.m');
@@ -41,12 +50,12 @@ fclose(hid);
 publish(ugname,'evalCode',false,'outputDir',docdir);
 
 % How to...
-mlxloop('howtos','How to…',chapters=@howtochapters);
-sphinxloop('howtos');
+mlxloop('howtos','How to…');
+%sphinxloop('howtos');
 
 % Release notes
 mlxloop('release_notes','Release notes');
-sphinxloop('release_notes');
+%sphinxloop('release_notes');
 
 % Web site
 fprintf(fid,'        <tocitem target="https://atcollab.github.io/at/" \n');
@@ -57,16 +66,6 @@ fprintf(fid,'        </tocitem>\n');
 fprintf(fid,'    </tocitem>\n');
 fprintf(fid,'</toc>\n');
 fclose(fid);
-
-% Publish custom files
-for dd=reshape(dir(fullfile(devdir,'mlx')),1,[])
-    [~,nn,xx]=fileparts(dd.name);
-    if strcmp(xx,'.mlx')
-        src=fullfile(dd.folder,dd.name);
-        fprintf('Export %s to %s\n', src, strcat(nn,'.html'));
-        export(src,fullfile(docdir,strcat(nn,'.html')),Run=false);
-    end
-end
 
 %Build doc search database
 try
@@ -96,46 +95,33 @@ warning(w0);  % Restore the warning state
     end
 
     function mlxloop(secdir,secname,varargin)
-        [chapfun,varargs]=getoption(varargin,'chapters',@lst);
-        if nargin<3, chapfun=@lst; end
-        dirname=fullfile(devdir,secdir);
         sumname=fullfile(devdir,'m',[secdir '.m']);
         sumid=openmfile(sumname,'wt');
         fprintf(fid,'        <tocitem target="%s" \n', [secdir '.html']);
         fprintf(fid,'                 image="$toolbox/matlab/icons/webicon.gif">\n');
         fprintf(fid,'        %s\n',secname);
         fprintf(sumid,'%%%% %s\n%% \n%%%%\n', secname);
-        for mm=chapfun()
-            target=fullfile(secdir,append(mm.id,'.html'));
-            source=fullfile(devdir,secdir,append(mm.id,'.mlx'));
-            fprintf('Export %s to %s\n', source, target);
-            export(source,fullfile(docdir,target),varargs{:});
-            fprintf(sumid,'%% <matlab:web(fullfile(docroot,''3ptoolbox'',''atacceleratortoolbox'',''doc'',''%s'')) %s>\n%%\n',target,mm.title);
-            fprintf(fid,'            <tocitem target="%s">%s</tocitem>\n',target,mm.title);
+        for fn=reshape(dir(fullfile(devdir,secdir,'*.mlx')),1,[])
+            source=fullfile(fn.folder,fn.name);
+            [~,name,~]=fileparts(fn.name);
+            title=regexprep(name,{'^[0-9_ ]*', '_'},{'',' '});
+            target=fullfile(secdir,append(name,'.html'));
+            targ1=fullfile(docdir,target);
+            % Export HTML file for the Matlab help browser
+            fprintf('Export %s to %s\n', source, targ1);
+            export(source,targ1,varargin{:});
+            % Export Markdown file fpr Sphinx
+            targ2=fullfile(sphinxdir,secdir,append(name,'.md'));
+            fprintf('Export %s to %s\n',source,targ2);
+            export(source,targ2,varargin{:});
+            fprintf(sumid,'%% <matlab:web(fullfile(docroot,''3ptoolbox'',''atacceleratortoolbox'',''doc'',''%s'')) %s>\n%%\n',target,title);
+            fprintf(fid,'            <tocitem target="%s">%s</tocitem>\n',target,title);
         end
         fclose(sumid);
         fprintf('Publish %s to %s\n', sumname, docdir);
         publish(sumname,'evalCode',false,'outputDir',docdir);
         fprintf(fid,'        </tocitem>\n');
         delete(sumname);
-
-        function res=lst()
-            vals=reshape(dir(fullfile(dirname,'*.mlx')),1,[]);
-            [~,nms,~]=cellfun(@fileparts,{vals.name},'UniformOutput',false);
-            tts=cellfun(@(s) regexprep(s,{'^[0-9_ ]*', '_'},{'',' '}), nms, UniformOutput=false);
-            res=struct('id',nms,'title',tts);
-        end
-    end
-
-    function sphinxloop(subdir,varargin)
-        dstdir=fullfile(sphinxdir,subdir);
-        for fn=reshape(dir(fullfile(devdir,subdir,'*.mlx')),1,[])
-            src=fullfile(fn.folder,fn.name);
-            [~,name,~]=fileparts(fn.name);
-            dst=fullfile(dstdir,[name '.md']);
-            fprintf('Export %s to %s\n',src,dst)
-            export(src,dst,varargin{:});
-        end
     end
 
     function fid=openmfile(fpath,mode)

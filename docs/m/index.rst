@@ -23,7 +23,7 @@ higher-level functions to provide physics results.
    :caption: How to:
    :hidden:
 
-   howtos/CavityControl
+   Control the RF cavities <howtos/100_Control_RF_cavities>
 
 .. toctree::
    :maxdepth: 2
