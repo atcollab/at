@@ -50,7 +50,7 @@ gen_help();
 Generates _atroot_/at.m ("help at")
 
 ```Matlab
-gen_toc();
+gen_doc();
 ```
 - Generates _atroot_/developer/matlab/m/*.m files*
 - Publishes these files in _atroot_/../docs/atdocs/matlab/*.html

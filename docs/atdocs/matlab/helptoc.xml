@@ -45,7 +45,7 @@
         <tocitem target="howtos.html" 
                  image="$toolbox/matlab/icons/webicon.gif">
         How to…
-            <tocitem target="howtos/CavityControl.html">Control RF cavities</tocitem>
+            <tocitem target="howtos/100_Control_RF_cavities.html">Control RF cavities</tocitem>
         </tocitem>
         <tocitem target="release_notes.html" 
                  image="$toolbox/matlab/icons/webicon.gif">

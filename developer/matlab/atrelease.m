@@ -35,7 +35,7 @@ fprintf( 1, 'Generating documentation & examples...' );
 try
     % Generate custom documentation
     gen_help()
-    gen_toc();
+    gen_doc();
     % Remove all mex-files
     atclearmex(atroot);
     fprintf( 1, ' Done.\n' );
