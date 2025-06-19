@@ -27,6 +27,13 @@ higher-level functions to provide physics results.
 
 .. toctree::
    :maxdepth: 2
+   :caption: User guide
+   :hidden:
+
+   physics <api/atphysics>
+
+.. toctree::
+   :maxdepth: 2
    :caption: Release notes:
    :hidden:
 
