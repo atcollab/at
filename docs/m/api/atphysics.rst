@@ -6,16 +6,16 @@ atphysics
 .. toctree::
    :hidden:
 
-   Orbit <atphysics.Orbit>
-   nafflib <atphysics.nafflib>
-   Radiation <atphysics.Radiation>
-   LinearOptics <atphysics.LinearOptics>
-   NonLinearDynamics <atphysics.NonLinearDynamics>
-   TuneAndChromaticity <atphysics.TuneAndChromaticity>
-   LongitudinalDynamics <atphysics.LongitudinalDynamics>
-   ParameterSummaryFunctions <atphysics.ParameterSummaryFunctions>
-   TouschekPiwinski <atphysics.TouschekPiwinski>
-   CollectiveEffects <atphysics.CollectiveEffects>
+   atphysics.Orbit
+   atphysics.nafflib
+   atphysics.Radiation
+   atphysics.LinearOptics
+   atphysics.NonLinearDynamics
+   atphysics.TuneAndChromaticity
+   atphysics.LongitudinalDynamics
+   atphysics.ParameterSummaryFunctions
+   atphysics.TouschekPiwinski
+   atphysics.CollectiveEffects
 
 .. rubric:: Modules
 

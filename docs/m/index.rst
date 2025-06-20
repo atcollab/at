@@ -30,7 +30,11 @@ higher-level functions to provide physics results.
    :caption: User guide
    :hidden:
 
-   physics <api/atphysics>
+   api/atphysics
+   api/atplot
+   api/attrack
+   api/atutils
+   api/lattice
 
 .. toctree::
    :maxdepth: 2
