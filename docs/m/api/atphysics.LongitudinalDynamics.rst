@@ -1,20 +1,35 @@
+.. _longitudinaldynamics_module:
+
 LongitudinalDynamics
 ====================
 
 .. rubric:: Functions
 
 
-cavityoff CAVITYOFF turns cavities OFF
-phis phase = phis(U0MeV,VrfMV)
-atRFacc ATRFACC Computes RF acceptance of the ring
-atSetCavityPhase SETCAVITYPHASE     Set the TimeLag attribute of RF cavities
-atBunchLength bunch length due to the potential well effect
-mcf MCF momentum compaction factor
-cavityon CAVITYON turns Cavities ON
-nus NUS Computes synchrotron tune from RF parameters
-RFacc RFACC Computes the RF acceptance with linear formula
-BunchLength 
-atsetcavity ATSECAVITY Set the parameters of RF cavities
+.. list-table::
+
+   * - :func:`cavityoff`
+     - CAVITYOFF turns cavities OFF
+   * - :func:`phis`
+     - phase = phis(U0MeV,VrfMV)
+   * - :func:`atRFacc`
+     - ATRFACC Computes RF acceptance of the ring
+   * - :func:`atSetCavityPhase`
+     - SETCAVITYPHASE     Set the TimeLag attribute of RF cavities
+   * - :func:`atBunchLength`
+     - bunch length due to the potential well effect
+   * - :func:`mcf`
+     - MCF momentum compaction factor
+   * - :func:`cavityon`
+     - CAVITYON turns Cavities ON
+   * - :func:`nus`
+     - NUS Computes synchrotron tune from RF parameters
+   * - :func:`RFacc`
+     - RFACC Computes the RF acceptance with linear formula
+   * - :func:`BunchLength`
+     - 
+   * - :func:`atsetcavity`
+     - ATSECAVITY Set the parameters of RF cavities
 
 .. py:function:: cavityoff
 

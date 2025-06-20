@@ -1,15 +1,25 @@
+.. _nonlineardynamics_module:
+
 NonLinearDynamics
 =================
 
 .. rubric:: Functions
 
 
-RDTbuildupFluct h22000s, h11110s, h00220s,...
-RDTfluctuationIndicator RDTFLUCTUATIONINDICATOR quantitative representation of RDT fluctuations
-computeRDT COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)
-atnuampl ATNUAMPL	computes tune shift with amplitude
-computeRDTfluctuation COMPUTERDTFLUCTUATION Computes Hamiltonian resonance driving terms (RDTs)
-tunespaceplot TUNESPACEPLOT draws a tune diagram
+.. list-table::
+
+   * - :func:`RDTbuildupFluct`
+     - h22000s, h11110s, h00220s,...
+   * - :func:`RDTfluctuationIndicator`
+     - RDTFLUCTUATIONINDICATOR quantitative representation of RDT fluctuations
+   * - :func:`computeRDT`
+     - COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)
+   * - :func:`atnuampl`
+     - ATNUAMPL	computes tune shift with amplitude
+   * - :func:`computeRDTfluctuation`
+     - COMPUTERDTFLUCTUATION Computes Hamiltonian resonance driving terms (RDTs)
+   * - :func:`tunespaceplot`
+     - TUNESPACEPLOT draws a tune diagram
 
 .. py:function:: RDTbuildupFluct
 

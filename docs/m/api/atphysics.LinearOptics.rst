@@ -1,31 +1,57 @@
+.. _linearoptics_module:
+
 LinearOptics
 ============
 
 .. rubric:: Functions
 
 
-r_analysis 
-findelemm44 FINDELEMM44 numerically finds the 4x4 transfer matrix of an element
-findm66 FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice
-atlinopt6 ATLINOPT6 Performs linear analysis of the lattice
-jmat JMAT Compute antisymmetric Matrix [O 1; -1 0]
-linopt LINOPT performs linear analysis of the COUPLED lattices
-atlinopt2 ATLINOPT2 Performs the linear analysis of UNCOUPLED lattices
-find_inv_G_fromA This function computes the invariant matrices G1,G2,G3
-find_betaoids [H1 H2 H3]=find_betaoids(A)
-amat find A matrix from one turn map matrix T such that:
-atlinopt ATLINOPT Performs 4D linear analysis of the COUPLED lattices
-plotbeta PLOTBETA plots UNCOUPLED! beta-functions
-findm44 FINDM44 numerically finds the 4x4 transfer matrix of an accelerator lattice
-findelemm66 FINDELEMM66 numerically finds the 6x6 transfer matrix of an element
-find_inv_G This function computes the invariants of a one turn map matrix.
-atlinopt4 ATLINOPT4 Performs the 4D linear analysis of COUPLED lattices
-atdampingrates ATDAMPINGRATES find tunes and damping rates from one map matrix with radiation
-beam22 BEAM22 computes the beam matrix from the 1-turn transfer matrix
-mkSRotationMatrix MKSROTATIONMATRIX(PSI) coordinate transformation matrix
-find_etaoids Given the normalizing matrix A, we compute the etaoids
-get_dispersion_from_etaoids get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts
-beam44 BEAM44 computes the coupled beam matrices
+.. list-table::
+
+   * - :func:`r_analysis`
+     - 
+   * - :func:`findelemm44`
+     - FINDELEMM44 numerically finds the 4x4 transfer matrix of an element
+   * - :func:`findm66`
+     - FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice
+   * - :func:`atlinopt6`
+     - ATLINOPT6 Performs linear analysis of the lattice
+   * - :func:`jmat`
+     - JMAT Compute antisymmetric Matrix [O 1; -1 0]
+   * - :func:`linopt`
+     - LINOPT performs linear analysis of the COUPLED lattices
+   * - :func:`atlinopt2`
+     - ATLINOPT2 Performs the linear analysis of UNCOUPLED lattices
+   * - :func:`find_inv_G_fromA`
+     - This function computes the invariant matrices G1,G2,G3
+   * - :func:`find_betaoids`
+     - [H1 H2 H3]=find_betaoids(A)
+   * - :func:`amat`
+     - find A matrix from one turn map matrix T such that:
+   * - :func:`atlinopt`
+     - ATLINOPT Performs 4D linear analysis of the COUPLED lattices
+   * - :func:`plotbeta`
+     - PLOTBETA plots UNCOUPLED! beta-functions
+   * - :func:`findm44`
+     - FINDM44 numerically finds the 4x4 transfer matrix of an accelerator lattice
+   * - :func:`findelemm66`
+     - FINDELEMM66 numerically finds the 6x6 transfer matrix of an element
+   * - :func:`find_inv_G`
+     - This function computes the invariants of a one turn map matrix.
+   * - :func:`atlinopt4`
+     - ATLINOPT4 Performs the 4D linear analysis of COUPLED lattices
+   * - :func:`atdampingrates`
+     - ATDAMPINGRATES find tunes and damping rates from one map matrix with radiation
+   * - :func:`beam22`
+     - BEAM22 computes the beam matrix from the 1-turn transfer matrix
+   * - :func:`mkSRotationMatrix`
+     - MKSROTATIONMATRIX(PSI) coordinate transformation matrix
+   * - :func:`find_etaoids`
+     - Given the normalizing matrix A, we compute the etaoids
+   * - :func:`get_dispersion_from_etaoids`
+     - get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts
+   * - :func:`beam44`
+     - BEAM44 computes the coupled beam matrices
 
 .. py:function:: r_analysis
 

@@ -1,36 +1,67 @@
+.. _radiation_module:
+
 Radiation
 =========
 
 .. rubric:: Functions
 
 
-check_6d CHECK_6D Checks the presence of longitudinal motion in a lattice.
-FDW FDW calculate radiation diffusion matrix of a wiggler element.
-WigglerRadiation WIGGLERRADIATION	Compute the radiation integrals in wigglers
-findmpoleraddiffmatrix FINDMPOLERADDIFFMATRIX calculate radiation diffusion matrix of a multipole element
-atdiffmat quantumDiff    Compute the radiation-diffusion matrix
-getclass_6d GETCLASS_6D    Private. Guess class for 6d motion
-atgetU0 ATGETU0 Computes Energy loss per turn in eV .
-findthickmpoleraddiffm FINDTHICKMPOLERADDIFFM
-check_radiation CHECK_RADIATION	Obsolete: check the radiation state of a ring
-atenergy ATENERGY Gets the lattice energy
-radiationoff RADIATIONOFF turns classical radiation  OFF
-DipoleRadiation DIPOLERADIATION	Compute the radiation integrals in dipoles
-atenable_6d ATENABLE_6D switches RF and radiation on
-radiationon RADIATIONON turns classical radiation  ON
-ElossRadiation ELOSSRADIATION Compute the radiation integrals in EnergyLoss elements
-ohmienvelope OHMIENVELOPE calculates equilibrium beam envelope in a
-atradon ATRADON    Obsolete: switches RF and radiation on
-quantumDiff QUANTUMDIFF    Compute the radiation-diffusion matrix
-thickmpoleraddiffm FINDTHICKMPOLERADDIFFM
-attapering ATTAPERING Scale magnet strengths
-atdisable_6d ATDISABLE_6D  switches radiation and cavity off
-findelemraddiffm FINDELEMRADDIFFM
-ElementRadiation ELEMENTRADIATION - Compute the radiation integrals in dipoles
-atsetenergy ATSETENERGY sets the Energy field in all elements.
-findthinmpoleraddiffm FINDTHINMPOLERADDIFFM
-thinmpoleraddiffm FINDTHINMPOLERADDIFFM
-atradoff ATRADOFF   Obsolete: switches RF and radiation off
+.. list-table::
+
+   * - :func:`check_6d`
+     - CHECK_6D Checks the presence of longitudinal motion in a lattice.
+   * - :func:`FDW`
+     - FDW calculate radiation diffusion matrix of a wiggler element.
+   * - :func:`WigglerRadiation`
+     - WIGGLERRADIATION	Compute the radiation integrals in wigglers
+   * - :func:`findmpoleraddiffmatrix`
+     - FINDMPOLERADDIFFMATRIX calculate radiation diffusion matrix of a multipole element
+   * - :func:`atdiffmat`
+     - quantumDiff    Compute the radiation-diffusion matrix
+   * - :func:`getclass_6d`
+     - GETCLASS_6D    Private. Guess class for 6d motion
+   * - :func:`atgetU0`
+     - ATGETU0 Computes Energy loss per turn in eV .
+   * - :func:`findthickmpoleraddiffm`
+     - FINDTHICKMPOLERADDIFFM
+   * - :func:`check_radiation`
+     - CHECK_RADIATION	Obsolete: check the radiation state of a ring
+   * - :func:`atenergy`
+     - ATENERGY Gets the lattice energy
+   * - :func:`radiationoff`
+     - RADIATIONOFF turns classical radiation  OFF
+   * - :func:`DipoleRadiation`
+     - DIPOLERADIATION	Compute the radiation integrals in dipoles
+   * - :func:`atenable_6d`
+     - ATENABLE_6D switches RF and radiation on
+   * - :func:`radiationon`
+     - RADIATIONON turns classical radiation  ON
+   * - :func:`ElossRadiation`
+     - ELOSSRADIATION Compute the radiation integrals in EnergyLoss elements
+   * - :func:`ohmienvelope`
+     - OHMIENVELOPE calculates equilibrium beam envelope in a
+   * - :func:`atradon`
+     - ATRADON    Obsolete: switches RF and radiation on
+   * - :func:`quantumDiff`
+     - QUANTUMDIFF    Compute the radiation-diffusion matrix
+   * - :func:`thickmpoleraddiffm`
+     - FINDTHICKMPOLERADDIFFM
+   * - :func:`attapering`
+     - ATTAPERING Scale magnet strengths
+   * - :func:`atdisable_6d`
+     - ATDISABLE_6D  switches radiation and cavity off
+   * - :func:`findelemraddiffm`
+     - FINDELEMRADDIFFM
+   * - :func:`ElementRadiation`
+     - ELEMENTRADIATION - Compute the radiation integrals in dipoles
+   * - :func:`atsetenergy`
+     - ATSETENERGY sets the Energy field in all elements.
+   * - :func:`findthinmpoleraddiffm`
+     - FINDTHINMPOLERADDIFFM
+   * - :func:`thinmpoleraddiffm`
+     - FINDTHINMPOLERADDIFFM
+   * - :func:`atradoff`
+     - ATRADOFF   Obsolete: switches RF and radiation off
 
 .. py:function:: check_6d
 

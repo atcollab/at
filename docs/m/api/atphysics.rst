@@ -1,3 +1,5 @@
+.. _atphysics_module:
+
 atphysics
 =========
 
@@ -18,24 +20,42 @@ atphysics
 .. rubric:: Modules
 
 
-Orbit ORBIT
-nafflib NAFFLIB
-Radiation RADIATION
-LinearOptics LINEAROPTICS
-NonLinearDynamics NONLINEARDYNAMICS
-TuneAndChromaticity TUNEANDCHROMATICITY
-LongitudinalDynamics LONGITUDINALDYNAMICS
-ParameterSummaryFunctions PARAMETERSUMMARYFUNCTIONS
-TouschekPiwinski TOUSCHEKPIWINSKI
-CollectiveEffects COLLECTIVEEFFECTS
+.. list-table::
+
+   * - :ref:`orbit_module`
+     - ORBIT
+   * - :ref:`nafflib_module`
+     - NAFFLIB
+   * - :ref:`radiation_module`
+     - RADIATION
+   * - :ref:`linearoptics_module`
+     - LINEAROPTICS
+   * - :ref:`nonlineardynamics_module`
+     - NONLINEARDYNAMICS
+   * - :ref:`tuneandchromaticity_module`
+     - TUNEANDCHROMATICITY
+   * - :ref:`longitudinaldynamics_module`
+     - LONGITUDINALDYNAMICS
+   * - :ref:`parametersummaryfunctions_module`
+     - PARAMETERSUMMARYFUNCTIONS
+   * - :ref:`touschekpiwinski_module`
+     - TOUSCHEKPIWINSKI
+   * - :ref:`collectiveeffects_module`
+     - COLLECTIVEEFFECTS
 
 .. rubric:: Functions
 
 
-findspos FINDSPOS returns longitudinal positions of accelerator lattice elements.
-atavedata ATAVEDATA       Average of optical functions on selected elements
-PhysConstant Physical constants
-findrespm FINDRESPM computes the change in the closed orbit due to parameter perturbations
+.. list-table::
+
+   * - :func:`findspos`
+     - FINDSPOS returns longitudinal positions of accelerator lattice elements.
+   * - :func:`atavedata`
+     - ATAVEDATA       Average of optical functions on selected elements
+   * - :func:`PhysConstant`
+     - Physical constants
+   * - :func:`findrespm`
+     - FINDRESPM computes the change in the closed orbit due to parameter perturbations
 
 .. py:function:: findspos
 

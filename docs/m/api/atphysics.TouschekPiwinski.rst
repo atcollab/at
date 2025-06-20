@@ -1,16 +1,27 @@
+.. _touschekpiwinski_module:
+
 TouschekPiwinski
 ================
 
 .. rubric:: Functions
 
 
-TLT_IntPiw_k integral in Piwinski Formula for the Lifetime with u=tan^2(k)
-MomAperture_Project2Start MOMAPERTURE_PROJECT2START calculates the local momentum aperture.
-simpletestToucheckLT simple example of use of toucheck lifetime formula:
-TLT_IntPiw integral in Piwinski Formula for the Lifetime
-momentum_aperture_at THERING, ...
-MomAperture_allRing MomAperture_allRing returns positive and negative momentum aperture
-TouschekPiwinskiLifeTime function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
+.. list-table::
+
+   * - :func:`TLT_IntPiw_k`
+     - integral in Piwinski Formula for the Lifetime with u=tan^2(k)
+   * - :func:`MomAperture_Project2Start`
+     - MOMAPERTURE_PROJECT2START calculates the local momentum aperture.
+   * - :func:`simpletestToucheckLT`
+     - simple example of use of toucheck lifetime formula:
+   * - :func:`TLT_IntPiw`
+     - integral in Piwinski Formula for the Lifetime
+   * - :func:`momentum_aperture_at`
+     - THERING, ...
+   * - :func:`MomAperture_allRing`
+     - MomAperture_allRing returns positive and negative momentum aperture
+   * - :func:`TouschekPiwinskiLifeTime`
+     - function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
 
 .. py:function:: TLT_IntPiw_k
 

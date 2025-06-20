@@ -1,13 +1,21 @@
+.. _nafflib_module:
+
 nafflib
 =======
 
 .. rubric:: Functions
 
 
-naff_cc NAFF_CC Compile nafflibrary for Matlab
-calcnaff CALCNAFF Computes NAFF decomposition for a phase space trajectory
-naff_example Example to test naff within matlab
-nafflib NAFFLIB MATLAB to NAFF library
+.. list-table::
+
+   * - :func:`naff_cc`
+     - NAFF_CC Compile nafflibrary for Matlab
+   * - :func:`calcnaff`
+     - CALCNAFF Computes NAFF decomposition for a phase space trajectory
+   * - :func:`naff_example`
+     - Example to test naff within matlab
+   * - :func:`nafflib`
+     - NAFFLIB MATLAB to NAFF library
 
 .. py:function:: naff_cc
 

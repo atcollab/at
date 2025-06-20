@@ -1,11 +1,17 @@
+.. _collectiveeffects_module:
+
 CollectiveEffects
 =================
 
 .. rubric:: Functions
 
 
-atbeam ATBEAM generates a particle distribution according to a sigma matrix
-atsigma ATSIGMA constructs a beam sigma matrix 2x2 4x4 or 6x6
+.. list-table::
+
+   * - :func:`atbeam`
+     - ATBEAM generates a particle distribution according to a sigma matrix
+   * - :func:`atsigma`
+     - ATSIGMA constructs a beam sigma matrix 2x2 4x4 or 6x6
 
 .. py:function:: atbeam
 

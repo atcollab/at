@@ -1,15 +1,25 @@
+.. _parametersummaryfunctions_module:
+
 ParameterSummaryFunctions
 =========================
 
 .. rubric:: Functions
 
 
-atsummary ATSUMMARY  Print out various parameters of the current AT lattice
-twissring TWISSRING calculates linear optics functions for an UNCOUPLED ring
-RadIntegrals calcuate the contribution to the radiation integrals of a Wiggler.
-atx ATX Computes and displays global information
-twissline TWISSLINE calculates linear optics functions for an UNCOUPLED transport line
-ringpara RINGPARA  Print out various parameters of the current AT lattice
+.. list-table::
+
+   * - :func:`atsummary`
+     - ATSUMMARY  Print out various parameters of the current AT lattice
+   * - :func:`twissring`
+     - TWISSRING calculates linear optics functions for an UNCOUPLED ring
+   * - :func:`RadIntegrals`
+     - calcuate the contribution to the radiation integrals of a Wiggler.
+   * - :func:`atx`
+     - ATX Computes and displays global information
+   * - :func:`twissline`
+     - TWISSLINE calculates linear optics functions for an UNCOUPLED transport line
+   * - :func:`ringpara`
+     - RINGPARA  Print out various parameters of the current AT lattice
 
 .. py:function:: atsummary
 

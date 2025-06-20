@@ -1,17 +1,29 @@
+.. _orbit_module:
+
 Orbit
 =====
 
 .. rubric:: Functions
 
 
-xorbit_ct XORBIT_CT	Private function used by findsyncorbit
-findorbit4 FINDORBIT4 finds closed orbit in the 4-d transverse phase
-plotcod PLOTCOD Closed Orbit Distortion
-xorbit_6 XORBIT_6	Private function used by findorbit6
-findsyncorbit FINDSYNCORBIT finds closed orbit, synchronous with the RF cavity
-xorbit_dp XORBIT_DP  Private function used by findorbit4
-findorbit FINDORBIT find the closed orbit
-findorbit6 FINDORBIT6 finds closed orbit in the full 6-d phase space
+.. list-table::
+
+   * - :func:`xorbit_ct`
+     - XORBIT_CT	Private function used by findsyncorbit
+   * - :func:`findorbit4`
+     - FINDORBIT4 finds closed orbit in the 4-d transverse phase
+   * - :func:`plotcod`
+     - PLOTCOD Closed Orbit Distortion
+   * - :func:`xorbit_6`
+     - XORBIT_6	Private function used by findorbit6
+   * - :func:`findsyncorbit`
+     - FINDSYNCORBIT finds closed orbit, synchronous with the RF cavity
+   * - :func:`xorbit_dp`
+     - XORBIT_DP  Private function used by findorbit4
+   * - :func:`findorbit`
+     - FINDORBIT find the closed orbit
+   * - :func:`findorbit6`
+     - FINDORBIT6 finds closed orbit in the full 6-d phase space
 
 .. py:function:: xorbit_ct
 

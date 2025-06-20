@@ -1,14 +1,23 @@
+.. _tuneandchromaticity_module:
+
 TuneAndChromaticity
 ===================
 
 .. rubric:: Functions
 
 
-fitchrom2 FITCHROM2 fits chromaticity  of THERING using 2 sextupole families
-findtune FINDTUNE   get the tune value from turn by turn positions
-fittune2 FITTUNE2 fits linear tunes of THERING using 2 quadrupole families
-tunechrom TUNECHROM computes linear tunes and chromaticities
-intfft INTFFT Calculates the tune from interpolated FFT of the trajectory.
+.. list-table::
+
+   * - :func:`fitchrom2`
+     - FITCHROM2 fits chromaticity  of THERING using 2 sextupole families
+   * - :func:`findtune`
+     - FINDTUNE   get the tune value from turn by turn positions
+   * - :func:`fittune2`
+     - FITTUNE2 fits linear tunes of THERING using 2 quadrupole families
+   * - :func:`tunechrom`
+     - TUNECHROM computes linear tunes and chromaticities
+   * - :func:`intfft`
+     - INTFFT Calculates the tune from interpolated FFT of the trajectory.
 
 .. py:function:: fitchrom2
 
