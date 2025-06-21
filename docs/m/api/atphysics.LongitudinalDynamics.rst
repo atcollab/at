@@ -44,7 +44,7 @@ LongitudinalDynamics
    |    h is the harmonic number
    |    alpha is the momentum compaction factor
    | 
-   |   See also at**rfacc**
+   |   See also atRFacc
 
 .. py:function:: atBunchLength(ring,ib,zn)
 

@@ -1226,7 +1226,7 @@ lattice
    |    R2 = R1'
    | 
    |   NOTES
-   |   1. This function is deprecated. Use at**settilt** instead
+   |   1. This function is deprecated. Use atsettilt instead
    | 
    |  See also SETSHIFT MKSROLLMAT
 
