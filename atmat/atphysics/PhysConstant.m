@@ -1,4 +1,5 @@
-%Physical constants
+classdef PhysConstant
+%PHYSCONSTANT    Physical constants
 %
 %Automatically generated from https://physics.nist.gov/cuu/Constants/Table/allascii.txt
 %
@@ -11,7 +12,6 @@
 %The 2022 adjustment was carried out under the auspices of the CODATA Task Group
 %on Fundamental Constants.
 
-classdef PhysConstant
 
     properties(Constant=true)
 

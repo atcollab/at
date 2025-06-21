@@ -8,20 +8,8 @@ atutils
 
 .. list-table::
 
-   * - :class:`getargs`
-     - Process positional arguments from the input arguments
-   * - :class:`getdparg`
-     - Handle positional dp arguments
-   * - :class:`getenvopt`
-     - (NAME, DEFAULTVALUE)
-   * - :class:`getflag`
-     - Check the presence of a flag in an argument list
-   * - :class:`getoption`
-     - Extract a keyword argument from an argument list
-   * - :class:`parseargs`
-     - Check and expands optional argument lists
-   * - :class:`setoption`
-     - Set AT preference values
+   * - :class:`atoptions`
+     - Singleton class for the storage of AT default values
 
 .. rubric:: Functions
 
@@ -45,6 +33,7 @@ atutils
 
 .. py:function:: atoptions
 
+   | Singleton class for the storage of AT default values
 
 .. py:function:: getargs(argin,def1,def2,...)
 
