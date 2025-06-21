@@ -8,55 +8,71 @@ LongitudinalDynamics
 
 .. list-table::
 
-   * - :func:`cavityoff`
-     - CAVITYOFF turns cavities OFF
-   * - :func:`phis`
-     - phase = phis(U0MeV,VrfMV)
-   * - :func:`atRFacc`
-     - ATRFACC Computes RF acceptance of the ring
-   * - :func:`atSetCavityPhase`
-     - SETCAVITYPHASE     Set the TimeLag attribute of RF cavities
-   * - :func:`atBunchLength`
-     - bunch length due to the potential well effect
-   * - :func:`mcf`
-     - MCF momentum compaction factor
-   * - :func:`cavityon`
-     - CAVITYON turns Cavities ON
-   * - :func:`nus`
-     - NUS Computes synchrotron tune from RF parameters
-   * - :func:`RFacc`
-     - RFACC Computes the RF acceptance with linear formula
    * - :func:`BunchLength`
      - 
+   * - :func:`RFacc`
+     - Computes the RF acceptance with linear formula
+   * - :func:`atBunchLength`
+     - bunch length due to the potential well effect
+   * - :func:`atRFacc`
+     - Computes RF acceptance of the ring
+   * - :func:`atSetCavityPhase`
+     - SETCAVITYPHASE     Set the TimeLag attribute of RF cavities
    * - :func:`atsetcavity`
      - ATSECAVITY Set the parameters of RF cavities
+   * - :func:`cavityon`
+     - turns Cavities ON
+   * - :func:`mcf`
+     - momentum compaction factor
+   * - :func:`nus`
+     - Computes synchrotron tune from RF parameters
+   * - :func:`phis`
+     - phase = phis(U0MeV,VrfMV)
 
-.. py:function:: cavityoff
+.. py:function:: BunchLength
 
-   |   Sets PassMethod to DriftPass or IdentityPass depending
-   |   on the value of 'Length' field
+
+.. py:function:: RFacc(vrf,u0,e0,h,alpha)
+
+   | Computes the RF acceptance with linear formula
+   |    **delta_max_rf = rfacc(vrf,u0,e0,h,alpha)**
    | 
-   |   See also CAVITYON, RADIATIONON, RADIATIONOFF, SETCAVITY
-
-.. py:function:: phis
-
+   |    This function computes the RF acceptance
+   |    Vrf is the RF voltage in V
+   |    U0 is the energy loss per turn in eV
+   |    E0 is the energy of the beam in eV
+   |    h is the harmonic number
+   |    alpha is the momentum compaction factor
    | 
-   |  this function returns the synchronous phase in radians
-   |  input:
-   |  U0MeV is energy loss per turn in MeV
-   |  VrfMV is the RF voltage in MV
+   |   See also at**rfacc**
 
-.. py:function:: atRFacc
+.. py:function:: atBunchLength(ring,ib,zn)
 
-   |  delta_max_rf = atRFacc(ring)
+   | bunch length due to the potential well effect
+   |  the output is the zerocurrent bunch length x bunch lengthening
+   | 
+   |    **bl = atbunchlength(ring,ib,zn)**
+   | 
+   |  Ib is the bunch current [A] (it may be a vector for multiple values)
+   |  Zn is the longitudinal broadband impedance [Ohms]
+   |  ring is the at ring without radiation
+   |  BL is the bunch length in metres
+   | 
+   |    see also: BunchLength
+
+.. py:function:: atRFacc(ring)
+
+   | Computes RF acceptance of the ring
+   |  **delta_max_rf = atrfacc(ring)**
    |    The functions computes the RF acceptance of the ring
    |    ring is tha at lattice without radiation
    |    delta_max_rf is the RF acceptance
-   |    
+   | 
    |   See also RFacc
 
 .. py:function:: atSetCavityPhase
 
+   | SETCAVITYPHASE     Set the TimeLag attribute of RF cavities
    | 
    | NEWRING=SETCAVITYPHASE(RING)
    |    Adjust the TimeLag attribute of RF cavities based on frequency,
@@ -79,127 +95,50 @@ LongitudinalDynamics
    |            'tracking': The losses are obtained by tracking without cavities.
    |                        Needs radiation ON, takes into account all radiating elements.
 
-.. py:function:: atBunchLength
+.. py:function:: atsetcavity(ring,...,'frequency',frequency,...)
 
-   |  the output is the zerocurrent bunch length x bunch lengthening
+   | ATSECAVITY Set the parameters of RF cavities
    | 
-   |    BL = atBunchLength(ring,Ib,Zn)
-   | 
-   |  Ib is the bunch current [A] (it may be a vector for multiple values)
-   |  Zn is the longitudinal broadband impedance [Ohms]
-   |  ring is the at ring without radiation
-   |  BL is the bunch length in metres 
-   | 
-   |    see also: BunchLength
-
-.. py:function:: mcf
-
-   |  MCF(RING) calculates momentum compaction factor of RING
-   | 
-   |  MCF(RING,DPP) computes the momentum compaction for off-momentum DPP
-   | 
-   |  IMPORTANT!!!
-   |  MCF gives a wrong result with 6-d rings. The RING should be set to 4d.
-   |  See also: ATDISABLE_6D, CHECK_6D
-
-.. py:function:: cavityon
-
-   | 
-   |  CAVITYON looks for elements that have field Frequency
-   |     and sets PassMethod for them to RFCavityPass
-   |  CAVITYON(ENERGY)
-   |     In addition sets the E0 field of the global variable GLOBVAL
-   |     to energy - design energy [eV]
-   |     If GLOBVAL does not exist CAVITYON creates it
-   | 
-   |  See also CAVITYOFF, RADIATIONON, RADIATIONOFF, SETCAVITY
-
-.. py:function:: nus
-
-   |  Nus = nus (VrfMV, alpha, U0MeV, E0MeV, h)
-   |  this function return the synchrotron tune
-   |  input:
-   |  VrfMV is the RF voltage in MV
-   |  alpha is the momentum compaction factor
-   |  U0MeV is the energy lost per turn in MeV
-   |  E0MeV is the beam energy in MeV
-   |  h is the harmonic number
-
-.. py:function:: RFacc
-
-   |    delta_max_rf = RFacc(Vrf,U0,E0,h,alpha)
-   | 
-   |    This function computes the RF acceptance
-   |    Vrf is the RF voltage in V
-   |    U0 is the energy loss per turn in eV
-   |    E0 is the energy of the beam in eV
-   |    h is the harmonic number
-   |    alpha is the momentum compaction factor
-   | 
-   |   See also atRFacc
-
-.. py:function:: BunchLength
-
-   |  bunch length due to the potential well effect
-   |  the output is the zerocurrent bunch length x bunch lengthening
-   | 
-   |    BL = BunchLength (Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta,circ)
-   | 
-   |  Ib is the bunch current [A] (it may be a vector for multiple values)
-   |  Zn is the longitudinal broadband impedance [Ohms]
-   |  Vrf is the RF voltage [V] (it may be a vector for multiple values)
-   |  U0 is the energy loss around the ring [eV]
-   |  E0 is the beam energy [eV]
-   |  h is the harmonic number
-   |  alpha is the momentum compaction factor
-   |  sigmadelta is the energy spread
-   |  circ is the ring circumference
-   |  
-   |    see also: atBunchLength
-
-.. py:function:: atsetcavity
-
-   | 
-   | ATSETCAVITY may be used in two modes:
+   | **atsetcavity** may be used in two modes:
    | 
    | Upgrade mode
    | ===================================================
-   |  By default, ATSETCAVITY will act on the "main" cavities: they are defined by the
+   |  By default, **atsetcavity** will act on the "main" cavities: they are defined by the
    |  cavpts ring property, or if absent by cavities at the lowest frequency.
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'Frequency',FREQUENCY,...)
+   | **newring=atsetcavity(ring,...,'frequency',frequency,...)**
    |    Set the cavity frequency [Hz]. FREQUENCY is a scalar or an array as
    |    long as the list of selected cavities
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal',...)
+   | **newring=atsetcavity(ring,...,'frequency','nominal',...)**
    |    Set the cavity frequency to the nominal value according to
    |    circumference and harmonic number
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dp',DP)
+   | **newring=atsetcavity(ring,...,'frequency','nominal','dp',dp)**
    |    Set the cavity frequency to the nominal value for the specified dp
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dct',DCT)
+   | **newring=atsetcavity(ring,...,'frequency','nominal','dct',dct)**
    |    Set the cavity frequency to the nominal value for the specified dct
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','df',DF)
+   | **newring=atsetcavity(ring,...,'frequency','nominal','df',df)**
    |    Set the cavity frequency to the nominal value + df
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
+   | **newring=atsetcavity(ring,...,'voltage',voltage,...)**
    |    Set the total voltage (all cells) [V]. VOLTAGE will be distributed over the
    |    cells: CELL_VOLTAGE = VOLTAGE / PERIODICITY.
    |    Then if CELL_VOLTAGE is a scalar, it will be equally shared among the
    |    selected cavities. Otherwise it is an array as long as the list of
    |    selected cavities.
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'HarmNumber',H,...)
+   | **newring=atsetcavity(ring,...,'harmnumber',h,...)**
    |    Set the harmonic number. H is a scalar or an array as
    |    long as the list of selected cavities
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
+   | **newring=atsetcavity(ring,...,'timelag',timelag,...)**
    |    Set the time lag [m], . TIMELAG is a scalar or an array as
    |    long as the list of selected cavities
    | 
-   | NEWRING=ATSETCAVITY(RING,...,'cavpts',CAVPTS)
+   | **newring=atsetcavity(ring,...,'cavpts',cavpts)**
    |    CAVPTS is the location of the selected RF cavities. The default is to act on the
    |    "main" cavities: they are defined by the cavpts ring property, or if absent by
    |    cavities at the lowest frequency.
@@ -210,7 +149,7 @@ LongitudinalDynamics
    | 
    | Compatibility mode
    | ===================================================
-   | NEWRING = ATSETCAVITY(RING,RFV,RADFLAG,HARM_NUMBER)
+   | **newring = atsetcavity(ring,rfv,radflag,harm_number)**
    |   RING         Ring structure
    |   RFV          RF voltage (full ring) [V]
    |   RADFLAG      0/1: activate/desactivate radiation (atradon/atradoff)
@@ -218,7 +157,7 @@ LongitudinalDynamics
    | 
    |   NOTES
    |   1. This mode is deprecated and should be replaced by
-   |        RING=ATSETCAVITY(RING,'Frequency','nominal','HarmNumber',HARM_NUMBER, 'Voltage',RFV)
+   |        **ring=atsetcavity(ring,'frequency','nominal','harmnumber',harm_number, 'voltage',rfv)**
    |        RING=atSetCavityPhase(RING) (optional)
    |        RING=atenable_6d(RING)      (optional)
    |   2. All the N cavities will have a voltage RFV/N
@@ -227,4 +166,49 @@ LongitudinalDynamics
    |      synchronous phase.
    | 
    |   See also atSetCavityPhase, atsetRFcavity, atenable_6d, atdisable_6d, atgetU0
+
+.. py:function:: cavityon(energy)
+
+   | turns Cavities ON
+   | 
+   |  **cavityon** looks for elements that have field Frequency
+   |     and sets PassMethod for them to RFCavityPass
+   |  **cavityon(energy)**
+   |     In addition sets the E0 field of the global variable GLOBVAL
+   |     to energy - design energy [eV]
+   |     If GLOBVAL does not exist **cavityon** creates it
+   | 
+   |  See also CAVITYOFF, RADIATIONON, RADIATIONOFF, SETCAVITY
+
+.. py:function:: mcf(ring)
+
+   | momentum compaction factor
+   |  **mcf(ring)** calculates momentum compaction factor of RING
+   | 
+   |  **mcf(ring,dpp)** computes the momentum compaction for off-momentum DPP
+   | 
+   |  IMPORTANT!!!
+   |  **mcf** gives a wrong result with 6-d rings. The RING should be set to 4d.
+   |  See also: ATDISABLE_6D, CHECK_6D
+
+.. py:function:: nus
+
+   | Computes synchrotron tune from RF parameters
+   |  **nus = nus** (VrfMV, alpha, U0MeV, E0MeV, h)
+   |  this function return the synchrotron tune
+   |  input:
+   |  VrfMV is the RF voltage in MV
+   |  alpha is the momentum compaction factor
+   |  U0MeV is the energy lost per turn in MeV
+   |  E0MeV is the beam energy in MeV
+   |  h is the harmonic number
+
+.. py:function:: phis
+
+   | phase = phis(U0MeV,VrfMV)
+   | 
+   |  this function returns the synchronous phase in radians
+   |  input:
+   |  U0MeV is energy loss per turn in MeV
+   |  VrfMV is the RF voltage in MV
 

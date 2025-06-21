@@ -8,25 +8,22 @@ TuneAndChromaticity
 
 .. list-table::
 
-   * - :func:`fitchrom2`
-     - FITCHROM2 fits chromaticity  of THERING using 2 sextupole families
    * - :func:`findtune`
-     - FINDTUNE   get the tune value from turn by turn positions
+     - get the tune value from turn by turn positions
+   * - :func:`fitchrom2`
+     - fits chromaticity  of THERING using 2 sextupole families
    * - :func:`fittune2`
-     - FITTUNE2 fits linear tunes of THERING using 2 quadrupole families
-   * - :func:`tunechrom`
-     - TUNECHROM computes linear tunes and chromaticities
+     - fits linear tunes of THERING using 2 quadrupole families
    * - :func:`intfft`
-     - INTFFT Calculates the tune from interpolated FFT of the trajectory.
+     - Calculates the tune from interpolated FFT of the trajectory.
+   * - :func:`tunechrom`
+     - computes linear tunes and chromaticities
 
-.. py:function:: fitchrom2
+.. py:function:: findtune(pos,method)
 
-   |  FITCHROM2(NEWCHROM,SEXTUPOLEFAMILY1,SEXTUPOLEFAMILY2)
-
-.. py:function:: findtune
-
+   | get the tune value from turn by turn positions
    | 
-   | TUNE=FINDTUNE(POS,METHOD)
+   | **tune=findtune(pos,method)**
    | 
    | POS:       Tune-by-turn particle position
    | METHOD:    Method for tune determination:
@@ -34,39 +31,56 @@ TuneAndChromaticity
    |                2: Interpolation on fft results
    |                3: Windowing + interpolation
    | 
-   | [TUNE,SPECTRUM]=FINDTUNE(...) Also returns the fft
+   | **[tune,spectrum]=findtune(...)** Also returns the fft
 
-.. py:function:: fittune2
+.. py:function:: fitchrom2(newchrom,sextupolefamily1,sextupolefamily2)
 
-   |  FITTUNE2(NEWTUNES,QUADFAMILY1,QUADFAMILY2)
-   |  [dK, Jinv] = FITTUNE2(NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+   | fits chromaticity  of THERING using 2 sextupole families
+   |  **fitchrom2(newchrom,sextupolefamily1,sextupolefamily2)**
 
-.. py:function:: tunechrom
+.. py:function:: fittune2(newtunes,quadfamily1,quadfamily2)
 
+   | fits linear tunes of THERING using 2 quadrupole families
+   |  **fittune2(newtunes,quadfamily1,quadfamily2)**
+   |  **[dk, jinv] = fittune2(newtunes,quadfamily1,quadfamily2)**
+
+.. py:function:: intfft(x)
+
+   | Calculates the tune from interpolated FFT of the trajectory.
+   |  **intfft(x)** X must be a column vector.
+   |   If X is a matrix - each column is treated as
+   |   a separate trajectory
+   |  **intfft(x,guess,delta)** searches for peaks in the FFT spectrum
+   |   only within the range (X-DELTA ... X+DELTA)
+   |   The same values of GUESS and DELTA are used for all columns of X
+
+.. py:function:: tunechrom(ring)
+
+   | computes linear tunes and chromaticities
    | 
-   | TUNE=TUNECHROM(RING)	Quick calculation of the fractional part of the tune
+   | **tune=tunechrom(ring)**	Quick calculation of the fractional part of the tune
    | 	from numerically computed transfer matrix.
    | 
-   |  [TUNE, CHROM] = TUNECHROM(RINGD,DP,'get_chrom') - optionally computes the
+   |  **[tune, chrom] = tunechrom(ringd,dp,'get_chrom')** - optionally computes the
    |     chromaticities by numerical differentiation from the difference between
    |    tune values at momentums DP+0.5*DPStep and DP-0.5*DPStep
    | 
-   | [...]=TUNECHROM(...,'orbit',ORBITIN	Do not search for closed orbit.
+   | **[...]=tunechrom**(...,'orbit',ORBITIN	Do not search for closed orbit.
    |    Instead ORBITIN,a 6x1 vector of initial conditions is used:
    |    This syntax is useful to avoid recomputing the closed orbit if is
    |    already known;
    | 
-   | [...]=TUNECHROM(RING,DP)       (obsolete)
-   | [...]=TUNECHROM(RING,...,'dp',DP)	Specify the momentum deviation when
+   | **[...]=tunechrom(ring,dp)       (obsolete)**
+   | **[...]=tunechrom(ring,...,'dp',dp)**	Specify the momentum deviation when
    |    radiation is OFF (default: 0)
    | 
-   | [...]=TUNECHROM(RING,...,'dct',DCT) Specify the path lengthening when
+   | **[...]=tunechrom(ring,...,'dct',dct)** Specify the path lengthening when
    |    radiation is OFF (default: 0)
    | 
-   | [...]=TUNECHROM(RING,...,'df',DF) Specify the RF frequency deviation when
+   | **[...]=tunechrom(ring,...,'df',df)** Specify the RF frequency deviation when
    |    radiation is OFF (default: 0)
    | 
-   |  Note: TUNECHROM computes tunes and chromaticities from the one-turn
+   |  Note: **tunechrom** computes tunes and chromaticities from the one-turn
    |    transfer matrix. The transfer matrix is computed from tracking using
    |    numerical differentiation. The error of numerical differentiation
    |    is sensitive to the step size. (Reference: Numerical Recipes)
@@ -77,13 +91,4 @@ TuneAndChromaticity
    |    in chromaticity calculations
    | 
    |  See also ATLINOPT6
-
-.. py:function:: intfft
-
-   |  INTFFT(X) X must be a column vector.
-   |   If X is a matrix - each column is treated as
-   |   a separate trajectory
-   |  INTFFT(X,GUESS,DELTA) searches for peaks in the FFT spectrum
-   |   only within the range (X-DELTA ... X+DELTA) 
-   |   The same values of GUESS and DELTA are used for all columns of X 
 

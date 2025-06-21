@@ -8,34 +8,30 @@ TouschekPiwinski
 
 .. list-table::
 
-   * - :func:`TLT_IntPiw_k`
-     - integral in Piwinski Formula for the Lifetime with u=tan^2(k)
    * - :func:`MomAperture_Project2Start`
-     - MOMAPERTURE_PROJECT2START calculates the local momentum aperture.
-   * - :func:`simpletestToucheckLT`
-     - simple example of use of toucheck lifetime formula:
-   * - :func:`TLT_IntPiw`
-     - integral in Piwinski Formula for the Lifetime
-   * - :func:`momentum_aperture_at`
-     - THERING, ...
+     - calculates the local momentum aperture.
    * - :func:`MomAperture_allRing`
      - MomAperture_allRing returns positive and negative momentum aperture
+   * - :func:`TLT_IntPiw`
+     - integral in Piwinski Formula for the Lifetime
+   * - :func:`TLT_IntPiw_k`
+     - integral in Piwinski Formula for the Lifetime with u=tan^2(k)
    * - :func:`TouschekPiwinskiLifeTime`
      - function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
+   * - :func:`momentum_aperture_at`
+     - 
 
-.. py:function:: TLT_IntPiw_k
+.. py:function:: MomAperture_Project2Start(thering)
 
-
-.. py:function:: MomAperture_Project2Start
-
+   | calculates the local momentum aperture.
    | 
-   |  MOMAPERTURE_PROJECT2START is a Bipartition search of the negative and 
+   |  **momaperture_project2start** is a Bipartition search of the negative and
    |  positive stability thesholds in the 5th dimension (relative momentum).
    |   -The 6D closed orbit is taken into account.
    |   -Particles launched at different REFPTS along the ring are first projected
    |   to the ring last element so that all particles can be tracked together.
    | 
-   |  [ETN, ETP] = MOMAPERTURE_PROJECT2START(THERING)
+   |  **[etn, etp] = momaperture_project2start(thering)**
    | 
    |  Inputs:
    |        THERING: ring used for tracking.
@@ -66,18 +62,9 @@ TouschekPiwinski
    |  the reference point refpts with positive and negative momentum offset is
    |  lost or not.
 
-.. py:function:: simpletestToucheckLT
+.. py:function:: MomAperture_allRing(..., nturns)
 
-   |  [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
-
-.. py:function:: TLT_IntPiw
-
-
-.. py:function:: momentum_aperture_at
-
-
-.. py:function:: MomAperture_allRing
-
+   | MomAperture_allRing returns positive and negative momentum aperture
    |                     boundaries where the particle is still alive.
    | 
    |                     The boundary width (i.e. the uncertainty) is equal to
@@ -86,56 +73,65 @@ TouschekPiwinski
    |                     particle unstable.
    | 
    |  [map_l,map_h] ...
-   |     = MomAperture_allRing(
+   |     = **momaperture_allring**(
    |                           THERING, ...
    |                           POINTS ...
    |                          )
-   |  [...] = MomAperture_allRing(..., NTURNS)
+   |  **[...] = momaperture_allring(..., nturns)**
    |          Tracks over NTURNS to get the momentum aperture. Default 100
-   |          e.g [dppM,dppP]=MomAperture_allRing(THERING,positions,nturns)
+   |          e.g **[dppm,dppp]=momaperture_allring(thering,positions,nturns)**
    | 
-   |  [...] = MomAperture_allRing(..., 'reforbit',ORBITIN)
+   |  **[...] = momaperture_allring(..., 'reforbit',orbitin)**
    |          The initial particle coordinates are taken from ORBITIN.
    |          Default zeros(6,length(POINTS))
    | 
-   |  [...] = MomAperture_allRing(..., 'xyinitoffsets',[x y])
+   |  **[...] = momaperture_allring(..., 'xyinitoffsets',[x y])**
    |          The transverse offsets to add to the reference orbit.
    |          Default 1e-5*ones(length(POINTS),2)
    | 
-   |  [...] = MomAperture_allRing(..., 'deltalimits',[deltapos deltaneg])
+   |  **[...] = momaperture_allring(..., 'deltalimits',[deltapos deltaneg])**
    |          The energy offset limits. Default [0.1 -0.1]
    | 
-   |  [...] = MomAperture_allRing(..., 'initialguess',[posguess negguess])
+   |  **[...] = momaperture_allring(..., 'initialguess',[posguess negguess])**
    |          The starting point of the recursive energy offsets.
    |          Default [0.0 0.0]
    | 
-   |  [...] = MomAperture_allRing(..., 'energysteps',[posstep negstep])
+   |  **[...] = momaperture_allring(..., 'energysteps',[posstep negstep])**
    |          The positive and negative initial energy steps.
    |          Default [0.01 -0.01]
    | 
-   |  [...] = MomAperture_allRing(..., 'ntimessplit',NSPLIT)
+   |  **[...] = momaperture_allring(..., 'ntimessplit',nsplit)**
    |          The number of recursive calls reducing the step size. Default 2
    | 
-   |  [...] = MomAperture_allRing(..., 'splitdivisor',SPLITTDIVISOR)
+   |  **[...] = momaperture_allring(..., 'splitdivisor',splittdivisor)**
    |          The step divisor every time we split the step. Default 10.
    | 
-   |  [...] = MomAperture_allRing(..., 'verbose',VERBOSE)
+   |  **[...] = momaperture_allring(..., 'verbose',verbose)**
    |          Print info the current position. Default 0.
    |          If set to 1 it will print info at every reference point.
    |          If set to 2 it will print info at each energy step.
    | 
-   |  ex: [map_l,map_h] = MomAperture_allRing(THERING,points,nturns);
+   |  ex: **[map_l,map_h] = momaperture_allring(thering,points,nturns)**;
    |  ex: [map_l,map_h] = ...
-   |    MomAperture_allRing(THERING,points,nturns,'reforbit',findorbit6(THERING,points));
+   |    **momaperture_allring(thering,points,nturns,'reforbit',findorbit6(thering,points))**;
 
-.. py:function:: TouschekPiwinskiLifeTime
+.. py:function:: TLT_IntPiw
 
+   | integral in Piwinski Formula for the Lifetime
+
+.. py:function:: TLT_IntPiw_k
+
+   | integral in Piwinski Formula for the Lifetime with u=tan^2(k)
+
+.. py:function:: TouschekPiwinskiLifeTime(..., 'abstol', abstol)
+
+   | function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
    | 
    |  evaluates Touschek Lifetime using Piwinski formula
    | 
    |  INPUT
    | 
-   |  TouschekPiwinskiLifeTime(
+   |  **touschekpiwinskilifetime**(
    |   ring,
    |   momentumaperturecolumnvector,  column array (size of r or positions)
    |                                  it can be length(r)x2, for positive and
@@ -151,17 +147,17 @@ TouschekPiwinski
    | 
    |  OUTPUT
    | 
-   |   contributionsTL 1/T contribution at each element 
-   |                   if dpp has positive and negative apertures, then contributionTL is a 2 columns vector      
+   |   contributionsTL 1/T contribution at each element
+   |                   if dpp has positive and negative apertures, then contributionTL is a 2 columns vector
    | 
    |   Tl  Lifetime in seconds 1/Tl=sum(contributionsTL.*L)/sum(L);
    | 
    |  NAME-VALUE PAIRS
    | 
-   |  TouschekPiwinskiLifeTime(..., 'AbsTol', abstol)
+   |  **touschekpiwinskilifetime(..., 'abstol', abstol)**
    |    Absolute tolerance for the 'integral' function. Default: 1.0e-16
    | 
-   |  TouschekPiwinskiLifeTime(..., 'RelTol', abstol)
+   |  **touschekpiwinskilifetime(..., 'reltol', abstol)**
    |    Relative tolerance for the 'integral' function. Default: 1.0e-12
    | 
    |  "The Touscheck Effect in strong focusing storage rings"
@@ -170,4 +166,7 @@ TouschekPiwinski
    |  "Touscheck Effect calculation and its applications to a transport line"
    |  A.Xiao M. Borland, Proceedings of PAC07, Albuquerque, New Mexico, USA
    | 
+
+.. py:function:: momentum_aperture_at
+
 

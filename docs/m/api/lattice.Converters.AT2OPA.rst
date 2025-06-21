@@ -9,11 +9,11 @@ AT2OPA
 .. list-table::
 
    * - :func:`AT_2_OPA`
-     -  function AT_2_OPA(AT_ring,linename)
+     - function (AT_ring,linename)
 
 .. py:function:: AT_2_OPA
 
-   |  function AT_2_OPA(AT_ring,linename)
+   | function (AT_ring,linename)
    |  this functions converts the AT lattice AT_ring in OPA format.
    | 
    | 

@@ -22,25 +22,19 @@ MADX2AT
 .. list-table::
 
    * - :func:`ParseAtributesMADX_2_AT`
-     -  determines atribute and sets field in sxs{i} structure AT
-   * - :func:`buildATLattice`
-     -  given a list (cell array) of elements with specified field Spos (center of element (madx default)) in a
+     - determines atribute and sets field in sxs{i} structure AT
    * - :func:`atfrommadx`
      - function atfrommadx(seqfilemadX,E0,outfilename)
+   * - :func:`buildATLattice`
+     - given a list (cell array) of elements with specified field Spos (center of element (madx default)) in a
    * - :func:`reshapeToCellArray`
-     -  if CEL_CEL is a cell array of structures and cell arrays it converts it a
+     - if CEL_CEL is a cell array of structures and cell arrays it converts it a
 
 .. py:function:: ParseAtributesMADX_2_AT
 
-   |  determines atribute and sets field in sxs{i} structure AT
+   | determines atribute and sets field in sxs{i} structure AT
    | 
    |  created 6-sept-2012
-
-.. py:function:: buildATLattice
-
-   |  given a list (cell array) of elements with specified field Spos (center of element (madx default)) in a
-   |  vector returns a cell array with elements without Spos field and
-   |  appropriate Drifts spaces between. Drifts of the same length have the same name.
 
 .. py:function:: atfrommadx
 
@@ -89,8 +83,14 @@ MADX2AT
    |           cavity : DriftPass
    | 
 
+.. py:function:: buildATLattice
+
+   | given a list (cell array) of elements with specified field Spos (center of element (madx default)) in a
+   |  vector returns a cell array with elements without Spos field and
+   |  appropriate Drifts spaces between. Drifts of the same length have the same name.
+
 .. py:function:: reshapeToCellArray
 
-   |  if CEL_CEL is a cell array of structures and cell arrays it converts it a
+   | if CEL_CEL is a cell array of structures and cell arrays it converts it a
    |  cell array of structures.
 

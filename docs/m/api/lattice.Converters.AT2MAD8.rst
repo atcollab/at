@@ -9,11 +9,11 @@ AT2MAD8
 .. list-table::
 
    * - :func:`AT_2_mad8`
-     -  function [elelat,def,lines]=AT_2_mad8(AT_ring,linename)
+     - function [elelat,def,lines]=AT_2_mad8(AT_ring,linename)
 
 .. py:function:: AT_2_mad8
 
-   |  function [elelat,def,lines]=AT_2_mad8(AT_ring,linename)
+   | function [elelat,def,lines]=AT_2_mad8(AT_ring,linename)
    |  this functions converts the AT lattice AT_ring in mad8 format.
    | 
    |  a MAD8 LINE is generated.

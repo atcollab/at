@@ -9,14 +9,15 @@ CollectiveEffects
 .. list-table::
 
    * - :func:`atbeam`
-     - ATBEAM generates a particle distribution according to a sigma matrix
+     - generates a particle distribution according to a sigma matrix
    * - :func:`atsigma`
-     - ATSIGMA constructs a beam sigma matrix 2x2 4x4 or 6x6
+     - constructs a beam sigma matrix 2x2 4x4 or 6x6
 
-.. py:function:: atbeam
+.. py:function:: atbeam(np,sigma)
 
-   |   PARTICLES=ATBEAM(NP,SIGMA)  Generate a particle distribution according to a sigma matrix
-   |   PARTICLES=ATBEAM(NP,SIGMA,ORBIT) adds a center of mass to the distribution%
+   | generates a particle distribution according to a sigma matrix
+   |   **particles=atbeam(np,sigma)**  Generate a particle distribution according to a sigma matrix
+   |   **particles=atbeam(np,sigma,orbit)** adds a center of mass to the distribution%
    | 
    |   INPUTS
    |     1. NP     number of particles
@@ -31,22 +32,23 @@ CollectiveEffects
    | 
    |   See also atsigma
 
-.. py:function:: atsigma
+.. py:function:: atsigma(beta,alpha,emit)
 
+   | constructs a beam sigma matrix 2x2 4x4 or 6x6
    | 
-   |    SIGMA=ATSIGMA(BETA,ALPHA,EMIT)
+   |    **sigma=atsigma(beta,alpha,emit)**
    |        builds a 2x2 sigma matrix for a transverse plane
    | 
-   |    SIGMA=ATSIGMA(ESPREAD,BLENGTH)
+   |    **sigma=atsigma(espread,blength)**
    |        builds a 2x2 sigma matrix for the longitudinal plane
    | 
-   |    SIGMA=ATSIGMA(BETAX,ALPHAX,EMITX,BETAZ,ALPHAZ,EMITZ)
+   |    **sigma=atsigma(betax,alphax,emitx,betaz,alphaz,emitz)**
    |        builds a 4x4 sigma matrix
    | 
-   |    SIGMA=ATSIGMA(BETAX,ALPHAX,EMITX,BETAZ,ALPHAZ,EMITZ,ESPREAD,BLENGTH)
+   |    **sigma=atsigma(betax,alphax,emitx,betaz,alphaz,emitz,espread,blength)**
    |        builds a 6x6 sigma matrix
    | 
-   |    SIGMA=ATSIGMA(ATSTRUCT)
+   |    **sigma=atsigma(atstruct)**
    |        builds a 6x6 sigma matrix
    | 
    |   See also atx

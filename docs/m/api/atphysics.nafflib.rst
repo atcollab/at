@@ -8,22 +8,17 @@ nafflib
 
 .. list-table::
 
-   * - :func:`naff_cc`
-     - NAFF_CC Compile nafflibrary for Matlab
    * - :func:`calcnaff`
-     - CALCNAFF Computes NAFF decomposition for a phase space trajectory
+     - Computes NAFF decomposition for a phase space trajectory
+   * - :func:`naff_cc`
+     - Compile nafflibrary for Matlab
    * - :func:`naff_example`
      - Example to test naff within matlab
-   * - :func:`nafflib`
-     - NAFFLIB MATLAB to NAFF library
 
-.. py:function:: naff_cc
+.. py:function:: calcnaff(y, yp, win)
 
-   | 
-
-.. py:function:: calcnaff
-
-   |  [nu amp phase] = calcnaff(Y, Yp, Win)
+   | Computes NAFF decomposition for a phase space trajectory
+   |  **[nu amp phase] = calcnaff(y, yp, win)**
    | 
    |   INPUTS
    |   1. Y  - position vector
@@ -57,30 +52,18 @@ nafflib
    | 
    |   Examples
    |   NT = 9996; % divisible by 6
-   |   simple quasiperiodic (even period) motion 
+   |   simple quasiperiodic (even period) motion
    |   y =2+0.1*cos(pi*(0:NT-1))+0.00125*cos(pi/3*(0:NT-1));
    |   yp=2+0.1*sin(pi*(0:NT-1))+0.00125*sin(pi/3*(0:NT-1));
-   |  
-   |   [nu ampl phase] = calcnaff(y,yp,1); % with windowing
+   | 
+   |   **[nu ampl phase] = calcnaff(y,yp,1)**; % with windowing
+
+.. py:function:: naff_cc
+
+   | Compile nafflibrary for Matlab
+   | 
 
 .. py:function:: naff_example
 
-
-.. py:function:: nafflib
-
-   | 
-   |   INPUTS
-   |   1. Real part
-   |   2. Imaginary part
-   |   3. Window type
-   |   4. Number of frequencies
-   |   5. Debug 0 or 1
-   | 
-   |   OUPUTS
-   |   1. Fundamental frequency vector
-   |   2. Amplitude vector
-   |   3. Phase vector
-   | 
-   |   EXAMPLE
-   |   1. [frequency amplitude phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);
+   | Example to test naff within matlab
 

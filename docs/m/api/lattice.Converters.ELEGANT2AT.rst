@@ -9,13 +9,13 @@ ELEGANT2AT
 .. list-table::
 
    * - :func:`ParseAtributesELEGANT_2_AT`
-     -  determines atribute and sets field in sxs{i} structure AT
+     - determines atribute and sets field in sxs{i} structure AT
    * - :func:`elegant2at`
      - function elegant2at(elegantlattice,E0,outfilename)
 
 .. py:function:: ParseAtributesELEGANT_2_AT
 
-   |  determines atribute and sets field in sxs{i} structure AT
+   | determines atribute and sets field in sxs{i} structure AT
    | 
    |  created 6-sept-2012
 

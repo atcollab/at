@@ -9,13 +9,13 @@ MAD82MADX
 .. list-table::
 
    * - :func:`mad8TOmadx`
-     -  converts mad8 sequence files to madX
+     - converts mad8 sequence files to madX
 
-.. py:function:: mad8TOmadx
+.. py:function:: mad8TOmadx(seqfilemad8)
 
-   |  converts mad8 sequence files to madX
+   | converts mad8 sequence files to madX
    | 
-   | function [seqfileMADX]=mad8TOmadx(seqfilemad8)
+   | function **[seqfilemadx]=mad8tomadx(seqfilemad8)**
    | 
    |  This procedure reads a saved sequence in
    |  mad8 (SAVE,FILE='seqfilemad8';)
