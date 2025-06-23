@@ -27,6 +27,18 @@ higher-level functions to provide physics results.
 
 .. toctree::
    :maxdepth: 2
+   :caption: User guide
+   :hidden:
+
+   api/lattice
+   api/atphysics
+   api/atplot
+   api/attrack
+   api/atutils
+   api/atmat
+
+.. toctree::
+   :maxdepth: 2
    :caption: Release notes:
    :hidden:
 
