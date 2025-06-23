@@ -15,12 +15,12 @@ AT2OPA
 
    | function (AT_ring,linename)
    |  this functions converts the AT lattice AT_ring in OPA format.
-   | 
-   | 
+   
+   
    |  file ['' linename '_lattice.opa'] is generated contiaining the lattice
    |  elements definitions and the LINE. no other comands introduced
-   | 
-   | 
+   
+   
    |  OPA may be found here: http://people.web.psi.ch/streun/opa/
-   | 
+   
 

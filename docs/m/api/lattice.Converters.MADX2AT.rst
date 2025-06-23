@@ -3,19 +3,6 @@
 MADX2AT
 =======
 
-.. toctree::
-   :hidden:
-
-   lattice.Converters.MADX2AT.Examples
-
-.. rubric:: Modules
-
-
-.. list-table::
-
-   * - :ref:`examples_module`
-     - EXAMPLES
-
 .. rubric:: Functions
 
 
@@ -33,46 +20,46 @@ MADX2AT
 .. py:function:: ParseAtributesMADX_2_AT
 
    | determines atribute and sets field in sxs{i} structure AT
-   | 
+   
    |  created 6-sept-2012
 
 .. py:function:: atfrommadx
 
    | function atfrommadx(seqfilemadX,E0,outfilename)
    |  tansform madX sequence file (savesequence) file into AT lattice structure.
-   | 
+   
    |  This procedure reads a saved lattice (sequence in madx) in madX
    |  and converts it to an AT lattice
-   | 
+   
    |  (madx comands to save the sequences :
-   | 
+   
    |   _______ MADX code _________
    |   use,period=sequencename1;
    |   use,period=sequencename2;
    |   use,period=sequencename2;
    |   SAVE,FILE='seqfilemadX.seq';
    |   ___________________________
-   | 
+   
    |   seqfilemadX.seq will contain sequencename1 sequencename2 sequencename3
    |   in the correct format in a single file
-   | 
+   
    |  )
-   | 
+   
    |  The routine outputs a Matlab macro with all the AT defitions and variables as
    |  in the madX file
-   | 
+   
    |  The order of the declarations is the same in the two files.
    |  declarations that contain other variables are moved to the end. (this may not be enough)
-   | 
-   | 
+   
+   
    |  Works also with single madX files not containing comands, only
    |  definitions.
-   | 
+   
    |  parameters:
    |     - seqfilemadX=name of the mad8 lattice file
    |     - E0  = design energy
    |     - outfilename (default: seqfilemadX_AT_LATTICE.mat)
-   | 
+   
    |  default pass methods:
    |           quadrupoles : StrMPoleSymplectic4Pass
    |           dipole : BndMPoleSymplectic4Pass
@@ -81,7 +68,7 @@ MADX2AT
    |           thinmultipole : ThinMPolePass
    |           correctors : ThinMPolePass
    |           cavity : DriftPass
-   | 
+   
 
 .. py:function:: buildATLattice
 

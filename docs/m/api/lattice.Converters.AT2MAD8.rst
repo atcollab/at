@@ -15,11 +15,11 @@ AT2MAD8
 
    | function [elelat,def,lines]=AT_2_mad8(AT_ring,linename)
    |  this functions converts the AT lattice AT_ring in mad8 format.
-   | 
+   
    |  a MAD8 LINE is generated.
-   | 
+   
    |  file ['' linename '_lattice.mad8'] is generated contiaining the lattice
    |  (elelat) elements definitions (defs) and the LINE (lines). no other comands introduced
-   | 
-   | 
+   
+   
 

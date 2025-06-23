@@ -58,16 +58,16 @@ atphysics
 .. py:function:: atavedata(ring,dpp,refpts)
 
    | Average of optical functions on selected elements
-   | 
+   
    | **[lindata,avebeta,avemu,avedisp,tunes,chroms]=atavedata(ring,dpp,refpts)**
-   | 
+   
    | LINDATA : Identical to ATLINOPT output
    | AVEBEA :  Average Beta functions
    | AVEMU :   Average phase advance
    | AVEDISP : Average dispersion
    | TUNES : Vector of tunes
    | CHROMS : Vector of chromaticites
-   | 
+   
    | **[lindata,avebeta,avemu,avedisp,tunes,chroms]=atavedata(ring,dpp,refpts,orbitin)**
    |     does not search for closed orbit. instead ORBITIN is used
 
@@ -77,56 +77,56 @@ atphysics
    |  Two calling syntax options
    |  1. **findrespm(ring, obsindex, perturbindex, pvalue, 'field', m, n, orbitfunction, args)**
    |  2. !!! not implemented yet **findrespm(ring, obsindex, perturbgroup, pvalue, orbitfunction, args)**
-   | 
+   
    |  RING      - ring lattice
    |  OBSINDEX  - indexes of elements where the orbit is observed (at the entrance)
    |  PERTURBINDEX  - Integer indexes of elements whose parameters are perturbed
    |                  used with syntax 1 only.
-   | 
+   
    |  PERTURBGROUP  - cell array of AT paramgroups. See ATPARAMGROUP
    |                used with syntax 2 only
-   | 
+   
    |  PVALUE    - amount of peturbation
    |              (Numeric array or scalar if all perturbations are the same magnitude)
-   | 
+   
    |  FIELD,M,N are only use with syntax 1.
-   | 
+   
    |  FIELD     - field name of the parameter to perturb (string)
-   | 
+   
    |  M,N       - index in the matrix, if the field is a matrix
    |              For example to perturb the quadrupole field in a
    |              multipole element
    |              FIELD = 'PolynomB', M = 1, N = 2
-   | 
+   
    |  ORBITFUNCTION  - specifies which of the FINDORBIT functions is used
-   | 
+   
    |              'findorbit4' (default)
    |              'findsyncorbit'
    |              'findorbit6'
-   | 
+   
    |  ARGS - additioanl arguments may be passsed to some of the FINDORBIT functions
    |              findorbit4     - constant momentum error dP
    |              findsyncorbit  - fixed orbit lengthening dCT
-   | 
-   | 
+   
+   
    |  Returns a 1-by-4 cell array of O-by-P matrixes
    |  where O = length(OBSINDEX) and P = length(PERTURB)
    |  one for each of the close orbit components: X, PX, Y, PY
-   |  See also ATPARAMGROUP, FINDORBIT, FINDORBIT4, FINDORBIT6, FINDSYNCORBIT
+   | See also :func:`atparamgroup`, :func:`findorbit`, :func:`findorbit4`, :func:`findorbit6`, :func:`findsyncorbit`
 
 .. py:function:: findspos(ring,1:length(ring))
 
    | returns longitudinal positions of accelerator lattice elements.
    |   Return value is a row vector of positions S at the entrance of each
    |   element specified REFPTS (index list or logical mask)
-   | 
+   
    |  Note: REFPTS is an array of increasing indexes that
    |    select elements from range 1 to length(LATTICE)+1.
    |    REFPTS is allowed to go 1 point beyond the
    |    number of elements. In this case the last point is
    |    the EXIT of the last element. If LATTICE is a RING
    |    it is also the entrance of the first element after 1 turn.
-   | 
+   
    |    Note:
    |    1. Use **findspos(ring,1:length(ring))** for to find
    |       longitudinal position of all elements

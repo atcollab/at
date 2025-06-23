@@ -68,83 +68,83 @@ element_creation
 .. py:function:: atM66(famname,atstruct,passmethod)
 
    | Create an element applying an arbitrary 6x6 transfer matrix
-   | 
+   
    | FAMNAME	family name
    | M66        transfer matrix, defaults to Identity(6)]
    | PASSMETHOD	tracking function, defaults to 'Matrix66Pass'
-   | 
-   | **atm66(famname,atstruct,passmethod)**
-   |    **atm66** will generate the matrix by calling FINDM66(ATSTRUCT)
-   | 
+   
+   | **atM66(famname,atstruct,passmethod)**
+   |    **atM66** will generate the matrix by calling FINDM66(ATSTRUCT)
+   
    | ATSTRUCT   AT structure
 
 .. py:function:: atM66Tijk
 
    | ATM66(FAMNAME,M66,Tijk,PASSMETHOD)
    |    atM66 creates an element that applies an arbitrary matrix m66
-   | 
+   
    | FAMNAME	family name
    | M66        transfer matrix, defaults to Identity(6)]
    | Tijk       2nd order transfer matrix, defaults to zeros(6,6,6)]
    | PASSMETHOD	tracking function, defaults to 'MatrixTijkPass'
-   | 
+   
    | ATM66(FAMNAME,ATSTRUCT,PASSMETHOD)
    |    atM66 will generate the matrix by calling FINDM66(ATSTRUCT)
-   | 
+   
    | ATSTRUCT   AT structure
 
 .. py:function:: atQuantDiff(famname,diffmat)
 
    | atQuantDiff creates a quantum diffusion element.
-   | 
-   | **elem=atquantdiff(famname,diffmat)** uses the given diffusion matrix
+   
+   | **elem=atQuantDiff(famname,diffmat)** uses the given diffusion matrix
    |    FAMNAME:   family name
    |    DIFFMAT:   Diffusion matrix
-   | 
-   | **elem=atquantdiff(famnane,ring)** computes the diffusion matrix of the ring
+   
+   | **elem=atQuantDiff(famnane,ring)** computes the diffusion matrix of the ring
    |    FAMNAME:   family name
    |    RING:      lattice with radiation on
-   | 
-   | **elem=atquantdiff(famnane,ring,'orbit0',orbit)** computes the diffusion
+   
+   | **elem=atQuantDiff(famnane,ring,'orbit0',orbit)** computes the diffusion
    |    matrix of the ring without computing the closed orbit
    |    ORBIT:	closed orbit at beginning of the ring
    |            (this option is useful for the islands)
-   | 
+   
    | The default pass method is 'QuantDiffPass' which uses a global
    | pseudo-random pcg32 stream inplemented in C. More details at:
    | https://github.com/atcollab/at/discussions/879
-   | 
-   | See also quantumDiff
+   
+   | See also :func:`quantumdiff`
 
 .. py:function:: atSimpleQuantDiff(famname,...)
 
    | SimpleQuantDiff creates a simple quantum difusion element
-   | 
-   | **elem=atsimplequantdiff(famname,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...)**
    |    FAMNAME:   family name
-   | 
-   | **elem=atsimplequantdiff(famname,...,'betax',betax,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'betax',betax,...)**
    |    BETAX:   Horizontal beta function. Default: 1.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'betay',betay,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'betay',betay,...)**
    |    BETAY:   Vertical beta function. Default: 1.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'emitx',emitx,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'emitx',emitx,...)**
    |    EMITX:   Horizontal equilibrium emittance. Default: 0.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'emity',emity,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'emity',emity,...)**
    |    EMITY:   Vertical equilibrium emittance. Default: 0.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'espread',espread,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'espread',espread,...)**
    |    ESPREAD: Equilibrium momentum spread. Default: 0.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'taux',tau_x,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'taux',tau_x,...)**
    |    TAU_X: Horizontal damping time. Default: 0.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'tauy',tau_y,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'tauy',tau_y,...)**
    |    TAU_Y: Vertical damping time. Default: 0.0
-   | 
-   | **elem=atsimplequantdiff(famname,...,'tauz',tau_z,...)**
+   
+   | **elem=atSimpleQuantDiff(famname,...,'tauz',tau_z,...)**
    |    TAU_Z: Longitudinal damping time. Default: 0.0
 
 .. py:function:: ataperture
@@ -153,21 +153,21 @@ element_creation
    |  **ataperture**(FAMNAME,LIMITS,PASSMETHOD
    |  define physical aperture element (collimator)
    |  lim=[-x,+x,-y,+y];
-   | 
+   
    |  lim={[-x,+x,-y,+y],[-x,+x,-y,+y],[-x,+x,-y,+y],...};
    |  will generate various aperture elements (one for every set of errors)
-   | 
-   |   See also setphysicalaperture
-   | 
+   
+   
+   | See also :func:`setphysicalaperture`
 
 .. py:function:: atbaselem(famname,method,'fieldname1',value1,...)
 
    | Create an AT element structure + various checks
-   | 
+   
    | **elem=atbaselem(famname,method,'fieldname1',value1,...)** create AT element
    |    Create an AT element structure and check the consistence of
    |    PolynomA, PolynomB, MaxOrder and NumIntSteps
-   | 
+   
    |   NOTES
    |     1. length of PolynomA and PolynomB are equal (zero padding)
    |     2. MaxOrder is always lenght(PolynomA) - 1
@@ -175,57 +175,57 @@ element_creation
 .. py:function:: atcorrector(famname,length,kick,passmethod)
 
    | Creates a drift space element with class 'Corrector'
-   | 
+   
    |   **atcorrector(famname,length,kick,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FAMNAME		family name
    |   2. LENGTH		length [m]
    |   3. KICK        [hor. kick, vert. kick] [rad]
    |   4. PASSMETHOD  tracking function, defaults to 'CorrectorPass'
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |   1. Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
+   
    |   NOTES
    |   1. Fieldname can be called by calling the passmethod
    |      [req opt] = CorrectorPass
    |                  where req are mandatory field and opt are optional fields
-   | 
-   |   See also atquadrupole, atsextupole, atsbend, atrbend
+   
    |            atmultipole, atthinmultipole, atmarker
+   | See also :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`
 
 .. py:function:: atcrabcavity(famname,length,voltages,frequency,harmonicnumber)
 
    | Creates an crab cavity element with Class 'CrabCavity'
-   | 
+   
    |   **atcrabcavity(famname,length,voltages,frequency,harmonicnumber)**
-   | 
+   
    |   INPUTS
    |    1. FAMNAME	    Family name
    |    2. LENGTH		Length [m]
    |    3. VOLTAGES	    Array [Horizontal, Vertical] Peak voltages [V]
    |    4. FREQUENCY	RF frequency [Hz]
    |    5. HARMNUMBER	Harmonic Number
-   | 
+   
    |   OUTPUTS
    |       1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |     **atcrabcavity(famname,...,passmethod,'fieldname1',value1,...)**
    |     Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
-   | See also  atdrift, atsextupole, atsbend, atrbend, atskewquad, atrfcavity
+   
    |           atmultipole, atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`, :func:`atrfcavity`
 
 .. py:function:: atdampMatElem(famname,ring,cavipass,bendpass,quadpass)
 
    | atdampMatElem creates an element that applies the global damping matrix
-   | **elem=atdampmatelem(famname,ring,cavipass,bendpass,quadpass)**
-   | 
+   | **elem=atdampMatElem(famname,ring,cavipass,bendpass,quadpass)**
+   
    | FAMNAME:   family name
    | RING:		initial AT structure, without radiation passmethods
    | CAVIPASS:	pass method for cavities (default RFCavityPass)
@@ -237,18 +237,18 @@ element_creation
    |            '' makes no change,
    |            'auto' wille substitute 'Pass' with 'RadPass' in any method
    |            (default: '')
-   | 
+   
 
 .. py:function:: atdrift(famname,length,passmethod)
 
    | Creates a drift space element with Class 'Drift'
    | **atdrift(famname,length,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FAMNAME	   - Family name
    |   2. LENGTH	   - Length [m]
    |   3. PASSMETHOD - Tracking function, defaults to 'DriftPass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -256,24 +256,24 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |   1. **atdrift(famname,length,passmethod,'fieldname1',value1,...)**
    |     each pair {'fieldname',value} is added to the element
-   | 
+   
 
 .. py:function:: atenergyloss(famname,eloss,passmethod)
 
    | atenergyloss creates an energy loss element
-   | 
+   
    | **elem=atenergyloss(famname,eloss,passmethod)**
    |    FAMNAME:    family name
    |    ELOSS:      Energy loss [eV]
    |    PASSMETHOD: Tracking methods, defaults to 'IdentityPass'
-   | 
+   
    | the "energy loss" element is taken into account in ATSUMMARY: it adds damping by
    | contributing to the I2 integral, thus reducing the equilibrium emittance.
    | But it does not generate any diffusion. This makes sense only if the losses
@@ -282,18 +282,18 @@ element_creation
 .. py:function:: atidtable
 
    | Creates an ID element
-   | 
+   
    |  FamName	family name
    |  Nslice	number of slices (1 means the wiggler is represented by a
    |            single kick in the center of the device).
    |  filename	name of file with wiggler tracking tables.
    |  Energy    Energy of the machine, needed for scaling
    |  method    tracking function. Defaults to 'IdTablePass'
-   | 
+   
    |  The tracking table is described in
    |  P. Elleaume, "A new approach to the electron beam dynamics in undulators
    |  and wigglers", EPAC92.
-   | 
+   
    |  returns assigned structure with class 'KickMap'
 
 .. py:function:: atinsertiondevicekickmap
@@ -302,13 +302,13 @@ element_creation
 .. py:function:: atmarker(famname,passmethod)
 
    | Creates a marker space element
-   | 
+   
    |   **atmarker(famname,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FAMNAME	 - Family name
    |   2. PASSMETHOD - Tracking function, defaults to 'IdentityPass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -316,48 +316,48 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |   1. **atmarker(famname,passmethod,'fieldname1',value1,...)**
    |     each pair {'fieldname',value} is added to the element
-   | 
+   
    |   NOTES
    |   1. Fieldname can be called by calling the passmethod
    |      [req opt] = IdentityPass
    |                  where req are mandatory field and opt are optional fields
-   | 
-   | See also  atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,
+   
    |           atthinmultipole, atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`
 
 .. py:function:: atmonitor(famname,'fieldname1',value1,...)
 
    | Creates a Beam Position Monitor element with Class 'Monitor'
-   | 
+   
    |   INPUTS
    |   1. fname - Family name
-   | 
+   
    |   **atmonitor(famname,'fieldname1',value1,...)**
    |    Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
-   |   See also atdrift, atsextupole, atsbend, atrbend
+   
    |           atmultipole, atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`
 
 .. py:function:: atmultipole(famname,length,polynoma,polynomb,passmethod)
 
    | Creates a multipole element
-   | 
+   
    |   **atmultipole(famname,length,polynoma,polynomb,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FNAME      - Family name
    |   2. LENGTH     - Length[m]
    |   3. POLYNOMA   - Skew [dipole quad sext oct];
    |   4. POLYNOMB   - Normal [dipole quad sext oct];
    |   5. PASSMETHOD - Tracking function. Defaults to 'StrMPoleSymplectic4Pass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1			 -	6 x 6 rotation matrix at the entrance
    | 	 R2        	 -	6 x 6 rotation matrix at the entrance
@@ -365,29 +365,29 @@ element_creation
    | 	 T2			 -	6 x 1 translation at exit
    | 	 NumIntSteps -   Number of integration steps
    | 	 MaxOrder    -    Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |     1. **atmultipole(famname,length,polynoma,polynomb,passmethod,'fieldname1',value1,...)**
    |    each pair {'fieldname',value} is added to the element
-   | 
-   |   See also atdrift, atquadrupole, atsextupole, atsbend, atrbend, atskewquad,
+   
    |           atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`
 
 .. py:function:: atquadrupole(famname,length,k,passmethod)
 
    | Creates a quadrupole element with Class 'Quadrupole'
-   | 
+   
    | **atquadrupole(famname,length,k,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FAMNAME    - Family name
    |   2. LENGTH     - Length [m]
    |   3. K          - Strength [m-2]
    |   4. PASSMETHOD - Tracking function, defaults to 'StrMPoleSymplectic4Pass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1			 -	6 x 6 rotation matrix at the entrance
    | 	 R2        	 -	6 x 6 rotation matrix at the entrance
@@ -395,34 +395,34 @@ element_creation
    | 	 T2			 -	6 x 1 translation at exit
    | 	 NumIntSteps -   Number of integration steps
    | 	 MaxOrder    -   Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |   1. Fieldname can be called by calling the passmethod
    |      [req opt] = StrMPoleSymplectic4Pass
    |                  where req are mandatory field and opt are optional fields
    |   2. **atquadrupole(famname,length,k,passmethod,'fieldname1',value1,...)**
    |        each pair {'fieldname',value} is added to the element
-   | 
+   
    |   3. Quadrupole fringe field can be activated at element entrance or exit
    |      with option FringeQuadEntrance/FringeQuadExit=0,1,2
    |      Version 0: no fringe field
    |      Version 1: Lee-Whiting formula
    |      Version 2: Lee-Whiting Elegant-like formula where 5 integral need to
    |      be provided
-   | 
-   |   See also atdrift, atsextupole, atsbend, atrbend, atskewquad,
+   
    |           atmultipole, atthinmultipole, atmarker, atcorrector, atringparam
+   | See also :func:`atdrift`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`
 
 .. py:function:: atrbend(famname,length,bendingangle,k,passmethod)
 
    | Creates a rectangular bending magnet element with class 'Bend'
-   | 
+   
    |   Two calling methods (that can be combined)
    |   **atrbend(famname,length,bendingangle,k,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FNAME        - Family name
    |   2. LENGTH       - Length of the arc for an on-energy particle
@@ -430,7 +430,7 @@ element_creation
    |   3. BENDINGANGLE - Total bending angle [rad], defaults to 0
    |   4. K			   - Focusing strength, defaults to 0
    |   5. PASSMETHOD   -Tracking function, defaults to 'BndMPoleSymplectic4Pass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -438,21 +438,21 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |   1. **atrbend(famname,length,bendingangle,k,passmethod,'fieldname1',value1,...)**
    |     each pair {'fieldname',value} is added to the element
-   | 
+   
    |   NOTES
    |   1. Fieldname can be called by calling the passmethod
    |      [req opt] = BndMPoleSymplectic4Pass
    |                  where req are mandatory field and opt are optional fields
    |   2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
    |             fields
-   | 
+   
    |        FringeBendEntrance/FringeBendExit = 0,1,2,3
    |        Version 0 no dipole fringe fields
    |        Version 1 legacy version Brown First Order (K. Brown. A First and Second Order
@@ -463,42 +463,42 @@ element_creation
    |                  the Advanced Light Source. London, UK, 1994.)
    |        Version 3 THOMX (Dipole Fringe Field Effects in the ThomX Ring, J. Zhang and
    |                  A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
-   | 
+   
    |        FringeQuadEntrance/FringeQuadExit = 0,1,2
    |        Version 0 no quadrupole fringe fields
    |        Version 1 Lee-Whiting Formula
    |        Version 2 Linear quadrupole fringe field using the 5 integrant a la
    |                  Elegant
-   | 
-   |   See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+   
    |           atmultipole, atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atskewquad`
 
 .. py:function:: atrbendtune(elem)
 
    | Set X0ref and RefDZ for rectangular bending magnets
-   | 
+   
    | **newelem=atrbendtune(elem)**
    |    Set the X0ref and RefDZ attributes for rectangular bending magnets
-   | 
+   
    | This function must be called after creating a rectangular bending magnet
    | or after setting its polynomA/B attributes. It will set the correct X0ref
    | and RefDZ attributes to get a zero closed orbit for the reference particle.
-   | 
+   
    | Example:
-   | 
+   
    | >> % Identify the rectangular bends
    | >> rbends=atgetcells(ring,...);
    | >> % Set their correct attributes
    | >> ring(rbends)=cellfun(@**atrbendtune**,ring(rbends),'UniformOutput',false);
-   | 
+   
    | Does nothing if the passmethod is not a rectangular bend passmethod
 
 .. py:function:: atrfcavity(famname,length,voltage,frequency,harmonicnumber,energy,passmethod)
 
    | Creates an rfcavity element with Class 'RFCavity'
-   | 
+   
    |   **atrfcavity(famname,length,voltage,frequency,harmonicnumber,energy,passmethod)**
-   | 
+   
    |   INPUTS
    |    1. FAMNAME	    Family name
    |    2. LENGTH		Length [m]
@@ -507,46 +507,46 @@ element_creation
    |    5. HARMNUMBER	Harmonic Number
    |    6. ENERGY       Energy [eV]
    |    7. PASSMETHOD	Tracking function, defaults to 'RFCavityPass'
-   | 
+   
    |   OUTPUTS
    |       1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |     **atrfcavity(famname,...,passmethod,'fieldname1',value1,...)**
    |     Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
+   
    |   NOTES
    |       1. Fieldname can be called by calling the passmethod
    |          **[req opt] = atrfcavity**
    |                      where req are mandatory field and opt are optional
    |                      fields
-   | %See also  atdrift, atsextupole, atsbend, atrbend, atskewquad
    |           atmultipole, atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`
 
 .. py:function:: atringparam(famname,e0,nbperiods)
 
    | Creates a RingParameter Element which should go at the beginning of the ring
-   | 
+   
    |   **atringparam(famname,e0,nbperiods)**
-   | 
+   
    |   INPUTS
    |   1. FAMNAME	- Family name which may be used as name of Ring
    |   2. E0        - Energy of electrons
    |   3. NBPERIODS - Periodicity of the ring (1 if ring is already expanded)
-   | 
+   
    |   OUTPUTS
    |   1. elem - RingParam class elem
-   | 
-   |   See also atdrift, atquadrupole, atsextupole, atsbend, atrbend
+   
    |           atmultipole, atthinmultipole
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`
 
 .. py:function:: atsbend(famname,length,bendingangle,k,passmethod)
 
    | Creates a sector bending magnet element with class 'Bend'
-   | 
+   
    |   Two calling methods (that can be combined)
    |   **atsbend(famname,length,bendingangle,k,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FNAME        	Family name
    |   2. LENGTH        Length of the arc for an on-energy particle
@@ -554,7 +554,7 @@ element_creation
    |   3. BENDINGANGLE	Total bending angle [rad], defaults to 0
    |   4. K				Focusing strength, defaults to 0
    |   5. PASSMETHOD    Tracking function, defaults to 'BndMPoleSymplectic4Pass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -562,13 +562,13 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   **atsbend(famname,length,bendingangle,k,passmethod,'fieldname1',value1,...)**
    |   Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
+   
    |   NOTES
    |   1. Fieldname can be called by calling the passmethod
    |          [req opt] = BndMPoleSymplectic4Pass
@@ -576,7 +576,7 @@ element_creation
    |                      fields
    |   2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
    |             fields
-   | 
+   
    |        FringeBendEntrance/FringeBendExit = 0,1,2,3
    |        Version 0 no dipole fringe fields
    |        Version 1 legacy version Brown First Order (K. Brown. A First and Second Order
@@ -587,28 +587,28 @@ element_creation
    |                  the Advanced Light Source. London, UK, 1994.)
    |        Version 3 THOMX (Dipole Fringe Field Effects in the ThomX Ring, J. Zhang and
    |                  A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
-   | 
+   
    |        FringeQuadEntrance/FringeQuadExit = 0,1,2
    |        Version 0 no quadrupole fringe fields
    |        Version 1 Lee-Whiting Formula
    |        Version 2 Linear quadrupole fringe field using the 5 integrant a la
    |                  Elegant
-   | 
-   |   See also atdrift, atquadrupole, atsextupole, atrbend
+   
    |           atmultipole, atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atrbend`
 
 .. py:function:: atsextupole(famname,length,s,passmethod)
 
    | Creates a sextupole element with class 'Sextupole'
-   | 
+   
    |   **atsextupole(famname,length,s,passmethod)**
-   | 
+   
    |   INPUTS
    | 	 1. FNAME        	family name
    |     2. LENGTH			length [m]
    |     3. S				strength [m-2]
    |     4. PASSMETHOD     tracking function, defaults to 'StrMPoleSymplectic4Pass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -616,28 +616,28 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |       1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |     **atsextupole(famname,length,s,passmethod,'fieldname1',value1,...)**
    |     Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
-   |   See also: atdrift, atquadrupole, atmultipole, atsbend,
+   
    |             atrbend,atskewquad, atmultipole, atthinmultipole, atmarker,
    |             atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atmultipole`, :func:`atsbend`
 
 .. py:function:: atskewquad(famname,length,qs,passmethod)
 
    | Creates a skew quadrupole element with Class 'Multipole'
    | **atskewquad(famname,length,qs,passmethod)**
-   | 
+   
    |   INPUTS
    |   1. FAMNAME - Family name
    |   2. LENGTH  - Length [m]
    |   3. Qs      - Skew quad strength [m-2]
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -645,29 +645,29 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |   1.  **atskewquad(fname, l, qs, method)**
-   | 
-   |   See also atdrift, atquadrupole, atsextupole, atsbend, atrbend,
+   
    |           atmultipole, atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`
 
 .. py:function:: atsolenoid
 
    | Creates a new solenoid element with Class 'Solenoid'
-   | 
+   
    |    Elem =solenoid('FAMILYNAME',Length [m],KS,'METHOD')
-   | 
+   
    |   INPUTS
    | 	1. FamName		  family name
    | 	2. Length	      length[m]
    | 	3. KS             solenoid strength KS [rad/m]
    | 	4. PassMethod     name of the function to use for tracking
-   | 
-   | 
+   
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -675,31 +675,31 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   NOTES
    |   1. Fieldname can be called by calling the passmethod
    |      [req opt] = BndMPoleSymplectic4Pass
    |                  where req are mandatory field and opt are optional
    |                  fields
-   | 
-   |   See also atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,
+   
    |           atthinmultipole, atmarker, atcorrector
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`
 
 .. py:function:: atthinmultipole(famname,polynoma,polynomb,passmethod)
 
    | Creates a thin multipole element
-   | 
+   
    |  **atthinmultipole(famname,polynoma,polynomb,passmethod)**
-   | 
+   
    |   INPUTS
    | 	 1. FNAME           family name
    | 	 2. POLYNOMA        skew [dipole quad sext oct];
    | 	 3. POLYNOMB        normal [dipole quad sext oct];
    | 	 4. PASSMETHOD      tracking function. Defaults to 'ThinMPolePass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     R1				6 x 6 rotation matrix at the entrance
    | 	 R2        		6 x 6 rotation matrix at the entrance
@@ -707,35 +707,35 @@ element_creation
    | 	 T2				6 x 1 translation at exit
    | 	 NumIntSteps    Number of integration steps
    | 	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-   | 
+   
    |   OUTPUTS
    |       1. ELEM - Structure with the AT element
-   | 
+   
    |   EXAMPLES
    |     **atthinmultipole(famname,polynoma,polynomb,passmethod,'fieldname1',value1,...)**
    |     Each pair {'FIELDNAME',VALUE} is added to the element
-   | 
+   
    |   NOTES
    |       1. Fieldname can be called by calling the passmethod
    |          [req opt] = BndMPoleSymplectic4Pass
    |                      where req are mandatory field and opt are optional
    |                      fields
-   | 
-   | See also  ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND ATSKEWQUAD,
+   
    |           ATMULTIPOLE, ATMARKER, ATCORRECTOR
+   | See also :func:`atdrift`, :func:`atquadrupole`, :func:`atsextupole`, :func:`atsbend`, :func:`atrbend`, :func:`atskewquad`
 
 .. py:function:: atvariablemultipole(famname,mode,passmethod,[key,value]...)
 
    | Creates a variable thin multipole element
-   | 
+   
    |   **atvariablemultipole(famname,mode,passmethod,[key,value]...)**
-   | 
+   
    |   INPUTS
    |     FNAME          Family name
    |     MODE           Excitation mode: 'SINE', 'WHITENOISE' or 'ARBITRARY'.
    |                    Default: 'SINE'
    |     PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
-   | 
+   
    |   OPTIONS (order does not matter)
    |     AMPLITUDEA     Vector or scalar to define the excitation amplitude for
    |                    PolynomA
@@ -756,10 +756,10 @@ element_creation
    |                    * t1<t<t2: exciation amplitude is constant
    |                    * t2<t<t3: exciation amplitude is linearly ramped down
    |                    * t3<t: exciation amplitude is zero
-   | 
+   
    |   OUTPUTS
    |   1. ELEM - Structure with the AT element
-   | 
+   
    |   NOTES
    |     1. For all excitation modes at least one amplitude (A or B) is
    |     required. The default excitation is SINE
@@ -767,30 +767,30 @@ element_creation
    |     AMPLITUDE is required
    |     3. For ARBITRARY excitation modes the FUNC corresponding to the input
    |     AMPLITUDE is required
-   | 
+   
    |   EXAMPLES
-   | 
+   
    |  % Create a sinusoidal dipole with amplitude 0.1 mrad and frequency 1 kHz
    |  >> **atvariablemultipole('acm','sine','amplitudeb',1.e-4,'frequencyb',1.e3)**;
-   | 
+   
    |  % Create a white noise dipole excitation of amplitude 0.1 mrad
    |  >> **atvariablemultipole('acm','whitenoise','amplitudeb',1.e-4)**;
 
 .. py:function:: atwiggler(famname, length, lw, bmax, energy, passmethod)
 
    | Creates a wiggler
-   | 
+   
    | **elem=atwiggler(famname, length, lw, bmax, energy, passmethod)**
-   | 
+   
    |  FAMNAME       family name
    |  LENGTH        total length
    |  LW            Period length
    |  BMAX          Peak magnetic field [T]
    |  ENERGY        Beam energy [eV]
    |  PASSMETHOD    Tracking function. Default 'GWigSymplecticPass'
-   | 
+   
    | **elem=atwiggler(...,'keyword',value...)**
-   | 
+   
    |  Keywords:
    |  Nstep		number of integration steps per period (default 5)
    |  Nmeth		symplectic integration method, 2nd or 4th order: 2 or 4 (default 4)
@@ -798,6 +798,6 @@ element_creation
    |                6xNH matrix, with NH number of harmonics
    |  Bx		harmonics of the vertical wigglers. Default []
    |                6xNV matrix, with NV number of harmonics
-   | 
+   
    | see also: GWigSymplecticPass
 
