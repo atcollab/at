@@ -34,6 +34,7 @@ higher-level functions to provide physics results.
    api/atphysics
    api/atplot
    api/attrack
+   api/atmatch
    api/atutils
    api/atmat
 

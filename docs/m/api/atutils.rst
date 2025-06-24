@@ -9,7 +9,7 @@ atutils
 .. list-table::
 
    * - :class:`atoptions`
-     - 
+     - Definition of default parameters
 
 .. rubric:: Functions
 
@@ -31,8 +31,11 @@ atutils
    * - :func:`setoption`
      - Set AT preference values
 
-.. py:function:: atoptions
+.. py:class:: atoptions
 
+   | Definition of default parameters
+   
+   |  Singleton class for the storage of AT default values
 
 .. py:function:: getargs(argin,def1,def2,...)
 
@@ -166,7 +169,7 @@ atutils
    | **[range,args] = getoption(args, 'range', 1:10)**; % Extract a keyword argument
    | [width, height] = getargs(args, 210, 297});    % Extract positional arguments
    
-   | See also :func:`getflag`, :func:`getargs`, :func:`setoption`, :func:`atoptions`
+   | See also :func:`getflag`, :func:`getargs`, :func:`setoption`, :class:`atoptions`
 
 .. py:function:: parseargs(default_values,argin)
 
@@ -192,5 +195,5 @@ atutils
    
    | **setoption()**      Resets all values to their initial setting
    
-   | See also :func:`getoption`, :func:`atoptions`
+   | See also :func:`getoption`, :class:`atoptions`
 

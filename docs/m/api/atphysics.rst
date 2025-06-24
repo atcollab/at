@@ -43,6 +43,14 @@ atphysics
    * - :ref:`nafflib_module`
      - NAFFLIB
 
+.. rubric:: Classes
+
+
+.. list-table::
+
+   * - :class:`PhysConstant`
+     - Physical constants
+
 .. rubric:: Functions
 
 
@@ -54,6 +62,21 @@ atphysics
      - computes the change in the closed orbit due to parameter perturbations
    * - :func:`findspos`
      - returns longitudinal positions of accelerator lattice elements.
+
+.. py:class:: PhysConstant
+
+   | Physical constants
+   
+   | Automatically generated from https://physics.nist.gov/cuu/Constants/Table/allascii.txt
+   
+   | The values of the constants provided at this site are recommended for international use
+   | by CODATA and are the latest available.
+   | Termed the "2022 CODATA recommended values," they are generally recognized worldwide
+   | for use in all fields of science and technology.
+   | The values became available on 20 May 2024 and replaced the 2018 CODATA set.
+   | They are based on all of the data available through 31 December 2022.
+   | The 2022 adjustment was carried out under the auspices of the CODATA Task Group
+   | on Fundamental Constants.
 
 .. py:function:: atavedata(ring,dpp,refpts)
 

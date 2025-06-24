@@ -153,7 +153,7 @@ lattice
    * - :func:`symplectify`
      - symplectify makes a matrix more symplectic
 
-.. py:function:: atparticle
+.. py:class:: atparticle
 
 
 .. py:function:: at2py
@@ -185,7 +185,7 @@ lattice
    | 	Extract data from the RingParam element of the lattice, if present,
    | 	otherwise return an empty structure
    
-   | See also :func:`atgetringproperties`, :func:`atsetringproperties`
+   | See also :func:`atGetRingProperties`, :func:`atSetRingProperties`
 
 .. py:function:: atGetRingProperties(ring,'param1','param2',...)
 
@@ -259,7 +259,7 @@ lattice
    
    | >>ring=atSetRingProperties(ring)
    
-   | See also :func:`atsetringproperties`
+   | See also :func:`atSetRingProperties`
 
 .. py:function:: atSetRingProperties(ring [,key,value]...)
 
@@ -297,7 +297,7 @@ lattice
    |  ideally located in the 1st position of the lattice. If there is no such
    |  element, **atSetRingProperties** will add it.
    
-   | See also :func:`atgetringproperties`
+   | See also :func:`atGetRingProperties`
 
 .. py:function:: ataddmpolecomppoly(polynom,index,strength,radius)
 
@@ -724,7 +724,7 @@ lattice
    |    2. for off-energy simulations:
    |    **newring = atsetRFCavity( ring, 6e6, 1, 992, 100 )**
    
-   | See also :func:`atsetcavity`, :func:`atradon`, :func:`atradoff`, :func:`atgetu0`
+   | See also :func:`atsetcavity`, :func:`atradon`, :func:`atradoff`, :func:`atgetU0`
 
 .. py:function:: atsetfieldvalues(ring,...)
 

@@ -274,7 +274,7 @@ Radiation
    |    HARMNUMBER  Harmonic number. Computed from the frequency of the main cavities
    |    U0          Total energy loss per turn
    
-   | See also :func:`atgetringproperties`, :func:`atgetu0`, :func:`atsetcavity`
+   | See also :func:`atGetRingProperties`, :func:`atgetU0`, :func:`atsetcavity`
 
 .. py:function:: atgetU0(ring)
 
@@ -379,7 +379,7 @@ Radiation
    |   and the RING is converted according to the value of ENABLE.
    |   IS_6D contains the status of the RING before conversion.
    
-   | See also :func:`atgetringproperties`, :func:`atenable_6d`, :func:`atdisable_6d`
+   | See also :func:`atGetRingProperties`, :func:`atenable_6d`, :func:`atdisable_6d`
 
 .. py:function:: check_radiation
 
@@ -392,7 +392,7 @@ Radiation
    |  <a href="matlab:help check_6d">check_6d</a> is an exact copy of this function and should preferably be
    |  used.
    
-   | See also :func:`check_6d`, :func:`atgetringproperties`, :func:`atenable_6d`, :func:`atdisable_6d`
+   | See also :func:`check_6d`, :func:`atGetRingProperties`, :func:`atenable_6d`, :func:`atdisable_6d`
 
 .. py:function:: findelemraddiffm
 

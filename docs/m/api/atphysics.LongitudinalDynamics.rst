@@ -44,7 +44,7 @@ LongitudinalDynamics
    |    h is the harmonic number
    |    alpha is the momentum compaction factor
    
-   | See also :func:`atrfacc`
+   | See also :func:`atRFacc`
 
 .. py:function:: atBunchLength(ring,ib,zn)
 
@@ -68,7 +68,7 @@ LongitudinalDynamics
    |    ring is tha at lattice without radiation
    |    delta_max_rf is the RF acceptance
    
-   | See also :func:`rfacc`
+   | See also :func:`RFacc`
 
 .. py:function:: atSetCavityPhase
 
@@ -165,7 +165,7 @@ LongitudinalDynamics
    |      on radflag says whether or not we want radiation on, which affects
    |      synchronous phase.
    
-   | See also :func:`atsetcavityphase`, :func:`atsetrfcavity`, :func:`atenable_6d`, :func:`atdisable_6d`, :func:`atgetu0`
+   | See also :func:`atSetCavityPhase`, :func:`atsetRFCavity`, :func:`atenable_6d`, :func:`atdisable_6d`, :func:`atgetU0`
 
 .. py:function:: cavityon(energy)
 

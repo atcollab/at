@@ -114,7 +114,7 @@ element_creation
    | pseudo-random pcg32 stream inplemented in C. More details at:
    | https://github.com/atcollab/at/discussions/879
    
-   | See also :func:`quantumdiff`
+   | See also :func:`quantumDiff`
 
 .. py:function:: atSimpleQuantDiff(famname,...)
 
@@ -158,7 +158,7 @@ element_creation
    |  will generate various aperture elements (one for every set of errors)
    
    
-   | See also :func:`setphysicalaperture`
+   | See also :func:`SetPhysicalAperture`
 
 .. py:function:: atbaselem(famname,method,'fieldname1',value1,...)
 
