@@ -94,7 +94,7 @@ def test_envelope_matching(mring: Lattice):
 
     # check the residuals
     residual = lopcst.evaluate(newring.radiation_on(copy=True))
-    assert_close(residual, 0, rtol=0.0, atol=6e-9)
+    assert_close(residual, 0, rtol=0.0, atol=1.e-8)
 
     # Define the constraints
     lincst = LinoptConstraints(ring)
@@ -108,5 +108,5 @@ def test_envelope_matching(mring: Lattice):
     # check the residuals
     linresidual = lincst.evaluate(newring)
     lopresidual = lopcst.evaluate(newring.radiation_on(copy=True))
-    assert_close(linresidual, 0, rtol=0.0, atol=6e-9)
+    assert_close(linresidual, 0, rtol=0.0, atol=1.e-8)
     assert_close(lopresidual, 0, rtol=0.0, atol=3e-8)

@@ -90,8 +90,21 @@ void Lattice::mapBuffers(std::string &code) {
   code.append("    MAP_FLOAT_BUFFER(gpuRing[elem].R2,gpuRing);\n");
   code.append("    MAP_FLOAT_BUFFER(gpuRing[elem].EApertures,gpuRing);\n");
   code.append("    MAP_FLOAT_BUFFER(gpuRing[elem].RApertures,gpuRing);\n");
-  code.append("    MAP_FLOAT_BUFFER(gpuRing[elem].mpole.PolynomA,gpuRing);\n");
-  code.append("    MAP_FLOAT_BUFFER(gpuRing[elem].mpole.PolynomB,gpuRing);\n");
+  code.append("    switch(gpuRing[elem].Type) {\n");
+  code.append("      case BNDMPOLESYMPLECTIC4PASS:\n");
+  code.append("      case BNDMPOLESYMPLECTIC4RADPASS:\n");
+  code.append("      case STRMPOLESYMPLECTIC4PASS:\n");
+  code.append("      case STRMPOLESYMPLECTIC4RADPASS:\n");
+  code.append("      case EXACTMULTIPOLEPASS:\n");
+  code.append("      case EXACTMULTIPOLERADPASS:\n");
+  code.append("      case THINMPOLEPASS:\n");
+  code.append("        MAP_FLOAT_BUFFER(gpuRing[elem].mpole.PolynomA,gpuRing);\n");
+  code.append("        MAP_FLOAT_BUFFER(gpuRing[elem].mpole.PolynomB,gpuRing);\n");
+  code.append("        break;\n");
+  code.append("      case CORRECTORPASS:\n");
+  code.append("        MAP_FLOAT_BUFFER(gpuRing[elem].cp.KickAngle,gpuRing);\n");
+  code.append("        break;\n");
+  code.append("    }\n");
   code.append("  }\n");
   code.append("}\n");
 

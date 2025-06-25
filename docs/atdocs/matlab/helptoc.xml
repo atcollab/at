@@ -14,23 +14,25 @@
         <!-- Icon images used for these entries are also stored in -->
         <!-- matlabroot/toolbox/matlab/icons -->
         <!-- A Getting Started Guide usually comes first -->
-        <tocitem target="AT_gs_top.html" image="HelpIcon.GETTING_STARTED">
-            Getting Started with the Accelerator Toolbox
-            <tocitem target="Installation.html">Installation</tocitem>
-            <tocitem target="primer.html">AT Primer</tocitem>
-            <tocitem target="latticedemo.html">Example</tocitem>
-            <!--
-            <tocitem target="mytbx_features_example.html">Features
-                <tocitem target="mytbx_feature1_example.htm#10187">Feature 1
-                </tocitem>
-                <tocitem target="mytbx_feature2_example.htm#10193">Feature 2
-                </tocitem>
+        <!--
+        <tocitem target="mytbx_features_example.html">Features
+            <tocitem target="mytbx_feature1_example.htm#10187">Feature 1
             </tocitem>
-            -->
+            <tocitem target="mytbx_feature2_example.htm#10193">Feature 2
+            </tocitem>
         </tocitem>
+        -->
         <!-- User Guide comes next -->
+        <tocitem target="getting_started.html" 
+                 image="$toolbox/matlab/icons/webicon.gif">
+        Getting started
+            <tocitem target="getting_started/01_Installation.html">Installation</tocitem>
+            <tocitem target="getting_started/02_Primer.html">Primer</tocitem>
+            <tocitem target="getting_started/03_Lattice_example.html">Lattice example</tocitem>
+        </tocitem>
         <tocitem target="ugsummary.html"
-            image="HelpIcon.USER_GUIDE">AT User Guide
+                 image="HelpIcon.USER_GUIDE">
+        AT User Guide
             <tocitem target="atelemcreate.html">Element creation</tocitem>
             <tocitem target="atelemfuncs.html">Element manipulation</tocitem>
             <tocitem target="atlatticefuncs.html">Lattice manipulation</tocitem>
@@ -43,7 +45,7 @@
         <tocitem target="howtos.html" 
                  image="$toolbox/matlab/icons/webicon.gif">
         How to…
-            <tocitem target="howtos/CavityControl.html">Control RF cavities</tocitem>
+            <tocitem target="howtos/100_Control_RF_cavities.html">Control RF cavities</tocitem>
         </tocitem>
         <tocitem target="release_notes.html" 
                  image="$toolbox/matlab/icons/webicon.gif">
