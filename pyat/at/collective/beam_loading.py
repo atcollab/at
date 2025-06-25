@@ -1,6 +1,6 @@
 import numpy
 from enum import IntEnum
-from ..lattice import Lattice, AtWarning
+from ..lattice import Lattice, AtWarning, AtError
 from at.lattice import RFCavity, Collective
 from at.lattice.elements import _array
 from at.lattice.utils import Refpts, uint32_refpts, make_copy
@@ -134,7 +134,8 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
-                 rshunt: float, blmode: Optional[BLMode] = BLMode.PHASOR,
+                 rshunt: float, detune: Optional[float] = 0.0, 
+                 blmode: Optional[BLMode] = BLMode.PHASOR,
                  cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                  fbmode: Optional[FeedbackMode] = FeedbackMode.ONETURN,
                  buffersize: Optional[int] = 0, **kwargs):
@@ -152,7 +153,9 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
+            detune [Hz] (float):     Define how much to detune the cavity from resonance
+                in unints of Hz
+            blmode (BLMode):    method for beam loading calculation BLMode.PHASOR
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
@@ -163,9 +166,9 @@ class BeamLoadingElement(RFCavity, Collective):
                 phase correction factor to be applied. 
             buffersize (int):  Size of the history buffer for vbeam, vgen, vbunch
                 (default 0)
-            detune_angle:      Fixed detuning from optimal tuning angle. [rad]
+            feedback_angle_offset:      Fixed detuning from optimal tuning angle. [rad]
                 For a negative slope of the RF voltage at the synchronous position,
-                the optimum detuning is negative. Applying a positive detune_angle 
+                the optimum detuning is negative. Applying a positive feedback_angle_offset 
                 will therefore reduce the detuning. The reverse is true for positive
                 RF slope.
             ts (float):        The timelag of the synchronous particle in the full
@@ -177,7 +180,10 @@ class BeamLoadingElement(RFCavity, Collective):
                 takes a sliding window.
             windowlength (int): for WINDOW feedback mode, states the length (in turns)
                 for the sliding window. Must be smaller than buffersize. 
-                
+
+            system_harmonic (float): Used to compute the nominal rf frequency for the 
+                given system. e.g. third of fourth harmonic of rf_frequency. If None,
+                then will be computed to the nearest integer multiple of rf_frequency.  
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -192,9 +198,19 @@ class BeamLoadingElement(RFCavity, Collective):
                             
         zcuts = kwargs.pop('ZCuts', None)
         ts = kwargs.pop('ts', None)
+        self.system_harmonic = kwargs.pop('system_harmonic', int(numpy.round(frequency/ring.rf_frequency)))
+        self.detune = detune
+        
+        if numpy.abs(frequency - self.system_harmonic*ring.rf_frequency) > 1.0: #1 Hz is the limit for the float check         
+            error_string = 'Cavity must be an integer of rf_frequency, otherwise' + \
+                           'the phi_s computation will be wrong. Please use the detune' + \
+                           'argument when adding beamloading to a cavity that is an integer' + \
+                           'harmonic.'
+            raise AtError(error_string)
+                   
         energy = ring.energy
-        harmonic_number = numpy.round(frequency*ring.circumference/clight)
-        self.detune_angle = kwargs.pop('detune_angle', 0)
+        harmonic_number = self.system_harmonic * ring.harmonic_number
+        self.feedback_angle_offset = kwargs.pop('feedback_angle_offset', 0)
         self.Rshunt = rshunt
         self.Qfactor = qfactor
         self.NormFact = kwargs.pop('NormFact', 1.0)
@@ -221,6 +237,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbunch = None
         self._buffersize = buffersize
         self._windowlength = kwargs.pop('windowlength', 0)
+
         if self._windowlength > self._buffersize:
             raise ValueError('The windowlength must be smaller than the buffersize') 
         self._vgen_buffer = numpy.zeros(1)
@@ -275,13 +292,13 @@ class BeamLoadingElement(RFCavity, Collective):
                 warning_string = 'Unusual cavity configuration found.' + \
                                  'Setting initial psi to 0 to avoid NaNs'
                 warnings.warn(AtWarning(warning_string))
-            psi += self.detune_angle
+            psi += self.feedback_angle_offset
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
 
         elif self._cavitymode == 2:
             vgen = 0
-            psi = 0
+            psi = numpy.arctan(2*self.Qfactor*(1 - self.Frequency/(self.Frequency + self.detune)))
         else:
             vgen = self.Voltage
             psi = 0

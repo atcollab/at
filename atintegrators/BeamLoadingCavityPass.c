@@ -32,7 +32,7 @@ struct elem
   double Rshunt;
   double Beta;
   double phis;
-  double detune_angle;
+  double feedback_angle_offset;
   double *vbunch;
   double *vbeam_phasor;
   double *vbeam;
@@ -86,8 +86,10 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vbeam_phasor = Elem->vbeam_phasor;
     double *vbeamk = Elem->vbeam;
     double *vcavk = Elem->vcav;
-    double *vgenk = Elem->vgen;
-    double detune_angle = Elem->detune_angle;
+    double *vgenk = Elem->vgen;    
+    double feedback_angle_offset = Elem->feedback_angle_offset;
+    int bufferlengthnow = 0;
+
     double vbeam_set[] = {vbeam_phasor[0], vbeam_phasor[1]};
     double tot_current = 0.0;
     int i;
@@ -96,21 +98,16 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     int *pslice;
     double *kz;
     double freqres = rffreq/(1-tan(vgenk[1])/(2*qfactor));
-    double vgen = 0.0;
-    double psi = 0.0;
+    double vgen = vgenk[0];
+    double psi = vgenk[1];
         
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
 
-    if(cavitymode==2){
-        freqres = rffreq;
-    }else if(cavitymode==1){
-        vgen = vgenk[0];
-        psi = vgenk[1];
-    }
+
     /*Track RF cavity is always done. */
-    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi+detune_angle,nturn,circumference/C0,num_particles);
+    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi+feedback_angle_offset,nturn,circumference/C0,num_particles);
     
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
@@ -153,12 +150,14 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
+
         update_vbeam_set(fbmode, vbeam_set, vbeamk, vbeam_buffer,
                              buffersize, windowlength);
         
         
         if(cavitymode==1){
-            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,detune_angle); 
+            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,feedback_angle_offset); 
+
         }     
 
 
@@ -184,7 +183,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *vbeam_buffer;
         double *vbunch_buffer;
         double *z_cuts;
-        double Energy, Frequency, TimeLag, Length, detune_angle;
+        double Energy, Frequency, TimeLag, Length, feedback_angle_offset;
         double qfactor,rshunt,beta;
         double *vbunch;
         double *vbeam_phasor;
@@ -223,7 +222,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*optional attributes*/
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
-        detune_angle=atGetOptionalDouble(ElemData,"detune_angle", 0); check_error();
+        feedback_angle_offset=atGetOptionalDouble(ElemData,"feedback_angle_offset", 0.0); check_error();
         
         int dimsth[] = {Param->nbunch*nslice*nturns, 4};
         atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
@@ -259,7 +258,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vgen_buffer = vgen_buffer;
         Elem->vbeam_buffer = vbeam_buffer;
         Elem->vbunch_buffer = vbunch_buffer;
-        Elem->detune_angle = detune_angle;
+        Elem->feedback_angle_offset = feedback_angle_offset;
         Elem->fbmode = fbmode;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
@@ -306,7 +305,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double normfact, phasegain, voltgain;
       double *turnhistory;
       double *z_cuts;
-      double Energy, Frequency, TimeLag, Length, detune_angle;
+      double Energy, Frequency, TimeLag, Length, feedback_angle_offset;
       double qfactor,rshunt,beta;
       double *vbunch;
       double *vbeam_phasor;
@@ -347,7 +346,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /*optional attributes*/
       Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
-      detune_angle=atGetOptionalDouble(ElemData,"detune_angle",0.0); check_error();
+      feedback_angle_offset=atGetOptionalDouble(ElemData,"feedback_angle_offset",0.0); check_error();
       
       Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
@@ -377,7 +376,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vgen_buffer = vgen_buffer;
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
-      Elem->detune_angle = detune_angle;
+      Elem->feedback_angle_offset = feedback_angle_offset;
+
       Elem->fbmode = fbmode;
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
@@ -424,7 +424,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
           plhs[1] = mxCreateCellMatrix(3,1);
           mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
           mxSetCell(plhs[1],1,mxCreateString("ZCuts"));
-          mxSetCell(plhs[1],2,mxCreateString("detune_angle"));
+          mxSetCell(plhs[1],2,mxCreateString("feedback_angle_offset"));
       }
   }
   else

@@ -497,6 +497,7 @@ int check_buffer_length(double *buffer, long buffersize, long numcolumns){
     return bufferlengthnow;
 }
 
+
 static void update_vbeam_set(long fbmode, double *vbeam_set,
                              double *vbeamk, double *vbeam_buffer,
                              long buffersize, long windowlength){
@@ -519,4 +520,5 @@ static void update_vbeam_set(long fbmode, double *vbeam_set,
         } 
     }
 }
+
 
