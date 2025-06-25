@@ -156,7 +156,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         
         
         if(cavitymode==1){
-            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,detune_angle); 
+            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,feedback_angle_offset); 
 
         }     
 
