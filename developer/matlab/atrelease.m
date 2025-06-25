@@ -35,20 +35,13 @@ fprintf( 1, 'Generating documentation & examples...' );
 try
     % Generate custom documentation
     gen_help()
-    gen_toc();
+    gen_doc();
     % Remove all mex-files
     atclearmex(atroot);
     fprintf( 1, ' Done.\n' );
 catch e
     fprintf( 1, ' failed.\n' );
     e.rethrow()
-end
-
-%Build doc search database
-try
-    builddocsearchdb(fullfile(rootdir,'docs','atdocs','matlab'));
-catch me
-    warning( me.message )
 end
 
 %% Run tests

@@ -14,18 +14,12 @@
         <!-- Icon images used for these entries are also stored in -->
         <!-- matlabroot/toolbox/matlab/icons -->
         <!-- A Getting Started Guide usually comes first -->
-        <tocitem target="AT_gs_top.html" image="HelpIcon.GETTING_STARTED">
-            Getting Started with the Accelerator Toolbox
-            <tocitem target="Installation.html">Installation</tocitem>
-            <tocitem target="primer.html">AT Primer</tocitem>
-            <tocitem target="latticedemo.html">Example</tocitem>
-            <!--
-            <tocitem target="mytbx_features_example.html">Features
-                <tocitem target="mytbx_feature1_example.htm#10187">Feature 1
-                </tocitem>
-                <tocitem target="mytbx_feature2_example.htm#10193">Feature 2
-                </tocitem>
+        <!--
+        <tocitem target="mytbx_features_example.html">Features
+            <tocitem target="mytbx_feature1_example.htm#10187">Feature 1
             </tocitem>
-            -->
+            <tocitem target="mytbx_feature2_example.htm#10193">Feature 2
+            </tocitem>
         </tocitem>
+        -->
         <!-- User Guide comes next -->

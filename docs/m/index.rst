@@ -14,24 +14,37 @@ higher-level functions to provide physics results.
 .. toctree::
    :maxdepth: 2
 
-   Installation
-   primer
-   demo1
+   Installation <getting_started/01_Installation>
+   AT Primer <getting_started/02_Primer>
+   Example <getting_started/03_Lattice_example>
 
 .. toctree::
    :maxdepth: 2
    :caption: How to:
    :hidden:
 
-   howtos/CavityControl
+   Control the RF cavities <howtos/100_Control_RF_cavities>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User guide
+   :hidden:
+
+   api/lattice
+   api/atphysics
+   api/atplot
+   api/attrack
+   api/atmatch
+   api/atutils
+   api/atmat
 
 .. toctree::
    :maxdepth: 2
    :caption: Release notes:
    :hidden:
 
-   releases/r2.3
-   releases/r2.4
-   releases/r2.5
-   releases/r2.6
-   releases/r2.7
+   release_notes/r2.3
+   release_notes/r2.4
+   release_notes/r2.5
+   release_notes/r2.6
+   release_notes/r2.7

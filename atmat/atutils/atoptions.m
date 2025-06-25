@@ -1,7 +1,7 @@
 classdef atoptions < handle
-    %Definition of default parameters
-    %
-    % Singleton class for the storage of AT default values
+%Definition of default parameters
+%
+% Singleton class for the storage of AT default values
 
     %% AT parameters
     properties

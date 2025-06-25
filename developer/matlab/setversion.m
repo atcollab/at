@@ -28,6 +28,7 @@ if nargin < 1
         error('%s\n%s','The release cannot be obtained from the pull request number.', ...
             'Check the "gh" command');
     end
+    version='';
 end
 
 versfile=fullfile(atroot,'Contents.m');
@@ -37,7 +38,7 @@ fin=fopen(versfile,'rt');
 line=fgetl(fin); %#ok<NASGU>                    Header: accelerator toolbox
 
 vv=textscan(fgetl(fin), '%*s %*s %s %s %s');  % Version string
-if nargin < 1 || isempty(version)
+if isempty(version)
     version=vv{1}{1};
 end
 fprintf(fout,'%% Accelerator Toolbox\n');
