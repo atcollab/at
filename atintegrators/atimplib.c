@@ -486,10 +486,6 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     }else{
         sg = -1;
     }
-    
-    /*double freqres = rffreq/(1-tan(vgenk[1])/(2*qfactor));
-    freqres += delta_freq;
-    */
 
     vgen[1] += sg*delta_psi*phasegain;
 }
