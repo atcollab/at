@@ -250,6 +250,7 @@ class BeamLoadingElement(RFCavity, Collective):
             raise AtError('Cannot start passive cavity feedback from zero detuning.' + 
                           'You must decide at the beginning which polarity you want.')
                           
+        self._passive_vset = kwargs.pop('passive_voltage', 0.0)
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
@@ -279,7 +280,11 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam_phasor = numpy.zeros(2)
         self._vbeam = numpy.zeros(2)
         self._vgen = numpy.zeros(2)
-        self._vcav = numpy.array([self.Voltage,
+        
+        
+        cavity_voltage = self._passive_vset if self._cavitymode==3 else self.Voltage 
+        
+        self._vcav = numpy.array([cavity_voltage,
                                   numpy.pi/2-self._phis])
         self.clear_history(ring=ring)
         
