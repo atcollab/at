@@ -177,8 +177,10 @@ class BeamLoadingElement(RFCavity, Collective):
                 used
             cavitymode (CavityMode):  Is cavity ACTIVE (default), PASSIVE or
                 PASSIVEVOLTAGE (Passive with a voltage feedback).
-                For PASSIVEVOLTAGE, the voltage of the RFCavity element is taken as
-                the setpoint. 
+                For PASSIVEVOLTAGE, the voltage setpoint is specified with
+                passive_voltage
+            passive_voltage [V] (float): Voltage setpoint with the passive cavity with
+                feedback.
             PhaseGain (float):  Used for cavity feedbacks. States the gain on the
                 phase correction factor to be applied. 
             VoltGain (float):  Used for cavity feedbacks. States the gain on the
