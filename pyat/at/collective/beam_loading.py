@@ -319,7 +319,7 @@ class BeamLoadingElement(RFCavity, Collective):
             vgen = self.Voltage*numpy.cos(psi) + \
                 vb*numpy.cos(psi)*numpy.sin(self._phis)
 
-        elif self._cavitymode == 2:
+        elif numpy.logical_or(self._cavitymode == 2, self._cavitymode == 3):
             vgen = 0
             psi = numpy.arctan(2*self.Qfactor*(1 - self.Frequency/(self.Frequency + self.detune)))
         else:
