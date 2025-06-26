@@ -15,14 +15,30 @@ class BLMode(IntEnum):
 
 
 class CavityMode(IntEnum):
+    '''
+    CavityMode.ACTIVE is an active feedback loop, acting on both 
+    detuning and generator voltages to compensate the beam induced
+    voltage. 
+    
+    CavityMode.PASSIVE takes a fixed cavity frequency and assumes 
+    zero generator voltage.
+    
+    CavityMode.PASSIVEVOLTAGE is a feedback loop for a passive harmonic
+    cavity. The frequency of the cavity is varied in order to maintain
+    a voltage setpoint.  
+    '''
+
     ACTIVE = 1
     PASSIVE = 2
-
+    PASSIVEVOLTAGE = 3
+    
+    
 class FeedbackMode(IntEnum):
     ONETURN = 1
     WINDOW = 2
     
 
+    
 def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
                     rshunt: Union[float, Sequence[float]],
                     cavpts: Refpts = None, copy: Optional[bool] = False,
@@ -159,7 +175,10 @@ class BeamLoadingElement(RFCavity, Collective):
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
-            cavitymode (CavityMode):  Is cavity ACTIVE (default) or PASSIVE
+            cavitymode (CavityMode):  Is cavity ACTIVE (default), PASSIVE or
+                PASSIVEVOLTAGE (Passive with a voltage feedback).
+                For PASSIVEVOLTAGE, the voltage of the RFCavity element is taken as
+                the setpoint. 
             PhaseGain (float):  Used for cavity feedbacks. States the gain on the
                 phase correction factor to be applied. 
             VoltGain (float):  Used for cavity feedbacks. States the gain on the
@@ -175,12 +194,12 @@ class BeamLoadingElement(RFCavity, Collective):
                 RF system [m]. If not specified, it will be calculated using 
                 get_timelag_fromU0. Defines the expected position of the beam to be
                 used for the beam loading setpoints.        
-            fbmode (FeedbackMode): States the type of feedback to be used for the loop.
-                ONETURN (default) takes only the current turn, compared to WINDOW which
-                takes a sliding window.
+            fbmode (FeedbackMode): States the mode for the parameter calculation to be
+                used for the loop. ONETURN (default) takes only the current turn,
+                compared to WINDOW which takes a sliding window.
             windowlength (int): for WINDOW feedback mode, states the length (in turns)
                 for the sliding window. Must be smaller than buffersize. 
-
+            
             system_harmonic (float): Used to compute the nominal rf frequency for the 
                 given system. e.g. third of fourth harmonic of rf_frequency. If None,
                 then will be computed to the nearest integer multiple of rf_frequency.  
@@ -227,6 +246,10 @@ class BeamLoadingElement(RFCavity, Collective):
         else:
             self._fbmode = 0              
             
+        if numpy.logical_and(self.detune == 0, self._cavitymode==3):
+            raise AtError('Cannot start passive cavity feedback from zero detuning.' + 
+                          'You must decide at the beginning which polarity you want.')
+                          
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)

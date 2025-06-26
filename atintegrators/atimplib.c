@@ -465,6 +465,40 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
 }
 
 
+static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double phasegain, double Vbr){
+    double vset = vcav[0];
+    double psi = vbeam[1] - TWOPI/2;
+    double vpeak = vbeam[0]*cos(psi); /* Peak amplitude of cavity voltage */
+    double delta_v = vset - vpeak;
+
+    printf("Vset: %f \n",vset);
+    printf("psi: %f \n",psi);
+    printf("Vpeak: %f \n",vpeak);
+    double grad = vpeak*sin(psi);
+    double delta_psi = delta_v / grad; 
+    printf("grad: %f \n",grad);
+    printf("delta_psi: %f \n",delta_psi);
+    
+    /* If the cavity is detuned positively, the psi needs to
+    be increased to reduce the voltage. Likewise, if the cavity
+    is detuned negatively, the psi needs to be decreased to reduce
+    the voltage.
+    */
+    
+    int sg = 0;
+    if (psi > 0) {
+        sg = 1;
+    }else{
+        sg = -1;
+    }
+
+    /*double freqres = rffreq/(1-tan(vgenk[1])/(2*qfactor));
+    freqres += delta_freq;
+    */
+
+    vgen[1] += delta_psi*phasegain;
+}
+
 static void compute_buffer_mean(double *out_array, double *buffer, long windowlength, long buffersize, long numcolumns){
 
     int c,p,offset;
