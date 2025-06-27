@@ -3,6 +3,10 @@
 atmat
 =====
 
+.. py:module:: atmat
+
+   Accelerator Toolbox
+
 .. rubric:: Functions
 
 
@@ -29,7 +33,7 @@ atmat
    * - :func:`getContents`
      - Get the contents of a specified directory
    * - :func:`isOctave`
-     - isOctave check if running Octave
+     - check if running Octave
    * - :func:`updateContents`
      - Create a Contents.m file including subdirectories
 
@@ -227,7 +231,7 @@ atmat
 
 .. py:function:: isOctave()
 
-   | isOctave check if running Octave
+   | check if running Octave
    
    |   **[retval]=isOctave()**
    |     Check if running Octave

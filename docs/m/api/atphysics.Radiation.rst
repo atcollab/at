@@ -3,6 +3,10 @@
 Radiation
 =========
 
+.. py:module:: atphysics.Radiation
+
+   Functions dealing with synchrotron radiation
+
 .. rubric:: Functions
 
 

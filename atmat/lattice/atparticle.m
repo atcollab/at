@@ -1,7 +1,7 @@
 classdef atparticle
-    %ATPARTICLE Particle definition for AT
-    %
-    %   A particle is defined by its name, rest energy and charge
+%ATPARTICLE Particle definition for AT
+%
+%   A particle is defined by its name, rest energy and charge
 
     properties(SetAccess=private)
         name        % Name of the particle

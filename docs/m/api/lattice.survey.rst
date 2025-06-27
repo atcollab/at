@@ -3,6 +3,10 @@
 survey
 ======
 
+.. py:module:: lattice.survey
+
+   Lattice floor plans
+
 .. rubric:: Functions
 
 
