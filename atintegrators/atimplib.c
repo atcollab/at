@@ -479,7 +479,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     is detuned negatively, the psi needs to be decreased to reduce
     the voltage.
     */
-    
+        
     int sg = 0;
     if (psi > 0) {
         sg = 1;
@@ -487,7 +487,12 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
         sg = -1;
     }
 
-    vgen[1] += sg*delta_psi*phasegain;
+    /* This is to avoid setting a value if grad is 0, as then
+    delta_psi is inf, which even when multiplied by 0 gives nan
+    */
+    if (grad!=0.0){
+        vgen[1] += sg*delta_psi*phasegain;
+    }
 }
 
 static void compute_buffer_mean(double *out_array, double *buffer, long windowlength, long buffersize, long numcolumns){
