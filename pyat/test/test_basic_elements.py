@@ -52,7 +52,7 @@ def test_argument_checks():
 def test_dipole():
     d = elements.Dipole('dipole', 1.0, 0.01)
     assert d.MaxOrder == 0
-    assert len(d.PolynomA) == 2
+    assert len(d.PolynomA) == 1
     assert d.K == 0.0
     d = elements.Dipole('dipole', 1.0, 0.01, -0.5)
     assert d.MaxOrder == 1
@@ -350,7 +350,9 @@ def test_correct_dimensions_does_not_raise_error(rin, func):
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
 @pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_dipole_bend_synonym(rin, dipole_class, func):
-    b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
+    b = dipole_class(
+        'dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05, PolynomB=[0.0, 0.0]
+    )
     rin[0, 0] = 1e-6
     if func == element_track:
         func(b, rin, in_place=True)
