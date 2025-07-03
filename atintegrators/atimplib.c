@@ -470,7 +470,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     double psi = vbeam[1] - TWOPI/2;
     double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
     double delta_v = vset - vpeak;
-    double grad = vbeam[0]*sin(psi);
+    double grad = vbeam[0]*sin(psi)/cos(psi);
     double delta_psi = delta_v / grad; 
 
     
@@ -480,12 +480,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     the voltage.
     */
         
-    int sg = 0;
-    if (psi > 0) {
-        sg = 1;
-    }else{
-        sg = -1;
-    }
+    int sg = (psi>0) - (psi<0);
 
     /* This is to avoid setting a value if grad is 0, as then
     delta_psi is inf, which even when multiplied by 0 gives nan
