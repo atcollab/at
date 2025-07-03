@@ -1,9 +1,10 @@
 import pytest
 import numpy
+import warnings
 from at import element_track, lattice_track
 from at import lattice_pass, internal_lpass
 from at import element_pass, internal_epass
-from at import elements
+from at import elements, lattice
 from numpy.testing import assert_equal
 
 
@@ -137,6 +138,162 @@ def test_multipole():
     assert m.MaxOrder == 0
     assert m.NumIntSteps == 10
     assert m.PassMethod == 'StrMPoleSymplectic4Pass'
+
+
+@pytest.mark.parametrize(
+    "element_type", [elements.Multipole, elements.ThinMultipole, elements.Octupole]
+)
+def test_multipole_strength_prioritisation(element_type):
+    # No warnings or changes when K and H aren't specified
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 1.0, 2.0])
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 1.0, 2.0])
+    assert elem.PolynomB[1] == 1.0
+    assert elem.PolynomB[2] == 2.0
+    # No warnings or changes when K and H are both default values (0.0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 1.0, 2.0], k=0.0, h=0.0)
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 1.0, 2.0], k=0.0, h=0.0)
+    assert elem.PolynomB[1] == 1.0
+    assert elem.PolynomB[2] == 2.0
+    # No warnings or changes when K and H are None
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 1.0, 2.0], k=None, h=None)
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 1.0, 2.0], k=None, h=None)
+    assert elem.PolynomB[1] == 1.0
+    assert elem.PolynomB[2] == 2.0
+    # Changes but no warnings when both PolynomB[1] and PolymonB[2] are the default
+    # value (0.0) and are replaced by K and H which are both not default values
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 0.0, 0.0], k=1.0, h=1.0)
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 0.0, 0.0], k=1.0, h=1.0)
+    assert elem.PolynomB[1] == 1.0
+    assert elem.PolynomB[2] == 1.0
+    # No warnings or changes when PolynomB[1] and K are the same but not default values
+    # and PolynomB[2] and H are the same but not default values
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 1.0, 2.0], k=1.0, h=2.0)
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 1.0, 2.0], k=1.0, h=2.0)
+    assert elem.PolynomB[1] == 1.0
+    assert elem.PolynomB[2] == 2.0
+    # Change and warning when PolynomB[1] is not default value and replaces K
+    with pytest.warns(lattice.AtWarning):
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 1.0, 0.0], k=2.0)
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 1.0, 0.0], k=2.0)
+    assert elem.K == 1.0
+    assert elem.PolynomB[1] == 1.0
+    # Change and warning when PolynomB[2] is not default value and replaces H
+    with pytest.warns(lattice.AtWarning):
+        if element_type is elements.ThinMultipole:
+            elem = element_type("ThinMulti", [], [0.0, 0.0, 1.0], h=2.0)
+        else:
+            elem = element_type("Multi", 1.0, [], [0.0, 0.0, 1.0], h=2.0)
+    assert elem.H == 1.0
+    assert elem.PolynomB[2] == 1.0
+
+
+@pytest.mark.parametrize("element_type", [elements.Quadrupole, elements.Dipole])
+def test_quadrupolar_strength_prioritisation(element_type):
+    # No warnings or changes when K isn't specified
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.Quadrupole:
+            elem = element_type("Quad", 1.0, PolynomB=[0.0, 1.0])
+        else:
+            elem = element_type("Dipole", 1.0, 0.0, PolynomB=[0.0, 1.0])
+    assert elem.PolynomB[1] == 1.0
+    # No warnings or changes when K is the default value (0.0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.Quadrupole:
+            elem = element_type("Quad", 1.0, k=0.0, PolynomB=[0.0, 1.0])
+        else:
+            elem = element_type("Dipole", 1.0, 0.0, k=0.0, PolynomB=[0.0, 1.0])
+    assert elem.PolynomB[1] == 1.0
+    # No warnings or changes when K is None
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.Quadrupole:
+            elem = element_type("Quad", 1.0, k=None, PolynomB=[0.0, 1.0])
+        else:
+            elem = element_type("Dipole", 1.0, 0.0, k=None, PolynomB=[0.0, 1.0])
+    assert elem.PolynomB[1] == 1.0
+    # Changes but no warnings when PolynomB[1] is the default value (0.0) and is
+    # replaced by K which isn't a default value
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.Quadrupole:
+            elem = element_type("Quad", 1.0, k=1.0, PolynomB=[0.0, 1.0])
+        else:
+            elem = element_type("Dipole", 1.0, 0.0, k=1.0, PolynomB=[0.0, 0.0])
+    assert elem.PolynomB[1] == 1.0
+    # No warnings or changes when PolynomB[1] and K are the same but not default values
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        if element_type is elements.Quadrupole:
+            elem = element_type("Quad", 1.0, k=1.0, PolynomB=[0.0, 1.0])
+        else:
+            elem = element_type("Dipole", 1.0, 0.0, k=1.0, PolynomB=[0.0, 1.0])
+    assert elem.PolynomB[1] == 1.0
+    # Change and warning when PolynomB[1] is not default value and replaces K
+    with pytest.warns(lattice.AtWarning):
+        if element_type is elements.Quadrupole:
+            elem = element_type("Quad", 1.0, k=2.0, PolynomB=[0.0, 1.0])
+        else:
+            elem = element_type("Dipole", 1.0, 0.0, k=2.0, PolynomB=[0.0, 1.0])
+    assert elem.K == 1.0
+    assert elem.PolynomB[1] == 1.0
+
+
+def test_sextupolar_strength_prioritisation():
+    # No warnings or changes when K and H aren't specified
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        s = elements.Sextupole("Sext", 1.0, PolynomB=[0.0, 0.0, 2.0])
+    assert s.PolynomB[2] == 2.0
+    # No warnings or changes when H is the default value (0.0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        s = elements.Sextupole("Sext", 1.0, h=0.0, PolynomB=[0.0, 0.0, 2.0])
+    assert s.PolynomB[2] == 2.0
+    # No warnings or changes when H is None
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        s = elements.Sextupole("Sext", 1.0, h=None, PolynomB=[0.0, 0.0, 2.0])
+    assert s.PolynomB[2] == 2.0
+    # Changes but no warnings when PolynomB[1] is the default value (0.0) and is
+    # replaced by H which isn't a default value
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        s = elements.Sextupole("Sext", 1.0, h=1.0, PolynomB=[0.0, 0.0, 0.0])
+    assert s.PolynomB[2] == 1.0
+    # No warnings or changes when PolynomB[2] and H are the same but not default values
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        s = elements.Sextupole("Sext", 1.0, h=2.0, PolynomB=[0.0, 0.0, 2.0])
+    assert s.PolynomB[2] == 2.0
+    # Change and warning when PolynomB[2] is not default value and replaces H
+    with pytest.warns(lattice.AtWarning):
+        s = elements.Sextupole("Sext", 1.0, h=2.0, PolynomB=[0.0, 0.0, 1.0])
+    assert s.H == 1.0
+    assert s.PolynomB[2] == 1.0
 
 
 def test_divide_splits_attributes_correctly():
