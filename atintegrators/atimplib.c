@@ -470,7 +470,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     double psi = vbeam[1] - TWOPI/2;
     double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
     double delta_v = vset - vpeak;
-    double grad = vbeam[0]*sin(psi)/cos(psi);
+    double grad = vbeam[0]*sin(psi)/cos(psi); /*vbeam amp contains cos(psi). So replace with sin(psi) */
     double delta_psi = delta_v / grad; 
 
     
