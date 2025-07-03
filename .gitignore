@@ -55,6 +55,3 @@ athelp.mat
 
 # octave files
 octave-workspace
-
-# Test dir
-test/
