@@ -24,14 +24,14 @@ class CavityMode(IntEnum):
     CavityMode.PASSIVE takes a fixed cavity frequency and assumes
     zero generator voltage.
 
-    CavityMode.PASSIVEVOLTAGE is a feedback loop for a passive harmonic
+    CavityMode.PASSIVE_SETVOLTAGE is a feedback loop for a passive harmonic
     cavity. The frequency of the cavity is varied in order to maintain
     a voltage setpoint.
     """
 
     ACTIVE = 1
     PASSIVE = 2
-    PASSIVEVOLTAGE = 3
+    PASSIVE_SETVOLTAGE = 3
 
 
 class FeedbackMode(IntEnum):
@@ -211,8 +211,8 @@ class BeamLoadingElement(RFCavity, Collective):
                 uses the wake function. For high Q resonator, the phasor
                 method should be used.
             cavitymode (CavityMode):  Is cavity ACTIVE (default), PASSIVE or
-                PASSIVEVOLTAGE (Passive with a voltage feedback).
-                For PASSIVEVOLTAGE, the voltage setpoint is specified with
+                PASSIVE_SETVOLTAGE (Passive with a voltage feedback).
+                For PASSIVE_SETVOLTAGE, the voltage setpoint is specified with
                 passive_voltage
             passive_voltage [V] (float): Voltage setpoint with the passive
                 cavity with feedback.
