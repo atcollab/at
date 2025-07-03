@@ -466,12 +466,20 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
 
 
 static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double phasegain, double Vbr){
+    /* The cavity voltage is
+    V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
+    We save the amplitude of vbeam, so the exponent goes to 1.
+    Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
+    */
     double vset = vcav[0];
     double psi = vbeam[1] - TWOPI/2;
     double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
     double delta_v = vset - vpeak;
-    double grad = vbeam[0]*sin(psi)/cos(psi); /*vbeam amp contains cos(psi). So replace with sin(psi) */
-    double delta_psi = delta_v / grad; 
+    double grad = vbeam[0]*sin(psi)/cos(psi); 
+    /*vbeam amp contains cos(psi). So replace with sin(psi)
+    to get get the gradient */
+    
+    double delta_psi = delta_v / grad; /*linear extrapolation*/
 
     
     /* If the cavity is detuned positively, the psi needs to
