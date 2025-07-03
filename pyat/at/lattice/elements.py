@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import abc
 import re
+import warnings
 from abc import ABC
 from collections.abc import Generator, Iterable
 from copy import copy, deepcopy
@@ -18,6 +19,7 @@ from typing import Any, Optional
 import numpy as np
 
 # noinspection PyProtectedMember
+from .exceptions import AtWarning
 from .variables import _nop
 
 _zero6 = np.zeros(6)
@@ -777,14 +779,25 @@ class Collimator(Drift):
 class ThinMultipole(Element):
     """Thin multipole element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB", "K", "H"]
+    _conversions = dict(Element._conversions, K=float, H=float)
 
-    def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
+    def __init__(
+        self,
+        family_name: str,
+        poly_a,
+        poly_b,
+        k: float | None = 0.0,
+        h: float | None = 0.0,
+        **kwargs,
+    ):
         """
         Args:
             family_name:    Name of the element
             poly_a:         Array of skew multipole components
             poly_b:         Array of normal multipole components
+            k:              Quadrupolar focusing strength [mˆ-2]
+            h:              Sextupolar focusing strength [mˆ-3]
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
@@ -795,9 +808,28 @@ class ThinMultipole(Element):
         Default PassMethod: ``ThinMPolePass``
         """
 
+        def unify_strengths(poly_b, strength, order, name):
+            if strength:
+                if len(poly_b) >= (order + 1):
+                    if poly_b[order] and (poly_b[order] != strength):
+                        warnings.warn(
+                            AtWarning(
+                                f"Conflicting values for PolynomB[{order}] "
+                                f"({poly_b[order]}) and {name} ({strength}), "
+                                f"prioritising PolynomB[{order}], {name} set to "
+                                f"{poly_b[order]}"
+                            )
+                        )
+                    else:
+                        poly_b[order] = strength
+                else:
+                    poly_b = lengthen(poly_b, order + 1 - len(poly_b))
+                    poly_b[order] = strength
+            return poly_b
+
         def getpol(poly):
             nonzero = np.flatnonzero(poly != 0.0)
-            return poly, len(poly), nonzero[-1] if len(nonzero) > 0 else -1
+            return len(poly), nonzero[-1] if len(nonzero) > 0 else -1
 
         def lengthen(poly, dl):
             if dl > 0:
@@ -808,8 +840,12 @@ class ThinMultipole(Element):
         # PolynomA and PolynomB and convert to ParamArray
         prmpola = self._conversions["PolynomA"](kwargs.pop("PolynomA", poly_a))
         prmpolb = self._conversions["PolynomB"](kwargs.pop("PolynomB", poly_b))
-        poly_a, len_a, ord_a = getpol(prmpola)
-        poly_b, len_b, ord_b = getpol(prmpolb)
+        # Unify K, H, and PolynomB
+        prmpolb = unify_strengths(prmpolb, k, 1, "K")
+        prmpolb = unify_strengths(prmpolb, h, 2, "H")
+        # Determine length and order of PolynomA and PolynomB
+        len_a, ord_a = getpol(prmpola)
+        len_b, ord_b = getpol(prmpolb)
         deforder = max(getattr(self, "DefaultOrder", 0), ord_a, ord_b)
         # Remove MaxOrder
         maxorder = kwargs.pop("MaxOrder", deforder)
@@ -836,45 +872,10 @@ class ThinMultipole(Element):
                 raise ValueError(f"MaxOrder must be smaller than {lmax}")
         super().__setattr__(key, value)
 
-
-class Multipole(_Radiative, LongElement, ThinMultipole):
-    """Multipole element"""
-
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
-    _conversions = dict(ThinMultipole._conversions, K=float, H=float)
-
-    def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
-        """
-        Args:
-            family_name:    Name of the element
-            length:         Element length [m]
-            poly_a:         Array of skew multipole components
-            poly_b:         Array of normal multipole components
-
-        Keyword arguments:
-            MaxOrder:       Number of desired multipoles. Default: highest
-              index of non-zero polynomial coefficients
-            NumIntSteps:    Number of integration steps (default: 10)
-            KickAngle:      Correction deviation angles (H, V)
-            FieldScaling:   Scaling factor applied to the magnetic field
-              (*PolynomA* and *PolynomB*)
-
-        Default PassMethod: ``StrMPoleSymplectic4Pass``
-        """
-        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
-        super().__init__(family_name, length, poly_a, poly_b, **kwargs)
-
-    def is_compatible(self, other) -> bool:
-        if super().is_compatible(other) and self.MaxOrder == other.MaxOrder:
-            for i in range(self.MaxOrder + 1):
-                if self.PolynomB[i] != other.PolynomB[i]:
-                    return False
-                if self.PolynomA[i] != other.PolynomA[i]:
-                    return False
-            return True
-        else:
-            return False
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
+        yield "K", self.K
+        yield "H", self.H
 
     # noinspection PyPep8Naming
     @property
@@ -899,6 +900,61 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     @H.setter
     def H(self, strength):
         self.PolynomB[2] = strength
+
+
+class Multipole(_Radiative, LongElement, ThinMultipole):
+    """Multipole element"""
+
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + [
+        "PolynomA",
+        "PolynomB",
+        "K",
+        "H",
+    ]
+
+    def __init__(
+        self,
+        family_name: str,
+        length: float,
+        poly_a,
+        poly_b,
+        k: float | None = 0.0,
+        h: float | None = 0.0,
+        **kwargs,
+    ):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            poly_a:         Array of skew multipole components
+            poly_b:         Array of normal multipole components
+            k:              Quadrupolar focusing strength [mˆ-2]
+            h:              Sextupolar focusing strength [mˆ-3]
+
+        Keyword arguments:
+            MaxOrder:       Number of desired multipoles. Default: highest
+              index of non-zero polynomial coefficients
+            NumIntSteps:    Number of integration steps (default: 10)
+            KickAngle:      Correction deviation angles (H, V)
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        kwargs.setdefault("NumIntSteps", 10)
+        super().__init__(family_name, length, poly_a, poly_b, k, h, **kwargs)
+
+    def is_compatible(self, other) -> bool:
+        if super().is_compatible(other) and self.MaxOrder == other.MaxOrder:
+            for i in range(self.MaxOrder + 1):
+                if self.PolynomB[i] != other.PolynomB[i]:
+                    return False
+                if self.PolynomA[i] != other.PolynomA[i]:
+                    return False
+            return True
+        else:
+            return False
 
 
 class Dipole(Radiative, Multipole):
@@ -937,7 +993,7 @@ class Dipole(Radiative, Multipole):
         family_name: str,
         length: float,
         bending_angle: float | None = 0.0,
-        k: float = 0.0,
+        k: float | None = 0.0,
         **kwargs,
     ):
         """
@@ -945,7 +1001,7 @@ class Dipole(Radiative, Multipole):
             family_name:    Name of the element
             length:         Element length [m]
             bending_angle:  Bending angle [rd]
-            k:              Focusing strength [m^-2]
+            k:              Quadrupolar focusing strength [mˆ-2]
 
         Keyword arguments:
             EntranceAngle=0.0:  entrance angle
@@ -985,11 +1041,12 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("EntranceAngle", 0.0)
         kwargs.setdefault("ExitAngle", 0.0)
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, k], **kwargs)
+        super().__init__(family_name, length, [], [], k, **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
+        custom_items = list(super().items())
+        custom_items.remove(("H", self.H))
+        yield from custom_items
 
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
@@ -1040,7 +1097,7 @@ class Quadrupole(Radiative, Multipole):
         Args:
             family_name:    Name of the element
             length:         Element length [m]
-            k:              Focusing strength [mˆ-2]
+            k:              Quadrupolar focusing strength [mˆ-2]
 
         Keyword Arguments:
             PolynomB:           straight multipoles
@@ -1062,11 +1119,12 @@ class Quadrupole(Radiative, Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, k], **kwargs)
+        super().__init__(family_name, length, [], [], k, **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
+        custom_items = list(super().items())
+        custom_items.remove(("H", self.H))
+        yield from custom_items
 
 
 class Sextupole(Multipole):
@@ -1083,7 +1141,7 @@ class Sextupole(Multipole):
         Args:
             family_name:    Name of the element
             length:         Element length [m]
-            h:              strength [mˆ-3]
+            h:              Sextupolar focusing strength [mˆ-3]
 
         Keyword Arguments:
             PolynomB:           straight multipoles
@@ -1097,11 +1155,12 @@ class Sextupole(Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
+        super().__init__(family_name, length, [], [], 0.0, h, **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "H", self.H
+        custom_items = list(super().items())
+        custom_items.remove(("K", self.K))
+        yield from custom_items
 
 
 class Octupole(Multipole):
