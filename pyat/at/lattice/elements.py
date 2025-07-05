@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import abc
 import re
+import warnings
 from abc import ABC
 from collections.abc import Generator, Iterable
 from copy import copy, deepcopy
@@ -18,12 +19,15 @@ from typing import Any, Optional
 import numpy as np
 
 # noinspection PyProtectedMember
-from .parser import _nop
+from .exceptions import AtWarning
+from .parser import _nop, ParamDef
 from .parameters import _ACCEPTED, ParamArray, AttributeArray as _array
-from .parser import ParamDef
 
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
+
+# AtWarning from this module should always be issued (not only on the first occurrence)
+warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _array66(value):
@@ -981,6 +985,8 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
+        kwargs.pop("K", None)
+        kwargs.pop("H", None)
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
@@ -1056,7 +1062,7 @@ class Dipole(Radiative, Multipole):
         self,
         family_name: str,
         length: float,
-        bending_angle: float | None = 0.0,
+        bending_angle: float = 0.0,
         k: float = 0.0,
         **kwargs,
     ):
@@ -1105,7 +1111,16 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("EntranceAngle", 0.0)
         kwargs.setdefault("ExitAngle", 0.0)
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, k], **kwargs)
+        k2 = kwargs.pop("K", k)
+        super().__init__(family_name, length, [], [0.0, k2], **kwargs)
+        if k != 0.0 and float(k) != self.K:
+            warnings.warn(
+                AtWarning(
+                    f"In element {family_name!r}: conflicting values "
+                    f"for the focusing strength.\nKeeping {self.K}"
+                ),
+                stacklevel=2,
+            )
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         yield from super().items(freeze=freeze)
@@ -1153,7 +1168,7 @@ class Quadrupole(Radiative, Multipole):
     DefaultOrder = 1
 
     def __init__(
-        self, family_name: str, length: float, k: float | None = 0.0, **kwargs
+        self, family_name: str, length: float, k: float = 0.0, **kwargs
     ):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
@@ -1182,7 +1197,16 @@ class Quadrupole(Radiative, Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, k], **kwargs)
+        k2 = kwargs.pop("K", k)
+        super().__init__(family_name, length, [], [0.0, k2], **kwargs)
+        if k != 0.0 and float(k) != self.K:
+            warnings.warn(
+                AtWarning(
+                    f"In element {family_name!r}: conflicting values "
+                    f"for the focusing strength.\nKeeping {self.K}"
+                ),
+                stacklevel=2,
+            )
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         yield from super().items(freeze=freeze)
@@ -1197,7 +1221,7 @@ class Sextupole(Multipole):
     DefaultOrder = 2
 
     def __init__(
-        self, family_name: str, length: float, h: float | None = 0.0, **kwargs
+        self, family_name: str, length: float, h: float = 0.0, **kwargs
     ):
         """
         Args:
@@ -1217,7 +1241,16 @@ class Sextupole(Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
+        h2 = kwargs.pop("H", h)
+        super().__init__(family_name, length, [], [0.0, 0.0, h2], **kwargs)
+        if h != 0.0 and float(h) != self.H:
+            warnings.warn(
+                AtWarning(
+                    f"In element {family_name!r}: conflicting values "
+                    f"for the sextupole strength.\nKeeping {self.H}"
+                ),
+                stacklevel=2,
+            )
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         yield from super().items(freeze=freeze)
