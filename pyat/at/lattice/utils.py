@@ -49,14 +49,13 @@ import numpy
 import numpy.typing as npt
 
 from .elements import Element, Dipole
+from .exceptions import AtError
 
 _GEOMETRY_EPSIL = 1.0e-3
 
 __all__ = [
     "All",
     "End",
-    "AtError",
-    "AtWarning",
     "BoolRefpts",
     "Uint32Refpts",
     "check_radiation",
@@ -82,14 +81,6 @@ __all__ = [
     "setval",
     "getval",
 ]
-
-
-class AtError(Exception):
-    pass
-
-
-class AtWarning(UserWarning):
-    pass
 
 
 _typ1 = "None, All, End, int, bool"

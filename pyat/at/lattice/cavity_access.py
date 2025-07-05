@@ -11,8 +11,9 @@ from enum import Enum
 import numpy as np
 
 from .elements import RFCavity
+from .exceptions import AtError
 from .lattice_object import Lattice
-from .utils import AtError, make_copy, Refpts
+from .utils import make_copy, Refpts
 
 __all__ = [
     "frequency_control",

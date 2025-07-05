@@ -5,6 +5,7 @@ These functions are useful for building ad manipulating these sequences.
 """
 import sys
 import numpy as np
+from .exceptions import *
 from .axisdef import *
 from .options import *
 from .particle_object import Particle
