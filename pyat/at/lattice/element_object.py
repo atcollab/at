@@ -439,21 +439,20 @@ class Element:
 
     def divide(self, frac) -> list[Element]:
         # noinspection PyUnresolvedReferences
-        """split the element in len(frac) pieces whose length
-                is frac[i]*self.Length
+        """split the element in len(frac) pieces whose length is frac[i]*self.Length
 
-                Parameters:
-                    frac:           length of each slice expressed as a fraction of the
-                      initial length. ``sum(frac)`` may differ from 1.
+        Parameters:
+            frac:           length of each slice expressed as a fraction of the
+              initial length. ``sum(frac)`` may differ from 1.
 
-                Returns:
-                    elem_list:  a list of elements equivalent to the original.
+        Returns:
+            elem_list:  a list of elements equivalent to the original.
 
-                Example:
+        Example:
 
-                    >>> Drift("dr", 0.5).divide([0.2, 0.6, 0.2])
-                    [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
-                """
+            >>> Drift("dr", 0.5).divide([0.2, 0.6, 0.2])
+            [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
+        """
         # Bx default, the element is indivisible
         return [self]
 

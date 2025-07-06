@@ -440,7 +440,7 @@ class ThinMultipole(Element):
                     f"for the strength."
                     f"\n{n1} ({v1}) and {n2} ({v2}): Keeping {v2}"
                 ),
-                stacklevel=2,
+                stacklevel=4,
             )
 
         if keyval != 0.0 and keyval != polval:
