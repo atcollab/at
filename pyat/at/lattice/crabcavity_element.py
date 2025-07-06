@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from .elements import LongtMotion, LongElement, _array
+from .element_object import _array
+from .elements import LongtMotion, LongElement
 
 
 class CrabCavity(LongtMotion, LongElement):

@@ -19,7 +19,6 @@ from .crabcavity_element import *
 from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .transformation import *
-from .element_parameterise import *
 from .lattice_object import *
 from .lattice_parameterise import *
 # from .lattice_variables import *
