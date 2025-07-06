@@ -18,7 +18,6 @@ from typing import Any, Optional
 
 import numpy as np
 
-# noinspection PyProtectedMember
 from .exceptions import AtWarning
 from .parser import _nop, ParamDef
 from .parameters import _ACCEPTED, ParamArray, AttributeArray as _array
@@ -974,7 +973,7 @@ class ThinMultipole(Element):
                     f"for the strength."
                     f"\n{n1} ({v1}) and {n2} ({v2}): Keeping {v2}"
                 ),
-                stacklevel=2,
+                stacklevel=4,
             )
 
         if keyval != 0.0 and keyval != polval:
@@ -1643,28 +1642,3 @@ class EnergyLoss(_DictLongtMotion, Element):
 
 
 Radiative.register(EnergyLoss)
-
-
-def build_class_map():  # Missing class aliases (Bend)
-    global CLASS_MAP
-
-    def subclasses_recursive(cl):
-        direct = cl.__subclasses__()
-        indirect = []
-        for subclass in direct:
-            indirect.extend(subclasses_recursive(subclass))
-        return frozenset([cl] + direct + indirect)
-
-    cls_list = subclasses_recursive(Element)
-    CLASS_MAP = {cls.__name__: cls for cls in cls_list}
-
-
-def get_class_map():
-    return CLASS_MAP
-
-
-# build_class_map()
-
-CLASS_MAP = {
-    k: v for k, v in locals().items() if isinstance(v, type) and issubclass(v, Element)
-}
