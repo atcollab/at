@@ -23,7 +23,6 @@ __all__ = [
 
 import abc
 import re
-import warnings
 from abc import ABC
 from collections.abc import Generator
 from copy import copy, deepcopy
@@ -31,13 +30,10 @@ from typing import Any
 
 import numpy as np
 
-from .exceptions import AtWarning
 from .parser import _nop, ParamDef
 from .variables import ParamBase
+# noinspection PyPep8Naming
 from .parameters import _ACCEPTED, Param, ParamArray, AttributeArray as _array
-
-# AtWarning from this module should always be issued (not only on the first occurrence)
-warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _array66(value):
@@ -241,6 +237,7 @@ class Radiative(_Radiative):
 
 
 class Collective(_DictLongtMotion):
+    # noinspection PyAbstractClass
     """Mixin class for elements representing collective effects
 
     Derived classes will automatically set the
@@ -400,7 +397,7 @@ class Element:
         return f"{clsname}({args})"
 
     def __getstate__(self):
-        # Make a copy of parameters
+        # For pickling Elements: make a copy of parameters
         return self.__dict__, {"_parameters": self._parameters.copy()}
 
     def _ident(self, attrname: str | None = None, index: bool = None):
@@ -478,8 +475,7 @@ class Element:
 
     def divide(self, frac) -> list[Element]:
         # noinspection PyUnresolvedReferences
-        """split the element in len(frac) pieces whose length
-        is frac[i]*self.Length
+        """split the element in len(frac) pieces whose length is frac[i]*self.Length
 
         Parameters:
             frac:           length of each slice expressed as a fraction of the
@@ -597,10 +593,13 @@ class Element:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
 
-    def set_parameter(self, attrname: str, value: Any, index: int | None = None) -> None:
+    def set_parameter(
+        self, attrname: str, value: Any, index: int | None = None
+    ) -> None:
         """Set an element's parameter.
 
-        This allows setting a parameter into an attribute or an item of an array attribute.
+        This allows setting a parameter into an attribute or an item of an
+        array attribute.
 
         Args:
             attrname:   Attribute name
@@ -613,10 +612,10 @@ class Element:
             AttributeError: If the attribute doesn't exist
         """
 
-        def set_array_item(array: np.ndarray, idx: int, val: Any) -> None:
-            """Helper function to set an item in an array with improved error handling."""
+        def set_array_item(arr: np.ndarray, idx: int, val: Any) -> None:
+            """Helper function to set an item in an array."""
             try:
-                array[idx] = val
+                arr[idx] = val
             except IndexError as exc:
                 exc.args = (f"{self._ident(attrname)}: {exc}",)
                 raise
@@ -634,7 +633,6 @@ class Element:
                 setattr(self, attrname, array)
             else:
                 set_array_item(array, index, value)
-
 
     def is_parameterised(
         self, attrname: str | None = None, index: int | None = None
@@ -657,7 +655,6 @@ class Element:
         # Get the attribute or specific index
         attribute = self.get_parameter(attrname, index=index)
         return isinstance(attribute, (ParamDef, ParamArray))
-
 
     def parameterise(
         self, attrname: str, index: int | None = None, name: str = ""
@@ -701,9 +698,10 @@ class Element:
         self.set_parameter(attrname, param, index=index)
         return param
 
-
-    def unparameterise(self, attrname: str | None = None, index: int | None = None) -> None:
-        """Freeze the parameter values by replacing parameters with their current values.
+    def unparameterise(
+        self, attrname: str | None = None, index: int | None = None
+    ) -> None:
+        """Replace parameters with their current values.
 
         This function replaces parameters with their current values, effectively
         "freezing" them. This is useful when you want to convert a parameterised
@@ -711,7 +709,8 @@ class Element:
 
         Args:
             attrname:   Attribute name. If :py:obj:`None`, freezes all attributes
-            index:      Index in an array. If :py:obj:`None`, freezes the whole attribute
+            index:      Index in an array. If :py:obj:`None`, freezes the whole
+              attribute
 
         Attributes which are not parameters are silently ignored.
         """
@@ -734,5 +733,5 @@ class Element:
                 if isinstance(item, ParamDef):
                     attr[index] = item.value
                 if not any(isinstance(item, ParamDef) for item in attr.flat):
-                    # freeze the whole array attribute if none of its items is a parameter
+                    # freeze the whole array attribute if no parameter left
                     setattr(self, attrname, attr.value)
