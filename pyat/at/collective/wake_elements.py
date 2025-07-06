@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import numpy
-from ..lattice import Lattice
-# noinspection PyProtectedMember
-from ..lattice.elements import Element, Collective, _array
-from ..constants import clight, qe
+
 from .wake_object import Wake, WakeComponent
+from ..constants import clight
+from ..lattice import Lattice, Element, Collective
+# noinspection PyProtectedMember
+from ..lattice.elements.conversions import _array
 
 
 # noinspection PyPep8Naming
