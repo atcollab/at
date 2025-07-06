@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import abc
 import re
+import warnings
 from abc import ABC
 from collections.abc import Generator, Iterable
 from copy import copy, deepcopy
@@ -18,12 +19,15 @@ from typing import Any, Optional
 import numpy as np
 
 # noinspection PyProtectedMember
-from .parser import _nop
+from .exceptions import AtWarning
+from .parser import _nop, ParamDef
 from .parameters import _ACCEPTED, ParamArray, ParamArray as _array
-from .parser import ParamDef
 
 _zero6 = np.zeros(6)
 _eye6 = np.eye(6, order="F")
+
+# AtWarning from this module should always be issued (not only on the first occurrence)
+warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _array66(value):
@@ -392,7 +396,7 @@ class Element:
         """Extract a parameter of an element
 
         Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
-        parameter itself instead of its value. It the item is not a parameter,
+        parameter itself instead of its value. If the item is not a parameter,
         both functions are equivalent, the value is returned.
 
         Args:
@@ -407,7 +411,8 @@ class Element:
             attr = self.__dict__[attrname]
         except KeyError:
             raise AttributeError(
-                f"{self._ident()} has no attribute {attrname!r}") from None
+                f"{self._ident()} has no attribute {attrname!r}"
+            ) from None
         if index is not None:
             try:
                 attr = attr[index]
@@ -886,6 +891,8 @@ class ThinMultipole(Element):
             else:
                 return poly
 
+        k2 = kwargs.pop("K", 0.0)
+        h2 = kwargs.pop("H", 0.0)
         # PolynomA and PolynomB and convert to ParamArray
         prmpola = self._conversions["PolynomA"](kwargs.pop("PolynomA", poly_a))
         prmpolb = self._conversions["PolynomB"](kwargs.pop("PolynomB", poly_b))
@@ -902,6 +909,8 @@ class ThinMultipole(Element):
         len_ab = max(self.MaxOrder + 1, len_a, len_b)
         self.PolynomA = lengthen(prmpola, len_ab - len_a)
         self.PolynomB = lengthen(prmpolb, len_ab - len_b)
+        self._priority_warning("k", 0.0, "K", float(k2), "PolynomB[1]", self.K)
+        self._priority_warning("h", 0.0, "H", float(h2), "PolynomB[2]", self.H)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
@@ -916,6 +925,46 @@ class ThinMultipole(Element):
             if not intval < lmax:
                 raise ValueError(f"MaxOrder must be smaller than {lmax}")
         super().__setattr__(key, value)
+
+    def _priority_warning(self, argname, argval, keyname, keyval, polname, polval):
+        def warn(n1, v1, n2, v2):
+            warnings.warn(
+                AtWarning(
+                    f"\nIn element {self.FamName!r}: conflicting values "
+                    f"for the strength."
+                    f"\n{n1} ({v1}) and {n2} ({v2}): Keeping {v2}"
+                ),
+                stacklevel=2,
+            )
+
+        if keyval != 0.0 and keyval != polval:
+            warn(keyname, keyval, polname, polval)
+        elif argval != 0.0 and argval != keyval:
+            warn(argname, argval, keyname, keyval)
+
+    # noinspection PyPep8Naming
+    @property
+    def K(self) -> float:
+        """Focusing strength [mˆ-2]"""
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 2 else float(arr[1])
+
+    # noinspection PyPep8Naming
+    @K.setter
+    def K(self, strength: float):
+        self.PolynomB[1] = strength
+
+    # noinspection PyPep8Naming
+    @property
+    def H(self) -> float:
+        """Sextupolar strength [mˆ-3]"""
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 3 else float(arr[2])
+
+    # noinspection PyPep8Naming
+    @H.setter
+    def H(self, strength):
+        self.PolynomB[2] = strength
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
@@ -957,30 +1006,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         else:
             return False
 
-    # noinspection PyPep8Naming
-    @property
-    def K(self) -> float:
-        """Focusing strength [mˆ-2]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 2 else float(arr[1])
-
-    # noinspection PyPep8Naming
-    @K.setter
-    def K(self, strength: float):
-        self.PolynomB[1] = strength
-
-    # noinspection PyPep8Naming
-    @property
-    def H(self) -> float:
-        """Sextupolar strength [mˆ-3]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 3 else float(arr[2])
-
-    # noinspection PyPep8Naming
-    @H.setter
-    def H(self, strength):
-        self.PolynomB[2] = strength
-
 
 class Dipole(Radiative, Multipole):
     """Dipole element"""
@@ -1017,7 +1042,7 @@ class Dipole(Radiative, Multipole):
         self,
         family_name: str,
         length: float,
-        bending_angle: float | None = 0.0,
+        bending_angle: float = 0.0,
         k: float = 0.0,
         **kwargs,
     ):
@@ -1066,7 +1091,9 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("EntranceAngle", 0.0)
         kwargs.setdefault("ExitAngle", 0.0)
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, k], **kwargs)
+        k2 = kwargs.pop("K", k)
+        super().__init__(family_name, length, [], [0.0, k2], **kwargs)
+        self._priority_warning("k", float(k), "K", float(k2), "PolynomB[1]", self.K)
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         yield from super().items(freeze=freeze)
@@ -1113,9 +1140,7 @@ class Quadrupole(Radiative, Multipole):
 
     DefaultOrder = 1
 
-    def __init__(
-        self, family_name: str, length: float, k: float | None = 0.0, **kwargs
-    ):
+    def __init__(self, family_name: str, length: float, k: float = 0.0, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
         Args:
@@ -1143,7 +1168,9 @@ class Quadrupole(Radiative, Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, k], **kwargs)
+        k2 = kwargs.pop("K", k)
+        super().__init__(family_name, length, [], [0.0, k2], **kwargs)
+        self._priority_warning("k", float(k), "K", float(k2), "PolynomB[1]", self.K)
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         yield from super().items(freeze=freeze)
@@ -1157,9 +1184,7 @@ class Sextupole(Multipole):
 
     DefaultOrder = 2
 
-    def __init__(
-        self, family_name: str, length: float, h: float | None = 0.0, **kwargs
-    ):
+    def __init__(self, family_name: str, length: float, h: float = 0.0, **kwargs):
         """
         Args:
             family_name:    Name of the element
@@ -1178,7 +1203,9 @@ class Sextupole(Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
+        h2 = kwargs.pop("H", h)
+        super().__init__(family_name, length, [], [0.0, 0.0, h2], **kwargs)
+        self._priority_warning("h", float(h), "H", float(h2), "PolynomB[2]", self.H)
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         yield from super().items(freeze=freeze)
