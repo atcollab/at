@@ -23,7 +23,6 @@ __all__ = [
 
 import abc
 import re
-import warnings
 from abc import ABC
 from collections.abc import Generator
 from copy import copy, deepcopy
@@ -31,13 +30,10 @@ from typing import Any
 
 import numpy as np
 
-from .exceptions import AtWarning
 from .parser import _nop, ParamDef
 from .variables import ParamBase
+# noinspection PyPep8Naming
 from .parameters import _ACCEPTED, Param, ParamArray, ParamArray as _array
-
-# AtWarning from this module should always be issued (not only on the first occurrence)
-warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _array66(value):
@@ -241,6 +237,7 @@ class Radiative(_Radiative):
 
 
 class Collective(_DictLongtMotion):
+    # noinspection PyAbstractClass
     """Mixin class for elements representing collective effects
 
     Derived classes will automatically set the
