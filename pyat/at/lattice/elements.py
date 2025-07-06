@@ -903,6 +903,7 @@ class ThinMultipole(Element):
     """Thin multipole element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
+    _conversions = dict(Element._conversions, K=float, H=float)
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -1010,7 +1011,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
-    _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -1228,7 +1228,7 @@ class Sextupole(Multipole):
         Args:
             family_name:    Name of the element
             length:         Element length [m]
-            h:              strength [mˆ-3]
+            h:              Sextupolar strength [mˆ-3]
 
         Keyword Arguments:
             PolynomB:           straight multipoles
@@ -1392,8 +1392,6 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
         """
         Args:
             family_name:    Name of the element
-
-        Optional Args:
             betax:         Horizontal beta function at element [m]
             betay:         Vertical beta function at element [m]
             emitx:         Horizontal equilibrium emittance [m.rad]
@@ -1458,8 +1456,6 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
         """
         Args:
             family_name:    Name of the element
-
-        Optional Args:
             taux:          Horizontal damping time [turns]
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
