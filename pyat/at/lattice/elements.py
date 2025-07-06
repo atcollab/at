@@ -402,14 +402,13 @@ class Element:
             return f"{self.__class__.__name__}({self.FamName!r}).{attrname}[{index}]"
 
     @classmethod
-    def subclasses(cls):
+    def subclasses(cls) -> Generator[type[Element], None, None]:
         """Yields all the class subclasses.
 
         Some classes may appear several times because of diamond-shape inheritance
         """
         for subclass in cls.__subclasses__():
             yield from subclass.subclasses()
-            yield subclass
         yield cls
 
     def keys(self):
