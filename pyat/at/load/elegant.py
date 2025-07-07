@@ -75,8 +75,6 @@ from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 from .madx import sinc, _Line, p_dict, p_list
 from . import Rpn
 
-_globals = globals()
-
 # -------------------
 #  Utility functions
 # -------------------
@@ -426,8 +424,7 @@ _elegant_env = {
 
 _ignore_names = ["SOLENOID", "SCRAPER", "ECOL", "RCOL", "CSRDRIF"]
 
-_globals.update((name, ignore_class(name, _ElegantElement)) for name in _ignore_names)
-_elegant_env.update((name, _globals[name]) for name in _ignore_names)
+_elegant_env.update((name, ignore_class(name, _ElegantElement)) for name in _ignore_names)
 
 _skip_names = [
     "MAXAMP",
@@ -442,8 +439,7 @@ _skip_names = [
     "WAKE",
 ]
 
-_globals.update((name, skip_class(name, _ElegantElement)) for name in _skip_names)
-_elegant_env.update((name, _globals[name]) for name in _skip_names)
+_elegant_env.update((name, skip_class(name, _ElegantElement)) for name in _skip_names)
 
 
 class ElegantParser(UpperCaseParser, BaseParser):
