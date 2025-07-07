@@ -1,4 +1,4 @@
-"""Crab cavity Element"""
+"""Crab cavity :py:class:`.Element`"""
 
 from __future__ import annotations
 

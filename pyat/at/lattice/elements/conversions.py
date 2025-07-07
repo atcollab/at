@@ -1,4 +1,4 @@
-"""Conversion functions for Element attributes"""
+"""Conversion functions for :py:class:`.Element` attributes"""
 
 from __future__ import annotations
 
