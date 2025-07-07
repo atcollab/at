@@ -3,7 +3,7 @@ import numpy
 from at import element_track, lattice_track
 from at import lattice_pass, internal_lpass
 from at import element_pass, internal_epass
-from at.lattice.elements.element_object import _array, _array66
+from at.lattice.elements.conversions import _array, _array66
 from at import elements
 from numpy.testing import assert_equal
 

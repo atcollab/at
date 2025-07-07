@@ -14,7 +14,6 @@ from .parser import *
 from .variables import VariableList, ParamBase
 from .parameters import *
 from .elements import *
-from .rectangular_bend import *
 from .utils import *
 from .transformation import *
 from .lattice_object import *

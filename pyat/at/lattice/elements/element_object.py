@@ -1,4 +1,4 @@
-"""Base Element object"""
+"""Base :py:class:`.Element` object"""
 
 from __future__ import annotations
 

@@ -1,10 +1,4 @@
-"""
-Module to define common elements used in AT.
-
-Each element has a default PassMethod attribute for which it should have the
-appropriate attributes.  If a different PassMethod is set, it is the caller's
-responsibility to ensure that the appropriate attributes are present.
-"""
+"""Abstract :py:class:`.Element` classes"""
 
 from __future__ import annotations
 

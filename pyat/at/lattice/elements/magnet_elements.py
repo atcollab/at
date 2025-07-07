@@ -1,4 +1,4 @@
-"""Basic Elements"""
+""":py:class:`.Element` classes for magnets"""
 
 from __future__ import annotations
 
