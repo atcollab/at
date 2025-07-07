@@ -1,17 +1,17 @@
 import pytest
 import numpy
-import warnings
 from at import element_track, lattice_track
 from at import lattice_pass, internal_lpass
 from at import element_pass, internal_epass
-from at import elements, lattice
+from at.lattice.elements.conversions import _array, _array66
+from at import elements
 from numpy.testing import assert_equal
 
 
 def test_data_checks():
     val = numpy.zeros([6, 6])
-    assert elements._array(val).shape == (36,)
-    assert elements._array66(val).shape == (6, 6)
+    assert _array(val).shape == (36,)
+    assert _array66(val).shape == (6, 6)
 
 
 def test_element_string_ordering():
@@ -140,170 +140,6 @@ def test_multipole():
     assert m.PassMethod == 'StrMPoleSymplectic4Pass'
 
 
-@pytest.mark.parametrize(
-    "element_type,args",
-    [
-        (elements.Multipole, ["Multi", 1.0]),
-        (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
-    ],
-)
-def test_PolynomA_strength_prioritisation(element_type, args):
-    # Warning and changes when poly_a is zeros and PolynomA isn't
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [0.0, 0.0], [], PolynomA=[1.0, 2.0])
-    assert elem.PolynomA[0] == 1.0
-    assert elem.PolynomA[1] == 2.0
-    # Warning and no changes when PolynomA and poly_a are the same and non-zero
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [1.0, 2.0], [], PolynomA=[1.0, 2.0])
-    assert elem.PolynomA[0] == 1.0
-    assert elem.PolynomA[1] == 2.0
-    # Error when poly_a is non-zero and different to PolynomA, even if PolynomA is zeros
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, [1.0], [], PolynomA=[0.0])
-    # Check poly_a and PolynomA are made the same length
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [1.0], [], PolynomA=[1.0, 0.0, 0.0, 0.0, 0.0])
-    assert len(elem.PolynomA) == 5
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [1.0, 0.0, 0.0, 0.0, 0.0], [], PolynomA=[1.0])
-    assert len(elem.PolynomA) == 5
-
-
-@pytest.mark.parametrize(
-    "element_type,args",
-    [
-        (elements.Multipole, ["Multi", 1.0]),
-        (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
-    ],
-)
-def test_PolynomB_strength_prioritisation(element_type, args):
-    # Warning and changes when poly_b is zeros and PolynomB isn't
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [0.0, 0.0], PolynomB=[1.0, 2.0])
-    assert elem.PolynomB[0] == 1.0
-    assert elem.PolynomB[1] == 2.0
-    # Warning and no changes when PolynomB and poly_b are the same and non-zero
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [1.0, 2.0], PolynomB=[1.0, 2.0])
-    assert elem.PolynomB[0] == 1.0
-    assert elem.PolynomB[1] == 2.0
-    # Error when poly_b is non-zero and different to PolynomB, even if PolynomB is zeros
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, [], [1.0], PolynomB=[0.0])
-    # Check poly_a and PolynomA are made the same length
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [1.0], PolynomB=[1.0, 0.0, 0.0, 0.0, 0.0])
-    assert len(elem.PolynomB) == 5
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [1.0, 0.0, 0.0, 0.0, 0.0], PolynomB=[1.0])
-    assert len(elem.PolynomB) == 5
-
-
-@pytest.mark.parametrize(
-    "element_type,args",
-    [
-        (elements.Multipole, ["Multi", 1.0]),
-        (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
-    ],
-)
-def test_K_and_H_strength_prioritisation(element_type, args):
-    # Warning and no change when K is zero
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [0.0, 1.0], K=0.0)
-    assert elem.PolynomB[1] == 1.0
-    # Warning and no change when H is zero
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [0.0, 0.0, 2.0], H=0.0)
-    assert elem.PolynomB[2] == 2.0
-    # Warning and no change when poly_b[1] and K are the same and non-zero
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [0.0, 1.0], K=1.0)
-    assert elem.PolynomB[1] == 1.0
-    # Warning and no change when poly_b[2] and H are the same and non-zero
-    with pytest.warns(lattice.AtWarning):
-        elem = element_type(*args, [], [0.0, 0.0, 2.0], H=2.0)
-    assert elem.PolynomB[2] == 2.0
-    # Error when K is non-zero and different to poly_b[1], even if poly_b[1] is 0.0
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, [], [0.0, 0.0], K=2.0)
-    # Error when H is non-zero and different to poly_b[2], even if poly_b[2] is 0.0
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, [], [0.0, 0.0, 0.0], H=2.0)
-    # Error when len(poly_b)<2 and K is specified
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, [], [0.0], K=1.0)
-    # Error when len(poly_b)<3 and H is specified
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, [], [0.0, 0.0], H=1.0)
-
-
-@pytest.mark.parametrize(
-    "element_type,args",
-    [
-        (elements.Quadrupole, ["Quad", 1.0]),
-        (elements.Dipole, ["Dipole", 1.0, 0.0]),
-    ],
-)
-def test_quadrupolar_strength_prioritisation(element_type, args):
-    # No warning or change when k isn't specified, and is therefore default value (0.0)
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = element_type(*args, PolynomB=[0.0, 1.0])
-    assert elem.PolynomB[1] == 1.0
-    # No warning or change when PolynomB isn't specified
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = element_type(*args, k=1.0)
-    assert elem.PolynomB[1] == 1.0
-    # No warning or change when PolynomB[1] and k are the same and non-zero
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = element_type(*args, k=1.0, PolynomB=[0.0, 1.0])
-    assert elem.PolynomB[1] == 1.0
-    # Error when k is non-zero and different to PolynomB[1], even if PolynomB[1] is 0.0
-    with pytest.raises(lattice.AtError):
-        elem = element_type(*args, k=1.0, PolynomB=[0.0, 0.0])
-    # No warning or change when PolynomB[1] and k are the same and non-zero even if the
-    # other terms of PolynomB are non-zero
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = element_type(*args, k=1.0, PolynomB=[0.5, 1.0])
-    assert elem.PolynomB[0] == 0.5
-    assert elem.PolynomB[1] == 1.0
-
-
-def test_sextupolar_strength_prioritisation():
-    # No warning or change when h isn't specified, and is therefore default value (0.0)
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = elements.Sextupole("Sext", 1.0, PolynomB=[0.0, 0.0, 1.0])
-    assert elem.PolynomB[2] == 1.0
-    # No warning or change when PolynomB isn't specified
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = elements.Sextupole("Sext", 1.0, h=1.0)
-    assert elem.PolynomB[2] == 1.0
-    # No warning or change when PolynomB[2] and h are the same and non-zero
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = elements.Sextupole("Sext", 1.0, h=1.0, PolynomB=[0.0, 0.0, 1.0])
-    assert elem.PolynomB[2] == 1.0
-    # Error when h is non-zero and different to PolynomB[2], even if PolynomB[2] is 0.0
-    with pytest.raises(lattice.AtError):
-        elem = elements.Sextupole("Sext", 1.0, h=1.0, PolynomB=[0.0, 0.0, 0.0])
-    # No warning or change when PolynomB[2] and h are the same and non-zero even if the
-    # other terms of PolynomB are non-zero
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        elem = elements.Sextupole("Sext", 1.0, h=1.0, PolynomB=[0.5, 0.0, 1.0])
-    assert elem.PolynomB[0] == 0.5
-    assert elem.PolynomB[2] == 1.0
-
-
 def test_divide_splits_attributes_correctly():
     pre = elements.Drift('drift', 1)
     post = pre.divide([0.2, 0.5, 0.3])
@@ -358,9 +194,7 @@ def test_correct_dimensions_does_not_raise_error(rin, func):
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
 @pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_dipole_bend_synonym(rin, dipole_class, func):
-    b = dipole_class(
-        'dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05, PolynomB=[0.0, 0.0]
-    )
+    b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
     rin[0, 0] = 1e-6
     if func == element_track:
         func(b, rin, in_place=True)
