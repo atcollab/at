@@ -157,8 +157,6 @@ emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 erad = _cst["classical electron radius"][0]  # [m]
 
-_globals = globals()
-
 
 def sinc(x: float) -> float:
     """Cardinal sine function known by MAD-X"""
@@ -832,8 +830,7 @@ _ignore_names = [
     "tkicker",
 ]
 
-_globals.update((name, ignore_class(name, _MadElement)) for name in _ignore_names)
-_madx_env.update((name, _globals[name]) for name in _ignore_names)
+_madx_env.update((name, ignore_class(name, _MadElement)) for name in _ignore_names)
 
 
 class _MadParser(LowerCaseParser, UnorderedParser):
