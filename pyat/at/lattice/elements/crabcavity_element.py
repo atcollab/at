@@ -1,7 +1,10 @@
+"""Crab cavity :py:class:`.Element`"""
+
 from __future__ import annotations
 
-from .element_object import _array
-from .elements import LongtMotion, LongElement
+from .conversions import _array
+from .abstract_elements import LongtMotion
+from .basic_elements import LongElement
 
 
 class CrabCavity(LongtMotion, LongElement):

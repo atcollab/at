@@ -14,16 +14,12 @@ from .parser import *
 from .variables import VariableList, ParamBase
 from .parameters import *
 from .elements import *
-from .rectangular_bend import *
-from .crabcavity_element import *
-from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .transformation import *
 from .lattice_object import *
 from .lattice_parameterise import *
 # from .lattice_variables import *
 from .cavity_access import *
-from .variable_elements import *
 from .deprecated import *
 # Define the module "lattice.constants" for backward compatibility
 # noinspection PyUnresolvedReferences

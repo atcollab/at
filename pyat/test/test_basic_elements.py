@@ -3,14 +3,15 @@ import numpy
 from at import element_track, lattice_track
 from at import lattice_pass, internal_lpass
 from at import element_pass, internal_epass
+from at.lattice.elements.conversions import _array, _array66
 from at import elements
 from numpy.testing import assert_equal
 
 
 def test_data_checks():
     val = numpy.zeros([6, 6])
-    assert elements._array(val).shape == (36,)
-    assert elements._array66(val).shape == (6, 6)
+    assert _array(val).shape == (36,)
+    assert _array66(val).shape == (6, 6)
 
 
 def test_element_string_ordering():
