@@ -35,6 +35,7 @@ class ThinMultipole(Element):
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(Element._conversions, K=float, H=float)
+    _stacklevel = 4  # Stacklevel for warnings
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -105,7 +106,7 @@ class ThinMultipole(Element):
                     f"for the strength."
                     f"\n{n1} ({v1}) and {n2} ({v2}): Keeping {v2}"
                 ),
-                stacklevel=4,
+                stacklevel=self._stacklevel,
             )
 
         if keyval != 0.0 and keyval != polval:
@@ -142,6 +143,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
+    _stacklevel = 6  # Stacklevel for warnings
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -192,6 +194,7 @@ class Dipole(Radiative, Multipole):
         FringeBendEntrance=int,
         FringeBendExit=int,
     )
+    _stacklevel = 4  # Stacklevel for warnings
 
     _entrance_fields = Multipole._entrance_fields + [
         "EntranceAngle",
@@ -304,6 +307,7 @@ class Quadrupole(Radiative, Multipole):
     _conversions = dict(
         Multipole._conversions, FringeQuadEntrance=int, FringeQuadExit=int
     )
+    _stacklevel = 4  # Stacklevel for warnings
 
     _entrance_fields = Multipole._entrance_fields + ["FringeQuadEntrance"]
     _exit_fields = Multipole._exit_fields + ["FringeQuadExit"]
@@ -351,6 +355,7 @@ class Sextupole(Multipole):
     """Sextupole element"""
 
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["H"]
+    _stacklevel = 4  # Stacklevel for warnings
 
     DefaultOrder = 2
 
