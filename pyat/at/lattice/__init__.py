@@ -12,7 +12,6 @@ from .particle_object import Particle
 # from .variables import *
 from .variables import VariableList
 from .elements import *
-from .rectangular_bend import *
 from .utils import *
 from .transformation import *
 from .lattice_object import *

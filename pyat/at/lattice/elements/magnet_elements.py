@@ -1,4 +1,4 @@
-"""Basic Elements"""
+""":py:class:`.Element` classes for magnets"""
 
 from __future__ import annotations
 
@@ -265,8 +265,8 @@ class Dipole(Radiative, Multipole):
         super().__init__(family_name, length, [], [0.0, k2], **kwargs)
         self._priority_warning("k", float(k), "K", float(k2), "PolynomB[1]", self.K)
 
-    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items(freeze=freeze)
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
         yield "K", self.K
 
     def _part(self, fr, sumfr):
@@ -342,8 +342,8 @@ class Quadrupole(Radiative, Multipole):
         super().__init__(family_name, length, [], [0.0, k2], **kwargs)
         self._priority_warning("k", float(k), "K", float(k2), "PolynomB[1]", self.K)
 
-    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items(freeze=freeze)
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
         yield "K", self.K
 
 
@@ -377,8 +377,8 @@ class Sextupole(Multipole):
         super().__init__(family_name, length, [], [0.0, 0.0, h2], **kwargs)
         self._priority_warning("h", float(h), "H", float(h2), "PolynomB[2]", self.H)
 
-    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items(freeze=freeze)
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
         yield "H", self.H
 
 

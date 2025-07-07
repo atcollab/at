@@ -1,4 +1,4 @@
-"""Base Element object"""
+"""Base :py:class:`.Element` object"""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from typing import Any
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
+
 # noinspection PyProtectedMember
 from ..variables import _nop
 
@@ -208,7 +209,7 @@ class Element:
 
     @property
     def longt_motion(self) -> bool:
-        """:py:obj:`True` if longitudinal motion is affected by the element"""
+        """:py:obj:`True` if the element affects the longitudinal motion"""
         return self._get_longt_motion()
 
     @property
