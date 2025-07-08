@@ -779,25 +779,15 @@ class Collimator(Drift):
 class ThinMultipole(Element):
     """Thin multipole element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB", "K", "H"]
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(Element._conversions, K=float, H=float)
 
-    def __init__(
-        self,
-        family_name: str,
-        poly_a,
-        poly_b,
-        k: float | None = 0.0,
-        h: float | None = 0.0,
-        **kwargs,
-    ):
+    def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
         Args:
             family_name:    Name of the element
             poly_a:         Array of skew multipole components
             poly_b:         Array of normal multipole components
-            k:              Quadrupolar focusing strength [mˆ-2]
-            h:              Sextupolar focusing strength [mˆ-3]
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
@@ -807,25 +797,6 @@ class ThinMultipole(Element):
 
         Default PassMethod: ``ThinMPolePass``
         """
-
-        def unify_strengths(poly_b, strength, order, name):
-            if strength:
-                if len(poly_b) >= (order + 1):
-                    if poly_b[order] and (poly_b[order] != strength):
-                        warnings.warn(
-                            AtWarning(
-                                f"Conflicting values for PolynomB[{order}] "
-                                f"({poly_b[order]}) and {name} ({strength}), "
-                                f"prioritising PolynomB[{order}], {name} set to "
-                                f"{poly_b[order]}"
-                            )
-                        )
-                    else:
-                        poly_b[order] = strength
-                else:
-                    poly_b = lengthen(poly_b, order + 1 - len(poly_b))
-                    poly_b[order] = strength
-            return poly_b
 
         def getpol(poly):
             nonzero = np.flatnonzero(poly != 0.0)
@@ -837,12 +808,65 @@ class ThinMultipole(Element):
             else:
                 return poly
 
+        def warn_if_duplicate_strengths(kwargs, poly_a, poly_b):
+            ignoring = []
+            prioritising = []
+            if "K" in kwargs:
+                k = self._conversions["K"](kwargs.pop("K"))
+                if "PolynomB" in kwargs:
+                    ignoring = [
+                        f"keyword argument 'K' ({k})",
+                        f"positional argument 'poly_b' ({poly_b})",
+                    ]
+                    prioritising.append(f"'PolynomB' ({kwargs.get('PolynomB')})")
+                else:
+                    ignoring.append(f"positional argument 'poly_b' ({poly_b})")
+                    prioritising.append(f"'K' ({k})")
+                    poly_b = lengthen(poly_b, 2 - len(poly_b))
+                    poly_b[1] = k
+            if "H" in kwargs:
+                h = self._conversions["H"](kwargs.pop("H"))
+                if "PolynomB" in kwargs:
+                    if ignoring:
+                        ignoring.insert(1, f"keyword argument 'H' ({h})")
+                    else:
+                        ignoring = [
+                            f"keyword argument 'H' ({h})",
+                            f"positional argument 'poly_b' ({poly_b})",
+                        ]
+                        prioritising.append(f"'PolynomB' ({kwargs.get('PolynomB')})")
+                else:
+                    if ignoring:
+                        prioritising.append(f"'H' ({h})")
+                    else:
+                        ignoring.append(f"positional argument 'poly_b' ({poly_b})")
+                        prioritising.append(f"'H' ({h})")
+                    poly_b = lengthen(poly_b, 3 - len(poly_b))
+                    poly_b[2] = h
+            if "PolynomB" in kwargs and not ignoring:
+                ignoring.append(f"positional argument 'poly_b' ({poly_b})")
+                prioritising.append(f"'PolynomB' ({kwargs.get('PolynomB')})")
+            if ignoring:
+                warnings.warn(
+                    AtWarning(
+                        f"Ignoring {' and '.join(ignoring)} as "
+                        f"{' and '.join(prioritising)} passed in kwargs."
+                    )
+                )
+            if "PolynomA" in kwargs:
+                warnings.warn(
+                    AtWarning(
+                        f"Ignoring positional argument 'poly_a' ({poly_a}) as "
+                        f"'PolynomA' ({kwargs.get('PolynomA')}) was passed in kwargs."
+                    )
+                )
+            return kwargs, poly_a, poly_b
+
+        # Check kwargs and poly_a & poly_b and warn if anything will be overridden
+        kwargs, poly_a, poly_b = warn_if_duplicate_strengths(kwargs, poly_a, poly_b)
         # PolynomA and PolynomB and convert to ParamArray
         prmpola = self._conversions["PolynomA"](kwargs.pop("PolynomA", poly_a))
         prmpolb = self._conversions["PolynomB"](kwargs.pop("PolynomB", poly_b))
-        # Unify K, H, and PolynomB
-        prmpolb = unify_strengths(prmpolb, k, 1, "K")
-        prmpolb = unify_strengths(prmpolb, h, 2, "H")
         # Determine length and order of PolynomA and PolynomB
         len_a, ord_a = getpol(prmpola)
         len_b, ord_b = getpol(prmpolb)
@@ -905,31 +929,15 @@ class ThinMultipole(Element):
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + [
-        "PolynomA",
-        "PolynomB",
-        "K",
-        "H",
-    ]
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
 
-    def __init__(
-        self,
-        family_name: str,
-        length: float,
-        poly_a,
-        poly_b,
-        k: float | None = 0.0,
-        h: float | None = 0.0,
-        **kwargs,
-    ):
+    def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
         Args:
             family_name:    Name of the element
             length:         Element length [m]
             poly_a:         Array of skew multipole components
             poly_b:         Array of normal multipole components
-            k:              Quadrupolar focusing strength [mˆ-2]
-            h:              Sextupolar focusing strength [mˆ-3]
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
@@ -943,7 +951,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         kwargs.setdefault("NumIntSteps", 10)
-        super().__init__(family_name, length, poly_a, poly_b, k, h, **kwargs)
+        super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and self.MaxOrder == other.MaxOrder:
@@ -1041,7 +1049,7 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("EntranceAngle", 0.0)
         kwargs.setdefault("ExitAngle", 0.0)
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [], k, **kwargs)
+        super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         custom_items = list(super().items())
@@ -1119,7 +1127,7 @@ class Quadrupole(Radiative, Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [], k, **kwargs)
+        super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         custom_items = list(super().items())
@@ -1155,7 +1163,7 @@ class Sextupole(Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        super().__init__(family_name, length, [], [], 0.0, h, **kwargs)
+        super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         custom_items = list(super().items())
