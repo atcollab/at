@@ -995,8 +995,8 @@ class Dipole(Radiative, Multipole):
         self,
         family_name: str,
         length: float,
-        bending_angle: float | None = 0.0,
-        k: float | None = 0.0,
+        bending_angle: float = 0.0,
+        k: float = 0.0,
         **kwargs,
     ):
         """
@@ -1092,7 +1092,7 @@ class Quadrupole(Radiative, Multipole):
     DefaultOrder = 1
 
     def __init__(
-        self, family_name: str, length: float, k: float | None = 0.0, **kwargs
+        self, family_name: str, length: float, k: float = 0.0, **kwargs
     ):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
@@ -1136,7 +1136,7 @@ class Sextupole(Multipole):
     DefaultOrder = 2
 
     def __init__(
-        self, family_name: str, length: float, h: float | None = 0.0, **kwargs
+        self, family_name: str, length: float, h: float = 0.0, **kwargs
     ):
         """
         Args:
@@ -1453,8 +1453,8 @@ class Wiggler(Radiative, LongElement):
         b_max: float,
         energy: float = 0.0,
         *,
-        Nstep: int | None = 5,
-        Nmeth: int | None = 4,
+        Nstep: int = 5,
+        Nmeth: int = 4,
         By=(1, 1, 0, 1, 1, 0),
         Bx=(),
         **kwargs,
