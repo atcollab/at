@@ -809,6 +809,15 @@ class ThinMultipole(Element):
                 return poly
 
         def check_for_duplicate_strengths(kwargs, poly_a, poly_b):
+            """To avoid potentially unintended behaviour, due to the constructor being
+            passed multiple definitions of the same thing, we do the following:
+            - If it is present in kwargs, 'PolynomA' takes priority over 'poly_a'.
+            - If it is present in kwargs, 'PolynomB' takes priority over 'poly_b' which
+              in-turn takes priority over 'K' and 'H' if they are present in kwargs.
+            - Whenever this happens, we either raise an error or give a warning. If the
+              duplicate definitions contain contradictory non-zero data then we raise an
+              error, otherwise we give a warning.
+            """
             error_msg = "Duplicate element data, '{}' ({}) in kwargs does not match positional argument '{}' ({})."
             warning_msg = "Duplicate element data, both positional argument '{}' and '{}' in kwargs passed."
             prmpola = self._conversions["PolynomA"](poly_a)
@@ -1077,9 +1086,7 @@ class Quadrupole(Radiative, Multipole):
 
     DefaultOrder = 1
 
-    def __init__(
-        self, family_name: str, length: float, k: float = 0.0, **kwargs
-    ):
+    def __init__(self, family_name: str, length: float, k: float = 0.0, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
         Args:
@@ -1121,9 +1128,7 @@ class Sextupole(Multipole):
 
     DefaultOrder = 2
 
-    def __init__(
-        self, family_name: str, length: float, h: float = 0.0, **kwargs
-    ):
+    def __init__(self, family_name: str, length: float, h: float = 0.0, **kwargs):
         """
         Args:
             family_name:    Name of the element
