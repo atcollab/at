@@ -896,11 +896,6 @@ class ThinMultipole(Element):
                 raise ValueError(f"MaxOrder must be smaller than {lmax}")
         super().__setattr__(key, value)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "K", self.K
-        yield "H", self.H
-
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
@@ -1052,9 +1047,8 @@ class Dipole(Radiative, Multipole):
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
-        custom_items = list(super().items())
-        custom_items.remove(("H", self.H))
-        yield from custom_items
+        yield from super().items()
+        yield "K", self.K
 
     def _part(self, fr, sumfr):
         pp = super()._part(fr, sumfr)
@@ -1130,9 +1124,8 @@ class Quadrupole(Radiative, Multipole):
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
-        custom_items = list(super().items())
-        custom_items.remove(("H", self.H))
-        yield from custom_items
+        yield from super().items()
+        yield "K", self.K
 
 
 class Sextupole(Multipole):
@@ -1166,9 +1159,8 @@ class Sextupole(Multipole):
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
-        custom_items = list(super().items())
-        custom_items.remove(("K", self.K))
-        yield from custom_items
+        yield from super().items()
+        yield "H", self.H
 
 
 class Octupole(Multipole):
