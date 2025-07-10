@@ -19,7 +19,7 @@ from typing import Any, Optional
 import numpy as np
 
 # noinspection PyProtectedMember
-from .exceptions import AtWarning
+from .exceptions import AtError, AtWarning
 from .variables import _nop
 
 _zero6 = np.zeros(6)
@@ -808,65 +808,51 @@ class ThinMultipole(Element):
             else:
                 return poly
 
-        def warn_if_duplicate_strengths(kwargs, poly_a, poly_b):
-            ignoring = []
-            prioritising = []
+        def check_for_duplicate_strengths(kwargs, poly_a, poly_b):
+            error_msg = "Duplicate element data, '{}' ({}) in kwargs does not match positional argument '{}' ({})."
+            warning_msg = "Duplicate element data, both positional argument '{}' and '{}' in kwargs passed."
+            prmpola = self._conversions["PolynomA"](poly_a)
+            prmpolb = self._conversions["PolynomB"](poly_b)
+            if "PolynomA" in kwargs:
+                kwargs_poly_a = self._conversions["PolynomA"](kwargs.pop("PolynomA"))
+                if np.any(kwargs_poly_a) and not np.array_equiv(kwargs_poly_a, prmpola):
+                    raise AtError(
+                        error_msg.format("PolynomA", kwargs_poly_a, "poly_a", prmpola)
+                    )
+                elif not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
+                    warnings.warn(AtWarning(warning_msg.format("poly_a", "PolynomA")))
+                prmpola = kwargs_poly_a
+            if "PolynomB" in kwargs:
+                kwargs_poly_b = self._conversions["PolynomB"](kwargs.pop("PolynomB"))
+                if np.any(kwargs_poly_b) and not np.array_equiv(kwargs_poly_b, prmpolb):
+                    raise AtError(
+                        error_msg.format("PolynomB", kwargs_poly_b, "poly_b", prmpolb)
+                    )
+                elif not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
+                    warnings.warn(AtWarning(warning_msg.format("poly_b", "PolynomB")))
+                prmpolb = kwargs_poly_b
             if "K" in kwargs:
                 k = self._conversions["K"](kwargs.pop("K"))
-                if "PolynomB" in kwargs:
-                    ignoring = [
-                        f"keyword argument 'K' ({k})",
-                        f"positional argument 'poly_b' ({poly_b})",
-                    ]
-                    prioritising.append(f"'PolynomB' ({kwargs.get('PolynomB')})")
+                if "PolynomB" in kwargs and len(prmpolb) >= 2:
+                    if k != 0.0 and k != kwargs_poly_b[1]:
+                        raise AtError(error_msg.format("K", k, "poly_b[1]", prmpolb[1]))
+                    else:
+                        warnings.warn(AtWarning(warning_msg.format("poly_b", "K")))
                 else:
-                    ignoring.append(f"positional argument 'poly_b' ({poly_b})")
-                    prioritising.append(f"'K' ({k})")
-                    poly_b = lengthen(poly_b, 2 - len(poly_b))
-                    poly_b[1] = k
+                    raise AtError(error_msg.format("K", k, "poly_b[1]", 0.0))
             if "H" in kwargs:
                 h = self._conversions["H"](kwargs.pop("H"))
-                if "PolynomB" in kwargs:
-                    if ignoring:
-                        ignoring.insert(1, f"keyword argument 'H' ({h})")
+                if "PolynomB" in kwargs and len(prmpolb) >= 3:
+                    if h != 0.0 and h != kwargs_poly_b[1]:
+                        raise AtError(error_msg.format("H", h, "poly_b[2]", prmpolb[2]))
                     else:
-                        ignoring = [
-                            f"keyword argument 'H' ({h})",
-                            f"positional argument 'poly_b' ({poly_b})",
-                        ]
-                        prioritising.append(f"'PolynomB' ({kwargs.get('PolynomB')})")
+                        warnings.warn(AtWarning(warning_msg.format("poly_b", "H")))
                 else:
-                    if ignoring:
-                        prioritising.append(f"'H' ({h})")
-                    else:
-                        ignoring.append(f"positional argument 'poly_b' ({poly_b})")
-                        prioritising.append(f"'H' ({h})")
-                    poly_b = lengthen(poly_b, 3 - len(poly_b))
-                    poly_b[2] = h
-            if "PolynomB" in kwargs and not ignoring:
-                ignoring.append(f"positional argument 'poly_b' ({poly_b})")
-                prioritising.append(f"'PolynomB' ({kwargs.get('PolynomB')})")
-            if ignoring:
-                warnings.warn(
-                    AtWarning(
-                        f"Ignoring {' and '.join(ignoring)} as "
-                        f"{' and '.join(prioritising)} passed in kwargs."
-                    )
-                )
-            if "PolynomA" in kwargs:
-                warnings.warn(
-                    AtWarning(
-                        f"Ignoring positional argument 'poly_a' ({poly_a}) as "
-                        f"'PolynomA' ({kwargs.get('PolynomA')}) was passed in kwargs."
-                    )
-                )
-            return kwargs, poly_a, poly_b
+                    raise AtError(error_msg.format("H", h, "poly_b[2]", 0.0))
+            return kwargs, prmpola, prmpolb
 
-        # Check kwargs and poly_a & poly_b and warn if anything will be overridden
-        kwargs, poly_a, poly_b = warn_if_duplicate_strengths(kwargs, poly_a, poly_b)
-        # PolynomA and PolynomB and convert to ParamArray
-        prmpola = self._conversions["PolynomA"](kwargs.pop("PolynomA", poly_a))
-        prmpolb = self._conversions["PolynomB"](kwargs.pop("PolynomB", poly_b))
+        # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
+        kwargs, prmpola, prmpolb = check_for_duplicate_strengths(kwargs, poly_a, poly_b)
         # Determine length and order of PolynomA and PolynomB
         len_a, ord_a = getpol(prmpola)
         len_b, ord_b = getpol(prmpolb)
