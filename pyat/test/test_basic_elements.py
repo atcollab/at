@@ -162,6 +162,13 @@ def test_PolynomA_strength_prioritisation(element_type, args):
     # Error when poly_a is non-zero and different to PolynomA, even if PolynomA is zeros
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, [1.0], [], PolynomA=[0.0])
+    # Check poly_a and PolynomA are made the same length
+    with pytest.warns(lattice.AtWarning):
+        elem = element_type(*args, [1.0], [], PolynomA=[1.0, 0.0, 0.0, 0.0, 0.0])
+    assert len(elem.PolynomA) == 5
+    with pytest.warns(lattice.AtWarning):
+        elem = element_type(*args, [1.0, 0.0, 0.0, 0.0, 0.0], [], PolynomA=[1.0])
+    assert len(elem.PolynomA) == 5
 
 
 @pytest.mark.parametrize(
@@ -186,6 +193,13 @@ def test_PolynomB_strength_prioritisation(element_type, args):
     # Error when poly_b is non-zero and different to PolynomB, even if PolynomB is zeros
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, [], [1.0], PolynomB=[0.0])
+    # Check poly_a and PolynomA are made the same length
+    with pytest.warns(lattice.AtWarning):
+        elem = element_type(*args, [], [1.0], PolynomB=[1.0, 0.0, 0.0, 0.0, 0.0])
+    assert len(elem.PolynomB) == 5
+    with pytest.warns(lattice.AtWarning):
+        elem = element_type(*args, [], [1.0, 0.0, 0.0, 0.0, 0.0], PolynomB=[1.0])
+    assert len(elem.PolynomB) == 5
 
 
 @pytest.mark.parametrize(

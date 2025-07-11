@@ -808,6 +808,14 @@ class ThinMultipole(Element):
             else:
                 return poly
 
+        def make_same_length(arr1, arr2):
+            diff = len(arr1) - len(arr2)
+            if diff > 0:
+                arr2 = lengthen(arr2, diff)
+            elif diff < 0:
+                arr1 = lengthen(arr1, -diff)
+            return arr1, arr2
+
         def check_for_duplicate_strengths(kwargs, poly_a, poly_b):
             """To avoid potentially unintended behaviour, due to the constructor being
             passed multiple definitions of the same thing, we do the following:
@@ -824,6 +832,7 @@ class ThinMultipole(Element):
             prmpolb = self._conversions["PolynomB"](poly_b)
             if "PolynomA" in kwargs:
                 kwargs_poly_a = self._conversions["PolynomA"](kwargs.pop("PolynomA"))
+                kwargs_poly_a, prmpola = make_same_length(kwargs_poly_a, prmpola)
                 if np.any(prmpola) and not np.array_equiv(kwargs_poly_a, prmpola):
                     raise AtError(
                         error_msg.format("PolynomA", kwargs_poly_a, "poly_a", prmpola)
@@ -833,6 +842,7 @@ class ThinMultipole(Element):
                 prmpola = kwargs_poly_a
             if "PolynomB" in kwargs:
                 kwargs_poly_b = self._conversions["PolynomB"](kwargs.pop("PolynomB"))
+                kwargs_poly_b, prmpolb = make_same_length(kwargs_poly_b, prmpolb)
                 if np.any(prmpolb) and not np.array_equiv(kwargs_poly_b, prmpolb):
                     raise AtError(
                         error_msg.format("PolynomB", kwargs_poly_b, "poly_b", prmpolb)
