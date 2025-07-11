@@ -852,7 +852,7 @@ class ThinMultipole(Element):
             if "H" in kwargs:
                 h = self._conversions["H"](kwargs.pop("H"))
                 if len(prmpolb) >= 3:
-                    if h != 0.0 and h != prmpolb[1]:
+                    if h != 0.0 and h != prmpolb[2]:
                         raise AtError(error_msg.format("H", h, "poly_b[2]", prmpolb[2]))
                     else:
                         warnings.warn(AtWarning(warning_msg.format("poly_b", "H")))
