@@ -20,7 +20,7 @@ from typing import Any
 
 import numpy as np
 
-from ..exceptions import AtWarning
+from ..exceptions import AtError, AtWarning
 from .conversions import _float, _array
 from .abstract_elements import Radiative, _Radiative
 from .element_object import Element
@@ -55,7 +55,7 @@ class ThinMultipole(Element):
 
         def getpol(poly):
             nonzero = np.flatnonzero(poly != 0.0)
-            return poly, len(poly), nonzero[-1] if len(nonzero) > 0 else -1
+            return len(poly), nonzero[-1] if len(nonzero) > 0 else -1
 
         def lengthen(poly, dl):
             if dl > 0:
@@ -63,13 +63,79 @@ class ThinMultipole(Element):
             else:
                 return poly
 
-        k2 = kwargs.pop("K", 0.0)
-        h2 = kwargs.pop("H", 0.0)
-        # PolynomA and PolynomB and convert to ParamArray
-        prmpola = self._conversions["PolynomA"](kwargs.pop("PolynomA", poly_a))
-        prmpolb = self._conversions["PolynomB"](kwargs.pop("PolynomB", poly_b))
-        poly_a, len_a, ord_a = getpol(prmpola)
-        poly_b, len_b, ord_b = getpol(prmpolb)
+        def seterr(name, kname, kval, aname, aval):
+            mess = (
+                f"Element {name}: Duplicate element data, {kname!r} ({kval}) "
+                f"in kwargs does not match positional argument {aname!r} ({aval})."
+            )
+            return AtError(mess)
+
+        def setwarn(name, aname, kname):
+            mess = f"Element {name}: Duplicate element data, both positional argument {aname!r} and {kname!r} in kwargs passed."
+            warnings.warn(AtWarning(mess))
+
+        def check_polynoma(keyname, argname, arg):
+            argvalue = self._conversions[keyname](arg)
+            if keyname in kwargs:
+                kvalue = self._conversions[keyname](kwargs.pop(keyname))
+                if not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
+                    if np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
+                        raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                    else:
+                        setwarn(family_name, argname, keyname)
+                return kvalue
+            else:
+                return argvalue
+
+        def check_polynomb(keyname, argname, arg):
+            argvalue = self._conversions[keyname](arg)
+            if keyname in kwargs:
+                kvalue = self._conversions[keyname](kwargs.pop(keyname))
+                if issubclass(self.__class__, (Dipole, Quadrupole)):
+                    arg = argvalue[1]
+                    if kvalue.size < 2 or (arg != 0.0 and arg != kvalue[1]):
+                        raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                elif issubclass(self.__class__, Sextupole):
+                    arg = argvalue[2]
+                    if kvalue.size < 3 or (arg != 0.0 and arg != kvalue[2]):
+                        raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
+                    raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                else:
+                    setwarn(family_name, argname, keyname)
+                return kvalue
+            else:
+                return argvalue
+
+        def check_strength(keyname, index):
+            if keyname in kwargs:
+                k = self._conversions[keyname](kwargs.pop(keyname))
+                vname = f"poly_b[{index}]"
+                if len(prmpolb) > index:
+                    if k != 0.0 and k != prmpolb[index]:
+                        raise seterr(family_name, "K", k, vname, prmpolb[index])
+                    else:
+                        setwarn(family_name, "poly_b", "K")
+                else:
+                    raise seterr(family_name, "K", k, vname, 0.0)
+
+        # To avoid potentially unintended behaviour, due to the constructor being
+        # passed multiple definitions of the same thing, we do the following:
+        # - If it is present in kwargs, 'PolynomA' takes priority over 'poly_a'.
+        # - If it is present in kwargs, 'PolynomB' takes priority over 'poly_b' which
+        #   in-turn takes priority over 'K' and 'H' if they are present in kwargs.
+        # - Whenever this happens, we either raise an error or give a warning. If the
+        #   duplicate definitions contain contradictory non-zero data then we raise an
+        #   error, otherwise we give a warning.
+
+        # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
+        prmpola = check_polynoma("PolynomA", "poly_a", poly_a)
+        prmpolb = check_polynomb("PolynomB", "poly_b", poly_b)
+        check_strength("K", 1)
+        check_strength("H", 2)
+        # Determine the length and order of PolynomA and PolynomB
+        len_a, ord_a = getpol(prmpola)
+        len_b, ord_b = getpol(prmpolb)
         deforder = max(getattr(self, "DefaultOrder", 0), ord_a, ord_b)
         # Remove MaxOrder
         maxorder = kwargs.pop("MaxOrder", deforder)
@@ -81,8 +147,6 @@ class ThinMultipole(Element):
         len_ab = max(self.MaxOrder + 1, len_a, len_b)
         self.PolynomA = lengthen(prmpola, len_ab - len_a)
         self.PolynomB = lengthen(prmpolb, len_ab - len_b)
-        self._priority_warning("k", 0.0, "K", float(k2), "PolynomB[1]", self.K)
-        self._priority_warning("h", 0.0, "H", float(h2), "PolynomB[2]", self.H)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
@@ -97,22 +161,6 @@ class ThinMultipole(Element):
             if not intval < lmax:
                 raise ValueError(f"MaxOrder must be smaller than {lmax}")
         super().__setattr__(key, value)
-
-    def _priority_warning(self, argname, argval, keyname, keyval, polname, polval):
-        def warn(n1, v1, n2, v2):
-            warnings.warn(
-                AtWarning(
-                    f"\nIn element {self.FamName!r}: conflicting values "
-                    f"for the strength."
-                    f"\n{n1} ({v1}) and {n2} ({v2}): Keeping {v2}"
-                ),
-                stacklevel=self._stacklevel,
-            )
-
-        if keyval != 0.0 and keyval != polval:
-            warn(keyname, keyval, polname, polval)
-        elif argval != 0.0 and argval != keyval:
-            warn(argname, argval, keyname, keyval)
 
     # noinspection PyPep8Naming
     @property
@@ -264,9 +312,7 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("EntranceAngle", 0.0)
         kwargs.setdefault("ExitAngle", 0.0)
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
-        k2 = kwargs.pop("K", k)
-        super().__init__(family_name, length, [], [0.0, k2], **kwargs)
-        self._priority_warning("k", float(k), "K", float(k2), "PolynomB[1]", self.K)
+        super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
@@ -342,9 +388,7 @@ class Quadrupole(Radiative, Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        k2 = kwargs.pop("K", k)
-        super().__init__(family_name, length, [], [0.0, k2], **kwargs)
-        self._priority_warning("k", float(k), "K", float(k2), "PolynomB[1]", self.K)
+        super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
@@ -378,9 +422,7 @@ class Sextupole(Multipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        h2 = kwargs.pop("H", h)
-        super().__init__(family_name, length, [], [0.0, 0.0, h2], **kwargs)
-        self._priority_warning("h", float(h), "H", float(h2), "PolynomB[2]", self.H)
+        super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
