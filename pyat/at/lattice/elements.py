@@ -824,7 +824,7 @@ class ThinMultipole(Element):
             prmpolb = self._conversions["PolynomB"](poly_b)
             if "PolynomA" in kwargs:
                 kwargs_poly_a = self._conversions["PolynomA"](kwargs.pop("PolynomA"))
-                if np.any(kwargs_poly_a) and not np.array_equiv(kwargs_poly_a, prmpola):
+                if np.any(prmpola) and not np.array_equiv(kwargs_poly_a, prmpola):
                     raise AtError(
                         error_msg.format("PolynomA", kwargs_poly_a, "poly_a", prmpola)
                     )
@@ -833,7 +833,7 @@ class ThinMultipole(Element):
                 prmpola = kwargs_poly_a
             if "PolynomB" in kwargs:
                 kwargs_poly_b = self._conversions["PolynomB"](kwargs.pop("PolynomB"))
-                if np.any(kwargs_poly_b) and not np.array_equiv(kwargs_poly_b, prmpolb):
+                if np.any(prmpolb) and not np.array_equiv(kwargs_poly_b, prmpolb):
                     raise AtError(
                         error_msg.format("PolynomB", kwargs_poly_b, "poly_b", prmpolb)
                     )
