@@ -842,8 +842,8 @@ class ThinMultipole(Element):
                 prmpolb = kwargs_poly_b
             if "K" in kwargs:
                 k = self._conversions["K"](kwargs.pop("K"))
-                if "PolynomB" in kwargs and len(prmpolb) >= 2:
-                    if k != 0.0 and k != kwargs_poly_b[1]:
+                if len(prmpolb) >= 2:
+                    if k != 0.0 and k != prmpolb[1]:
                         raise AtError(error_msg.format("K", k, "poly_b[1]", prmpolb[1]))
                     else:
                         warnings.warn(AtWarning(warning_msg.format("poly_b", "K")))
@@ -851,8 +851,8 @@ class ThinMultipole(Element):
                     raise AtError(error_msg.format("K", k, "poly_b[1]", 0.0))
             if "H" in kwargs:
                 h = self._conversions["H"](kwargs.pop("H"))
-                if "PolynomB" in kwargs and len(prmpolb) >= 3:
-                    if h != 0.0 and h != kwargs_poly_b[1]:
+                if len(prmpolb) >= 3:
+                    if h != 0.0 and h != prmpolb[1]:
                         raise AtError(error_msg.format("H", h, "poly_b[2]", prmpolb[2]))
                     else:
                         warnings.warn(AtWarning(warning_msg.format("poly_b", "H")))
