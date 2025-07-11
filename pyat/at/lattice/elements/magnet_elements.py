@@ -65,44 +65,47 @@ class ThinMultipole(Element):
 
         def seterr(name, kname, kval, aname, aval):
             mess = (
-                f"Element {name}: Duplicate element data, {kname!r} ({kval}) "
+                f"Element {name}: Conflicting element data, {kname!r} ({kval}) "
                 f"in kwargs does not match positional argument {aname!r} ({aval})."
             )
             return AtError(mess)
 
         def setwarn(name, aname, kname):
-            mess = f"Element {name}: Duplicate element data, both positional argument {aname!r} and {kname!r} in kwargs passed."
-            warnings.warn(AtWarning(mess))
+            mess = (
+                f"Element {name}: Duplicate element data, both positional "
+                f"argument {aname!r} and {kname!r} in kwargs passed."
+            )
+            warnings.warn(AtWarning(mess), stacklevel=self._stacklevel)
 
-        def check_polynoma(keyname, argname, arg):
+        def check_polynoma(keyname, arg):
             argvalue = self._conversions[keyname](arg)
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
                 if not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
                     if np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
-                        raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                        raise seterr(family_name, keyname, kvalue, "poly_a", argvalue)
                     else:
-                        setwarn(family_name, argname, keyname)
+                        setwarn(family_name, "poly_a", keyname)
                 return kvalue
             else:
                 return argvalue
 
-        def check_polynomb(keyname, argname, arg):
+        def check_polynomb(keyname, arg):
             argvalue = self._conversions[keyname](arg)
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
                 if issubclass(self.__class__, (Dipole, Quadrupole)):
                     arg = argvalue[1]
                     if kvalue.size < 2 or (arg != 0.0 and arg != kvalue[1]):
-                        raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                        raise seterr(family_name, keyname, kvalue, "k", arg)
                 elif issubclass(self.__class__, Sextupole):
                     arg = argvalue[2]
                     if kvalue.size < 3 or (arg != 0.0 and arg != kvalue[2]):
-                        raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                        raise seterr(family_name, keyname, kvalue, "h", arg)
                 elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
-                    raise seterr(family_name, keyname, kvalue, argname, argvalue)
+                    raise seterr(family_name, keyname, kvalue, "poly_b", argvalue)
                 else:
-                    setwarn(family_name, argname, keyname)
+                    setwarn(family_name, "poly_b", keyname)
                 return kvalue
             else:
                 return argvalue
@@ -129,8 +132,8 @@ class ThinMultipole(Element):
         #   error, otherwise we give a warning.
 
         # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
-        prmpola = check_polynoma("PolynomA", "poly_a", poly_a)
-        prmpolb = check_polynomb("PolynomB", "poly_b", poly_b)
+        prmpola = check_polynoma("PolynomA", poly_a)
+        prmpolb = check_polynomb("PolynomB", poly_b)
         check_strength("K", 1)
         check_strength("H", 2)
         # Determine the length and order of PolynomA and PolynomB
@@ -242,7 +245,7 @@ class Dipole(Radiative, Multipole):
         FringeBendEntrance=int,
         FringeBendExit=int,
     )
-    _stacklevel = 4  # Stacklevel for warnings
+    _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = Multipole._entrance_fields + [
         "EntranceAngle",
@@ -353,7 +356,7 @@ class Quadrupole(Radiative, Multipole):
     _conversions = dict(
         Multipole._conversions, FringeQuadEntrance=int, FringeQuadExit=int
     )
-    _stacklevel = 4  # Stacklevel for warnings
+    _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = Multipole._entrance_fields + ["FringeQuadEntrance"]
     _exit_fields = Multipole._exit_fields + ["FringeQuadExit"]
@@ -399,7 +402,7 @@ class Sextupole(Multipole):
     """Sextupole element"""
 
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["H"]
-    _stacklevel = 4  # Stacklevel for warnings
+    _stacklevel = 7  # Stacklevel for warnings
 
     DefaultOrder = 2
 
