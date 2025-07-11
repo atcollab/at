@@ -68,8 +68,9 @@ void AperturePass::generateApertures(std::string& code, PassMethodInfo *info) no
 
 void AperturePass::generateRAperture(std::string& code) noexcept {
   code.append("  if(elem->RApertures) {\n"
-              "    isLost |= r6[0]<elem->RApertures[0] || r6[0]>elem->RApertures[1] ||\n"
+              "    bool isLost = r6[0]<elem->RApertures[0] || r6[0]>elem->RApertures[1] ||\n"
               "              r6[2]<elem->RApertures[2] || r6[2]>elem->RApertures[3];\n"
+              "    if(isLost) r6[5] = INF;\n"
               "  }\n");
 }
 
