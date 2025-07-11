@@ -52,7 +52,7 @@ def test_argument_checks():
 def test_dipole():
     d = elements.Dipole('dipole', 1.0, 0.01)
     assert d.MaxOrder == 0
-    assert len(d.PolynomA) == 1
+    assert len(d.PolynomA) == 2
     assert d.K == 0.0
     d = elements.Dipole('dipole', 1.0, 0.01, -0.5)
     assert d.MaxOrder == 1
