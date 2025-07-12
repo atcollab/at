@@ -63,6 +63,14 @@ class ThinMultipole(Element):
             else:
                 return poly
 
+        def make_same_length(arr1, arr2):
+            diff = len(arr1) - len(arr2)
+            if diff > 0:
+                arr2 = lengthen(arr2, diff)
+            elif diff < 0:
+                arr1 = lengthen(arr1, -diff)
+            return arr1, arr2
+
         def seterr(name, kname, kval, aname, aval):
             mess = (
                 f"Element {name}: Conflicting element data, {kname!r} ({kval}) "
@@ -81,6 +89,7 @@ class ThinMultipole(Element):
             argvalue = self._conversions[keyname](arg)
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
+                kvalue, argvalue = make_same_length(kvalue, argvalue)
                 if not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
                     if np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
                         raise seterr(family_name, keyname, kvalue, "poly_a", argvalue)
@@ -94,6 +103,7 @@ class ThinMultipole(Element):
             argvalue = self._conversions[keyname](arg)
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
+                kvalue, argvalue = make_same_length(kvalue, argvalue)
                 if issubclass(self.__class__, (Dipole, Quadrupole)):
                     arg = argvalue[1]
                     if kvalue.size < 2 or (arg != 0.0 and arg != kvalue[1]):

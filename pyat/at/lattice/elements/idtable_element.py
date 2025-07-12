@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import io
 from warnings import warn
 
 import numpy
@@ -50,14 +49,14 @@ class InsertionDeviceKickMap(Element):
     )
 
     def set_DriftPass(self):
-        setattr(self, "PassMethod", "DriftPass")
+        self.PassMethod = "DriftPass"
 
     def set_IdTablePass(self):
-        setattr(self, "PassMethod", "IdTablePass")
+        self.PassMethod = "IdTablePass"
 
     def get_PassMethod(self):
-        warn(UserWarning("get_PassMethod is deprecated; do not use"))
-        return getattr(self, "PassMethod")
+        warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
+        return self.PassMethod
 
     def from_text_file(self, Nslice, Filename_in, Energy):
         """
@@ -84,7 +83,7 @@ class InsertionDeviceKickMap(Element):
             """
             Read a RadiaField map and return
             """
-            with io.open(file_in_name, mode="r", encoding="utf-8") as f:
+            with open(file_in_name, encoding="utf-8") as f:
                 """
                 File, where :
                 - the first data line is the length in meters
