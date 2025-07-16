@@ -110,7 +110,7 @@ class IBS_run:
         )
         return at.beam(
             1000, sigma_matrix
-        )  # 400000 is the number of particles in the bunch.
+        )  # 1000 is the number of particles in the bunch. Increase the number of particles for more reliable results.
 
     def _track(self, ring_ibs, bunch):
         """
