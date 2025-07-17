@@ -1,5 +1,5 @@
 function varargout=atpass(varargin) %#ok<STOUT>
-%ATPASS is a numerical tracking engine for AT
+%ATPASS Low-level tracking engine
 %
 % ROUT = ATPASS(LATTICE,RIN,MODE,NTURNS,REFPTS,PREFUNC,POSTFUNC,NHIST,NUMTHREADS,RINGPROPS)
 %   LATTICE     AT lattice

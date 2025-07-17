@@ -1,5 +1,5 @@
 function varargout=gpupass(varargin) %#ok<STOUT>
-%ATPASS is a numerical tracking engine for AT
+%GPUPASS Low-level tracking engine on GPU
 %
 % ROUT = GPUPASS(LATTICE,RIN,MODE,NTURNS,REFPTS,TURN,KEEPCOUNTER,GPUPOOL,INTEGRATOR)
 %   LATTICE     AT lattice

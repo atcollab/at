@@ -3,13 +3,15 @@
 NonLinearDynamics
 =================
 
+.. py:module:: atphysics.NonLinearDynamics
+
+   Non-linear beam dynamics
+
 .. rubric:: Functions
 
 
 .. list-table::
 
-   * - :func:`RDTbuildupFluct`
-     - 
    * - :func:`RDTfluctuationIndicator`
      - quantitative representation of RDT fluctuations
    * - :func:`atnuampl`
@@ -20,9 +22,6 @@ NonLinearDynamics
      - Computes Hamiltonian resonance driving terms (RDTs)
    * - :func:`tunespaceplot`
      - draws a tune diagram
-
-.. py:function:: RDTbuildupFluct
-
 
 .. py:function:: RDTfluctuationIndicator(ring,varargin)
 

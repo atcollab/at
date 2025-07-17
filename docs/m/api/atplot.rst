@@ -3,6 +3,10 @@
 atplot
 ======
 
+.. py:module:: atplot
+
+   ATPLOT
+
 .. toctree::
    :hidden:
 

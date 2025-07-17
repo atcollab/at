@@ -3,6 +3,10 @@
 element_creation
 ================
 
+.. py:module:: lattice.element_creation
+
+   Create lattice elements
+
 .. rubric:: Functions
 
 
@@ -13,7 +17,7 @@ element_creation
    * - :func:`atM66Tijk`
      - ATM66(FAMNAME,M66,Tijk,PASSMETHOD)
    * - :func:`atQuantDiff`
-     - atQuantDiff creates a quantum diffusion element.
+     - creates a quantum diffusion element.
    * - :func:`atSimpleQuantDiff`
      - SimpleQuantDiff creates a simple quantum difusion element
    * - :func:`ataperture`
@@ -25,15 +29,15 @@ element_creation
    * - :func:`atcrabcavity`
      - Creates an crab cavity element with Class 'CrabCavity'
    * - :func:`atdampMatElem`
-     - atdampMatElem creates an element that applies the global damping matrix
+     - creates an element that applies the global damping matrix
    * - :func:`atdrift`
      - Creates a drift space element with Class 'Drift'
    * - :func:`atenergyloss`
-     - atenergyloss creates an energy loss element
+     - creates an energy loss element
    * - :func:`atidtable`
      - Creates an ID element
    * - :func:`atinsertiondevicekickmap`
-     - 
+     - creates an insertion device kick-map element
    * - :func:`atmarker`
      - Creates a marker space element
    * - :func:`atmonitor`
@@ -95,7 +99,7 @@ element_creation
 
 .. py:function:: atQuantDiff(famname,diffmat)
 
-   | atQuantDiff creates a quantum diffusion element.
+   | creates a quantum diffusion element.
    
    | **elem=atQuantDiff(famname,diffmat)** uses the given diffusion matrix
    |    FAMNAME:   family name
@@ -223,7 +227,7 @@ element_creation
 
 .. py:function:: atdampMatElem(famname,ring,cavipass,bendpass,quadpass)
 
-   | atdampMatElem creates an element that applies the global damping matrix
+   | creates an element that applies the global damping matrix
    | **elem=atdampMatElem(famname,ring,cavipass,bendpass,quadpass)**
    
    | FAMNAME:   family name
@@ -267,7 +271,7 @@ element_creation
 
 .. py:function:: atenergyloss(famname,eloss,passmethod)
 
-   | atenergyloss creates an energy loss element
+   | creates an energy loss element
    
    | **elem=atenergyloss(famname,eloss,passmethod)**
    |    FAMNAME:    family name
@@ -298,6 +302,42 @@ element_creation
 
 .. py:function:: atinsertiondevicekickmap
 
+   | creates an insertion device kick-map element
+   |  Elem = atinsetiondevicekickmap( fname, ...
+   |                                  method, ...
+   |                                  filename, ...
+   |                                  Normalization_energy, ...
+   |                                  Nslice, ...
+   |                                  length, ...
+   |                                  xkick, ...
+   |                                  ykick, ...
+   |                                  xkick1, ...
+   |                                  ykick1, ...
+   |                                  xtable, ...
+   |                                  ytable ...
+   |                                )
+   
+   |  fname     family name
+   |  method    'IdTablePass'
+   |  filename  name of the file used to create the element
+   |  Normalization_energy    energy to which the field table was scaled
+   |  Nslice    number of slices (1 means the wiggler is represented by a
+   |            single kick in the center of the device).
+   |  length    length of the element
+   |  NumX      number of horizontal points
+   |  NumY      number of vertical points
+   |  xkick     list of x positions
+   |  ykick     list of y positions
+   |  xkick1    ---
+   |  ykick1    ---
+   |  xtable    horizontal plane table
+   |  ytable    vertical plane table
+   
+   |  The tracking method is described in
+   |  P. Elleaume, "A new approach to the electron beam dynamics in undulators
+   |  and wigglers", EPAC92.
+   
+   |  Returns an element with Class 'InsertionDeviceKickMap'
 
 .. py:function:: atmarker(famname,passmethod)
 

@@ -3,6 +3,10 @@
 ELEGANT2AT
 ==========
 
+.. py:module:: lattice.Converters.ELEGANT2AT
+
+   ELEGANT2AT
+
 .. rubric:: Functions
 
 
@@ -11,7 +15,7 @@ ELEGANT2AT
    * - :func:`ParseAtributesELEGANT_2_AT`
      - determines atribute and sets field in sxs{i} structure AT
    * - :func:`elegant2at`
-     - function elegant2at(elegantlattice,E0,outfilename)
+     - function (elegantlattice,E0,outfilename)
 
 .. py:function:: ParseAtributesELEGANT_2_AT
 
@@ -21,7 +25,7 @@ ELEGANT2AT
 
 .. py:function:: elegant2at
 
-   | function elegant2at(elegantlattice,E0,outfilename)
+   | function (elegantlattice,E0,outfilename)
    |  tansform elegant %s.new file (save_lattice with output_seq=0) file into AT lattice structure.
    
    |  This procedure reads a saved elegant lattice and converts it to an AT lattice

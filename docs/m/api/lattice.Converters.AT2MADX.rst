@@ -3,17 +3,21 @@
 AT2MADX
 =======
 
+.. py:module:: lattice.Converters.AT2MADX
+
+   AT2MADX
+
 .. rubric:: Functions
 
 
 .. list-table::
 
    * - :func:`AT_2_madX`
-     - function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)
+     - function [elelat,defs,lines]=(AT_ring,linename)
 
 .. py:function:: AT_2_madX
 
-   | function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)
+   | function [elelat,defs,lines]=(AT_ring,linename)
    |  this functions converts the AT lattice AT_ring in madX format.
    
    |  a MADX LINE is generated.

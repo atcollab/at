@@ -3,15 +3,19 @@
 plotfunctions
 =============
 
+.. py:module:: atplot.plotfunctions
+
+   PLOTFUNCTIONS
+
 .. rubric:: Functions
 
 
 .. list-table::
 
    * - :func:`CurlyH`
-     - function [H,Hv]=CurlyH(RING,dp,ind)
+     - function [H,Hv]=(RING,dp,ind)
    * - :func:`CurlyHlindata`
-     - function [H,Hv]=CurlyHlindata(lindata)
+     - function [H,Hv]=(lindata)
    * - :func:`plBeamSize`
      - Plot H and V beam size
    * - :func:`plClosedOrbit`
@@ -37,13 +41,13 @@ plotfunctions
    * - :func:`plotRDT`
      - 
    * - :func:`plotWdispP`
-     - plotWdispP    Plot W functions
+     - Plot W functions
    * - :func:`plot_betabeat`
-     - function plot_betabeat(THERING_ref,THERING_mod)
+     - function (THERING_ref,THERING_mod)
    * - :func:`plot_trajectory`
      - Plots particle trajectories
    * - :func:`plotbetadisp`
-     - function [s,plotdata]=plotbetadisp(ring,dpp,plotfun,varargin)
+     - function [s,plotdata]=(ring,dpp,plotfun,varargin)
    * - :func:`plotbetadispcurlyh`
      - Plot beta, dispersion and H
    * - :func:`plotsqrtbetadispcurlyh`
@@ -51,11 +55,11 @@ plotfunctions
    * - :func:`pltouschek`
      - Plots Touschek lifetime contribution
    * - :func:`plxi`
-     - plotdata=plxi(lindata,ring,dpp)
+     - plotdata=(lindata,ring,dpp)
 
 .. py:function:: CurlyH
 
-   | function [H,Hv]=CurlyH(RING,dp,ind)
+   | function [H,Hv]=(RING,dp,ind)
    
    |  computes Curly H (dispersion invariant)
    
@@ -72,7 +76,7 @@ plotfunctions
 
 .. py:function:: CurlyHlindata
 
-   | function [H,Hv]=CurlyHlindata(lindata)
+   | function [H,Hv]=(lindata)
    
    |  computes Curly H (dispersion invariant)
    
@@ -216,7 +220,7 @@ plotfunctions
 
 .. py:function:: plotWdispP
 
-   | plotWdispP    Plot W functions
+   | Plot W functions
    
    | Helper function for atplot: plot
    | - W functions (derivatives of beta-functions versus momentum) on left axis
@@ -224,7 +228,7 @@ plotfunctions
 
 .. py:function:: plot_betabeat
 
-   | function plot_betabeat(THERING_ref,THERING_mod)
+   | function (THERING_ref,THERING_mod)
    
    |  returns plot of beta beat of THERING_mod respect to THERING_ref
 
@@ -243,7 +247,7 @@ plotfunctions
 
 .. py:function:: plotbetadisp
 
-   | function [s,plotdata]=plotbetadisp(ring,dpp,plotfun,varargin)
+   | function [s,plotdata]=(ring,dpp,plotfun,varargin)
    | **plotbetadisp** Plot beta functions and dispersion
    
    | Helper function for tplot:
@@ -284,6 +288,6 @@ plotfunctions
 
 .. py:function:: plxi
 
-   | plotdata=plxi(lindata,ring,dpp)
+   | plotdata=(lindata,ring,dpp)
    | xi function in Touschek formula gives trans. velocity in beam frame
 

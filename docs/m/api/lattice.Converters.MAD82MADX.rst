@@ -3,6 +3,10 @@
 MAD82MADX
 =========
 
+.. py:module:: lattice.Converters.MAD82MADX
+
+   MAD82MADX
+
 .. rubric:: Functions
 
 

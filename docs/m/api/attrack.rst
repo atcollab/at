@@ -3,19 +3,23 @@
 attrack
 =======
 
+.. py:module:: attrack
+
+   Tracking functions
+
 .. rubric:: Functions
 
 
 .. list-table::
 
    * - :func:`atpass`
-     - is a numerical tracking engine for AT
+     - Low-level tracking engine
    * - :func:`elempass`
      - Tracks particles through a single element
    * - :func:`gpuinfo`
-     - INFO = at_gpuinfo()
+     - Get information on GPUs available for tracking
    * - :func:`gpupass`
-     - ATPASS is a numerical tracking engine for AT
+     - Low-level tracking engine on GPU
    * - :func:`linepass`
      - tracks particles through each element of the cell array LINE
    * - :func:`ringpass`
@@ -23,7 +27,7 @@ attrack
 
 .. py:function:: atpass(lattice,rin,mode,nturns,refpts,prefunc,postfunc,nhist,numthreads,ringprops)
 
-   | is a numerical tracking engine for AT
+   | Low-level tracking engine
    
    |  **rout = atpass(lattice,rin,mode,nturns,refpts,prefunc,postfunc,nhist,numthreads,ringprops)**
    |    LATTICE     AT lattice
@@ -74,16 +78,19 @@ attrack
 
 .. py:function:: gpuinfo
 
-   | INFO = at_gpuinfo()
-   |  INFO          1xn structure with the following fields:
-   |                Name: GPU name
-   |                Version: CUDA compute capability (? for OpenCL)
-   |                CoreNumber: Multi processor number
-   |                Platform: Platform name
+   | Get information on GPUs available for tracking
+   
+   |  **info = gpuinfo**
+   
+   |  INFO:    1xn structure with the following fields:
+   |           Name:       GPU name
+   |           Version:    CUDA compute capability (? for OpenCL)
+   |           CoreNumber: Multi processor number
+   |           Platform:   Platform name
 
 .. py:function:: gpupass(lattice,rin,mode,nturns,refpts,turn,keepcounter,gpupool,integrator)
 
-   | ATPASS is a numerical tracking engine for AT
+   | Low-level tracking engine on GPU
    
    |  **rout = gpupass(lattice,rin,mode,nturns,refpts,turn,keepcounter,gpupool,integrator)**
    |    LATTICE     AT lattice

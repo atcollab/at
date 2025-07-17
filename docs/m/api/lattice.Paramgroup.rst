@@ -3,6 +3,10 @@
 Paramgroup
 ==========
 
+.. py:module:: lattice.Paramgroup
+
+   Parameter groups
+
 .. rubric:: Functions
 
 

@@ -3,6 +3,10 @@
 Orbit
 =====
 
+.. py:module:: atphysics.Orbit
+
+   Closed orbit search
+
 .. rubric:: Functions
 
 
@@ -17,7 +21,7 @@ Orbit
    * - :func:`findsyncorbit`
      - finds closed orbit, synchronous with the RF cavity
    * - :func:`plotcod`
-     - Closed Orbit Distortion
+     - Plots the closed orbit distortion
 
 .. py:function:: findorbit(ring,refpts)
 
@@ -227,8 +231,10 @@ Orbit
 
 .. py:function:: plotcod(ring,dp)
 
-   | Closed Orbit Distortion
+   | Plots the closed orbit distortion
+   
    |  **plotcod(ring,dp)** finds and plots closed orbit for a given momentum
+   
    |   deviation DP. It calls FINDORBIT4 which assumes a lattice
    |   with NO accelerating cavities and NO radiation
 

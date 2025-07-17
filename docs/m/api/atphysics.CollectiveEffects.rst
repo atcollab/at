@@ -3,6 +3,10 @@
 CollectiveEffects
 =================
 
+.. py:module:: atphysics.CollectiveEffects
+
+   Collective Effects
+
 .. rubric:: Functions
 
 

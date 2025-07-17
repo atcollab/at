@@ -1,6 +1,5 @@
-% SURVEY
-% See also 
-% 
+% Lattice floor plans
+%
 %   Contents file for SURVEY and its subfolders.
 %   
 %   SURVEY

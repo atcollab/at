@@ -3,6 +3,10 @@
 LinearOptics
 ============
 
+.. py:module:: atphysics.LinearOptics
+
+   Linear beam dynamics
+
 .. rubric:: Functions
 
 
@@ -25,7 +29,7 @@ LinearOptics
    * - :func:`beam44`
      - computes the coupled beam matrices
    * - :func:`find_betaoids`
-     - [H1 H2 H3]=find_betaoids(A)
+     - [H1 H2 H3]=(A)
    * - :func:`find_etaoids`
      - Given the normalizing matrix A, we compute the etaoids
    * - :func:`find_inv_G`
@@ -41,7 +45,7 @@ LinearOptics
    * - :func:`findm66`
      - numerically finds the 6x6 transfer matrix of an accelerator lattice
    * - :func:`get_dispersion_from_etaoids`
-     - get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts
+     - computes dispersion functions (x,px,y,py) at refpts
    * - :func:`jmat`
      - Compute antisymmetric Matrix [O 1; -1 0]
    * - :func:`linopt`
@@ -51,7 +55,7 @@ LinearOptics
    * - :func:`plotbeta`
      - plots UNCOUPLED! beta-functions
    * - :func:`r_analysis`
-     - 
+     - bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);   % Only if symplectic
 
 .. py:function:: amat
 
@@ -438,7 +442,7 @@ LinearOptics
 
 .. py:function:: find_betaoids
 
-   | [H1 H2 H3]=find_betaoids(A)
+   | [H1 H2 H3]=(A)
    | Given the normalizing matrix A, we compute the betaoids
    | (in Forest's terminology)
    |  these can be related to the invariants
@@ -624,7 +628,7 @@ LinearOptics
 
 .. py:function:: get_dispersion_from_etaoids
 
-   | get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts
+   | computes dispersion functions (x,px,y,py) at refpts
    | using the etaoids (E. Forest terminology) which are computed from the one turn map
 
 .. py:function:: jmat
@@ -709,4 +713,5 @@ LinearOptics
 
 .. py:function:: r_analysis
 
+   | bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);   % Only if symplectic
 

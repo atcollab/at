@@ -1,6 +1,8 @@
 function varargout = plotcod(RING,DP)
-%PLOTCOD Closed Orbit Distortion
+%PLOTCOD Plots the closed orbit distortion
+%
 % PLOTCOD(RING,DP) finds and plots closed orbit for a given momentum 
+%
 %  deviation DP. It calls FINDORBIT4 which assumes a lattice
 %  with NO accelerating cavities and NO radiation
 

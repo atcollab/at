@@ -3,6 +3,10 @@
 AT2OPA
 ======
 
+.. py:module:: lattice.Converters.AT2OPA
+
+   AT2OPA
+
 .. rubric:: Functions
 
 

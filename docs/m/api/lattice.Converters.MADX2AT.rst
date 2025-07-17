@@ -3,6 +3,10 @@
 MADX2AT
 =======
 
+.. py:module:: lattice.Converters.MADX2AT
+
+   MADX2AT
+
 .. rubric:: Functions
 
 
@@ -11,7 +15,7 @@ MADX2AT
    * - :func:`ParseAtributesMADX_2_AT`
      - determines atribute and sets field in sxs{i} structure AT
    * - :func:`atfrommadx`
-     - function atfrommadx(seqfilemadX,E0,outfilename)
+     - function (seqfilemadX,E0,outfilename)
    * - :func:`buildATLattice`
      - given a list (cell array) of elements with specified field Spos (center of element (madx default)) in a
    * - :func:`reshapeToCellArray`
@@ -25,7 +29,7 @@ MADX2AT
 
 .. py:function:: atfrommadx
 
-   | function atfrommadx(seqfilemadX,E0,outfilename)
+   | function (seqfilemadX,E0,outfilename)
    |  tansform madX sequence file (savesequence) file into AT lattice structure.
    
    |  This procedure reads a saved lattice (sequence in madx) in madX

@@ -2,7 +2,7 @@ function [h21000s, h30000s, h10110s, h10020s, h10200s, h20001s, h00201s, h10002s
           h22000s, h11110s, h00220s,...
           h31000s, h40000s, h20110s, h11200s, h20020s, h20200s, h00310s, h00400s] = RDTbuildupFluct(betax,betay,...
           etax,phix,phiy,b2L,b3L,b4L,nData)
-%BUILDUPRDTFLUCTUATION build-up fluctuation of RDTs
+%RDTBUILDUPFLUCT Private: build-up fluctuation of RDTs
 %
 %   This function can show the build-up and cancellation of RDTs.
 %   DON'T use this function directly!!! 

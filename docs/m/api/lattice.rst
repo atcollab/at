@@ -3,6 +3,10 @@
 lattice
 =======
 
+.. py:module:: lattice
+
+   Lattice building and modifying
+
 .. toctree::
    :hidden:
 
@@ -17,13 +21,13 @@ lattice
 .. list-table::
 
    * - :ref:`converters_module`
-     - CONVERTERS
+     - Conversion of AT lattices to/from other formats
    * - :ref:`paramgroup_module`
-     - PARAMGROUP
+     - Parameter groups
    * - :ref:`element_creation_module`
-     - ELEMENT_CREATION
+     - Create lattice elements
    * - :ref:`survey_module`
-     - SURVEY
+     - Lattice floor plans
 
 .. rubric:: Classes
 
@@ -31,7 +35,7 @@ lattice
 .. list-table::
 
    * - :class:`atparticle`
-     - 
+     - Particle definition for AT
 
 .. rubric:: Functions
 
@@ -47,9 +51,9 @@ lattice
    * - :func:`atGetRingProperties`
      - Get the ring properties
    * - :func:`atSetRingProperties`
-     - atSetRingProperties	Add or modify properties of the lattice
+     - Add or modify properties of the lattice
    * - :func:`ataddmpolecomppoly`
-     - ataddmpolecomppoly adds a multipole component to an existing polynomial,
+     - adds a multipole component to an existing polynomial,
    * - :func:`ataddmpoleerrors`
      - ataddrandmpole adds a random multipole component to all elements of type
    * - :func:`atdivelem`
@@ -97,7 +101,7 @@ lattice
    * - :func:`atshiftelem`
      - set new displacement parameters
    * - :func:`atsimplering`
-     - 
+     - Creates a "simple ring"
    * - :func:`atsplitelem`
      - Creates a line by inserting one or more elements into a base element
    * - :func:`attiltelem`
@@ -151,10 +155,13 @@ lattice
    * - :func:`splitdrift`
      - inserts an element into a drift space
    * - :func:`symplectify`
-     - symplectify makes a matrix more symplectic
+     - makes a matrix more symplectic
 
 .. py:class:: atparticle
 
+   | Particle definition for AT
+   
+   |    A particle is defined by its name, rest energy and charge
 
 .. py:function:: at2py
 
@@ -263,7 +270,7 @@ lattice
 
 .. py:function:: atSetRingProperties(ring [,key,value]...)
 
-   | atSetRingProperties	Add or modify properties of the lattice
+   | Add or modify properties of the lattice
    
    |  **newring=atSetRingProperties(ring [,key,value]...)**
    |    Add or modify the attributes of the RingParam element of the lattice,
@@ -301,7 +308,7 @@ lattice
 
 .. py:function:: ataddmpolecomppoly(polynom,index,strength,radius)
 
-   | ataddmpolecomppoly adds a multipole component to an existing polynomial,
+   | adds a multipole component to an existing polynomial,
    | scaling it by the reference multipole value and a radius to set the length
    | scale
    | **[polynomout] = ataddmpolecomppoly(polynom,index,strength,radius)**
@@ -847,8 +854,66 @@ lattice
    
    | See also :func:`atsetshift`, :func:`attiltelem`, :func:`atmodelem`
 
-.. py:function:: atsimplering
+.. py:function:: atsimplering(...,'name',name,...)
 
+   | Creates a "simple ring"
+   
+   |  A "simple ring" consists of:
+   |  - A RF cavity
+   |  - a 6x6 linear transfer map
+   |  - a simple radiation damping element
+   |  - a detuning and chromaticity element
+   |  - a simplified quantum diffusion element which provides the equilibrium
+   |  emittance
+   
+   | **ring=atsimplering**(ENERGY,CIRCUMFERENCE,HARMONIC_NUMBER,HTUNE,VTUNE,...
+   |                   VRF,ALPHAC)
+   |  ENERGY:           nominal energy [eV]
+   |  CIRCUMFERENCE:    ring circumference [m]
+   |  HARMONIC_NUMBER:  harmonic number
+   |  HTUNE:            horizontal tune
+   |  VTUNE:            vertical tune
+   |  VRF:              RF voltage [V]
+   |  ALPHAC:           momentum compaction factor
+   
+   |  RING:             generated simple lattice
+   
+   | **ring=atsimplering(...,'name',name,...)**
+   |        specify the name of the generated lattice. Default: ''
+   
+   | **ring=atsimplering(...,'particle',particle,...)**
+   |        specify the particle. Default: 'relativistic'
+   
+   | **ring=atsimplering(...,'qpx',xsi_h,'qpy',xsi_v,...)**
+   |        specify the chromaticites. Default: 0
+   
+   | **ring=atsimplering(...,'a1',a1,'a2',a2,'a3',a3,...)**
+   |        specify the amplitude detuning coefficients. Default: 0
+   
+   | **ring=atsimplering(...,'betax',betax,'betay',betay,...)**
+   |        specify the beta values at origin [m]. Default: 1
+   
+   | **ring=atsimplering(...,'alphax',alphax,'alphay',alpha,...)**
+   |        specify the alpha values at origin. Default: 0
+   
+   | **ring=atsimplering(...,'dispx',dispx,'dispxp',dispxp,...)**
+   |        specify the horizontal dispersion and derivative at origin. Default: 0
+   
+   | **ring=atsimplering(...,'dispy',dispy,'dispyp',dispyp,...)**
+   |        specify the vertical dispersion and derivative at origin. Default: 0
+   
+   | **ring=atsimplering(...,'emitx',emitx,'emity',emity,...)**
+   |        specify the equilibrium emittance. Default: 0, meaning no quantum
+   |        diffusion
+   
+   | **ring=atsimplering(...,'taux',taux,'tauy',tauy,'tauz',tauz,...)**
+   |        specify the damping times. Default: 0, meaning no damping
+   
+   | **ring=atsimplering(...,'espread',espread,...)**
+   |        specify the energy spread. Default: 0
+   
+   | **ring=atsimplering(...,'u0',u0,...)**
+   |        specify the emergy loss per turn [eV]. Default: 0
 
 .. py:function:: atsplitelem(baseelem,frac1,elem1[,frac2,elem2...])
 
@@ -1252,7 +1317,7 @@ lattice
 
 .. py:function:: symplectify
 
-   | symplectify makes a matrix more symplectic
+   | makes a matrix more symplectic
    | follow Healy algorithm as described by McKay
    | BNL-75461-2006-CP
 
