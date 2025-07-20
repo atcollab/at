@@ -3,6 +3,10 @@
 Converters
 ==========
 
+.. py:module:: lattice.Converters
+
+   Conversion of AT lattices to/from other formats
+
 .. toctree::
    :hidden:
 
