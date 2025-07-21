@@ -781,6 +781,7 @@ class ThinMultipole(Element):
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(Element._conversions, K=float, H=float)
+    _stacklevel = 4  # Stacklevel for warnings
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -816,62 +817,80 @@ class ThinMultipole(Element):
                 arr1 = lengthen(arr1, -diff)
             return arr1, arr2
 
-        def check_for_duplicate_strengths(kwargs, poly_a, poly_b):
-            """To avoid potentially unintended behaviour, due to the constructor being
-            passed multiple definitions of the same thing, we do the following:
-            - If it is present in kwargs, 'PolynomA' takes priority over 'poly_a'.
-            - If it is present in kwargs, 'PolynomB' takes priority over 'poly_b' which
-              in-turn takes priority over 'K' and 'H' if they are present in kwargs.
-            - Whenever this happens, we either raise an error or give a warning. If the
-              duplicate definitions contain contradictory non-zero data then we raise an
-              error, otherwise we give a warning.
-            """
-            error_msg = "Duplicate element data, '{}' ({}) in kwargs does not match positional argument '{}' ({})."
-            warning_msg = "Duplicate element data, both positional argument '{}' and '{}' in kwargs passed."
-            prmpola = self._conversions["PolynomA"](poly_a)
-            prmpolb = self._conversions["PolynomB"](poly_b)
-            if "PolynomA" in kwargs:
-                kwargs_poly_a = self._conversions["PolynomA"](kwargs.pop("PolynomA"))
-                kwargs_poly_a, prmpola = make_same_length(kwargs_poly_a, prmpola)
-                if np.any(prmpola) and not np.array_equiv(kwargs_poly_a, prmpola):
-                    raise AtError(
-                        error_msg.format("PolynomA", kwargs_poly_a, "poly_a", prmpola)
-                    )
-                elif not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
-                    warnings.warn(AtWarning(warning_msg.format("poly_a", "PolynomA")))
-                prmpola = kwargs_poly_a
-            if "PolynomB" in kwargs:
-                kwargs_poly_b = self._conversions["PolynomB"](kwargs.pop("PolynomB"))
-                kwargs_poly_b, prmpolb = make_same_length(kwargs_poly_b, prmpolb)
-                if np.any(prmpolb) and not np.array_equiv(kwargs_poly_b, prmpolb):
-                    raise AtError(
-                        error_msg.format("PolynomB", kwargs_poly_b, "poly_b", prmpolb)
-                    )
-                elif not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
-                    warnings.warn(AtWarning(warning_msg.format("poly_b", "PolynomB")))
-                prmpolb = kwargs_poly_b
-            if "K" in kwargs:
-                k = self._conversions["K"](kwargs.pop("K"))
-                if len(prmpolb) >= 2:
-                    if k != 0.0 and k != prmpolb[1]:
-                        raise AtError(error_msg.format("K", k, "poly_b[1]", prmpolb[1]))
-                    else:
-                        warnings.warn(AtWarning(warning_msg.format("poly_b", "K")))
+        def seterr(name, kname, kval, aname, aval):
+            mess = (
+                f"Element {name}: Conflicting element data, {kname!r} ({kval}) "
+                f"in kwargs does not match positional argument {aname!r} ({aval})."
+            )
+            return AtError(mess)
+
+        def setwarn(name, aname, kname):
+            mess = (
+                f"Element {name}: Duplicate element data, both positional "
+                f"argument {aname!r} and {kname!r} in kwargs passed."
+            )
+            warnings.warn(AtWarning(mess), stacklevel=self._stacklevel)
+
+        def check_polynom(keyname, arg):
+            argvalue = self._conversions[keyname](arg)
+            argname = f"poly_{keyname[-1].lower()}"
+            if keyname in kwargs:
+                kvalue = self._conversions[keyname](kwargs.pop(keyname))
+                kvalue, argvalue = make_same_length(kvalue, argvalue)
+                if issubclass(self.__class__, (Dipole, Quadrupole)):
+                    if (
+                        keyname == "PolynomB"
+                        and argvalue[1] != 0.0
+                        and argvalue[1] != kvalue[1]
+                    ):
+                        raise seterr(family_name, "PolynomB", kvalue, "k", argvalue[1])
+                elif issubclass(self.__class__, Sextupole):
+                    if (
+                        keyname == "PolynomB"
+                        and argvalue[2] != 0.0
+                        and argvalue[2] != kvalue[2]
+                    ):
+                        raise seterr(family_name, "PolynomB", kvalue, "h", argvalue[2])
+                elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
+                    raise seterr(family_name, keyname, kvalue, argname, argvalue)
                 else:
-                    raise AtError(error_msg.format("K", k, "poly_b[1]", 0.0))
-            if "H" in kwargs:
-                h = self._conversions["H"](kwargs.pop("H"))
-                if len(prmpolb) >= 3:
-                    if h != 0.0 and h != prmpolb[2]:
-                        raise AtError(error_msg.format("H", h, "poly_b[2]", prmpolb[2]))
+                    setwarn(family_name, argname, keyname)
+                return kvalue
+            else:
+                return argvalue
+
+        def check_strength(keyname, index):
+            if keyname in kwargs:
+                strength = self._conversions[keyname](kwargs.pop(keyname))
+                vname = f"poly_b[{index}]"
+                if len(prmpolb) > index:
+                    if strength != 0.0 and strength != prmpolb[index]:
+                        raise seterr(
+                            family_name, keyname, strength, vname, prmpolb[index]
+                        )
                     else:
-                        warnings.warn(AtWarning(warning_msg.format("poly_b", "H")))
+                        setwarn(family_name, "poly_b", keyname)
                 else:
-                    raise AtError(error_msg.format("H", h, "poly_b[2]", 0.0))
-            return kwargs, prmpola, prmpolb
+                    raise seterr(family_name, keyname, strength, vname, 0.0)
+
+        # To avoid potentially unintended behaviour, due to the constructor being
+        # passed multiple definitions of the same thing, we do the following:
+        # - If it is present in kwargs, 'PolynomA' takes priority over 'poly_a'.
+        # - If it is present in kwargs, 'PolynomB' takes priority over 'poly_b' which
+        #   in-turn takes priority over 'K' and 'H' if they are present in kwargs.
+        # - Whenever this happens, we either raise an error or give a warning. If the
+        #   duplicate definitions contain contradictory non-zero data then we raise an
+        #   error, otherwise we give a warning.
+        # - These errors/warnings are only given if they are due to the user specifying
+        #   duplicate data, the cases caused by the way in which we create Dipole,
+        #   Quadrupole, and Sextupole elements will not raise an error or give a warning
+        #   as the user is using the element constructor correctly in those cases.
 
         # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
-        kwargs, prmpola, prmpolb = check_for_duplicate_strengths(kwargs, poly_a, poly_b)
+        prmpola = check_polynom("PolynomA", poly_a)
+        prmpolb = check_polynom("PolynomB", poly_b)
+        check_strength("K", 1)
+        check_strength("H", 2)
         # Determine length and order of PolynomA and PolynomB
         len_a, ord_a = getpol(prmpola)
         len_b, ord_b = getpol(prmpolb)
@@ -930,6 +949,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
+    _stacklevel = 6  # Stacklevel for warnings
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -980,6 +1000,7 @@ class Dipole(Radiative, Multipole):
         FringeBendEntrance=int,
         FringeBendExit=int,
     )
+    _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = Multipole._entrance_fields + [
         "EntranceAngle",
@@ -1090,6 +1111,7 @@ class Quadrupole(Radiative, Multipole):
     _conversions = dict(
         Multipole._conversions, FringeQuadEntrance=int, FringeQuadExit=int
     )
+    _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = Multipole._entrance_fields + ["FringeQuadEntrance"]
     _exit_fields = Multipole._exit_fields + ["FringeQuadExit"]
@@ -1135,6 +1157,7 @@ class Sextupole(Multipole):
     """Sextupole element"""
 
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["H"]
+    _stacklevel = 7  # Stacklevel for warnings
 
     DefaultOrder = 2
 
