@@ -85,37 +85,30 @@ class ThinMultipole(Element):
             )
             warnings.warn(AtWarning(mess), stacklevel=self._stacklevel)
 
-        def check_polynoma(keyname, arg):
+        def check_polynom(keyname, arg):
             argvalue = self._conversions[keyname](arg)
-            if keyname in kwargs:
-                kvalue = self._conversions[keyname](kwargs.pop(keyname))
-                kvalue, argvalue = make_same_length(kvalue, argvalue)
-                if not issubclass(self.__class__, (Dipole, Quadrupole, Sextupole)):
-                    if np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
-                        raise seterr(family_name, keyname, kvalue, "poly_a", argvalue)
-                    else:
-                        setwarn(family_name, "poly_a", keyname)
-                return kvalue
-            else:
-                return argvalue
-
-        def check_polynomb(keyname, arg):
-            argvalue = self._conversions[keyname](arg)
+            argname = f"poly_{keyname[-1].lower()}"
             if keyname in kwargs:
                 kvalue = self._conversions[keyname](kwargs.pop(keyname))
                 kvalue, argvalue = make_same_length(kvalue, argvalue)
                 if issubclass(self.__class__, (Dipole, Quadrupole)):
-                    arg = argvalue[1]
-                    if kvalue.size < 2 or (arg != 0.0 and arg != kvalue[1]):
-                        raise seterr(family_name, keyname, kvalue, "k", arg)
+                    if (
+                        keyname == "PolynomB"
+                        and argvalue[1] != 0.0
+                        and (kvalue.size < 2 or argvalue[1] != kvalue[1])
+                    ):
+                        raise seterr(family_name, "PolynomB", kvalue, "k", argvalue[1])
                 elif issubclass(self.__class__, Sextupole):
-                    arg = argvalue[2]
-                    if kvalue.size < 3 or (arg != 0.0 and arg != kvalue[2]):
-                        raise seterr(family_name, keyname, kvalue, "h", arg)
+                    if (
+                        keyname == "PolynomB"
+                        and argvalue[2] != 0.0
+                        and (kvalue.size < 3 or argvalue[2] != kvalue[2])
+                    ):
+                        raise seterr(family_name, "PolynomB", kvalue, "h", argvalue[2])
                 elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
-                    raise seterr(family_name, keyname, kvalue, "poly_b", argvalue)
+                    raise seterr(family_name, keyname, kvalue, argname, argvalue)
                 else:
-                    setwarn(family_name, "poly_b", keyname)
+                    setwarn(family_name, argname, keyname)
                 return kvalue
             else:
                 return argvalue
@@ -142,8 +135,8 @@ class ThinMultipole(Element):
         #   error, otherwise we give a warning.
 
         # Check kwargs and poly_a & poly_b for compatibility and convert to ParamArray
-        prmpola = check_polynoma("PolynomA", poly_a)
-        prmpolb = check_polynomb("PolynomB", poly_b)
+        prmpola = check_polynom("PolynomA", poly_a)
+        prmpolb = check_polynom("PolynomB", poly_b)
         check_strength("K", 1)
         check_strength("H", 2)
         # Determine the length and order of PolynomA and PolynomB

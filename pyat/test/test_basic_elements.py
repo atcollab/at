@@ -268,6 +268,13 @@ def test_quadrupolar_strength_prioritisation(element_type, args):
     # Error when k is non-zero and different to PolynomB[1], even if PolynomB[1] is 0.0
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, k=1.0, PolynomB=[0.0, 0.0])
+    # No warning or change when PolynomB[1] and k are the same and non-zero even if the
+    # other terms of PolynomB are non-zero
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        elem = element_type(*args, k=1.0, PolynomB=[0.5, 1.0])
+    assert elem.PolynomB[0] == 0.5
+    assert elem.PolynomB[1] == 1.0
 
 
 def test_sextupolar_strength_prioritisation():
@@ -289,6 +296,13 @@ def test_sextupolar_strength_prioritisation():
     # Error when h is non-zero and different to PolynomB[2], even if PolynomB[2] is 0.0
     with pytest.raises(lattice.AtError):
         elem = elements.Sextupole("Sext", 1.0, h=1.0, PolynomB=[0.0, 0.0, 0.0])
+    # No warning or change when PolynomB[2] and h are the same and non-zero even if the
+    # other terms of PolynomB are non-zero
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        elem = elements.Sextupole("Sext", 1.0, h=1.0, PolynomB=[0.5, 0.0, 1.0])
+    assert elem.PolynomB[0] == 0.5
+    assert elem.PolynomB[2] == 1.0
 
 
 def test_divide_splits_attributes_correctly():
