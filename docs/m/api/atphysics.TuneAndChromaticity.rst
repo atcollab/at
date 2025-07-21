@@ -3,6 +3,10 @@
 TuneAndChromaticity
 ===================
 
+.. py:module:: atphysics.TuneAndChromaticity
+
+   Tune and chromaticity
+
 .. rubric:: Functions
 
 

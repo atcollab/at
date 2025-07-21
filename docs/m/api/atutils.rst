@@ -3,6 +3,10 @@
 atutils
 =======
 
+.. py:module:: atutils
+
+   Utility functions for developers
+
 .. rubric:: Classes
 
 
@@ -21,7 +25,7 @@ atutils
    * - :func:`getdparg`
      - Handle positional dp arguments
    * - :func:`getenvopt`
-     - (NAME, DEFAULTVALUE)
+     - Get the value of an environment variable
    * - :func:`getflag`
      - Check the presence of a flag in an argument list
    * - :func:`getoption`
@@ -101,9 +105,12 @@ atutils
    |    DP is extracted, and if it is finite and non-zero,
    |    {'DP', DP} is added to VARARGS
 
-.. py:function:: getenvopt
+.. py:function:: getenvopt(name, defaultvalue)
 
-   | (NAME, DEFAULTVALUE)
+   | Get the value of an environment variable
+   
+   |  **v = getenvopt(name, defaultvalue)**
+   
    |    Looks for an environment variable and return a default value if absent
 
 .. py:function:: getflag(args,optname)

@@ -3,6 +3,10 @@
 atphysics
 =========
 
+.. py:module:: atphysics
+
+   Accelerator physics
+
 .. toctree::
    :hidden:
 
@@ -23,25 +27,25 @@ atphysics
 .. list-table::
 
    * - :ref:`collectiveeffects_module`
-     - COLLECTIVEEFFECTS
+     - Collective Effects
    * - :ref:`linearoptics_module`
-     - LINEAROPTICS
+     - Linear beam dynamics
    * - :ref:`longitudinaldynamics_module`
-     - LONGITUDINALDYNAMICS
+     - Longitudinal beam dynamics
    * - :ref:`nonlineardynamics_module`
-     - NONLINEARDYNAMICS
+     - Non-linear beam dynamics
    * - :ref:`orbit_module`
-     - ORBIT
+     - Closed orbit search
    * - :ref:`parametersummaryfunctions_module`
-     - PARAMETERSUMMARYFUNCTIONS
+     - Summaries of lattice parameters
    * - :ref:`radiation_module`
-     - RADIATION
+     - Functions dealing with synchrotron radiation
    * - :ref:`touschekpiwinski_module`
-     - TOUSCHEKPIWINSKI
+     - Touschek liftime and apertures
    * - :ref:`tuneandchromaticity_module`
-     - TUNEANDCHROMATICITY
+     - Tune and chromaticity
    * - :ref:`nafflib_module`
-     - NAFFLIB
+     - NAFF frequency analysis
 
 .. rubric:: Classes
 

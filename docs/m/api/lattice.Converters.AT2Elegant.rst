@@ -3,6 +3,10 @@
 AT2Elegant
 ==========
 
+.. py:module:: lattice.Converters.AT2Elegant
+
+   AT2ELEGANT
+
 .. rubric:: Functions
 
 

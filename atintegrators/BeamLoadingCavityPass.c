@@ -88,7 +88,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vcavk = Elem->vcav;
     double *vgenk = Elem->vgen;    
     double feedback_angle_offset = Elem->feedback_angle_offset;
-    int bufferlengthnow = 0;
+
 
     double vbeam_set[] = {vbeam_phasor[0], vbeam_phasor[1]};
     double tot_current = 0.0;
@@ -104,7 +104,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
-
+    double vbr=2*tot_current*rshunt;
 
     /*Track RF cavity is always done. */
     trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi+feedback_angle_offset,nturn,circumference/C0,num_particles);
@@ -158,8 +158,9 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         if(cavitymode==1){
             update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,feedback_angle_offset); 
 
-        }     
-
+        }else if(cavitymode==3){     
+            update_passive_frequency(vbeam_set, vcavk, vgenk, phasegain, vbr);
+        }
 
         
         atFree(buffer);
@@ -268,7 +269,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }else if (num_particles%Param->nbunch!=0){
         atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
-    if(Elem->cavitymode==0 || Elem->cavitymode>=3){
+    if(Elem->cavitymode==0 || Elem->cavitymode>=4){
         atError("Unknown cavitymode provided.");    
     } 
     if(Elem->blmode==0 || Elem->blmode>=3){
