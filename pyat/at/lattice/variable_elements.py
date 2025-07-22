@@ -1,6 +1,6 @@
 import numpy
 from .elements import Element, _array
-from .utils import AtError
+from .exceptions import AtError
 from typing import Optional, Union
 from enum import IntEnum
 from datetime import datetime

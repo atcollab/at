@@ -84,8 +84,8 @@ def create_corrector(name, params, variables):
 def create_multipole(name, params, variables):
     length = parse_float(params.pop("l", 0), variables)
     params["NumIntSteps"] = parse_float(params.pop("n", 10), variables)
-    poly_a = [0, 0, 0, 0]
-    poly_b = [0, 0, 0, 0]
+    poly_a = params.pop("PolynomA", [0, 0, 0, 0])
+    poly_b = params.pop("PolynomB", [0, 0, 0, 0])
     return Multipole(name, length, poly_a, poly_b, **params)
 
 
