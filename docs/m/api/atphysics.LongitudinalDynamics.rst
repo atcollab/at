@@ -3,13 +3,17 @@
 LongitudinalDynamics
 ====================
 
+.. py:module:: atphysics.LongitudinalDynamics
+
+   Longitudinal beam dynamics
+
 .. rubric:: Functions
 
 
 .. list-table::
 
    * - :func:`BunchLength`
-     - 
+     - bunch length due to the potential well effect
    * - :func:`RFacc`
      - Computes the RF acceptance with linear formula
    * - :func:`atBunchLength`
@@ -27,10 +31,26 @@ LongitudinalDynamics
    * - :func:`nus`
      - Computes synchrotron tune from RF parameters
    * - :func:`phis`
-     - phase = phis(U0MeV,VrfMV)
+     - phase = (U0MeV,VrfMV)
 
 .. py:function:: BunchLength
 
+   | bunch length due to the potential well effect
+   |  the output is the zerocurrent bunch length x bunch lengthening
+   
+   |    **bl = BunchLength** (Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta,circ)
+   
+   |  Ib is the bunch current [A] (it may be a vector for multiple values)
+   |  Zn is the longitudinal broadband impedance [Ohms]
+   |  Vrf is the RF voltage [V] (it may be a vector for multiple values)
+   |  U0 is the energy loss around the ring [eV]
+   |  E0 is the beam energy [eV]
+   |  h is the harmonic number
+   |  alpha is the momentum compaction factor
+   |  sigmadelta is the energy spread
+   |  circ is the ring circumference
+   
+   |    see also: atBunchLength
 
 .. py:function:: RFacc(vrf,u0,e0,h,alpha)
 
@@ -205,7 +225,7 @@ LongitudinalDynamics
 
 .. py:function:: phis
 
-   | phase = phis(U0MeV,VrfMV)
+   | phase = (U0MeV,VrfMV)
    
    |  this function returns the synchronous phase in radians
    |  input:

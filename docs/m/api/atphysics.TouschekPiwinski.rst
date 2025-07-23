@@ -3,6 +3,10 @@
 TouschekPiwinski
 ================
 
+.. py:module:: atphysics.TouschekPiwinski
+
+   Touschek liftime and apertures
+
 .. rubric:: Functions
 
 
@@ -11,15 +15,15 @@ TouschekPiwinski
    * - :func:`MomAperture_Project2Start`
      - calculates the local momentum aperture.
    * - :func:`MomAperture_allRing`
-     - MomAperture_allRing returns positive and negative momentum aperture
+     - returns positive and negative momentum aperture
    * - :func:`TLT_IntPiw`
      - integral in Piwinski Formula for the Lifetime
    * - :func:`TLT_IntPiw_k`
      - integral in Piwinski Formula for the Lifetime with u=tan^2(k)
    * - :func:`TouschekPiwinskiLifeTime`
-     - function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
+     - function [Tl,contributionsTL]=(ring,dpp,Ib,...)
    * - :func:`momentum_aperture_at`
-     - 
+     - recursively offsets the particle energy and checks
 
 .. py:function:: MomAperture_Project2Start(thering)
 
@@ -64,7 +68,7 @@ TouschekPiwinski
 
 .. py:function:: MomAperture_allRing(..., nturns)
 
-   | MomAperture_allRing returns positive and negative momentum aperture
+   | returns positive and negative momentum aperture
    |                     boundaries where the particle is still alive.
    
    |                     The boundary width (i.e. the uncertainty) is equal to
@@ -125,7 +129,7 @@ TouschekPiwinski
 
 .. py:function:: TouschekPiwinskiLifeTime(..., 'abstol', abstol)
 
-   | function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
+   | function [Tl,contributionsTL]=(ring,dpp,Ib,...)
    
    |  evaluates Touschek Lifetime using Piwinski formula
    
@@ -167,6 +171,44 @@ TouschekPiwinski
    |  A.Xiao M. Borland, Proceedings of PAC07, Albuquerque, New Mexico, USA
    
 
-.. py:function:: momentum_aperture_at
+.. py:function:: momentum_aperture_at(..., 'reforbit',orbitin)
 
+   | recursively offsets the particle energy and checks
+   |                      for survival over n turns of tracking.
+   |                      Returns the stable energy boundary.
+   
+   |  deltamax ...
+   |      = **momentum_aperture_at**( ...
+   |          THERING,...
+   |          deltalimit,...       [min max]
+   |          initcoord,...        [x y] initial coordinate
+   |          delta,...            current energy offset
+   |          precdelta,...        previous energy offset
+   |          deltastepsize,...
+   |          splits,...           number of times splitting the deltastepsize
+   |          split_step_divisor,  divides the step size at every split
+   |          nturns
+   |          )
+   
+   |  ... = **momentum_aperture_at(..., 'reforbit',orbitin)**
+   |        Use ORBITIN to define the reference. Useful when the closed orbit
+   |        is not zero.
+   
+   |  Adapted routine based on ELEGANT
+   |  1. Start with delta = 0, i.e., zero momentum offset.
+   |  2. If the limit has been reached stop, otherwise
+   |       If the number of step divisions is done, stop. Otherwise ...
+   |       Track the particle
+   |       If it survives, increase the energy by one step, and start 2) again.
+   |       Otherwise, go back one step in energy, and divide the step.
+   |       Count the number of times the step has been divided.
+   |       Start 2) with the new step.
+   
+   |  Debugging info prints are commented to avoid speed reduction,
+   
+   |  The ELEGANT routine:
+   |  https://ops.aps.anl.gov/manuals/elegant_latest/elegantsu53.html
+   
+   |  ex: **[deltamax]=momentum_aperture_at(thering,0.1,[10^-6 10^-6],0,0,0.01,3,10,100)**
+   |  ex: **[deltamin]=momentum_aperture_at(thering,-0.1,[10^-6 10^-6],0,0,-0.01,3,10,100)**
 

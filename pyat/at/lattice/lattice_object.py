@@ -40,9 +40,9 @@ import numpy as np
 
 from . import elements as elt
 from .elements import Element
+from .exceptions import AtError, AtWarning
 from .particle_object import Particle
-from .utils import AtError, AtWarning, Refpts
-from .utils import get_s_pos, get_elements, get_value_refpts, set_value_refpts
+from .utils import get_s_pos, get_elements, get_value_refpts, Refpts, set_value_refpts
 
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts

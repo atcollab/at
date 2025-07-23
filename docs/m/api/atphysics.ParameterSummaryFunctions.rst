@@ -3,6 +3,10 @@
 ParameterSummaryFunctions
 =========================
 
+.. py:module:: atphysics.ParameterSummaryFunctions
+
+   Summaries of lattice parameters
+
 .. rubric:: Functions
 
 

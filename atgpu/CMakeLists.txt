@@ -27,6 +27,7 @@ set(SOURCE_FILES
         CavityPass.cpp
         RFCavityPass.cpp
         CorrectorPass.cpp
+        AperturePass.cpp
 )
 
 if(_CUDA)

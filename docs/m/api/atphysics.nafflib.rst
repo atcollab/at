@@ -3,6 +3,10 @@
 nafflib
 =======
 
+.. py:module:: atphysics.nafflib
+
+   NAFF frequency analysis
+
 .. rubric:: Functions
 
 
