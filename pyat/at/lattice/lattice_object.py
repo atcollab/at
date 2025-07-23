@@ -305,7 +305,7 @@ class Lattice(list):
         params = {}
 
         for elem in type_filter(params, elems):
-            if isinstance(elem, elt.RFCavity):
+            if isinstance(elem, elt.RFCavity) or isinstance(elem, elt.Wiggler):
                 cavities.append(elem)
                 elem.Energy = self._energy
             elif elem.PassMethod.endswith("RadPass"):
@@ -1534,7 +1534,8 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
             cavities.append(elem)
         elif hasattr(elem, "Energy"):
             el_energies.append(elem.Energy)
-            del elem.Energy
+            if not isinstance(elem, elt.Wiggler):
+                del elem.Energy
         if isinstance(elem, elt.Dipole):
             thetas.append(elem.BendingAngle)
         cell_length += getattr(elem, "Length", 0.0)
