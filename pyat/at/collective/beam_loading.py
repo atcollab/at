@@ -1,13 +1,16 @@
-import numpy
-from enum import IntEnum
-from ..lattice import Lattice, AtWarning, AtError
-from at.lattice import RFCavity, Collective
-from at.lattice.elements import _array
-from at.lattice.utils import Refpts, uint32_refpts, make_copy
-from at.physics import get_timelag_fromU0
-from at.constants import clight
-from typing import Sequence, Optional, Union
+from __future__ import annotations
+
 import warnings
+from enum import IntEnum
+from typing import Sequence, Optional, Union
+
+import numpy
+
+from ..constants import clight
+from ..lattice import Lattice, AtWarning, AtError, RFCavity, Collective
+from ..lattice import Refpts, uint32_refpts, make_copy
+from ..lattice.elements.conversions import _array
+from ..physics import get_timelag_fromU0
 
 
 class BLMode(IntEnum):

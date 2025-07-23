@@ -5,21 +5,18 @@ These functions are useful for building ad manipulating these sequences.
 """
 import sys
 import numpy as np
+from .exceptions import *
 from .axisdef import *
 from .options import *
 from .particle_object import Particle
 # from .variables import *
 from .variables import VariableList
 from .elements import *
-from .rectangular_bend import *
-from .crabcavity_element import *
-from .idtable_element import InsertionDeviceKickMap
 from .utils import *
 from .transformation import *
 from .lattice_object import *
 # from .lattice_variables import *
 from .cavity_access import *
-from .variable_elements import *
 from .deprecated import *
 # Define the module "lattice.constants" for backward compatibility
 # noinspection PyUnresolvedReferences

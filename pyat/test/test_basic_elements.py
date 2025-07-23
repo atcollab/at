@@ -4,14 +4,15 @@ import warnings
 from at import element_track, lattice_track
 from at import lattice_pass, internal_lpass
 from at import element_pass, internal_epass
+from at.lattice.elements.conversions import _array, _array66
 from at import elements, lattice
 from numpy.testing import assert_equal
 
 
 def test_data_checks():
     val = numpy.zeros([6, 6])
-    assert elements._array(val).shape == (36,)
-    assert elements._array66(val).shape == (6, 6)
+    assert _array(val).shape == (36,)
+    assert _array66(val).shape == (6, 6)
 
 
 def test_element_string_ordering():
@@ -358,9 +359,7 @@ def test_correct_dimensions_does_not_raise_error(rin, func):
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
 @pytest.mark.parametrize('func', (element_track, element_pass, internal_epass))
 def test_dipole_bend_synonym(rin, dipole_class, func):
-    b = dipole_class(
-        'dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05, PolynomB=[0.0, 0.0]
-    )
+    b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
     rin[0, 0] = 1e-6
     if func == element_track:
         func(b, rin, in_place=True)
