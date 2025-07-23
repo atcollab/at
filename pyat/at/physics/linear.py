@@ -679,7 +679,10 @@ def linopt2(ring: Lattice, *args, **kwargs):
     **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
-                        (modulo :math:`2\pi`)
+                         Warning: if the sampling (number of refpts) is too
+                         sparse, i.e. if the phase advance is more than 2*pi
+                         between 2 points the integer part will not increment
+                         correclty
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
@@ -792,7 +795,10 @@ def linopt4(ring: Lattice, *args, **kwargs):
     **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
-                        (modulo :math:`2\pi`)
+                         Warning: if the sampling (number of refpts) is too
+                         sparse, i.e. if the phase advance is more than 2*pi
+                         between 2 points the integer part will not increment
+                         correclty
     **gamma**           gamma parameter of the transformation to
                         eigenmodes [7]_
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
@@ -919,7 +925,10 @@ def linopt6(ring: Lattice, *args, **kwargs):
     **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
-                        (modulo :math:`2\pi`)
+                         Warning: if the sampling (number of refpts) is too
+                         sparse, i.e. if the phase advance is more than 2*pi
+                         between 2 points the integer part will not increment
+                         correclty
     **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     **Wp**              :math:`\left[ Wp_x,Wp_y \right]` only if *get_w*
@@ -1147,7 +1156,11 @@ def linopt(
         dispersion      (4,) dispersion vector
         beta            [betax, betay] vector
         alpha           [alphax, alphay] vector
-        mu              [mux, muy], betatron phase (modulo 2*pi)
+        mu              [mux, muy], betatron phase
+                         Warning: if the sampling (number of refpts) is too
+                         sparse, i.e. if the phase advance is more than 2*pi
+                         between 2 points the integer part will not increment
+                         correclty
         W               (2,) chromatic amplitude function (only if get_w==True)
         All values given at the entrance of each element specified in refpts.
         In case coupled == :py:obj:`True` additional outputs are available:
