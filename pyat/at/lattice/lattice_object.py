@@ -1279,7 +1279,9 @@ class Lattice(list):
         return self._set_6d(False, *args, **kwargs)
 
     def sbreak(self, break_s, break_elems=None, **kwargs):
-        """Insert elements at selected locations in the lattice
+        r"""
+        Insert elements at selected locations in the lattice.
+        In place modification not available for this function.
 
         Parameters:
             break_s:        location or array of locations of breakpoints
@@ -1288,6 +1290,9 @@ class Lattice(list):
                             duplicated as necessary). Default: Marker('sbreak')
         Returns:
             newring:    A new lattice with new elements inserted at breakpoints
+
+        Example:
+            >>> newring = ring.sbreak(spos, at.Marker('sbreak'))
         """
 
         def sbreak_iterator(_, itmk):

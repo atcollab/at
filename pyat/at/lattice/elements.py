@@ -1486,6 +1486,12 @@ class EnergyLoss(_DictLongtMotion, Element):
         generate any diffusion. This makes sense only if the losses summarised in
         the element occur in non-dispersive locations.
 
+        It is a single thin, straight non-focusing radiative element that does not contribute
+        to the diffusion. It's typical usage is to model the energy loss and contribution
+        to the damping times from a thin wiggler located in a non dispersive region.
+        More complex cases with focusing and / or  diffusion are not correctly handled by this
+        element.
+
         Args:
             family_name:    Name of the element
             energy_loss:    Energy loss [eV]

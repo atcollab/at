@@ -288,14 +288,14 @@ def get_lifetime(
 
     args:
         ring:            ring use for tracking
-        emity:           verticla emittance
-        bunch_curr:      bunch current
+        emity:           vertical emittance [m]
+        bunch_curr:      bunch current [A]
 
     keyword args:
-        emitx=None:      horizontal emittance
-        sigs=None:       rms bunch length
+        emitx=None:      horizontal emittance [m]
+        sigs=None:       rms bunch length [m]
         sigp=None:       energy spread
-        zn=None:         full ring :math:`Z/n`
+        zn=None:         full ring :math:`Z/n` [Ohm]
         momap=None:      momentum aperture, has to be consistent with
                          ``refpts`` if provided the momentum aperture is
                          not calculated
@@ -304,7 +304,7 @@ def get_lifetime(
                          ring, ``len(refpts)>2`` is required
         resolution:      minimum distance between 2 grid points, default=1.0e-3
         amplitude:       max. amplitude for ``RADIAL`` and ``CARTESIAN`` or
-                         initial step in ``RECURSIVE``
+                         initial step in ``RECURSIVE`` [m]
                          default = 0.1
         nturns=1024:     Number of turns for the tracking
         dp=None:         static momentum offset
