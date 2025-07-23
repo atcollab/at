@@ -832,8 +832,8 @@ def get_value_refpts(
         attrname:   Attribute name
         index:      index of the value to retrieve if *attrname* is
           an array. If :py:obj:`None` the full array is retrieved
-          In case *attrname* is a scalar, the keyword argument index has
-          to be None
+          In case *attrname* is a scalar attribute, the keyword argument
+          index has to be None
         regex: Use regular expression for *refpts* string matching instead of
           Unix shell-style wildcards.
 
@@ -869,8 +869,8 @@ def set_value_refpts(
         index:      index of the value to set if *attrname* is
           an array. if :py:obj:`None`, the full array is replaced by
           *attrvalue*. 
-          In case *attrname* is a scalar, the keyword argument index has
-          to be None
+          In case *attrname* is a scalar attribute, the keyword argument
+          index has to be None
         increment:  If :py:obj:`True`, *attrvalues* are added to the
           initial values.
         regex: Use regular expression for *refpts* string matching
