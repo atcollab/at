@@ -320,8 +320,8 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "K", self.K
 
     def _part(self, fr, sumfr):
@@ -396,8 +396,8 @@ class Quadrupole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "K", self.K
 
 
@@ -429,6 +429,10 @@ class Sextupole(Multipole):
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
+
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
+        yield "H", self.H
 
 
 class Octupole(Multipole):
@@ -501,7 +505,7 @@ class Wiggler(Radiative, LongElement):
             length:         total length of the wiggler
             wiggle_period:  length must be a multiple of this
             b_max:          peak wiggler field [Tesla]
-            energy:         kept for backwards compatibility but always ignored
+            energy:         beam energy [eV]
             Nstep:          number of integration steps.
             Nmeth:          symplectic integration order: 2 or 4
             Bx:             harmonics for horizontal wiggler: (6, nHharm)
@@ -518,13 +522,6 @@ class Wiggler(Radiative, LongElement):
                 "Wiggler: length / wiggle_period is not an "
                 f"integer. ({length}/{wiggle_period}={n_wiggles})"
             )
-        if energy:
-            warnings.warn(
-                AtWarning(
-                    f"Wiggler: positional argument energy={energy} has been ignored as "
-                    "lattice.Energy is always used instead."
-                )
-            )
         super().__init__(
             family_name,
             length,
@@ -534,6 +531,7 @@ class Wiggler(Radiative, LongElement):
             Nmeth=Nmeth,
             By=By,
             Bx=Bx,
+            Energy=energy,
             **kwargs,
         )
 
