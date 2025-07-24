@@ -8,5 +8,6 @@ Example notebooks
 
    notebooks/variables
    notebooks/observables
+   notebooks/parameters
    notebooks/test_variables
    notebooks/matching
