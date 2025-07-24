@@ -12,9 +12,9 @@ from typing import Any
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
-
-# noinspection PyProtectedMember
-from ..variables import _nop
+from ..parser import _nop, ParamDef
+from ..variables import ParamBase
+from ..parameters import _ACCEPTED, Param, ParamArray
 
 
 class Element:
@@ -57,19 +57,55 @@ class Element:
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
         self.update(kwargs)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, attrname: str, value: Any) -> None:
+        """Override __setattr__ to handle parameter conversions.
+
+        This method applies the appropriate conversion function to the value
+        before setting it as an attribute.
+        """
+        # Get the conversion function for this attribute or use _nop (no operation)
+        conversion = self._conversions.get(attrname, _nop)
+
         try:
-            value = self._conversions.get(key, _nop)(value)
+            # If the value is a parameter, set its conversion function
+            if isinstance(value, _ACCEPTED):
+                value.set_conversion(conversion)
+            # Otherwise, apply the conversion to the value
+            else:
+                value = conversion(value)
         except Exception as exc:
-            exc.args = (f"In element {self.FamName}, parameter {key}: {exc}",)
+            # Conversion failed
+            exc.args = (f"{self._ident(attrname)}: {exc}",)
             raise
         else:
-            super().__setattr__(key, value)
+            # Set the attribute with the converted value
+            object.__setattr__(self, attrname, value)
+
+    def __getattribute__(self, attrname: str) -> Any:
+        """Override __getattribute__ to handle parameter values.
+
+        This method returns the value of parameters instead of the parameter objects
+        themselves when accessing attributes.
+        """
+        try:
+            attr = object.__getattribute__(self, attrname)
+        except AttributeError as exc:
+            cl = self.__class__.__name__
+            el = object.__getattribute__(self, "FamName")
+            exc.args = (f"{cl}({el!r}) has no attribute {attrname!r}",)
+            raise
+
+        # If it's a parameter or parameter array, return its value
+        if isinstance(attr, (ParamDef, ParamArray)):
+            return attr.value
+
+        # Otherwise return the attribute itself
+        return attr
 
     def __str__(self):
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {v!s}" for k, v in self.items()]
+            + [f"{k:>14}: {v!s}" for k, v in self.items(freeze=False)]
         )
 
     def __repr__(self):
@@ -79,15 +115,63 @@ class Element:
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
 
-    @classmethod
-    def get_subclasses(cls) -> Generator[type[Element], None, None]:
-        """Iterator over the subclasses of this element
+    def _ident(self, attrname: str | None = None, index: bool = None):
+        """Return an element's identifier for error messages"""
+        if attrname is None:
+            return f"{self.__class__.__name__}({self.FamName!r})"
+        elif index is None:
+            return f"{self.__class__.__name__}({self.FamName!r}).{attrname}"
+        else:
+            return f"{self.__class__.__name__}({self.FamName!r}).{attrname}[{index}]"
 
-        Because of multiple inheritance, some classes may appear several times
+    @classmethod
+    def subclasses(cls) -> Generator[type[Element], None, None]:
+        """Yields all the class subclasses.
+
+        Some classes may appear several times because of diamond-shape inheritance
         """
         for subclass in cls.__subclasses__():
-            yield from subclass.get_subclasses()
+            yield from subclass.subclasses()
         yield cls
+
+    def keys(self):
+        """Return a set of all attribute names"""
+        return set(vars(self).keys())
+
+    def to_dict(self, freeze: bool = True):
+        """Return a copy of the element parameters"""
+        if freeze:
+            return {k: getattr(self, k) for k in self.keys()}
+        else:
+            return vars(self).copy()
+
+    def get_parameter(self, attrname: str, index: int | None = None) -> Any:
+        """Extract a parameter of an element
+
+        Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
+        parameter itself instead of its value. If the item is not a parameter,
+        both functions are equivalent, the value is returned.
+
+        Args:
+            attrname:   Attribute name
+            index:      Index in an array attribute. If :py:obj:`None`, the
+              whole attribute is returned
+
+        Returns:
+            The parameter object or attribute value.
+        """
+        try:
+            attr = self.__dict__[attrname]
+        except KeyError:
+            raise AttributeError(
+                f"{self._ident()} has no attribute {attrname!r}"
+            ) from None
+        if index is not None:
+            try:
+                attr = attr[index]
+            except IndexError as exc:
+                raise IndexError(f"{self._ident(attrname)}: {exc}") from None
+        return attr
 
     def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
@@ -99,8 +183,7 @@ class Element:
 
     def divide(self, frac) -> list[Element]:
         # noinspection PyUnresolvedReferences
-        """split the element in len(frac) pieces whose length
-        is frac[i]*self.Length
+        """split the element in len(frac) pieces whose length is frac[i]*self.Length
 
         Parameters:
             frac:           length of each slice expressed as a fraction of the
@@ -121,7 +204,7 @@ class Element:
         """Swap the faces of an element, alignment errors are ignored"""
 
         def swapattr(element, attro, attri):
-            val = getattr(element, attri)
+            val = element.get_parameter(attri)  # get the parameter itself
             delattr(element, attri)
             return attro, val
 
@@ -130,15 +213,16 @@ class Element:
         else:
             el = self
         # Remove and swap entrance and exit attributes
+        attrs = el.keys()
         fin = dict(
             swapattr(el, kout, kin)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
-            if kin in vars(el) and kin not in el._no_swap
+            if kin in attrs and kin not in el._no_swap
         )
         fout = dict(
             swapattr(el, kin, kout)
             for kin, kout in zip(el._entrance_fields, el._exit_fields)
-            if kout in vars(el) and kout not in el._no_swap
+            if kout in attrs and kout not in el._no_swap
         )
         # Apply swapped entrance and exit attributes
         for key, value in fin.items():
@@ -169,7 +253,7 @@ class Element:
     @property
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element"""
-        attrs = dict(self.items())
+        attrs = {k: getattr(self, k) for k, v in self.items()}
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
         )
@@ -181,9 +265,9 @@ class Element:
         }
         return self.__class__.__name__, arguments, keywords
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
         """Iterates through the data members"""
-        v = vars(self).copy()
+        v = self.to_dict(freeze=freeze)
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
         for k, val in sorted(v.items()):
@@ -216,3 +300,151 @@ class Element:
     def is_collective(self) -> bool:
         """:py:obj:`True` if the element involves collective effects"""
         return self._get_collective()
+
+    def set_parameter(
+        self, attrname: str, value: Any, index: int | None = None
+    ) -> None:
+        """Set an element's parameter.
+
+        This allows setting a parameter into an attribute or an item of an
+        array attribute.
+
+        Args:
+            attrname:   Attribute name
+            value:      Parameter or value to be set
+            index:      Index into an array attribute. If *value* is a
+              parameter, the array attribute is converted to a :py:class:`.ParamArray`.
+
+        Raises:
+            IndexError: If the provided index is out of bounds for the array attribute
+            AttributeError: If the attribute doesn't exist
+        """
+
+        def set_array_item(arr: np.ndarray, idx: int, val: Any) -> None:
+            """Helper function to set an item in an array."""
+            try:
+                arr[idx] = val
+            except IndexError as exc:
+                exc.args = (f"{self._ident(attrname)}: {exc}",)
+                raise
+
+        # Set the entire attribute
+        if index is None:
+            setattr(self, attrname, value)
+        # Set a specific index in an array attribute
+        else:
+            array = self.get_parameter(attrname)
+            set_array_item(array, index, value)
+
+    def is_parameterised(
+        self, attrname: str | None = None, index: int | None = None
+    ) -> bool:
+        """Check for the parameterisation of an element
+
+        Args:
+            attrname:   Attribute name. If :py:obj:`None`, checks if any attribute is
+              parameterised
+            index:      Index in an array attribute. If :py:obj:`None`, tests the whole
+              attribute
+
+        Returns:
+            True if the attribute, or array item is parameterised, False otherwise
+        """
+        # Check if any attribute is parameterised
+        if attrname is None:
+            return any(self.is_parameterised(attribute) for attribute in self.__dict__)
+
+        # Get the attribute or specific index
+        attribute = self.get_parameter(attrname, index=index)
+
+        # Check if the attribute itself is a parameter
+        if isinstance(attribute, ParamDef):
+            return True
+
+        # Check if any element in the array is a parameter
+        if isinstance(attribute, np.ndarray):
+            return any(isinstance(item, ParamDef) for item in attribute.flat)
+
+        # Not parameterised
+        return False
+
+    def parameterise(
+        self, attrname: str, index: int | None = None, name: str = ""
+    ) -> ParamBase:
+        """Convert attribute to parameter preserving value.
+
+        The value of the attribute is kept unchanged. If the attribute is
+        already parameterised, the existing parameter is returned.
+
+        Args:
+            attrname:   Attribute name
+            index:      Index in an array. If :py:obj:`None`, the
+              whole attribute is parameterised
+            name:       Name of the created parameter
+
+        Returns:
+            A :py:class:`.ParamArray` for an array attribute,
+            a :py:class:`.Param` for a scalar attribute or an item in an
+            array attribute
+
+        Raises:
+            TypeError: If the attribute value is not a valid parameter type (Number)
+            IndexError: If the index is out of bounds for an array attribute
+            AttributeError: If the attribute does not exist
+        """
+        # Get the current value of the attribute or array element
+        current_value = self.get_parameter(attrname, index=index)
+
+        # If it's already a parameter, return it
+        if isinstance(current_value, ParamBase):
+            return current_value
+
+        # Create a new parameter with the current value
+        try:
+            param = Param(current_value, name=name)
+        except TypeError as exc:
+            exc.args = (f"Cannot parameterise {self._ident(attrname)}: {exc}",)
+            raise
+
+        # Set the parameter in the element
+        self.set_parameter(attrname, param, index=index)
+        return param
+
+    def unparameterise(
+        self, attrname: str | None = None, index: int | None = None
+    ) -> None:
+        """Replace parameters with their current values.
+
+        This function replaces parameters with their current values, effectively
+        "freezing" them. This is useful when you want to convert a parameterised
+        element back to a regular element with fixed values.
+
+        Args:
+            attrname:   Attribute name. If :py:obj:`None`, freezes all attributes
+            index:      Index in an array. If :py:obj:`None`, freezes the whole
+              attribute
+
+        Attributes which are not parameters are silently ignored.
+        """
+
+        def _freeze_attribute(attrname: str, attr: Any) -> None:
+            """Helper function to freeze a parameterised attribute."""
+            if isinstance(attr, ParamDef):
+                setattr(self, attrname, attr.value)
+            elif isinstance(attr, np.ndarray):
+                for i, item in enumerate(attr.flat):
+                    if isinstance(item, ParamDef):
+                        ij = np.unravel_index(i, attr.shape)
+                        attr[ij] = item.value
+
+        if attrname is None:
+            for name, attr in self.__dict__.items():
+                _freeze_attribute(name, attr)
+        else:
+            attr = self.get_parameter(attrname)
+            if index is None:
+                _freeze_attribute(attrname, attr)
+            else:
+                item = attr[index]
+                if isinstance(item, ParamDef):
+                    attr[index] = item.value
