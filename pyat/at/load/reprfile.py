@@ -20,10 +20,10 @@ from at.lattice import Lattice, Element
 # imports necessary in' globals()' for 'eval'
 from at.lattice import Particle  # noqa: F401
 from at.load import register_format
-from at.load.utils import element_classes, keep_attributes, keep_elements
+from at.load.utils import keep_attributes, keep_elements
 
 # Map class names to Element classes
-_CLASS_MAP = dict((cls.__name__, cls) for cls in element_classes())
+_CLASS_MAP = {cls.__name__: cls for cls in Element.subclasses()}
 
 
 def _element_from_string(elem_string: str) -> Element:

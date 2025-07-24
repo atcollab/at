@@ -52,6 +52,7 @@ that their sum is constant:
 
         If *total_length* is None, it is set to the initial total length
         '''
+
         def __init__(self, drift1, drift2, total_length=None, **kwargs):
             # store the 2 variable elements
             self.drift1 = drift1
@@ -84,44 +85,132 @@ from __future__ import annotations
 
 __all__ = [
     "VariableBase",
+    "ParamBase",
     "CustomVariable",
     "VariableList",
 ]
 
 import abc
+from operator import add, sub, mul, truediv, pos, neg
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
-from typing import Union
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
-Number = Union[int, float]
+from .parser import ParamDef, _nop
+
+# Define a type variable for numeric types
+Number = TypeVar("Number", int, float)
 
 
-def _nop(value):
-    return value
+class _Evaluator(Generic[Number], abc.ABC):
+    """Abstract base class for evaluators
+
+    An evaluator is a callable object that returns a scalar value.
+    """
+
+    @abc.abstractmethod
+    def __call__(self) -> Number:
+        """Evaluate and return the value
+
+        Returns:
+            The evaluated value
+        """
+        ...
 
 
-class VariableBase(abc.ABC):
+class _Constant(_Evaluator[Number]):
+    """An evaluator that always returns a constant value"""
+
+    __slots__ = "value"
+
+    def __init__(self, value: Number):
+        """Initialize a constant evaluator
+
+        Args:
+            value: The constant value to return
+
+        Raises:
+            TypeError: If the value is not a scalar (int or float)
+        """
+        if not isinstance(value, (int, float)):
+            raise TypeError("The parameter value must be a scalar")
+        self.value: Number = value
+
+    def __call__(self) -> Number:
+        return self.value
+
+
+class _BinaryOperator(_Evaluator[Number]):
+    __slots__ = ["operator", "left_operand", "right_operand"]
+
+    @staticmethod
+    def _convert_to_evaluator(value):
+        """Convert a value to an evaluator"""
+        if isinstance(value, (int, float)):
+            return _Constant(value)
+        elif isinstance(value, VariableBase):
+            return value
+        raise TypeError(f"Parameter operation not defined for type {type(value)}")
+
+    def __init__(self, operator, left, right) -> None:
+        """Initialize a binary operator
+
+        Args:
+            operator: The operator function to apply
+            left: The left operand of the operator
+            right: The right operand of the operator
+        """
+        self.operator = operator
+        self.right_operand = self._convert_to_evaluator(right)
+        self.left_operand = self._convert_to_evaluator(left)
+
+    def __call__(self) -> Number:
+        return self.operator(self.left_operand.value, self.right_operand.value)
+
+
+class _UnaryOperator(_Evaluator[Number]):
+    __slots__ = ["operator", "operand"]
+
+    def __init__(self, operator, operand) -> None:
+        """Initialize a unary operator
+
+        Args:
+            operator: The operator function to apply
+            operand: The operand to apply the operator to
+        """
+        self.operator = operator
+        self.operand = operand
+
+    def __call__(self) -> Number:
+        return self.operator(self.operand.value)
+
+
+class VariableBase(Generic[Number], abc.ABC):
     """A Variable abstract base class
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
-    :py:meth:`~VariableBase._getfun` methods
+    :py:meth:`~VariableBase._setfun` methods
     """
 
+    # Class constants
+    DEFAULT_DELTA = 1.0
+    COUNTER_PREFIX = "var"
+
     _counter = 0
-    _prefix = "var"
 
     def __init__(
         self,
         *,
         name: str = "",
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
-        delta: Number = 1.0,
-        history_length: int = None,
+        bounds: tuple[Number, Number] | None = None,
+        delta: Number = DEFAULT_DELTA,
+        history_length: int | None = None,
         ring=None,
-    ):
+        **kwargs,
+    ) -> None:
         """
         Parameters:
             name:       Name of the Variable
@@ -132,33 +221,42 @@ class VariableBase(abc.ABC):
             ring:       provided to an attempt to get the initial value of the
               variable
         """
-        self.name: str = self._setname(name)  #: Variable name
-        self.bounds: tuple[Number, Number] = bounds  #: Variable bounds
+        self.name: str = self._generate_name(name)  #: Variable name
+        if bounds is None:
+            bounds = (None, None)
+        self.bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
         self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
-        self._history = deque([], self.history_length)
+        self._history: deque[Number] = deque([], self.history_length)
         try:
             self.get(ring=ring, initial=True)
         except ValueError:
             pass
+        super().__init__(**kwargs)
 
     @classmethod
-    def _setname(cls, name):
+    def _generate_name(cls, name: str) -> str:
+        """Generate unique name for variable"""
         cls._counter += 1
-        if name:
-            return name
-        else:
-            return f"{cls._prefix}{cls._counter}"
+        return name if name else f"{cls.COUNTER_PREFIX}{cls._counter}"
+
+    def _check_bounds(self, value: Number) -> None:
+        """Verify value is within bounds"""
+        min_val, max_val = self.bounds
+        if min_val is not None and value < min_val:
+            raise ValueError(f"Value {value} must be larger or equal to {min_val}")
+        if max_val is not None and value > max_val:
+            raise ValueError(f"Value {value} must be smaller or equal to {max_val}")
 
     # noinspection PyUnusedLocal
-    def _setfun(self, value: Number, ring=None):
+    def _setfun(self, value: Number, ring=None) -> None:
         classname = self.__class__.__name__
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, ring=None) -> Number: ...
+    def _getfun(self, **kwargs) -> Number: ...
 
     @property
     def history(self) -> list[Number]:
@@ -167,15 +265,23 @@ class VariableBase(abc.ABC):
 
     @property
     def initial_value(self) -> Number:
-        """Initial value of the variable"""
+        """Initial value of the variable
+
+        Raises:
+            IndexError: If no initial value has been set yet
+        """
         if not np.isnan(self._initial):
             return self._initial
         else:
-            raise IndexError(f"{self.name}: No value has been set yet")
+            raise IndexError(f"{self.name}: No initial value has been set yet")
 
     @property
     def last_value(self) -> Number:
-        """Last value of the variable"""
+        """Last value of the variable
+
+        Raises:
+            IndexError: If no value has been set yet
+        """
         try:
             return self._history[-1]
         except IndexError as exc:
@@ -184,11 +290,15 @@ class VariableBase(abc.ABC):
 
     @property
     def previous_value(self) -> Number:
-        """Value before the last one"""
+        """Value before the last one
+
+        Raises:
+            IndexError: If there are fewer than 2 values in the history
+        """
         try:
             return self._history[-2]
         except IndexError as exc:
-            exc.args = (f"{self.name}: history too short",)
+            exc.args = (f"{self.name}: history too short (need at least 2 values)",)
             raise
 
     def set(self, value: Number, ring=None) -> None:
@@ -199,8 +309,7 @@ class VariableBase(abc.ABC):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
         """
-        if value < self.bounds[0] or value > self.bounds[1]:
-            raise ValueError(f"set value must be in {self.bounds}")
+        self._check_bounds(value)
         self._setfun(value, ring=ring)
         if np.isnan(self._initial):
             self._initial = value
@@ -227,8 +336,7 @@ class VariableBase(abc.ABC):
             self._initial = value
             self._history = deque([value], self.history_length)
         if check_bounds:
-            if value < self.bounds[0] or value > self.bounds[1]:
-                raise ValueError(f"value out of {self.bounds}")
+            self._check_bounds(value)
         return value
 
     value = property(get, set, doc="Actual value")
@@ -236,10 +344,9 @@ class VariableBase(abc.ABC):
     @property
     def _safe_value(self):
         try:
-            v = self._history[-1]
+            return self._history[-1]
         except IndexError:
-            v = np.nan
-        return v
+            return np.nan
 
     def set_previous(self, ring=None) -> None:
         """Reset to the value before the last one
@@ -247,13 +354,16 @@ class VariableBase(abc.ABC):
         Args:
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
+
+        Raises:
+            IndexError: If there are fewer than 2 values in the history
         """
         if len(self._history) >= 2:
             self._history.pop()  # Remove the last value
-            value = self._history.pop()  # retrieve the previous value
-            self.set(value, ring=ring)
+            previous_value = self._history.pop()  # retrieve the previous value
+            self.set(previous_value, ring=ring)
         else:
-            raise IndexError(f"{self.name}: history too short")
+            raise IndexError(f"{self.name}: history too short (need at least 2 values)")
 
     def reset(self, ring=None) -> None:
         """Reset to the initial value and clear the history buffer
@@ -261,13 +371,18 @@ class VariableBase(abc.ABC):
         Args:
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to reset the variable.
+
+        Raises:
+            IndexError: If no initial value has been set yet
         """
-        iniv = self._initial
-        if not np.isnan(iniv):
+        initial_value = self._initial
+        if not np.isnan(initial_value):
             self._history = deque([], self.history_length)
-            self.set(iniv, ring=ring)
+            self.set(initial_value, ring=ring)
         else:
-            raise IndexError(f"reset {self.name}: No value has been set yet")
+            raise IndexError(
+                f"Cannot reset {self.name}: No initial value has been set yet"
+            )
 
     def increment(self, incr: Number, ring=None) -> None:
         """Increment the variable value
@@ -277,14 +392,31 @@ class VariableBase(abc.ABC):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to increment the variable.
         """
-        if self._initial is None:
+        try:
+            current_value = self.last_value
+        except IndexError:
+            # If no value has been set yet, get the initial value
             self.get(ring=ring, initial=True)
-        self.set(self.last_value + incr, ring=ring)
+            current_value = self.last_value
+
+        self.set(current_value + incr, ring=ring)
 
     def _step(self, step: Number, ring=None) -> None:
-        if self._initial is None:
+        """Apply a step relative to the initial value
+
+        Args:
+            step:   Step value to add to the initial value
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
+        try:
+            initial_value = self.initial_value
+        except IndexError:
+            # If no initial value has been set yet, get it
             self.get(ring=ring, initial=True)
-        self.set(self._initial + step, ring=ring)
+            initial_value = self.initial_value
+
+        self.set(initial_value + step, ring=ring)
 
     def step_up(self, ring=None) -> None:
         """Set to initial_value + delta
@@ -313,10 +445,7 @@ class VariableBase(abc.ABC):
     def _line(self):
         vnow = self._safe_value
         vini = self._initial
-
-        return "{:>12s}{: 16e}{: 16e}{: 16e}".format(
-            self.name, vini, vnow, (vnow - vini)
-        )
+        return f"{self.name:>12s}{vini: 16e}{vnow: 16e}{vnow - vini: 16e}"
 
     def status(self):
         """Return a string describing the current status of the variable
@@ -325,6 +454,40 @@ class VariableBase(abc.ABC):
             status: Variable description
         """
         return "\n".join((self._header(), self._line()))
+
+    def __add__(self, other):
+        fun = _BinaryOperator(add, self, other)
+        return ParamBase(fun)
+
+    __radd__ = __add__
+
+    def __pos__(self):
+        return ParamBase(_UnaryOperator(pos, self))
+
+    def __neg__(self):
+        return ParamBase(_UnaryOperator(neg, self))
+
+    def __sub__(self, other):
+        fun = _BinaryOperator(sub, self, other)
+        return ParamBase(fun)
+
+    def __rsub__(self, other):
+        fun = _BinaryOperator(sub, other, self)
+        return ParamBase(fun)
+
+    def __mul__(self, other):
+        fun = _BinaryOperator(mul, self, other)
+        return ParamBase(fun)
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        fun = _BinaryOperator(truediv, self, other)
+        return ParamBase(fun)
+
+    def __rtruediv__(self, other):
+        fun = _BinaryOperator(truediv, other, self)
+        return ParamBase(fun)
 
     def __float__(self):
         return float(self._safe_value)
@@ -339,7 +502,53 @@ class VariableBase(abc.ABC):
         return repr(self._safe_value)
 
 
-class CustomVariable(VariableBase):
+class ParamBase(VariableBase[Number], ParamDef):
+    """Read-only base class for parameters
+
+    It is used for computed parameters and should not be instantiated
+    otherwise. See :py:class:`.Variable` for a description of inherited
+    methods
+    """
+
+    COUNTER_PREFIX = "calc"
+
+    _counter = 0
+    _evaluator: _Evaluator[Number]
+    _conversion: Callable[[Any], Number]
+
+    def __init__(
+        self,
+        evaluator: _Evaluator[Number],
+        *,
+        name: str = "",
+        conversion: Callable[[Any], Number] = _nop,
+        bounds: tuple[Number, Number] | None = None,
+        delta: Number = 1.0,
+    ) -> None:
+        """
+
+        Args:
+            evaluator:  Evaluator function
+            name:       Name of the parameter
+            conversion: data conversion function
+            bounds:     Lower and upper bounds of the parameter value
+            delta:      Initial variation step
+        """
+        if not isinstance(evaluator, _Evaluator):
+            raise TypeError("'Evaluate' must be an _Evaluate object")
+        self._evaluator = evaluator
+        self._conversion = conversion
+        super().__init__(name=name, bounds=bounds, delta=delta)
+
+    def _getfun(self, **kwargs) -> Number:
+        return self._conversion(self._evaluator())
+
+    @property
+    def _safe_value(self):
+        return self._getfun()
+
+
+class CustomVariable(VariableBase[Number]):
     r"""A Variable with user-defined get and set functions
 
     This is a convenience function allowing user-defined *get* and *set*
@@ -350,16 +559,16 @@ class CustomVariable(VariableBase):
 
     def __init__(
         self,
-        setfun: Callable,
-        getfun: Callable,
+        setfun: Callable[..., None],
+        getfun: Callable[..., Number],
         *args,
         name: str = "",
-        bounds: tuple[Number, Number] = (-np.inf, np.inf),
+        bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
-        history_length: int = None,
+        history_length: int | None = None,
         ring=None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Parameters:
             getfun:     Function for getting the variable value. Called as

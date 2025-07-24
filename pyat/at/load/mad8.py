@@ -12,24 +12,24 @@ from __future__ import annotations
 __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
 # functions known by MAD-8
-from math import pi, e, sqrt, exp, log, sin, cos, tan  # noqa: F401
-from math import asin  # noqa: F401
+from math import pi, e, sqrt, exp, log, sin, cos, tan
+from math import asin
 import re
 
 # constants known by MAD-8
-from scipy.constants import c as clight, e as qelect  # noqa: F401
+from scipy.constants import c as clight, e as qelect
 from scipy.constants import physical_constants as _cst
 
 from ..lattice import Lattice
 
-from .file_input import ignore_names
+from .file_input import ignore_class
 
 # noinspection PyProtectedMember
 from .madx import _MadElement, _MadParser, _MadExporter
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
-from .madx import (  # noqa: F401
+from .madx import (
     drift,
     marker,
     quadrupole,
@@ -45,18 +45,9 @@ from .madx import (  # noqa: F401
     monitor,
     hmonitor,
     vmonitor,
-    value,
+    _value,
 )
 
-# Constants known by MAD-8
-_true_ = True
-_yes_ = True
-_t_ = True
-_on_ = True
-_false_ = False
-_no_ = False
-_f_ = False
-_off_ = False
 twopi = 2 * pi
 degrad = 180.0 / pi
 raddeg = pi / 180.0
@@ -65,10 +56,67 @@ pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
 _attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
 
-ignore_names(
-    globals(),
-    _MadElement,
-    ["solenoid", "rfmultipole", "crabcavity", "elseparator", "collimator", "tkicker"],
+
+_mad8_env = {
+    # Constants
+    "_true_": True,
+    "_yes_": True,
+    "_t_": True,
+    "_on_": True,
+    "_false_": False,
+    "_no_": False,
+    "_f_": False,
+    "_off_": False,
+    "pi": pi,
+    "e": e,
+    "abs": abs,
+    "sqrt": sqrt,
+    "exp": exp,
+    "log": log,
+    "sin": sin,
+    "cos": cos,
+    "tan": tan,
+    "asin": asin,
+    "twopi": 2 * pi,
+    "degrad": 180.0 / pi,
+    "raddeg": pi / 180.0,
+    "emass": emass,  # [GeV]
+    "pmass": pmass,  # [GeV]
+    "clight": clight,
+    "qelect": qelect,
+    # Elements
+    "drift": drift,
+    "marker": marker,
+    "quadrupole": quadrupole,
+    "sextupole": sextupole,
+    "octupole": octupole,
+    "multipole": multipole,
+    "sbend": sbend,
+    "rbend": rbend,
+    "kicker": kicker,
+    "hkicker": hkicker,
+    "vkicker": vkicker,
+    "rfcavity": rfcavity,
+    "monitor": monitor,
+    "hmonitor": hmonitor,
+    "vmonitor": vmonitor,
+    # Commands
+    "value": _value,
+    "__builtins__": {},
+}
+
+
+_ignore_names = [
+    "solenoid",
+    "rfmultipole",
+    "crabcavity",
+    "elseparator",
+    "collimator",
+    "tkicker",
+]
+
+_mad8_env.update(
+    (name, ignore_class(name, _MadElement, module=__name__)) for name in _ignore_names
 )
 
 
@@ -118,7 +166,7 @@ class Mad8Parser(_MadParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(globals(), **kwargs)
+        super().__init__(_mad8_env, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""
@@ -132,6 +180,7 @@ def load_mad8(
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
+    parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
     """Create a :py:class:`.Lattice` from MAD8 files
@@ -169,7 +218,7 @@ def load_mad8(
         if key in kwargs
     }
     parser.parse_files(*files, **kwargs)
-    return parser.lattice(use=use, **params)
+    return parser.lattice(use=use, parameterised=parameterised, **params)
 
 
 class _Mad8Exporter(_MadExporter):
