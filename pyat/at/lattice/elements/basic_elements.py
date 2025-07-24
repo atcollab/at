@@ -55,24 +55,23 @@ class LongElement(Element):
 
     def _part(self, fr, sumfr):
         pp = self.copy()
-        pp.Length = fr * self.Length
+        pp.Length = fr * self.get_parameter("Length")
         if hasattr(self, "KickAngle"):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
-            val = getattr(element, attr)
+            val = element.get_parameter(attr)  # get the parameter itself
             delattr(element, attr)
             return attr, val
 
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        fin = dict(
-            popattr(el, key) for key in vars(self) if key in self._entrance_fields
-        )
-        fout = dict(popattr(el, key) for key in vars(self) if key in self._exit_fields)
+        attrs = el.keys()
+        fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
+        fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
         element_list = [el._part(f, np.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
