@@ -61,13 +61,6 @@ _p2m = {v: k for k, v in _m2p.items() if v is not None}
 # Attribute to drop when writing a file
 _p2m.update(_drop_attrs)
 
-# Python to Matlab type translation
-_mattype_map = {
-    int: float,
-    list: lambda attr: np.array(attr, dtype=object),
-    tuple: lambda attr: np.array(attr, dtype=object),
-    Particle: lambda attr: attr.to_dict(),
-}
 # Matlab constructor function
 # Default: "".join(("at", element_class.__name__.lower()))
 _mat_constructor = {
@@ -78,7 +71,13 @@ _mat_constructor = {
 
 def _mat_encoder(v):
     """type encoding for .mat files"""
-    return _mattype_map.get(type(v), lambda attr: attr)(v)
+    if isinstance(v, int):
+        return float(v)
+    if isinstance(v, Particle):
+        return v.to_dict()
+    if isinstance(v, (list, tuple)):
+        return np.array(v, dtype=object)
+    return v
 
 
 def _matfile_generator(
@@ -118,7 +117,7 @@ def _matfile_generator(
     for index, mat_elem in enumerate(cell_array):
         elem = mat_elem[0, 0]
         kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-        yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
+        yield Element.from_matlab(kwargs, index=index, check=check, quiet=quiet)
 
 
 def ringparam_filter(
@@ -373,7 +372,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
         for elem in latt:
-            yield Element.from_dict(elem)
+            yield Element.from_matlab(elem)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
@@ -421,7 +420,7 @@ def save_mat(ring: Lattice, filename: str, **kwargs) -> None:
     # Ensure the lattice is a Matlab column vector: list(list)
     use = kwargs.pop("mat_key", "RING")  # For backward compatibility
     use = kwargs.pop("use", use)
-    lring = [[el.to_dict(encoder=_mat_encoder)] for el in matlab_ring(ring)]
+    lring = [el.to_matlab(encoder=_mat_encoder) for el in matlab_ring(ring)]
     scipy.io.savemat(filename, {use: lring}, long_field_names=True)
 
 
@@ -470,9 +469,7 @@ def _element_to_m(elem: Element) -> str:
             return str(arg)
         elif isinstance(arg, dict):
             return convert_dict(arg)
-        elif isinstance(arg, tuple):
-            return convert_list(arg)
-        elif isinstance(arg, list):
+        elif isinstance(arg, (list, tuple)):
             return convert_list(arg)
         elif isinstance(arg, Particle):
             return convert_dict(arg.to_dict())
@@ -483,15 +480,7 @@ def _element_to_m(elem: Element) -> str:
         classname = elclass.__name__
         return _mat_constructor.get(classname, "".join(("at", classname.lower())))
 
-    attrs = dict(elem.items())
-    # noinspection PyProtectedMember
-    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
-    defelem = elem.__class__(*args)
-    kwds = {
-        k: v
-        for k, v in attrs.items()
-        if not np.array_equal(v, getattr(defelem, k, None))
-    }
+    _, args, kwds = elem.definition
     argstrs = [convert(arg) for arg in args]
     if "PassMethod" in kwds:
         argstrs.append(convert(kwds.pop("PassMethod")))

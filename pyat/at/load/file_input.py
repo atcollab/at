@@ -6,8 +6,6 @@ __all__ = [
     "set_argparser",
     "skip_class",
     "ignore_class",
-    "skip_names",
-    "ignore_names",
     "AnyDescr",
     "ElementDescr",
     "SequenceDescr",
@@ -19,15 +17,17 @@ __all__ = [
 ]
 
 from os import getcwd
-from os.path import join, abspath, normpath, dirname
+from os.path import join, normpath, dirname
 import re
 from itertools import repeat, count
+from functools import wraps
+from typing import Any
 from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 
 import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Lattice, elements as elt, params_filter
+from ..lattice import Lattice, elements as elt, params_filter, StrParser
 
 _dot = re.compile(r'("?)(\.?[a-zA-Z_][\w.:]*)\1')  # look for MAD identifiers
 _colon = re.compile(r":(?!=)")  # split on :=
@@ -35,6 +35,93 @@ _colon = re.compile(r":(?!=)")  # split on :=
 # For decoding error messages:
 _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
+
+
+class CommentHandler(object):
+    """
+    Handle comments in the file.
+    """
+
+    def __init__(self, linecomment, blockcomment):
+        if linecomment is None:
+            self.linecomment = []
+        elif not isinstance(linecomment, Sequence):
+            self.linecomment = [linecomment]
+        else:
+            self.linecomment = linecomment
+
+        if blockcomment is None:
+            self.handle_comments = CommentHandler.noblock_handler
+        else:
+            self.in_comment = False
+            self.begcomment, self.endcomment = blockcomment
+            self.handle_comments = CommentHandler.block_handler
+
+    def line_handler(self, line):
+        for delim in self.linecomment:
+            line, *_ = line.split(sep=delim, maxsplit=1)
+        return line
+
+    def block_handler(self, buffer, line):
+        if self.in_comment:
+            *rest, line = line.split(sep=self.endcomment, maxsplit=1)
+            in_comment = len(rest) <= 0
+            self.in_comment = in_comment
+            return "" if in_comment else line
+        else:
+            line = self.line_handler(line)
+            if line:
+                contents, *rest = line.split(sep=self.begcomment, maxsplit=1)
+                buffer.append(contents)
+                in_comment = len(rest) > 0
+                self.in_comment = in_comment
+                return rest[0] if in_comment else ""
+            else:
+                # Special case to avoid that empty lines break the continuation
+                return None
+
+    def noblock_handler(self, buffer, line):
+        line = self.line_handler(line)
+        if line:
+            buffer.append(line)
+            return ""
+        else:
+            # Special case to avoid that empty lines break the continuation
+            return None
+
+    def __call__(self, buffer: list[str], line: str) -> str | None:
+        """Handles processing of input lines and appends processed data to the buffer.
+
+        Non-commented parts of the line are appended to the buffer.
+
+        Args:
+            buffer: Mutable sequence where processed line data is appended.
+            line: String representing the current line of text to be processed.
+
+        Returns:
+            Uncommented input line, or None if the line is empty (special case where
+            block comment should not be interrupted).
+        """
+        while line:
+            line = self.handle_comments(self, buffer, line)
+        if line is None:
+            return None
+        else:
+            contents = "".join(buffer).strip()
+            buffer.clear()
+            return contents
+
+
+def _no_default(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        self._use_default = self.always_force
+        try:
+            return func(self, *args, **kwargs)
+        finally:
+            self._use_default = True
+
+    return wrapper
 
 
 def set_argparser(argparser):
@@ -47,12 +134,21 @@ def set_argparser(argparser):
     return decorator
 
 
-def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
+def skip_class(
+    classname: str,
+    baseclass: type[ElementDescr],
+    module: str | None = None,
+    **kwargs,
+):
     """Generate a class for skipped elements.
+
+    No AT element is generated for these elements.
 
     Args:
         classname: Name of the generated class
         baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
+        module: Name of the module where the class is defined. If :py:obj:`None`, use
+          the module of the base class.
         **kwargs: dictionary of additional attributes and methods. See :py:func:`type`.
 
     Returns:
@@ -66,16 +162,25 @@ def skip_class(classname: str, baseclass: type[ElementDescr], **kwargs):
         print(f"Element {self.name} ({type1}) is ignored.")
         self._mentioned.add(type(self))
 
-    kwargs.update(__init__=init)
+    kwargs.update(__init__=init, __module__=module or baseclass.__module__)
     return type(classname, (baseclass,), kwargs)
 
 
-def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
+def ignore_class(
+    classname: str,
+    baseclass: type[ElementDescr],
+    module: str | None = None,
+    **kwargs,
+):
     """Generate a class for ignored elements.
+
+    The element generates an AT Drift or Marker element depending on its length.
 
     Args:
         classname: Name of the generated class
         baseclass: Base class, must be a subclass of :py:class:`ElementDescr`
+        module: Name of the module where the class is defined. If :py:obj:`None`, use
+          the module of the base class.
         **kwargs: dictionary of additional attributes and methods. See :py:func:`type`.
 
     Returns:
@@ -86,46 +191,20 @@ def ignore_class(classname: str, baseclass: type[ElementDescr], **kwargs):
     def init(self, *args, **kwargs):
         baseclass.__init__(self, *args, **kwargs)
         # if type(self) not in self.mentioned:
-        if not args:  # not for replication
+        if not args:  # no message in case of element replication
             type1 = self.__class__.__name__
             type2 = "Marker" if self.get("l", 0.0) == 0.0 else "Drift"
             print(f"Element {self.name} ({type1}) is replaced by a {type2}.")
             self._mentioned.add(type(self))
 
-    def to_at(self, l=0.0, origin="", **params):  # noqa: E741
+    def to_at(self, l=0.0, **params):  # noqa: E741
         if l == 0.0:
-            return [elt.Marker(self.name, origin=origin, **self.meval(params))]
+            return [elt.Marker(self.name, origin=self.origin, **self.meval(params))]
         else:
-            return [elt.Drift(self.name, l, origin=origin, **self.meval(params))]
+            return [elt.Drift(self.name, l, origin=self.origin, **self.meval(params))]
 
-    kwargs.update(__init__=init, to_at=to_at)
+    kwargs.update(__init__=init, to_at=to_at, __module__=module or baseclass.__module__)
     return type(classname, (baseclass,), kwargs)
-
-
-def ignore_names(
-    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str]
-) -> None:
-    """Add classes for ignored elements in the given namespace.
-
-    Args:
-        namespace:
-        baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
-        classnames: Class names of the generated classes
-    """
-    namespace.update((nm, ignore_class(nm, baseclass)) for nm in classnames)
-
-
-def skip_names(
-    namespace: dict, baseclass: type[ElementDescr], classnames: Iterable[str]
-) -> None:
-    """Add classes for ignored elements in the given namespace.
-
-    Args:
-        namespace:
-        baseclass:  Base class, must be a subclass of :py:class:`ElementDescr`
-        classnames: Class names of the generated classes
-    """
-    namespace.update((nm, skip_class(nm, baseclass)) for nm in classnames)
 
 
 class DictNoDot(dict):
@@ -242,12 +321,11 @@ class ElementDescr(AnyDescr, dict):
         self.origin = origin or self.__class__.__name__
 
     def __getattr__(self, item):
-        # Allows accessing items using the attribute access syntax
-        # tried after lookup for a real attribute failed
+        # Allows accessing dict items using the attribute access syntax, used for
+        # the "ATTR=ELEM->ATTR" syntax."
         try:
             return self[item]
         except KeyError as exc:
-            # necessary for getattr to return the default value for a missing attribute
             name = self.__class__.__name__
             raise AttributeError(f"{name!r} object has no {item!r} attribute") from exc
 
@@ -332,7 +410,7 @@ class SequenceDescr(AnyDescr, list):
         return getattr(self, "l", 0.0)
 
 
-class BaseParser(DictNoDot):
+class BaseParser(DictNoDot, StrParser):
     """Generic file parser
 
     Analyses files with the following MAD-like format:
@@ -364,68 +442,16 @@ class BaseParser(DictNoDot):
             env: global namespace used for evaluating commands
             verbose: If True, print detail on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
-            *args: dict initializer
-            **kwargs: dict initializer
+            *args: dict initialiser
+            **kwargs: dict initialiser
         """
-        linecomment = self._linecomment
-        blockcomment = self._blockcomment
-        if isinstance(linecomment, tuple):
-
-            def line_comment(line):
-                for linecom in linecomment:
-                    line, *_ = line.split(sep=linecom, maxsplit=1)
-                return line
-
-        else:
-            if linecomment is None:
-
-                def line_comment(line):
-                    return line
-
-            else:
-
-                def line_comment(line):
-                    line, *_ = line.split(sep=linecomment, maxsplit=1)
-                    return line
-
-        if blockcomment is None:
-            # noinspection PyUnusedLocal
-            def handle_comments(buffer, line, in_comment):
-                line = line_comment(line)
-                if line:
-                    buffer.append(line_comment(line))
-                    return False, ""
-                else:
-                    # Special case to avoid that empty lines break the continuation
-                    return False, None
-
-        else:
-
-            def handle_comments(buffer, line, in_comment):
-                if in_comment:
-                    *rest, line = line.split(sep=endcomment, maxsplit=1)
-                    in_comment = len(rest) <= 0
-                    return in_comment, "" if in_comment > 0 else line
-                else:
-                    line = line_comment(line)
-                    if line:
-                        contents, *rest = line.split(sep=begcomment, maxsplit=1)
-                        buffer.append(contents)
-                        in_comment = len(rest) > 0
-                        return in_comment, rest[0] if in_comment else ""
-                    else:
-                        # Special case to avoid that empty lines break the continuation
-                        return False, None
-
-            begcomment, endcomment = blockcomment
-
-        self.skip_comments = handle_comments
+        self.skip_comments = CommentHandler(self._linecomment, self._blockcomment)
         self.env = env
-        self.bases = [getcwd()]
+        self.bases = []
         self.kwargs = kwargs
         self.strict = strict
         self.always_force = always_force
-        self.force = always_force
+        self._use_default = True
 
         super().__init__(*args, **kwargs)
 
@@ -433,6 +459,22 @@ class BaseParser(DictNoDot):
             self[self._undef_key] = 0
         self.postponed = []
         self.in_file = []
+
+    # Defined externally because python >= 38 does not allow static methods
+    # as decorators
+    # @staticmethod
+    # def _no_default(func):
+    #     @wraps(func)
+    #     def wrapper(self, *args, **kwargs):
+    #         self._use_default = self.always_force
+    #         print("Set self._use_default")
+    #         try:
+    #             return func(self, *args, **kwargs)
+    #         finally:
+    #             self._use_default = True
+    #             print("Reset self._use_default")
+    #
+    #     return wrapper
 
     def clear(self):
         """Clear the database: remove all parameters and objects"""
@@ -449,6 +491,27 @@ class BaseParser(DictNoDot):
         Overload this method for specific languages"""
         return expr
 
+    def _check_constant(self, expr: str) -> Any:
+        """Check if an expression is constant
+
+        This method attempts to evaluate the expression in a context where no variables
+        are defined. If the evaluation succeeds, the expression is considered constant
+        and the evaluated value is returned. If the evaluation fails with a NameError,
+        the expression is considered non-constant (i.e. it depends on variables).
+
+        Args:
+            expr: The string expression to evaluate
+
+        Returns:
+            The result of evaluating the expression if it's constant
+
+        Raises:
+            NameError: If the expression contains variables
+        """
+        expr = self._format_command(self._gen_expr(expr))
+        # Try to evaluate with only built-ins, not parser variables
+        return eval(expr, self.env, {})
+
     def evaluate(self, expr: str):
         """Evaluate the right side of an expression
 
@@ -460,7 +523,7 @@ class BaseParser(DictNoDot):
         """
         expr = self._format_command(self._gen_expr(expr))
         default_value = self.get(self._undef_key)
-        if self.force and default_value is not None:
+        if self._use_default and default_value is not None:
             for _loop in range(5):
                 try:
                     return eval(expr, self.env, self)
@@ -591,7 +654,7 @@ class BaseParser(DictNoDot):
         return line.replace(" ", "")  # Remove all spaces
 
     def _statement(self, line: str) -> bool:
-        # protect quoted items. Make sure placeholder cannot be modified
+        # Protect quoted items. Make sure placeholder cannot be modified
         line, match1 = protect(line, fence=('"', '"'), placeholder="_0_")
 
         if self._endfile is not None and line.startswith(self._endfile):
@@ -619,18 +682,18 @@ class BaseParser(DictNoDot):
 
         # handle label
         if left:
-            id = 1
+            idx = 1
             label = b[0].replace(" ", "")
         else:
-            id = 0
+            idx = 0
             label = None
 
         # ignore MAD qualifiers
-        while b[id] in ["const", "int", "real"]:
-            id += 1
+        while b[idx] in ["const", "int", "real"]:
+            idx += 1
 
         # process statement
-        self._decode(label, *b[id:])
+        self._decode(label, *b[idx:])
         return True
 
     def _finalise(self, final: bool = True) -> None:
@@ -700,7 +763,6 @@ class BaseParser(DictNoDot):
 
     def expand(self, key: str) -> Generator[elt.Element, None, None]:
         """iterator over AT objects generated by a source object"""
-        self.force = True
         try:
             v = self[key]
             if isinstance(v, AnyDescr):
@@ -712,8 +774,6 @@ class BaseParser(DictNoDot):
             print(f"{type(exc).__name__}: {': '.join(strargs)}")
             self._analyse(self._reason(exc))
             raise
-        finally:
-            self.force = self.always_force
 
     def _generator(self, params):
         """Generate AT elements for the Lattice constructor"""
@@ -747,6 +807,7 @@ class BaseParser(DictNoDot):
             **kwargs,
         )
 
+    @_no_default
     def parse_lines(
         self,
         lines: Iterable[str],
@@ -764,22 +825,11 @@ class BaseParser(DictNoDot):
         """
         self.update(**kwargs)
         buffer = []
-        in_comment: bool = False
         ok: bool = True
-        for line_number, contents in enumerate(lines):
+        for line_number, line in enumerate(lines):
             # Handle comments
-            while contents:
-                in_comment, contents = self.skip_comments(buffer, contents, in_comment)
-            if contents is None:
-                # Special case to avoid that empty lines break the continuation
-                continue
-
-            if buffer:
-                contents = "".join(buffer).strip()
-                buffer = []
-                if not contents:
-                    continue
-            else:
+            contents = self.skip_comments(buffer, line)
+            if not contents:
                 continue
 
             # Handle delimiters
@@ -837,12 +887,13 @@ class BaseParser(DictNoDot):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
-        filenames = tuple(abspath(file) for file in filenames)
-        self.in_file.extend(filenames)
         last = len(filenames) - 1
         ElementDescr._mentioned.clear()
         for nf, fn in enumerate(filenames):
-            fn = normpath(join(self.bases[-1], fn))
+            bases = self.bases
+            fn = normpath(join(bases[-1] if bases else getcwd(), fn))
+            if not bases:
+                self.in_file.append(fn)
             self.bases.append(dirname(fn))
             print("Processing", fn)
             try:
@@ -875,8 +926,8 @@ class UnorderedParser(BaseParser):
         Args:
             env: global namespace
             verbose: If True, print detail on the processing
-            *args: dict initializer
-            **kwargs: dict initializer
+            *args: dict initialiser
+            **kwargs: dict initialiser
         """
         super().__init__(env, *args, always_force=False, **kwargs)
 
@@ -899,9 +950,9 @@ class UnorderedParser(BaseParser):
         # at the end of each file: try again previously failing commands
         replay()
 
-        # After the last file: initialize the remaining undefined variables
-        default_value = self.get(self._undef_key)
+        # After the last file: initialise the remaining undefined variables
         if final:
+            default_value = self.get(self._undef_key)
             undefined = self._missing(verbose=self.verbose)
             self._print(f"{len(undefined)} missing definitions.")
             if undefined and default_value is not None:

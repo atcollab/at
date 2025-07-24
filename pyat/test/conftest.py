@@ -60,6 +60,8 @@ def dba_lattice():
 def hmba_lattice():
     with as_file(files(machine_data) / "hmba.mat") as path:
         ring = at.load_lattice(path)
+    _ = ring.parameterise("QF1[AE]", "PolynomB", index=1, name="kf1")
+    _ = ring.parameterise("QD2[AE]", "Length")
     return ring
 
 
