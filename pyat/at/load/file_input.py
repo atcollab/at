@@ -1,32 +1,33 @@
-"""Generic text parsers for conversion of lattices in different formats to AT."""
+"""Generic text parsers for conversion of lattices in different formats to AT"""
 
 from __future__ import annotations
 
 __all__ = [
-    "AnyDescr",
-    "BaseParser",
-    "DictNoDot",
-    "ElementDescr",
-    "LowerCaseParser",
-    "SequenceDescr",
-    "UnorderedParser",
-    "UpperCaseParser",
-    "ignore_class",
+    "set_argparser",
     "skip_class",
+    "ignore_class",
+    "AnyDescr",
+    "ElementDescr",
+    "SequenceDescr",
+    "BaseParser",
+    "UnorderedParser",
+    "LowerCaseParser",
+    "UpperCaseParser",
+    "DictNoDot",
 ]
 
-from pathlib import Path
+from os import getcwd
+from os.path import join, normpath, dirname
 import re
 from itertools import repeat, count
 from functools import wraps
-from typing import Any, ClassVar
-from collections.abc import Callable, Iterable, Generator, Mapping, Sequence, Container
+from typing import Any
+from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 
 import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
-from .parser import StrParser
-from ..lattice import Lattice, elements as elt, params_filter
+from ..lattice import Lattice, elements as elt, params_filter, StrParser
 
 _dot = re.compile(r'("?)(\.?[a-zA-Z_][\w.:]*)\1')  # look for MAD identifiers
 _colon = re.compile(r":(?!=)")  # split on :=
@@ -36,7 +37,7 @@ _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
 
 
-class CommentHandler:
+class CommentHandler(object):
     """
     Handle comments in the file.
     """
@@ -67,18 +68,21 @@ class CommentHandler:
             in_comment = len(rest) <= 0
             self.in_comment = in_comment
             return "" if in_comment else line
-        elif line := self.line_handler(line):
-            contents, *rest = line.split(sep=self.begcomment, maxsplit=1)
-            buffer.append(contents)
-            in_comment = len(rest) > 0
-            self.in_comment = in_comment
-            return rest[0] if in_comment else ""
         else:
-            # Special case to avoid that empty lines break the continuation
-            return None
+            line = self.line_handler(line)
+            if line:
+                contents, *rest = line.split(sep=self.begcomment, maxsplit=1)
+                buffer.append(contents)
+                in_comment = len(rest) > 0
+                self.in_comment = in_comment
+                return rest[0] if in_comment else ""
+            else:
+                # Special case to avoid that empty lines break the continuation
+                return None
 
     def noblock_handler(self, buffer, line):
-        if line := self.line_handler(line):
+        line = self.line_handler(line)
+        if line:
             buffer.append(line)
             return ""
         else:
@@ -118,6 +122,16 @@ def _no_default(func):
             self._use_default = True
 
     return wrapper
+
+
+def set_argparser(argparser):
+    """Decorator which adds an "argparser" attribute to a function"""
+
+    def decorator(func):
+        func.argparser = argparser
+        return func
+
+    return decorator
 
 
 def skip_class(
@@ -196,13 +210,13 @@ def ignore_class(
 class DictNoDot(dict):
     @classmethod
     def _defkey(cls, expr: str, quoted: bool) -> str:
-        """substitutions to get a valid python identifier."""
+        """substitutions to get a valid python identifier"""
         # Using classmethod to allow using super() in subclasses
         return expr.replace(".", "_").replace(":", "_")
 
     @classmethod
     def _gen_key(cls, expr: str) -> str:
-        """Generate a dict key."""
+        """Generate a dict key"""
         if expr and expr[0] == '"':
             return cls._defkey(expr[1:-1], True)
         else:
@@ -210,7 +224,7 @@ class DictNoDot(dict):
 
     @classmethod
     def _gen_expr(cls, expr) -> str:
-        """Generate a valid python expression."""
+        """Generate a valid python expression"""
 
         def repl(match):
             return cls._defkey(match.group(2), match.group(1))
@@ -230,30 +244,26 @@ class DictNoDot(dict):
     def get(self, key, *args):
         return super().get(self._gen_key(key), *args)
 
-    def _print(self, *args, level=0, **kwargs):
-        if int(self.verbose) > level:
+    def _print(self, *args, **kwargs):
+        if self.verbose:
             print(*args, **kwargs)
 
 
 class AnyDescr:
-    """Base class for source object descriptors."""
+    """Base class for source object descriptors"""
 
-    str_attr: ClassVar[set[str]] = set()
+    str_attr = ()
     "list of names of str attributes"
-    bool_attr: ClassVar[set[str]] = set()
+    bool_attr = ()
     "list of names of bool attributes"
-    pos_args: ClassVar[tuple[str, ...]] = ()
+    pos_args = ()
     "list of names of positional arguments"
 
     @classmethod
     def argparser(cls, parser, argcount, argstr):
-        """Specialised argument parser."""
+        """Specialised argument parser"""
         return parser._argparser(
-            argcount,
-            argstr,
-            bool_attr=cls.bool_attr,
-            str_attr=cls.str_attr,
-            pos_args=cls.pos_args,
+            argcount, argstr, bool_attr=cls.bool_attr, str_attr=cls.str_attr
         )
 
     def __init__(self, *args, **kwargs):
@@ -265,7 +275,7 @@ class AnyDescr:
         return self.inverted(copy=True)
 
     def __call__(self, *args, copy: bool = True, **kwargs) -> AnyDescr | None:
-        """Create a copy of the element with updated fields."""
+        """Create a copy of the element with updated fields"""
         if copy:
             b = {key: kwargs.pop(key, value) for key, value in vars(self).items()}
             b.update(kwargs)
@@ -288,23 +298,23 @@ class AnyDescr:
                 setattr(self, key, value)
 
     def inverted(self, copy=False):
-        """Return a reversed element or line."""
+        """Return a reversed element or line"""
         instance = self() if copy else self
         instance.inverse = not self.inverse
         return instance
 
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
-        """Iterator on the generated AT elements."""
+        """Iterator on the generated AT elements"""
         yield from ()
 
 
 class ElementDescr(AnyDescr, dict):
-    """Simple representation of an element as a :py:class:`dict`."""
+    """Simple representation of an element as a :py:class:`dict`"""
 
-    _mentioned: ClassVar[set[str]] = set()
-    at2mad: ClassVar[dict[str, str]] = {"Length": "L"}
+    _mentioned = set()
+    at2mad = {"Length": "L"}
     array_fmt = str.maketrans("[]()", "{}{}")
-    bool_fmt: ClassVar[dict[bool, str]] = {False: "False", True: "True"}
+    bool_fmt = None
 
     def __init__(self, *args, origin=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -316,11 +326,11 @@ class ElementDescr(AnyDescr, dict):
         try:
             return self[item]
         except KeyError as exc:
-            msg = f"{self.__class__.__name__!r} object has no {item!r} attribute"
-            raise AttributeError(msg) from exc
+            name = self.__class__.__name__
+            raise AttributeError(f"{name!r} object has no {item!r} attribute") from exc
 
     def __rmul__(self, other):
-        """Element repetition."""
+        """Element repetition"""
         return list(repeat(self, other))
 
     def __repr__(self):
@@ -330,7 +340,7 @@ class ElementDescr(AnyDescr, dict):
 
     def __str__(self):
         attrs = [f"{key}={self.attr_format(value)}" for key, value in self.items()]
-        return ", ".join([self.__class__.__name__.upper().ljust(10), *attrs])
+        return ", ".join([self.__class__.__name__.upper().ljust(10)] + attrs)
 
     @staticmethod
     def attr_format(value):
@@ -358,12 +368,12 @@ class ElementDescr(AnyDescr, dict):
         return cls(**params)
 
     def to_at(self, *args, **params) -> list[elt.Element]:
-        """Generate the AT element. Must be overloaded for each specific element."""
+        """Generate the AT element. Must be overloaded for each specific element"""
         return []
 
     # noinspection PyUnusedLocal
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
-        """Iterator on the generated AT elements."""
+        """Iterator on the generated AT elements"""
         try:
             elems = self.to_at(**self)
         except Exception as exc:
@@ -378,19 +388,18 @@ class ElementDescr(AnyDescr, dict):
 
     @property
     def length(self) -> float:
-        """Element length."""
+        """Element length"""
         return self.get("l", 0.0)
 
     @staticmethod
-    def meval(params: dict[str, Any]) -> dict[str, Any]:
-        """Evaluation of superfluous parameters."""
-        # Ignore superfluous parameters
+    def meval(params: dict):
+        """Evaluation of superfluous parameters"""
         # return params
         return {}
 
 
 class SequenceDescr(AnyDescr, list):
-    """Simple representation of a sequence of elements as a :py:class:`list`."""
+    """Simple representation of a sequence of elements as a :py:class:`list`"""
 
     def __repr__(self):
         string = super().__repr__()
@@ -402,7 +411,7 @@ class SequenceDescr(AnyDescr, list):
 
 
 class BaseParser(DictNoDot, StrParser):
-    """Generic file parser.
+    """Generic file parser
 
     Analyses files with the following MAD-like format:
 
@@ -413,23 +422,18 @@ class BaseParser(DictNoDot, StrParser):
     The parser builds a database of all the defined objects
     """
 
-    # Class attributes
-    _delimiter: ClassVar[str | None] = None
-    _continuation: ClassVar[str | None] = "\\"
-    _linecomment: ClassVar[str | tuple[str, ...] | None] = "#"
-    _blockcomment: ClassVar[tuple[str, str] | None] = None
-    _endfile: ClassVar[str | None] = None
-    _undef_key: ClassVar[str] = "missing"
-
-    # Instance attributes
-    postponed: list[tuple]
-    in_file: list[str]
+    _delimiter: str | None = None
+    _continuation: str = "\\"
+    _linecomment: str | tuple[str] | None = "#"
+    _blockcomment: tuple[str, str] | None = None
+    _endfile: str | None = None
+    _undef_key: str = "missing"
 
     def __init__(
         self,
-        env: dict[str, Any],
+        env: dict,
+        *args,
         strict: bool = True,
-        verbose: bool = False,
         always_force: bool = True,
         **kwargs,
     ):
@@ -438,17 +442,18 @@ class BaseParser(DictNoDot, StrParser):
             env: global namespace used for evaluating commands
             verbose: If True, print detail on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
-            **kwargs: dict initialiser.
+            *args: dict initialiser
+            **kwargs: dict initialiser
         """
         self.skip_comments = CommentHandler(self._linecomment, self._blockcomment)
         self.env = env
-        self.bases: list[Path] = []
+        self.bases = []
         self.kwargs = kwargs
         self.strict = strict
         self.always_force = always_force
         self._use_default = True
 
-        super().__init__(verbose=verbose, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not strict:
             self[self._undef_key] = 0
@@ -472,7 +477,7 @@ class BaseParser(DictNoDot, StrParser):
     #     return wrapper
 
     def clear(self):
-        """Clear the database: remove all parameters and objects."""
+        """Clear the database: remove all parameters and objects"""
         super().clear()
         self.update(self.kwargs)
         if not self.strict:
@@ -481,13 +486,34 @@ class BaseParser(DictNoDot, StrParser):
         self.in_file = []
 
     def _format_command(self, expr: str) -> str:
-        """Format a command for evaluation.
+        """Format a command for evaluation
 
         Overload this method for specific languages"""
-        return self._gen_expr(expr)  # Fix identifiers
+        return expr
+
+    def _check_constant(self, expr: str) -> Any:
+        """Check if an expression is constant
+
+        This method attempts to evaluate the expression in a context where no variables
+        are defined. If the evaluation succeeds, the expression is considered constant
+        and the evaluated value is returned. If the evaluation fails with a NameError,
+        the expression is considered non-constant (i.e. it depends on variables).
+
+        Args:
+            expr: The string expression to evaluate
+
+        Returns:
+            The result of evaluating the expression if it's constant
+
+        Raises:
+            NameError: If the expression contains variables
+        """
+        expr = self._format_command(self._gen_expr(expr))
+        # Try to evaluate with only built-ins, not parser variables
+        return eval(expr, self.env, {})
 
     def evaluate(self, expr: str):
-        """Evaluate the right side of an expression.
+        """Evaluate the right side of an expression
 
         Args:
             expr: expression to evaluate
@@ -495,32 +521,31 @@ class BaseParser(DictNoDot, StrParser):
         Returns:
             value: evaluated expression
         """
-        expr = self._format_command(expr)
-        default = self.get(self._undef_key)
-        if self._use_default and default is not None:
+        expr = self._format_command(self._gen_expr(expr))
+        default_value = self.get(self._undef_key)
+        if self._use_default and default_value is not None:
             for _loop in range(5):
                 try:
                     return eval(expr, self.env, self)
-                except NameError as exc:  # noqa: PERF203
+                except NameError as exc:
                     var = self._reason(exc)
-                    self._print(f"In {expr}, set {var!r} to {default} ({_loop})")
-                    self[var] = default
+                    self._print(f"Set {var!r} to {default_value} ({_loop})")
+                    self[var] = default_value
         return eval(expr, self.env, self)
 
     def _eval_cmd(self, cmdname: str, no_global: bool = False) -> Callable:
-        """Evaluate a command."""
+        """Evaluate a command"""
         cmd: Callable | None = self.get(cmdname, None)
         if cmd is not None:
             return cmd
         elif no_global:
-            msg = f"{cmdname!r} is not allowed in this context"
-            raise TypeError(msg)
+            raise TypeError(f"{cmdname!r} is not allowed in this context")
         else:
             return self.env[self._gen_key(cmdname)]
 
     @staticmethod
     def _reason(exc: Exception) -> str | None:
-        """Extract the element name from the exception."""
+        """Extract the element name from the exception"""
         if isinstance(exc, KeyError):  # Undefined element, attribute
             return exc.args[0]
         elif isinstance(exc, NameError):  # refpos missing
@@ -529,10 +554,14 @@ class BaseParser(DictNoDot, StrParser):
             idx = _named.search(exc.args[-1])  # Missing pos. arg.
             if idx is None:
                 idx = _singlequoted.search(exc.args[0])  # Not allowed in seq.
-            return "TypeError" if idx is None else idx[1]
+            if idx is None:
+                return "TypeError"
+            else:
+                return idx[1]
         elif isinstance(exc, ValueError):  # overlap
+            print(exc.args[0])
             names = _singlequoted.search(exc.args[0])
-            return "ValueError" if names is None else names[1]
+            return names[-1]
         else:
             return None
 
@@ -541,18 +570,16 @@ class BaseParser(DictNoDot, StrParser):
         argcount: int,
         argstr: str,
         *,
-        bool_attr: Container[str] = (),
-        str_attr: Container[str] = (),
-        pos_args: Sequence[str] = (),
+        bool_attr: tuple[str] = (),
+        str_attr: tuple[str] = (),
+        pos_args: tuple[str] = (),
     ):
-        """Evaluate the value of a command argument and return the pair (key, value)."""
+        """Evaluate the value of a command argument and return the pair (key, value)"""
 
         def arg_value(k, v):
             if k in str_attr:
                 return v[1:-1] if v[0] in {'"', "'"} else v
             else:
-                if v.startswith("("):
-                    v = v[:-1] + ",)"  # for 1-element tuples
                 return self.evaluate(v)
 
         key, *value = split_ignoring_parentheses(
@@ -573,8 +600,8 @@ class BaseParser(DictNoDot, StrParser):
                     return None
                 return key, arg_value(key, argstr)
 
-    def _assign(self, label: str | None, key: str, value: str):
-        """Variable assignment."""
+    def _assign(self, label: str, key: str, value: str):
+        """Variable assignment"""
         return key, self.evaluate(value)
 
     def _raw_command(
@@ -585,7 +612,7 @@ class BaseParser(DictNoDot, StrParser):
         no_global: bool = False,
         **kwargs,
     ):
-        """Command execution."""
+        """Command execution"""
         # Get the command
         cmd = self._eval_cmd(cmdname, no_global=no_global)
         # Evaluate the arguments
@@ -602,11 +629,11 @@ class BaseParser(DictNoDot, StrParser):
         # Execute the command
         return cmd(**kwargs)
 
-    def _command(self, label: str | None, cmdname: str, *args: str, **kwargs):
-        return self._raw_command(label, cmdname, *args, **kwargs)
+    def _command(self, *args: str, **kwargs):
+        return self._raw_command(*args, **kwargs)
 
     def _decode(self, label: str | None, cmdname: str, *args: str) -> None:
-        """Execute the split statement."""
+        """Execute the split statement"""
         left, *right = cmdname.split("=")
         try:
             if right:
@@ -619,11 +646,11 @@ class BaseParser(DictNoDot, StrParser):
             self._fallback(exc, label, cmdname, *args)
 
     def _fallback(self, exc: Exception, lbl: str | None, cmd: str, *args: str) -> None:
-        """Store failing commands in self.postponed for later evaluation."""
+        """Store failing commands in self.postponed for later evaluation"""
         self.postponed.append((self._reason(exc), lbl, cmd, *args))
 
     def _format_statement(self, line: str) -> str:
-        """Reformat the input line."""
+        """Reformat the input line"""
         return line.replace(" ", "")  # Remove all spaces
 
     def _statement(self, line: str) -> bool:
@@ -670,14 +697,14 @@ class BaseParser(DictNoDot, StrParser):
         return True
 
     def _finalise(self, final: bool = True) -> None:
-        """Called at the end of processing."""
+        """Called at the end of processing"""
         if final:
-            undefined = self._missing()
+            undefined = self._missing(verbose=self.verbose)
             self._print(f"{len(undefined)} missing definitions.")
 
     @property
     def sequences(self):
-        """List of available sequences or lines."""
+        """List of available sequences or lines"""
         return [k for k, v in self.items() if isinstance(v, SequenceDescr)]
 
     @staticmethod
@@ -688,32 +715,32 @@ class BaseParser(DictNoDot, StrParser):
         return string
 
     def _lookup(self, item: str):
-        """Search for an object in the pending statements."""
+        """Search for an object in the pending statements"""
         for reason, label, *args in self.postponed:
             if label is not None and self._gen_key(label) == item:
-                return reason, label, *args
+                return (reason, label, *args)
         return None
 
-    def _missing(self):
-        """Return the set of missing definitions."""
+    def _missing(self, verbose=False):
+        """Return the set of missing definitions"""
         miss = set()
         for cmd in self.postponed:
             reason = cmd[0]
             if reason == self._gen_key(cmd[2]):
-                if self.verbose:
+                if verbose:
                     cmdstr = self._command_str(*cmd[1:])
                     self._print(f"Command {cmdstr!r} ignored")
                 continue
             while cmd is not None:
                 reason = cmd[0]
-                cmd = self._lookup(reason)  # noqa: PLW2901 (reassignment of cmd)
+                cmd = self._lookup(reason)
             miss.add(reason)
         return miss
 
     missing = property(_missing, doc="Set of missing definitions")
 
-    def _analyse(self, key: str | None) -> None:
-        """Print the chain of failing commands."""
+    def _analyse(self, key: str) -> None:
+        """Print the chain of failing commands"""
         if isinstance(key, str):
             reason = self._gen_key(key)
             cmd = self._lookup(reason)
@@ -727,7 +754,7 @@ class BaseParser(DictNoDot, StrParser):
 
     @property
     def ignored(self):
-        """Set of ignored commands."""
+        """Set of ignored commands"""
         ignd = set()
         for cmd in self.postponed:
             if cmd[0] == self._gen_key(cmd[2]):
@@ -735,7 +762,7 @@ class BaseParser(DictNoDot, StrParser):
         return ignd
 
     def expand(self, key: str) -> Generator[elt.Element, None, None]:
-        """iterator over AT objects generated by a source object."""
+        """iterator over AT objects generated by a source object"""
         try:
             v = self[key]
             if isinstance(v, AnyDescr):
@@ -749,7 +776,7 @@ class BaseParser(DictNoDot, StrParser):
             raise
 
     def _generator(self, params):
-        """Generate AT elements for the Lattice constructor."""
+        """Generate AT elements for the Lattice constructor"""
         use = params.setdefault("use", "ring")
         params.setdefault("name", use)
         params.setdefault("energy", 1.0e9)
@@ -759,7 +786,7 @@ class BaseParser(DictNoDot, StrParser):
         yield from self.expand(use)
 
     def lattice(self, use="ring", **kwargs):
-        """Create a lattice from the selected sequence.
+        """Create a lattice from the selected sequence
 
         Parameters:
             use:                Name of the sequence or line containing the desired
@@ -788,7 +815,7 @@ class BaseParser(DictNoDot, StrParser):
         final: bool = True,
         **kwargs,
     ) -> None:
-        """Process input lines and fill the database.
+        """Process input lines and fill the database
 
         Args:
             lines: Iterable of input lines
@@ -797,7 +824,7 @@ class BaseParser(DictNoDot, StrParser):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
-        buffer: list[str] = []
+        buffer = []
         ok: bool = True
         for line_number, line in enumerate(lines):
             # Handle comments
@@ -823,8 +850,8 @@ class BaseParser(DictNoDot, StrParser):
                     statements.append(last)
 
             # Process statements
-            for statement in statements:
-                stmnt = statement.strip()
+            for stmnt in statements:
+                stmnt = stmnt.strip()
                 if not stmnt:
                     continue
                 try:
@@ -843,13 +870,13 @@ class BaseParser(DictNoDot, StrParser):
 
     def parse_files(
         self,
-        *filenames: str | Path,
+        *filenames: str,
         final: bool = True,
         prolog: None | int | Callable[..., None] = None,
         epilog: Callable[..., None] | None = None,
         **kwargs,
     ) -> None:
-        """Process files and fill the database.
+        """Process files and fill the database
 
         Args:
             *filenames: Files to process
@@ -862,16 +889,15 @@ class BaseParser(DictNoDot, StrParser):
         self.update(**kwargs)
         last = len(filenames) - 1
         ElementDescr._mentioned.clear()
-        for nf, fnm in enumerate(filenames):
+        for nf, fn in enumerate(filenames):
             bases = self.bases
-            # fn = normpath(join(bases[-1] if bases else getcwd(), fnm))
-            fn = ((Path(bases[-1]) if bases else Path.cwd()) / Path(fnm)).resolve()
+            fn = normpath(join(bases[-1] if bases else getcwd(), fn))
             if not bases:
-                self.in_file.append(str(fn))
-            self.bases.append(fn.parent)
-            print(f"Processing {fn}")
+                self.in_file.append(fn)
+            self.bases.append(dirname(fn))
+            print("Processing", fn)
             try:
-                with fn.open() as f:
+                with open(fn) as f:
                     if callable(prolog):
                         prolog(f)
                     elif isinstance(prolog, int):
@@ -888,25 +914,25 @@ class BaseParser(DictNoDot, StrParser):
 
 
 class UnorderedParser(BaseParser):
-    """Parser allowing definitions in any order.
+    """Parser allowing definitions in any order
 
     This is done by storing the failed statements in a queue and iteratively trying
     to execute them after all input statements have been processed, until the number
     of failures is constant (hopefully zero)
     """
 
-    def __init__(self, env: dict[str, Any], **kwargs):
+    def __init__(self, env: dict, *args, **kwargs):
         """
         Args:
-            env: global namespace used for evaluating commands
+            env: global namespace
             verbose: If True, print detail on the processing
-            strict: If :py:obj:`False`, assign 0 to undefined variables
-            **kwargs: dict initialiser.
+            *args: dict initialiser
+            **kwargs: dict initialiser
         """
-        super().__init__(env, always_force=False, **kwargs)
+        super().__init__(env, *args, always_force=False, **kwargs)
 
     def _finalise(self, final: bool = True) -> None:
-        """Loop on evaluation of the pending statements."""
+        """Loop on evaluation of the pending statements"""
 
         def replay():
             nend = len(self.postponed)
@@ -927,7 +953,7 @@ class UnorderedParser(BaseParser):
         # After the last file: initialise the remaining undefined variables
         if final:
             default_value = self.get(self._undef_key)
-            undefined = self._missing()
+            undefined = self._missing(verbose=self.verbose)
             self._print(f"{len(undefined)} missing definitions.")
             if undefined and default_value is not None:
                 for var in undefined:
@@ -938,28 +964,28 @@ class UnorderedParser(BaseParser):
 
 
 class LowerCaseParser(BaseParser):
-    """Case independent parser."""
+    """Case independent parser"""
 
     @classmethod
     def _defkey(cls, expr: str, quoted: bool) -> str:
-        """substitutions to get a valid python identifier."""
+        """substitutions to get a valid python identifier"""
         expr = super()._defkey(expr, quoted)
         return expr if quoted else expr.lower()
 
     def _format_statement(self, line: str) -> str:
-        """Reformat the input line."""
+        """Reformat the input line"""
         return super()._format_statement(line.lower())
 
 
 class UpperCaseParser(BaseParser):
-    """Case independent parser."""
+    """Case independent parser"""
 
     @classmethod
     def _defkey(cls, expr: str, quoted: bool) -> str:
-        """substitutions to get a valid python identifier."""
+        """substitutions to get a valid python identifier"""
         expr = super()._defkey(expr, quoted)
         return expr if quoted else expr.upper()
 
     def _format_statement(self, line: str) -> str:
-        """Reformat the input line."""
+        """Reformat the input line"""
         return super()._format_statement(line.upper())
