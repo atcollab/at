@@ -16,7 +16,7 @@ Multipoles
 Elegant thick multipoles are limited to a single multipole order. For AT
 :py:class:`.Multipole` elements combining several orders, the lowest order is converted
 and higher orders are discarded. AT :py:class:`.ThinMultipole` elements are expanded
-to a series of thin ``MULT`` elements with 0 length.
+to a series of thin ``MULT`` elements with length 0.
 
 Elegant elements absent from AT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -39,7 +39,7 @@ When reading an Elegant file:
 - `TILT` is interpreted and converted to `R1` and `R2` attributes,
 - `DX`, `DZ` are converted to `T1`and `T2` attributes,
 - `N_SLICES`, if specified, is converted to `NumIntSteps`. If not, `NumIntSteps` is
-  left to is default value (10).
+  left to its default value (10).
 
 2. Usage
 --------
@@ -67,14 +67,13 @@ from scipy.constants import c as clight
 
 from .allfiles import register_format
 from .file_input import ElementDescr, BaseParser, UpperCaseParser
-from .file_input import skip_names, ignore_names, ignore_class
+from .file_input import skip_class, ignore_class
 from .file_output import Exporter
 from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 
 # noinspection PyProtectedMember
 from .madx import sinc, _Line, p_dict, p_list
 from . import Rpn
-
 
 # -------------------
 #  Utility functions
@@ -104,7 +103,7 @@ def elegant_element(func):
             if tilt != 0.0:
                 tilt_elem(el, tilt)
             if not (dx == 0.0 and dy == 0.0):
-                shift_elem(el, deltax=dx, deltaz=dy)
+                shift_elem(el, dx=dx, dy=dy)
             el.origin = self.origin
         return elems
 
@@ -380,42 +379,67 @@ def ignore(kwargs):
         return DRIF.from_at(kwargs)
 
 
-SOLENOID = ignore_class("SOLENOID", _ElegantElement)
+_elegant_env = {
+    "DRIF": DRIF,
+    "DRIFT": DRIF,
+    "EDRIFT": DRIF,
+    "MARK": MARK,
+    "KQUAD": KQUAD,
+    "QUAD": KQUAD,
+    "QUADRUPOLE": KQUAD,
+    "KSEXT": KSEXT,
+    "SEXT": KSEXT,
+    "SEXTUPOLE": KSEXT,
+    "KQUSE": KQUSE,
+    "KOCT": KOCT,
+    "OCTUPOLE": KOCT,
+    "OCTU": KOCT,
+    "MULT": MULT,
+    "MULTIPOLE": MULT,
+    "CSBEND": CSBEND,
+    "SBEND": CSBEND,
+    "SBEN": CSBEND,
+    "CSBEN": CSBEND,
+    "CSRCSBEN": CSBEND,
+    "RBEN": RBEN,
+    "RBEND": RBEN,
+    "CRBEND": RBEN,
+    "CRBEN": RBEN,
+    "KICKER": KICKER,
+    "HKICK": HKICK,
+    "HKICKER": HKICK,
+    "VKICK": VKICK,
+    "VKICKER": VKICK,
+    "RFCA": RFCA,
+    "RFCW": RFCA,
+    "MONI": MONI,
+    "MONITOR": MONI,
+    "HMON": HMON,
+    "HMONITOR": HMON,
+    "VMON": VMON,
+    "VMONITOR": VMON,
 
-skip_names(
-    globals(),
-    _ElegantElement,
-    [
-        "MAXAMP",
-        "CHARGE",
-        "RECIRC",
-        "MALIGN",
-        "SREFFECTS",
-        "PFILTER",
-        "ENERGY",
-        "SCATTER",
-        "WATCH",
-        "WAKE",
-    ],
-)
+    "__builtins__": {}
+}
 
+_ignore_names = ["SOLENOID", "SCRAPER", "ECOL", "RCOL", "CSRDRIF"]
 
-ignore_names(globals(), _ElegantElement, ["SCRAPER", "ECOL", "RCOL", "CSRDRIF"])
+_elegant_env.update((name, ignore_class(name, _ElegantElement)) for name in _ignore_names)
 
-EDRIFT = DRIFT = DRIF
-QUAD = QUADRUPOLE = KQUAD
-CSRCSBEN = CSBEN = SBEN = SBEND = CSBEND
-CRBEN = CRBEND = RBEND = RBEN
-SEXT = SEXTUPOLE = KSEXT
-OCTU = OCTUPOLE = KOCT
-HKICKER = HKICK
-VKICKER = VKICK
-MONITOR = MONI
-HMONITOR = HMON
-VMONITOR = VMON
-RFCW = RFCA
-SOLE = SOLENOID
-MULTIPOLE = MULT
+_skip_names = [
+    "MAXAMP",
+    "CHARGE",
+    "RECIRC",
+    "MALIGN",
+    "SREFFECTS",
+    "PFILTER",
+    "ENERGY",
+    "SCATTER",
+    "WATCH",
+    "WAKE",
+]
+
+_elegant_env.update((name, skip_class(name, _ElegantElement)) for name in _skip_names)
 
 
 class ElegantParser(UpperCaseParser, BaseParser):
@@ -451,7 +475,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(globals(), **kwargs)
+        super().__init__(_elegant_env, **kwargs)
         self.rpn = Rpn()
 
     def _assign(self, label: str, key: str, val: str):
@@ -467,6 +491,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
         if label == "#INCLUDE":
             file = cmdname[1:-1] if cmdname[0] == '"' else cmdname
             self.parse_files(file, final=False)
+            return None
         else:
             return super()._command(label, cmdname, *args, **kwargs)
 
@@ -584,7 +609,7 @@ _AT2EL = {
     elt.Multipole: multipole,
     elt.RFCavity: RFCA.from_at,
     elt.Drift: DRIF.from_at,
-    elt.Bend: SBEN.from_at,
+    elt.Bend: CSBEND.from_at,
     elt.Marker: MARK.from_at,
     elt.Monitor: MONI.from_at,
     elt.Corrector: KICKER.from_at,
