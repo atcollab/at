@@ -320,8 +320,8 @@ class Dipole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "BndMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "K", self.K
 
     def _part(self, fr, sumfr):
@@ -396,8 +396,8 @@ class Quadrupole(Radiative, Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, k], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "K", self.K
 
 
@@ -430,8 +430,8 @@ class Sextupole(Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
+    def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items(freeze=freeze)
         yield "H", self.H
 
 
