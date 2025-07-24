@@ -1,4 +1,4 @@
-r"""Using `MAD8`_ files with PyAT.
+r"""Using `MAD8`_ files with PyAT
 =================================
 
 Using MAD8 files is similar to using MAD-X files: see
@@ -11,25 +11,21 @@ from __future__ import annotations
 
 __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
-from pathlib import Path
-from typing import ClassVar
-
 # functions known by MAD-8
 from math import pi, e, sqrt, exp, log, sin, cos, tan
-from math import asin, atan2
+from math import asin
 import re
 
 # constants known by MAD-8
 from scipy.constants import c as clight, e as qelect
 from scipy.constants import physical_constants as _cst
 
-from ..lattice import Lattice, elements as elt
+from ..lattice import Lattice
 
 from .file_input import ignore_class
 
 # noinspection PyProtectedMember
 from .madx import _MadElement, _MadParser, _MadExporter
-from .madx import mad_element, p_to_at, poly_to_mad
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -39,7 +35,7 @@ from .madx import (
     quadrupole,
     sextupole,
     octupole,
-    longmultipole,
+    multipole,
     sbend,
     rbend,
     kicker,
@@ -49,9 +45,7 @@ from .madx import (
     monitor,
     hmonitor,
     vmonitor,
-    _Line,
-    _Sequence,
-    _Value,
+    _value,
 )
 
 twopi = 2 * pi
@@ -61,48 +55,6 @@ emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
 _attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
-
-
-# noinspection PyPep8Naming
-class multipole(_MadElement):
-    at2mad: ClassVar[dict[str, str]] = {}
-    klist = ("k0l", "k1l", "k2l", "k3l", "k4l", "k5l", "k6l", "k7l", "k8l", "k9l")
-    tlist = ("t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9")
-
-    @mad_element
-    def to_at(self, **params):
-        polya = [0.0] * 10
-        polyb = [0.0] * 10
-        params.pop("l", None)
-        for k in list(params.keys()):
-            try:
-                order = self.klist.index(k)
-            except ValueError:  # noqa: PERF203
-                pass
-            else:
-                strength = params.pop(k)
-                angle = (order + 1) * params.get(self.tlist[order], 0.0)
-                polyb[order] = strength * cos(-angle)
-                polya[order] = strength * sin(-angle)
-        return [
-            elt.ThinMultipole(
-                self.name, p_to_at(polya), p_to_at(polyb), **self.meval(params)
-            )
-        ]
-
-    @classmethod
-    def from_at(cls, kwargs, factor=1.0):
-        el = super().from_at(kwargs)
-        maxorder = kwargs.pop("MaxOrder", -1) + 1
-        nlist = poly_to_mad(kwargs.pop("PolynomB", ())[: maxorder + 1], factor=factor)
-        slist = poly_to_mad(kwargs.pop("PolynomA", ())[: maxorder + 1], factor=factor)
-        for order, (va, vb) in enumerate(zip(slist, nlist, strict=True)):
-            if va != 0.0 or vb != 0.0:
-                el[multipole.klist[order]] = sqrt(va * va + vb * vb)
-                tilt = -atan2(va, vb) / (order + 1)
-                if tilt != 0.0:
-                    el[multipole.tlist[order]] = tilt
-        return el
 
 
 _mad8_env = {
@@ -132,9 +84,6 @@ _mad8_env = {
     "pmass": pmass,  # [GeV]
     "clight": clight,
     "qelect": qelect,
-    "centre": "centre",
-    "entry": "entry",
-    "exit": "exit",
     # Elements
     "drift": drift,
     "marker": marker,
@@ -142,7 +91,6 @@ _mad8_env = {
     "sextupole": sextupole,
     "octupole": octupole,
     "multipole": multipole,
-    "longmultipole": longmultipole,
     "sbend": sbend,
     "rbend": rbend,
     "kicker": kicker,
@@ -152,10 +100,8 @@ _mad8_env = {
     "monitor": monitor,
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
-    "sequence": _Sequence,
-    "line": _Line,
     # Commands
-    "value": _Value(),
+    "value": _value,
     "__builtins__": {},
 }
 
@@ -176,7 +122,7 @@ _mad8_env.update(
 
 class Mad8Parser(_MadParser):
     # noinspection PyUnresolvedReferences
-    r"""MAD-X specific parser.
+    r"""MAD-X specific parser
 
     The parser is a subclass of :py:class:`dict` and is database containing all the
     MAD-X variables.
@@ -213,33 +159,31 @@ class Mad8Parser(_MadParser):
     _continuation = "&"
     _blockcomment = ("comment", "endcomment")
 
-    def __init__(self, *filenames: str, **kwargs):
+    def __init__(self, **kwargs):
         """
         Args:
-            *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
-            **kwargs:   Initial variable definitions.
+            **kwargs:   Initial variable definitions
         """
-        super().__init__(_mad8_env, *filenames, **kwargs)
+        super().__init__(_mad8_env, **kwargs)
 
     def _format_command(self, expr: str) -> str:
-        """Evaluate an expression using *self* as local namespace."""
-        expr = super()._format_command(expr)
+        """Evaluate an expression using *self* as local namespace"""
         expr = _attr.sub(r".\1", expr)  # Attribute access: VAR[ATTR]
         expr = expr.replace("^", "**")  # Exponentiation
-        return expr
+        return super()._format_command(expr)
 
 
 def load_mad8(
-    *files: str | Path,
+    *files: str,
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
     parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
-    """Create a :py:class:`.Lattice` from MAD8 files.
+    """Create a :py:class:`.Lattice` from MAD8 files
 
     - The *energy* and *particle* of the generated lattice are taken from the MAD8
       ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
@@ -278,27 +222,13 @@ def load_mad8(
 
 
 class _Mad8Exporter(_MadExporter):
-    delimiter: ClassVar[str] = ""
-    continuation: ClassVar[str] = "&"
-    bool_fmt: ClassVar[dict[bool, str]] = {False: ".FALSE.", True: ".TRUE."}
-
-    AT2MAD: ClassVar[dict] = {
-        elt.Quadrupole: quadrupole,
-        elt.Sextupole: sextupole,
-        elt.Octupole: octupole,
-        elt.ThinMultipole: multipole,
-        elt.Multipole: longmultipole,
-        elt.RFCavity: rfcavity,
-        elt.Drift: drift,
-        elt.Bend: sbend,
-        elt.Marker: marker,
-        elt.Monitor: monitor,
-        elt.Corrector: kicker,
-    }
+    delimiter = ""
+    continuation = "&"
+    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
 
 
-def save_mad8(ring: Lattice, filename: str | Path | None = None, **kwargs):
-    """Save a :py:class:`.Lattice` as a MAD8 file.
+def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
+    """Save a :py:class:`.Lattice` as a MAD8 file
 
     Args:
         ring:   lattice

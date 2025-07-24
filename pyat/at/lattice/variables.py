@@ -84,142 +84,112 @@ keeping their sum constant:
 from __future__ import annotations
 
 __all__ = [
-    "AttributeVariable",
-    "CustomVariable",
-    "ItemVariable",
     "VariableBase",
+    "ParamBase",
+    "CustomVariable",
     "VariableList",
-    "attr_",
-    "membergetter",
 ]
 
 import abc
+from operator import add, sub, mul, truediv, pos, neg
 from collections import deque
-from collections.abc import (
-    Iterable,
-    Sequence,
-    Callable,
-    Generator,
-    MutableMapping,
-    MutableSequence,
-)
-from contextlib import suppress, contextmanager
-from operator import itemgetter, attrgetter
+from collections.abc import Iterable, Sequence, Callable
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
-Number = int | float
+from .parser import ParamDef, _nop
+
+# Define a type variable for numeric types
+Number = TypeVar("Number", int, float)
 
 
-class attr_(str):
-    """subclass of :py:class:`str` used to differentiate directory keys and
-    attribute names.
+class _Evaluator(Generic[Number], abc.ABC):
+    """Abstract base class for evaluators
+
+    An evaluator is a callable object that returns a scalar value.
     """
 
-    __slots__ = []
+    @abc.abstractmethod
+    def __call__(self) -> Number:
+        """Evaluate and return the value
+
+        Returns:
+            The evaluated value
+        """
+        ...
 
 
-class _AttributeAccessor:
-    """Class object setting/getting an attribute of an object."""
+class _Constant(_Evaluator[Number]):
+    """An evaluator that always returns a constant value"""
 
-    __slots__ = ["attrname", "obj"]
+    __slots__ = "value"
 
-    def __init__(self, obj, attrname: str):
-        self.obj = obj
-        self.attrname = attrname
+    def __init__(self, value: Number):
+        """Initialize a constant evaluator
 
-    def set(self, value: float):
-        setattr(self.obj, self.attrname, value)
-
-    def get(self) -> float:
-        return getattr(self.obj, self.attrname)
-
-
-class _ItemAccessor:
-    """Class object setting/getting an item of an object."""
-
-    __slots__ = ["key", "obj"]
-
-    def __init__(self, obj: MutableMapping | MutableSequence, key):
-        self.obj = obj
-        self.key = key
-
-    def set(self, value: float):
-        self.obj[self.key] = value
-
-    def get(self) -> float:
-        return self.obj[self.key]
-
-
-class membergetter:
-    """Generalised attribute and item lookup.
-
-    Callable object fetching attributes or items from its operand object. This
-    generalises :py:func:`~operator.attrgetter` and :py:func:`~operator.itemgetter` and
-    allows to extract elements deep in the object structure. For example:
-
-    - With ``f1 = membergetter("key1", [2])``, then ``f1(obj)`` returns
-      ``obj["key1"][2]``,
-    - With ``f2 = membergetter("key2", attr_("attr1"), [key3])``, then ``f2(obj)``
-      returns ``obj["key2"].attr1["key3"]``.
-    """
-
-    def __init__(self, *args):
-        r"""
         Args:
-            *args:      Sequence of dictionary keys, sequence indices or
-              attribute names. A :py:class:`str` argument is interpreted as a
-              dictionary key. Attribute names must be decorated with ``attr_(attrname)``
-              to distinguish them from directory keys.
+            value: The constant value to return
 
-              - ``f1 = SetGet("key1")(obj)`` returns ``obj["key1"]``,
-              - ``f2 = SetGet(attr("attr1"))(obj)`` returns ``obj.attr1``
-
-        Example:
-            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
-            >>> f = membergetter("b", 1)
-            >>> f(dct)
-            1.0
+        Raises:
+            TypeError: If the value is not a scalar (int or float)
         """
+        if not isinstance(value, (int, float)):
+            raise TypeError("The parameter value must be a scalar")
+        self.value: Number = value
 
-        def getter(key):
-            return attrgetter(key) if isinstance(key, attr_) else itemgetter(key)
+    def __call__(self) -> Number:
+        return self.value
 
-        self.key = args[-1]
-        self.getters = [getter(key) for key in args]
 
-    def __call__(self, obj):
-        for getter in self.getters:
-            obj = getter(obj)
-        return obj
+class _BinaryOperator(_Evaluator[Number]):
+    __slots__ = ["operator", "left_operand", "right_operand"]
 
-    def accessor(self, obj):
-        """Return an accessor object.
+    @staticmethod
+    def _convert_to_evaluator(value):
+        """Convert a value to an evaluator"""
+        if isinstance(value, (int, float)):
+            return _Constant(value)
+        elif isinstance(value, VariableBase):
+            return value
+        raise TypeError(f"Parameter operation not defined for type {type(value)}")
 
-        The returned object has *set* and *get* methods acting on the selected item of
-        the object *obj*.
+    def __init__(self, operator, left, right) -> None:
+        """Initialize a binary operator
 
-        Example:
-            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
-            >>> v2 = membergetter("b", 1)
-            >>> accessor = v2.accessor(dct)
-            >>> accessor.get()
-            1.0
-            >>> accessor.set(42.0)
-            >>> dct
-            {'a': 42.0, 'b': [0.0, 42.0, 2.0, 3.0]}
+        Args:
+            operator: The operator function to apply
+            left: The left operand of the operator
+            right: The right operand of the operator
         """
-        for getter in self.getters[:-1]:
-            obj = getter(obj)
-        if isinstance(self.key, attr_):
-            return _AttributeAccessor(obj, self.key)
-        else:
-            return _ItemAccessor(obj, self.key)
+        self.operator = operator
+        self.right_operand = self._convert_to_evaluator(right)
+        self.left_operand = self._convert_to_evaluator(left)
+
+    def __call__(self) -> Number:
+        return self.operator(self.left_operand.value, self.right_operand.value)
 
 
-class VariableBase(abc.ABC):
-    """A Variable abstract base class.
+class _UnaryOperator(_Evaluator[Number]):
+    __slots__ = ["operator", "operand"]
+
+    def __init__(self, operator, operand) -> None:
+        """Initialize a unary operator
+
+        Args:
+            operator: The operator function to apply
+            operand: The operand to apply the operator to
+        """
+        self.operator = operator
+        self.operand = operand
+
+    def __call__(self) -> Number:
+        return self.operator(self.operand.value)
+
+
+class VariableBase(Generic[Number], abc.ABC):
+    """A Variable abstract base class
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
     :py:meth:`~VariableBase._setfun` methods
@@ -227,88 +197,75 @@ class VariableBase(abc.ABC):
 
     # Class constants
     DEFAULT_DELTA = 1.0
-    _COUNTER_PREFIX = "var"
+    COUNTER_PREFIX = "var"
 
     _counter = 0
 
     def __init__(
         self,
-        *args,
+        *,
         name: str = "",
-        bounds: tuple[Number | None, Number | None] | None = None,
+        bounds: tuple[Number, Number] | None = None,
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
+        ring=None,
         **kwargs,
     ) -> None:
         """
         Parameters:
-            *args:      Positional arguments passed to the _setfun and _getfun methods
-            name:       Name of the Variable. If omitted or blank, a unique name is
-              generated.
+            name:       Name of the Variable
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             history_length: Maximum length of the history buffer. :py:obj:`None`
-              means infinite.
-
-        Keyword Args:
-            **kwargs:    Keyword arguments passed to the _setfun and _getfun methods
+              means infinite
+            ring:       provided to an attempt to get the initial value of the
+              variable
         """
         self.name: str = self._generate_name(name)  #: Variable name
-        self.args = args
-        self.kwargs = kwargs
         if bounds is None:
             bounds = (None, None)
-        self._bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
+        self.bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
         self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
         self._history: deque[Number] = deque([], self.history_length)
-        with suppress(ValueError):
-            self.get(initial=True)
+        try:
+            self.get(ring=ring, initial=True)
+        except ValueError:
+            pass
+        super().__init__(**kwargs)
 
     @classmethod
     def _generate_name(cls, name: str) -> str:
-        """Generate unique name for variable."""
+        """Generate unique name for variable"""
         cls._counter += 1
-        return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
+        return name if name else f"{cls.COUNTER_PREFIX}{cls._counter}"
 
-    @property
-    def bounds(self) -> tuple[float, float]:
-        """Lower and upper bounds of the variable."""
-        vmin, vmax = self._bounds
-        return -np.inf if vmin is None else vmin, np.inf if vmax is None else vmax
-
-    def check_bounds(self, value: Number) -> None:
-        """Check that a value is within the variable bounds.
-
-        Raises:
-            ValueError: If the value is not within bounds
-        """
-        min_val, max_val = self._bounds
+    def _check_bounds(self, value: Number) -> None:
+        """Verify value is within bounds"""
+        min_val, max_val = self.bounds
         if min_val is not None and value < min_val:
-            msg = f"Value {value} must be larger or equal to {min_val}"
-            raise ValueError(msg)
+            raise ValueError(f"Value {value} must be larger or equal to {min_val}")
         if max_val is not None and value > max_val:
-            msg = f"Value {value} must be smaller or equal to {max_val}"
-            raise ValueError(msg)
+            raise ValueError(f"Value {value} must be smaller or equal to {max_val}")
 
-    def _setfun(self, value: Number, *args, **kwargs) -> None:
+    # noinspection PyUnusedLocal
+    def _setfun(self, value: Number, ring=None) -> None:
         classname = self.__class__.__name__
-        msg = f"{classname!r} is read-only"
-        raise TypeError(msg)
+        raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, *args, **kwargs) -> Number: ...
+    def _getfun(self, **kwargs) -> Number: ...
 
     @property
     def history(self) -> list[Number]:
-        """History of the values of the variable."""
+        """History of the values of the variable"""
         return list(self._history)
 
     @property
     def initial_value(self) -> Number:
-        """Initial value of the variable.
+        """Initial value of the variable
 
         Raises:
             IndexError: If no initial value has been set yet
@@ -316,12 +273,11 @@ class VariableBase(abc.ABC):
         if not np.isnan(self._initial):
             return self._initial
         else:
-            msg = f"{self.name}: No initial value has been set yet"
-            raise IndexError(msg)
+            raise IndexError(f"{self.name}: No initial value has been set yet")
 
     @property
     def last_value(self) -> Number:
-        """Last value of the variable.
+        """Last value of the variable
 
         Raises:
             IndexError: If no value has been set yet
@@ -334,7 +290,7 @@ class VariableBase(abc.ABC):
 
     @property
     def previous_value(self) -> Number:
-        """Value before the last one.
+        """Value before the last one
 
         Raises:
             IndexError: If there are fewer than 2 values in the history
@@ -345,63 +301,59 @@ class VariableBase(abc.ABC):
             exc.args = (f"{self.name}: history too short (need at least 2 values)",)
             raise
 
-    def set(self, value: Number, **setkw) -> None:
-        r"""Set the variable value.
+    def set(self, value: Number, ring=None) -> None:
+        """Set the variable value
 
         Args:
-            value:      New value to be applied on the variable
-
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+            value:  New value to be applied on the variable
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
         """
-        self.check_bounds(value)
-        self._setfun(value, *self.args, **(self.kwargs | setkw))
+        self._check_bounds(value)
+        self._setfun(value, ring=ring)
         if np.isnan(self._initial):
             self._initial = value
         self._history.append(value)
 
     def get(
-        self, *, initial: bool = False, check_bounds: bool = False, **getkw
+        self, ring=None, *, initial: bool = False, check_bounds: bool = False
     ) -> Number:
-        r"""Get the actual variable value.
+        """Get the actual variable value
 
         Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to get the variable value.
             initial:    If :py:obj:`True`, clear the history and set the variable
               initial value
             check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
               of bounds
 
-        Keyword Args:
-            \*\*getkw:  Keyword arguments to be passed to the *getfun* function.
-              They augment the keyword arguments given in the constructor.
-
         Returns:
             value:      Value of the variable
         """
-        value = self._getfun(*self.args, **(self.kwargs | getkw))
+        value = self._getfun(ring=ring)
         if initial or np.isnan(self._initial):
             self._initial = value
             self._history = deque([value], self.history_length)
         if check_bounds:
-            self.check_bounds(value)
+            self._check_bounds(value)
         return value
 
     value = property(get, set, doc="Actual value")
 
     @property
-    def _print_value(self):
+    def _safe_value(self):
         try:
             return self._history[-1]
         except IndexError:
             return np.nan
 
-    def set_previous(self, **setkw) -> None:
-        r"""Reset to the value before the last one.
+    def set_previous(self, ring=None) -> None:
+        """Reset to the value before the last one
 
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
 
         Raises:
             IndexError: If there are fewer than 2 values in the history
@@ -409,17 +361,16 @@ class VariableBase(abc.ABC):
         if len(self._history) >= 2:
             self._history.pop()  # Remove the last value
             previous_value = self._history.pop()  # retrieve the previous value
-            self.set(previous_value, **setkw)
+            self.set(previous_value, ring=ring)
         else:
-            msg = f"{self.name}: history too short (need at least 2 values)"
-            raise IndexError(msg)
+            raise IndexError(f"{self.name}: history too short (need at least 2 values)")
 
-    def reset(self, **setkw) -> None:
-        r"""Reset to the initial value and clear the history buffer.
+    def reset(self, ring=None) -> None:
+        """Reset to the initial value and clear the history buffer
 
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to reset the variable.
 
         Raises:
             IndexError: If no initial value has been set yet
@@ -427,58 +378,63 @@ class VariableBase(abc.ABC):
         initial_value = self._initial
         if not np.isnan(initial_value):
             self._history = deque([], self.history_length)
-            self.set(initial_value, **setkw)
+            self.set(initial_value, ring=ring)
         else:
-            msg = f"Cannot reset {self.name}: No initial value has been set yet"
-            raise IndexError(msg)
+            raise IndexError(
+                f"Cannot reset {self.name}: No initial value has been set yet"
+            )
 
-    def increment(self, incr: Number, **setkw) -> None:
-        r"""Increment the variable value.
+    def increment(self, incr: Number, ring=None) -> None:
+        """Increment the variable value
 
         Args:
             incr:   Increment value
-
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to increment the variable.
         """
         try:
             current_value = self.last_value
         except IndexError:
             # If no value has been set yet, get the initial value
-            self.get(initial=True, **setkw)
+            self.get(ring=ring, initial=True)
             current_value = self.last_value
 
-        self.set(current_value + incr, **setkw)
+        self.set(current_value + incr, ring=ring)
 
-    def _step(self, step: Number, **setkw) -> None:
-        """Apply a step relative to the initial value."""
+    def _step(self, step: Number, ring=None) -> None:
+        """Apply a step relative to the initial value
+
+        Args:
+            step:   Step value to add to the initial value
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
         try:
             initial_value = self.initial_value
         except IndexError:
             # If no initial value has been set yet, get it
-            self.get(initial=True, **setkw)
+            self.get(ring=ring, initial=True)
             initial_value = self.initial_value
 
-        self.set(initial_value + step, **setkw)
+        self.set(initial_value + step, ring=ring)
 
-    def step_up(self, **setkw) -> None:
-        r"""Set to initial_value + delta.
+    def step_up(self, ring=None) -> None:
+        """Set to initial_value + delta
 
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
         """
-        self._step(self.delta, **setkw)
+        self._step(self.delta, ring=ring)
 
-    def step_down(self, **setkw) -> None:
-        r"""Set to initial_value - delta.
+    def step_down(self, ring=None) -> None:
+        """Set to initial_value - delta
 
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
         """
-        self._step(-self.delta, **setkw)
+        self._step(-self.delta, ring=ring)
 
     @staticmethod
     def _header():
@@ -487,144 +443,113 @@ class VariableBase(abc.ABC):
         )
 
     def _line(self):
-        vnow = self._print_value
+        vnow = self._safe_value
         vini = self._initial
         return f"{self.name:>12s}{vini: 16e}{vnow: 16e}{vnow - vini: 16e}"
 
     def status(self):
-        """Return a string describing the current status of the variable.
+        """Return a string describing the current status of the variable
 
         Returns:
             status: Variable description
         """
         return "\n".join((self._header(), self._line()))
 
-    @contextmanager
-    def restore(self, initial: bool = False, **setkw) -> Generator[None, None, None]:
-        # noinspection PyUnresolvedReferences
-        r"""Context manager that saves and restore a variable.
+    def __add__(self, other):
+        fun = _BinaryOperator(add, self, other)
+        return ParamBase(fun)
 
-        The value of the :py:class:`Variable <VariableBase>` is initially saved, and
-        then restored when exiting the context.
+    __radd__ = __add__
 
-        Keyword Args:
-            initial:    If :py:obj:`True`, clear the history and set the variable
-              initial value
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the constructor.
+    def __pos__(self):
+        return ParamBase(_UnaryOperator(pos, self))
 
-        Example:
-            >>> var = AttributeVariable(ring, "energy")
-            >>> with var.restore():
-            ...     do_something(var)
-        """
-        # print(f"save {self.name}")
-        v0 = self.get(initial=initial, **setkw)
-        try:
-            yield
-        finally:
-            # print(f"restore {self.name}")
-            self.set(v0, **setkw)
+    def __neg__(self):
+        return ParamBase(_UnaryOperator(neg, self))
+
+    def __sub__(self, other):
+        fun = _BinaryOperator(sub, self, other)
+        return ParamBase(fun)
+
+    def __rsub__(self, other):
+        fun = _BinaryOperator(sub, other, self)
+        return ParamBase(fun)
+
+    def __mul__(self, other):
+        fun = _BinaryOperator(mul, self, other)
+        return ParamBase(fun)
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        fun = _BinaryOperator(truediv, self, other)
+        return ParamBase(fun)
+
+    def __rtruediv__(self, other):
+        fun = _BinaryOperator(truediv, other, self)
+        return ParamBase(fun)
 
     def __float__(self):
-        return float(self._print_value)
+        return float(self._safe_value)
 
     def __int__(self):
-        return int(self._print_value)
+        return int(self._safe_value)
 
     def __str__(self):
-        return self.name
+        return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
-        return repr(self._print_value)
+        return repr(self._safe_value)
 
 
-class ItemVariable(VariableBase):
-    """A Variable controlling an item of a dictionary or a sequence."""
+class ParamBase(VariableBase[Number], ParamDef):
+    """Read-only base class for parameters
+
+    It is used for computed parameters and should not be instantiated
+    otherwise. See :py:class:`.Variable` for a description of inherited
+    methods
+    """
+
+    COUNTER_PREFIX = "calc"
+
+    _counter = 0
+    _evaluator: _Evaluator[Number]
+    _conversion: Callable[[Any], Number]
 
     def __init__(
-        self, obj: MutableSequence | MutableMapping, key, *args, **kwargs
+        self,
+        evaluator: _Evaluator[Number],
+        *,
+        name: str = "",
+        conversion: Callable[[Any], Number] = _nop,
+        bounds: tuple[Number, Number] | None = None,
+        delta: Number = 1.0,
     ) -> None:
-        # noinspection PyUnresolvedReferences
         """
+
         Args:
-            obj:        Mapping or Sequence containing the variable value,
-            key:        Index or attribute name of the variable.  A :py:class:`str`
-              argument is interpreted as a dictionary key. Attribute names must be
-              decorated with ``attr_(attrname)`` to distinguish them from directory
-              keys.
-            *args:      additional sequence of indices or attribute names allowing to
-              extract elements deeper in the object structure.
-
-        Keyword Args:
-            name:       Name of the Variable. If empty, a unique name is generated.
-            bounds:     Lower and upper bounds of the variable value
+            evaluator:  Evaluator function
+            name:       Name of the parameter
+            conversion: data conversion function
+            bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
-            history_length: Maximum length of the history buffer. :py:obj:`None`
-              means infinite.
-
-        Example:
-            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
-            >>> v1 = at.ItemVariable(dct, "a")
-            >>> v1.value
-            42.0
-
-            *v1* points to ``dct["a"]``
-
-            >>> v2 = at.ItemVariable(dct, "b", 1)
-            >>> v2.value
-            1.0
-
-            *v2* points to ``dct["b"][1]``
         """
-        super().__init__(membergetter(key, *args).accessor(obj), **kwargs)
+        if not isinstance(evaluator, _Evaluator):
+            raise TypeError("'Evaluate' must be an _Evaluate object")
+        self._evaluator = evaluator
+        self._conversion = conversion
+        super().__init__(name=name, bounds=bounds, delta=delta)
 
-    def _setfun(self, value, obj, **_):
-        obj.set(value)
+    def _getfun(self, **kwargs) -> Number:
+        return self._conversion(self._evaluator())
 
-    def _getfun(self, obj, **_):
-        return obj.get()
-
-
-class AttributeVariable(VariableBase):
-    """A Variable controlling an attribute of an object."""
-
-    def __init__(self, obj, attrname: str, index: int | None = None, **kwargs):
-        # noinspection PyUnresolvedReferences
-        """
-        Args:
-            obj:        Object containing the variable value
-            attrname:   attribute name of the variable
-            index:      Index in the attribute array. Use :py:obj:`None` for
-              scalar attributes.
-
-        Keyword Args:
-            name:       Name of the Variable. If empty, a unique name is generated.
-            bounds:     Lower and upper bounds of the variable value
-            delta:      Initial variation step
-            history_length: Maximum length of the history buffer. :py:obj:`None`
-              means infinite.
-
-        Example:
-            >>> ring = at.Lattice.load("hmba.mat")
-            >>> v3 = at.AttributeVariable(ring, "energy")
-            >>> v3.value
-            6000000000.0
-
-            *v3* points to the *"energy"* attribute of *ring*
-        """
-        args = (attr_(attrname),) if index is None else (attr_(attrname), index)
-        super().__init__(membergetter(*args).accessor(obj), **kwargs)
-
-    def _setfun(self, value, obj, **_):
-        obj.set(value)
-
-    def _getfun(self, obj, **_):
-        return obj.get()
+    @property
+    def _safe_value(self):
+        return self._getfun()
 
 
-class CustomVariable(VariableBase):
-    r"""A Variable with user-defined get and set functions.
+class CustomVariable(VariableBase[Number]):
+    r"""A Variable with user-defined get and set functions
 
     This is a convenience function allowing user-defined *get* and *set*
     functions. But subclassing :py:class:`.Variable` should always be preferred
@@ -641,21 +566,16 @@ class CustomVariable(VariableBase):
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
         history_length: int | None = None,
+        ring=None,
         **kwargs,
     ) -> None:
         """
         Parameters:
             getfun:     Function for getting the variable value. Called as
-              :pycode:`getfun(*args, **kwargs) -> Number`.
-              *args* are the positional arguments given to the constructor, *kwargs*
-              are the keyword arguments given to the constructor augmented with the
-              keywords given to the :py:meth:`~.Variable.get` function.
+              :pycode:`getfun(*args, ring=ring, **kwargs) -> Number`
             setfun:     Function for setting the variable value. Called as
-              :pycode:`setfun(value: Number, *args, **kwargs): None`.
-              *args* are the positional arguments given to the constructor, *kwargs*
-              are the keyword arguments given to the constructor augmented with the
-              keywords given to the :py:meth:`~.Variable.set` function.
-            name:       Name of the Variable. If empty, a unique name is generated.
+              :pycode:`setfun(value: Number, *args, ring=ring, **kwargs): None`
+            name:       Name of the Variable
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             *args:      Variable argument list transmitted to both the *getfun*
@@ -669,24 +589,25 @@ class CustomVariable(VariableBase):
         """
         self.getfun = getfun
         self.setfun = setfun
+        self.args = args
+        self.kwargs = kwargs
         super().__init__(
-            *args,
             name=name,
             bounds=bounds,
             delta=delta,
             history_length=history_length,
-            **kwargs,
+            ring=ring,
         )
 
-    def _getfun(self, *args, **kwargs) -> Number:
-        return self.getfun(*args, **kwargs)
+    def _getfun(self, ring=None) -> Number:
+        return self.getfun(*self.args, ring=ring, **self.kwargs)
 
-    def _setfun(self, value: Number, *args, **kwargs) -> None:
-        self.setfun(value, *self.args, **self.kwargs)
+    def _setfun(self, value: Number, ring=None):
+        self.setfun(value, *self.args, ring=ring, **self.kwargs)
 
 
 class VariableList(list):
-    """Container for Variable objects.
+    """Container for Variable objects
 
     :py:class:`VariableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
@@ -698,98 +619,62 @@ class VariableList(list):
         else:
             return super().__getitem__(index)
 
-    def get(self, **getkw) -> Sequence[float]:
-        r"""Get the current values of Variables.
+    def get(self, ring=None, **kwargs) -> Sequence[float]:
+        r"""Get the current values of Variables
+
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
 
         Keyword Args:
             initial:    If :py:obj:`True`, set the Variables'
               initial value
-            check_bounds: If :py:obj:`True`, raise a ValueError any value is out
+            check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
               of bounds
-            \*\*getkw:  Keyword arguments to be passed to the *getfun* function.
-              They augment the keyword arguments given in the variable constructors.
 
         Returns:
             values:     1D array of values of all variables
         """
-        return np.array([var.get(**getkw) for var in self])
+        return np.array([var.get(ring=ring, **kwargs) for var in self])
 
-    def set(self, values: Iterable[float], **setkw) -> None:
-        r"""Set the values of Variables.
+    def set(self, values: Iterable[float], ring=None) -> None:
+        r"""Set the values of Variables
 
         Args:
             values:     Iterable of values
-
-        Keyword Args:
-            check_bounds: If :py:obj:`True`, raise a ValueError any value is out
-              of bounds
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the variable constructors.
-
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
         """
-        for var, val in zip(self, values, strict=False):
-            var.set(val, **setkw)
+        for var, val in zip(self, values):
+            var.set(val, ring=ring)
 
-    def increment(self, increment: Iterable[float], **setkw) -> None:
-        r"""Increment the values of Variables.
+    def increment(self, increment: Iterable[float], ring=None) -> None:
+        r"""Increment the values of Variables
 
         Args:
             increment:  Iterable of values
-
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the variable constructors.
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to increment the variable.
         """
-        for var, incr in zip(self, increment, strict=False):
-            var.increment(incr, **setkw)
-
-    def reset(self, **setkw) -> None:
-        r"""Reset to all variables their initial value and clear their history buffer.
-
-        Keyword Args:
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the variable constructors.
-        """
-        for var in self:
-            var.reset(**setkw)
+        for var, incr in zip(self, increment):
+            var.increment(incr, ring=ring)
 
     # noinspection PyProtectedMember
     def status(self, **kwargs) -> str:
-        """String description of the variables."""
+        """String description of the variables"""
         values = "\n".join(var._line(**kwargs) for var in self)
         return "\n".join((VariableBase._header(), values))
-
-    @contextmanager
-    def restore(self, initial: bool = False, **setkw):
-        r"""Context manager that saves and restore the variable list.
-
-        The value of the :py:class:`VariableList` is initially saved, and then restored
-        when exiting the context.
-
-        Keyword Args:
-            initial:    If :py:obj:`True`, clear the history and set the variable
-              initial value
-            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
-              They augment the keyword arguments given in the variable constructors.
-        """
-        # print("Saving variables")
-        v0 = self.get(initial=initial, **setkw)
-        try:
-            yield
-        finally:
-            # print("Restoring variables")
-            self.set(v0, **setkw)
 
     def __str__(self) -> str:
         return self.status()
 
     @property
     def deltas(self) -> npt.NDArray[Number]:
-        """delta values of the variables."""
+        """delta values of the variables"""
         return np.array([var.delta for var in self])
 
     @deltas.setter
     def deltas(self, value: Number | Sequence[Number]) -> None:
         deltas = np.broadcast_to(value, len(self))
-        for var, delta in zip(self, deltas, strict=False):
+        for var, delta in zip(self, deltas):
             var.delta = delta
