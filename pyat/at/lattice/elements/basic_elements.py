@@ -55,22 +55,23 @@ class LongElement(Element):
 
     def _part(self, fr, sumfr):
         pp = self.copy()
-        pp.Length = fr * self.Length
+        pp.Length = fr * self.get_parameter("Length")
+        if hasattr(self, "KickAngle"):
+            pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:
         def popattr(element, attr):
-            val = getattr(element, attr)
+            val = element.get_parameter(attr)  # get the parameter itself
             delattr(element, attr)
             return attr, val
 
         frac = np.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        fin = dict(
-            popattr(el, key) for key in vars(self) if key in self._entrance_fields
-        )
-        fout = dict(popattr(el, key) for key in vars(self) if key in self._exit_fields)
+        attrs = el.keys()
+        fin = dict(popattr(el, key) for key in attrs if key in self._entrance_fields)
+        fout = dict(popattr(el, key) for key in attrs if key in self._exit_fields)
         # Split element
         element_list = [el._part(f, np.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
@@ -502,29 +503,29 @@ class DeltaQ(Radiative, Element):
     def __init__(
         self,
         family_name: str,
-        beta: Sequence[float] = (1.0, 1.0),
-        alpha: Sequence[float] = (0.0, 0.0),
+        beta: Sequence[float] = [1.0, 1.0],
+        alpha: Sequence[float] = [0.0, 0.0],
         dispersion: Sequence[float] | None = None,
         betarad: Sequence[float] | None = None,
         alpharad: Sequence[float] | None = None,
         dispersionrad: Sequence[float] | None = None,
-        qpx: Sequence[float] = (0.0,),
-        qpy: Sequence[float] = (0.0,),
-        detuning_coefficients: Sequence[float] = (0.0, 0.0, 0.0),
+        qpx: Sequence[float] = [0.0],
+        qpy: Sequence[float] = [0.0],
+        detuning_coefficients: Sequence[float] = [0.0, 0.0, 0.0],
         alphac: Sequence[float] | None = None,
         **kwargs,
     ):
-        r"""
+        """
         Object to lump sources of tune shifts from a ring in a single Element.
-        All optics imput argument and T1 /T2 have \*Rad equivalent used to
+        All optics imput argument and T1 /T2 have *Rad equivalent used to
         enable_6d.
 
         Args:
             family_name:    Name of the element
             beta:                   Beta functions at the entrance of the element
-                                    Default=(1.0, 1.0)
+                                    Default=[1.0, 1.0]
             alpha:                  Alpha function at the entrance of the element
-                                    Default=(0.0, 0.0)
+                                    Default=[0.0, 0.0]
             dispersion:             Dispersion function at the entrance of the element.
                                     Used to cancel dispersion contribution to the closed
                                     orbit for off-momentum particles before applying the
