@@ -22,7 +22,7 @@ class _AtEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, Element):
-            return obj.to_dict()
+            return obj.to_dict(freeze=True)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, Particle):
@@ -100,7 +100,7 @@ def load_json(filename: str, **kwargs) -> Lattice:
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
-            yield Element.from_dict(elem_dict, index=idx, check=False)
+            yield Element.from_matlab(elem_dict, index=idx, check=False)
 
     return Lattice(abspath(filename), iterator=json_generator, **kwargs)
 
