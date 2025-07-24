@@ -43,8 +43,12 @@ def _match(
         constraints.evaluate(ring, dp=dp, dct=dct, df=df)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
 
+    def fbounds(var):
+        vmin, vmax = var.bounds
+        return [-np.inf if vmin is None else vmin, np.inf if vmax is None else vmax]
+
     vini = variables.get(ring=ring, initial=True, check_bounds=True)
-    bounds = np.array([var.bounds for var in variables])
+    bounds = np.array([fbounds(var) for var in variables])
 
     constraints.evaluate(ring, initial=True, dp=dp, dct=dct, df=df)
     constraints.check()

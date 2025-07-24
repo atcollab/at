@@ -14,7 +14,6 @@ from os.path import abspath, basename, splitext
 from typing import Any
 from warnings import warn
 
-import h5py
 import numpy as np
 import scipy.io
 
@@ -62,13 +61,6 @@ _p2m = {v: k for k, v in _m2p.items() if v is not None}
 # Attribute to drop when writing a file
 _p2m.update(_drop_attrs)
 
-# Python to Matlab type translation
-_mattype_map = {
-    int: float,
-    list: lambda attr: np.array(attr, dtype=object),
-    tuple: lambda attr: np.array(attr, dtype=object),
-    Particle: lambda attr: attr.to_dict(),
-}
 # Matlab constructor function
 # Default: "".join(("at", element_class.__name__.lower()))
 _mat_constructor = {
@@ -79,88 +71,53 @@ _mat_constructor = {
 
 def _mat_encoder(v):
     """type encoding for .mat files"""
-    return _mattype_map.get(type(v), lambda attr: attr)(v)
+    if isinstance(v, int):
+        return float(v)
+    if isinstance(v, Particle):
+        return v.to_dict()
+    if isinstance(v, (list, tuple)):
+        return np.array(v, dtype=object)
+    return v
 
 
 def _matfile_generator(
     params: dict[str, Any], mat_file: str
 ) -> Generator[Element, None, None]:
-    """Run through Matlab cells and generate AT elements.
+    """Run through Matlab cells and generate AT elements"""
 
-    Arguments:
-        params: parameter dictionary
-        mat_file: matlab file name
-
-    Yields:
-        pyat Element from dictionary
-    """
-
-    def mclean(data: any) -> any:
+    def mclean(data):
         if data.dtype.type is np.str_:
             # Convert strings in arrays back to strings.
-            dataout = str(data[0]) if data.size > 0 else ""
+            return str(data[0]) if data.size > 0 else ""
         elif data.size == 1:
-            vdata = data[0, 0]
-            if issubclass(vdata.dtype.type, np.void):
+            v = data[0, 0]
+            if issubclass(v.dtype.type, np.void):
                 # Object => Return a dict
-                dataout = {f: mclean(vdata[f]) for f in vdata.dtype.fields}
+                return {f: mclean(v[f]) for f in v.dtype.fields}
             else:
                 # Return a scalar
-                dataout = vdata
+                return v
         else:
             # Remove any surplus dimensions in arrays.
-            dataout = np.squeeze(data)
-        return dataout
-
-    def mcleanhdf5(data: any) -> any:
-        matlab_class = data.attrs["MATLAB_class"]
-        if matlab_class == b"struct":
-            # Return a dict from recursion
-            dataout = {f: mcleanhdf5(data[f]) for f in data.keys()}
-        elif matlab_class == b"char":
-            # Convert to string
-            dataout = "".join(chr(i) for i in np.asarray(data).flatten())
-        else:
-            # e.g. matlab_class == b"double":
-            # Remove any surplus dimensions in arrays.
-            dataout = np.squeeze(np.asarray(data))
-        return dataout
-
-    def define_default_key(
-        params: dict, mat_input: any, ignore_chars: str = ""
-    ) -> tuple:
-        matvars = [
-            varname for varname in mat_input if not varname.startswith(ignore_chars)
-        ]
-        default_key = matvars[0] if (len(matvars) == 1) else "RING"
-        key = params.setdefault("use", default_key)
-        if key not in mat_input.keys():
-            kok = [k for k in mat_input.keys() if "__" not in k]
-            raise AtError(
-                f"Selected '{key}' variable does not exist, please select in: {kok}"
-            )
-        return params, key
+            return np.squeeze(data)
 
     # noinspection PyUnresolvedReferences
+    m = scipy.io.loadmat(params.setdefault("in_file", mat_file))
+    matvars = [varname for varname in m if not varname.startswith("__")]
+    default_key = matvars[0] if (len(matvars) == 1) else "RING"
+    key = params.setdefault("use", default_key)
+    if key not in m.keys():
+        kok = [k for k in m.keys() if "__" not in k]
+        raise AtError(
+            f"Selected '{key}' variable does not exist, please select in: {kok}"
+        )
     check = params.pop("check", True)
     quiet = params.pop("quiet", False)
-    matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
-    if matlabfile_ver < (2, 0):
-        mat_input = scipy.io.loadmat(params.setdefault("in_file", mat_file))
-        params, key = define_default_key(params, mat_input, ignore_chars="__")
-        cell_array = mat_input[key].flat
-        for index, mat_elem in enumerate(cell_array):
-            elem = mat_elem[0, 0]
-            kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-            yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
-    else:
-        mat_input = h5py.File(mat_file)
-        params, key = define_default_key(params, mat_input, ignore_chars="#")
-        cell_array = mat_input[key][0]
-        for index, ref_elem in enumerate(cell_array):
-            elem = mat_input[ref_elem]
-            kwargs = {f: mcleanhdf5(elem[f]) for f in elem.keys()}
-            yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
+    cell_array = m[key].flat
+    for index, mat_elem in enumerate(cell_array):
+        elem = mat_elem[0, 0]
+        kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
+        yield Element.from_matlab(kwargs, index=index, check=check, quiet=quiet)
 
 
 def ringparam_filter(
@@ -415,7 +372,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
         for elem in latt:
-            yield Element.from_dict(elem)
+            yield Element.from_matlab(elem)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
@@ -463,7 +420,7 @@ def save_mat(ring: Lattice, filename: str, **kwargs) -> None:
     # Ensure the lattice is a Matlab column vector: list(list)
     use = kwargs.pop("mat_key", "RING")  # For backward compatibility
     use = kwargs.pop("use", use)
-    lring = [[el.to_dict(encoder=_mat_encoder)] for el in matlab_ring(ring)]
+    lring = [el.to_matlab(encoder=_mat_encoder) for el in matlab_ring(ring)]
     scipy.io.savemat(filename, {use: lring}, long_field_names=True)
 
 
@@ -512,9 +469,7 @@ def _element_to_m(elem: Element) -> str:
             return str(arg)
         elif isinstance(arg, dict):
             return convert_dict(arg)
-        elif isinstance(arg, tuple):
-            return convert_list(arg)
-        elif isinstance(arg, list):
+        elif isinstance(arg, (list, tuple)):
             return convert_list(arg)
         elif isinstance(arg, Particle):
             return convert_dict(arg.to_dict())
@@ -525,15 +480,7 @@ def _element_to_m(elem: Element) -> str:
         classname = elclass.__name__
         return _mat_constructor.get(classname, "".join(("at", classname.lower())))
 
-    attrs = dict(elem.items())
-    # noinspection PyProtectedMember
-    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
-    defelem = elem.__class__(*args)
-    kwds = {
-        k: v
-        for k, v in attrs.items()
-        if not np.array_equal(v, getattr(defelem, k, None))
-    }
+    _, args, kwds = elem.definition
     argstrs = [convert(arg) for arg in args]
     if "PassMethod" in kwds:
         argstrs.append(convert(kwds.pop("PassMethod")))

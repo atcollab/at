@@ -10,12 +10,15 @@ from .axisdef import *
 from .options import *
 from .particle_object import Particle
 # from .variables import *
-from .variables import VariableList
+from .parser import *
+from .variables import VariableList, ParamBase
+from .parameters import *
 from .elements import *
 from .utils import *
 from .geometry import *
 from .transformation import *
 from .lattice_object import *
+from .lattice_parameterise import *
 # from .lattice_variables import *
 from .cavity_access import *
 from .deprecated import *
