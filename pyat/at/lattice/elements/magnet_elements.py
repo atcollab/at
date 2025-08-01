@@ -471,7 +471,7 @@ class Wiggler(Radiative, LongElement):
     See atwiggler.m
     """
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["Lw", "Bmax", "Energy"]
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["Lw", "Bmax"]
     _conversions = dict(
         Element._conversions,
         Lw=_float,
