@@ -677,9 +677,7 @@ class Lattice(list):
     def energy(self, energy: float):
         # Set the Energy attribute of radiating elements
         for elem in self:
-            if isinstance(
-                elem, (elt.RFCavity, elt.Wiggler)
-            ) or elem.PassMethod.endswith("RadPass"):
+            if isinstance(elem, elt.RFCavity) or elem.PassMethod.endswith("RadPass"):
                 elem.Energy = energy
         # Set the energy attribute of the Lattice
         # Use a numpy scalar to allow division by zero
