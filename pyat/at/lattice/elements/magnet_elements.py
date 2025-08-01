@@ -522,6 +522,13 @@ class Wiggler(Radiative, LongElement):
                 "Wiggler: length / wiggle_period is not an "
                 f"integer. ({length}/{wiggle_period}={n_wiggles})"
             )
+        if energy:
+            warnings.warn(
+                AtWarning(
+                    f"Wiggler: positional argument energy={energy} has been ignored as "
+                    "lattice.Energy is always used instead."
+                )
+            )
         super().__init__(
             family_name,
             length,
@@ -531,7 +538,6 @@ class Wiggler(Radiative, LongElement):
             Nmeth=Nmeth,
             By=By,
             Bx=Bx,
-            Energy=energy,
             **kwargs,
         )
 
