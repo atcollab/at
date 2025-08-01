@@ -552,7 +552,7 @@ def test_wiggler(rin, func):
     periods = 23
     bmax = 1
     by = numpy.array([1, 1, 0, 1, 1, 0], dtype=numpy.float64)
-    c = elements.Wiggler('wiggler', period * periods, period, bmax, 3e9, By=by)
+    c = elements.Wiggler('wiggler', period * periods, period, bmax, By=by)
     assert abs(c.Length - 1.15) < 1e-10
     # Expected value from Matlab AT.
     expected = numpy.array(rin, copy=True)
