@@ -355,31 +355,23 @@ def _computedrivingterms(
             # ANL/APS/LS-330 March 10, 2012. Chun-xi Wang. Eq (46)
             # in order to follow AT sign convention.
             imag_and_sign = 1j * (np.tri(nelem, nelem, -1) - 1 + np.tri(nelem))
+            b2b2lm = np.array([imag_and_sign[i] * b2lm[i] * b2lm for i in range(nelem)])
+            b3b2lm = np.array([imag_and_sign[i] * b3lm[i] * b2lm for i in range(nelem)])
+            b2b3lm = np.array([imag_and_sign[i] * b2lm[i] * b3lm for i in range(nelem)])
+            b3b3lm = np.array([imag_and_sign[i] * b3lm[i] * b3lm for i in range(nelem)])
+            bx3o2bx = np.array([betaxm3o2[i] * betaxm for i in range(nelem)])
+            bxbx = np.array([betaxm[i] * betaxm for i in range(nelem)])
+            byby = np.array([betaym[i] * betaym for i in range(nelem)])
+            bxbx3o2etax = np.array([betaxm[i] * bx3o2 * etaxm[i] for i in range(nelem)])
+            rbxbxby = np.array([rbetaxm[i] * betaxm * betaym[i] for i in range(nelem)])
+            rbxbyby = np.array([rbetaxm[i] * betaym[i] * betaym for i in range(nelem)])
+            bxrbxbyetax = np.array(
+                [betaxm[i] * rbetaxm * betaym * etaxm[i] for i in range(nelem)]
+            )
+            rbxbybyetax = np.array(
+                [rbetaxm * betaym[i] * betaym * etaxm[i] for i in range(nelem)]
+            )
             # fmt: off
-            b2b2lm = np.array([ imag_and_sign[i] * b2lm[i] * b2lm
-                               for i in range(nelem)])
-            b3b2lm = np.array([ imag_and_sign[i] * b3lm[i] * b2lm
-                               for i in range(nelem)])
-            b2b3lm = np.array([ imag_and_sign[i] * b2lm[i] * b3lm
-                               for i in range(nelem)])
-            b3b3lm = np.array([ imag_and_sign[i] * b3lm[i] * b3lm
-                               for i in range(nelem)])
-            rbbxbx = np.array([rbbetaxm[i] * betaxm
-                             for i in range(nelem)])
-            bxbx = np.array([betaxm[i] * betaxm
-                             for i in range(nelem)])
-            byby = np.array([betaym[i] * betaym
-                             for i in range(nelem)])
-            bxrbbxetax = np.array([betaxm[i] * rbbetaxm * etaxm[i]
-                             for i in range(nelem)])
-            rbxbxby = np.array([rbetaxm[i] * rbetaxm * betaym[i]
-                             for i in range(nelem)])
-            rbxbyby = np.array([rbetaxm[i] * rbetaym[i] * betaym
-                             for i in range(nelem)])
-            bxrbxbyetax = np.array([betaxm[i] * rbetaxm * betaym * etaxm[i]
-                             for i in range(nelem)])
-            rbxbybyetax = np.array([rbetaxm * betaym[i] * betaym * etaxm[i]
-                             for i in range(nelem)])
             rbxrbxbxetax = np.array([rbetaxm[i] * rbetaxm * betaxm * etaxm[i]
                          for i in range(nelem)])
             rbxrbxbyetax = np.array([rbetaxm[i] * rbetaxm * betaym * etaxm[i]
@@ -393,13 +385,13 @@ def _computedrivingterms(
             ppxm = np.array([pxm[i] * pxm for i in range(nelem)])
 
             rdts2["h21001"] += ( 1.0 / 32 ) * np.sum([
-                - 1 * b3b2lm[i] * rbbxbx[i] * ( pxm[i] + pxm3[i] * cpxm2 - 2 * pxm2 * cpxm[i] )
-                - 2 * b3b3lm[i] * bxrbbxetax[i] * ( pxm - 2 * pxm2[i] * cpxm + pxm3 * cpxm2[i] )
+                - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm[i] + pxm3[i] * cpxm2 - 2 * pxm2 * cpxm[i] )
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm - 2 * pxm2[i] * cpxm + pxm3 * cpxm2[i] )
                 for i in range(nelem)]
             )
             rdts2["h30001"] += ( 1.0 / 32 ) * np.sum([
-                - 1 * b3b2lm[i] * rbbxbx[i] * ( pxm3[i] - pxm[i] * pxm2 )
-                - 2 * b3b3lm[i] * bxrbbxetax[i] * ( pxm3[i] - pxm2[i] * pxm )
+                - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm3[i] - pxm[i] * pxm2 )
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm3[i] - pxm2[i] * pxm )
                 for i in range(nelem)]
             )
             rdts2["h10021"] += ( 1.0 / 32 ) * np.sum([
