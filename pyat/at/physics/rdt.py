@@ -427,7 +427,7 @@ def _computedrivingterms(
             )
             rdts2["h20002"] += ( 1.0 / 16 ) * np.sum([
                 + bxbx[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm ) * pxm2[i]
-                               + 2 * b3b2lm[i] * etaxm[i] * ( cpxm2[i] * pxm2 ) )
+                               + 2 * b3b2lm[i] * etaxm[i] * pxm2 )
                 + rbxbx3o2etax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * pxm - cpxm[i] * pxm3 )
                     for i in range(nelem)]
                 )
