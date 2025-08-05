@@ -319,12 +319,11 @@ def _computedrivingterms(
         if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
             mask_b23l = mask_b2l | mask_b3l
             nelem = sum(mask_b23l)
-            sm = s[mask_b23l]
             b2lm = b2l[mask_b23l]
             b3lm = b3l[mask_b23l]
             betaxm = betax[mask_b23l]
             rbetaxm = rbetax[mask_b23l]
-            rbbetaxm = betaxm * rbetaxm
+            betaxm3o2 = betaxm * rbetaxm
             betaym = betay[mask_b23l]
             rbetaym = rbetay[mask_b23l]
             etaxm = etax[mask_b23l]
@@ -333,12 +332,10 @@ def _computedrivingterms(
             pxm3 = pxm2 * pxm
             cpxm = np.conj(pxm)
             cpxm2 = np.conj(pxm2)
-            cpxm3 = np.conj(pxm3)
             pym = py[mask_b23l]
             pym2 = pym * pym
             cpym = np.conj(pym)
             cpym2 = np.conj(pym2)
-            cpxym2 = np.conj(pxm * pym2)
             rdts2.update(
                 {
                     "h21001": 0.0,
@@ -354,15 +351,18 @@ def _computedrivingterms(
                     "h00004": 0.0,
                 }
             )
+            # The variable imag_and_sign follows by -1 the expression in
+            # ANL/APS/LS-330 March 10, 2012. Chun-xi Wang. Eq (46)
+            # in order to follow AT sign convention.
+            imag_and_sign = 1j * (np.tri(nelem, nelem, -1) - 1 + np.tri(nelem))
             # fmt: off
-            imag_spos_sign = 1j * (np.tri(nelem,nelem,-1) - 1 + np.tri(nelem))
-            b2b2lm = np.array([ imag_spos_sign[i] * b2lm[i] * b2lm
+            b2b2lm = np.array([ imag_and_sign[i] * b2lm[i] * b2lm
                                for i in range(nelem)])
-            b3b2lm = np.array([ imag_spos_sign[i] * b3lm[i] * b2lm
+            b3b2lm = np.array([ imag_and_sign[i] * b3lm[i] * b2lm
                                for i in range(nelem)])
-            b2b3lm = np.array([ imag_spos_sign[i] * b2lm[i] * b3lm
+            b2b3lm = np.array([ imag_and_sign[i] * b2lm[i] * b3lm
                                for i in range(nelem)])
-            b3b3lm = np.array([ imag_spos_sign[i] * b3lm[i] * b3lm
+            b3b3lm = np.array([ imag_and_sign[i] * b3lm[i] * b3lm
                                for i in range(nelem)])
             rbbxbx = np.array([rbbetaxm[i] * betaxm
                              for i in range(nelem)])
