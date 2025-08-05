@@ -386,12 +386,12 @@ def _computedrivingterms(
             rbxrbxetaxetax = np.array(
                 [rbetxm[i] * rbetxm * etaxm[i] * etaxm for i in range(nelem)]
             )
-            ppxm = np.array([pxm[i] * pxm for i in range(nelem)])
+            pxpx = np.array([pxm[i] * pxm for i in range(nelem)])
 
             # fmt: off
             rdts2["h21001"] += ( 1.0 / 32 ) * np.sum([
-                - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm[i] + pxm3[i] * cpxm2 - 2 * pxm2 * cpxm[i] )
-                - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm - 2 * pxm2[i] * cpxm + pxm3 * cpxm2[i] )
+                - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm[i] + pxm3[i] * cpxm2 - 2 * cpxm[i] * pxm2 )
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm - 2 * pxm2[i] * cpxm + cpxm2[i] * pxm3 )
                 for i in range(nelem)]
             )
             rdts2["h30001"] += ( 1.0 / 32 ) * np.sum([
