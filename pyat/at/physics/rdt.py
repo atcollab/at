@@ -325,7 +325,6 @@ def _computedrivingterms(
             rbetxm = rbetax[mask_b23l]
             betxm3o2 = betxm * rbetxm
             betym = betay[mask_b23l]
-            rbetym = rbetay[mask_b23l]
             etaxm = etax[mask_b23l]
             pxm = px[mask_b23l]
             pxm2 = pxm * pxm
@@ -388,69 +387,69 @@ def _computedrivingterms(
             )
 
             # fmt: off
-            rdts2["h21001"] += ( 1.0 / 32 ) * np.sum([
-                - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm[i] + pxm3[i] * cpxm2 - 2 * cpxm[i] * pxm2 )
-                - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm - 2 * pxm2[i] * cpxm + cpxm2[i] * pxm3 )
+            rdts2["h21001"] += (1.0 / 32) * np.sum([
+                - 1 * b3b2lm[i] * bx3o2bx[i] * (pxm[i] + pxm3[i] * cpxm2 - 2 * cpxm[i] * pxm2)
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm - 2 * pxm2[i] * cpxm + cpxm2[i] * pxm3)
                 for i in range(nelem)]
             )
-            rdts2["h30001"] += ( 1.0 / 32 ) * np.sum([
-                - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm3[i] - pxm[i] * pxm2 )
-                - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm3[i] - pxm2[i] * pxm )
+            rdts2["h30001"] += (1.0 / 32) * np.sum([
+                - 1 * b3b2lm[i] * bx3o2bx[i] * (pxm3[i] - pxm[i] * pxm2)
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm3[i] - pxm2[i] * pxm)
                 for i in range(nelem)]
             )
-            rdts2["h10021"] += ( 1.0 / 32 ) * np.sum([
-                + 1 * b3b2lm[i] * rbxbxby[i] * ( pxm[i] * cpym2[i] - cpxm[i] * pxm2 * cpym2[i] )
-                + 2 * b3b2lm[i] * rbxbyby[i] * ( pxm[i] * cpym2[i] - pxm[i] * cpym2 )
-                + 2 * b3b3lm[i] * bxrbxbyetax[i] * ( pxm * cpym2 - pxm2[i] * cpxm * cpym2 )
-                - 4 * b3b3lm[i] * rbxbybyetax[i] * ( pxm * cpym[i] - pxm * cpxm2 )
+            rdts2["h10021"] += (1.0 / 32) * np.sum([
+                + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * cpym2[i] - cpxm[i] * pxm2 * cpym2[i])
+                + 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] - pxm[i] * cpym2)
+                + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * cpym2 - pxm2[i] * cpxm * cpym2)
+                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym[i] - pxm * cpxm2)
                 for i in range(nelem)]
             )
-            rdts2["h10111"] += ( 1.0 / 16 ) * np.sum([
-                + 1 * b3b2lm[i] * rbxbxby[i] * ( pxm[i] - cpxm[i] * pxm2 )
-                + 1 * b3b2lm[i] * rbxbyby[i] * ( pxm[i] * cpym2[i] * pym2 - pxm[i] * pym2[i] * cpym2 )
-                + 2 * b3b3lm[i] * bxrbxbyetax[i] * ( pxm - pxm2[i] * cpxm )
-                - 2 * b3b3lm[i] * rbxbybyetax[i] * ( pxm * cpym2[i] * pym2 - pxm * pym2[i] * cpym )
+            rdts2["h10111"] += (1.0 / 16) * np.sum([
+                + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] - cpxm[i] * pxm2)
+                + 1 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] * pym2 - pxm[i] * pym2[i] * cpym2)
+                + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm - pxm2[i] * cpxm)
+                - 2 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym2[i] * pym2 - pxm * pym2[i] * cpym)
                 for i in range(nelem)]
             )
-            rdts2["h10201"] += ( 1.0 / 32 ) * np.sum([
-                + 1 * b3b2lm[i] * rbxbxby[i] * ( pxm[i] * pym2[i] - cpxm[i] * pxm2 * pym2[i] )
-                - 2 * b3b2lm[i] * rbxbyby[i] * ( pxm[i] * pym2[i] - pxm[i] * pym2 )
-                + 2 * b3b3lm[i] * bxrbxbyetax[i] * ( pxm * pym2 - pxm2[i] * cpxm * pym2 )
-                + 4 * b3b3lm[i] * rbxbybyetax[i] * ( pxm * pym2[i] - pxm * pym2 )
+            rdts2["h10201"] += (1.0 / 32) * np.sum([
+                + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * pym2[i] - cpxm[i] * pxm2 * pym2[i])
+                - 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * pym2[i] - pxm[i] * pym2)
+                + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * pym2 - pxm2[i] * cpxm * pym2)
+                + 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * pym2[i] - pxm * pym2)
                 for i in range(nelem)]
             )
-            rdts2["h11002"] += ( 1.0 / 16 ) * np.sum([
-                + 1 * bxbx[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm )
-                                    * ( pxm2[i] * cpxm2 ) + 2 * b3b2lm[i] * etaxm[i] * ( cpxm2[i] * pxm2 ) )
-                + 2 * rbxbx3o2etax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * cpxm - cpxm[i] * pxm )
+            rdts2["h11002"] += (1.0 / 16) * np.sum([
+                + 1 * bxbx[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm)
+                                    * (pxm2[i] * cpxm2) + 2 * b3b2lm[i] * etaxm[i] * (cpxm2[i] * pxm2))
+                + 2 * rbxbx3o2etax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm - cpxm[i] * pxm)
                 for i in range(nelem)]
             )
-            rdts2["h20002"] += ( 1.0 / 16 ) * np.sum([
-                + bxbx[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm ) * pxm2[i]
-                               + 2 * b3b2lm[i] * etaxm[i] * pxm2 )
-                + rbxbx3o2etax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * pxm - cpxm[i] * pxm3 )
+            rdts2["h20002"] += (1.0 / 16) * np.sum([
+                + bxbx[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm) * pxm2[i]
+                               + 2 * b3b2lm[i] * etaxm[i] * pxm2)
+                + rbxbx3o2etax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * pxm - cpxm[i] * pxm3)
                     for i in range(nelem)]
-                )
-            rdts2["h00112"] += ( 1.0 / 16 ) * np.sum([
-                + 1 * byby[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm )
-                                  * ( pym2[i] - cpym2 ) + 2 * b3b2lm[i] * etaxm[i] * ( cpym2[i] * pym2 ) )
-                - 2 * rbxrbxbyetax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * cpxm - cpxm[i] * pxm )
+            )
+            rdts2["h00112"] += (1.0 / 16) * np.sum([
+                + 1 * byby[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm)
+                                  * (pym2[i] - cpym2) + 2 * b3b2lm[i] * etaxm[i] * (cpym2[i] * pym2))
+                - 2 * rbxrbxbyetax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm - cpxm[i] * pxm)
                 for i in range(nelem)]
             )
-            rdts2["h00202"] += ( 1.0 / 16 ) * np.sum([
-                + byby[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm ) * pym2[i]
-                                + 2 * b3b2lm[i] * etaxm[i] * pym2 )
-                - rbxrbxbyetax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * cpxm * pym2 - cpxm[i] * pxm *  pym2 )
+            rdts2["h00202"] += (1.0 / 16) * np.sum([
+                + byby[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm) * pym2[i]
+                                + 2 * b3b2lm[i] * etaxm[i] * pym2)
+                - rbxrbxbyetax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm * pym2 - cpxm[i] * pxm *  pym2)
                 for i in range(nelem)]
             )
-            rdts2["h10003"] += ( 1.0 / 8 ) * np.sum([
-                + 2 * b3b2lm[i] * bxrbxetaxetax[i] * ( pxm - pxm2[i] * cpxm )
-                + 1 * rbxbxetax[i] * ( b2b2lm[i] - b3b2lm[i] * etaxm[i] + 2 * b3b3lm[i] * etaxm[i] * etaxm ) * ( pxm[i] - cpxm[i] * pxm2 )
+            rdts2["h10003"] += (1.0 / 8) * np.sum([
+                + 2 * b3b2lm[i] * bxrbxetaxetax[i] * (pxm - pxm2[i] * cpxm)
+                + 1 * rbxbxetax[i] * (b2b2lm[i] - b3b2lm[i] * etaxm[i] + 2 * b3b3lm[i] * etaxm[i] * etaxm) * (pxm[i] - cpxm[i] * pxm2)
                 for i in range(nelem)]
             )
-            rdts2["h00004"] += ( 1.0 / 4 ) * np.sum([
-                + rbxrbxetaxetax * ( ( b2b2lm[i] - b3b2lm[i] * etaxm[i] + b3b3lm[i] * etaxm[i] * etaxm ) * pxm[i] * cpxm
-                                     + b3b2lm[i] * etaxm[i] * cpxm[i] * pxm )
+            rdts2["h00004"] += (1.0 / 4) * np.sum([
+                + rbxrbxetaxetax * ((b2b2lm[i] - b3b2lm[i] * etaxm[i] + b3b3lm[i] * etaxm[i] * etaxm) * pxm[i] * cpxm
+                                     + b3b2lm[i] * etaxm[i] * cpxm[i] * pxm)
                 for i in range(nelem)]
             )
             # fmt: on
