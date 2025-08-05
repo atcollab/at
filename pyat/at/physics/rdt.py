@@ -321,11 +321,11 @@ def _computedrivingterms(
             nelem = sum(mask_b23l)
             b2lm = b2l[mask_b23l]
             b3lm = b3l[mask_b23l]
-            betaxm = betax[mask_b23l]
-            rbetaxm = rbetax[mask_b23l]
-            betaxm3o2 = betaxm * rbetaxm
-            betaym = betay[mask_b23l]
-            rbetaym = rbetay[mask_b23l]
+            betxm = betax[mask_b23l]
+            rbetxm = rbetax[mask_b23l]
+            betxm3o2 = betxm * rbetxm
+            betym = betay[mask_b23l]
+            rbetym = rbetay[mask_b23l]
             etaxm = etax[mask_b23l]
             pxm = px[mask_b23l]
             pxm2 = pxm * pxm
@@ -351,7 +351,7 @@ def _computedrivingterms(
                     "h00004": 0.0,
                 }
             )
-            # The variable imag_and_sign follows by -1 the expression in
+            # The variable imag_and_sign multiplies by -1 the expression in
             # ANL/APS/LS-330 March 10, 2012. Chun-xi Wang. Eq (46)
             # in order to follow AT sign convention.
             imag_and_sign = 1j * (np.tri(nelem, nelem, -1) - 1 + np.tri(nelem))
@@ -359,31 +359,36 @@ def _computedrivingterms(
             b3b2lm = np.array([imag_and_sign[i] * b3lm[i] * b2lm for i in range(nelem)])
             b2b3lm = np.array([imag_and_sign[i] * b2lm[i] * b3lm for i in range(nelem)])
             b3b3lm = np.array([imag_and_sign[i] * b3lm[i] * b3lm for i in range(nelem)])
-            bx3o2bx = np.array([betaxm3o2[i] * betaxm for i in range(nelem)])
-            bxbx = np.array([betaxm[i] * betaxm for i in range(nelem)])
-            byby = np.array([betaym[i] * betaym for i in range(nelem)])
-            bxbx3o2etax = np.array([betaxm[i] * bx3o2 * etaxm[i] for i in range(nelem)])
-            rbxbxby = np.array([rbetaxm[i] * betaxm * betaym[i] for i in range(nelem)])
-            rbxbyby = np.array([rbetaxm[i] * betaym[i] * betaym for i in range(nelem)])
+            bx3o2bx = np.array([betxm3o2[i] * betxm for i in range(nelem)])
+            bxbx = np.array([betxm[i] * betxm for i in range(nelem)])
+            byby = np.array([betym[i] * betym for i in range(nelem)])
+            bxbx3o2etax = np.array(
+                [betxm[i] * betxm3o2 * etaxm[i] for i in range(nelem)]
+            )
+            rbxbxby = np.array([rbetxm[i] * betxm * betym[i] for i in range(nelem)])
+            rbxbyby = np.array([rbetxm[i] * betym[i] * betym for i in range(nelem)])
             bxrbxbyetax = np.array(
-                [betaxm[i] * rbetaxm * betaym * etaxm[i] for i in range(nelem)]
+                [betxm[i] * rbetxm * betym * etaxm[i] for i in range(nelem)]
             )
             rbxbybyetax = np.array(
-                [rbetaxm * betaym[i] * betaym * etaxm[i] for i in range(nelem)]
+                [rbetxm * betym[i] * betym * etaxm[i] for i in range(nelem)]
             )
-            # fmt: off
-            rbxrbxbxetax = np.array([rbetaxm[i] * rbetaxm * betaxm * etaxm[i]
-                         for i in range(nelem)])
-            rbxrbxbyetax = np.array([rbetaxm[i] * rbetaxm * betaym * etaxm[i]
-                         for i in range(nelem)])
-            bxrbxetaxetax = np.array([betaxm[i] * rbetaxm * etaxm[i] * etaxm
-                         for i in range(nelem)])
-            rbxbxetax = np.array([rbetaxm[i] * betaxm * etaxm[i]
-                         for i in range(nelem)])
-            rbxrbxetaxetax = np.array([rbetaxm[i] * rbetaxm * etaxm[i] * etaxm
-                         for i in range(nelem)])
+            rbxbx3o2etax = np.array(
+                [rbetxm[i] * betxm3o2 * etaxm[i] for i in range(nelem)]
+            )
+            rbxrbxbyetax = np.array(
+                [rbetxm[i] * rbetxm * betym * etaxm[i] for i in range(nelem)]
+            )
+            bxrbxetaxetax = np.array(
+                [betxm[i] * rbetxm * etaxm[i] * etaxm for i in range(nelem)]
+            )
+            rbxbxetax = np.array([rbetxm[i] * betxm * etaxm[i] for i in range(nelem)])
+            rbxrbxetaxetax = np.array(
+                [rbetxm[i] * rbetxm * etaxm[i] * etaxm for i in range(nelem)]
+            )
             ppxm = np.array([pxm[i] * pxm for i in range(nelem)])
 
+            # fmt: off
             rdts2["h21001"] += ( 1.0 / 32 ) * np.sum([
                 - 1 * b3b2lm[i] * bx3o2bx[i] * ( pxm[i] + pxm3[i] * cpxm2 - 2 * pxm2 * cpxm[i] )
                 - 2 * b3b3lm[i] * bxbx3o2etax[i] * ( pxm - 2 * pxm2[i] * cpxm + pxm3 * cpxm2[i] )
@@ -418,13 +423,13 @@ def _computedrivingterms(
             rdts2["h11002"] += ( 1.0 / 16 ) * np.sum([
                 + 1 * bxbx[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm )
                                     * ( pxm2[i] * pxm2 ) + 2 * b3b2lm[i] * etaxm[i] * ( cpxm2[i] * pxm2 ) )
-                + 2 * rbxrbxbxetax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * cpxm - cpxm[i] * pxm )
+                + 2 * rbxbx3o2etax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * cpxm - cpxm[i] * pxm )
                 for i in range(nelem)]
             )
             rdts2["h20002"] += ( 1.0 / 16 ) * np.sum([
                 + bxbx[i] * ( ( b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm ) * pxm2[i]
                                + 2 * b3b2lm[i] * etaxm[i] * ( cpxm2[i] * pxm2 ) )
-                + rbxrbxbxetax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * pxm - cpxm[i] * pxm3 )
+                + rbxbx3o2etax[i] * ( b3b3lm[i] * etaxm[i] - b2b3lm[i] ) * ( pxm[i] * pxm - cpxm[i] * pxm3 )
                     for i in range(nelem)]
                 )
             rdts2["h00112"] += ( 1.0 / 16 ) * np.sum([
