@@ -27,7 +27,7 @@ class RDTType(Enum):
     #: Amplitude detuning coefficients
     #: optionally includes the second order contribution of sextupoles
     TUNESHIFT = 6
-    CHROMATIC2 = 7 #:Chromatic RDTs from sextupoles
+    CHROMATIC2 = 7  #:Chromatic RDTs from sextupoles
 
 
 def _get_polynom(elem, attr, index):
@@ -188,22 +188,37 @@ def _computedrivingterms(
         betaxm = betax[mask_b4l]
         rbetaxm = np.sqrt(betaxm)
         betaym = betay[mask_b4l]
-        rbetaym = np.sqrt(betaym)
         etaxm = etax[mask_b4l]
         etaxm2 = etaxm * etaxm
         pxm = px[mask_b4l]
         pym = py[mask_b4l]
-        rdts["h21001"] = sum( 3.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pf(1, 0) )
-        rdts["h30001"] = sum( 1.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pxm * pxm * pf(3, 0) )
-        rdts["h10021"] = sum( -3.0 / 8 * b4lm * etaxm * rbetaxm * betaym * pxm * np.conj(pym * pym) * pf(1,-2) )
-        rdts["h10111"] = sum( -3.0 / 4 * b4lm * etaxm * rbetaxm * betaym * pxm * pf(1,0) )
-        rdts["h10201"] = sum( -3.0 / 8 * b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym * pf(1,2) )
-        rdts["h11002"] = sum( 3.0 / 4 * b4lm * etaxm2 * betaxm * nperiods )
-        rdts["h20002"] = sum( 3.0 / 8 * b4lm * etaxm2 * pxm * pxm * pf(2,0) )
-        rdts["h00112"] = sum( -3.0 / 4 * b4lm * etaxm2 * betaym * nperiods )
-        rdts["h00202"] = sum( -3.0 / 8 * b4lm * etaxm2 * betaym * pf(0,2) )
-        rdts["h10003"] = sum( 1.0 / 2 * b4lm * etaxm2 * etaxm * rbetaxm * pxm * pf(1,0) )
-        rdts["h00004"] = sum( 1.0 / 4 * b4lm * etaxm2 * etaxm2 * nperiods )
+        rdts["h21001"] = sum(3.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pf(1, 0))
+        rdts["h30001"] = sum(
+            1.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pxm * pxm * pf(3, 0)
+        )
+        rdts["h10021"] = sum(
+            -3.0
+            / 8
+            * b4lm
+            * etaxm
+            * rbetaxm
+            * betaym
+            * pxm
+            * np.conj(pym * pym)
+            * pf(1, -2)
+        )
+        rdts["h10111"] = sum(
+            -3.0 / 4 * b4lm * etaxm * rbetaxm * betaym * pxm * pf(1, 0)
+        )
+        rdts["h10201"] = sum(
+            -3.0 / 8 * b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym * pf(1, 2)
+        )
+        rdts["h11002"] = sum(3.0 / 4 * b4lm * etaxm2 * betaxm * nperiods)
+        rdts["h20002"] = sum(3.0 / 8 * b4lm * etaxm2 * pxm * pxm * pf(2, 0))
+        rdts["h00112"] = sum(-3.0 / 4 * b4lm * etaxm2 * betaym * nperiods)
+        rdts["h00202"] = sum(-3.0 / 8 * b4lm * etaxm2 * betaym * pf(0, 2))
+        rdts["h10003"] = sum(1.0 / 2 * b4lm * etaxm2 * etaxm * rbetaxm * pxm * pf(1, 0))
+        rdts["h00004"] = sum(1.0 / 4 * b4lm * etaxm2 * etaxm2 * nperiods)
 
     if second_order:
         assert nperiods == 1, "Second order available only for nperiods=1"
@@ -450,7 +465,6 @@ def _computedrivingterms(
                 for i in range(nelem)]
             )
             # fmt: on
-
 
         if (RDTType.TUNESHIFT in rdttype) or (RDTType.ALL in rdttype):
             nelem = sum(mask_b3l)
