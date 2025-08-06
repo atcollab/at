@@ -186,12 +186,12 @@ def _computedrivingterms(
     if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
         b4lm = b4l[mask_b4l]
         betaxm = betax[mask_b4l]
-        rbetaxm = np.sqrt(betaxm)
         betaym = betay[mask_b4l]
         etaxm = etax[mask_b4l]
-        etaxm2 = etaxm * etaxm
         pxm = px[mask_b4l]
         pym = py[mask_b4l]
+        rbetaxm = np.sqrt(betaxm)
+        etaxm2 = etaxm * etaxm
         cpym = np.conj(pym)
         rdts["h21001"] = sum(3.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pf(1, 0))
         rdts["h30001"] = sum(
