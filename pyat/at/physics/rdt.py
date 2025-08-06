@@ -323,15 +323,15 @@ def _computedrivingterms(
             b3lm = b3l[mask_b23l]
             betxm = betax[mask_b23l]
             rbetxm = rbetax[mask_b23l]
-            betxm3o2 = betxm * rbetxm
             betym = betay[mask_b23l]
             etaxm = etax[mask_b23l]
             pxm = px[mask_b23l]
+            pym = py[mask_b23l]
+            betxm3o2 = betxm * rbetxm
             pxm2 = pxm * pxm
             pxm3 = pxm2 * pxm
             cpxm = np.conj(pxm)
             cpxm2 = np.conj(pxm2)
-            pym = py[mask_b23l]
             pym2 = pym * pym
             cpym = np.conj(pym)
             cpym2 = np.conj(pym2)
@@ -401,7 +401,7 @@ def _computedrivingterms(
                 + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * cpym2[i] - cpxm[i] * pxm2 * cpym2[i])
                 + 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] - pxm[i] * cpym2)
                 + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * cpym2 - pxm2[i] * cpxm * cpym2)
-                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym[i] - pxm * cpxm2)
+                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym[i] - pxm * cpym2)
                 for i in range(nelem)]
             )
             rdts2["h10111"] += (1.0 / 16) * np.sum([
