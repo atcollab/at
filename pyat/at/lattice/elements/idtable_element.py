@@ -50,14 +50,19 @@ class InsertionDeviceKickMap(Element):
     )
 
     def set_DriftPass(self) -> None:
-        """Sets DriftPass tracking pass method."""
+        """Set DriftPass tracking pass method."""
         self.PassMethod = "DriftPass"
 
-    def set_IdTablePass(self):
-        """Sets IdTablePass tracking pass method."""
+    def set_IdTablePass(self) -> str:
+        """Set IdTablePass tracking pass method."""
         self.PassMethod = "IdTablePass"
 
-    def get_PassMethod(self):
+    def get_PassMethod(self) -> str:
+        """Get the current tracking pass method.
+
+        Returns:
+            String with the current tracking pass method.
+        """
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
@@ -66,61 +71,60 @@ class InsertionDeviceKickMap(Element):
         Create an Insertion Device Kick Map from a Radia field map file.
 
         Args:
-            family_name:    family name
             Nslice:         number of slices in integrator
             Filename_in:    input filename
             Energy:         particle energy in GeV
-
         Returns:
             KickMap element
             Default PassMethod: ``IdTablePass``
         """
+
         # 2023jul04 changing class to save in .mat and .m
         # 2023apr30 redefinition to function
         # 2023jan18 fix bug with element print
         # 2023jan15 first release
         # orblancog
-        def read_radia_field_map(file_in_name) -> tuple:
+        def read_radia_field_map(file_in_name: str) -> tuple:
             """
             Read a RadiaField map and return.
-
-            Arguments
-                filename
-
-            Returns
+            Arguments:
+                file_in_name: the file name.
+            Returns:
                 Tuple with file tables and axes.
+            Raises
+                ValueError: if the number of blocks in less than 2 or equal to 3.
 
-                File, where :
-                - the first data line is the length in meters.
-                - the second data line is the number of points in the h. plane.
-                - the third data line is the number of points in the v. plane.
-                - each data block comes after a START.
-                - first the horizontal data block, and second the
-                  vertical data block with the second order kicks.
-                  There might be two other blocks with the horizontal and
-                  vertical first order kicks.
-                - each block is a table with axes.
-                - comments start with #.
-                ! File example:
-                ! #comment in line 1
-                ! #comment in line 2
-                ! Length_in_m
-                ! #comment in line 4
-                ! Number of points in horizontal plane :nh
-                ! #comment in line 6
-                ! Number of points in vertical plane :nv
-                ! #comment in line 8
-                ! START
-                !             pos_point1h pos_point2h ... pos_pointnh
-                ! pos_point1v
-                ! ...                    horizontal kick_map(nv,nh)
-                ! pos_pointnv
-                ! START
-                !             pos_point1h pos_point2h ... pos_pointnh
-                ! pos_point1v
-                ! ...                    vertical kick_map(nv,nh)
-                ! pos_pointnv
-                ! (EOL)
+            A File, where :
+            - the first data line is the length in meters.
+            - the second data line is the number of points in the h. plane.
+            - the third data line is the number of points in the v. plane.
+            - each data block comes after a START.
+            - first the horizontal data block, and second the
+              vertical data block with the second order kicks.
+              There might be two other blocks with the horizontal and
+              vertical first order kicks.
+            - each block is a table with axes.
+            - comments start with #.
+            ! File example:
+            ! #comment in line 1
+            ! #comment in line 2
+            ! Length_in_m
+            ! #comment in line 4
+            ! Number of points in horizontal plane :nh
+            ! #comment in line 6
+            ! Number of points in vertical plane :nv
+            ! #comment in line 8
+            ! START
+            !             pos_point1h pos_point2h ... pos_pointnh
+            ! pos_point1v
+            ! ...                    horizontal kick_map(nv,nh)
+            ! pos_pointnv
+            ! START
+            !             pos_point1h pos_point2h ... pos_pointnh
+            ! pos_point1v
+            ! ...                    vertical kick_map(nv,nh)
+            ! pos_pointnv
+            ! (EOL)
             """
             thepath = Path(file_in_name)
             with thepath.open(encoding="utf-8") as thefile:
