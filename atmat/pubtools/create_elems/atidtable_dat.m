@@ -29,8 +29,6 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 %                               PolynomA, PolynomB,NumX,NumY
 %                               (they are not used in IdTablePass)
 %                             Adds InsertionDeviceKickMap class
-% 13-11-2023:  blanco-garcia. Renaming variables due to Pull Request
-%                             https://github.com/atcollab/at/pull/683
 %--------------------------------------------------------------------------
 
 % constants
