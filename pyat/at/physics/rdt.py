@@ -156,9 +156,9 @@ def _computedrivingterms(
         b4lm = b4l[mask_b4l]
         betaxm = betax[mask_b4l]
         betaym = betay[mask_b4l]
-        rdts["dnux_dJx"] = sum(3 * b4lm * betaxm * betaxm / (8 * np.pi) * nperiods)
-        rdts["dnux_dJy"] = sum(-3 * b4lm * betaxm * betaym / (4 * np.pi) * nperiods)
-        rdts["dnuy_dJy"] = sum(3 * b4lm * betaym * betaym / (8 * np.pi) * nperiods)
+        rdts["dnux_dJx"] = 3 / (8 * np.pi) * nperiods * sum(b4lm * betaxm * betaxm)
+        rdts["dnux_dJy"] = -3 / (4 * np.pi) * nperiods * sum(b4lm * betaxm * betaym)
+        rdts["dnuy_dJy"] = 3 / (8 * np.pi) * nperiods * sum(b4lm * betaym * betaym)
 
     if (RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
         b4lm = b4l[mask_b4l]
