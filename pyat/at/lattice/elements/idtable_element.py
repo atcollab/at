@@ -50,25 +50,20 @@ class InsertionDeviceKickMap(Element):
     )
 
     def set_DriftPass(self) -> None:
-        """
-        Sets DriftPass tracking pass method.
-        """
+        """Sets DriftPass tracking pass method."""
         self.PassMethod = "DriftPass"
 
     def set_IdTablePass(self):
-        """
-        Sets IdTablePass tracking pass method.
-        """
+        """Sets IdTablePass tracking pass method."""
         self.PassMethod = "IdTablePass"
 
     def get_PassMethod(self):
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
-    def from_text_file(self, Nslice, Filename_in, Energy):
+    def from_text_file(self, Nslice: int, Filename_in: str, Energy: float) -> tuple:
         """
-        This function creates an Insertion Device Kick Map
-        from a Radia field map file.
+        Create an Insertion Device Kick Map from a Radia field map file.
 
         Args:
             family_name:    family name
@@ -80,52 +75,55 @@ class InsertionDeviceKickMap(Element):
             KickMap element
             Default PassMethod: ``IdTablePass``
         """
-
         # 2023jul04 changing class to save in .mat and .m
         # 2023apr30 redefinition to function
         # 2023jan18 fix bug with element print
         # 2023jan15 first release
         # orblancog
-        def readRadiaFieldMap(file_in_name):
+        def read_radia_field_map(file_in_name) -> tuple:
             """
-            Read a RadiaField map and return
+            Read a RadiaField map and return.
+
+            Arguments
+                filename
+
+            Returns
+                Tuple with file tables and axes.
+
+                File, where :
+                - the first data line is the length in meters.
+                - the second data line is the number of points in the h. plane.
+                - the third data line is the number of points in the v. plane.
+                - each data block comes after a START.
+                - first the horizontal data block, and second the
+                  vertical data block with the second order kicks.
+                  There might be two other blocks with the horizontal and
+                  vertical first order kicks.
+                - each block is a table with axes.
+                - comments start with #.
+                ! File example:
+                ! #comment in line 1
+                ! #comment in line 2
+                ! Length_in_m
+                ! #comment in line 4
+                ! Number of points in horizontal plane :nh
+                ! #comment in line 6
+                ! Number of points in vertical plane :nv
+                ! #comment in line 8
+                ! START
+                !             pos_point1h pos_point2h ... pos_pointnh
+                ! pos_point1v
+                ! ...                    horizontal kick_map(nv,nh)
+                ! pos_pointnv
+                ! START
+                !             pos_point1h pos_point2h ... pos_pointnh
+                ! pos_point1v
+                ! ...                    vertical kick_map(nv,nh)
+                ! pos_pointnv
+                ! (EOL)
             """
             thepath = Path(file_in_name)
             with thepath.open(encoding="utf-8") as thefile:
-                """
-                File, where :
-                - the first data line is the length in meters
-                - the second data line is the number of points in the h. plane
-                - the third data line is the number of points in the v. plane
-                - each data block comes after a START
-                - first the horizontal data block, and second the
-                      vertical data block with the second order kicks.
-                      There might be two other blocks with the horizontal and
-                      vertical first order kicks
-                - each block is a table with axes
-                - comments start with #
-                """
-                # File example:
-                # #comment in line 1
-                # #comment in line 2
-                # Length_in_m
-                # #comment in line 4
-                # Number of points in horizontal plane :nh
-                # #comment in line 6
-                # Number of points in vertical plane :nv
-                # #comment in line 8
-                # START
-                #             pos_point1h pos_point2h ... pos_pointnh
-                # pos_point1v
-                # ...                    horizontal kick_map(nv,nh)
-                # pos_pointnv
-                # START
-                #             pos_point1h pos_point2h ... pos_pointnh
-                # pos_point1v
-                # ...                    vertical kick_map(nv,nh)
-                # pos_pointnv
-                # (EOL)
-
                 data_lines = 0  # line not starting with '#'
                 header_lines = 0  # line starting with '#'
                 block_counter = 0  # START of the h.map, START of the v.map
@@ -200,7 +198,9 @@ class InsertionDeviceKickMap(Element):
                 v_points,
             )
 
-        def sorted_table(table_in, sorted_index, order_axis):
+        def sorted_table(
+            table_in: np.ndarray, sorted_index: np.ndarray, order_axis: str
+        ) -> np.ndarray:
             # np.asfortranarray makes a copy of contiguous memory positions
             table_out = np.copy(table_in)
             for i, iis in zip(range(len(sorted_index)), sorted_index):
@@ -223,7 +223,7 @@ class InsertionDeviceKickMap(Element):
             vkickmap1,
             _,
             _,
-        ) = readRadiaFieldMap(Filename_in)
+        ) = read_radia_field_map(Filename_in)
 
         # set to float
         table_colshkickarray = np.array(table_colshkick, dtype="float64")
@@ -284,10 +284,10 @@ class InsertionDeviceKickMap(Element):
         """
         Init IdTable.
 
-        Parameters:
-        family_name: the family name
-        args: positional arguments
-        kwargs: key-value arguments
+        Arguments:
+            family_name: the family name
+            args: positional arguments
+            kwargs: key-value arguments
         """
         _argnames = [
             "PassMethod",
