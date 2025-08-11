@@ -160,27 +160,27 @@ def _computedrivingterms(
         betaym = betay[mask_b4l]
         pxm = px[mask_b4l]
         pym = py[mask_b4l]
-        rdts["h22000"] = sum(3 * b4lm * betaxm * betaxm / 32 * nperiods)
-        rdts["h11110"] = sum(-3 * b4lm * betaxm * betaym / 8 * nperiods)
-        rdts["h00220"] = sum(3 * b4lm * betaym * betaym / 32 * nperiods)
-        rdts["h31000"] = sum(b4lm * betaxm * betaxm / 16 * pxm * pxm * pf(2, 0))
-        rdts["h40000"] = sum(
-            b4lm * betaxm * betaxm / 64 * pxm * pxm * pxm * pxm * pf(4, 0)
+        rdts["h22000"] = 3 / 32 * nperiods * sum(b4lm * betaxm * betaxm)
+        rdts["h11110"] = -3 / 8 * nperiods * sum(b4lm * betaxm * betaym)
+        rdts["h00220"] = 3 / 32 * nperiods * sum(b4lm * betaym * betaym)
+        rdts["h31000"] = 1 / 16 * pf(2, 0) * sum(b4lm * betaxm * betaxm * pxm * pxm)
+        rdts["h40000"] = (
+            1 / 64 * pf(4, 0) * sum(b4lm * betaxm * betaxm * pxm * pxm * pxm * pxm)
         )
-        rdts["h20110"] = sum(-3 * b4lm * betaxm * betaym / 16 * pxm * pxm * pf(2, 0))
-        rdts["h11200"] = sum(-3 * b4lm * betaxm * betaym / 16 * pym * pym * pf(0, 2))
+        rdts["h20110"] = -3 / 16 * pf(2, 0) * sum(b4lm * betaxm * betaym * pxm * pxm)
+        rdts["h11200"] = -3 / 16 * pf(0, 2) * sum(b4lm * betaxm * betaym * pym * pym)
         # fmt: off
-        rdts["h20020"] = sum(
-            -3 * b4lm * betaxm * betaym / 32 * pxm * pxm
-            * np.conj(pym * pym) * pf(2, -2)
+        rdts["h20020"] = (
+            -3 / 32 * pf(2, -2)
+            * sum(b4lm * betaxm * betaym * pxm * pxm * np.conj(pym * pym))
         )
         # fmt: on
-        rdts["h20200"] = sum(
-            -3 * b4lm * betaxm * betaym / 32 * pxm * pxm * pym * pym * pf(2, 2)
+        rdts["h20200"] = (
+            -3 / 32 * pf(2, 2) * sum(b4lm * betaxm * betaym * pxm * pxm * pym * pym)
         )
-        rdts["h00310"] = sum(b4lm * betaym * betaym / 16 * pym * pym * pf(0, 2))
-        rdts["h00400"] = sum(
-            b4lm * betaym * betaym / 64 * pym * pym * pym * pym * pf(0, 4)
+        rdts["h00310"] = 1 / 16 * pf(0, 2) * sum(b4lm * betaym * betaym * pym * pym)
+        rdts["h00400"] = (
+            1 / 64 * pf(0, 4) * sum(b4lm * betaym * betaym * pym * pym * pym * pym)
         )
 
     if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
