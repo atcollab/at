@@ -103,8 +103,8 @@ def _computedrivingterms(
         rbetaym = rbetay[mask_a2l]
         pxm = px[mask_a2l]
         pym = py[mask_a2l]
-        rdts["h10010"] = sum((a2lm / 4) * rbetaxm * rbetaym * pxm / pym * pf(1, -1))
-        rdts["h10100"] = sum((a2lm / 4) * rbetaxm * rbetaym * pxm * pym * pf(1, 1))
+        rdts["h10010"] = 1 / 4 * pf(1, -1) * sum(a2lm * rbetaxm * rbetaym * pxm / pym)
+        rdts["h10100"] = 1 / 4 * pf(1, 1) * sum(a2lm * rbetaxm * rbetaym * pxm * pym)
 
     if (RDTType.CHROMATIC in rdttype) or (RDTType.ALL in rdttype):
         mask_b23l = mask_b2l | mask_b3l
