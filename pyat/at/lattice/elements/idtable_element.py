@@ -1,18 +1,19 @@
-"""ID table :py:class:`.Element`"""
+"""ID table :py:class:`.Element`."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from warnings import warn
 
-import numpy
+import numpy as np
 
 from ...constants import clight, e_mass
 from .element_object import Element
 
 
-def _anyarray(value):
+def _anyarray(value: np.ndarray) -> None:
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
-    return numpy.require(value, dtype=numpy.float64, requirements=["F", "A"])
+    return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
 
 class InsertionDeviceKickMap(Element):
@@ -48,10 +49,16 @@ class InsertionDeviceKickMap(Element):
         ykick1=_anyarray,
     )
 
-    def set_DriftPass(self):
+    def set_DriftPass(self) -> None:
+        """
+        Sets DriftPass tracking pass method.
+        """
         self.PassMethod = "DriftPass"
 
     def set_IdTablePass(self):
+        """
+        Sets IdTablePass tracking pass method.
+        """
         self.PassMethod = "IdTablePass"
 
     def get_PassMethod(self):
@@ -83,7 +90,8 @@ class InsertionDeviceKickMap(Element):
             """
             Read a RadiaField map and return
             """
-            with open(file_in_name, encoding="utf-8") as f:
+            thepath = Path(file_in_name)
+            with thepath.open(encoding="utf-8") as thefile:
                 """
                 File, where :
                 - the first data line is the length in meters
@@ -124,7 +132,7 @@ class InsertionDeviceKickMap(Element):
                 kick_block_list = []
                 kick_haxes_list = []
                 kick_vaxes_list = []
-                for line in f:
+                for line in thefile:
                     sline = line.split()
                     if sline[0] == "#":  # line is comment
                         header_lines += 1
@@ -137,9 +145,9 @@ class InsertionDeviceKickMap(Element):
                         elif data_lines == 3:  # get the number of ver. points
                             v_points = int(sline[0])
                             # initialize element kicks and table_axes
-                            kick_block = numpy.zeros((v_points, h_points))
-                            haxis = numpy.zeros(h_points)
-                            vaxis = numpy.zeros(v_points)
+                            kick_block = np.zeros((v_points, h_points))
+                            haxis = np.zeros(h_points)
+                            vaxis = np.zeros(v_points)
                         else:
                             # read block of data
                             if sline[0] == "START" or sline[0] == "START\n":
@@ -162,14 +170,14 @@ class InsertionDeviceKickMap(Element):
             # checking how many kick blocks were added
             lenkick_block_list = len(kick_block_list)
             if lenkick_block_list < 2 or lenkick_block_list == 3:
-                _minimumBlocknumberErrormsg = (
+                _minimumblocknumbererrormsg = (
                     "Input file contains only " f"{len(kick_block_list)} block"
                 )
-                raise ValueError(_minimumBlocknumberErrormsg)
+                raise ValueError(_minimumblocknumbererrormsg)
             if lenkick_block_list == 2:
                 # first order kick not in file
-                kick_block_list.append(0.0 * numpy.copy(kick_block))
-                kick_block_list.append(0.0 * numpy.copy(kick_block))
+                kick_block_list.append(0.0 * np.copy(kick_block))
+                kick_block_list.append(0.0 * np.copy(kick_block))
             elif lenkick_block_list > 4:
                 # file contains more blocks that required
                 _warn4kickblocks = (
@@ -193,15 +201,14 @@ class InsertionDeviceKickMap(Element):
             )
 
         def sorted_table(table_in, sorted_index, order_axis):
-            # numpy.asfortranarray makes a copy of contiguous memory positions
-            table_out = numpy.copy(table_in)
+            # np.asfortranarray makes a copy of contiguous memory positions
+            table_out = np.copy(table_in)
             for i, iis in zip(range(len(sorted_index)), sorted_index):
                 if order_axis == "col":
                     table_out[:, i] = table_in[:, iis]
                 if order_axis == "row":
                     table_out[i, :] = table_in[iis, :]
-            table_out2 = numpy.asfortranarray(table_out)
-            return table_out2
+            return np.asfortranarray(table_out)
 
         # read the input data
         (
@@ -214,24 +221,24 @@ class InsertionDeviceKickMap(Element):
             table_rowsvkick,
             hkickmap1,
             vkickmap1,
-            NumX,
-            NumY,
+            _,
+            _,
         ) = readRadiaFieldMap(Filename_in)
 
         # set to float
-        table_colshkickarray = numpy.array(table_colshkick, dtype="float64")
-        table_rowshkickarray = numpy.array(table_rowshkick, dtype="float64")
-        table_colsvkickarray = numpy.array(table_colsvkick, dtype="float64")
-        table_rowsvkickarray = numpy.array(table_rowsvkick, dtype="float64")
+        table_colshkickarray = np.array(table_colshkick, dtype="float64")
+        table_rowshkickarray = np.array(table_rowshkick, dtype="float64")
+        table_colsvkickarray = np.array(table_colsvkick, dtype="float64")
+        table_rowsvkickarray = np.array(table_rowsvkick, dtype="float64")
 
         # Reorder table_axes
-        cols1sorted_index = numpy.argsort(table_colshkickarray)
+        cols1sorted_index = np.argsort(table_colshkickarray)
         table_colshkickarray.sort()
-        rows1sorted_index = numpy.argsort(table_rowshkickarray)
+        rows1sorted_index = np.argsort(table_rowshkickarray)
         table_rowshkickarray.sort()
-        cols2sorted_index = numpy.argsort(table_colsvkickarray)
+        cols2sorted_index = np.argsort(table_colsvkickarray)
         table_colsvkickarray.sort()
-        rows2sorted_index = numpy.argsort(table_rowsvkickarray)
+        rows2sorted_index = np.argsort(table_rowsvkickarray)
         table_rowsvkickarray.sort()
         # Reorder kickmap2
         hkickmap2_a = sorted_table(hkickmap2, cols1sorted_index, "col")
@@ -245,25 +252,25 @@ class InsertionDeviceKickMap(Element):
         vkickmap1 = sorted_table(vkickmap1_a, rows2sorted_index, "row")
 
         # Field to kick factors
-        e_massGeV = e_mass * 1e-9
-        Brho = 1e9 * numpy.sqrt(Energy**2 - e_massGeV**2) / clight
+        e_mass_gev = e_mass * 1e-9
+        brho = 1e9 * np.sqrt(Energy**2 - e_mass_gev**2) / clight
         # kick2 vars
-        factor2 = 1.0 / (Brho**2)
+        factor2 = 1.0 / (brho**2)
         xkick = factor2 * hkickmap2
         ykick = factor2 * vkickmap2
         # kick1 vars
-        factor1 = 1.0 / (Brho)
+        factor1 = 1.0 / (brho)
         xkick1 = factor1 * hkickmap1
         ykick1 = factor1 * vkickmap1
         # axes
         xtable = table_colshkickarray.T
         ytable = table_rowshkickarray.T
 
-        args_dict = {
+        return {
             "PassMethod": "IdTablePass",
             "Filename_in": Filename_in,
             "Normalization_energy": Energy,
-            "Nslice": numpy.uint8(Nslice),
+            "Nslice": np.uint8(Nslice),
             "Length": el_length,
             "xkick": xkick,
             "ykick": ykick,
@@ -272,9 +279,16 @@ class InsertionDeviceKickMap(Element):
             "xtable": xtable,
             "ytable": ytable,
         }
-        return args_dict
 
-    def __init__(self, family_name: str, *args, **kwargs):
+    def __init__(self, family_name: str, *args, **kwargs) -> None:
+        """
+        Init IdTable.
+
+        Parameters:
+        family_name: the family name
+        args: positional arguments
+        kwargs: key-value arguments
+        """
         _argnames = [
             "PassMethod",
             "Filename_in",
