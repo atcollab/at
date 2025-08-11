@@ -62,8 +62,8 @@ switch isIDfileformat
         y = (D.y)';
         xkick1 = factor1 * D.Kick1x;
         ykick1 = factor1 * D.Kick1y;
-        xkick2 = factor2 * D.Kick2x;
-        ykick2 = factor2 * D.Kick2y;
+        xkick = factor2 * D.Kick2x;
+        ykick = factor2 * D.Kick2y;
         L  = D.Len;
 
     case {2} % new variable names
@@ -71,8 +71,8 @@ switch isIDfileformat
         y = D.ytable;
         xkick1 = factor1 * D.xkick1;
         ykick1 = factor1 * D.ykick1;
-        xkick2 = factor2 * D.xkick2;
-        ykick2 = factor2 * D.ykick2;
+        xkick = factor2 * D.xkick2;
+        ykick = factor2 * D.ykick2;
         L  = D.Length;
 
     case {3}% data from text file
@@ -80,15 +80,15 @@ switch isIDfileformat
         fid = fopen(filename);
         line_ex = fgetl(fid);
         while ischar(line_ex)
-        line_ex = fgetl(fid);
-        if line_ex(1) == '#'
-            continue
-        end
-        flagistab = (line_ex==9);
-        istab = (sum(flagistab));
-        if istab
-            break
-        end
+            line_ex = fgetl(fid);
+            if line_ex(1) == '#'
+                continue
+            end
+            flagistab = (line_ex==9);
+            istab = (sum(flagistab));
+            if istab
+                break
+            end
         end
         fclose(fid);
         % define data separator
@@ -134,8 +134,8 @@ switch isIDfileformat
         end
 
         % scale kick tables
-        xkick2 = factor2 * txkick2;
-        ykick2 = factor2 * tykick2;
+        xkick = factor2 * txkick2;
+        ykick = factor2 * tykick2;
         xkick1 = factor1 * txkick1;
         ykick1 = factor1 * tykick1;
 
@@ -143,8 +143,8 @@ switch isIDfileformat
         [y, indy] = sort(y);
         [x, indx] = sort(x);
         x = x';
-        xkick2 = xkick2(indy, indx);
-        ykick2 = ykick2(indy, indx);
+        xkick = xkick(indy, indx);
+        ykick = ykick(indy, indx);
     otherwise
         fprintf('Unsupported fileformat.\n')
 end
@@ -156,8 +156,8 @@ Elem = atinsertiondevicekickmap( ...
     Energy, ...
     Nslice, ...
     L, ...
-    xkick2, ...
-    ykick2, ...
+    xkick, ...
+    ykick, ...
     xkick1, ...
     ykick1, ...
     x, ...
