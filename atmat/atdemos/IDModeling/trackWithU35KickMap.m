@@ -5,8 +5,8 @@ r=atradoff(esrf);
 U35elem=atidtable_dat('U35',1,'U35.mat',6.04,'IdTablePass');
 xtable=U35elem.xtable;
 ytable=U35elem.ytable;
-xkick2=U35elem.xkick2;
-ykick2=U35elem.ykick2;
+xkick2=U35elem.xkick;
+ykick2=U35elem.ykick;
 surf(xtable,ytable,xkick2)
 figure
 surf(xtable,ytable,ykick2)
