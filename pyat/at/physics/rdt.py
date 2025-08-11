@@ -94,8 +94,8 @@ def _computedrivingterms(
         betaym = betay[mask_b2l]
         pxm = px[mask_b2l]
         pym = py[mask_b2l]
-        rdts["h20000"] = sum((b2lm / 8) * betaxm * pxm * pxm * pf(2, 0))
-        rdts["h00200"] = -sum((b2lm / 8) * betaym * pym * pym * pf(0, 2))
+        rdts["h20000"] = 1 / 8 * pf(2, 0) * sum(b2lm * betaxm * pxm * pxm)
+        rdts["h00200"] = -1 / 8 * pf(0, 2) * sum(b2lm * betaym * pym * pym)
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
         a2lm = a2l[mask_a2l]
