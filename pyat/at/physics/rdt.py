@@ -116,18 +116,24 @@ def _computedrivingterms(
         etaxm = etax[mask_b23l]
         pxm = px[mask_b23l]
         pym = py[mask_b23l]
-        rdts["h11001"] = sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) * nperiods)
-        rdts["h00111"] = sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) * nperiods)
-        rdts["h20001"] = sum(
-            (b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) / 2 * pxm * pxm * pf(2, 0)
+        rdts["h11001"] = nperiods * sum(b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4)
+        rdts["h00111"] = nperiods * sum(b2lm * betaym / 4 - b3lm * betaym * etaxm / 2)
+        rdts["h20001"] = (
+            1
+            / 2
+            * pf(2, 0)
+            * sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) * pxm * pxm)
         )
-        rdts["h00201"] = sum(
-            (b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) / 2 * pym * pym * pf(0, 2)
+        rdts["h00201"] = (
+            1
+            / 2
+            * pf(0, 2)
+            * sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) * pym * pym)
         )
         # fmt: off
-        rdts["h10002"] = sum(
+        rdts["h10002"] = 1 / 2 * pf(1, 0 ) * sum(
             (b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm)
-            / 2 * pxm * pf(1, 0)
+            * pxm
         )
         # fmt: on
 
