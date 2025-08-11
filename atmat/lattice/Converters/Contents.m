@@ -1,6 +1,5 @@
-% CONVERTERS
-% See also 
-% 
+% Conversion of AT lattices to/from other formats
+%
 %   Contents file for CONVERTERS and its subfolders.
 %   
 %   CONVERTERS

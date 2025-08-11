@@ -40,7 +40,7 @@ end
 % Split the ring
 elmlength=findspos(ring(el1:el2-1),el2-el1+1)/npts;
 r2=cellfun(@splitelem,ring(el1:el2-1),'UniformOutput',false);
-splitring=cat(1,ring(1:el1-1),r2{:},ring(el2:elt0));
+splitring=cat(1,ring(1:el1-1,1),r2{:},ring(el2:elt0,1));
 plrange=el1:el2+length(splitring)-elt0;
 
 [s,outp]=plotfun(splitring,curve.dpp,plotargs{:},dpargs{:});
@@ -53,7 +53,7 @@ if numel(outp) >= 2
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
     linkaxes([ax2(1) ax2(2)],'x');% allows zoom on both right and left plots
-elseif numel(outp) == 1
+elseif isscalar(outp)
     curve.left=plot(ax,s(plrange),outp(1).values(plrange,:));
     curve.right=[];
     ylabel(ax,outp(1).axislabel);
@@ -76,7 +76,8 @@ if nargout>0, varargout={curve}; end
 
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0 ...
-                && ~strcmp(elem.PassMethod, 'IdTablePass')
+                && ~any(strcmp(elem.PassMethod,...
+                {'IdTablePass', 'GWigSymplecticPass', 'GWigSymplecticRadPass'}))
             nslices=ceil(elem.Length/elmlength);
             if ~KeepAxis
                 newelems=atdivelem(elem,ones(1,nslices)./nslices);

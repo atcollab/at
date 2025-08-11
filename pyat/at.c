@@ -9,17 +9,22 @@
 #include <string.h>
 #include <omp.h>
 #endif /*_OPENMP*/
+#ifdef MPI
+#include <mpi.h>
+#endif /* MPI */
 #include "attypes.h"
 #include <stdbool.h> 
 #include <math.h>
 #include <float.h>
 #include <atrandom.c>
 
+#define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
-
-#define NUMPY_IMPORT_ARRAY_RETVAL NULL
-#define NUMPY_IMPORT_ARRAY_TYPE void *
+#if NPY_ABI_VERSION < 0x02000000
+    #define NPY_RAVEL_AXIS 32
+#endif
 
 typedef PyObject atElem;
 
@@ -303,11 +308,11 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
 void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
                              struct parameters *param){ 
     if(bcurrents != NULL){
-        PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_MAXDIMS, 
+        PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_RAVEL_AXIS,
                                             PyArray_DESCR(bcurrents)->type_num,
-                                            NULL); 
+                                            NULL);
         param->beam_current = PyFloat_AsDouble(bcurrentsum);
-        Py_DECREF(bcurrentsum);    
+        Py_DECREF(bcurrentsum);
         param->nbunch = PyArray_SIZE(bspos);
         param->bunch_spos = PyArray_DATA(bspos);
         param->bunch_currents = PyArray_DATA(bcurrents); 
@@ -316,7 +321,7 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
         param->nbunch=1;
         param->bunch_spos = (double[1]){0.0};
         param->bunch_currents = (double[1]){0.0};
-    }   
+    }
 }
 
 /*
@@ -406,13 +411,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     param.rest_energy=0.0;
     param.charge=-1.0;
     param.num_turns=num_turns;
+    param.bdiff = NULL;
     
     if (keep_counter)
         param.nturn = last_turn;
     else
         param.nturn = counter;
 
-    set_energy_particle(lattice, energy, particle, &param);   
+    set_energy_particle(lattice, energy, particle, &param);
     set_current_fillpattern(bspos, bcurrents, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
@@ -520,9 +526,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             Py_DECREF(PyPassMethod);
             if (!LibraryListPtr) return print_error(elem_index, rout);  /* No trackFunction for the given PassMethod: RuntimeError */
             pylength = PyObject_GetAttrString(el, "Length");
-            length = PyFloat_AsDouble(pylength);
-            Py_XDECREF(pylength);
-            if (PyErr_Occurred()) {
+            if (pylength) {
+                length = PyFloat_AsDouble(pylength);
+                Py_XDECREF(pylength);
+            }
+            else {
                 length = 0.0;
                 PyErr_Clear();
             }
@@ -638,10 +646,13 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
+    param.common_rng=&common_state;
+    param.thread_rng=&thread_state;
     param.nturn = 0;
     param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;
+    param.bdiff=NULL;
     particle=NULL;
     energy=NULL;
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$O!O!", kwlist,
@@ -691,13 +702,97 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     return (PyObject *) rin;
 }
 
+static PyObject *at_diffmatrix(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"element", "rin", "energy", "particle", NULL};
+    PyObject *element;
+    PyObject *energy;
+    PyObject *particle;
+    PyArrayObject *rin;
+    npy_uint32 num_particles;
+    track_function integrator;
+    PyObject *pyintegrator;
+    PyObject *PyPassMethod;
+    const double *drin;
+    double orb[6];
+    struct parameters param;
+    struct LibraryListElement *LibraryListPtr;
+    npy_intp dims[2] = {6, 6};
+    PyObject *pbdiff = PyArray_ZEROS(2, dims, NPY_DOUBLE ,1);
+    double *bdiff = (double *)PyArray_DATA((PyArrayObject *)pbdiff);
+
+    param.nturn = 0;
+    param.energy=0.0;
+    param.rest_energy=0.0;
+    param.charge=-1.0;
+    param.bdiff=bdiff;
+    particle=NULL;
+    energy=NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$O!O!", kwlist,
+        element_type, &element,  &PyArray_Type, &rin,
+        &PyFloat_Type ,&energy, particle_type, &particle)) {
+        return NULL;
+    }
+    if (PyArray_DIM(rin,0) != 6) {
+        return PyErr_Format(PyExc_ValueError, "rin is not 6D");
+    }
+    if (PyArray_TYPE(rin) != NPY_DOUBLE) {
+        return PyErr_Format(PyExc_ValueError, "rin is not a double array");
+    }
+    if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
+    }
+    num_particles = (PyArray_SIZE(rin)/6);
+    if (num_particles != 1) {
+        return PyErr_Format(PyExc_ValueError, "Number of particles should be 1");
+    }
+
+    set_energy_particle(NULL, energy, particle, &param);
+
+    drin = (const double *)PyArray_DATA(rin);
+    for (int i=0; i<6; i++) orb[i] = drin[i];
+
+    param.RingLength = 0.0;
+    param.T0 = 0.0;
+    param.beam_current=0.0;
+    param.nbunch=1;
+    param.bunch_spos = (double[1]){0.0};
+    param.bunch_currents = (double[1]){0.0};
+    for (int i = 0; i < 36; i++) bdiff[i] = 0.0;
+
+    PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
+    if (!PyPassMethod) return NULL;
+    LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
+    Py_DECREF(PyPassMethod);
+
+    if (!LibraryListPtr) return NULL;
+    integrator = LibraryListPtr->FunctionHandle;
+    pyintegrator = LibraryListPtr->PyFunctionHandle;
+    if (pyintegrator) {
+        PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
+        if (!res) return NULL;
+        Py_DECREF(res);
+    } else {
+        struct elem *elem_data = integrator(element, NULL, orb, 1, &param);
+        if (!elem_data) return NULL;
+        free(elem_data);
+    }
+    return pbdiff;
+}
+
 static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"rank", "seed", NULL};
-    uint64_t rank = 0;
     uint64_t seed = AT_RNG_STATE;
+#ifdef MPI
+    int irank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &irank);
+    uint64_t rank = irank;
+#else
+    uint64_t rank = 0;
+#endif /* MPI */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|K$K", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|$KK", kwlist,
         &rank, &seed)) {
         return NULL;
     }
@@ -755,12 +850,26 @@ static PyMethodDef AtMethods[] = {
               "    particle (Optional[Particle]):  circulating particle\n\n"
               ":meta private:"
             )},
+    {"diffusion_matrix",  (PyCFunction)at_diffmatrix, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("diffusion_matrix(element, r_in)\n\n"
+              "Track a particles r_in through a single element,\n"
+              "computes the diffusion matrix\n\n"
+              "Parameters:\n"
+              "    element (Element):   AT element\n"
+              "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "      On return, rin contains the final coordinates of the particles\n"
+              "    energy (float):      nominal energy [eV]\n"
+              "    particle (Optional[Particle]):  circulating particle\n\n"
+              ":meta private:"
+            )},
     {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("reset_rng(rank=0, seed=None)\n\n"
+    PyDoc_STR("reset_rng(*, rank=0, seed=None)\n\n"
               "Reset the *common* and *thread* random generators.\n\n"
+              "The seed is applied unchanged to the \"common\" generator, and modified in a\n"
+              "thread-specific way to the \"thread\" generator\n\n"
               "Parameters:\n"
               "    rank (int):    thread identifier (for MPI and python multiprocessing)\n"
-              "    seed (int):    single seed for both generators\n"
+              "    seed (int):    single seed for both generators. Default: initial seed\n"
             )},
     {"common_rng",  (PyCFunction)common_rng, METH_NOARGS,
     PyDoc_STR("common_rng()\n\n"

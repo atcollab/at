@@ -5,9 +5,11 @@
 *.mex
 *.mexa64
 *.mexmaci64
+*.mexw64
 
 # Compiled python
 *.pyc
+*.pyd
 
 # pytest cache
 .cache
@@ -19,8 +21,8 @@
 venv*
 
 # pyat build stuff
-pyat/build
-pyat/dist
+build
+dist
 pyat/at.egg-info
 pyat/prefix
 pyat/integrator-src
@@ -36,6 +38,9 @@ atintegrators/passmethodlist.m
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
+cmake-build-debug
+cmake-build-release
+.idea/
 
 # Vim
 *.swp

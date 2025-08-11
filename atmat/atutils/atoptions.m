@@ -1,7 +1,7 @@
 classdef atoptions < handle
-    %Definition of default parameters
-    %
-    % Singleton class for the storage of AT default values
+%Definition of default parameters
+%
+% Singleton class for the storage of AT default values
 
     %% AT parameters
     properties
@@ -12,11 +12,12 @@ classdef atoptions < handle
                                     % Number of OpenMP thread
         WarningDp6D = true          % Warn if fp is specified with 6D lattices 
         omp_num_threads = str2double(getenvopt('OMP_NUM_THREADS','0'))
+        test_mode = false           % test mode
     end
     
     %% AT dependent parameters
     properties (Dependent, SetAccess=private)
-        openmp                      % True if compiled with OpenMP (not yet implemented)
+        openmp                      % True if compiled with OpenMP
     end
     
     methods

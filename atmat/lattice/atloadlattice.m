@@ -21,12 +21,16 @@ function lattice = atloadlattice(fspec,varargin)
 %           the variable name must be specified using the 'matkey' keyword.
 %
 %   .m      Matlab function. The function must output a valid AT structure.
+%   .json   JSON file
+%
+%see also atwritem, atwritejson
 
 persistent link_table
 
 if isempty(link_table)
     link_table.mat=@load_mat;
     link_table.m=@load_m;
+    link_table.json=@load_json;
 end
 
 [~,~,fext]=fileparts(fspec);
@@ -57,7 +61,7 @@ lattice=atSetRingProperties(lattice,varargs{:});
         dt=load(fpath);
         vnames=fieldnames(dt);
         key='RING';
-        if length(vnames) == 1
+        if isscalar(vnames)
             key=vnames{1};
         else
             for v={'ring','lattice'}
@@ -75,7 +79,36 @@ lattice=atSetRingProperties(lattice,varargs{:});
             error('AT:load','Cannot find variable %s\nmatkey must be in: %s',...
                 key, strjoin(vnames,', '));
         end
+    end
 
+    function [lattice, opts]=load_json(fpath, opts)
+        data=jsondecode(fileread(fpath));
+        % File signature for later use
+        try
+            atjson=data.atjson;
+        catch
+            atjson=1;
+        end
+        props=data.properties;
+        name=props.name;
+        energy=props.energy;
+        periodicity=props.periodicity;
+        particle=atparticle.loadobj(props.particle);
+        if isfield(props,'harmonic_number')
+            harmnumber=props.harmonic_number;
+            props=rmfield(props,'harmonic_number');
+        else
+            harmnumber=NaN;
+        end
+        props=rmfield(props,{'name','energy','periodicity','particle'});
+        args=[fieldnames(props) struct2cell(props)]';
+        lattice=atSetRingProperties(data.elements,...
+            'FamName', name,...
+            'Energy', energy,...
+            'Periodicity', periodicity,...
+            'Particle', particle,...
+            'HarmNumber', harmnumber, ...
+            args{:});
     end
 
 end

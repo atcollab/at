@@ -1,23 +1,26 @@
 [build-system]
 requires = [
-    "setuptools >= 62",
+    "setuptools >= 64",
     "setuptools_scm >= 7",
-    "oldest-supported-numpy",
-    "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
+    "oldest-supported-numpy; python_version <= '3.8'",
+    "numpy >= 2.0; python_version >= '3.9'",
     "wheel",
 ]
 # build-backend = "setuptools.build_meta"
+# in-tree backend because of MPI requirement
 build-backend = "backend"
 backend-path = ["_custom_build"]
 
 [project]
 name = "accelerator-toolbox"
-authors = [{name="The AT collaboration", email="atcollab-general@lists.sourceforge.net"}]
+authors = [{ name = "The AT collaboration", email = "atcollab-general@lists.sourceforge.net" }]
 description = "Accelerator Toolbox"
 readme = "pyat/README.rst"
+license = { file = "LICENSE.txt" }
 dynamic = ["version"]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Topic :: Scientific/Engineering :: Physics",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
@@ -25,49 +28,53 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
 ]
 requires-python = ">=3.7"
 dependencies = [
     "importlib-resources;python_version<'3.9'",
-    "numpy>=1.16.6",
+    "numpy >=1.16.6, <2.0; python_version <= '3.8'",
+    "numpy >= 1.23.5; python_version >= '3.9'",
     "scipy>=1.4.0"
 ]
 
 [project.urls]
-GitHub = "https://github.com/atcollab/at"
-Home="https://atcollab.github.io/at/"
+Home = "https://github.com/atcollab/at"
+Github = "https://github.com/atcollab/at.git"
+Issues = "https://github.com/atcollab/at/issues"
+ChangeLog = "https://github.com/atcollab/at/releases"
 
 [project.optional-dependencies]
 mpi = ["mpi4py"]
 plot = ["matplotlib"]
 dev = ["pytest >= 2.9", "pytest-cov", "flake8"]
-doc = ["Sphinx ~= 7.2", "myst-parser", "myst-nb", "pydata-sphinx-theme ~= 0.14",
+doc = ["Sphinx ~= 8.1", "myst-parser", "myst-nb", "pydata-sphinx-theme",
     "sphinx_design", "sphinx-copybutton"]
 
-# tool.setuptools is still in BETA, so we keep temporarily setup.cfg
+[tool.setuptools]
+zip-safe = false
+include-package-data = false
 
-#[tool.setuptools]
-#zip-safe = false
-#include-package-data = false
+[tool.setuptools.packages.find]
+where = ["pyat"]
+namespaces = false
 
-#[tool.setuptools.packages.find]
-#where = ["pyat"]
-#namespaces = false
-
-#[tool.setuptools.package-data]
-#machine_data = ["*.m", "*.mat"]
+[tool.setuptools.package-data]
+machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
+build = ["*"]
 # Pypy does not have Scipy so we cannot support it.
-build = ["cp3{7,8,9,10,11,12}*"]
-# Skip 32-bit builds starting with python 3.12
-skip = ["cp312-win32", "cp312-*_i686"]
+skip = ["pp*", "cp3{7,8}-musllinux_*"]
+archs = ["auto64"]
 build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"
-
-[tool.cibuildwheel.macos]
-archs = ["x86_64", "arm64"]
 
 #[tool.cibuildwheel.linux]
 ## Pass the detected PyAT version to the linux docker containers

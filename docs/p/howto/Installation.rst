@@ -9,7 +9,7 @@ methods are used by higher-level functions to provide physics results.
 Requirements
 ------------
 
-pyAT supports Python 3.7 to 3.11.
+pyAT supports Python 3.7 to 3.12.
 
 Installation
 ------------
@@ -17,11 +17,61 @@ Installation
 From PyPI
 ~~~~~~~~~
 
-Install accelerator-toolbox from PyPI::
+PyPI maintains PyAT versions for Linux, MacOS and Windows, and python versions:
+
+- CPython 3.7, 3.8, 3.9, 3.10, 3.11, 3.12
+- PyPI does not support PyPy, because of the missing numpy and scipy libraries
+
+*Installation with minimal dependencies:*
+.........................................
+
+::
 
    $ pip install accelerator-toolbox
 
-From GitHub
+This minimal installation disables all plotting functions. Note that the plotting
+functions can be enabled later by simply installing `matplotlib <https://matplotlib.org>`_.
+
+*Standard installation:*
+........................
+
+::
+
+   $ pip install "accelerator-toolbox[plot]"
+
+This installs in addition the `matplotlib <https://matplotlib.org>`_ package and its
+dependencies, which enables all plotting functions.
+
+*Optional dependencies:*
+........................
+
+In addition to ``[plot]``, other modifiers are available for specific purposes:
+
+``"accelerator-toolbox[dev]"``
+    Installs the test framework: `pytest <https://docs.pytest.org/en/stable/>`_,
+    `pytest-cov <https://pypi.org/project/pytest-cov/>`_ and
+    `flake8 <https://flake8.pycqa.org/en/latest/>`_. This allows to run locally
+    the test sequence executed on GitHub.
+
+``"accelerator-toolbox[doc]"``
+    Installs `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_ and its
+    utilities, allowing the generate locally the HTML documentation.
+
+These modifiers may be combined. Example: ``pip install "accelerator-toolbox[plot,dev]"``
+
+From conda-forge
+~~~~~~~~~~~~~~~~
+
+conda-forge maintains PyAT versions for Linux, MacOS and Windows, and python versions:
+
+- CPython 3.8, 3.9, 3.10, 3.11, 3.12
+- PyPy 3.9
+
+PyAT can be installed in a conda environment with::
+
+   $ conda install -c conda-forge accelerator-toolbox
+
+From source
 ~~~~~~~~~~~
 
 1. Install git on your computer.

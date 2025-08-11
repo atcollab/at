@@ -89,7 +89,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct','df'});
         [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
-        [cavargs,varargs]=getoption(varargs,{'cavpts'});
+        [~,varargs]=getoption(varargs,'cavpts',[]);  % Ignore the cavpts keyword
         [refpts,varargs]=getargs(varargs,1,'check',@(arg) isnumeric(arg) || islogical(arg));
         is_6d=getoption(varargs,'is_6d',[]); % Always set by frequency_control, keep in varargs
 
@@ -124,10 +124,12 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         if is_6d                     % 6D processing
             [alpha,beta,disp]=cellfun(@output6,ri,'UniformOutput',false);
             if get_w || get_chrom
-                frf=get_rf_frequency(ring);
-                DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,cavargs{:});
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,cavargs{:});
+                cavities=atgetcells(ring,'Frequency');
+                freqs=atgetfieldvalues(ring,cavities,'Frequency');
+                dff=-DPStep*mcf(atradoff(ring));
+                % Scale all frequencies by the same factor
+                rgup=atsetfieldvalues(ring,cavities,'Frequency',freqs*(1.0+0.5*dff));
+                rgdn=atsetfieldvalues(ring,cavities,'Frequency',freqs*(1.0-0.5*dff));
                 [~,o1P]=findorbit6(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit6(rgdn,'guess',orbitin,varargs{:});
                 if get_w
@@ -143,8 +145,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         else                        % 4D processing
             dp=orbitin(5);
             [alpha,beta]=cellfun(@output4,ri,'UniformOutput',false);
-            [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'orbit',o1P,'guess',orbitin,varargs{:});
-            [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'orbit',o1M,'guess',orbitin,varargs{:});
+            [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'orbit',o1P,'guess',orbitin,varargs{:}, 'strict', -1);
+            [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'orbit',o1M,'guess',orbitin,varargs{:}, 'strict', -1);
             disp = num2cell((orbitP-orbitM)/DPStep,1);
             if get_w
                 [ringdata.chromaticity,w]=chrom_w(ring,ring,o1P,o1M,refpts);
@@ -225,13 +227,6 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
                 bet=ab(2);
                 sigma(slc,slc)=[bet -alp;-alp (1+alp*alp)/bet];
             end
-        end
-
-        function f=get_rf_frequency(ring)
-            % Get the initial RF frequency
-            cavities=ring(atgetcells(ring, 'Frequency'));
-            freqs=atgetfieldvalues(cavities,'Frequency');
-            f=freqs(1);
         end
 
         function [chrom,w]=chrom_w(ringup,ringdn,orbup,orbdn,refpts)

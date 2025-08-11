@@ -4,10 +4,10 @@ function elem=atthinmultipole(fname,varargin)
 % ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD)
 %	
 %  INPUTS
-%	 1. FNAME        	family name 
+%	 1. FNAME           family name
 %	 2. POLYNOMA        skew [dipole quad sext oct];	 
 %	 3. POLYNOMB        normal [dipole quad sext oct]; 
-%	 4. PASSMETHOD      tracking function. Defaults to 'StrMPoleSymplectic4Pass'
+%	 4. PASSMETHOD      tracking function. Defaults to 'ThinMPolePass'
 %
 %  OPTIONS (order does not matter)
 %    R1				6 x 6 rotation matrix at the entrance

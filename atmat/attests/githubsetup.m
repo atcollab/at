@@ -1,4 +1,4 @@
-function githubsetup()
+function githubsetup(varargin)
 %GITHUBSETUP    Private. Setup Matlab for AT tests in GitHib Actions
 %
 % This function prepares a workflow in GitHub actions for using AT and
@@ -6,17 +6,14 @@ function githubsetup()
 % user workflow.
 
 savepath('pathdef.m');
-atmexall -fail
+mex -setup
+mex -setup C++
+atmexall('-fail', varargin{:});
 if ispc
     execfile=fullfile(getenv('pythonLocation'),'pythonw.exe');
-    execmode='InProcess';
-elseif ismac
-    execfile=fullfile(getenv('pythonLocation'),'bin','python');
-    execmode='InProcess';
 else
     execfile=fullfile(getenv('pythonLocation'),'bin','python');
-    execmode='OutOfProcess';
 end
-pyenv("Version", execfile,'ExecutionMode', execmode);
+pyenv("Version", execfile,'ExecutionMode', 'InProcess');
 disp(pyenv);
 end

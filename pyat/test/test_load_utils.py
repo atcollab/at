@@ -5,8 +5,10 @@ import warnings
 from at import AtWarning
 from at.lattice import Lattice, elements, params_filter, no_filter
 from at.load.utils import find_class, element_from_dict
+# noinspection PyProtectedMember
 from at.load.utils import _CLASS_MAP, _PASS_MAP
 from at.load.utils import RingParam, split_ignoring_parentheses
+# noinspection PyProtectedMember
 from at.load.matfile import ringparam_filter
 
 
@@ -66,8 +68,8 @@ def test_inconsistent_energy_values_warns_correctly():
 
 
 def test_more_than_one_RingParam_in_ring_raises_warning():
-    p1 = RingParam('rp1', 5.e+6)
-    p2 = RingParam('rp2', 3.e+6)
+    p1 = RingParam('rp1', 5.e+6, 1)
+    p2 = RingParam('rp2', 3.e+6, 1)
     with pytest.warns(AtWarning):
         params = _matlab_scanner([p1, p2])
         assert params['_energy'] == 5.e+6

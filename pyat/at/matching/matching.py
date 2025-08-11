@@ -1,5 +1,10 @@
 """
-Classes for matching variables and constraints
+Classes for matching variables and constraints (obsolete)
+
+**These classes and functions are now obsolete** and should be replaced by
+:doc:`variables <at.lattice.lattice_variables>`,
+:doc:`observables <at.latticetools.observables>`,
+:doc:`matching <at.latticetools.matching>`.
 """
 from __future__ import annotations
 from itertools import chain
@@ -10,6 +15,10 @@ from scipy.optimize import least_squares
 from itertools import repeat
 from at.lattice import Lattice, Refpts, bool_refpts
 from at.physics import get_optics, ohmi_envelope, find_orbit
+
+__all__ = ['Variable', 'ElementVariable', 'Constraints', 'ElementConstraints',
+           'LinoptConstraints', 'OrbitConstraints', 'EnvelopeConstraints',
+           'match']
 
 
 class Variable(object):
@@ -66,7 +75,7 @@ class Variable(object):
         return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
             'Name', 'Initial', 'Final ', 'Variation')
 
-    def status(self, ring: Lattice, vini=np.NaN):
+    def status(self, ring: Lattice, vini=np.nan):
         vnow = self.get(ring)
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
             self.name, vini, vnow, (vnow - vini))
@@ -235,7 +244,7 @@ class Constraints(object):
     def status(self, ring: Lattice, initial=None):
         """Return a string giving the actual state of constraints"""
         if initial is None:
-            initial = repeat(np.NaN)
+            initial = repeat(np.nan)
         strs = []
         for name, ini, now, target in zip(self.name, initial,
                                           self.values(ring), self.target):
@@ -649,7 +658,7 @@ def match(ring: Lattice, variables: Sequence[Variable],
           max_nfev: int = 1000,
           diff_step: float = 1.0e-10,
           method=None, copy: bool = True):
-    """Perform matching of constraints by varying variables
+    """Perform matching of constraints by varying variables (obsolete)
 
     Parameters:
         ring:               Lattice description

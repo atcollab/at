@@ -170,13 +170,22 @@ static void checkiflostRectangularAp(double *r6, const double *limits)
 {
 	/* check limits for X position */
     if (r6[0]<limits[0] || r6[0]>limits[1])      markaslost(r6,5);
+	/* check limits for Y position */
     else if (r6[2]<limits[2] || r6[2]>limits[3]) markaslost(r6,5);
+}
+
+static void checkiflostLongtRectangularAp(double *r6, const double *limits)
+{
+        /* check limits for DP position */
+    if (r6[4]<limits[0] || r6[4]>limits[1]) markaslost(r6,5);
+        /* check limits for CT position */
+    else if (r6[5]<limits[2] || r6[5]>limits[3]) markaslost(r6,5);
 }
 
 static void checkiflostEllipticalAp(double *r6, const double *axesptr)
 {
-	register double xnorm = r6[0]/axesptr[0];
-	register double znorm = r6[2]/axesptr[1];
+	double xnorm = r6[0]/axesptr[0];
+	double znorm = r6[2]/axesptr[1];
 	if ((xnorm*xnorm + znorm*znorm) >= 1) markaslost(r6,5);
 }
 

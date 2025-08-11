@@ -8,15 +8,16 @@ struct elem {
 
 void AperturePass(double *r_in, double *limits, int num_particles)
 {
-    /* Checks X and Y of each input 6-vector and marks the corresponding element in
-     * lossflag array with 0 if X,Y are exceed the limits given by limitsptr array
-     * limitsptr has 4 elements: (MinX, MaxX, MinY, MaxY)
+    /* Checks X,Y of each input 6-vector and marks the corresponding element in
+     * lossflag array with 0 if X,Y are exceed the limits given by limits
+     * arrays
+     * limits has 4 elements: (MinX, MaxX, MinY, MaxY)
      */
     int c;
     double *r6;
     for (c=0; c<num_particles; c++) {
         r6 = r_in+c*6;
-        if (!atIsNaN(r6[0])) 
+        if (!atIsNaN(r6[0]))
         {
             /*  check if this particle is already marked as lost */
             checkiflostRectangularAp(r6, limits);
@@ -30,10 +31,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double *limits=atGetDoubleArray(ElemData,"Limits"); check_error();
-        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+	Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->limits=limits;
-    }
+	}
     AperturePass(r_in, Elem->limits, num_particles);
+
     return Elem;
 }
 
@@ -44,7 +46,7 @@ MODULE_DEF(AperturePass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);

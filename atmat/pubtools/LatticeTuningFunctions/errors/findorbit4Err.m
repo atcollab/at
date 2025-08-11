@@ -16,7 +16,7 @@ function orbit = findorbit4Err(RING, dP, indbpm, varargin)
 %  See also findorbit4 ApplyBPMErr bpm_matrices
 
 % Get 4x4 closed orbit
-orbit = findorbit4(RING, dP,indbpm, varargin{:});
+orbit = findorbit4(RING, dP,indbpm, varargin{:}, 'strict', -1);
 
 % Get transformation matrices for applying error on BPM readings
 [rel,tel,trand] = bpm_matrices(RING(indbpm));

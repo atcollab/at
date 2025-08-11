@@ -21,8 +21,9 @@ if is_6d
                 'For a better efficiency, handle the RF frequency beforehand,',...
                 'or to avoid this warning, use "setoption(''WarningDp6D'',false)"');
         end
-        [cavargs,~]=getoption(varargs,{'cavpts'});
-        ring2=atsetcavity(ring,'Frequency','nominal',dpargs{:},cavargs{:});
+        [~,varargs]=getoption(varargs,{'cavpts'});  % Discard and ignore cavpts
+        cavpts=atgetcells(ring,'Frequency');        % Scale all cavities
+        ring2=atsetcavity(ring,'Frequency','nominal',dpargs{:},'cavpts',cavpts);
         [varargout{1:nargout}]=func(ring2,varargs{:},'is_6d',is_6d);
     else
         [varargout{1:nargout}]=func(ring,varargs{:},'is_6d',is_6d);

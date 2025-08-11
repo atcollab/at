@@ -1,4 +1,4 @@
-/* RandomPass.c
+ /* RandomPass.c
    Accelerator Toolbox
 
    Test of random generators
@@ -7,6 +7,9 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atrandom.c"
+#ifdef MPI
+#include <mpi.h>
+#endif
 
 struct elem 
 {
@@ -18,23 +21,29 @@ static void RandomPass(double *r_in,
         pcg32_random_t* thread_rng,
         int num_particles)
 {	
-    double common_val = atrandn_r(common_rng, 0.0, 0.001);
+    double common_val;
+#ifdef MPI
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#else
+    int rank = 0;
+#endif /* MPI */
 
+    common_val = atrandn_r(common_rng, 0.0, 0.001);
     for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
         double *r6 = r_in+c*6;
-        double thread_val = atrandn_r(thread_rng, 0.0, 0.001);
-        r6[0] = thread_val;
+        r6[0] = atrandn_r(thread_rng, 0.0, 0.001);
         r6[2] = common_val;
-        r6[4] = 0.0;
-        r6[5] = 0.0;
+        r6[4] = 0.01*rank;
+        r6[5] = 0.01*c;
     }
 
+    common_val = atrandn_r(common_rng, 0.0, 0.001);
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none)                      \
     shared(r_in, num_particles, common_val, thread_rng)
     for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
         double *r6 = r_in+c*6;
-        double thread_val = atrandn_r(thread_rng, 0.0, 0.001);
-        r6[1] = thread_val;
+        r6[1] = atrandn_r(thread_rng, 0.0, 0.001);;
         r6[3] = common_val;
     }
 }
@@ -57,7 +66,7 @@ MODULE_DEF(TestRandomPass)        /* Dummy module initialisation */
 #if defined(MATLAB_MEX_FILE)
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if (nrhs == 2) {
+    if (nrhs >= 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);

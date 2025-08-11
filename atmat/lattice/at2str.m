@@ -80,6 +80,9 @@ switch atclass
     case 'RFCavity'
         create=@atrfcavity;
         [options,args]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber','Energy'});
+    case 'CrabCavity'
+        create=@atcrabcavity;
+        [options,args]=doptions(elem,create,{'Length','Voltages','Frequency','HarmNumber'});
     case 'RingParam'
         create=@atringparam;
         [options,args]=doptions(elem,create,{'Energy','Periodicity'});
