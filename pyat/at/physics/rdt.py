@@ -118,19 +118,15 @@ def _computedrivingterms(
         pym = py[mask_b23l]
         rdts["h11001"] = nperiods * sum(b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4)
         rdts["h00111"] = nperiods * sum(b2lm * betaym / 4 - b3lm * betaym * etaxm / 2)
+        # fmt: off
         rdts["h20001"] = (
-            1
-            / 2
-            * pf(2, 0)
+            1 / 2 * pf(2, 0)
             * sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) * pxm * pxm)
         )
         rdts["h00201"] = (
-            1
-            / 2
-            * pf(0, 2)
+            1 / 2 * pf(0, 2)
             * sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) * pym * pym)
         )
-        # fmt: off
         rdts["h10002"] = 1 / 2 * pf(1, 0 ) * sum(
             (b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm)
             * pxm
