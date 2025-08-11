@@ -140,13 +140,17 @@ def _computedrivingterms(
         rbetaxm = rbetax[mask_b3l]
         pxm = px[mask_b3l]
         pym = py[mask_b3l]
-        rdts["h21000"] = sum(b3lm * rbetaxm * betaxm / 8 * pxm * pf(1, 0))
-        rdts["h30000"] = sum(b3lm * rbetaxm * betaxm / 24 * pxm * pxm * pxm * pf(3, 0))
-        rdts["h10110"] = sum(-b3lm * rbetaxm * betaym / 4 * pxm * pf(1, 0))
-        rdts["h10020"] = sum(
-            -b3lm * rbetaxm * betaym / 8 * pxm * np.conj(pym * pym) * pf(1, -2)
+        rdts["h21000"] = 1 / 8 * pf(1, 0) * sum(b3lm * rbetaxm * betaxm * pxm)
+        rdts["h30000"] = (
+            1 / 24 * pf(3, 0) * sum(b3lm * rbetaxm * betaxm * pxm * pxm * pxm)
         )
-        rdts["h10200"] = sum(-b3lm * rbetaxm * betaym / 8 * pxm * pym * pym * pf(1, 2))
+        rdts["h10110"] = -1 / 4 * pf(1, 0) * sum(b3lm * rbetaxm * betaym * pxm)
+        rdts["h10020"] = (
+            -1 / 8 * pf(1, -2) * sum(b3lm * rbetaxm * betaym * pxm * np.conj(pym * pym))
+        )
+        rdts["h10200"] = (
+            -1 / 8 * pf(1, 2) * sum(b3lm * rbetaxm * betaym * pxm * pym * pym)
+        )
 
     if (RDTType.TUNESHIFT in rdttype) or (RDTType.ALL in rdttype):
         b4lm = b4l[mask_b4l]
