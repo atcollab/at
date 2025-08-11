@@ -193,25 +193,26 @@ def _computedrivingterms(
         rbetaxm = np.sqrt(betaxm)
         etaxm2 = etaxm * etaxm
         cpym = np.conj(pym)
-        rdts["h21001"] = sum(3.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pf(1, 0))
-        rdts["h30001"] = sum(
-            1.0 / 8 * b4lm * etaxm * rbetaxm * betaxm * pxm * pxm * pxm * pf(3, 0)
+        rdts["h21001"] = 3 / 8 * pf(1, 0) * sum(b4lm * etaxm * rbetaxm * betaxm * pxm)
+        rdts["h30001"] = (
+            1 / 8 * pf(3, 0) * sum(b4lm * etaxm * rbetaxm * betaxm * pxm * pxm * pxm)
         )
-        rdts["h10021"] = sum(
-            -3.0 / 8 * b4lm * etaxm * rbetaxm * betaym * pxm * cpym * cpym * pf(1, -2)
+        # fmt: off
+        rdts["h10021"] = (
+            -3 / 8 * pf(1, -2)
+            * sum(b4lm * etaxm * rbetaxm * betaym * pxm * cpym * cpym)
         )
-        rdts["h10111"] = sum(
-            -3.0 / 4 * b4lm * etaxm * rbetaxm * betaym * pxm * pf(1, 0)
+        # fmt: on
+        rdts["h10111"] = -3 / 4 * pf(1, 0) * sum(b4lm * etaxm * rbetaxm * betaym * pxm)
+        rdts["h10201"] = (
+            -3 / 8 * pf(1, 2) * sum(b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym)
         )
-        rdts["h10201"] = sum(
-            -3.0 / 8 * b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym * pf(1, 2)
-        )
-        rdts["h11002"] = sum(3.0 / 4 * b4lm * etaxm2 * betaxm * nperiods)
-        rdts["h20002"] = sum(3.0 / 8 * b4lm * etaxm2 * betaxm * pxm * pxm * pf(2, 0))
-        rdts["h00112"] = sum(-3.0 / 4 * b4lm * etaxm2 * betaym * nperiods)
-        rdts["h00202"] = sum(-3.0 / 8 * b4lm * etaxm2 * betaym * pym * pym * pf(0, 2))
-        rdts["h10003"] = sum(1.0 / 2 * b4lm * etaxm2 * etaxm * rbetaxm * pxm * pf(1, 0))
-        rdts["h00004"] = sum(1.0 / 4 * b4lm * etaxm2 * etaxm2 * nperiods)
+        rdts["h11002"] = 3 / 4 * nperiods * sum(b4lm * etaxm2 * betaxm)
+        rdts["h20002"] = 3 / 8 * pf(2, 0) * sum(b4lm * etaxm2 * betaxm * pxm * pxm)
+        rdts["h00112"] = -3 / 4 * nperiods * sum(b4lm * etaxm2 * betaym)
+        rdts["h00202"] = -3 / 8 * pf(0, 2) * sum(b4lm * etaxm2 * betaym * pym * pym)
+        rdts["h10003"] = 1 / 2 * pf(1, 0) * sum(b4lm * etaxm2 * etaxm * rbetaxm * pxm)
+        rdts["h00004"] = 1 / 4 * nperiods * sum(b4lm * etaxm2 * etaxm2)
 
     if second_order:
         assert nperiods == 1, "Second order available only for nperiods=1"
