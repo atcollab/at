@@ -41,7 +41,7 @@ static double get_kick(double *r6, double *ktable)
     /*cubic interpolation*/
     /*splin2(GLOBAL_y_map,GLOBAL_x_map,GLOBAL_xkick,GLOBAL_xkick2,GLOBAL_n,GLOBAL_nx,y,x,&f);*/
     
-    /*biliniar interpolation*/
+    /*bilinear interpolation*/
     /* Transpose coordinates because the kick-table is FORTRAN-ordered */
     linint(GLOBAL_y_map, GLOBAL_x_map, ktable, GLOBAL_ny_map, GLOBAL_nx_map, r6[2], r6[0], &f);
     return f;
