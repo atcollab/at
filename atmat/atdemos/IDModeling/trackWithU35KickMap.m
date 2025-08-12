@@ -7,9 +7,9 @@ xtable=U35elem.xtable;
 ytable=U35elem.ytable;
 xkick2=U35elem.xkick;
 ykick2=U35elem.ykick;
-surf(xtable,ytable,xkick2)
+surf(xtable,ytable,xkick2')
 figure
-surf(xtable,ytable,ykick2)
+surf(xtable,ytable,ykick2')
 
 %add kick map to lattice
 esrf_U35 = add_ID(r,U35elem);
