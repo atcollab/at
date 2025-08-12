@@ -69,9 +69,10 @@ switch isIDfileformat
         y = D.ytable;
         xkick1 = factor1 * D.xkick1;
         ykick1 = factor1 * D.ykick1;
-        xkick = factor2 * D.xkick2;
-        ykick = factor2 * D.ykick2;
-        L  = D.Length;
+        xkick = factor2 * D.xkick;
+        ykick = factor2 * D.ykick;
+        if isfield(D,'Length'), L  = D.Length; end
+        if isfield(D,'Len'), L  = D.Len; end
 
     case {3}% data from text file
         % check the data separator, either all tabs or all spaces
