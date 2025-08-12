@@ -4,8 +4,6 @@ __all__ = ["RDTObservable"]
 
 from functools import partial
 
-import numpy as np
-
 from .observables import Need, ElementObservable
 from ..lattice import Refpts
 from ..physics import RDTType
@@ -29,6 +27,20 @@ RDT_names = {
         "h00400",
     ),
     RDTType.TUNESHIFT: ("dnux_dJx", "dnux_dJy", "dnuy_dJy"),
+    RDTType.CHROMATIC2: (
+        "h21001",
+        "h30001",
+        "h10021",
+        "h10111",
+        "h10201",
+        "h11002",
+        "h20002",
+        "h00112",
+        "h00202",
+        "h10003",
+        "h00103",
+        "h00004",
+    ),
 }
 RDT_code = {nm: code for code, names in RDT_names.items() for nm in names}
 
@@ -116,6 +128,19 @@ class RDTObservable(ElementObservable):
         **dnux_dJx**        at.RDTType.DETUNING
         **dnux_dJy**
         **dnuy_dJy**
+
+        **h21001**          at.RDTType.CHROMATIC2
+        **h30001**
+        **h10021**
+        **h10111**
+        **h10201**
+        **h11002**
+        **h20002**
+        **h00112**
+        **h00202**
+        **h10003**
+        **h00103**
+        **h00004**
 
         Examples:
 
