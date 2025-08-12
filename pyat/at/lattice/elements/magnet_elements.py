@@ -505,7 +505,7 @@ class Wiggler(Radiative, LongElement):
             length:         total length of the wiggler
             wiggle_period:  length must be a multiple of this
             b_max:          peak wiggler field [Tesla]
-            energy:         beam energy [eV]
+            energy:         kept for backwards compatibility but always ignored
             Nstep:          number of integration steps.
             Nmeth:          symplectic integration order: 2 or 4
             Bx:             harmonics for horizontal wiggler: (6, nHharm)
