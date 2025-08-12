@@ -70,13 +70,14 @@ class InsertionDeviceKickMap(Element):
         """
         Create an Insertion Device Kick Map from a Radia field map file.
 
-        Args:
-            Nslice:         number of slices in integrator
-            Filename_in:    input filename
-            Energy:         particle energy in GeV
+        Arguments:
+            Nslice: number of slices in integrator.
+            Filename_in: input filename.
+            Energy: particle energy in GeV.
+
         Returns:
-            KickMap element
-            Default PassMethod: ``IdTablePass``
+            A tuple.
+            Element parameters, default PassMethod: ``IdTablePass``.
         """
 
         # 2023jul04 changing class to save in .mat and .m
@@ -87,11 +88,14 @@ class InsertionDeviceKickMap(Element):
         def read_radia_field_map(file_in_name: str) -> tuple:
             """
             Read a RadiaField map and return.
+
             Arguments:
                 file_in_name: the file name.
+
             Returns:
                 Tuple with file tables and axes.
-            Raises
+
+            Raises:
                 ValueError: if the number of blocks in less than 2 or equal to 3.
 
             A File, where :
