@@ -1198,7 +1198,6 @@ def linopt(
 
 
 # noinspection PyPep8Naming
-@check_6d(False)
 def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
     r"""Linear analysis of a lattice with average values
 

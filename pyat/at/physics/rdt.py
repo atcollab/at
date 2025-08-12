@@ -27,6 +27,7 @@ class RDTType(Enum):
     #: Amplitude detuning coefficients
     #: optionally includes the second order contribution of sextupoles
     TUNESHIFT = 6
+    CHROMATIC2 = 7  #:Chromatic RDTs from sextupoles
 
 
 def _get_polynom(elem, attr, index):
@@ -93,8 +94,8 @@ def _computedrivingterms(
         betaym = betay[mask_b2l]
         pxm = px[mask_b2l]
         pym = py[mask_b2l]
-        rdts["h20000"] = sum((b2lm / 8) * betaxm * pxm * pxm * pf(2, 0))
-        rdts["h00200"] = -sum((b2lm / 8) * betaym * pym * pym * pf(0, 2))
+        rdts["h20000"] = 1 / 8 * pf(2, 0) * sum(b2lm * betaxm * pxm * pxm)
+        rdts["h00200"] = -1 / 8 * pf(0, 2) * sum(b2lm * betaym * pym * pym)
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
         a2lm = a2l[mask_a2l]
@@ -102,8 +103,8 @@ def _computedrivingterms(
         rbetaym = rbetay[mask_a2l]
         pxm = px[mask_a2l]
         pym = py[mask_a2l]
-        rdts["h10010"] = sum((a2lm / 4) * rbetaxm * rbetaym * pxm / pym * pf(1, -1))
-        rdts["h10100"] = sum((a2lm / 4) * rbetaxm * rbetaym * pxm * pym * pf(1, 1))
+        rdts["h10010"] = 1 / 4 * pf(1, -1) * sum(a2lm * rbetaxm * rbetaym * pxm / pym)
+        rdts["h10100"] = 1 / 4 * pf(1, 1) * sum(a2lm * rbetaxm * rbetaym * pxm * pym)
 
     if (RDTType.CHROMATIC in rdttype) or (RDTType.ALL in rdttype):
         mask_b23l = mask_b2l | mask_b3l
@@ -115,18 +116,20 @@ def _computedrivingterms(
         etaxm = etax[mask_b23l]
         pxm = px[mask_b23l]
         pym = py[mask_b23l]
-        rdts["h11001"] = sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) * nperiods)
-        rdts["h00111"] = sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) * nperiods)
-        rdts["h20001"] = sum(
-            (b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) / 2 * pxm * pxm * pf(2, 0)
-        )
-        rdts["h00201"] = sum(
-            (b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) / 2 * pym * pym * pf(0, 2)
-        )
+        rdts["h11001"] = nperiods * sum(b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4)
+        rdts["h00111"] = nperiods * sum(b2lm * betaym / 4 - b3lm * betaym * etaxm / 2)
         # fmt: off
-        rdts["h10002"] = sum(
+        rdts["h20001"] = (
+            1 / 2 * pf(2, 0)
+            * sum((b3lm * betaxm * etaxm / 2 - b2lm * betaxm / 4) * pxm * pxm)
+        )
+        rdts["h00201"] = (
+            1 / 2 * pf(0, 2)
+            * sum((b2lm * betaym / 4 - b3lm * betaym * etaxm / 2) * pym * pym)
+        )
+        rdts["h10002"] = 1 / 2 * pf(1, 0 ) * sum(
             (b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm)
-            / 2 * pxm * pf(1, 0)
+            * pxm
         )
         # fmt: on
 
@@ -137,21 +140,25 @@ def _computedrivingterms(
         rbetaxm = rbetax[mask_b3l]
         pxm = px[mask_b3l]
         pym = py[mask_b3l]
-        rdts["h21000"] = sum(b3lm * rbetaxm * betaxm / 8 * pxm * pf(1, 0))
-        rdts["h30000"] = sum(b3lm * rbetaxm * betaxm / 24 * pxm * pxm * pxm * pf(3, 0))
-        rdts["h10110"] = sum(-b3lm * rbetaxm * betaym / 4 * pxm * pf(1, 0))
-        rdts["h10020"] = sum(
-            -b3lm * rbetaxm * betaym / 8 * pxm * np.conj(pym * pym) * pf(1, -2)
+        rdts["h21000"] = 1 / 8 * pf(1, 0) * sum(b3lm * rbetaxm * betaxm * pxm)
+        rdts["h30000"] = (
+            1 / 24 * pf(3, 0) * sum(b3lm * rbetaxm * betaxm * pxm * pxm * pxm)
         )
-        rdts["h10200"] = sum(-b3lm * rbetaxm * betaym / 8 * pxm * pym * pym * pf(1, 2))
+        rdts["h10110"] = -1 / 4 * pf(1, 0) * sum(b3lm * rbetaxm * betaym * pxm)
+        rdts["h10020"] = (
+            -1 / 8 * pf(1, -2) * sum(b3lm * rbetaxm * betaym * pxm * np.conj(pym * pym))
+        )
+        rdts["h10200"] = (
+            -1 / 8 * pf(1, 2) * sum(b3lm * rbetaxm * betaym * pxm * pym * pym)
+        )
 
     if (RDTType.TUNESHIFT in rdttype) or (RDTType.ALL in rdttype):
         b4lm = b4l[mask_b4l]
         betaxm = betax[mask_b4l]
         betaym = betay[mask_b4l]
-        rdts["dnux_dJx"] = sum(3 * b4lm * betaxm * betaxm / (8 * np.pi) * nperiods)
-        rdts["dnux_dJy"] = sum(-3 * b4lm * betaxm * betaym / (4 * np.pi) * nperiods)
-        rdts["dnuy_dJy"] = sum(3 * b4lm * betaym * betaym / (8 * np.pi) * nperiods)
+        rdts["dnux_dJx"] = 3 / (8 * np.pi) * nperiods * sum(b4lm * betaxm * betaxm)
+        rdts["dnux_dJy"] = -3 / (4 * np.pi) * nperiods * sum(b4lm * betaxm * betaym)
+        rdts["dnuy_dJy"] = 3 / (8 * np.pi) * nperiods * sum(b4lm * betaym * betaym)
 
     if (RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
         b4lm = b4l[mask_b4l]
@@ -159,28 +166,59 @@ def _computedrivingterms(
         betaym = betay[mask_b4l]
         pxm = px[mask_b4l]
         pym = py[mask_b4l]
-        rdts["h22000"] = sum(3 * b4lm * betaxm * betaxm / 32 * nperiods)
-        rdts["h11110"] = sum(-3 * b4lm * betaxm * betaym / 8 * nperiods)
-        rdts["h00220"] = sum(3 * b4lm * betaym * betaym / 32 * nperiods)
-        rdts["h31000"] = sum(b4lm * betaxm * betaxm / 16 * pxm * pxm * pf(2, 0))
-        rdts["h40000"] = sum(
-            b4lm * betaxm * betaxm / 64 * pxm * pxm * pxm * pxm * pf(4, 0)
+        rdts["h22000"] = 3 / 32 * nperiods * sum(b4lm * betaxm * betaxm)
+        rdts["h11110"] = -3 / 8 * nperiods * sum(b4lm * betaxm * betaym)
+        rdts["h00220"] = 3 / 32 * nperiods * sum(b4lm * betaym * betaym)
+        rdts["h31000"] = 1 / 16 * pf(2, 0) * sum(b4lm * betaxm * betaxm * pxm * pxm)
+        rdts["h40000"] = (
+            1 / 64 * pf(4, 0) * sum(b4lm * betaxm * betaxm * pxm * pxm * pxm * pxm)
         )
-        rdts["h20110"] = sum(-3 * b4lm * betaxm * betaym / 16 * pxm * pxm * pf(2, 0))
-        rdts["h11200"] = sum(-3 * b4lm * betaxm * betaym / 16 * pym * pym * pf(0, 2))
+        rdts["h20110"] = -3 / 16 * pf(2, 0) * sum(b4lm * betaxm * betaym * pxm * pxm)
+        rdts["h11200"] = -3 / 16 * pf(0, 2) * sum(b4lm * betaxm * betaym * pym * pym)
         # fmt: off
-        rdts["h20020"] = sum(
-            -3 * b4lm * betaxm * betaym / 32 * pxm * pxm
-            * np.conj(pym * pym) * pf(2, -2)
+        rdts["h20020"] = (
+            -3 / 32 * pf(2, -2)
+            * sum(b4lm * betaxm * betaym * pxm * pxm * np.conj(pym * pym))
         )
         # fmt: on
-        rdts["h20200"] = sum(
-            -3 * b4lm * betaxm * betaym / 32 * pxm * pxm * pym * pym * pf(2, 2)
+        rdts["h20200"] = (
+            -3 / 32 * pf(2, 2) * sum(b4lm * betaxm * betaym * pxm * pxm * pym * pym)
         )
-        rdts["h00310"] = sum(b4lm * betaym * betaym / 16 * pym * pym * pf(0, 2))
-        rdts["h00400"] = sum(
-            b4lm * betaym * betaym / 64 * pym * pym * pym * pym * pf(0, 4)
+        rdts["h00310"] = 1 / 16 * pf(0, 2) * sum(b4lm * betaym * betaym * pym * pym)
+        rdts["h00400"] = (
+            1 / 64 * pf(0, 4) * sum(b4lm * betaym * betaym * pym * pym * pym * pym)
         )
+
+    if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
+        b4lm = b4l[mask_b4l]
+        betaxm = betax[mask_b4l]
+        betaym = betay[mask_b4l]
+        etaxm = etax[mask_b4l]
+        pxm = px[mask_b4l]
+        pym = py[mask_b4l]
+        rbetaxm = np.sqrt(betaxm)
+        etaxm2 = etaxm * etaxm
+        cpym = np.conj(pym)
+        rdts["h21001"] = 3 / 8 * pf(1, 0) * sum(b4lm * etaxm * rbetaxm * betaxm * pxm)
+        rdts["h30001"] = (
+            1 / 8 * pf(3, 0) * sum(b4lm * etaxm * rbetaxm * betaxm * pxm * pxm * pxm)
+        )
+        # fmt: off
+        rdts["h10021"] = (
+            -3 / 8 * pf(1, -2)
+            * sum(b4lm * etaxm * rbetaxm * betaym * pxm * cpym * cpym)
+        )
+        # fmt: on
+        rdts["h10111"] = -3 / 4 * pf(1, 0) * sum(b4lm * etaxm * rbetaxm * betaym * pxm)
+        rdts["h10201"] = (
+            -3 / 8 * pf(1, 2) * sum(b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym)
+        )
+        rdts["h11002"] = 3 / 4 * nperiods * sum(b4lm * etaxm2 * betaxm)
+        rdts["h20002"] = 3 / 8 * pf(2, 0) * sum(b4lm * etaxm2 * betaxm * pxm * pxm)
+        rdts["h00112"] = -3 / 4 * nperiods * sum(b4lm * etaxm2 * betaym)
+        rdts["h00202"] = -3 / 8 * pf(0, 2) * sum(b4lm * etaxm2 * betaym * pym * pym)
+        rdts["h10003"] = 1 / 2 * pf(1, 0) * sum(b4lm * etaxm2 * etaxm * rbetaxm * pxm)
+        rdts["h00004"] = 1 / 4 * nperiods * sum(b4lm * etaxm2 * etaxm2)
 
     if second_order:
         assert nperiods == 1, "Second order available only for nperiods=1"
@@ -281,6 +319,144 @@ def _computedrivingterms(
             )
             rdts2["h00400"] += (1.0 / 64) * np.sum([
                 rbxy[i] * betaym * pxm[i] * cpxm * pym2[i] * pym2
+                for i in range(nelem)]
+            )
+            # fmt: on
+
+        if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
+            mask_b23l = mask_b2l | mask_b3l
+            nelem = sum(mask_b23l)
+            b2lm = b2l[mask_b23l]
+            b3lm = b3l[mask_b23l]
+            betxm = betax[mask_b23l]
+            rbetxm = rbetax[mask_b23l]
+            betym = betay[mask_b23l]
+            etaxm = etax[mask_b23l]
+            pxm = px[mask_b23l]
+            pym = py[mask_b23l]
+            betxm3o2 = betxm * rbetxm
+            pxm2 = pxm * pxm
+            pxm3 = pxm2 * pxm
+            cpxm = np.conj(pxm)
+            cpxm2 = np.conj(pxm2)
+            pym2 = pym * pym
+            cpym = np.conj(pym)
+            cpym2 = np.conj(pym2)
+            rdts2.update(
+                {
+                    "h21001": 0.0,
+                    "h30001": 0.0,
+                    "h10021": 0.0,
+                    "h10111": 0.0,
+                    "h10201": 0.0,
+                    "h11002": 0.0,
+                    "h20002": 0.0,
+                    "h00112": 0.0,
+                    "h00202": 0.0,
+                    "h10003": 0.0,
+                    "h00004": 0.0,
+                }
+            )
+            # The variable imag_and_sign multiplies by -1 the expression in
+            # ANL/APS/LS-330 March 10, 2012. Chun-xi Wang. Eq (46)
+            # in order to follow AT sign convention.
+            imag_and_sign = 1j * (np.tri(nelem, nelem, -1) - 1 + np.tri(nelem))
+            b2b2lm = np.array([imag_and_sign[i] * b2lm[i] * b2lm for i in range(nelem)])
+            b3b2lm = np.array([imag_and_sign[i] * b3lm[i] * b2lm for i in range(nelem)])
+            b2b3lm = np.array([imag_and_sign[i] * b2lm[i] * b3lm for i in range(nelem)])
+            b3b3lm = np.array([imag_and_sign[i] * b3lm[i] * b3lm for i in range(nelem)])
+            bx3o2bx = np.array([betxm3o2[i] * betxm for i in range(nelem)])
+            bxbx = np.array([betxm[i] * betxm for i in range(nelem)])
+            byby = np.array([betym[i] * betym for i in range(nelem)])
+            bxbx3o2etax = np.array(
+                [betxm[i] * betxm3o2 * etaxm[i] for i in range(nelem)]
+            )
+            rbxbxby = np.array([rbetxm[i] * betxm * betym[i] for i in range(nelem)])
+            rbxbyby = np.array([rbetxm[i] * betym[i] * betym for i in range(nelem)])
+            bxrbxbyetax = np.array(
+                [betxm[i] * rbetxm * betym * etaxm[i] for i in range(nelem)]
+            )
+            rbxbybyetax = np.array(
+                [rbetxm * betym[i] * betym * etaxm[i] for i in range(nelem)]
+            )
+            rbxbx3o2etax = np.array(
+                [rbetxm[i] * betxm3o2 * etaxm[i] for i in range(nelem)]
+            )
+            rbxrbxbyetax = np.array(
+                [rbetxm[i] * rbetxm * betym * etaxm[i] for i in range(nelem)]
+            )
+            bxrbxetaxetax = np.array(
+                [betxm[i] * rbetxm * etaxm[i] * etaxm for i in range(nelem)]
+            )
+            rbxbxetax = np.array([rbetxm[i] * betxm * etaxm[i] for i in range(nelem)])
+            rbxrbxetaxetax = np.array(
+                [rbetxm[i] * rbetxm * etaxm[i] * etaxm for i in range(nelem)]
+            )
+
+            # fmt: off
+            rdts2["h21001"] += (1.0 / 32) * np.sum([
+                - 1 * b3b2lm[i] * bx3o2bx[i] * (pxm[i] + pxm3[i] * cpxm2 - 2 * cpxm[i] * pxm2)
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm - 2 * pxm2[i] * cpxm + cpxm2[i] * pxm3)
+                for i in range(nelem)]
+            )
+            rdts2["h30001"] += (1.0 / 32) * np.sum([
+                - 1 * b3b2lm[i] * bx3o2bx[i] * (pxm3[i] - pxm[i] * pxm2)
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm3[i] - pxm2[i] * pxm)
+                for i in range(nelem)]
+            )
+            rdts2["h10021"] += (1.0 / 32) * np.sum([
+                + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * cpym2[i] - cpxm[i] * pxm2 * cpym2[i])
+                + 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] - pxm[i] * cpym2)
+                + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * cpym2 - pxm2[i] * cpxm * cpym2)
+                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym[i] - pxm * cpym2)
+                for i in range(nelem)]
+            )
+            rdts2["h10111"] += (1.0 / 16) * np.sum([
+                + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] - cpxm[i] * pxm2)
+                + 1 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] * pym2 - pxm[i] * pym2[i] * cpym2)
+                + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm - pxm2[i] * cpxm)
+                - 2 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym2[i] * pym2 - pxm * pym2[i] * cpym)
+                for i in range(nelem)]
+            )
+            rdts2["h10201"] += (1.0 / 32) * np.sum([
+                + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * pym2[i] - cpxm[i] * pxm2 * pym2[i])
+                - 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * pym2[i] - pxm[i] * pym2)
+                + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * pym2 - pxm2[i] * cpxm * pym2)
+                + 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * pym2[i] - pxm * pym2)
+                for i in range(nelem)]
+            )
+            rdts2["h11002"] += (1.0 / 16) * np.sum([
+                + 1 * bxbx[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm)
+                                    * (pxm2[i] * cpxm2) + 2 * b3b2lm[i] * etaxm[i] * (cpxm2[i] * pxm2))
+                + 2 * rbxbx3o2etax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm - cpxm[i] * pxm)
+                for i in range(nelem)]
+            )
+            rdts2["h20002"] += (1.0 / 16) * np.sum([
+                + bxbx[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm) * pxm2[i]
+                               + 2 * b3b2lm[i] * etaxm[i] * pxm2)
+                + rbxbx3o2etax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * pxm - cpxm[i] * pxm3)
+                    for i in range(nelem)]
+            )
+            rdts2["h00112"] += (1.0 / 16) * np.sum([
+                + 1 * byby[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm)
+                                  * (pym2[i] - cpym2) + 2 * b3b2lm[i] * etaxm[i] * (cpym2[i] * pym2))
+                - 2 * rbxrbxbyetax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm - cpxm[i] * pxm)
+                for i in range(nelem)]
+            )
+            rdts2["h00202"] += (1.0 / 16) * np.sum([
+                + byby[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm) * pym2[i]
+                                + 2 * b3b2lm[i] * etaxm[i] * pym2)
+                - rbxrbxbyetax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm * pym2 - cpxm[i] * pxm * pym2)
+                for i in range(nelem)]
+            )
+            rdts2["h10003"] += (1.0 / 8) * np.sum([
+                + 2 * b3b2lm[i] * bxrbxetaxetax[i] * (pxm - pxm2[i] * cpxm)
+                + 1 * rbxbxetax[i] * (b2b2lm[i] - b3b2lm[i] * etaxm[i] + 2 * b3b3lm[i] * etaxm[i] * etaxm) * (pxm[i] - cpxm[i] * pxm2)
+                for i in range(nelem)]
+            )
+            rdts2["h00004"] += (1.0 / 4) * np.sum([
+                + rbxrbxetaxetax[i] * ((b2b2lm[i] - b3b2lm[i] * etaxm[i] + b3b3lm[i] * etaxm[i] * etaxm) * pxm[i] * cpxm
+                                     + b3b2lm[i] * etaxm[i] * cpxm[i] * pxm)
                 for i in range(nelem)]
             )
             # fmt: on
@@ -427,6 +603,8 @@ def get_rdts(
           * :py:obj:`RDTType.COUPLING`: Linear coupling RDTs from skew quadrupoles
           * :py:obj:`RDTType.CHROMATIC`: Chromatic RDTs from sextupoles and normal
             quadrupoles
+          * :py:obj:`RDTType.CHROMATIC2`: Chromatic RDTs from octupoles. The second
+            order  contribution of sextupoles is added when *second_order* is True
           * :py:obj:`RDTType.GEOMETRIC1`: Geometric RDTs from sextupoles
           * :py:obj:`RDTType.GEOMETRIC2`: Geometric RDTs from octupoles. The second
             order contribution of sextupoles is added when *second_order* is True
@@ -463,6 +641,10 @@ def get_rdts(
     for :py:obj:`~RDTType.GEOMETRIC2`:
         `h22000`, `h11110`, `h00220`, `h31000`, `h40000`, `h20110`
         `h11200`, `h20020`, `h20200`, `h00310`, `h00400`
+
+    for :py:obj:`~RDTType.CHROMATIC2`:
+        `h21001`, `h30001`, `h10021`, `h10111`, `h10201`, `h11002`
+        `h20002`, `h00112`, `h00202`, `h10003`, `h00103`, `h00004`
 
     for :py:obj:`~RDTType.TUNESHIFT`:
         `dnux_dJx`, `dnux_dJy`, `dnuy_dJy`
@@ -553,9 +735,9 @@ def get_rdts(
             rdttot[k] += np.array(val2, dtype=complex)
     rdts2["refpts"] = rdts["refpts"]
     rdttot["refpts"] = rdts["refpts"]
-    ardts = np.rec.fromarrays(rdts.values(), names=list(keylist))
-    ardts2 = np.rec.fromarrays(rdts2.values(), names=list(keylist))
-    ardttot = np.rec.fromarrays(rdttot.values(), names=list(keylist))
+    ardts = np.rec.fromarrays(rdts.values(), names=list(rdts.keys()))
+    ardts2 = np.rec.fromarrays(rdts2.values(), names=list(rdts2.keys()))
+    ardttot = np.rec.fromarrays(rdttot.values(), names=list(rdttot.keys()))
     return ardts, ardts2, ardttot
 
 
