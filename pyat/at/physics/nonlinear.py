@@ -125,11 +125,7 @@ def detuning(
         q_dy (ndarray): qx, qy tunes as a function of y amplitude (npoints, 2)
                         Only the fractional parts are returned
     """
-    if ring.is_6d:
-        ring4d = ring.copy()
-        ring4d.disable_6d()
-    else:
-        ring4d = ring
+    ring4d = ring.disable_6d(copy=True)
 
     lindata0, *_ = linopt4(ring4d)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
