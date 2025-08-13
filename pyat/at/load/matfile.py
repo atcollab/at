@@ -242,9 +242,9 @@ def _element_from_m(line: str) -> Element:
         """Build numpy array for Matlab array syntax"""
 
         def arraystr(arr):
-            lns = arr.split(";")
+            lns = arr.replace('[','').replace(']','').split(";")
             rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
-            return f"{', '.join(rr)}"
+            return f"[{', '.join(rr)}]"
 
         return eval(f"array({arraystr(mat_arr)})")
 
