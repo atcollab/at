@@ -8,7 +8,7 @@ from scipy.special import factorial
 from ..lattice import Element, Lattice
 from ..tracking import internal_lpass
 from .orbit import Orbit, find_orbit
-from .linear import get_tune, get_chrom, linopt6
+from .linear import get_tune, get_chrom, linopt6, linopt4
 from .harmonic_analysis import get_tunes_harmonic
 
 __all__ = ["detuning", "chromaticity", "gen_detuning_elem", "tunes_vs_amp"]
@@ -93,7 +93,9 @@ def detuning(
     This function uses :py:func:`tunes_vs_amp` to compute the tunes for
     the specified amplitudes. Then it fits this data and returns
     the detuning coefficiant dQx/Jx, dQy/Jx, dQx/Jy, dQy/Jy and the
-    qx, qy arrays versus x, y arrays
+    qx, qy arrays versus x, y arrays.
+
+    Tracking is done in 4D.
 
     Parameters:
         ring:       Lattice description
@@ -121,7 +123,13 @@ def detuning(
         q_dy (ndarray): qx, qy tunes as a function of y amplitude (npoints, 2)
                         Only the fractional parts are returned
     """
-    lindata0, _, _ = linopt6(ring)
+    if ring.is_6d:
+        ring4d = ring.copy()
+        ring4d.disable_6d()
+    else:
+        ring4d = ring
+
+    lindata0, _, _ = linopt4(ring4d)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
     x = np.linspace(-xm, xm, npoints)
@@ -129,10 +137,10 @@ def detuning(
     x2 = x * x
     y2 = y * y
 
-    q_dx = tunes_vs_amp(ring, amp=x, dim=0, nturns=nturns, **kwargs)
-    q_dy = tunes_vs_amp(ring, amp=y, dim=2, nturns=nturns, **kwargs)
-    q_dx, _ = np.modf(q_dx * ring.periodicity)
-    q_dy, _ = np.modf(q_dy * ring.periodicity)
+    q_dx = tunes_vs_amp(ring4d, amp=x, dim=0, nturns=nturns, **kwargs)
+    q_dy = tunes_vs_amp(ring4d, amp=y, dim=2, nturns=nturns, **kwargs)
+    q_dx, _ = np.modf(q_dx * ring4d.periodicity)
+    q_dy, _ = np.modf(q_dy * ring4d.periodicity)
 
     idx = np.isfinite(q_dx[:, 0]) & np.isfinite(q_dx[:, 1])
     idy = np.isfinite(q_dy[:, 0]) & np.isfinite(q_dy[:, 1])
