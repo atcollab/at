@@ -27,7 +27,9 @@ class RDTType(Enum):
     #: Amplitude detuning coefficients
     #: optionally includes the second order contribution of sextupoles
     TUNESHIFT = 6
-    CHROMATIC2 = 7  #:Chromatic RDTs from sextupoles
+    #: Chromatic RDTs from octupoles
+    #: optionally includes the second order contribution of sextupoles
+    CHROMATIC2 = 7
 
 
 def _get_polynom(elem, attr, index):
@@ -644,7 +646,7 @@ def get_rdts(
 
     for :py:obj:`~RDTType.CHROMATIC2`:
         `h21001`, `h30001`, `h10021`, `h10111`, `h10201`, `h11002`
-        `h20002`, `h00112`, `h00202`, `h10003`, `h00103`, `h00004`
+        `h20002`, `h00112`, `h00202`, `h10003`, `h00004`
 
     for :py:obj:`~RDTType.TUNESHIFT`:
         `dnux_dJx`, `dnux_dJy`, `dnuy_dJy`
