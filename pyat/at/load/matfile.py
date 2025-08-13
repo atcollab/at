@@ -6,6 +6,7 @@ from __future__ import annotations
 
 __all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
 
+import ast
 import os
 import sys
 from collections.abc import Generator, Sequence
@@ -252,14 +253,30 @@ def _element_from_m(line: str) -> Element:
 
         return dict(pairs(iter(mat_struct)))
 
-    def makearray(mat_arr):
-        """Build numpy array for Matlab array syntax"""
+    def makearray(mat_arr: str) -> np.ndarray:
+        """Build numpy array for Matlab array syntax.
 
-        def arraystr(arr):
+        Arguments:
+            mat_arr: matlab style array.
+
+        Returns:
+            numpy style ndarray.
+        """
+
+        def arraystr(arr: str) -> str:
+            """Recursive ndarray to string.
+
+            Arguments:
+                arr: matlab [...;...], or numpy [[...];[...]] ndarray repr.
+
+            Returns:
+                1D array formatted as a comma separated string inside [ ].
+            """
             lns = arr.replace("[", "").replace("]", "").split(";")
-            rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
-            return f"[{', '.join(rr)}]"
+            _rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
+            return f"[{', '.join(_rr)}]"
 
+        #return ast.literal_eval(f"array({arraystr(mat_arr)})")
         return eval(f"array({arraystr(mat_arr)})")
 
     def convert(value):
