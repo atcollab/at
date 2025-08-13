@@ -16,16 +16,30 @@ from warnings import warn
 
 import numpy as np
 import scipy.io
+
 # imports necessary in 'globals()' for 'eval'
 from numpy import array
 from numpy import nan as NaN  # noqa: F401
 from numpy import uint8
 
-from ..lattice import (AtError, AtWarning, Element, Filter, Lattice, Particle,
-                       elements, params_filter)
+from ..lattice import (
+    AtError,
+    AtWarning,
+    Element,
+    Filter,
+    Lattice,
+    Particle,
+    elements,
+    params_filter,
+)
 from .allfiles import register_format
-from .utils import (_CLASS_MAP, RingParam, _drop_attrs, keep_elements,
-                    split_ignoring_parentheses)
+from .utils import (
+    _CLASS_MAP,
+    RingParam,
+    _drop_attrs,
+    keep_elements,
+    split_ignoring_parentheses,
+)
 
 # Translation of RingParam attributes
 _m2p = {
@@ -242,7 +256,7 @@ def _element_from_m(line: str) -> Element:
         """Build numpy array for Matlab array syntax"""
 
         def arraystr(arr):
-            lns = arr.replace('[','').replace(']','').split(";")
+            lns = arr.replace("[", "").replace("]", "").split(";")
             rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
             return f"[{', '.join(rr)}]"
 
