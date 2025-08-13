@@ -16,7 +16,7 @@ __all__ = [
 
 import warnings
 from collections.abc import Generator
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 
@@ -192,6 +192,50 @@ class ThinMultipole(Element):
     def H(self, strength):
         self.PolynomB[2] = strength
 
+        # noinspection PyPep8Naming
+    @property
+    def O(self) -> float:
+        """Octupolar strength [mˆ-4]"""
+        arr = self.PolynomB
+        return 0.0 if len(arr) < 4 else float(arr[3])
+
+    # noinspection PyPep8Naming
+    @O.setter
+    def O(self, strength):
+        self.PolynomB[3] = strength
+
+    def _get_order(self):
+        order = getattr(self, 'DefaultOrder', None)
+        if order is None:
+            msg = (f"Default Order not defined for class "
+                   f"{self.__class__.__name__}, please access the strength "
+                   f"with PolynomA/B or use predefined magnet class")
+            raise AtError(msg)
+        return order
+
+    @property
+    def Strength(self): 
+        return self.PolynomB[self._get_order()]
+    
+    @Strength.setter
+    def Strength(self, strength):
+        self.PolynomB[self._get_order()] = strength
+
+    @property
+    def IntegratedStrength(self):
+        k = self.PolynomB[self._get_order()]
+        l = getattr(self,'Length', 1.0)
+        return k*l if l>0 else k
+    
+    @IntegratedStrength.setter
+    def IntegratedStrength(self, strength):
+        l = getattr(self,'Length', 1.0)
+        if l>0:
+            value = strength/l
+        else:
+            value = strength   
+        self.PolynomB[self._get_order()] = value  
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
@@ -231,7 +275,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             return True
         else:
             return False
-
+        
 
 class Dipole(Radiative, Multipole):
     """Dipole element"""
@@ -436,11 +480,37 @@ class Sextupole(Multipole):
 
 
 class Octupole(Multipole):
-    """Octupole element, with no changes from multipole at present"""
+    """Octupole element"""
 
-    _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["O"]
+    _stacklevel = 7  # Stacklevel for warnings
 
     DefaultOrder = 3
+
+    def __init__(self, family_name: str, length: float, o: float = 0.0, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            o:              Octupolar strength [mˆ-4]
+
+        Keyword Arguments:
+            PolynomB:           straight multipoles
+            PolynomA:           skew multipoles
+            MaxOrder:           Number of desired multipoles
+            NumIntSteps=10:     Number of integration steps
+            KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        super().__init__(family_name, length, [], [0.0, 0.0, 0.0, o], **kwargs)
+
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
+        yield "O", self.O
 
 
 class Corrector(LongElement):
