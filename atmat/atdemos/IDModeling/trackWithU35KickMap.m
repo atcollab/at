@@ -2,9 +2,11 @@
 r=atradoff(esrf);
 
 % create element from kick map and plot kick map.
-% sort and transpose are needed for U35.mat
-U35elem=atidtable_dat('U35',1,'U35.mat',6.04,'IdTablePass', ...
-                      'sort',1,'transpose',1);
+% sort, transpose and negative sign are needed for U35.mat
+U35elem=atidtable_dat('U35', 1, 'U35.mat', 6.04, 'IdTablePass', ...
+                      'sort', 1, ...
+                      'transpose', 1,...
+                      'first_order_sign', -1);
 xtable=U35elem.xtable;
 ytable=U35elem.ytable;
 xkick2=U35elem.xkick;
