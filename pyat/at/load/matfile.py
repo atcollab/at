@@ -264,7 +264,7 @@ def _element_from_m(line: str) -> Element:
             numpy style ndarray.
         """
         lns = mat_arr.replace("[", "").replace("]", "").split(";")
-        return np.squeeze(np.asarray([row.split() for row in lns]))
+        return np.squeeze(np.array([row.split() for row in lns], dtype=np.float64))
 
     def convert(value):
         """convert Matlab syntax to numpy syntax"""
