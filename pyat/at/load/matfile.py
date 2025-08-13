@@ -243,14 +243,14 @@ def _element_from_m(line: str) -> Element:
         def arraystr(arr):
             lns = arr.split(";")
             rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
-            return f"[{', '.join(rr)}]"
+            return f"{', '.join(rr)}"
 
         return eval(f"array({arraystr(mat_arr)})")
 
     def convert(value):
         """convert Matlab syntax to numpy syntax"""
         if value.startswith("["):
-            result = makearray(value[1:-1])
+            result = makearray(value)
         elif value.startswith("struct"):
             result = makedir(argsplit(value[7:-1]))
         else:
@@ -427,10 +427,14 @@ def _element_to_m(elem: Element) -> str:
             return "struct({})".format(", ".join(scan(pdir)))
 
         def convert_array(arr):
+            max_array = max(1000, np.prod(arr.shape)) + 1
+            mod_opt = {'threshold': max_array, 'max_line_width': np.inf}
             if arr.ndim > 1:
-                return np.array2string(arg).replace("\n", ";")
+                # replace endline character by ; to indicate the end of a 1D array
+                # replace [SPACE by [ to remove extra spaces from +sign of first array element
+                return np.array2string(arg, **mod_opt).replace("\n", ";").replace('[ ','[')
             elif arr.ndim > 0:
-                return np.array2string(arg)
+                return np.array2string(arg, **mod_opt).replace('[ ','[')
             else:
                 return str(arr)
 
