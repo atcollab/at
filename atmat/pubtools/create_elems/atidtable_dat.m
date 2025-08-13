@@ -1,8 +1,10 @@
-function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
+function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
+                              varargin)
 % atidtable_dat Read - RADIA kick maps of 1st and 2nd order in energy
 %
 % Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 %
+% Arguments:
 % FamName   family name
 % Nslice    number of slices (1 means the Insertion Device is represented
 %           by a single kick in the center of the device).
@@ -11,7 +13,13 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 % method    name of the function to use for tracking. Use 'IdTablePass'
 %             or 'WigTablePass'
 %
-% returns   atinsertiondevicekickmap
+% Options:
+% sort      sort the imput table if not zero. Default, 0.
+% transpose transpose the imput table if not zero. Default, 0.
+% verbose   print info if not zero. Default, 0.
+%
+% Returns
+%   atinsertiondevicekickmap
 %
 %
 % This function creates an AT element read from an integrated kickmap file.
@@ -31,6 +39,17 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 %                             Adds InsertionDeviceKickMap class
 %--------------------------------------------------------------------------
 
+p = inputParser;
+addOptional(p,'sort',0);
+addOptional(p,'transpose',0);
+addOptional(p,'verbose',0);
+parse(p,varargin{:});
+par = p.Results;
+
+dosort = par.sort;
+dotranspose = par.transpose;
+verbose = par.verbose;
+
 % constants
 lightspeed = PhysConstant.speed_of_light_in_vacuum.value;
 emassGeV = PhysConstant.electron_mass_energy_equivalent_in_MeV.value/1e3;
@@ -49,8 +68,10 @@ if isfield(D, 'Kick1x') % old matlab format
     fprintf('Old format type. Variables will be renamed.\n');
 elseif isfield(D, 'xkick1') % ID new variable names
     isIDfileformat = 2;
+    if verbose, fprintf('Found xkick1 in .mat file.\n'); end
 else
     isIDfileformat = 3; % text file with only TABs or only SPACES
+    if verbose, fprintf('Text file.\n'); end
 end
 
 % readout variables according to fileformat
@@ -145,7 +166,24 @@ switch isIDfileformat
         xkick = xkick(indy, indx);
         ykick = ykick(indy, indx);
     otherwise
-        fprintf('Unsupported fileformat.\n')
+        fprintf('Unsupported fileformat.\n');
+        return;
+end
+
+if dosort
+    if verbose, fprintf('Sorting data.\n'); end
+    [x, indx]=sort(x);
+    [y, indy]=sort(y);
+    xkick=xkick(indx,indy);
+    ykick=ykick(indx,indy);
+end
+
+if dotranspose
+    if verbose, fprintf('Transposing data.\n'); end
+    xkick=xkick';
+    ykick=ykick';
+    xkick1=xkick1';
+    ykick1=ykick1';
 end
 
 Elem = atinsertiondevicekickmap( ...
