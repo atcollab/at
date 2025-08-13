@@ -244,6 +244,6 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
         A3=r1[1][1],
         T1=-orbit,
         T2=orbit,
-        chrom_maxorder=1
+        chrom_maxorder=1,
     )
     return nonlin_elem
