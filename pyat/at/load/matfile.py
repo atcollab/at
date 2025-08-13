@@ -6,25 +6,26 @@ from __future__ import annotations
 
 __all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
 
-import sys
 import os
+import sys
+from collections.abc import Generator, Sequence
+from math import isfinite
 from os.path import abspath, basename, splitext
 from typing import Any
-from collections.abc import Sequence, Generator
-from math import isfinite
 from warnings import warn
 
 import numpy as np
 import scipy.io
-
 # imports necessary in 'globals()' for 'eval'
-from numpy import array, uint8, nan as NaN  # noqa: F401
+from numpy import array
+from numpy import nan as NaN  # noqa: F401
+from numpy import uint8
 
+from ..lattice import (AtError, AtWarning, Element, Filter, Lattice, Particle,
+                       elements, params_filter)
 from .allfiles import register_format
-from .utils import split_ignoring_parentheses, RingParam, keep_elements
-from .utils import _drop_attrs, _CLASS_MAP
-from ..lattice import Element, Lattice, Particle, Filter
-from ..lattice import elements, AtWarning, params_filter, AtError
+from .utils import (_CLASS_MAP, RingParam, _drop_attrs, keep_elements,
+                    split_ignoring_parentheses)
 
 # Translation of RingParam attributes
 _m2p = {
@@ -428,13 +429,17 @@ def _element_to_m(elem: Element) -> str:
 
         def convert_array(arr):
             max_array = max(1000, np.prod(arr.shape)) + 1
-            mod_opt = {'threshold': max_array, 'max_line_width': np.inf}
+            mod_opt = {"threshold": max_array, "max_line_width": np.inf}
             if arr.ndim > 1:
                 # replace endline character by ; to indicate the end of a 1D array
-                # replace [SPACE by [ to remove extra spaces from +sign of first array element
-                return np.array2string(arg, **mod_opt).replace("\n", ";").replace('[ ','[')
+                # replace [SPACE by [ to remove extra space from +sign of first array element
+                return (
+                    np.array2string(arg, **mod_opt)
+                    .replace("\n", ";")
+                    .replace("[ ", "[")
+                )
             elif arr.ndim > 0:
-                return np.array2string(arg, **mod_opt).replace('[ ','[')
+                return np.array2string(arg, **mod_opt).replace("[ ", "[")
             else:
                 return str(arr)
 
