@@ -20,49 +20,14 @@ function Elem = atidtable(fname, Nslice, filename, Energy, method)
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
 % 17-11-2008:  Modificated by Z.Martí
 % 23-02-2012:  further modifications by B. Nash: reads in only matlab file
+% 13-08-2025:  Replaced by atidtable_dat.
 %---------------------------------------------------------------------------
+fprintf(['Note: Use atidtable_dat instead, with sort, transpose,' ...
+          ' and negative first order sign.\n']);
 
 if nargin < 5, method='IdTablePass'; end
-Elem.FamName=fname;
-Elem.Nslice=Nslice;
-Elem.PassMethod=method;
-
-
-factor=1/((Energy/0.299792458)^2);
-factor1=-1/((Energy/0.299792458));
-    
-% Read the file, first check if its a matlab file
-%[pathstr, name, ext] = fileparts(filename)
-%if  ~isequal(ext,'.mat');
- 
-    D=load(filename);
-    xtable=(D.xtable)';
-    ytable=(D.ytable)';
-    xkick1=factor1*D.xkick1;
-    ykick1=factor1*D.ykick1;
-    xkick=factor*D.xkick;
-    ykick=factor*D.ykick;
-    L=D.Len;
-% Sort arrays in ascending order and transpose (needed for "IdTablePass.c")
-
-[xtable indx]=sort(xtable); %#ok<TRSRT>
-[ytable indy]=sort(ytable); %#ok<TRSRT>
-
-xkick=xkick(indx,indy);
-ykick=ykick(indx,indy);
-
-xkick=xkick';
-ykick=ykick';
-xkick1=xkick1';
-ykick1=ykick1';
-
-
-Elem.Length= L;
-Elem.xtable = xtable;
-Elem.ytable = ytable;
-Elem.xkick = xkick;
-Elem.ykick = ykick;
-Elem.xkick1 = xkick1;
-Elem.ykick1 = ykick1;
-
-Elem.Class  = 'KickMap'
+Elem = atidtable_dat(fname,Nslice,filename,Energy,method,...
+                    'sort',1, ...
+                    'transpose',1, ...
+                    'first_order_sign',-1);
+end
