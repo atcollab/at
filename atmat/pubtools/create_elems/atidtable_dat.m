@@ -17,6 +17,7 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
 % sort      sort the imput table if not zero. Default, 0.
 % transpose transpose the imput table if not zero. Default, 0.
 % verbose   print info if not zero. Default, 0.
+% first_order_sign Defines the sign of first order table. Default, +1.
 %
 % Returns
 %   atinsertiondevicekickmap
@@ -43,19 +44,22 @@ p = inputParser;
 addOptional(p,'sort',0);
 addOptional(p,'transpose',0);
 addOptional(p,'verbose',0);
+addOptional(p,'first_order_sign',1);
 parse(p,varargin{:});
 par = p.Results;
 
 dosort = par.sort;
 dotranspose = par.transpose;
 verbose = par.verbose;
+first_order_sign = par.first_order_sign;
 
 % constants
 lightspeed = PhysConstant.speed_of_light_in_vacuum.value;
 emassGeV = PhysConstant.electron_mass_energy_equivalent_in_MeV.value/1e3;
 
 % energy scaling for 1st order kick-map
-factor1 = 1 / (1e9*sqrt(Energy ^2 - emassGeV^2 )/ lightspeed);
+factor1 = first_order_sign * ...
+            1 / (1e9*sqrt(Energy ^2 - emassGeV^2 )/ lightspeed);
 % energy scaling for 2st order kick-map
 factor2 = (factor1) ^ 2;
 
