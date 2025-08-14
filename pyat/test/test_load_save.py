@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from tempfile import mkstemp
 
 import pytest
@@ -61,7 +62,8 @@ def test_m(request, lattice, suffix, options):
     os.unlink(fname)
 
 
-def test_long_arrays_in_m_file():
+def test_long_arrays_in_m_file() -> None:
+    """Test long array saving in .m files."""
     # create an element with long arrays
     elem = InsertionDeviceKickMap(
         "idmap", 10, "../../machine_data/IDs/kickmap_w150_20mm.txt", 6.04
@@ -75,8 +77,8 @@ def test_long_arrays_in_m_file():
     # retrieve the ring
     ring1 = Lattice.load(fname)
 
-    # compare
-    assert_equal(ring1[0].xkick.shape, ring0[0].xkick.shape)
+    assert_equal(ring1[0].xkick.shape, ring0[0].xkick.shape)  # act
 
     # delete temporary file
-    os.unlink(fname)
+    temp_file = Path(fname)
+    temp_file.unlink()
