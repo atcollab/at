@@ -205,6 +205,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
+
+    if(Elem->Length==0.0){
+        atError("Quantum diffusion not available in thin elements.");
+    }
+
     energy = atEnergy(Param->energy, Elem->Energy);
 
     StrMPoleSymplectic4QuantPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
