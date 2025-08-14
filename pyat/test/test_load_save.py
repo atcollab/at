@@ -1,12 +1,18 @@
-import os
+import sys
 from pathlib import Path
 from tempfile import mkstemp
 
+import machine_data
 import pytest
 from at.lattice import Lattice
 from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
 from numpy.testing import assert_allclose, assert_equal
+
+if sys.version_info.minor < 9:
+    from importlib_resources import as_file, files
+else:
+    from importlib.resources import as_file, files
 
 
 @pytest.fixture
@@ -59,14 +65,16 @@ def test_m(request, lattice, suffix, options):
     assert_allclose(rg1.tune, rg2.tune, atol=1.0e-12)
     assert_allclose(rg1.chromaticity, rg2.chromaticity, atol=1.0e-12)
 
-    os.unlink(fname)
+    # delete temporary file
+    temp_file = Path(fname)
+    temp_file.unlink()
 
 
 def test_long_arrays_in_m_file() -> None:
     """Test long array saving in .m files."""
     # create an element with long arrays
     elem = InsertionDeviceKickMap(
-        "idmap", 10, "../../machine_data/IDs/kickmap_w150_20mm.txt", 6.04
+        "idmap", 10, files(machine_data).as_posix() + "/kickmap_w150_20mm.txt", 6.04
     )
 
     # save a ring with one element into a temporary file
