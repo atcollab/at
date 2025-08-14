@@ -4,13 +4,12 @@ import sys
 from pathlib import Path
 from tempfile import mkstemp
 
-import pytest
-from numpy.testing import assert_allclose, assert_equal
-
 import machine_data
+import pytest
 from at.lattice import Lattice
 from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
+from numpy.testing import assert_allclose, assert_equal
 
 if sys.version_info < (3, 9):
     from importlib_resources import files
@@ -19,14 +18,14 @@ else:
 
 
 @pytest.fixture()
-def simple_hmba(hmba_lattice) -> None:
+def simple_hmba(hmba_lattice: Lattice) -> None:
     """Modify hmba_lattice to make it compatible with MAD-X and Elegant.
 
     Arguments:
         hmba_lattice: AT Lattice.
 
     Returns:
-        Lattice: AT ring
+        Lattice: AT lattice
     """
     ring = hmba_lattice.deepcopy()
     # Set NumIntSteps to default, remove FringeQuadEntrance and FringeQuadExit
@@ -62,7 +61,8 @@ def simple_hmba(hmba_lattice) -> None:
 def test_m(request, lattice, suffix, options) -> None:
     """Test m."""
     ring0 = request.getfixturevalue(lattice)
-    fname = mkstemp(suffix=suffix)[1]
+    thepath = files(machine_data).as_posix()
+    fname = mkstemp(suffix=suffix, dir=thepath)[1]
 
     # Create a new file
     ring0.save(fname, **options)
@@ -84,13 +84,13 @@ def test_m(request, lattice, suffix, options) -> None:
 def test_long_arrays_in_m_file() -> None:
     """Test long array saving in .m files."""
     # create an element with long arrays
-    elem = InsertionDeviceKickMap(
-        "idmap", 10, files(machine_data).as_posix() + "/kickmap_w150_20mm.txt", 6.04
-    )
+    thepath = files(machine_data).as_posix()
+    theidfname = "/kickmap_w150_20mm.txt"
+    elem = InsertionDeviceKickMap("idmap", 10, thepath + theidfname, 6.04)
 
     # save a ring with one element into a temporary file
     ring0 = Lattice([elem], energy=6.04e9)
-    fname = mkstemp(suffix=".m")[1]
+    fname = mkstemp(suffix=".m", dir=thepath)[1]
     ring0.save(fname)
 
     # retrieve the ring
