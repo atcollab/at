@@ -379,7 +379,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double energy, double beta, double *vbeamk, double *vbunch){ 
                           
     #ifndef _MSC_VER  
-    int i,ib,is;
+    int i,ib;
     double wi;
     double selfkick;
     int sliceperturn = nslice*nbunch;
@@ -403,7 +403,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         vbi[ib] = 0.0;
         totalWb[ib] = 0.0;
     }
-    
+
     for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
         ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
@@ -439,7 +439,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     vbeamkc /= (totalW);
     vbeamk[0] = cabs(vbeamkc);
     vbeamk[1] = carg(vbeamkc);   
-    
+
     for(i=0;i<nbunch;i++){
         double vr = vbr[i]/totalWb[i];
         double vi = vbi[i]/totalWb[i];
@@ -463,3 +463,95 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,
     vgen[0] += (vga-vgen[0])*voltgain;
     vgen[1] += (vgp-vgen[1])*phasegain;
 }
+
+
+static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double phasegain){
+    /* The cavity voltage is
+    V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
+    We save the amplitude of vbeam, so the exponent goes to 1.
+    Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
+    */
+    double vset = vcav[0];
+    double psi = vgen[1];
+    double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
+    double delta_v = vset - vpeak;
+    double grad = vbeam[0]*sin(psi)/cos(psi); 
+    /*vbeam amp contains cos(psi). So replace with sin(psi)
+    to get get the gradient */
+    
+    double delta_psi = delta_v / grad; /*linear extrapolation*/
+
+    
+    /* If the cavity is detuned positively, the psi needs to
+    be increased to reduce the voltage. Likewise, if the cavity
+    is detuned negatively, the psi needs to be decreased to reduce
+    the voltage.
+    */
+        
+    int sg = (psi<0) - (psi>0);
+
+    /* This is to avoid setting a value if grad is 0, as then
+    delta_psi is inf, which even when multiplied by 0 gives nan
+    */
+    if (grad!=0.0){
+        vgen[1] += sg*delta_psi*phasegain;
+    }
+}
+
+static void compute_buffer_mean(double *out_array, double *buffer, long windowlength, long buffersize, long numcolumns){
+
+    int c,p,offset;
+    offset = buffersize - windowlength;
+
+    for (p=0; p<numcolumns; p++) {
+        out_array[p] = 0.0;
+    }
+    
+    for (c=offset; c<buffersize; c++) {
+        for (p=0; p<numcolumns; p++) {
+            out_array[p] += buffer[2*c+p];
+        }
+    }
+    
+    for (p=0; p<numcolumns; p++) {
+        out_array[p] /= windowlength ; 
+    }
+}
+
+int check_buffer_length(double *buffer, long buffersize, long numcolumns){
+    int c;
+    int bufferlengthnow=0;
+    for (c=0; c<numcolumns*buffersize; c++){
+        if (buffer[c]!=0.0){
+            bufferlengthnow += 1;
+        }
+    }
+    bufferlengthnow /= numcolumns;
+    return bufferlengthnow;
+}
+
+
+static void update_vbeam_set(long fbmode, double *vbeam_set,
+                             double *vbeamk, double *vbeam_buffer,
+                             long buffersize, long windowlength){
+    int bufferlengthnow = 0;
+    // If FBMode is set to ONETURN, then set the vbeam and move on
+    if(fbmode==1){
+        vbeam_set[0] = vbeamk[0];
+        vbeam_set[1] = vbeamk[1];        
+    }
+    // If FBMode is set to WINDOW, compute the vbeam_set from the buffer
+    
+    else if(fbmode==2){
+        // Compute the length of the buffer as we will not act until 
+        // the buffer is full. (2 arrays of vbeam and psi)
+        
+        bufferlengthnow = check_buffer_length(vbeam_buffer, buffersize, 2);
+
+        if(bufferlengthnow >= windowlength){
+            compute_buffer_mean(vbeam_set, vbeam_buffer, windowlength, buffersize, 2);
+        } 
+    }
+}
+
+

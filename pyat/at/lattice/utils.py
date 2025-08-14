@@ -49,14 +49,13 @@ import numpy
 import numpy.typing as npt
 
 from .elements import Element, Dipole
+from .exceptions import AtError
 
 _GEOMETRY_EPSIL = 1.0e-3
 
 __all__ = [
     "All",
     "End",
-    "AtError",
-    "AtWarning",
     "BoolRefpts",
     "Uint32Refpts",
     "check_radiation",
@@ -82,14 +81,6 @@ __all__ = [
     "setval",
     "getval",
 ]
-
-
-class AtError(Exception):
-    pass
-
-
-class AtWarning(UserWarning):
-    pass
 
 
 _typ1 = "None, All, End, int, bool"
@@ -841,6 +832,8 @@ def get_value_refpts(
         attrname:   Attribute name
         index:      index of the value to retrieve if *attrname* is
           an array. If :py:obj:`None` the full array is retrieved
+          In case *attrname* is a scalar attribute, the keyword argument
+          index has to be None
         regex: Use regular expression for *refpts* string matching instead of
           Unix shell-style wildcards.
 
@@ -875,7 +868,9 @@ def set_value_refpts(
         attrvalues: Attribute values
         index:      index of the value to set if *attrname* is
           an array. if :py:obj:`None`, the full array is replaced by
-          *attrvalue*
+          *attrvalue*. 
+          In case *attrname* is a scalar attribute, the keyword argument
+          index has to be None
         increment:  If :py:obj:`True`, *attrvalues* are added to the
           initial values.
         regex: Use regular expression for *refpts* string matching

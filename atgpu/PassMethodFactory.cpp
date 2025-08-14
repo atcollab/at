@@ -3,6 +3,8 @@
 #include "ExactDriftPass.h"
 #include "ExactMultipoleRadPass.h"
 #include "ThinMPolePass.h"
+#include "CorrectorPass.h"
+#include "AperturePass.h"
 #include "StrMPoleSymplectic4RadPass.h"
 #include "BndMPoleSymplectic4RadPass.h"
 #include "RFCavityPass.h"
@@ -40,6 +42,8 @@ PassMethodFactory::PassMethodFactory(SymplecticIntegrator& integrator) noexcept:
   passMethodInfos[EXACTMULTIPOLEPASS] = REGISTER_PASS(ExactMultipolePass);
   passMethodInfos[EXACTMULTIPOLERADPASS] = REGISTER_PASS(ExactMultipoleRadPass);
   passMethodInfos[THINMPOLEPASS] = REGISTER_PASS(ThinMPolePass);
+  passMethodInfos[CORRECTORPASS] = REGISTER_PASS(CorrectorPass);
+  passMethodInfos[APERTUREPASS] = REGISTER_PASS(AperturePass);
 
 }
 

@@ -1,4 +1,4 @@
-% TUNEANDCHROMATICITY
+% Tune and chromaticity
 % See also 
 % 
 %   Contents file for TUNEANDCHROMATICITY and its subfolders.

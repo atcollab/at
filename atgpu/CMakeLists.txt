@@ -26,6 +26,8 @@ set(SOURCE_FILES
         BndMPoleSymplectic4RadPass.cpp
         CavityPass.cpp
         RFCavityPass.cpp
+        CorrectorPass.cpp
+        AperturePass.cpp
 )
 
 if(_CUDA)

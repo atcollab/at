@@ -40,9 +40,9 @@ import numpy as np
 
 from . import elements as elt
 from .elements import Element
+from .exceptions import AtError, AtWarning
 from .particle_object import Particle
-from .utils import AtError, AtWarning, Refpts
-from .utils import get_s_pos, get_elements, get_value_refpts, set_value_refpts
+from .utils import get_s_pos, get_elements, get_value_refpts, Refpts, set_value_refpts
 
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
@@ -854,7 +854,8 @@ class Lattice(list):
     @property
     def nbunch(self) -> int:
         """Number of bunches"""
-        return np.count_nonzero(self._fillpattern)
+        # cast to int required from numpy version 2.3.0
+        return int(np.count_nonzero(self._fillpattern))
 
     @property
     def harmonic_number(self) -> int:
@@ -1278,7 +1279,9 @@ class Lattice(list):
         return self._set_6d(False, *args, **kwargs)
 
     def sbreak(self, break_s, break_elems=None, **kwargs):
-        """Insert elements at selected locations in the lattice
+        r"""
+        Insert elements at selected locations in the lattice.
+        In place modification not available for this function.
 
         Parameters:
             break_s:        location or array of locations of breakpoints
@@ -1287,6 +1290,9 @@ class Lattice(list):
                             duplicated as necessary). Default: Marker('sbreak')
         Returns:
             newring:    A new lattice with new elements inserted at breakpoints
+
+        Example:
+            >>> newring = ring.sbreak(spos, at.Marker('sbreak'))
         """
 
         def sbreak_iterator(_, itmk):

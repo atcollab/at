@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,IE=9,chrome=1"><meta name="generator" content="MATLAB 2025a"><title>2.7</title><style type="text/css">.rtcContent { padding: 30px; } .S0 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 28.8px; min-height: 0px; white-space: pre-wrap; color: rgb(192, 76, 11); font-family: Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif; font-style: normal; font-size: 24px; font-weight: 400; text-align: left;  }
+.S1 { margin: 15px 10px 5px 4px; padding: 0px; line-height: 20.4px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif; font-style: normal; font-size: 17px; font-weight: 700; text-align: left;  }
+.S2 { margin: 10px 0px 20px; padding-left: 0px; font-family: Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif; font-size: 14px;  }
+.S3 { margin-left: 56px; line-height: 21px; min-height: 0px; text-align: left; white-space: pre-wrap;  }
+.S4 { margin: 2px 10px 9px 4px; padding: 0px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif, Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: left;  }</style></head><body><div class = rtcContent><h1  class = 'S0'><span>2.7</span></h1><h3  class = 'S1'><span>Main changes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>GPU tracking is now implemented, thanks to </span><a href = "https://github.com/JeanLucPons"><span>@JeanLucPons</span></a><span>,</span></li><li  class = 'S3'><span>Physical constants are updated to CODADA 2022. This may cause slight changes in the results,</span></li><li  class = 'S3'><span>The computation of diffusion matrices is now modular and is integrated in the C integrators,</span></li><li  class = 'S3'><span>The seed of random generators can now be set at the beginning of tracking, as an argument of </span><span style=' font-family: monospace;'>ringpass</span><span> and </span><span style=' font-family: monospace;'>linepass.</span></li></ul><h3  class = 'S1'><span>New features</span></h3><ul  class = 'S2'><li  class = 'S3'><span>Gpu tracking by </span><a href = "https://github.com/JeanLucPons"><span>@JeanLucPons</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/920"><span>#920</span></a></li><li  class = 'S3'><span>Update of Matlab physical constants to CODADA 2022 by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/884"><span>#884</span></a></li><li  class = 'S3'><span>Modular computation of diffusion matrices by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/742"><span>#742</span></a></li><li  class = 'S3'><span>Allow setting the seed of random generators by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/905"><span>#905</span></a></li></ul><h3  class = 'S1'><span>Bug fixes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>Fix load mat by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/791"><span>#791</span></a></li><li  class = 'S3'><span>Update momentum aperture matlab by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/786"><span>#786</span></a></li><li  class = 'S3'><span>add check_6d in findorbit4 and atlinopt4 by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/789"><span>#789</span></a></li><li  class = 'S3'><span>New test of the average optics values by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/794"><span>#794</span></a></li><li  class = 'S3'><span>use _Complex_I instead of I by </span><a href = "https://github.com/swhite2401"><span>@swhite2401</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/802"><span>#802</span></a></li><li  class = 'S3'><span>update AT matlab help default pass method in atthinmultipole by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/819"><span>#819</span></a></li><li  class = 'S3'><span>Bug Fix: Wiggler diffusion matrix by </span><a href = "https://github.com/joanarenillas"><span>@joanarenillas</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/759"><span>#759</span></a></li><li  class = 'S3'><span>Bug fix in atavedata by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/823"><span>#823</span></a></li><li  class = 'S3'><span>add units and example of use to help by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/827"><span>#827</span></a></li><li  class = 'S3'><span>matlab ohmienvelope add help message; add check_6d by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/830"><span>#830</span></a></li><li  class = 'S3'><span>Fix wiggler radiation by </span><a href = "https://github.com/lfarv"><span>@lfarv </span></a><span>in </span><a href = "https://github.com/atcollab/at/pull/822"><span>#822</span></a></li><li  class = 'S3'><span>Fix handling of JSON files when harmonic_number is undefined by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/831"><span>#831</span></a></li><li  class = 'S3'><span>Access to the lattice energy in integrators by </span><a href = "https://github.com/lfarv"><span>@lfarv </span></a><span>in </span><a href = "https://github.com/atcollab/at/pull/816"><span>#816</span></a></li><li  class = 'S3'><span>Fix atplot for single-element lattices by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/854"><span>#854</span></a></li><li  class = 'S3'><span>Fix diffusion_matrix compilation on Linux by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/863"><span>#863</span></a></li><li  class = 'S3'><span>Tune documentation for dark mode by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/864"><span>#864</span></a></li><li  class = 'S3'><span>Fix ohmienvelope with wigglers by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/870"><span>#870</span></a></li><li  class = 'S3'><span>adds Multipole class to `atdisable_6d` `atenable_6d` by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/874"><span>#874</span></a></li><li  class = 'S3'><span>Documentation: new figure for the AT coordinate system by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/876"><span>#876</span></a></li><li  class = 'S3'><span>Fix the energy loss computation by </span><a href = "https://github.com/lfarv"><span>@lfarv </span></a><span>in </span><a href = "https://github.com/atcollab/at/pull/877"><span>#877</span></a></li><li  class = 'S3'><span>Upgrade tests for new GitHub runners by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/878"><span>#878</span></a></li><li  class = 'S3'><span>Fix OpenMP compilation by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/882"><span>#882</span></a></li><li  class = 'S3'><span>remove seed from `atQuantumDiff.m` help by </span><a href = "https://github.com/oscarxblanco"><span>@oscarxblanco</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/881"><span>#881</span></a></li><li  class = 'S3'><span>Improvement of AT build process by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/889"><span>#889</span></a></li><li  class = 'S3'><span>Improve radiation_parameters by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/888"><span>#888</span></a></li><li  class = 'S3'><span>Fix OpenMP compilation bug by </span><a href = "https://github.com/lfarv"><span>@lfarv </span></a><span>in </span><a href = "https://github.com/atcollab/at/pull/891"><span>#891</span></a></li><li  class = 'S3'><span>Fix the energyloss computation for simple ring by </span><a href = "https://github.com/lcarver"><span>@lcarver</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/911"><span>#911</span></a></li><li  class = 'S3'><span>Add non-linear chromaticity to DeltaQPass by </span><a href = "https://github.com/lcarver"><span>@lcarver</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/912"><span>#912</span></a></li><li  class = 'S3'><span>Fix atlinopt with harmonic cavity by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/917"><span>#917</span></a></li><li  class = 'S3'><span>Fix the display of element labels in atplot by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/927"><span>#927</span></a></li><li  class = 'S3'><span>Setting the nominal frequency on 6d lattices by </span><a href = "https://github.com/lfarv"><span>@lfarv</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/923"><span>#923</span></a></li><li  class = 'S3'><span>Fix atmexall by </span><a href = "https://github.com/lcarver"><span>@lcarver</span></a><span> in </span><a href = "https://github.com/atcollab/at/pull/928"><span>#928</span></a></li></ul><div  class = 'S4'><span> Full Changelog</span><span>:</span><span> </span><a href = "https://github.com/atcollab/at/compare/2.6...2.7"><span style=' text-decoration: underline; font-family: monospace;'>2.6...2.7</span></a></div>
+<br>
+<!-- 
+##### SOURCE BEGIN #####
+%% 2.7
+% Main changes
+%% 
+% * GPU tracking is now implemented, thanks to <https://github.com/JeanLucPons 
+% @JeanLucPons>,
+% * Physical constants are updated to CODADA 2022. This may cause slight changes 
+% in the results,
+% * The computation of diffusion matrices is now modular and is integrated in 
+% the C integrators,
+% * The seed of random generators can now be set at the beginning of tracking, 
+% as an argument of |ringpass| and |linepass.|
+% New features
+%% 
+% * Gpu tracking by <https://github.com/JeanLucPons @JeanLucPons> in <https://github.com/atcollab/at/pull/920 
+% #920>
+% * Update of Matlab physical constants to CODADA 2022 by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/884 #884>
+% * Modular computation of diffusion matrices by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/742 #742>
+% * Allow setting the seed of random generators by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/905 #905>
+% Bug fixes
+%% 
+% * Fix load mat by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/791 
+% #791>
+% * Update momentum aperture matlab by <https://github.com/oscarxblanco @oscarxblanco> 
+% in <https://github.com/atcollab/at/pull/786 #786>
+% * add check_6d in findorbit4 and atlinopt4 by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/789 #789>
+% * New test of the average optics values by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/794 #794>
+% * use _Complex_I instead of I by <https://github.com/swhite2401 @swhite2401> 
+% in <https://github.com/atcollab/at/pull/802 #802>
+% * update AT matlab help default pass method in atthinmultipole by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/819 #819>
+% * Bug Fix: Wiggler diffusion matrix by <https://github.com/joanarenillas @joanarenillas> 
+% in <https://github.com/atcollab/at/pull/759 #759>
+% * Bug fix in atavedata by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/823 
+% #823>
+% * add units and example of use to help by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/827 #827>
+% * matlab ohmienvelope add help message; add check_6d by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/830 #830>
+% * Fix wiggler radiation by <https://github.com/lfarv @lfarv >in <https://github.com/atcollab/at/pull/822 
+% #822>
+% * Fix handling of JSON files when harmonic_number is undefined by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/831 #831>
+% * Access to the lattice energy in integrators by <https://github.com/lfarv 
+% @lfarv >in <https://github.com/atcollab/at/pull/816 #816>
+% * Fix atplot for single-element lattices by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/854 #854>
+% * Fix diffusion_matrix compilation on Linux by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/863 #863>
+% * Tune documentation for dark mode by <https://github.com/lfarv @lfarv> in 
+% <https://github.com/atcollab/at/pull/864 #864>
+% * Fix ohmienvelope with wigglers by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/870 
+% #870>
+% * adds Multipole class to `atdisable_6d` `atenable_6d` by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/874 #874>
+% * Documentation: new figure for the AT coordinate system by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/876 #876>
+% * Fix the energy loss computation by <https://github.com/lfarv @lfarv >in 
+% <https://github.com/atcollab/at/pull/877 #877>
+% * Upgrade tests for new GitHub runners by <https://github.com/lfarv @lfarv> 
+% in <https://github.com/atcollab/at/pull/878 #878>
+% * Fix OpenMP compilation by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/882 
+% #882>
+% * remove seed from `atQuantumDiff.m` help by <https://github.com/oscarxblanco 
+% @oscarxblanco> in <https://github.com/atcollab/at/pull/881 #881>
+% * Improvement of AT build process by <https://github.com/lfarv @lfarv> in 
+% <https://github.com/atcollab/at/pull/889 #889>
+% * Improve radiation_parameters by <https://github.com/lfarv @lfarv> in <https://github.com/atcollab/at/pull/888 
+% #888>
+% * Fix OpenMP compilation bug by <https://github.com/lfarv @lfarv >in <https://github.com/atcollab/at/pull/891 
+% #891>
+% * Fix the energyloss computation for simple ring by <https://github.com/lcarver 
+% @lcarver> in <https://github.com/atcollab/at/pull/911 #911>
+% * Add non-linear chromaticity to DeltaQPass by <https://github.com/lcarver 
+% @lcarver> in <https://github.com/atcollab/at/pull/912 #912>
+% * Fix atlinopt with harmonic cavity by <https://github.com/lfarv @lfarv> in 
+% <https://github.com/atcollab/at/pull/917 #917>
+% * Fix the display of element labels in atplot by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/927 #927>
+% * Setting the nominal frequency on 6d lattices by <https://github.com/lfarv 
+% @lfarv> in <https://github.com/atcollab/at/pull/923 #923>
+% * Fix atmexall by <https://github.com/lcarver @lcarver> in <https://github.com/atcollab/at/pull/928 
+% #928>
+%% 
+% Full Changelog: <https://github.com/atcollab/at/compare/2.6...2.7 |2.6...2.7|>
+##### SOURCE END #####
+-->
+</div></body></html>
