@@ -1,10 +1,11 @@
 import os
-from tempfile import mktemp
+from tempfile import mkstemp
 
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from at.lattice import Lattice, elements as elt
+from at.lattice.elements.idtable_element import InsertionDeviceKickMap
 
 
 @pytest.fixture
@@ -43,7 +44,7 @@ def simple_hmba(hmba_lattice):
 )
 def test_m(request, lattice, suffix, options):
     ring0 = request.getfixturevalue(lattice)
-    fname = mktemp(suffix=suffix)
+    fname = mkstemp(suffix=suffix)[1]
 
     # Create a new file
     ring0.save(fname, **options)
@@ -57,4 +58,22 @@ def test_m(request, lattice, suffix, options):
     assert_allclose(rg1.tune, rg2.tune, atol=1.0e-12)
     assert_allclose(rg1.chromaticity, rg2.chromaticity, atol=1.0e-12)
 
+    os.unlink(fname)
+
+def test_long_arrays_in_m_file():
+    # create an element with long arrays
+    elem = InsertionDeviceKickMap('idmap', 10, "../../machine_data/IDs/kickmap_w150_20mm.txt", 6.04)
+
+    # save a ring with one element into a temporary file
+    ring0 = Lattice([elem],energy=6.04e9)
+    fname = mkstemp(suffix='.m')[1]
+    ring0.save(fname)
+
+    # retrieve the ring
+    ring1 = Lattice.load(fname)
+
+    # compare
+    assert_equal(ring1[0].xkick.shape, ring0[0].xkick.shape)
+
+    # delete temporary file
     os.unlink(fname)
