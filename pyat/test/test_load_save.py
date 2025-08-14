@@ -62,8 +62,8 @@ def simple_hmba(hmba_lattice: Lattice) -> None:
 def test_m(request, lattice, suffix, options) -> None:
     """Test m."""
     ring0 = request.getfixturevalue(lattice)
-    fdescriptor, fname = mkstemp(suffix=suffix)
-    os.close(fdescriptor)
+    fhandle, fname = mkstemp(suffix=suffix)
+    os.close(fhandle)
 
     # Create a new file
     ring0.save(fname, **options)
@@ -91,8 +91,8 @@ def test_long_arrays_in_m_file() -> None:
 
     # save a ring with one element into a temporary file
     ring0 = Lattice([elem], energy=6.04e9)
-    fdescript, fname = mkstemp(suffix=".m")
-    os.close(fdescript)
+    fhandle, fname = mkstemp(suffix=".m")
+    os.close(fhandle)
     ring0.save(fname)
 
     # retrieve the ring
