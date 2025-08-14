@@ -34,7 +34,7 @@ class ThinMultipole(Element):
     """Thin multipole element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
-    _conversions = dict(Element._conversions, K=float, H=float)
+    _conversions = dict(Element._conversions, K=float, H=float, O=float)
     _stacklevel = 4  # Stacklevel for warnings
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
@@ -105,6 +105,13 @@ class ThinMultipole(Element):
                         and (kvalue.size < 3 or argvalue[2] != kvalue[2])
                     ):
                         raise seterr(family_name, "PolynomB", kvalue, "h", argvalue[2])
+                elif issubclass(self.__class__, Octupole):
+                    if (
+                        keyname == "PolynomB"
+                        and argvalue[3] != 0.0
+                        and (kvalue.size < 4 or argvalue[3] != kvalue[3])
+                    ):
+                        raise seterr(family_name, "PolynomB", kvalue, "o", argvalue[3]) 
                 elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
                     raise seterr(family_name, keyname, kvalue, argname, argvalue)
                 else:
@@ -139,6 +146,7 @@ class ThinMultipole(Element):
         prmpolb = check_polynom("PolynomB", poly_b)
         check_strength("K", 1)
         check_strength("H", 2)
+        check_strength("O", 3)
         # Determine the length and order of PolynomA and PolynomB
         len_a, ord_a = getpol(prmpola)
         len_b, ord_b = getpol(prmpolb)
