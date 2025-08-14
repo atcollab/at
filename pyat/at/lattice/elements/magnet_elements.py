@@ -168,42 +168,6 @@ class ThinMultipole(Element):
                 raise ValueError(f"MaxOrder must be smaller than {lmax}")
         super().__setattr__(key, value)
 
-    # noinspection PyPep8Naming
-    @property
-    def K(self) -> float:
-        """Focusing strength [mˆ-2]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 2 else float(arr[1])
-
-    # noinspection PyPep8Naming
-    @K.setter
-    def K(self, strength: float):
-        self.PolynomB[1] = strength
-
-    # noinspection PyPep8Naming
-    @property
-    def H(self) -> float:
-        """Sextupolar strength [mˆ-3]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 3 else float(arr[2])
-
-    # noinspection PyPep8Naming
-    @H.setter
-    def H(self, strength):
-        self.PolynomB[2] = strength
-
-        # noinspection PyPep8Naming
-    @property
-    def O(self) -> float:
-        """Octupolar strength [mˆ-4]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 4 else float(arr[3])
-
-    # noinspection PyPep8Naming
-    @O.setter
-    def O(self, strength):
-        self.PolynomB[3] = strength
-
     def _get_order(self):
         order = getattr(self, 'DefaultOrder', None)
         if order is None:
@@ -212,29 +176,72 @@ class ThinMultipole(Element):
                    f"with PolynomA/B or use predefined magnet class")
             raise AtError(msg)
         return order
+    
+    def _get_strength(self, order, integrated=False):
+        try:
+            k = self.PolynomB[order]
+        except IndexError:
+            return 0.0
+        if integrated:
+            l = getattr(self,'Length', 1.0)
+            k = k*l if l > 0.0 else k   
+        return k
+    
+    def _set_strength(self, value, order, integrated=False):
+        if integrated:
+            l = getattr(self,'Length', 1.0)    
+            value = value/l if l > 0.0 else value
+        self.PolynomB[order] = value    
 
+
+    # noinspection PyPep8Naming
+    @property
+    def K(self) -> float:
+        """Focusing strength [mˆ-2]"""
+        return self._get_strength(1)
+
+    # noinspection PyPep8Naming
+    @K.setter
+    def K(self, strength: float):
+        self._set_strength(strength, 1)
+
+    # noinspection PyPep8Naming
+    @property
+    def H(self) -> float:
+        """Sextupolar strength [mˆ-3]"""
+        return self._get_strength(2)
+
+    # noinspection PyPep8Naming
+    @H.setter
+    def H(self, strength):
+        self._set_strength(strength, 2)
+
+        # noinspection PyPep8Naming
+    @property
+    def O(self) -> float:
+        """Octupolar strength [mˆ-4]"""
+        return self._get_strength(3)
+
+    # noinspection PyPep8Naming
+    @O.setter
+    def O(self, strength):
+        self._set_strength(strength, 3)
+    
     @property
     def Strength(self): 
-        return self.PolynomB[self._get_order()]
+        return self._get_strength(self._get_order())
     
     @Strength.setter
     def Strength(self, strength):
-        self.PolynomB[self._get_order()] = strength
+        self._set_strength(strength, self._get_order())
 
     @property
     def IntegratedStrength(self):
-        k = self.PolynomB[self._get_order()]
-        l = getattr(self,'Length', 1.0)
-        return k*l if l>0 else k
+        return self._get_strength(self._get_order(), True) 
     
     @IntegratedStrength.setter
     def IntegratedStrength(self, strength):
-        l = getattr(self,'Length', 1.0)
-        if l>0:
-            value = strength/l
-        else:
-            value = strength   
-        self.PolynomB[self._get_order()] = value  
+        self._set_strength(strength, self._get_order(), True)  
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
