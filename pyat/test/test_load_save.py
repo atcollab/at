@@ -1,5 +1,7 @@
 """pyat test."""
 
+from __future__ import annotations
+
 import os
 import sys
 from pathlib import Path
@@ -46,10 +48,10 @@ def simple_hmba(hmba_lattice: Lattice) -> None:
     return ring
 
 
-@pytest.mark.parametrize("lattice", ["dba_lattice", "simple_hmba"])
+@pytest.mark.parametrize(("lattice"), ["dba_lattice", "simple_hmba"])
 @pytest.mark.parametrize(
-    "suffix, options",
-    (
+    ("suffix", "options"),
+    [
         (".m", {}),
         (".repr", {}),
         (".mat", {"use": "abcd"}),
@@ -57,10 +59,19 @@ def simple_hmba(hmba_lattice: Lattice) -> None:
         (".json", {}),
         (".seq", {"use": "ring"}),
         (".lte", {"use": "ring"}),
-    ),
+    ],
 )
-def test_m(request, lattice, suffix, options) -> None:
-    """Test m."""
+def test_m(
+    request: any, lattice: Lattice, suffix: str, options: dict[any, any]
+) -> None:
+    """Test m.
+
+    Arguments:
+        request: request from fixture
+        lattice: AT lattice
+        suffix: output filename extension
+        options: options
+    """
     ring0 = request.getfixturevalue(lattice)
     fhandle, fname = mkstemp(suffix=suffix)
     os.close(fhandle)
