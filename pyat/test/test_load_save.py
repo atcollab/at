@@ -74,7 +74,9 @@ def test_m(request, lattice, suffix, options) -> None:
     # Check that we get back the original lattice
     _, rg1, _ = ring0.linopt6()
     _, rg2, _ = ring1.linopt6()
-    assert_allclose(rg1.tune, rg2.tune, atol=1.0e-12)
+
+    assert_allclose(rg1.tune, rg2.tune, atol=1.0e-12)  # act
+
     assert_allclose(rg1.chromaticity, rg2.chromaticity, atol=1.0e-12)
 
     # delete temporary file
