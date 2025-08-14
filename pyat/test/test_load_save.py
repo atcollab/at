@@ -29,13 +29,13 @@ def simple_hmba(hmba_lattice):
             del mult.FringeQuadEntrance
             del mult.FringeQuadExit
     # Replace Multipoles by Octupoles
-    for id in ring.get_uint32_index("OF*"):
-        _q = ring[id]
-        ring[id] = elt.Octupole(_q.FamName, _q.Length, _q.PolynomA, _q.PolynomB)
+    for idx in ring.get_uint32_index("OF*"):
+        _q = ring[idx]
+        ring[idx] = elt.Octupole(_q.FamName, _q.Length, _q.PolynomA, _q.PolynomB)
     # Disable useless e;ements
-    for id in ring.get_uint32_index("SH*"):
-        _q = ring[id]
-        ring[id] = elt.Drift(_q.FamName, _q.Length)
+    for idx in ring.get_uint32_index("SH*"):
+        _q = ring[idx]
+        ring[idx] = elt.Drift(_q.FamName, _q.Length)
     return ring
 
 
@@ -53,6 +53,7 @@ def simple_hmba(hmba_lattice):
     ),
 )
 def test_m(request, lattice, suffix, options) -> None:
+    """Test m."""
     ring0 = request.getfixturevalue(lattice)
     fname = mkstemp(suffix=suffix)[1]
 
