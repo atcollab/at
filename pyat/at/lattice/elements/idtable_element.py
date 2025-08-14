@@ -81,86 +81,87 @@ class InsertionDeviceKickMap(Element):
         # orblancog
         def readRadiaFieldMap(file_in_name):
             """
-            Read a RadiaField map and return
+            Read a RadiaField map and return.
             """
             with open(file_in_name, encoding="utf-8") as f:
-                """
-                File, where :
-                - the first data line is the length in meters
-                - the second data line is the number of points in the h. plane
-                - the third data line is the number of points in the v. plane
-                - each data block comes after a START
-                - first the horizontal data block, and second the
-                      vertical data block
-                - each block is a table with axes
-                - comments start with #
-                """
-                # File example:
-                # #comment in line 1
-                # #comment in line 2
-                # Length_in_m
-                # #comment in line 4
-                # Number of points in horizontal plane :nh
-                # #comment in line 6
-                # Number of points in vertical plane :nv
-                # #comment in line 8
-                # START
-                #             pos_point1h pos_point2h ... pos_pointnh
-                # pos_point1v
-                # ...                    horizontal kick_map(nv,nh)
-                # pos_pointnv
-                # START
-                #             pos_point1h pos_point2h ... pos_pointnh
-                # pos_point1v
-                # ...                    vertical kick_map(nv,nh)
-                # pos_pointnv
-                # (EOL)
-
-                data_lines = 0  # line not starting with '#'
-                header_lines = 0  # line starting with '#'
-                block_counter = 0  # START of the h.map, START of the v.map
-                for line in f:
-                    sline = line.split()
-                    if sline[0] == "#":  # line is comment
-                        header_lines += 1
+                lines = f.readlines()
+            f.close()
+            # """
+            # File, where :
+            # - the first data line is the length in meters
+            # - the second data line is the number of points in the h. plane
+            # - the third data line is the number of points in the v. plane
+            # - each data block comes after a START
+            # - first the horizontal data block, and second the
+            #       vertical data block
+            # - each block is a table with axes
+            # - comments start with #
+            # """
+            # File example:
+            # #comment in line 1
+            # #comment in line 2
+            # Length_in_m
+            # #comment in line 4
+            # Number of points in horizontal plane :nh
+            # #comment in line 6
+            # Number of points in vertical plane :nv
+            # #comment in line 8
+            # START
+            #             pos_point1h pos_point2h ... pos_pointnh
+            # pos_point1v
+            # ...                    horizontal kick_map(nv,nh)
+            # pos_pointnv
+            # START
+            #             pos_point1h pos_point2h ... pos_pointnh
+            # pos_point1v
+            # ...                    vertical kick_map(nv,nh)
+            # pos_pointnv
+            # (EOL)
+            data_lines = 0  # line not starting with '#'
+            header_lines = 0  # line starting with '#'
+            block_counter = 0  # START of the h.map, START of the v.map
+            for line in lines:
+                sline = line.split()
+                if sline[0] == "#":  # line is comment
+                    header_lines += 1
+                else:
+                    data_lines += 1
+                    if data_lines == 1:  # get the element length
+                        el_length = float(sline[0])
+                    elif data_lines == 2:  # get the number of hor. points
+                        h_points = int(sline[0])
+                    elif data_lines == 3:  # get the number of ver. points
+                        v_points = int(sline[0])
+                        # initialize element kicks and table_axes
+                        kick_map = numpy.zeros((v_points, h_points))
+                        haxis = numpy.zeros(h_points)
+                        vaxis = numpy.zeros(v_points)
                     else:
-                        data_lines += 1
-                        if data_lines == 1:  # get the element length
-                            el_length = float(sline[0])
-                        elif data_lines == 2:  # get the number of hor. points
-                            h_points = int(sline[0])
-                        elif data_lines == 3:  # get the number of ver. points
-                            v_points = int(sline[0])
-                            # initialize element kicks and table_axes
-                            kick_map = numpy.zeros((v_points, h_points))
-                            haxis = numpy.zeros(h_points)
-                            vaxis = numpy.zeros(v_points)
-                        else:
-                            # read block of data
-                            if sline[0] == "START" or sline[0] == "START\n":
-                                block_counter += 1
-                                block_lines = 0
-                            if block_lines == 1:
-                                haxis = sline
-                            if block_lines > 1:
-                                # minus one due to python index starting at 0
-                                # and minus another one due
-                                # to the column labels in first line
-                                vaxis[block_lines - 2] = float(sline[0])
-                                kick_map[block_lines - 2][:] = sline[1:]
-                            if block_lines > v_points:
-                                block_lines = 0
-                                if block_counter == 1:
-                                    hkickmap = numpy.copy(kick_map)
-                                    table_cols1 = haxis
-                                    table_rows1 = vaxis
-                                if block_counter == 2:
-                                    vkickmap = numpy.copy(kick_map)
-                                    table_cols2 = haxis
-                                    table_rows2 = vaxis
-                                if block_counter > 2:
-                                    print("atWarning: only two tables read")
-                            block_lines += 1
+                        # read block of data
+                        if sline[0] == "START" or sline[0] == "START\n":
+                            block_counter += 1
+                            block_lines = 0
+                        if block_lines == 1:
+                            haxis = sline
+                        if block_lines > 1:
+                            # minus one due to python index starting at 0
+                            # and minus another one due
+                            # to the column labels in first line
+                            vaxis[block_lines - 2] = float(sline[0])
+                            kick_map[block_lines - 2][:] = sline[1:]
+                        if block_lines > v_points:
+                            block_lines = 0
+                            if block_counter == 1:
+                                hkickmap = numpy.copy(kick_map)
+                                table_cols1 = haxis
+                                table_rows1 = vaxis
+                            if block_counter == 2:
+                                vkickmap = numpy.copy(kick_map)
+                                table_cols2 = haxis
+                                table_rows2 = vaxis
+                            if block_counter > 2:
+                                print("atWarning: only two tables read")
+                        block_lines += 1
             # dummy variables not implemented in the reading function
             # but required
             hkickmap1 = 0.0 * numpy.copy(hkickmap)
