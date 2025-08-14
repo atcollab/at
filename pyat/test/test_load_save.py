@@ -60,13 +60,16 @@ def test_m(request, lattice, suffix, options):
 
     os.unlink(fname)
 
+
 def test_long_arrays_in_m_file():
     # create an element with long arrays
-    elem = InsertionDeviceKickMap('idmap', 10, "../../machine_data/IDs/kickmap_w150_20mm.txt", 6.04)
+    elem = InsertionDeviceKickMap(
+        "idmap", 10, "../../machine_data/IDs/kickmap_w150_20mm.txt", 6.04
+    )
 
     # save a ring with one element into a temporary file
-    ring0 = Lattice([elem],energy=6.04e9)
-    fname = mkstemp(suffix='.m')[1]
+    ring0 = Lattice([elem], energy=6.04e9)
+    fname = mkstemp(suffix=".m")[1]
     ring0.save(fname)
 
     # retrieve the ring
