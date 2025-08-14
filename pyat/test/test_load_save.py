@@ -2,10 +2,10 @@ import os
 from tempfile import mkstemp
 
 import pytest
-from numpy.testing import assert_allclose, assert_equal
-
-from at.lattice import Lattice, elements as elt
+from at.lattice import Lattice
+from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
+from numpy.testing import assert_allclose, assert_equal
 
 
 @pytest.fixture
