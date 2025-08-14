@@ -1,5 +1,6 @@
 """pyat test."""
 
+import os
 import sys
 from pathlib import Path
 from tempfile import mkstemp
@@ -61,8 +62,8 @@ def simple_hmba(hmba_lattice: Lattice) -> None:
 def test_m(request, lattice, suffix, options) -> None:
     """Test m."""
     ring0 = request.getfixturevalue(lattice)
-    thepath = files(machine_data).as_posix()
-    fname = mkstemp(suffix=suffix, dir=thepath)[1]
+    fdescriptor, fname = mkstemp(suffix=suffix)
+    os.close(fdescriptor)
 
     # Create a new file
     ring0.save(fname, **options)
@@ -90,7 +91,8 @@ def test_long_arrays_in_m_file() -> None:
 
     # save a ring with one element into a temporary file
     ring0 = Lattice([elem], energy=6.04e9)
-    fname = mkstemp(suffix=".m", dir=thepath)[1]
+    fdescript, fname = mkstemp(suffix=".m")
+    os.close(fdescript)
     ring0.save(fname)
 
     # retrieve the ring
