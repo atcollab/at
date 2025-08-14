@@ -18,9 +18,16 @@ else:
     from importlib.resources import files
 
 
-@pytest.fixture
-def simple_hmba(hmba_lattice):
-    """Modify hmba_lattice to make it compatible with MAD-X and Elegant"""
+@pytest.fixture()
+def simple_hmba(hmba_lattice) -> None:
+    """Modify hmba_lattice to make it compatible with MAD-X and Elegant.
+
+    Arguments:
+        hmba_lattice: AT Lattice.
+
+    Returns:
+        Lattice: AT ring
+    """
     ring = hmba_lattice.deepcopy()
     # Set NumIntSteps to default, remove FringeQuadEntrance and FringeQuadExit
     for mult in ring.select(elt.Multipole):
