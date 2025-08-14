@@ -12,7 +12,10 @@ function Elem = atidtable(fname, Nslice, filename, Energy, method)
 % P. Elleaume, "A new approach to the electron beam dynamics in undulators
 % and wigglers", EPAC92.
 %
-% returns assigned structure with class 'KickMap'
+% returns assigned structure with class 'KickMap'.
+%
+% Note: Use atidtable_dat instead, with sort, transpose,
+%       and negative first order sign.
 
 %---------------------------------------------------------------------------
 % Modification Log:
@@ -22,12 +25,9 @@ function Elem = atidtable(fname, Nslice, filename, Energy, method)
 % 23-02-2012:  further modifications by B. Nash: reads in only matlab file
 % 13-08-2025:  Replaced by atidtable_dat.
 %---------------------------------------------------------------------------
-fprintf(['Note: Use atidtable_dat instead, with sort, transpose,' ...
-          ' and negative first order sign.\n']);
-
-if nargin < 5, method='IdTablePass'; end
-Elem = atidtable_dat(fname,Nslice,filename,Energy,method,...
-                    'sort',1, ...
-                    'transpose',1, ...
-                    'first_order_sign',-1);
+    if nargin < 5, method='IdTablePass'; end
+    Elem = atidtable_dat(fname,Nslice,filename,Energy,method,...
+                        'sort',1, ...
+                        'transpose',1, ...
+                        'first_order_sign',-1);
 end
