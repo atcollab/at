@@ -1,6 +1,7 @@
 function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
                               varargin)
-% atidtable_dat Read - RADIA kick maps of 1st and 2nd order in energy
+% atidtable_dat Creates an element from RADIA files containing kick maps
+%               of second order in energy, and optionally first order.
 %
 % Elem = atidtable_dat(FamName, Nslice, filename, Energy, method)
 %
@@ -10,8 +11,7 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
 %           by a single kick in the center of the device).
 % filename  name of file with the ID tracking tables.
 % Energy    Normalization energy in GeV, needed for scaling
-% method    name of the function to use for tracking. Use 'IdTablePass'
-%             or 'WigTablePass'
+% method    name of the function to use for tracking. Use 'IdTablePass'.
 %
 % Options:
 % sort      sort the imput table if not zero. Default, 0.
@@ -23,21 +23,29 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
 %   atinsertiondevicekickmap
 %
 %
-% This function creates an AT element read from an integrated kickmap file.
+% This elememt implements tracking through an integrated field map of
+% second order, see Eq. (5) in [#]. A normalization energy is required
+% to calculate alpha.
+%
+% Optionally, first order maps could be included. See Eq. (3) in [#].
+% Note that positive and negative signs are not taken into account in
+% this implementation. Input should already include the sign difference.
 %
 % The tracking table method is described in
-% P. Elleaume, "A new approach to the electron beam dynamics in undulators
-% and wigglers", EPAC92.
+% [#] P. Elleaume, "A new approach to the electron beam dynamics
+% in undulators and wigglers", EPAC92.
 
 %--------------------------------------------------------------------------
 % Modification Log:
 % -----------------
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
 % 17-11-2008:  Modificated by Z.Martí
-% 18-07-2023:  blanco-garcia. Eliminates R1,R1,T1,T2,NumIntSteps,MaxOrder
+% 18-07-2023:  oblanco. Eliminates R1,R1,T1,T2,NumIntSteps,MaxOrder
 %                               PolynomA, PolynomB,NumX,NumY
 %                               (they are not used in IdTablePass)
 %                             Adds InsertionDeviceKickMap class
+% 15-08-2025   oblanco. Eliminates redundant idtable_global.m and
+%                           atidtable.m. Add options for compatibility.
 %--------------------------------------------------------------------------
 
 p = inputParser;
