@@ -68,7 +68,9 @@ class InsertionDeviceKickMap(Element):
 
     def from_text_file(self, Nslice: int, Filename_in: str, Energy: float) -> tuple:
         """
-        Create an Insertion Device Kick Map from a Radia field map file.
+        Create an Insertion Device Kick Map from a Radia field map file in text format.
+
+        FamilyName is part of the base class, and all other arguments are described below.
 
         Arguments:
             Nslice: number of slices in integrator.
@@ -87,16 +89,7 @@ class InsertionDeviceKickMap(Element):
         # orblancog
         def read_radia_field_map(file_in_name: str) -> tuple:
             """
-            Read a RadiaField map and return.
-
-            Arguments:
-                file_in_name: the file name.
-
-            Returns:
-                Tuple with file tables and axes.
-
-            Raises:
-                ValueError: if the number of blocks in less than 2 or equal to 3.
+            Read a RadiaField map in text format and return.
 
             A File, where :
             - the first data line is the length in meters.
@@ -109,7 +102,7 @@ class InsertionDeviceKickMap(Element):
               vertical first order kicks.
             - each block is a table with axes.
             - comments start with #.
-            ! File example:
+            File example (ignore the !SPACE):
             ! #comment in line 1
             ! #comment in line 2
             ! Length_in_m
@@ -129,50 +122,61 @@ class InsertionDeviceKickMap(Element):
             ! ...                    vertical kick_map(nv,nh)
             ! pos_pointnv
             ! (EOL)
+
+            Arguments:
+                file_in_name: the file name.
+
+            Returns:
+                Tuple with file tables and axes.
+
+            Raises:
+                ValueError: if the number of blocks in less than 2 or equal to 3.
             """
             thepath = Path(file_in_name)
             with thepath.open(encoding="utf-8") as thefile:
-                data_lines = 0  # line not starting with '#'
-                header_lines = 0  # line starting with '#'
-                block_counter = 0  # START of the h.map, START of the v.map
-                kick_block_list = []
-                kick_haxes_list = []
-                kick_vaxes_list = []
-                for line in thefile:
-                    sline = line.split()
-                    if sline[0] == "#":  # line is comment
-                        header_lines += 1
+                lines = f.readlines()
+            f.close()
+            data_lines = 0  # line not starting with '#'
+            header_lines = 0  # line starting with '#'
+            block_counter = 0  # START of the h.map, START of the v.map
+            kick_block_list = []
+            kick_haxes_list = []
+            kick_vaxes_list = []
+            for line in lines:
+                sline = line.split()
+                if sline[0] == "#":  # line is comment
+                    header_lines += 1
+                else:
+                    data_lines += 1
+                    if data_lines == 1:  # get the element length
+                        el_length = float(sline[0])
+                    elif data_lines == 2:  # get the number of hor. points
+                        h_points = int(sline[0])
+                    elif data_lines == 3:  # get the number of ver. points
+                        v_points = int(sline[0])
+                        # initialize element kicks and table_axes
+                        kick_block = np.zeros((v_points, h_points))
+                        haxis = np.zeros(h_points)
+                        vaxis = np.zeros(v_points)
                     else:
-                        data_lines += 1
-                        if data_lines == 1:  # get the element length
-                            el_length = float(sline[0])
-                        elif data_lines == 2:  # get the number of hor. points
-                            h_points = int(sline[0])
-                        elif data_lines == 3:  # get the number of ver. points
-                            v_points = int(sline[0])
-                            # initialize element kicks and table_axes
-                            kick_block = np.zeros((v_points, h_points))
-                            haxis = np.zeros(h_points)
-                            vaxis = np.zeros(v_points)
-                        else:
-                            # read block of data
-                            if sline[0] == "START" or sline[0] == "START\n":
-                                block_counter += 1
-                                block_lines = 0
-                            if block_lines == 1:
-                                haxis = sline
-                            if block_lines > 1:
-                                # minus one due to python index starting at 0
-                                # and minus another one due
-                                # to the column labels in first line
-                                vaxis[block_lines - 2] = float(sline[0])
-                                kick_block[block_lines - 2][:] = sline[1:]
-                            if block_lines > v_points:
-                                block_lines = 0
-                                kick_block_list.append(kick_block)
-                                kick_haxes_list.append(haxis)
-                                kick_vaxes_list.append(vaxis)
-                            block_lines += 1
+                        # read block of data
+                        if sline[0] == "START" or sline[0] == "START\n":
+                            block_counter += 1
+                            block_lines = 0
+                        if block_lines == 1:
+                            haxis = sline
+                        if block_lines > 1:
+                            # minus one due to python index starting at 0
+                            # and minus another one due
+                            # to the column labels in first line
+                            vaxis[block_lines - 2] = float(sline[0])
+                            kick_block[block_lines - 2][:] = sline[1:]
+                        if block_lines > v_points:
+                            block_lines = 0
+                            kick_block_list.append(kick_block)
+                            kick_haxes_list.append(haxis)
+                            kick_vaxes_list.append(vaxis)
+                        block_lines += 1
             # checking how many kick blocks were added
             lenkick_block_list = len(kick_block_list)
             if lenkick_block_list < 2 or lenkick_block_list == 3:
