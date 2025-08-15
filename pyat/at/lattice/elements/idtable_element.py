@@ -72,16 +72,16 @@ class InsertionDeviceKickMap(Element):
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
-    def from_text_file(self, Nslice: int, fname: str, Energy: float) -> tuple:
+    def from_text_file(self, nslice: int, fname: str, norm_energy: float) -> tuple:
         """
         Create an Insertion Device Kick Map from a Radia field map file in text format.
 
         FamilyName is part of the base class, and all other arguments are described below.
 
         Arguments:
-            Nslice: number of slices in integrator.
+            nslice: number of slices in integrator.
             fname: input filename.
-            Energy: particle energy in GeV.
+            norm_energy: particle energy in GeV.
 
         Returns:
             A tuple.
@@ -267,7 +267,7 @@ class InsertionDeviceKickMap(Element):
 
         # Field to kick factors
         e_mass_gev = e_mass * 1e-9
-        brho = 1e9 * np.sqrt(Energy**2 - e_mass_gev**2) / clight
+        brho = 1e9 * np.sqrt(norm_energy**2 - e_mass_gev**2) / clight
         # kick2 vars
         factor2 = 1.0 / (brho**2)
         xkick = factor2 * hkickmap2
@@ -283,8 +283,8 @@ class InsertionDeviceKickMap(Element):
         return {
             "PassMethod": "IdTablePass",
             "Filename_in": fname,
-            "Normalization_energy": Energy,
-            "Nslice": np.uint8(Nslice),
+            "Normalization_energy": norm_energy,
+            "Nslice": np.uint8(nslice),
             "Length": el_length,
             "xkick": xkick,
             "ykick": ykick,
