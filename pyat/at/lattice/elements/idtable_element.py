@@ -59,9 +59,9 @@ class InsertionDeviceKickMap(Element):
         """
         Init IdTable.
 
-        This __init__ takes the inputto initialize an InsertionDeviceKickMap
-        from an input file with arguments, or from a dictionary with
-        all parameters.
+        This __init__ takes the input to initialize an InsertionDeviceKickMap
+        from an input file with arguments, for example at the moment of the element creation,
+        or from a dictionary with all parameters, for example when reading a Lattice.
 
         Arguments:
             family_name: the family name
