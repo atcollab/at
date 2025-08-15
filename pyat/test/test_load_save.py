@@ -20,7 +20,8 @@ def simple_hmba(hmba_lattice):
     # Replace Multipoles by Octupoles
     for id in ring.get_uint32_index("OF*"):
         q = ring[id]
-        ring[id] = elt.Octupole(q.FamName, q.Length, q.PolynomA, q.PolynomB)
+        ring[id] = elt.Octupole(q.FamName, q.Length, PolynomA=q.PolynomA,
+                                PolynomB=q.PolynomB)
     # Disable useless e;ements
     for id in ring.get_uint32_index("SH*"):
         q = ring[id]

@@ -183,7 +183,7 @@ class KOCT(_ElegantElement):
     def to_at(self, l, k3=0.0, **params):  # noqa: E741
         poly_b = [0.0, 0.0, 0.0, k3 / 6.0]
         poly_a = [0.0, 0.0, 0.0, 0.0]
-        return [elt.Octupole(self.name, l, poly_a, poly_b, **params)]
+        return [elt.Octupole(self.name, l, k3/6.0, **params)]
 
     @classmethod
     def from_at(cls, kwargs):

@@ -16,7 +16,7 @@ __all__ = [
 
 import warnings
 from collections.abc import Generator
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class ThinMultipole(Element):
     """Thin multipole element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
-    _conversions = dict(Element._conversions, K=float, H=float)
+    _conversions = dict(Element._conversions, K=float, H=float, O=float)
     _stacklevel = 4  # Stacklevel for warnings
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
@@ -105,6 +105,13 @@ class ThinMultipole(Element):
                         and (kvalue.size < 3 or argvalue[2] != kvalue[2])
                     ):
                         raise seterr(family_name, "PolynomB", kvalue, "h", argvalue[2])
+                elif issubclass(self.__class__, Octupole):
+                    if (
+                        keyname == "PolynomB"
+                        and argvalue[3] != 0.0
+                        and (kvalue.size < 4 or argvalue[3] != kvalue[3])
+                    ):
+                        raise seterr(family_name, "PolynomB", kvalue, "o", argvalue[3]) 
                 elif np.any(argvalue) and not np.array_equiv(kvalue, argvalue):
                     raise seterr(family_name, keyname, kvalue, argname, argvalue)
                 else:
@@ -139,6 +146,7 @@ class ThinMultipole(Element):
         prmpolb = check_polynom("PolynomB", poly_b)
         check_strength("K", 1)
         check_strength("H", 2)
+        check_strength("O", 3)
         # Determine the length and order of PolynomA and PolynomB
         len_a, ord_a = getpol(prmpola)
         len_b, ord_b = getpol(prmpolb)
@@ -168,29 +176,80 @@ class ThinMultipole(Element):
                 raise ValueError(f"MaxOrder must be smaller than {lmax}")
         super().__setattr__(key, value)
 
+    def _get_order(self):
+        order = getattr(self, 'DefaultOrder', None)
+        if order is None:
+            msg = (f"Default Order not defined for class "
+                   f"{self.__class__.__name__}, please access the strength "
+                   f"with PolynomA/B or use predefined magnet class")
+            raise AtError(msg)
+        return order
+    
+    def _get_strength(self, order, integrated=False):
+        try:
+            k = self.PolynomB[order]
+        except IndexError:
+            return 0.0
+        if integrated:
+            l = getattr(self,'Length', 1.0)
+            k = k*l if l > 0.0 else k   
+        return k
+    
+    def _set_strength(self, value, order, integrated=False):
+        if integrated:
+            l = getattr(self,'Length', 1.0)    
+            value = value/l if l > 0.0 else value
+        self.PolynomB[order] = value    
+
+
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 2 else float(arr[1])
+        return self._get_strength(1)
 
     # noinspection PyPep8Naming
     @K.setter
     def K(self, strength: float):
-        self.PolynomB[1] = strength
+        self._set_strength(strength, 1)
 
     # noinspection PyPep8Naming
     @property
     def H(self) -> float:
         """Sextupolar strength [mˆ-3]"""
-        arr = self.PolynomB
-        return 0.0 if len(arr) < 3 else float(arr[2])
+        return self._get_strength(2)
 
     # noinspection PyPep8Naming
     @H.setter
     def H(self, strength):
-        self.PolynomB[2] = strength
+        self._set_strength(strength, 2)
+
+        # noinspection PyPep8Naming
+    @property
+    def O(self) -> float:
+        """Octupolar strength [mˆ-4]"""
+        return self._get_strength(3)
+
+    # noinspection PyPep8Naming
+    @O.setter
+    def O(self, strength):
+        self._set_strength(strength, 3)
+    
+    @property
+    def Strength(self): 
+        return self._get_strength(self._get_order())
+    
+    @Strength.setter
+    def Strength(self, strength):
+        self._set_strength(strength, self._get_order())
+
+    @property
+    def IntegratedStrength(self):
+        return self._get_strength(self._get_order(), True) 
+    
+    @IntegratedStrength.setter
+    def IntegratedStrength(self, strength):
+        self._set_strength(strength, self._get_order(), True)  
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
@@ -231,7 +290,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             return True
         else:
             return False
-
+        
 
 class Dipole(Radiative, Multipole):
     """Dipole element"""
@@ -436,11 +495,37 @@ class Sextupole(Multipole):
 
 
 class Octupole(Multipole):
-    """Octupole element, with no changes from multipole at present"""
+    """Octupole element"""
 
-    _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["O"]
+    _stacklevel = 7  # Stacklevel for warnings
 
     DefaultOrder = 3
+
+    def __init__(self, family_name: str, length: float, o: float = 0.0, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            o:              Octupolar strength [mˆ-4]
+
+        Keyword Arguments:
+            PolynomB:           straight multipoles
+            PolynomA:           skew multipoles
+            MaxOrder:           Number of desired multipoles
+            NumIntSteps=10:     Number of integration steps
+            KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        super().__init__(family_name, length, [], [0.0, 0.0, 0.0, o], **kwargs)
+
+    def items(self) -> Generator[tuple[str, Any], None, None]:
+        yield from super().items()
+        yield "O", self.O
 
 
 class Corrector(LongElement):

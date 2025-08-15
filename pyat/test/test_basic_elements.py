@@ -119,9 +119,27 @@ def test_sextupole():
 
 
 def test_octupole():
-    o = elements.Octupole('octupole', 1.0, [], [0.0, 0.0, 0.0, 0.0])
+    o = elements.Octupole('octupole', 1.0)
     assert o.MaxOrder == 3
     assert len(o.PolynomA) == 4
+    assert o.O == 0.0
+    o = elements.Octupole('octupole', 1.0, -0.5)
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 4
+    assert o.O == -0.5
+    o = elements.Octupole('octupole', 1.0, PolynomB=[0.0, 0.0, 0.0, 0.005, 0.0])
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 5
+    assert o.O == 0.005
+    o = elements.Octupole('octupole', 1.0, PolynomB=[0.0, 0.0, 0.0, 0.005, 0.001])
+    assert o.MaxOrder == 4
+    assert len(o.PolynomA) == 5
+    assert o.O == 0.005
+    o = elements.Octupole('octupole', 1.0, PolynomB=[0.0, 0.0, 0.5, 0.005, 0.001],
+                           MaxOrder=3)
+    assert o.MaxOrder == 3
+    assert len(o.PolynomA) == 5
+    assert o.O == 0.005
 
 
 def test_thinmultipole():
@@ -146,7 +164,6 @@ def test_multipole():
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
 def test_PolynomA_strength_prioritisation(element_type, args):
@@ -177,7 +194,6 @@ def test_PolynomA_strength_prioritisation(element_type, args):
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
 def test_PolynomB_strength_prioritisation(element_type, args):
@@ -208,10 +224,9 @@ def test_PolynomB_strength_prioritisation(element_type, args):
     [
         (elements.Multipole, ["Multi", 1.0]),
         (elements.ThinMultipole, ["ThinMulti"]),
-        (elements.Octupole, ["Oct", 1.0]),
     ],
 )
-def test_K_and_H_strength_prioritisation(element_type, args):
+def test_K_and_H_and_O_strength_prioritisation(element_type, args):
     # Warning and no change when K is zero
     with pytest.warns(lattice.AtWarning):
         elem = element_type(*args, [], [0.0, 1.0], K=0.0)
@@ -220,6 +235,10 @@ def test_K_and_H_strength_prioritisation(element_type, args):
     with pytest.warns(lattice.AtWarning):
         elem = element_type(*args, [], [0.0, 0.0, 2.0], H=0.0)
     assert elem.PolynomB[2] == 2.0
+        # Warning and no change when O is zero
+    with pytest.warns(lattice.AtWarning):
+        elem = element_type(*args, [], [0.0, 0.0, 0.0, 3.0], O=0.0)
+    assert elem.PolynomB[3] == 3.0
     # Warning and no change when poly_b[1] and K are the same and non-zero
     with pytest.warns(lattice.AtWarning):
         elem = element_type(*args, [], [0.0, 1.0], K=1.0)
@@ -228,18 +247,28 @@ def test_K_and_H_strength_prioritisation(element_type, args):
     with pytest.warns(lattice.AtWarning):
         elem = element_type(*args, [], [0.0, 0.0, 2.0], H=2.0)
     assert elem.PolynomB[2] == 2.0
+        # Warning and no change when poly_b[3] and O are the same and non-zero
+    with pytest.warns(lattice.AtWarning):
+        elem = element_type(*args, [], [0.0, 0.0, 0.0, 3.0], O=3.0)
+    assert elem.PolynomB[3] == 3.0
     # Error when K is non-zero and different to poly_b[1], even if poly_b[1] is 0.0
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, [], [0.0, 0.0], K=2.0)
     # Error when H is non-zero and different to poly_b[2], even if poly_b[2] is 0.0
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, [], [0.0, 0.0, 0.0], H=2.0)
+    # Error when O is non-zero and different to poly_b[3], even if poly_b[3] is 0.0
+    with pytest.raises(lattice.AtError):
+        elem = element_type(*args, [], [0.0, 0.0 ,0.0, 0.0], O=3.0)
     # Error when len(poly_b)<2 and K is specified
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, [], [0.0], K=1.0)
     # Error when len(poly_b)<3 and H is specified
     with pytest.raises(lattice.AtError):
         elem = element_type(*args, [], [0.0, 0.0], H=1.0)
+     # Error when len(poly_b)<4 and O is specified
+    with pytest.raises(lattice.AtError):
+        elem = element_type(*args, [], [0.0, 0.0, 0.0], O=1.0)       
 
 
 @pytest.mark.parametrize(
