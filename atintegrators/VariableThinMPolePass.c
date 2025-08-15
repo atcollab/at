@@ -49,11 +49,8 @@ struct elemab {
     double Sinabove;
     double Phase;
     int NSamples;
+    int MOrders;
     double* Func;
-    double* Funcderiv1;
-    double* Funcderiv2;
-    double* Funcderiv3;
-    double* Funcderiv4;
     double FuncTimeDelay;
 };
 
@@ -114,8 +111,8 @@ double get_pol(
     pcg32_random_t* rng
     )
 {
-    int turnidx; // turn index
-    double ampt; // amplitude per turn
+    int turnidx,MOrders,i; // index
+    double ampt,tpow,thefactorial; // variables in for cycles
 
     // sin mode parameters
     double whole_sin_above = elem->Sinabove;
@@ -123,10 +120,9 @@ double get_pol(
 
     // custom mode parameters
     double* func;
-    double *funcderiv1, *funcderiv2, *funcderiv3, *funcderiv4;
     double* amp = elem->Amplitude;
-    double t2;       // time squared
     double functdelay;
+    double functot;
 
     if (!amp) {
         return 0.0;
@@ -148,21 +144,24 @@ double get_pol(
         return ampt;
     case 2:
         if (periodic || turn < elem->NSamples) {
+            /* get the function, the delay, and turns */
             func = elem->Func;
-            funcderiv1 = elem->Funcderiv1;
-            funcderiv2 = elem->Funcderiv2;
-            funcderiv3 = elem->Funcderiv3;
-            funcderiv4 = elem->Funcderiv4;
             functdelay = elem->FuncTimeDelay;
             turnidx = turn % elem->NSamples;
+            MOrders = elem->MOrders;
 
+            /* calculate the amplitude as a Taylor expansion */
             t = t - functdelay;
-            t2 = t*t;
-            ampt = ampt*(func[turnidx]
-                  + funcderiv1[turnidx]*t
-                  + 0.5*funcderiv2[turnidx]*t2
-                  + oneoversix*funcderiv3[turnidx]*t2*t
-                  + oneovertwentyfour*funcderiv4[turnidx]*t2*t2);
+            functot = func[0][turnidx];
+            tpow = 1;
+            thefactorial = 1;
+            for (i=1;i<MOrders;i++){
+              tpow = tpow * t;
+              thefactorial = thefactorial * i;
+              functot =  functot + tpow / thefactorial * func[i][turnidx];
+            };
+            ampt = ampt * functot;
+
             return ampt;
         } else {
             return 0.0;
@@ -268,14 +267,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
     if (!Elem) {
-        int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, MOrdersA, MOrdersB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
-        double *FuncAderiv1, *FuncBderiv1;
-        double *FuncAderiv2, *FuncBderiv2;
-        double *FuncAderiv3, *FuncBderiv3;
-        double *FuncAderiv4, *FuncBderiv4;
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
@@ -302,16 +297,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
+        MOrdersA=atGetOptionalLong(ElemData, "MOrdersA", 1); check_error();
+        MOrdersB=atGetOptionalLong(ElemData, "MOrdersB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
-        FuncAderiv1=atGetOptionalDoubleArray(ElemData,"FuncAderiv1"); check_error();
-        FuncBderiv1=atGetOptionalDoubleArray(ElemData,"FuncBderiv1"); check_error();
-        FuncAderiv2=atGetOptionalDoubleArray(ElemData,"FuncAderiv2"); check_error();
-        FuncBderiv2=atGetOptionalDoubleArray(ElemData,"FuncBderiv2"); check_error();
-        FuncAderiv3=atGetOptionalDoubleArray(ElemData,"FuncAderiv3"); check_error();
-        FuncBderiv3=atGetOptionalDoubleArray(ElemData,"FuncBderiv3"); check_error();
-        FuncAderiv4=atGetOptionalDoubleArray(ElemData,"FuncAderiv4"); check_error();
-        FuncBderiv4=atGetOptionalDoubleArray(ElemData,"FuncBderiv4"); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
         FuncBTimeDelay=atGetOptionalDouble(ElemData,"FuncBTimeDelay", 0); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 0); check_error();
@@ -340,16 +329,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Sinabove = SinBabove;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
+        ElemA->NSamples = MOrdersA;
+        ElemB->NSamples = MOrdersB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
-        ElemA->Funcderiv1 = FuncAderiv1;
-        ElemB->Funcderiv1 = FuncBderiv1;
-        ElemA->Funcderiv2 = FuncAderiv2;
-        ElemB->Funcderiv2 = FuncBderiv2;
-        ElemA->Funcderiv3 = FuncAderiv3;
-        ElemB->Funcderiv3 = FuncBderiv3;
-        ElemA->Funcderiv4 = FuncAderiv4;
-        ElemB->Funcderiv4 = FuncBderiv4;
         ElemA->FuncTimeDelay = FuncATimeDelay;
         ElemB->FuncTimeDelay = FuncBTimeDelay;
         Elem->ElemA = ElemA;
@@ -379,14 +362,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double* r_in;
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, MOrdersA, MOrdersB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
-        double *FuncAderiv1, *FuncBderiv1;
-        double *FuncAderiv2, *FuncBderiv2;
-        double *FuncAderiv3, *FuncBderiv3;
-        double *FuncAderiv4, *FuncBderiv4;
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
@@ -415,16 +394,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
+        MOrdersA=atGetOptionalLong(ElemData, "MOrdersA", 0); check_error();
+        MOrdersB=atGetOptionalLong(ElemData, "MOrdersB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
-        FuncAderiv1=atGetOptionalDoubleArray(ElemData,"FuncAderiv1"); check_error();
-        FuncBderiv1=atGetOptionalDoubleArray(ElemData,"FuncBderiv1"); check_error();
-        FuncAderiv2=atGetOptionalDoubleArray(ElemData,"FuncAderiv2"); check_error();
-        FuncBderiv2=atGetOptionalDoubleArray(ElemData,"FuncBderiv2"); check_error();
-        FuncAderiv3=atGetOptionalDoubleArray(ElemData,"FuncAderiv3"); check_error();
-        FuncBderiv3=atGetOptionalDoubleArray(ElemData,"FuncBderiv3"); check_error();
-        FuncAderiv4=atGetOptionalDoubleArray(ElemData,"FuncAderiv4"); check_error();
-        FuncBderiv4=atGetOptionalDoubleArray(ElemData,"FuncBderiv4"); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
         FuncBTimeDelay=atGetOptionalDouble(ElemData,"FuncBTimeDelay", 0); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 0); check_error();
@@ -444,18 +417,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Sinabove = SinBabove;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
+        ElemA->MOrders = MOrdersA;
+        ElemB->MOrders = MOrdersB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
-        ElemA->Funcderiv1 = FuncAderiv1;
-        ElemB->Funcderiv1 = FuncBderiv1;
-        ElemA->Funcderiv2 = FuncAderiv2;
-        ElemB->Funcderiv2 = FuncBderiv2;
-        ElemA->Funcderiv3 = FuncAderiv3;
-        ElemB->Funcderiv3 = FuncBderiv3;
-        ElemA->Funcderiv4 = FuncAderiv4;
-        ElemB->Funcderiv4 = FuncBderiv4;
         ElemA->FuncTimeDelay = FuncATimeDelay;
         ElemB->FuncTimeDelay = FuncBTimeDelay;
         /* ALLOCATE memory for the output array of the same size as the input  */
@@ -483,26 +450,20 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 7, mxCreateString("SinBabove"));
             mxSetCell(plhs[1], 8, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 9, mxCreateString("FuncA"));
-            mxSetCell(plhs[1], 10, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 11, mxCreateString("FuncAderiv1"));
-            mxSetCell(plhs[1], 12, mxCreateString("FuncBderiv1"));
-            mxSetCell(plhs[1], 13, mxCreateString("FuncAderiv2"));
-            mxSetCell(plhs[1], 14, mxCreateString("FuncBderiv2"));
-            mxSetCell(plhs[1], 15, mxCreateString("FuncAderiv3"));
-            mxSetCell(plhs[1], 16, mxCreateString("FuncBderiv3"));
-            mxSetCell(plhs[1], 17, mxCreateString("FuncAderiv4"));
-            mxSetCell(plhs[1], 18, mxCreateString("FuncBderiv4"));
-            mxSetCell(plhs[1], 19, mxCreateString("FuncATimeDelay"));
-            mxSetCell(plhs[1], 20, mxCreateString("FuncBTimeDelay"));
-            mxSetCell(plhs[1], 21, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 22, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 23, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 24,mxCreateString("T1"));
-            mxSetCell(plhs[1], 25,mxCreateString("T2"));
-            mxSetCell(plhs[1], 26,mxCreateString("R1"));
-            mxSetCell(plhs[1], 27,mxCreateString("R2"));
-            mxSetCell(plhs[1], 28,mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 29,mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 10,mxCreateString("FuncB"));
+            mxSetCell(plhs[1], 11,mxCreateString("FuncATimeDelay"));
+            mxSetCell(plhs[1], 12,mxCreateString("FuncBTimeDelay"));
+            mxSetCell(plhs[1], 13,mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 14,mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 15,mxCreateString("MOrdersA"));
+            mxSetCell(plhs[1], 16,mxCreateString("MOrdersB"));
+            mxSetCell(plhs[1], 17,mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 18,mxCreateString("T1"));
+            mxSetCell(plhs[1], 19,mxCreateString("T2"));
+            mxSetCell(plhs[1], 20,mxCreateString("R1"));
+            mxSetCell(plhs[1], 21,mxCreateString("R2"));
+            mxSetCell(plhs[1], 22,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 23,mxCreateString("EApertures"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
