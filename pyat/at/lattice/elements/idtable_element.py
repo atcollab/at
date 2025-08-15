@@ -1,7 +1,9 @@
-"""ID table :py:class:`.Element`."""
+"""ID table :py:clas:`.Element`."""
+
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from warnings import warn
 
@@ -88,8 +90,9 @@ class InsertionDeviceKickMap(Element):
             "ytable",
         ]
         if len(args) < 11:
-            # get data from text file
-            elemargs = self.from_text_file(*args)
+            # get data from file
+            elemargs = self.from_file(*args)
+            # _, ext = os.path.splitext(fname)
         else:
             # get data from arguments
             elemargs = dict(zip(_argnames, args))
@@ -113,15 +116,20 @@ class InsertionDeviceKickMap(Element):
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
-    def from_text_file(self, nslice: int, fname: str, norm_energy: float) -> tuple:
+    def from_file(self, nslice: int, fname: str, norm_energy: float) -> tuple:
         """
         Create an Insertion Device Kick Map from a Radia field map file in text format.
 
         FamilyName is part of the base class, and all other arguments are described below.
 
+        The following is an example of an Insertion Device element, idelem, created from
+        a file 'radiakickmap.txt' with 10 integration steps. The tables have been normalized
+        to 3 GeV. The family name is 'IDname'.
+        >>> iiddelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
+
         Arguments:
             nslice: number of slices in integrator.
-            fname: input filename.
+            fname: input filename. Text of .mat files.
             norm_energy: particle energy in GeV.
 
         Returns:
