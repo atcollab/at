@@ -139,7 +139,7 @@ class InsertionDeviceKickMap(Element):
             norm_energy: particle energy in GeV.
 
         Returns:
-            A tuple.
+            A tuple with the file data.
         """
 
         def read_text_radia_field_map(file_in_name: str) -> tuple:
