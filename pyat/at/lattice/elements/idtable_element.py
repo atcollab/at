@@ -10,6 +10,12 @@ import numpy as np
 from ...constants import clight, e_mass
 from .element_object import Element
 
+# 2023jan15 orblancog first release
+# 2023jan18 orblancog fix bug with element print
+# 2023apr30 orblancog redefinition to function
+# 2023jul04 orblancog changing class to save in .mat and .m
+# 2025ago15 orblancog include first order kick maps from text files
+
 
 def _anyarray(value: np.ndarray) -> None:
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
@@ -66,7 +72,7 @@ class InsertionDeviceKickMap(Element):
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
-    def from_text_file(self, Nslice: int, Filename_in: str, Energy: float) -> tuple:
+    def from_text_file(self, Nslice: int, fname: str, Energy: float) -> tuple:
         """
         Create an Insertion Device Kick Map from a Radia field map file in text format.
 
@@ -74,7 +80,7 @@ class InsertionDeviceKickMap(Element):
 
         Arguments:
             Nslice: number of slices in integrator.
-            Filename_in: input filename.
+            fname: input filename.
             Energy: particle energy in GeV.
 
         Returns:
@@ -82,26 +88,22 @@ class InsertionDeviceKickMap(Element):
             Element parameters, default PassMethod: ``IdTablePass``.
         """
 
-        # 2023jul04 changing class to save in .mat and .m
-        # 2023apr30 redefinition to function
-        # 2023jan18 fix bug with element print
-        # 2023jan15 first release
-        # orblancog
         def read_radia_field_map(file_in_name: str) -> tuple:
             """
             Read a RadiaField map in text format and return.
 
             A File, where :
+            - comments start with #.
             - the first data line is the length in meters.
             - the second data line is the number of points in the h. plane.
             - the third data line is the number of points in the v. plane.
+            - each block is a table with axes.
             - each data block comes after a START.
             - first the horizontal data block, and second the
               vertical data block with the second order kicks.
               There might be two other blocks with the horizontal and
               vertical first order kicks.
-            - each block is a table with axes.
-            - comments start with #.
+
             File example (ignore the !SPACE):
             ! #comment in line 1
             ! #comment in line 2
@@ -134,8 +136,8 @@ class InsertionDeviceKickMap(Element):
             """
             thepath = Path(file_in_name)
             with thepath.open(encoding="utf-8") as thefile:
-                lines = f.readlines()
-            f.close()
+                lines = thefile.readlines()
+            thefile.close()
             data_lines = 0  # line not starting with '#'
             header_lines = 0  # line starting with '#'
             block_counter = 0  # START of the h.map, START of the v.map
@@ -235,7 +237,7 @@ class InsertionDeviceKickMap(Element):
             vkickmap1,
             _,
             _,
-        ) = read_radia_field_map(Filename_in)
+        ) = read_radia_field_map(fname)
 
         # set to float
         table_colshkickarray = np.array(table_colshkick, dtype="float64")
@@ -280,7 +282,7 @@ class InsertionDeviceKickMap(Element):
 
         return {
             "PassMethod": "IdTablePass",
-            "Filename_in": Filename_in,
+            "Filename_in": fname,
             "Normalization_energy": Energy,
             "Nslice": np.uint8(Nslice),
             "Length": el_length,
@@ -296,10 +298,12 @@ class InsertionDeviceKickMap(Element):
         """
         Init IdTable.
 
+        This __init__ takes the inputto initialize an InsertionDeviceKickMap
+        from an input file with arguments, or from a dictionary with
+        all parameters.
+
         Arguments:
             family_name: the family name
-            args: positional arguments
-            kwargs: key-value arguments
         """
         _argnames = [
             "PassMethod",
