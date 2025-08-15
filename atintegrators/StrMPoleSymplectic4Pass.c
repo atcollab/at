@@ -45,11 +45,22 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     double B0 = B[0];
     double A0 = A[0];
-
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
+    
+    /* Convert corrector component to polynomial coefficients */
+    if (KickAngle != NULL && le>0) {
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
+    } 
+    else if (KickAngle != NULL && le==0) {
+        B[0] -= KickAngle[0];
+        A[0] += KickAngle[1];     
     }
+
+    /* Set to 1 for thin lens approximation */
+    if (le==0){
+       K2 = 1.0; 
+    }
+
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
@@ -78,13 +89,17 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
             }
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
-                fastdrift(r6, NormL1);
-                strthinkick(r6, A, B, K1, max_order);
-                fastdrift(r6, NormL2);
+                if (le > 0.0){
+                    fastdrift(r6, NormL1);
+                    strthinkick(r6, A, B, K1, max_order);
+                    fastdrift(r6, NormL2);
+                }
                 strthinkick(r6, A, B, K2, max_order);
-                fastdrift(r6, NormL2);
-                strthinkick(r6, A, B, K1, max_order);
-                fastdrift(r6, NormL1);
+                if (le > 0.0){
+                    fastdrift(r6, NormL2);
+                    strthinkick(r6, A, B, K1, max_order);
+                    fastdrift(r6, NormL1);
+                }
             }
             if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/

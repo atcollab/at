@@ -50,10 +50,21 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
     double rad_const = RAD_CONST*pow(gamma, 3);
     double diff_const = DIF_CONST*pow(gamma, 5);
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
+    /* Convert corrector component to polynomial coefficients */
+    if (KickAngle != NULL && le>0) {
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
+    } 
+    else if (KickAngle != NULL && le==0) {
+        B[0] -= KickAngle[0];
+        A[0] += KickAngle[1];     
     }
+
+    /* Set to 1 for thin lens approximation */
+    if (le==0){
+       K2 = 1.0; 
+    }
+    
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,bdiff,\
     A,B,L1,L2,K1,K2,max_order,num_int_steps,rad_const, diff_const,scaling,\
@@ -81,13 +92,17 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
             }
             /* integrator */
             for (int m=0; m < num_int_steps; m++) { /* Loop over slices */
-                    diff_drift(r6,L1, bdiff);
-                    diff_str_kick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
-                    diff_drift(r6,L2, bdiff);
+                    if (le > 0.0){
+                        diff_drift(r6,L1, bdiff);
+                        diff_str_kick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
+                        diff_drift(r6,L2, bdiff);
+                    }
                     diff_str_kick(r6, A, B, max_order, K2, rad_const, diff_const, bdiff);
-                    diff_drift(r6,L2, bdiff);
-                    diff_str_kick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
-                    diff_drift(r6,L1, bdiff);
+                    if (le > 0.0){
+                        diff_drift(r6,L2, bdiff);
+                        diff_str_kick(r6, A, B, max_order, K1, rad_const, diff_const, bdiff);
+                        diff_drift(r6,L1, bdiff);
+                    }
             }
             if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/

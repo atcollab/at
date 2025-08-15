@@ -7,6 +7,7 @@ __all__ = [
     "Multipole",
     "Dipole",
     "Bend",
+    "ThinQuadrupole",
     "Quadrupole",
     "Sextupole",
     "Octupole",
@@ -30,29 +31,31 @@ from .basic_elements import LongElement
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
-class ThinMultipole(Element):
-    """Thin multipole element"""
+class Multipole(_Radiative, LongElement):
+    """Multipole element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(Element._conversions, K=float, H=float)
-    _stacklevel = 4  # Stacklevel for warnings
+    _stacklevel = 6  # Stacklevel for warnings
 
-    def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
+    def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
         Args:
             family_name:    Name of the element
+            length:         Element length [m]
             poly_a:         Array of skew multipole components
             poly_b:         Array of normal multipole components
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
               index of non-zero polynomial coefficients
+            NumIntSteps:    Number of integration steps (default: 10)
+            KickAngle:      Correction deviation angles (H, V)
             FieldScaling:   Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
-        Default PassMethod: ``ThinMPolePass``
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
-
         def getpol(poly):
             nonzero = np.flatnonzero(poly != 0.0)
             return len(poly), nonzero[-1] if len(nonzero) > 0 else -1
@@ -145,8 +148,9 @@ class ThinMultipole(Element):
         deforder = max(getattr(self, "DefaultOrder", 0), ord_a, ord_b)
         # Remove MaxOrder
         maxorder = kwargs.pop("MaxOrder", deforder)
-        kwargs.setdefault("PassMethod", "ThinMPolePass")
-        super().__init__(family_name, **kwargs)
+        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
+        kwargs.setdefault("NumIntSteps", 10)
+        super().__init__(family_name, length, **kwargs)
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
         # Adjust polynom lengths and set them
@@ -192,35 +196,6 @@ class ThinMultipole(Element):
     def H(self, strength):
         self.PolynomB[2] = strength
 
-
-class Multipole(_Radiative, LongElement, ThinMultipole):
-    """Multipole element"""
-
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
-    _stacklevel = 6  # Stacklevel for warnings
-
-    def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
-        """
-        Args:
-            family_name:    Name of the element
-            length:         Element length [m]
-            poly_a:         Array of skew multipole components
-            poly_b:         Array of normal multipole components
-
-        Keyword arguments:
-            MaxOrder:       Number of desired multipoles. Default: highest
-              index of non-zero polynomial coefficients
-            NumIntSteps:    Number of integration steps (default: 10)
-            KickAngle:      Correction deviation angles (H, V)
-            FieldScaling:   Scaling factor applied to the magnetic field
-              (*PolynomA* and *PolynomB*)
-
-        Default PassMethod: ``StrMPoleSymplectic4Pass``
-        """
-        kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
-        super().__init__(family_name, length, poly_a, poly_b, **kwargs)
-
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and self.MaxOrder == other.MaxOrder:
             for i in range(self.MaxOrder + 1):
@@ -231,6 +206,41 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             return True
         else:
             return False
+        
+class _ThinElement(Element):
+    """Class to override divide and merge for thin elements"""   
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+
+    def divide(self, value):
+        warnings.warn(AtWarning("Slicing not available for thin elements"))
+
+    def merge(self):
+        warnings.warn(AtWarning("Merging not available for thin elements"))
+
+
+class ThinMultipole(_ThinElement, Radiative, Multipole):
+    """Thin multipole element"""
+
+    _BUILD_ATTRIBUTES = _ThinElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
+    _stacklevel = 7  # Stacklevel for warnings
+    _conversions = dict(Multipole._conversions)
+
+    def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            poly_a:         Array of skew multipole components
+            poly_b:         Array of normal multipole components
+
+        Keyword arguments:
+            MaxOrder:       Number of desired multipoles. Default: highest
+              index of non-zero polynomial coefficients
+            FieldScaling:   Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        super().__init__(family_name, 0.0, poly_a, poly_b, **kwargs)
 
 
 class Dipole(Radiative, Multipole):
@@ -401,6 +411,40 @@ class Quadrupole(Radiative, Multipole):
         yield "K", self.K
 
 
+class ThinQuadrupole(_ThinElement, Quadrupole):
+    """Thin quadrupole element"""
+
+    _BUILD_ATTRIBUTES = _ThinElement._BUILD_ATTRIBUTES + ["K"]
+    _stacklevel = 8  # Stacklevel for warnings
+
+    def __init__(self, family_name: str, k: float = 0.0, **kwargs):
+        """Quadrupole(FamName, Length, Strength=0, **keywords)
+
+        Args:
+            family_name:    Name of the element
+            k:              Integrated Focusing strength [mˆ-2]
+
+        Keyword Arguments:
+            PolynomB:           Integrated straight multipoles
+            PolynomA:           Integrated skew multipoles
+            MaxOrder=1:         Number of desired multipoles
+            FringeQuadEntrance: 0: no fringe field effect (default)
+
+              1: Lee-Whiting's thin lens limit formula
+
+              2: elegant-like
+            FringeQuadExit:     See ``FringeQuadEntrance``
+            fringeIntM0:        Integrals for FringeQuad method 2
+            fringeIntP0:
+            KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        super().__init__(family_name, 0.0, k, **kwargs)
+
+
 class Sextupole(Multipole):
     """Sextupole element"""
 
@@ -433,6 +477,40 @@ class Sextupole(Multipole):
     def items(self) -> Generator[tuple[str, Any], None, None]:
         yield from super().items()
         yield "H", self.H
+
+
+class ThinSextupole(_ThinElement, Sextupole):
+    """Thin sextupole element"""
+
+    _BUILD_ATTRIBUTES = _ThinElement._BUILD_ATTRIBUTES + ["K"]
+    _stacklevel = 8  # Stacklevel for warnings
+
+    def __init__(self, family_name: str, h: float = 0.0, **kwargs):
+        """Quadrupole(FamName, Length, Strength=0, **keywords)
+
+        Args:
+            family_name:    Name of the element
+            h:              Integrated sextupole strength [mˆ-3]
+
+        Keyword Arguments:
+            PolynomB:           Integrated straight multipoles
+            PolynomA:           Integrated skew multipoles
+            MaxOrder:         Number of desired multipoles
+            FringeQuadEntrance: 0: no fringe field effect (default)
+
+              1: Lee-Whiting's thin lens limit formula
+
+              2: elegant-like
+            FringeQuadExit:     See ``FringeQuadEntrance``
+            fringeIntM0:        Integrals for FringeQuad method 2
+            fringeIntP0:
+            KickAngle:          Correction deviation angles (H, V)
+            FieldScaling:       Scaling factor applied to the magnetic field
+              (*PolynomA* and *PolynomB*)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
+        """
+        super().__init__(family_name, 0.0, h, **kwargs)
 
 
 class Octupole(Multipole):
