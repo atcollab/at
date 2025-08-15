@@ -8,6 +8,7 @@ from pathlib import Path
 from warnings import warn
 
 import numpy as np
+import scipy
 
 from ...constants import clight, e_mass
 from .element_object import Element
@@ -268,6 +269,16 @@ class InsertionDeviceKickMap(Element):
         def sorted_table(
             table_in: np.ndarray, sorted_index: np.ndarray, order_axis: str
         ) -> np.ndarray:
+            """Return ordered table.
+
+            Arguments:
+                table_in: input table..
+                sorted_index: index to sort the table.
+                order_axis: sort on 'col' or 'row'.
+
+            Returns:
+                Sorted table as fortran array.
+            """
             # np.asfortranarray makes a copy of contiguous memory positions
             table_out = np.copy(table_in)
             for i, iis in zip(range(len(sorted_index)), sorted_index):
@@ -277,13 +288,26 @@ class InsertionDeviceKickMap(Element):
                     table_out[i, :] = table_in[iis, :]
             return np.asfortranarray(table_out)
 
-        def read_mat_radia_field_map(fname):
-            return None
+        def read_mat_radia_field_map(fname: str) -> tuple:
+            matdata = scipy.io.loadmat(fname)
+            # dict_keys(['xkick', 'ykick', 'xkick1', 'ykick1', 'xtable', 'ytable', 'Len'])
+            return (
+                el_length,
+                hkickmap2,
+                vkickmap2,
+                table_colshkick,
+                table_rowshkick,
+                table_colsvkick,
+                table_rowsvkick,
+                hkickmap1,
+                vkickmap1,
+                h_points,
+                v_points,
+            )
 
-        def read_radia_field_map(fname):
+        def read_radia_field_map(fname: str) -> tuple:
             _, ext = os.path.splitext(fname)
             if ext == ".mat":
-                print("mat file")
                 return read_mat_radia_field_map(fname)
             else:
                 # read data from text file
