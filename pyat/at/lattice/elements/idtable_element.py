@@ -31,7 +31,7 @@ class InsertionDeviceKickMap(Element):
     to calculate alpha.
 
     Optionally, first order maps could be included. See Eq. (3) in [#].
-    Note that positive and negative signs are not taking into account in
+    Note that positive and negative signs are not taken into account in
     this implementation. Input should already include the sign difference.
 
     [#] Pascale ELLEAUME, "A New Approach to the Electron Beam Dynamics in
