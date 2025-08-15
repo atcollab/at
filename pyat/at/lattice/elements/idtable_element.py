@@ -36,6 +36,8 @@ class InsertionDeviceKickMap(Element):
     Note that positive and negative signs are not taken into account in
     this implementation. Input should already include the sign difference.
 
+    Default PassMethod: ``IdTablePass``.
+
     [#] Pascale ELLEAUME, "A New Approach to the Electron Beam Dynamics in
         Undulators and  Wigglers". EPAC1992 0661.
         European Synchrotron Radiation Facility.
@@ -137,7 +139,6 @@ class InsertionDeviceKickMap(Element):
 
         Returns:
             A tuple.
-            Element parameters, default PassMethod: ``IdTablePass``.
         """
 
         def read_text_radia_field_map(file_in_name: str) -> tuple:
