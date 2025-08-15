@@ -26,7 +26,15 @@ class InsertionDeviceKickMap(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 
-      Pascale ELLEAUME, "A New Approach to the Electron Beam Dynamics in
+    This elememt implements tracking through an integrated field map of
+    second order, see Eq. (5) in [#]. A normalization energy is required
+    to calculate alpha.
+
+    Optionally, first order maps could be included. See Eq. (3) in [#].
+    Note that positive and negative signs are not taking into account in
+    this implementation. Input should already include the sign difference.
+
+    [#] Pascale ELLEAUME, "A New Approach to the Electron Beam Dynamics in
         Undulators and  Wigglers". EPAC1992 0661.
         European Synchrotron Radiation Facility.
         BP 220, F-38043 Grenoble, France
