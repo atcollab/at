@@ -37,6 +37,7 @@ def get_acceptance(
     grid_mode: GridMode = GridMode.RADIAL,
     use_mp: bool | MPMode = False,
     gpu_pool: list[int] | None = None,
+    gpu_integrator: int | None = None,
     verbose: bool = False,
     divider: int = 2,
     shift_zero: float = 1.0e-6,
@@ -77,6 +78,7 @@ def get_acceptance(
         gpu_pool:       List of GPU id to use when use_mp is
           :py:attr:`at.tracking.MPMode.GPU`. If None specified, if gets
           first GPU.
+        gpu_integrator: Symplectic integrator used for GPU tracking
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -137,6 +139,7 @@ def get_acceptance(
             print(f"\n{nprocu} GPU cores found")
             print("GPU acceptance calculation selected...")
             kwargs["gpu_pool"] = gpu_pool if gpu_pool is not None else [0]
+            kwargs["integrator"] = gpu_integrator if gpu_integrator is not None else 4
         else:
             nprocu = 1
             print("Single process acceptance calculation selected...")
@@ -194,6 +197,7 @@ def get_1d_acceptance(
     grid_mode: GridMode | None = GridMode.RADIAL,
     use_mp: bool | MPMode = False,
     gpu_pool: list[int] | None = None,
+    gpu_integrator: int | None = None,
     verbose: bool | None = False,
     divider: int | None = 2,
     shift_zero: float | None = 1.0e-6,
@@ -230,6 +234,7 @@ def get_1d_acceptance(
         gpu_pool:       List of GPU id to use when use_mp is
           :py:attr:`at.tracking.MPMode.GPU`. If None specified, if gets
           first GPU.
+        gpu_integrator: Symplectic integrator used for GPU tracking
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -284,6 +289,7 @@ def get_1d_acceptance(
         grid_mode=grid_mode,
         use_mp=use_mp,
         gpu_pool=gpu_pool,
+        gpu_integrator=gpu_integrator,
         verbose=verbose,
         start_method=start_method,
         divider=divider,
@@ -326,6 +332,7 @@ def get_horizontal_acceptance(
         gpu_pool:       List of GPU id to use when use_mp is
           :py:attr:`at.tracking.MPMode.GPU`. If None specified, if gets
           first GPU.
+        gpu_integrator: Symplectic integrator used for GPU tracking
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -393,6 +400,7 @@ def get_vertical_acceptance(
         gpu_pool:       List of GPU id to use when use_mp is
           :py:attr:`at.tracking.MPMode.GPU`. If None specified, if gets
           first GPU.
+        gpu_integrator: Symplectic integrator used for GPU tracking
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -460,6 +468,7 @@ def get_momentum_acceptance(
         gpu_pool:       List of GPU id to use when use_mp is
           :py:attr:`at.tracking.MPMode.GPU`. If None specified, if gets
           first GPU.
+        gpu_integrator: Symplectic integrator used for GPU tracking
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
