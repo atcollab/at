@@ -55,6 +55,39 @@ class InsertionDeviceKickMap(Element):
         ykick1=_anyarray,
     )
 
+    def __init__(self, family_name: str, *args, **kwargs) -> None:
+        """
+        Init IdTable.
+
+        This __init__ takes the inputto initialize an InsertionDeviceKickMap
+        from an input file with arguments, or from a dictionary with
+        all parameters.
+
+        Arguments:
+            family_name: the family name
+        """
+        _argnames = [
+            "PassMethod",
+            "Filename_in",
+            "Normalization_energy",
+            "Nslice",
+            "Length",
+            "xkick",
+            "ykick",
+            "xkick1",
+            "ykick1",
+            "xtable",
+            "ytable",
+        ]
+        if len(args) < 11:
+            # get data from text file
+            elemargs = self.from_text_file(*args)
+        else:
+            # get data from arguments
+            elemargs = dict(zip(_argnames, args))
+        elemargs.update(kwargs)
+        super().__init__(family_name, **elemargs)
+
     def set_DriftPass(self) -> None:
         """Set DriftPass tracking pass method."""
         self.PassMethod = "DriftPass"
@@ -293,39 +326,6 @@ class InsertionDeviceKickMap(Element):
             "xtable": xtable,
             "ytable": ytable,
         }
-
-    def __init__(self, family_name: str, *args, **kwargs) -> None:
-        """
-        Init IdTable.
-
-        This __init__ takes the inputto initialize an InsertionDeviceKickMap
-        from an input file with arguments, or from a dictionary with
-        all parameters.
-
-        Arguments:
-            family_name: the family name
-        """
-        _argnames = [
-            "PassMethod",
-            "Filename_in",
-            "Normalization_energy",
-            "Nslice",
-            "Length",
-            "xkick",
-            "ykick",
-            "xkick1",
-            "ykick1",
-            "xtable",
-            "ytable",
-        ]
-        if len(args) < 11:
-            # get data from text file
-            elemargs = self.from_text_file(*args)
-        else:
-            # get data from arguments
-            elemargs = dict(zip(_argnames, args))
-        elemargs.update(kwargs)
-        super().__init__(family_name, **elemargs)
 
 
 # EOF
