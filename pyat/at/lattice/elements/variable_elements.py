@@ -36,16 +36,10 @@ class VariableThinMultipole(Element):
         SinBabove=float,
         NsamplesA=int,
         NsamplesB=int,
+        MOrdersA=int,
+        MOrdersB=int,
         FuncA=_array,
-        FuncAderiv1=_array,
-        FuncAderiv2=_array,
-        FuncAderiv3=_array,
-        FuncAderiv4=_array,
         FuncB=_array,
-        FuncBderiv1=_array,
-        FuncBderiv2=_array,
-        FuncBderiv3=_array,
-        FuncBderiv4=_array,
         Ramps=_array,
         Periodic=bool,
     )
@@ -139,22 +133,6 @@ class VariableThinMultipole(Element):
             SinBabove(float): Limit the sin function to be above. Default -1.
             FuncA(Sequence[float]):   User defined tbt list for PolynomA
             FuncB(Sequence[float]):   User defined tbt list for PolynomB
-            FuncAderiv1(Sequence[float]): tbt list for PolynomA 1st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncBderiv1(Sequence[float]): tbt list for PolynomB 1st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncAderiv2(Sequence[float]): tbt list for PolynomA 2st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncBderiv2(Sequence[float]): tbt list for PolynomB 2st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncAderiv3(Sequence[float]): tbt list for PolynomA 3st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncBderiv3(Sequence[float]): tbt list for PolynomB 3st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncAderiv4(Sequence[float]): tbt list for PolynomA 4st derivative wrt tau.
-                Default: zeros array of the custom function length.
-            FuncBderiv4(Sequence[float]): tbt list for PolynomB 4st derivative wrt tau.
-                Default: zeros array of the custom function length.
             FuncATimeDelay(float): generate a time offset on the function FUNCA.
                 It only has an effect if any of the derivatives is not zero.
             FuncBTimeDelay(float): generate a time offset on the function FUNCB.
@@ -228,12 +206,12 @@ class VariableThinMultipole(Element):
             if func is None:
                 raise AtError("Please provide a value for Func" + a_b)
             nsamp = len(func)
-            kwargs.setdefault("Func" + a_b + "deriv1", np.zeros(nsamp))
-            kwargs.setdefault("Func" + a_b + "deriv2", np.zeros(nsamp))
-            kwargs.setdefault("Func" + a_b + "deriv3", np.zeros(nsamp))
-            kwargs.setdefault("Func" + a_b + "deriv4", np.zeros(nsamp))
+            morders = 1
+            if len(func.shape) == 2:
+                morders = func.shape[1]
             kwargs.setdefault("Func" + a_b + "TimeDelay", 0)
             kwargs["NSamples" + a_b] = nsamp
+            kwargs["MOrders" + a_b] = morders
             kwargs.setdefault("Periodic", False)
             return kwargs
 
@@ -394,22 +372,11 @@ class VariableThinMultipole(Element):
             nsamples = getattr(self, "NSamples" + a_b)
             if periodic or turn < nsamples:
                 func = getattr(self, "Func" + a_b)
-                funcderiv1 = np.array(getattr(self, "Func" + a_b + "deriv1"))
-                funcderiv2 = np.array(getattr(self, "Func" + a_b + "deriv2"))
-                funcderiv3 = np.array(getattr(self, "Func" + a_b + "deriv3"))
-                funcderiv4 = np.array(getattr(self, "Func" + a_b + "deriv4"))
                 functdelay = float(getattr(self, "Func" + a_b + "TimeDelay"))
                 turnidx = np.mod(turn, nsamples)
 
                 _time = _time - functdelay
                 _time_2 = _time * _time
-                ampout = ampout * (
-                    func[turnidx]
-                    + funcderiv1[turnidx] * _time
-                    + 0.5 * funcderiv2[turnidx] * _time_2
-                    + 1.0 / 6.0 * funcderiv3[turnidx] * _time_2 * _time
-                    + 1.0 / 24.0 * funcderiv4[turnidx] * _time_2 * _time_2
-                )
             else:
                 ampout = 0.0
         else:
