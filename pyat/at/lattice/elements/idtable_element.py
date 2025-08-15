@@ -92,7 +92,6 @@ class InsertionDeviceKickMap(Element):
         if len(args) < 11:
             # get data from file
             elemargs = self.from_file(*args)
-            # _, ext = os.path.splitext(fname)
         else:
             # get data from arguments
             elemargs = dict(zip(_argnames, args))
@@ -127,6 +126,10 @@ class InsertionDeviceKickMap(Element):
         to 3 GeV. The family name is 'IDname'.
         >>> iiddelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
 
+        The input file could be a text or .mat file.
+        See read_text_radia_field_map for info about the text file format.
+        See read_mat_radia_field_map for info about the .mat file format.
+
         Arguments:
             nslice: number of slices in integrator.
             fname: input filename. Text of .mat files.
@@ -137,7 +140,7 @@ class InsertionDeviceKickMap(Element):
             Element parameters, default PassMethod: ``IdTablePass``.
         """
 
-        def read_radia_field_map(file_in_name: str) -> tuple:
+        def read_text_radia_field_map(file_in_name: str) -> tuple:
             """
             Read a RadiaField map in text format and return.
 
@@ -273,7 +276,18 @@ class InsertionDeviceKickMap(Element):
                     table_out[i, :] = table_in[iis, :]
             return np.asfortranarray(table_out)
 
-        # read the input data
+        def read_mat_radia_field_map(fname):
+            return None
+
+        def read_radia_field_map(fname):
+            _, ext = os.path.splitext(fname)
+            if ext == ".mat":
+                print("mat file")
+                return read_mat_radia_field_map(fname)
+            else:
+                # read data from text file
+                return read_text_radia_field_map(fname)
+
         (
             el_length,
             hkickmap2,
