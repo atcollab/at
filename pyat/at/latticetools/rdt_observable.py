@@ -38,7 +38,6 @@ RDT_names = {
         "h00112",
         "h00202",
         "h10003",
-        "h00103",
         "h00004",
     ),
 }
@@ -139,7 +138,6 @@ class RDTObservable(ElementObservable):
         **h00112**
         **h00202**
         **h10003**
-        **h00103**
         **h00004**
 
         Examples:
