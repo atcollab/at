@@ -288,7 +288,19 @@ class InsertionDeviceKickMap(Element):
             return np.asfortranarray(table_out)
 
         def read_dict_radia_field_map(id_input: dict) -> tuple:
-            # dict_keys(['xkick', 'ykick', 'xkick1', 'ykick1', 'xtable', 'ytable', 'Len'])
+            """Read a dictionary with Radia field map tables.
+
+            The required keys are "Length", "xkick" and "ykick"
+            for the second order maps, "xtable" and "ytable" for
+            the grid, and "xkick1" and "ykick1" for the first order
+            maps.
+
+            Arguments:
+                id_input: Radia field map input.
+
+            Returns:
+                Tuple with Insertion Device parameters.
+            """
             (v_points, h_points) = id_input["xtable"].shape
             return (
                 id_input["Length"],
