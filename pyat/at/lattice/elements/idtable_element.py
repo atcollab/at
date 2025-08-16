@@ -7,7 +7,6 @@ from pathlib import Path
 from warnings import warn
 
 import numpy as np
-import scipy
 
 from ...constants import clight, e_mass
 from .element_object import Element
@@ -121,9 +120,9 @@ class InsertionDeviceKickMap(Element):
         """
         Create an Insertion Device Kick Map from a Radia field map file.
 
-        The following is an example of an Insertion Device element, idelem, created from
-        a file 'radiakickmap.txt' with 10 integration steps. The tables have been normalized
-        to 3 GeV. The family name is 'IDname'.
+        The following is an example of an Insertion Device element, idelem,
+        created from a file 'radiakickmap.txt' with 10 integration steps.
+        The tables have been normalized to 3 GeV. The family name is 'IDname'.
         >>> idelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
 
         The input file could be a text file or a dictionary.
@@ -343,7 +342,7 @@ class InsertionDeviceKickMap(Element):
         elif lenkick_block_list > 4:
             # file contains more blocks that required
             _warn4kickblocks = (
-                "Input file contains more than 4 blocks. " "Additional blocks ignored"
+                "Input file contains more than 4 blocks. Additional blocks ignored"
             )
             warn(_warn4kickblocks)
 
