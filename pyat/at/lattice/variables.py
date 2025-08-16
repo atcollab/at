@@ -450,6 +450,16 @@ class VariableList(list):
         for var, incr in zip(self, increment):
             var.increment(incr, ring=ring)
 
+    def reset(self, ring=None) -> None:
+        """Reset to all variables their initial value and clear their history buffer
+
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to reset the variable.
+        """
+        for var in self:
+            var.reset(ring=ring)
+
     # noinspection PyProtectedMember
     def status(self, **kwargs) -> str:
         """String description of the variables"""
