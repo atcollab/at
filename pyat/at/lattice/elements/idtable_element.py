@@ -164,6 +164,7 @@ class InsertionDeviceKickMap(Element):
 
         if isinstance(fname, dict):
             thefields = self.read_dict_radia_field_map(fname)
+            fname = ""
         else:
             # assume text file
             thefields = self.read_text_radia_field_map(fname)
@@ -374,7 +375,7 @@ class InsertionDeviceKickMap(Element):
         Returns:
             Tuple with Insertion Device parameters.
         """
-        (v_points, h_points) = id_input["xtable"].shape
+        (v_points, h_points) = id_input["xkick"].shape
         return (
             id_input["Length"],
             id_input["xkick"],
