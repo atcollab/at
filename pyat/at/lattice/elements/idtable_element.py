@@ -66,16 +66,25 @@ class InsertionDeviceKickMap(Element):
         ykick1=_anyarray,
     )
 
-    def __init__(self, family_name: str, *args, **kwargs) -> None:
+    def __init__(
+        self: InsertionDeviceKickMap,
+        family_name: str,
+        *args: any,
+        **kwargs: dict[any, any],
+    ) -> None:
         """
         Init IdTable.
 
         This __init__ takes the input to initialize an InsertionDeviceKickMap
-        from an user input with arguments, for example at the moment of the element creation,
-        or from all parameters, for example when reading a Lattice.
+        from an user input with arguments, for example at the moment of the
+        element creation, or from all parameters, for example when reading
+        a Lattice.
 
-        Arguments:
+        Args:
             family_name: the family name
+            args: postional arguments from user.
+            kwargs: dictionary from element.
+
         """
         _argnames = [
             "PassMethod",
@@ -99,15 +108,15 @@ class InsertionDeviceKickMap(Element):
         elemargs.update(kwargs)
         super().__init__(family_name, **elemargs)
 
-    def set_DriftPass(self) -> None:
+    def set_DriftPass(self: InsertionDeviceKickMap) -> None:
         """Set DriftPass tracking pass method."""
         self.PassMethod = "DriftPass"
 
-    def set_IdTablePass(self) -> str:
+    def set_IdTablePass(self: InsertionDeviceKickMap) -> str:
         """Set IdTablePass tracking pass method."""
         self.PassMethod = "IdTablePass"
 
-    def get_PassMethod(self) -> str:
+    def get_PassMethod(self: InsertionDeviceKickMap) -> str:
         """Get the current tracking pass method.
 
         Returns:
@@ -116,7 +125,9 @@ class InsertionDeviceKickMap(Element):
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
-    def from_user(self, nslice: int, fname: str, norm_energy: float) -> dict:
+    def from_user(
+        self: InsertionDeviceKickMap, nslice: int, fname: str, norm_energy: float
+    ) -> dict:
         """
         Create an Insertion Device Kick Map from a Radia field map file.
 
@@ -129,7 +140,8 @@ class InsertionDeviceKickMap(Element):
         See read_text_radia_field_map for info about the text file format.
         See read_dict_radia_field_map for info about the dict format.
 
-        Family name is part of the base class, and all other arguments are parsed here below.
+        Family name is part of the base class, and all other arguments are
+        parsed here below.
 
         Arguments:
             nslice: number of slices in integrator.
@@ -238,7 +250,9 @@ class InsertionDeviceKickMap(Element):
             "ytable": ytable,
         }
 
-    def read_text_radia_field_map(self, file_in_name: str) -> tuple:
+    def read_text_radia_field_map(
+        self: InsertionDeviceKickMap, file_in_name: str
+    ) -> tuple:
         """
         Read a RadiaField map in text format and return.
 
@@ -249,10 +263,10 @@ class InsertionDeviceKickMap(Element):
         - the third data line is the number of points in the v. plane.
         - each block is a table with axes.
         - each data block comes after a START.
-        - first the horizontal data block, and second the
-          vertical data block with the second order kicks.
-          There might be two other blocks with the horizontal and
-          vertical first order kicks.
+        - first the horizontal data block, and second the vertical data
+        block with the second order kicks.
+        There might be two other blocks with the horizontal and
+        vertical first order kicks.
 
         File example (ignore the !SPACE):
         ! #comment in line 1
@@ -361,7 +375,9 @@ class InsertionDeviceKickMap(Element):
             v_points,
         )
 
-    def read_dict_radia_field_map(self, id_input: dict) -> tuple:
+    def read_dict_radia_field_map(
+        self: InsertionDeviceKickMap, id_input: dict
+    ) -> tuple:
         """Read a dictionary with Radia field map tables.
 
         The required keys are "Length", "xkick" and "ykick"
