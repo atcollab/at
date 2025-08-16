@@ -28,11 +28,11 @@ class InsertionDeviceKickMap(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 
-    This elememt implements tracking through an integrated field map of
-    second order, see Eq. (5) in [#]. A normalization energy is required
-    to calculate alpha.
+    This elememt implements tracking through an integrated magnetic
+    field map of second order in energy, normalized to and energy
+    value that is required to calculate alpha. See Eq. (5) in [#].
 
-    Optionally, first order maps could be included. See Eq. (3) in [#].
+    First order maps could be included. See Eq. (3) in [#].
     Note that positive and negative signs are not taken into account in
     this implementation. Input should already include the sign difference.
 
@@ -72,8 +72,8 @@ class InsertionDeviceKickMap(Element):
         Init IdTable.
 
         This __init__ takes the input to initialize an InsertionDeviceKickMap
-        from an input file with arguments, for example at the moment of the element creation,
-        or from a dictionary with all parameters, for example when reading a Lattice.
+        from an user input with arguments, for example at the moment of the element creation,
+        or from all parameters, for example when reading a Lattice.
 
         Arguments:
             family_name: the family name
@@ -92,8 +92,8 @@ class InsertionDeviceKickMap(Element):
             "ytable",
         ]
         if len(args) < 11:
-            # get data from file
-            elemargs = self.from_file(*args)
+            # get data from user input
+            elemargs = self.from_user(*args)
         else:
             # get data from arguments
             elemargs = dict(zip(_argnames, args))
@@ -117,20 +117,20 @@ class InsertionDeviceKickMap(Element):
         warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
         return self.PassMethod
 
-    def from_file(self, nslice: int, fname: str, norm_energy: float) -> tuple:
+    def from_user(self, nslice: int, fname: str, norm_energy: float) -> dict:
         """
-        Create an Insertion Device Kick Map from a Radia field map file in text format.
-
-        FamilyName is part of the base class, and all other arguments are described below.
+        Create an Insertion Device Kick Map from a Radia field map file.
 
         The following is an example of an Insertion Device element, idelem, created from
         a file 'radiakickmap.txt' with 10 integration steps. The tables have been normalized
         to 3 GeV. The family name is 'IDname'.
-        >>> iiddelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
+        >>> idelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
 
         The input file could be a text or .mat file.
         See read_text_radia_field_map for info about the text file format.
         See read_dict_radia_field_map for info about the .mat file format.
+
+        Family name is part of the base class, and all other arguments are parsed here below.
 
         Arguments:
             nslice: number of slices in integrator.
@@ -138,7 +138,7 @@ class InsertionDeviceKickMap(Element):
             norm_energy: particle energy in GeV.
 
         Returns:
-            A tuple with the file data.
+            A dict with the file data.
         """
 
         def read_text_radia_field_map(file_in_name: str) -> tuple:
