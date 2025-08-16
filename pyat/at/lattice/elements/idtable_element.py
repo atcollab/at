@@ -131,7 +131,7 @@ class InsertionDeviceKickMap(Element):
 
         The input file could be a text or .mat file.
         See read_text_radia_field_map for info about the text file format.
-        See read_mat_radia_field_map for info about the .mat file format.
+        See read_dict_radia_field_map for info about the .mat file format.
 
         Arguments:
             nslice: number of slices in integrator.
@@ -288,29 +288,28 @@ class InsertionDeviceKickMap(Element):
                     table_out[i, :] = table_in[iis, :]
             return np.asfortranarray(table_out)
 
-        def read_mat_radia_field_map(fname: str) -> tuple:
-            matdata = scipy.io.loadmat(fname)
+        def read_dict_radia_field_map(id_input: dict) -> tuple:
             # dict_keys(['xkick', 'ykick', 'xkick1', 'ykick1', 'xtable', 'ytable', 'Len'])
-            return (
-                el_length,
-                hkickmap2,
-                vkickmap2,
-                table_colshkick,
-                table_rowshkick,
-                table_colsvkick,
-                table_rowsvkick,
-                hkickmap1,
-                vkickmap1,
+            (v_points, h_points) = id_input["xtable"].shape
+            return  (
+                id_input["Length"],
+                id_input["xkick"],
+                id_input["ykick"],
+                id_input["xtable"],
+                id_input["ytable"],
+                id_input["xtable"],
+                id_input["ytable"],
+                id_input["xkick1"],
+                id_input["ykick1"],
                 h_points,
                 v_points,
             )
 
-        def read_radia_field_map(fname: str) -> tuple:
-            _, ext = os.path.splitext(fname)
-            if ext == ".mat":
-                return read_mat_radia_field_map(fname)
+        def read_radia_field_map(fname: str or dict) -> tuple:
+            if type(fname) == dict:
+                return read_dict_radia_field_map(fname)
             else:
-                # read data from text file
+                # assume text file
                 return read_text_radia_field_map(fname)
 
         (
