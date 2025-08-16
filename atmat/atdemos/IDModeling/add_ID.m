@@ -2,7 +2,7 @@ function [ ringID ] = add_ID( ring, IDelem )
 %add_ID adds IDelem at the beginning and subtracts the length from
 %   the surrounding straights
  
-ringID={IDelem,ring{:}};
+ringID=[{IDelem};ring];
 IDlen=IDelem.Length;
 
 driftInd=findcells(ringID,'FamName','SDHI');

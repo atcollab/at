@@ -51,7 +51,7 @@ function Elem = atinsertiondevicekickmap( fname, ...
 %------------------
 % Modification Log:
 % -----------------
-% 24-05-2023:  orblancog, added for compatibility with pyat
+% 24-05-2023:  blanco-garcia, added for compatibility with pyat
 %---------------------------------------------------------------------------
 
 Elem.FamName = fname;
