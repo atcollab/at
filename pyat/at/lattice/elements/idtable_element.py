@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from warnings import warn
 
@@ -291,7 +290,7 @@ class InsertionDeviceKickMap(Element):
         def read_dict_radia_field_map(id_input: dict) -> tuple:
             # dict_keys(['xkick', 'ykick', 'xkick1', 'ykick1', 'xtable', 'ytable', 'Len'])
             (v_points, h_points) = id_input["xtable"].shape
-            return  (
+            return (
                 id_input["Length"],
                 id_input["xkick"],
                 id_input["ykick"],
