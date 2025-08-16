@@ -29,7 +29,7 @@ class InsertionDeviceKickMap(Element):
     Insertion Device Element. Valid for a parallel electron beam.
 
     This elememt implements tracking through an integrated magnetic
-    field map of second order in energy, normalized to and energy
+    field map of second order in energy, normalized to an energy
     value that is required to calculate alpha. See Eq. (5) in [#].
 
     First order maps could be included. See Eq. (3) in [#].
@@ -126,9 +126,9 @@ class InsertionDeviceKickMap(Element):
         to 3 GeV. The family name is 'IDname'.
         >>> idelem = at.InsertionDeviceKickMap('IDname', 10, 'radiakickmap.txt', 3)
 
-        The input file could be a text or .mat file.
+        The input file could be a text file or a dictionary.
         See read_text_radia_field_map for info about the text file format.
-        See read_dict_radia_field_map for info about the .mat file format.
+        See read_dict_radia_field_map for info about the dict format.
 
         Family name is part of the base class, and all other arguments are parsed here below.
 
