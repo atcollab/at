@@ -22,18 +22,20 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
 % Returns
 %   atinsertiondevicekickmap
 %
+% This elememt implements tracking through an integrated magnetic
+% field map of second order in energy, normalized to and energy
+% value that is required to calculate alpha. See Eq. (5) in [#].
 %
-% This elememt implements tracking through an integrated field map of
-% second order, see Eq. (5) in [#]. A normalization energy is required
-% to calculate alpha.
-%
-% Optionally, first order maps could be included. See Eq. (3) in [#].
+% First order maps could be included. See Eq. (3) in [#].
 % Note that positive and negative signs are not taken into account in
 % this implementation. Input should already include the sign difference.
 %
-% The tracking table method is described in
-% [#] P. Elleaume, "A new approach to the electron beam dynamics
-% in undulators and wigglers", EPAC92.
+% Default PassMethod: ``IdTablePass``.
+%
+% [#] Pascale ELLEAUME, "A New Approach to the Electron Beam Dynamics in
+%     Undulators and  Wigglers". EPAC1992 0661.
+%     European Synchrotron Radiation Facility.
+%     BP 220, F-38043 Grenoble, France
 
 %--------------------------------------------------------------------------
 % Modification Log:
@@ -45,7 +47,8 @@ function Elem = atidtable_dat(FamName, Nslice, filename, Energy, method,...
 %                               (they are not used in IdTablePass)
 %                             Adds InsertionDeviceKickMap class
 % 15-08-2025   oblanco. Eliminates redundant idtable_global.m and
-%                           atidtable.m. Add options for compatibility.
+%                           atidtable.m.
+%                       Add options for compatibility.
 %--------------------------------------------------------------------------
 
 p = inputParser;
