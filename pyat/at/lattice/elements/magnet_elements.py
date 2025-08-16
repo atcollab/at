@@ -430,10 +430,6 @@ class Sextupole(Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "H", self.H
-
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
