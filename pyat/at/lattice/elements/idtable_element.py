@@ -141,130 +141,6 @@ class InsertionDeviceKickMap(Element):
             A dict with the file data.
         """
 
-        def read_text_radia_field_map(file_in_name: str) -> tuple:
-            """
-            Read a RadiaField map in text format and return.
-
-            A File, where :
-            - comments start with #.
-            - the first data line is the length in meters.
-            - the second data line is the number of points in the h. plane.
-            - the third data line is the number of points in the v. plane.
-            - each block is a table with axes.
-            - each data block comes after a START.
-            - first the horizontal data block, and second the
-              vertical data block with the second order kicks.
-              There might be two other blocks with the horizontal and
-              vertical first order kicks.
-
-            File example (ignore the !SPACE):
-            ! #comment in line 1
-            ! #comment in line 2
-            ! Length_in_m
-            ! #comment in line 4
-            ! Number of points in horizontal plane :nh
-            ! #comment in line 6
-            ! Number of points in vertical plane :nv
-            ! #comment in line 8
-            ! START
-            !             pos_point1h pos_point2h ... pos_pointnh
-            ! pos_point1v
-            ! ...                    horizontal kick_map(nv,nh)
-            ! pos_pointnv
-            ! START
-            !             pos_point1h pos_point2h ... pos_pointnh
-            ! pos_point1v
-            ! ...                    vertical kick_map(nv,nh)
-            ! pos_pointnv
-            ! (EOL)
-
-            Arguments:
-                file_in_name: the file name.
-
-            Returns:
-                Tuple with file tables and axes.
-
-            Raises:
-                ValueError: if the number of blocks in less than 2 or equal to 3.
-            """
-            thepath = Path(file_in_name)
-            with thepath.open(encoding="utf-8") as thefile:
-                lines = thefile.readlines()
-            thefile.close()
-            data_lines = 0  # line not starting with '#'
-            header_lines = 0  # line starting with '#'
-            block_counter = 0  # START of the h.map, START of the v.map
-            kick_block_list = []
-            kick_haxes_list = []
-            kick_vaxes_list = []
-            for line in lines:
-                sline = line.split()
-                if sline[0] == "#":  # line is comment
-                    header_lines += 1
-                else:
-                    data_lines += 1
-                    if data_lines == 1:  # get the element length
-                        el_length = float(sline[0])
-                    elif data_lines == 2:  # get the number of hor. points
-                        h_points = int(sline[0])
-                    elif data_lines == 3:  # get the number of ver. points
-                        v_points = int(sline[0])
-                        # initialize element kicks and table_axes
-                        kick_block = np.zeros((v_points, h_points))
-                        haxis = np.zeros(h_points)
-                        vaxis = np.zeros(v_points)
-                    else:
-                        # read block of data
-                        if sline[0] == "START" or sline[0] == "START\n":
-                            block_counter += 1
-                            block_lines = 0
-                        if block_lines == 1:
-                            haxis = sline
-                        if block_lines > 1:
-                            # minus one due to python index starting at 0
-                            # and minus another one due
-                            # to the column labels in first line
-                            vaxis[block_lines - 2] = float(sline[0])
-                            kick_block[block_lines - 2][:] = sline[1:]
-                        if block_lines > v_points:
-                            block_lines = 0
-                            kick_block_list.append(kick_block)
-                            kick_haxes_list.append(haxis)
-                            kick_vaxes_list.append(vaxis)
-                        block_lines += 1
-            # checking how many kick blocks were added
-            lenkick_block_list = len(kick_block_list)
-            if lenkick_block_list < 2 or lenkick_block_list == 3:
-                _minimumblocknumbererrormsg = (
-                    "Input file contains only " f"{len(kick_block_list)} block"
-                )
-                raise ValueError(_minimumblocknumbererrormsg)
-            if lenkick_block_list == 2:
-                # first order kick not in file
-                kick_block_list.append(0.0 * np.copy(kick_block))
-                kick_block_list.append(0.0 * np.copy(kick_block))
-            elif lenkick_block_list > 4:
-                # file contains more blocks that required
-                _warn4kickblocks = (
-                    "Input file contains more than 4 blocks. "
-                    "Additional blocks ignored"
-                )
-                warn(_warn4kickblocks)
-
-            return (
-                el_length,
-                kick_block_list[0],
-                kick_block_list[1],
-                kick_haxes_list[0],
-                kick_vaxes_list[0],
-                kick_haxes_list[1],
-                kick_vaxes_list[1],
-                kick_block_list[2],
-                kick_block_list[3],
-                h_points,
-                v_points,
-            )
-
         def sorted_table(
             table_in: np.ndarray, sorted_index: np.ndarray, order_axis: str
         ) -> np.ndarray:
@@ -287,41 +163,11 @@ class InsertionDeviceKickMap(Element):
                     table_out[i, :] = table_in[iis, :]
             return np.asfortranarray(table_out)
 
-        def read_dict_radia_field_map(id_input: dict) -> tuple:
-            """Read a dictionary with Radia field map tables.
-
-            The required keys are "Length", "xkick" and "ykick"
-            for the second order maps, "xtable" and "ytable" for
-            the grid, and "xkick1" and "ykick1" for the first order
-            maps.
-
-            Arguments:
-                id_input: Radia field map input.
-
-            Returns:
-                Tuple with Insertion Device parameters.
-            """
-            (v_points, h_points) = id_input["xtable"].shape
-            return (
-                id_input["Length"],
-                id_input["xkick"],
-                id_input["ykick"],
-                id_input["xtable"],
-                id_input["ytable"],
-                id_input["xtable"],
-                id_input["ytable"],
-                id_input["xkick1"],
-                id_input["ykick1"],
-                h_points,
-                v_points,
-            )
-
-        def read_radia_field_map(fname: str or dict) -> tuple:
-            if type(fname) == dict:
-                return read_dict_radia_field_map(fname)
-            else:
-                # assume text file
-                return read_text_radia_field_map(fname)
+        if isinstance(fname, dict):
+            thefields = self.read_dict_radia_field_map(fname)
+        else:
+            # assume text file
+            thefields = self.read_text_radia_field_map(fname)
 
         (
             el_length,
@@ -335,7 +181,7 @@ class InsertionDeviceKickMap(Element):
             vkickmap1,
             _,
             _,
-        ) = read_radia_field_map(fname)
+        ) = thefields
 
         # set to float
         table_colshkickarray = np.array(table_colshkick, dtype="float64")
@@ -391,6 +237,158 @@ class InsertionDeviceKickMap(Element):
             "xtable": xtable,
             "ytable": ytable,
         }
+
+    def read_text_radia_field_map(self, file_in_name: str) -> tuple:
+        """
+        Read a RadiaField map in text format and return.
+
+        A File, where :
+        - comments start with #.
+        - the first data line is the length in meters.
+        - the second data line is the number of points in the h. plane.
+        - the third data line is the number of points in the v. plane.
+        - each block is a table with axes.
+        - each data block comes after a START.
+        - first the horizontal data block, and second the
+          vertical data block with the second order kicks.
+          There might be two other blocks with the horizontal and
+          vertical first order kicks.
+
+        File example (ignore the !SPACE):
+        ! #comment in line 1
+        ! #comment in line 2
+        ! Length_in_m
+        ! #comment in line 4
+        ! Number of points in horizontal plane :nh
+        ! #comment in line 6
+        ! Number of points in vertical plane :nv
+        ! #comment in line 8
+        ! START
+        !             pos_point1h pos_point2h ... pos_pointnh
+        ! pos_point1v
+        ! ...                    horizontal kick_map(nv,nh)
+        ! pos_pointnv
+        ! START
+        !             pos_point1h pos_point2h ... pos_pointnh
+        ! pos_point1v
+        ! ...                    vertical kick_map(nv,nh)
+        ! pos_pointnv
+        ! (EOL)
+
+        Arguments:
+            file_in_name: the file name.
+
+        Returns:
+            Tuple with file tables and axes.
+
+        Raises:
+            ValueError: if the number of blocks in less than 2 or equal to 3.
+        """
+        thepath = Path(file_in_name)
+        with thepath.open(encoding="utf-8") as thefile:
+            lines = thefile.readlines()
+        thefile.close()
+        data_lines = 0  # line not starting with '#'
+        header_lines = 0  # line starting with '#'
+        block_counter = 0  # START of the h.map, START of the v.map
+        kick_block_list = []
+        kick_haxes_list = []
+        kick_vaxes_list = []
+        for line in lines:
+            sline = line.split()
+            if sline[0] == "#":  # line is comment
+                header_lines += 1
+            else:
+                data_lines += 1
+                if data_lines == 1:  # get the element length
+                    el_length = float(sline[0])
+                elif data_lines == 2:  # get the number of hor. points
+                    h_points = int(sline[0])
+                elif data_lines == 3:  # get the number of ver. points
+                    v_points = int(sline[0])
+                    # initialize element kicks and table_axes
+                    kick_block = np.zeros((v_points, h_points))
+                    haxis = np.zeros(h_points)
+                    vaxis = np.zeros(v_points)
+                else:
+                    # read block of data
+                    if sline[0] == "START" or sline[0] == "START\n":
+                        block_counter += 1
+                        block_lines = 0
+                    if block_lines == 1:
+                        haxis = sline
+                    if block_lines > 1:
+                        # minus one due to python index starting at 0
+                        # and minus another one due
+                        # to the column labels in first line
+                        vaxis[block_lines - 2] = float(sline[0])
+                        kick_block[block_lines - 2][:] = sline[1:]
+                    if block_lines > v_points:
+                        block_lines = 0
+                        kick_block_list.append(kick_block)
+                        kick_haxes_list.append(haxis)
+                        kick_vaxes_list.append(vaxis)
+                    block_lines += 1
+        # checking how many kick blocks were added
+        lenkick_block_list = len(kick_block_list)
+        if lenkick_block_list < 2 or lenkick_block_list == 3:
+            _minimumblocknumbererrormsg = (
+                "Input file contains only " f"{len(kick_block_list)} block"
+            )
+            raise ValueError(_minimumblocknumbererrormsg)
+        if lenkick_block_list == 2:
+            # first order kick not in file
+            kick_block_list.append(0.0 * np.copy(kick_block))
+            kick_block_list.append(0.0 * np.copy(kick_block))
+        elif lenkick_block_list > 4:
+            # file contains more blocks that required
+            _warn4kickblocks = (
+                "Input file contains more than 4 blocks. " "Additional blocks ignored"
+            )
+            warn(_warn4kickblocks)
+
+        return (
+            el_length,
+            kick_block_list[0],
+            kick_block_list[1],
+            kick_haxes_list[0],
+            kick_vaxes_list[0],
+            kick_haxes_list[1],
+            kick_vaxes_list[1],
+            kick_block_list[2],
+            kick_block_list[3],
+            h_points,
+            v_points,
+        )
+
+    def read_dict_radia_field_map(self, id_input: dict) -> tuple:
+        """Read a dictionary with Radia field map tables.
+
+        The required keys are "Length", "xkick" and "ykick"
+        for the second order maps, "xtable" and "ytable" for
+        the grid, and "xkick1" and "ykick1" for the first order
+        maps.
+
+        Arguments:
+            id_input: Radia field map input.
+
+        Returns:
+            Tuple with Insertion Device parameters.
+        """
+        (v_points, h_points) = id_input["xtable"].shape
+        return (
+            id_input["Length"],
+            id_input["xkick"],
+            id_input["ykick"],
+            id_input["xtable"],
+            id_input["ytable"],
+            id_input["xtable"],
+            id_input["ytable"],
+            id_input["xkick1"],
+            id_input["ykick1"],
+            h_points,
+            v_points,
+        )
 
 
 # EOF
