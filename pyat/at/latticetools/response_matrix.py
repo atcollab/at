@@ -22,7 +22,7 @@ The :py:class:`ResponseMatrix` class defines a general-purpose response matrix, 
 on a :py:class:`.VariableList` of quantities which will be independently varied, and an
 :py:class:`.ObservableList` of quantities which will be recorded for each step.
 
-For instance let's take the horizontal displacements of all quadrupoles as variables:
+For instance, let's take the horizontal displacements of all quadrupoles as variables:
 
 >>> variables = VariableList(
 ...     RefptsVariable(ik, "dx", name=f"dx_{ik}", delta=0.0001)
@@ -56,7 +56,7 @@ The response matrix may be filled by several means:
 #. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
    saved values or experimentally measured values,
 #. :py:meth:`~ResponseMatrix.build` computes the matrix using tracking,
-#. For some specialized response matrices a
+#. For some specialised response matrices a
    :py:meth:`~OrbitResponseMatrix.build_analytical` method is available.
 
 Matrix normalisation
@@ -111,7 +111,7 @@ Exclusion of variables and observables
 Variables may be added to a set of excluded values, and similarly for observables.
 Excluding an item does not change the response matrix. The values are excluded from the
 pseudo-inversion of the response, possibly reducing the number of singular values.
-After inversion the correction matrix is expanded to its original size by inserting
+After inversion, the correction matrix is expanded to its original size by inserting
 zero lines and columns at the location of excluded items. This way:
 
 - error and correction vectors keep the same size independently of excluded values,
@@ -175,16 +175,16 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def sequence_split(seq: Sequence, nslices: int) -> Generator[Sequence, None, None]:
-    """Split a sequence into multiple sub-sequences.
+    """Split a sequence into multiple subsequences.
 
     The length of *seq* does not have to be a multiple of *nslices*.
 
     Args:
         seq: sequence to split
-        nslices: number of sub-sequences
+        nslices: number of subsequences
 
     Returns:
-        subseqs: Iterator over sub-sequences
+        subseqs: Iterator over subsequences
     """
 
     def _split(seqsizes):
@@ -202,6 +202,7 @@ def sequence_split(seq: Sequence, nslices: int) -> Generator[Sequence, None, Non
     return _split(lsubseqs)
 
 
+# noinspection PyUnusedLocal
 def _nocheck(v: VariableBase) -> None:
     pass
 
@@ -309,7 +310,7 @@ class _SvdSolver(abc.ABC):
     def check_norm(self) -> tuple[FloatArray, FloatArray]:
         """Display the norm of the rows and columns of the weighted response matrix.
 
-        Adjusting the variables and observable weights to equalize the norms
+        Adjusting the variables and observable weights to equalise the norms
         of rows and columns is important.
 
         Returns:
@@ -539,11 +540,13 @@ class ResponseMatrix(_SvdSolver):
             pool_size:          number of processes. If None,
               :pycode:`min(len(self.variables, nproc)` is used
             start_method:       python multiprocessing start method.
-              :py:obj:`None` uses the python default that is considered safe.
+              :py:obj:`None` uses the python default, considered safe.
               Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
               Default for linux is ``'fork'``, default for macOS and  Windows
               is ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
               calculation, however it is considered unsafe.
+            checkfun:       Function called after each variable has been scanned.
+              ``checkfun(v: VariableBase) -> None``.
 
         Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
@@ -1149,7 +1152,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
     def build_analytical(self, **kwargs) -> FloatArray:
-        """Build analytically the response matrix.
+        """Analytically build the response matrix.
 
         Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
@@ -1187,7 +1190,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         :py:meth:`solve`.
 
         Args:
-            refpts:    location of Monitors to exclude
+            refpts: location of Monitors to exclude
+            obsid:  name or index of observable to be excluded
 
         Raises:
             ValueError: No observable with the given name.
