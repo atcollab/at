@@ -366,19 +366,19 @@ class _SvdSolver(abc.ABC):
         return cormat
 
     def get_correction(
-        self, observed: FloatArray, nvals: int | None = None
+        self, deviation: FloatArray, nvals: int | None = None
     ) -> FloatArray:
         """Compute the correction of the given observation.
 
         Args:
-            observed:   Vector of observed deviations,
+            deviation:  Vector of observed deviations,
             nvals:      Desired number of singular values. If :py:obj:`None`, use
               all singular values
 
         Returns:
             corr:       Correction vector
         """
-        return -self.correction_matrix(nvals=nvals) @ observed
+        return -self.correction_matrix(nvals=nvals) @ deviation
 
     def save(self, file) -> None:
         """Save a response matrix in the NumPy .npy format.
@@ -513,12 +513,12 @@ class ResponseMatrix(_SvdSolver):
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,))):
             print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self._eval_args)
-            err = obs.flat_deviations
-            if np.any(np.isnan(err)):
+            deviation = obs.flat_deviations
+            if np.any(np.isnan(deviation)):
                 raise AtError(
                     f"Step {it + 1}: Invalid observables, cannot compute correction"
                 )
-            corr = self.get_correction(obs.flat_deviations, nvals=nv)
+            corr = self.get_correction(deviation, nvals=nv)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
                 self.variables.increment(corr, ring=ring)
