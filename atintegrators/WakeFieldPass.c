@@ -56,6 +56,8 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
     double *kx2;
     double *ky2;
     double *kz;
+    double *kcx;
+    double *kcy;
 
     void *buffer = atMalloc(sz);
     double *dptr = (double *) buffer;
