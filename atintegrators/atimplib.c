@@ -204,7 +204,7 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                    double *waketableDY,double *waketableQX,double *waketableQY,
                    double *waketableZ, double *waketableCX, double *waketableCY,
                    double *normfact, double *kx,double *ky,
-                   double *kx2,double *ky2,double *kz){
+                   double *kx2,double *ky2,double *kz, double *kcx, double *kcy){
     int rank=0;
     int size=1;
     int i,ii,index;
