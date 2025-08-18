@@ -47,7 +47,7 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
     double *turnhistory = Elem->turnhistory;
     double *z_cuts = Elem->z_cuts;    
 
-    size_t sz = 5*nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
+    size_t sz = 7*nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
     int c;
 
     int *pslice;
