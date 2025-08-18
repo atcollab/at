@@ -90,7 +90,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double feedback_angle_offset = Elem->feedback_angle_offset;
 
 
-    double vbeam_set[] = {vbeam_phasor[0], vbeam_phasor[1]};
+    double vbeam_set[] = {vbeamk[0], vbeamk[1]};
     double tot_current = 0.0;
     int i;
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
@@ -104,7 +104,6 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
-    double vbr=2*tot_current*rshunt;
 
     /*Track RF cavity is always done. */
     trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi+feedback_angle_offset,nturn,circumference/C0,num_particles);
@@ -159,7 +158,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,feedback_angle_offset); 
 
         }else if(cavitymode==3){     
-            update_passive_frequency(vbeam_set, vcavk, vgenk, phasegain, vbr);
+            update_passive_frequency(vbeam_set, vcavk, vgenk, phasegain);
         }
 
         

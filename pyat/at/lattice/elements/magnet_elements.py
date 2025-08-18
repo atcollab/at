@@ -430,10 +430,6 @@ class Sextupole(Multipole):
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
         super().__init__(family_name, length, [], [0.0, 0.0, h], **kwargs)
 
-    def items(self) -> Generator[tuple[str, Any], None, None]:
-        yield from super().items()
-        yield "H", self.H
-
 
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
@@ -505,7 +501,7 @@ class Wiggler(Radiative, LongElement):
             length:         total length of the wiggler
             wiggle_period:  length must be a multiple of this
             b_max:          peak wiggler field [Tesla]
-            energy:         beam energy [eV]
+            energy:         kept for backwards compatibility but always ignored
             Nstep:          number of integration steps.
             Nmeth:          symplectic integration order: 2 or 4
             Bx:             harmonics for horizontal wiggler: (6, nHharm)
@@ -522,6 +518,13 @@ class Wiggler(Radiative, LongElement):
                 "Wiggler: length / wiggle_period is not an "
                 f"integer. ({length}/{wiggle_period}={n_wiggles})"
             )
+        if energy:
+            warnings.warn(
+                AtWarning(
+                    f"Wiggler: positional argument energy={energy} has been ignored as "
+                    "lattice.Energy is always used instead."
+                )
+            )
         super().__init__(
             family_name,
             length,
@@ -531,7 +534,6 @@ class Wiggler(Radiative, LongElement):
             Nmeth=Nmeth,
             By=By,
             Bx=Bx,
-            Energy=energy,
             **kwargs,
         )
 

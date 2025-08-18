@@ -43,7 +43,7 @@ def test_exact_hamiltonian_pass_with_dls_dipole(rin, func):
                          ('GWigSymplecticPass', 'GWigSymplecticRadPass'))
 def test_gwig_symplectic_pass(rin, passmethod, func):
     # Parameters copied from one of the Diamond wigglers.
-    wiggler = elements.Wiggler('w', 1.15, 0.05, 0.8, 3e9)
+    wiggler = elements.Wiggler('w', 1.15, 0.05, 0.8)
     wiggler.PassMethod = passmethod
     func(wiggler, rin)
 
