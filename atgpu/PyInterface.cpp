@@ -309,7 +309,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   try {
 
     if( verbose )
-      cout << "Tracking " << num_particles << " particles for " << num_turns << " turns on " << gpuLattice->getGPUContext()->name() << " #" << gpuId << endl;
+      cout << "Tracking " << num_particles << " particles for " << num_turns << " turns on " <<
+      gpuLattice->getGPUContext()->name() << " #" << gpuId << " Integrator: #" << integratorType << endl;
 
     npy_intp outdims[4] = {6,(npy_intp)(num_particles),num_refs,num_turns};
     PyObject *rout = PyArray_EMPTY(4, outdims, floatType, 1);
