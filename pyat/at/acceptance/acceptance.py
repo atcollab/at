@@ -41,6 +41,7 @@ def get_acceptance(
     divider: int = 2,
     shift_zero: float = 1.0e-6,
     start_method: str | None = None,
+    **kwargs
 ):
     # noinspection PyUnresolvedReferences
     r"""Computes the acceptance at ``repfts`` observation points
@@ -116,7 +117,6 @@ def get_acceptance(
          do most of the work in a single function call and allows for
          full parallelization.
     """
-    kwargs = {}
     if start_method is not None:
         kwargs["start_method"] = start_method
 
@@ -198,6 +198,7 @@ def get_1d_acceptance(
     divider: int | None = 2,
     shift_zero: float | None = 1.0e-6,
     start_method: str | None = None,
+    **kwargs
 ):
     r"""Computes the 1D acceptance at ``refpts`` observation points
 
@@ -289,6 +290,7 @@ def get_1d_acceptance(
         divider=divider,
         shift_zero=shift_zero,
         offset=offset,
+        **kwargs
     )
     return np.squeeze(b), s, g
 
