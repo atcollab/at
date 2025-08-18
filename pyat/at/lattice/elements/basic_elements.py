@@ -105,18 +105,6 @@ class LongElement(Element):
         self.Length += other.Length
 
 
-class _ThinElement(Element):
-    """Mixing class for long elements"""
-    
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
-
-    def divide(self, frac) -> list[Element]:
-        pass
-
-    def merge(self, other) -> None:
-        pass
-
-
 class Marker(Element):
     """Marker element"""
 
