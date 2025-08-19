@@ -479,10 +479,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             PyObject *el = PyList_GET_ITEM(lattice, elem_index);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
             double length;
-            if (!PyPassMethod) return print_error(elem_index, rout);    /* No PassMethod: AttributeError */
+            if (!PyPassMethod) return NULL;    /* No PassMethod: AttributeError */
             LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
             Py_DECREF(PyPassMethod);
-            if (!LibraryListPtr) return print_error(elem_index, rout);  /* No trackFunction for the given PassMethod: RuntimeError */
+            if (!LibraryListPtr) return NULL;  /* No trackFunction for the given PassMethod: RuntimeError */
             pylength = PyObject_GetAttrString(el, "Length");
             if (pylength) {
                 length = PyFloat_AsDouble(pylength);
