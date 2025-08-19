@@ -41,18 +41,15 @@ static PyMethodDef AtGPUMethods[] = {
                           "    reuse:   if True, use previously cached description of the lattice.\n"
                           "    losses:  if True, process losses\n"
                           "    gpu_pool:  List of GPU id to use\n"
-                          "    tracking_starts: numpy array of indices of elements where tracking should start.\n"
-                          "       len(tracking_start) must divide the number of particle and it gives the stride size.\n"
-                          "       The i-th particle of rin starts at elem tracking_start[i/stride].\n"
-                          "       The behavior is similar to lattice.rotate(tracking_starts[i/stride]).\n"
-                          "       The stride size should be multiple of 64 for best performance.\n"
                           "    integrator: Type of integrator to use.\n"
                           "       1: Euler 1st order, 1 drift/1 kick per step.\n"
                           "       2: Mclachlan 2nd order, 2 drift/2 kicks per step.\n"
                           "       3: Ruth 3rd order, 3 drifts/3 kicks per step.\n"
                           "       4: Forest/Ruth 4th order, 4 drifts/3 kicks per step (Default).\n"
                           "       5: Optimal 4th order from R. Mclachlan, 4 drifts/4 kicks per step.\n"
-                          "       6: Yoshida 6th order, 8 drifts/7 kicks per step.\n\n"
+                          "       6: Yoshida 6th order, 8 drifts/7 kicks per step.\n"
+                          "   start_elem: start tracking at element #start_elem\n"
+                          "   end_elem: end tracking at element #end_elem (inclusive)\n\n"
                           "Returns:\n"
                           "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
                           "         of particle coordinates\n\n"
@@ -138,7 +135,8 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                  "energy", "particle", "keep_counter",
                                  "reuse","losses",
                                  "bunch_spos", "bunch_currents", "gpu_pool",
-                                 "tracking_starts","integrator","verbose",
+                                 "integrator","verbose",
+                                 "start_elem","end_elem",
                                  nullptr};
 
   NPY_TYPES floatType;
@@ -168,10 +166,12 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   int counter=0;
   int losses=0;
   int integratorType=4;
+  int startElem=0;
+  int endElem=-1;
   double t0,t1;
 
   // Get input args
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!O!ip", const_cast<char **>(kwlist),
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pppO!O!O!ipii", const_cast<char **>(kwlist),
                                    &PyList_Type, &lattice,
                                    &PyArray_Type, &rin,
                                    &num_turns,
@@ -185,9 +185,10 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
                                    &PyArray_Type, &bspos,
                                    &PyArray_Type, &bcurrents,
                                    &PyList_Type, &gpupool,
-                                   &PyArray_Type, &trackstarts,
                                    &integratorType,
-                                   &verbose
+                                   &verbose,
+                                   &startElem,
+                                   &endElem
                                    )) {
     return nullptr;
   }
@@ -292,6 +293,23 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   }
 
+  int num_elements = gpuLattice->getNbElement();
+
+  // Check for partial turn tracking
+  if(endElem==-1) endElem = num_elements-1;
+  if(startElem<0 || startElem>=num_elements) {
+    return PyErr_Format(PyExc_ValueError, "start_elem out of range [0..num_elements-1]");
+  }
+  if(endElem<0 || endElem>=num_elements) {
+    return PyErr_Format(PyExc_ValueError, "end_elem out of range [0..num_elements-1]");
+  }
+  if(startElem>endElem) {
+    return PyErr_Format(PyExc_ValueError, "end_elem must be greater that start_elem");
+  }
+  if((endElem!=num_elements-1) && (num_turns!=1)) {
+    return PyErr_Format(PyExc_ValueError, "partial turn tracking not ending at the end of the ring requires nturns=1");
+  }
+
   // Load lattice on the GPU
   try {
     uint64_t size = gpuLattice->fillGPUMemory();
@@ -331,7 +349,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
       bool *xlostPtr = (bool *)PyArray_DATA((PyArrayObject *)xlost);
       AT_FLOAT *xlostcoordPtr = (AT_FLOAT *)PyArray_DATA((PyArrayObject *)xlostcoord);
 
-      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,
+      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,startElem,endElem,
                       xnturnPtr,xnelemPtr,xlostcoordPtr,true);
 
       // Format result for AT
@@ -356,7 +374,7 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     } else {
 
-      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,num_starts,track_starts,
+      gpuLattice->run(num_turns,num_particles,drin,drout,num_refs,ref_pts,startElem,endElem,
                       nullptr,nullptr,nullptr,true);
       return rout;
 

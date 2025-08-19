@@ -134,7 +134,7 @@ void integratorTest(int gpu,string latticeName) {
       // Choose an arc close to 1mm where unexpected tune drift is observed when step size in too small (EBS lattice)
       AT_FLOAT *rin = createArc(0.001,M_PI/2.0,-M_PI/2.0,nbPart);
 
-      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, 0, nullptr, nullptr, nullptr, nullptr, false);
+      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, 0, l->getNbElement()-1, nullptr, nullptr, nullptr, false);
 
       double err = 0;
       double max = 0;
@@ -209,9 +209,6 @@ void performanceTest(int gpu,string latticeName) {
       uint32_t nbPart = nbX * nbY;
       uint32_t refs[] = {l->getNbElement()};
       uint32_t nbRef = sizeof(refs) / sizeof(uint32_t);
-      uint32_t starts[] = {0,100,200,300,400,500,600,700};
-      uint32_t nbStride = sizeof(starts) / sizeof(uint32_t);
-      //uint32_t nbStride = 0;
 
       uint64_t routSize = nbTurn * nbPart * nbRef * 6 * sizeof(AT_FLOAT);
       AT_FLOAT *rout = (AT_FLOAT *) malloc(routSize);
@@ -222,7 +219,7 @@ void performanceTest(int gpu,string latticeName) {
       AT_FLOAT *lostAtCoord = new AT_FLOAT[nbPart * 6];
 
       t0 = AbstractGPU::get_ticks();
-      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, nbStride, starts, lostAtTurn, lostAtElem, lostAtCoord,false);
+      l->run(nbTurn, nbPart, rin, rout, nbRef, refs, 0, l->getNbElement()-1, lostAtTurn, lostAtElem, lostAtCoord,false);
       t1 = AbstractGPU::get_ticks();
 
       AT_FLOAT *P = &rin[114*6];
@@ -231,9 +228,8 @@ void performanceTest(int gpu,string latticeName) {
       cout << "Lost elem:" << lostAtElem[114] << endl;
       cout << "Lost coord:" << lostAtCoord[114*6] << "," << lostAtCoord[114*6+2] << endl;
 
-      uint32_t strideSize = nbPart / nbStride;
-      for(int stride=0; stride < nbStride; stride++) {
-        P = ROUTPTR(stride*strideSize, 0, nbTurn - 1);
+      for(int stride=0; stride < 8; stride++) {
+        P = ROUTPTR(stride*8, 0, nbTurn - 1);
         cout << "[" << stride << "] " << P[0] << " " << P[1] << " " << P[2] << " " << P[3] << " " << P[4] << " " << P[5] << endl;
       }
 

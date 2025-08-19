@@ -340,10 +340,13 @@ def grid_boundary_search(
     t0 = time.time()
     allparts = []
     grids = []
-    offsets = []
 
-    for i, obs, orbit in zip(numpy.arange(len(obspt)), obspt, offset):
-        orbit, newring = set_ring_orbit(ring, dp, obs, orbit)
+    if offset is None:
+        _,offsets = ring.find_orbit(dp=dp,refpts=obspt)
+    else:
+       offsets = offset
+
+    for i, obs, orbit in zip(numpy.arange(len(obspt)), obspt, offsets):
         parts, grid = get_parts(config, orbit)
         obs = 0 if obs is None else obs
         dpp = 0.0 if dp is None else dp
@@ -354,12 +357,11 @@ def grid_boundary_search(
                     ring[obs].FamName, obs, orbit, dpp, i + 1, len(obspt)
                 )
             )
-        newring[: len(ring) - obs].track(
-            parts, use_mp=use_mp, in_place=True, refpts=None, **kwargs
+        ring.track(
+            parts, use_mp=use_mp, in_place=True, refpts=None,start_elem=obs,keep_lattice=True,**kwargs
         )
         allparts.append(parts)
         grids.append(grid)
-        offsets.append(orbit)
     if verbose:
         print("Starting the multi-turn tracking...")
     allparts = numpy.concatenate(allparts, axis=1)
@@ -521,14 +523,14 @@ def boundary_search(
                 numpy.shape(offset), numpy.shape(obspt)
             )
             raise AtError(msg)
-    else:
-        offset = [None for _ in rp]
 
     divider = kwargs.pop("divider", 2)
     if grid_mode is GridMode.RECURSIVE:
         boundary = []
         survived = []
         grid = []
+        if offset is None:
+            offset = [None for _ in rp]
         for r, o in zip(rp, offset):
             b, s, g = recursive_boundary_search(
                 ring,
