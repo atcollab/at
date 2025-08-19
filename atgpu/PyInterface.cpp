@@ -49,7 +49,7 @@ static PyMethodDef AtGPUMethods[] = {
                           "       5: Optimal 4th order from R. Mclachlan, 4 drifts/4 kicks per step.\n"
                           "       6: Yoshida 6th order, 8 drifts/7 kicks per step.\n"
                           "   start_elem: start tracking at element #start_elem\n"
-                          "   end_elem: end tracking at element #end_elem (inclusive)\n\n"
+                          "   end_elem: end tracking at element #end_elem (exclusive)\n\n"
                           "Returns:\n"
                           "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
                           "         of particle coordinates\n\n"
@@ -296,18 +296,27 @@ static PyObject *at_gpupass(PyObject *self, PyObject *args, PyObject *kwargs) {
   int num_elements = gpuLattice->getNbElement();
 
   // Check for partial turn tracking
-  if(endElem==-1) endElem = num_elements-1;
-  if(startElem<0 || startElem>=num_elements) {
-    return PyErr_Format(PyExc_ValueError, "start_elem out of range [0..num_elements-1]");
-  }
-  if(endElem<0 || endElem>=num_elements) {
-    return PyErr_Format(PyExc_ValueError, "end_elem out of range [0..num_elements-1]");
-  }
-  if(startElem>endElem) {
-    return PyErr_Format(PyExc_ValueError, "end_elem must be greater that start_elem");
-  }
-  if((endElem!=num_elements-1) && (num_turns!=1)) {
-    return PyErr_Format(PyExc_ValueError, "partial turn tracking not ending at the end of the ring requires nturns=1");
+  if(endElem==-1) endElem = num_elements;
+  if(num_elements!=0) {
+    if(startElem<0 || startElem>=num_elements) {
+      char errMsg[64];
+      sprintf(errMsg,"start_elem out of range, %d not in [0..%d]",startElem,num_elements-1);
+      return PyErr_Format(PyExc_ValueError, errMsg);
+    }
+    if(endElem<0 || endElem>num_elements) {
+      char errMsg[64];
+      sprintf(errMsg,"end_elem out of range, %d not in [0..%d]",endElem,num_elements);
+      return PyErr_Format(PyExc_ValueError, errMsg);
+    }
+    if(startElem>endElem) {
+      return PyErr_Format(PyExc_ValueError, "end_elem must be greater that start_elem");
+    }
+    if((endElem!=num_elements) && (num_turns!=1)) {
+      return PyErr_Format(PyExc_ValueError, "partial turn tracking not ending at the end of the ring requires nturns=1");
+    }
+  } else {
+    startElem = 0;
+    endElem = 0;
   }
 
   // Load lattice on the GPU

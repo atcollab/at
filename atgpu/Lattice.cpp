@@ -369,7 +369,7 @@ void Lattice::run(uint64_t nbTurn,uint32_t nbParticles,AT_FLOAT *rin,AT_FLOAT *r
 
   // Call GPU
   gpu->resetArg();
-  uint32_t nbElemToProcess = (endElem+1) - startElem;
+  uint32_t nbElemToProcess = endElem - startElem;
   uint32_t turn;
   gpu->addArg(sizeof(void *),&gpuRingParams);       // Global ring params
   gpu->addArg(sizeof(void *),&gpuRing);             // The lattice

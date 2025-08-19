@@ -333,7 +333,7 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
  *  - refpts: numpy uint32 array denoting elements at which to return state
  *  - reuse: whether to reuse the cached state of the ring
  *  - start_elem: start tracking at element #start_elem
- *  - end_elem: end tracking at element #end_elem (inclusive)
+ *  - end_elem: end tracking at element #end_elem (exclusive)
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
@@ -503,18 +503,27 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     /* Check for partial turn tracking */
-    if(end_elem==INT32_MAX) end_elem = num_elements-1;
-    if(start_elem<0 || start_elem>=num_elements) {
-        return PyErr_Format(PyExc_ValueError, "start_elem out of range [0..num_elements-1]");
-    }
-    if(end_elem<0 || end_elem>=num_elements) {
-        return PyErr_Format(PyExc_ValueError, "end_elem out of range [0..num_elements-1]");
-    }
-    if(start_elem>end_elem) {
-        return PyErr_Format(PyExc_ValueError, "end_elem must be greater that start_elem");
-    }
-    if((end_elem!=num_elements-1) && (num_turns!=1)) {
-        return PyErr_Format(PyExc_ValueError, "partial turn tracking not ending at the end of the ring requires nturns=1");
+    if(end_elem==INT32_MAX) end_elem = num_elements;
+    if(num_elements!=0) {
+        if(start_elem<0 || start_elem>=num_elements) {
+            char errMsg[64];
+            sprintf(errMsg,"start_elem out of range, %d not in [0..%d]",start_elem,num_elements-1);
+            return PyErr_Format(PyExc_ValueError, errMsg);
+        }
+        if(end_elem<0 || end_elem>num_elements) {
+            char errMsg[64];
+            sprintf(errMsg,"end_elem out of range, %d not in [0..%d]",start_elem,num_elements);
+            return PyErr_Format(PyExc_ValueError, errMsg);
+        }
+        if(start_elem>end_elem) {
+            return PyErr_Format(PyExc_ValueError, "end_elem must be greater that start_elem");
+        }
+        if((end_elem!=num_elements) && (num_turns!=1)) {
+            return PyErr_Format(PyExc_ValueError, "partial turn tracking not ending at the end of the ring requires nturns=1");
+        }
+    } else {
+        start_elem = 0;
+        end_elem = 0;
     }
 
     /* Particle energy */
@@ -597,7 +606,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         /*PySys_WriteStdout("turn: %i\n", param.nturn);*/
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
-        for (elem_index = start_elem; elem_index <= end_elem; elem_index++) {
+        for (elem_index = start_elem; elem_index < end_elem; elem_index++) {
             param.s_coord = s_coord;
             if (elem_index == nextref) {
                 memcpy(drout, drin, np6*sizeof(double));
