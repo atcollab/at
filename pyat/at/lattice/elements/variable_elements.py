@@ -7,9 +7,9 @@ from enum import IntEnum
 
 import numpy as np
 
+from ..exceptions import AtError
 from .conversions import _array
 from .element_object import Element
-from ..exceptions import AtError
 
 
 class ACMode(IntEnum):
