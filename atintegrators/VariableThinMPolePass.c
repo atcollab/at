@@ -44,10 +44,12 @@ struct elemab {
     double Frequency;
     double Sinabove;
     double Phase;
-    int NSamples;
-    int Ktaylor;
     double* Func;
     double FuncTimeDelay;
+    int NSamples;
+    int Ktaylor;
+    double* Buffer;
+    int BufferSize;
 };
 
 /* This struct contains the parameters of the element.
@@ -139,6 +141,10 @@ double get_pol(
         return ampt;
     case 1:
         ampt *= atrandn_r(rng, 0, 1);
+        /* save random value into buffer */
+        if (turn < elem->BufferSize){
+            elem->Buffer[turn] = ampt;
+        }
         return ampt;
     case 2:
         if (periodic || turn < elem->NSamples) {
@@ -274,9 +280,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     /* Initialize element */
     if (!Elem) {
         int MaxOrder, Mode, NSamplesA, NSamplesB, KtaylorA, KtaylorB, Periodic;
+        int BufferSizeA, BufferSizeB;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
-        double *Ramps, *FuncA, *FuncB;
+        double *Ramps, *FuncA, *FuncB, *BufferA, *BufferB;
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
@@ -307,6 +314,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         KtaylorB=atGetOptionalLong(ElemData, "KtaylorB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        BufferA=atGetOptionalDoubleArray(ElemData,"BufferA"); check_error();
+        BufferB=atGetOptionalDoubleArray(ElemData,"BufferB"); check_error();
+        BufferSizeA=atGetOptionalLong(ElemData, "BufferSizeA", 0); check_error();
+        BufferSizeB=atGetOptionalLong(ElemData, "BufferSizeB", 0); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
         FuncBTimeDelay=atGetOptionalDouble(ElemData,"FuncBTimeDelay", 0); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 0); check_error();
@@ -339,6 +350,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Ktaylor = KtaylorB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
+        ElemA->Buffer = BufferA;
+        ElemB->Buffer = BufferB;
+        ElemA->BufferSize = BufferSizeA;
+        ElemB->BufferSize = BufferSizeB;
         ElemA->FuncTimeDelay = FuncATimeDelay;
         ElemB->FuncTimeDelay = FuncBTimeDelay;
         Elem->ElemA = ElemA;
@@ -371,9 +386,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         int MaxOrder, Mode, NSamplesA, NSamplesB, KtaylorA, KtaylorB, Periodic;
+        int BufferSizeA, BufferSizeB;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
-        double *Ramps, *FuncA, *FuncB;
+        double *Ramps, *FuncA, *FuncB, *BufferA, *BufferB;
         double FuncATimeDelay, FuncBTimeDelay;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
@@ -406,6 +422,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         KtaylorB=atGetOptionalLong(ElemData, "KtaylorB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        BufferA=atGetOptionalDoubleArray(ElemData,"BufferA"); check_error();
+        BufferB=atGetOptionalDoubleArray(ElemData,"BufferB"); check_error();
+        BufferSizeA=atGetOptionalLong(ElemData, "BufferSizeA", 0); check_error();
+        BufferSizeB=atGetOptionalLong(ElemData, "BufferSizeB", 0); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
         FuncBTimeDelay=atGetOptionalDouble(ElemData,"FuncBTimeDelay", 0); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 0); check_error();
@@ -429,6 +449,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Ktaylor = KtaylorB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
+        ElemA->Buffer = BufferA;
+        ElemB->Buffer = BufferB;
+        ElemA->BufferSize = BufferSizeA;
+        ElemB->BufferSize = BufferSizeB;
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
         ElemA->FuncTimeDelay = FuncATimeDelay;
@@ -459,19 +483,23 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 8, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 9, mxCreateString("FuncA"));
             mxSetCell(plhs[1], 10,mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 11,mxCreateString("FuncATimeDelay"));
-            mxSetCell(plhs[1], 12,mxCreateString("FuncBTimeDelay"));
-            mxSetCell(plhs[1], 13,mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 14,mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 15,mxCreateString("KtaylorA"));
-            mxSetCell(plhs[1], 16,mxCreateString("KtaylorB"));
-            mxSetCell(plhs[1], 17,mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 18,mxCreateString("T1"));
-            mxSetCell(plhs[1], 19,mxCreateString("T2"));
-            mxSetCell(plhs[1], 20,mxCreateString("R1"));
-            mxSetCell(plhs[1], 21,mxCreateString("R2"));
-            mxSetCell(plhs[1], 22,mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 23,mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 11,mxCreateString("BufferA"));
+            mxSetCell(plhs[1], 12,mxCreateString("BufferB"));
+            mxSetCell(plhs[1], 13,mxCreateString("BufferSizeA"));
+            mxSetCell(plhs[1], 14,mxCreateString("BufferSizeB"));
+            mxSetCell(plhs[1], 15,mxCreateString("FuncATimeDelay"));
+            mxSetCell(plhs[1], 16,mxCreateString("FuncBTimeDelay"));
+            mxSetCell(plhs[1], 17,mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 18,mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 19,mxCreateString("KtaylorA"));
+            mxSetCell(plhs[1], 20,mxCreateString("KtaylorB"));
+            mxSetCell(plhs[1], 21,mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 22,mxCreateString("T1"));
+            mxSetCell(plhs[1], 23,mxCreateString("T2"));
+            mxSetCell(plhs[1], 24,mxCreateString("R1"));
+            mxSetCell(plhs[1], 25,mxCreateString("R2"));
+            mxSetCell(plhs[1], 26,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 27,mxCreateString("EApertures"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
