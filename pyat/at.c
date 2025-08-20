@@ -366,7 +366,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_uint32 num_particles, np6;
     npy_uint32 elem_index;
     npy_uint32 start_elem = 0;
-    npy_uint32 end_elem = INT32_MAX;
+    npy_uint32 end_elem = 0;
     npy_uint32 *refpts = NULL;
     npy_uint32 nextref;
     unsigned int nextrefindex;
@@ -503,7 +503,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     /* Check for partial turn tracking */
-    if(end_elem==INT32_MAX) end_elem = num_elements;
+    if(end_elem==0) end_elem = num_elements;
     if(num_elements!=0) {
         if(start_elem<0 || start_elem>=num_elements) {
             char errMsg[64];
