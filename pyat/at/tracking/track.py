@@ -235,7 +235,8 @@ def lattice_track(
           set using the variable *at.lattice.DConstant.patpass_startmethod*
         start_elem (int):       Start tracking at the specified element. The
           behavior is different from :py:func:`..lattice.rotate`, refpts are
-          still indexed from the begininig of the ring. Default 0.
+          still indexed from the begininig of the ring and s_coord starts at
+          the beginning of the ring. Default 0.
         end_elem (int):         End tracking at the specified element (exclusive).
           When end_elem is different from the number of lattice elements,
           :pycode:`nturns=1` is required. Default number of elements.
