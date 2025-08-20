@@ -201,6 +201,8 @@ class VariableThinMultipole(Element):
                 kwargs = _set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
                 kwargs = _set_arb(a_b, **kwargs)
+            if mode == ACMode.WHITENOISE:
+                kwargs = _set_white_noise(a_b, **kwargs)
             return kwargs
 
         def _set_sine(a_b: str, **kwargs) -> dict[str, Any]:
@@ -224,6 +226,11 @@ class VariableThinMultipole(Element):
             kwargs["NSamples" + a_b] = nsamples
             kwargs["Ktaylor" + a_b] = ktaylor
             kwargs.setdefault("Periodic", False)
+            return kwargs
+
+        def _set_white_noise(a_b: str, **kwargs):
+            kwargs.setdefault("BufferSize" + a_b, 0)
+            kwargs.setdefault("Buffer" + a_b, np.zeros((kwargs['BufferSize' + a_b])))
             return kwargs
 
         def _check_ramp(**kwargs) -> _array:
