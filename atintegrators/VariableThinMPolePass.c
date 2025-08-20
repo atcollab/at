@@ -4,10 +4,10 @@
 */
 
 /* 2024nov19 oblanco at ALBA CELLS. modified to be compatible with
-                                    pyat and AT matlab*/
+                                    pyat and AT matlab */
 
 /*
- This pass method is implements three modes.
+ This pass method implements three modes.
  Mode 0 : a sin function with frequency and phase
  Mode 1 : a random kick
  Mode 2 : a custom function defined in every turn
@@ -16,11 +16,11 @@
 
  The value of the polynoms A and B are calculated per turn during tracking,
  and also, in modes 0 and 2, per particle to take in to account
- the delay time.
+ the individual delay time.
 
  In mode 0, the sin function could be limited to be between any value above
- `Sinabove`. For example a half-sin function would be obtained by setting
- `Sinabove` to zero.
+ `Sinabove`. For example a positive half-sin function would be obtained by
+ setting `Sinabove` to zero.
 
  In mode 1 the stream of pseudo-random values is taken from the
  parameters structure in attypes.h. For more details about the random
@@ -38,7 +38,7 @@
 #include "driftkick.c"
 
 /* This struct contains the values to set one of the two
-   poynoms: A or B */
+   polynoms: A or B , as a function of the element parameters. */
 struct elemab {
     double* Amplitude;
     double Frequency;
@@ -94,8 +94,8 @@ double get_amp(double amp, double* ramps, double t)
 
 
 /* get_pol calculates the PolynomA/B per turn and mode.
-   If the mode is 0 or 2, the polynom depends on the particle time
-   of delay*/
+   If the mode is 0 or 2, the polynom depends on the particle
+   time delay*/
 double get_pol(
     struct elemab* elem,
     double* ramps,
@@ -108,7 +108,7 @@ double get_pol(
     )
 {
     int turnidx,i; // index
-    double ampt,tpow,thefactorial; // variables in for cycles
+    double ampt;
 
     // sin mode parameters
     double whole_sin_above = elem->Sinabove;
@@ -119,6 +119,7 @@ double get_pol(
     double* amp = elem->Amplitude;
     double functdelay;
     double functot;
+    double tpow,thefactorial; // variables in for cycles
     int Ktaylor;
 
     if (!amp) {
@@ -179,9 +180,9 @@ double get_pol(
    variable PolynomB and PolynomA per turn.*/
 void VariableThinMPolePass(
     double* r, // the particle in 6D
-    struct elem* Elem,  //the variable element
-    double t0, //time of one revolution
-    int turn,  //number of the current turn
+    struct elem* Elem,  // the variable element
+    double t0, // time of one revolution
+    int turn,  // number of the current turn
     int num_particles, //number of particles
     pcg32_random_t* rng // pcg32 random stream
     )
@@ -190,7 +191,7 @@ void VariableThinMPolePass(
     int i; // order of the polynom, counter
     int c; // particle, counter
     double* r6; // particle 6D coordinates
-    double tpart; //time of particle delay
+    double tpart; // particle time delay
 
     // particle time offset for the mode
     double time_in_this_mode = 0;
@@ -270,6 +271,7 @@ void VariableThinMPolePass(
 ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
+    /* Initialize element */
     if (!Elem) {
         int MaxOrder, Mode, NSamplesA, NSamplesB, KtaylorA, KtaylorB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
@@ -342,12 +344,14 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
     }
-    double t0 = Param->T0;
-    int turn = Param->nturn;
+    double t0 = Param->T0;  // revolution time of the nominal ring
+    int turn = Param->nturn;  // current turn
     int i;
 
+    /* track */
     VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->common_rng);
-    /* reset the polynom values*/
+    /* reset the polynom values.
+       This is done to save the ring in an unperturbed configuration. */
     for (i = 0; i < Elem->MaxOrder + 1; i++){
         Elem->PolynomA[i] = 0;
         Elem->PolynomB[i] = 0;
