@@ -53,16 +53,15 @@ class VariableThinMultipole(Element):
         family_name: str,
         mode: int or ACMode,
         **kwargs: dict[any, any],
-    ):
-        r"""VariableThinMultipole initialization.
-
-        Default pass method: ``VariableThinMPolePass``.
+    ) -> VariableThinMultipole:
+        r"""Init VariableThinMultipole.
 
         This Class creates a thin multipole of any order (dipole kick, quadrupole,
         sextupole, etc.) and type (Normal or Skew) defined by AmplitudeA and/or
         AmplitudeB components; the polynoms PolynomA and PolynomB are calculated
         on every turn depending on the chosen mode, and for some modes on the
         particle time delay. All modes could be ramped.
+        Default pass method: ``VariableThinMPolePass``.
 
         Keep in mind that as this element varies on every turn, and at the end of
         the tracking PolynomA and PolynomB are set to zero.
@@ -70,21 +69,25 @@ class VariableThinMultipole(Element):
         Passing arrays of zeros as amplitude will initialize the MaxOrder to
         zero, and the polynom to a single zero.
 
-        There are three different modes that could be set:
-            SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
+        There are three different modes that could be set,
+        SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
         For example, use at.ACMode.SINE or 0 to create an sin function element.
 
         The **SINE** mode requires amplitude and frequency for A and/or B.
         The value of the jth component of the polynom (A or B) at the nth turn
         is given by
-            Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_p) + phase],
+
+        Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_p) + phase],
+
         where T0 is the revolution period of the ideal ring, and \tau_p is the delay
         of the pth particle i.e. the sixth coordinate over the speed of light. Also,
         note that the position of the element on the ring has no effect, the phase
         could be used to add any delay due to the position along s. The following is
         an example of the SINE mode of an skew quad
-            eleskew = at.VariableThinMultipole('VAR_SKEW',at.ACMode.SINE,
-                AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+
+        eleskew = at.VariableThinMultipole('VAR_SKEW',at.ACMode.SINE,
+        AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+
         The values of the sin function could be limited to be above a defined
         threshold using ``Sin[AB]above``. For example, you could create a positive
         half-sin by setting ``Sin[AB]above`` to zero. You could also create a
@@ -96,15 +99,19 @@ class VariableThinMultipole(Element):
         function, therefore using the same stream on all trackings (sequencial or
         parallel). See https://github.com/atcollab/at/discussions/879 for more
         details on the pseudo random stream. For example
-            elenoise = at.VariableThinMultipole('MYNOISE',at.ACMode.WHITENOISE,
-                AmplitudeA=[noiseA1])
+
+        elenoise = at.VariableThinMultipole('MYNOISE',at.ACMode.WHITENOISE,
+        AmplitudeA=[noiseA1])
+
         creates a vertical kick as gaussian noise of amplitude noiseA1.
 
         The **ARBITRARY** mode requires the definition of a custom discrete function
         to be sampled at every turn. The function and its Taylor expansion with
         respect to \tau up to any given order is
-            value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
-                    + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
+
+        value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
+        + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
+
         f is an array of values, f',f'',f''',f'''', are arrays containing
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
         the the sixth coordinate divided by the speed of light. Therefore, the
@@ -115,12 +122,16 @@ class VariableThinMultipole(Element):
         Func=[[1,-1],[0.1,-0.2]]. Use FuncA or FuncB, and AmplitudeA or AmplitudeB
         accordingly.
         tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
-            tau = tau - Func[AB]TimeDelay
+
+        tau = tau - Func[AB]TimeDelay
+
         The function `value` is then **multiplied by Amplitude A and/or B**.
         For example, the following is a positive vertical kick in the first turn,
         negative on the second turn, and zero on the third turn.
-            elesinglekick = at.VariableThinMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
-                AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+
+        elesinglekick = at.VariableThinMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
+        AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+
         By default the array is assumed non periodic, the function has no effect
         on the particle in turns exceeding the function definition. If
         ``Periodic`` is set to True, the sequence is repeated.
@@ -128,19 +139,19 @@ class VariableThinMultipole(Element):
         One could use the method inspect_polynom_values to check the polynom values
         used in every turn.
 
-
-        Parameters:
+        Arguments:
             family_name(str):  Element name
             mode(at.ACMode): defines the mode. Default ACMode.SINE:
+            * :py:attr:`.ACMode.SINE`: sine function
+            * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+            * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
+            kwargs: as follow.
 
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
-                Default None
+            Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
-                Default None
+            Default None
             FrequencyA(float): Frequency of the PolynomA sine excitation. Unit Hz
             FrequencyB(float): Frequency of the PolynomB sine excitation. Unit Hz
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
@@ -150,31 +161,31 @@ class VariableThinMultipole(Element):
             FuncA(Sequence[float]):   User defined tbt list for PolynomA
             FuncB(Sequence[float]):   User defined tbt list for PolynomB
             FuncATimeDelay(float): generate a time offset on the function FUNCA.
-                It only has an effect if any of the derivatives is not zero.
+            It only has an effect if any of the derivatives is not zero.
             FuncBTimeDelay(float): generate a time offset on the function FUNCB.
-                It only has an effect if any of the derivatives is not zero.
+            It only has an effect if any of the derivatives is not zero.
             Periodic(bool): If True the user definition is repeated. Default False.
             Ramps(list): Four values (t0,t1,t2,t3) defining the ramping steps:
+            * ``t<=t0``: excitation amplitude is zero.
+            * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
+            * ``t1<t<=t2``: excitation amplitude is constant.
+            * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
+            * ``t3<t``: excitation amplitude is zero.
 
-              * ``t<=t0``: excitation amplitude is zero.
-              * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
-              * ``t1<t<=t2``: excitation amplitude is constant.
-              * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
-              * ``t3<t``: excitation amplitude is zero.
         Raises:
-            AtError: if none of ``AmplitudeA`` or ``AmplitudeB`` is passed.
-            AtError: if ramp is not vector of length 4 when using ``Ramps``.
-            AtError: when frequency is not defined if using Mode ``ACMode.SINE``.
-            AtError: when the custom function is not defined if using mode
-                ``ACMode.ARBITRARY``.
-
+        :raise AtError: if none of ``AmplitudeA`` or ``AmplitudeB`` is passed.
+        :raise AtError: if ramp is not vector of length 4 when using ``Ramps``.
+        :raise AtError: when frequency is not defined if using Mode ``ACMode.SINE``.
+        :raise AtError: when the custom function is not defined if using
+        mode ``ACMode.ARBITRARY``.
 
         Examples:
-
-            >>> acmpole = at.VariableThinMultipole('ACSKEW', at.ACMode.SINE, AmplitudeA=[0,amp], FrequencyA=freq)
-            >>> acmpole = at.VariableThinMultipole('ACHKICK', at.ACMode.WHITENOISE, AmplitudeB=amp)
-            >>> acmpole = at.VariableThinMultipole('ACMPOLE', at.ACMode.ARBITRARY, AmplitudeB=[0,0,amp], FuncB=fun)
-
+            >>> acmpole = at.VariableThinMultipole('ACSKEW',
+            at.ACMode.SINE, AmplitudeA=[0,amp], FrequencyA=freq)
+            >>> acmpole = at.VariableThinMultipole('ACHKICK',
+            at.ACMode.WHITENOISE, AmplitudeB=amp)
+            >>> acmpole = at.VariableThinMultipole('ACMPOLE',
+            at.ACMode.ARBITRARY, AmplitudeB=[0,0,amp], FuncB=fun)
         """
 
         def _check_amplitudes(**kwargs: dict[any, any]) -> dict[str, any]:
@@ -277,10 +288,10 @@ class VariableThinMultipole(Element):
         Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
 
         Arguments:
-        kwargs:
         turns(int): Default 1. Number of turns to calculate.
         T0(float): revolution time in seconds. Use only in SINE mode.
         tparticle(float): Default 0. Time of the particle in seconds.
+        kwargs: as needed by the mode.
 
         Returns:
             Dictionary with a list of PolynomA and PolynomB per turn.
