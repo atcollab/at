@@ -291,6 +291,9 @@ class VariableThinMultipole(Element):
         Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
 
         Arguments:
+            kwargs: as follow.
+
+        Keyword Arguments:
             turns(int): Default 1. Number of turns to calculate.
             T0(float): revolution time in seconds. Use only in SINE mode.
             tparticle(float): Default 0. Time of the particle in seconds.
