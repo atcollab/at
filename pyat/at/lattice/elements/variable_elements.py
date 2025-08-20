@@ -81,8 +81,9 @@ class VariableThinMultipole(Element):
             eleskew = at.VariableThinMultipole('VAR_SKEW',at.ACMode.SINE,
                 AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
         The values of the sin function could be limited to be above a defined
-        threshold using ``Sin[AB]above``. For example, you could create a half-sin
-        by setting ``Sin[AB]above`` to zero.
+        threshold using ``Sin[AB]above``. For example, you could create a positive
+        half-sin by setting ``Sin[AB]above`` to zero. You could also create a
+        negative half-sin function by setting the amplitude to -1.
 
         The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
         distribution is generated with zero-mean and one standard deviation from
@@ -96,12 +97,16 @@ class VariableThinMultipole(Element):
 
         The **ARBITRARY** mode requires the definition of a custom discrete function
         to be sampled at every turn. The function and its Taylor expansion with
-        respect to \tau up to fourth order is used to calculate a value
+        respect to \tau up to any given order is
             value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
-                    + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4
+                    + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
         f is an array of values, f',f'',f''',f'''', are arrays containing
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
-        the the sixth coordinate divided by the speed of light.
+        the the sixth coordinate divided by the speed of light. Therefore, the
+        function func is a 2D-array with columns corresponding to the f and its
+        derivatives and rows to turns. For example, a positive kick of 1 with
+        positive derivative 0.1 followed by a negative kick of -1 with negative
+        derivative -0.2 would be [[1,-1],[0.1,-0.2]].
         tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
             tau = tau - Func[AB]TimeDelay
         The function `value` is then **multiplied by Amplitude A and/or B**.
