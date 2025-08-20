@@ -19,6 +19,7 @@ class ACMode(IntEnum):
     WHITENOISE = 1
     ARBITRARY = 2
 
+
 def _anyarray(value):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return np.require(value, dtype=np.float64, requirements=["F", "A"])
@@ -230,7 +231,7 @@ class VariableThinMultipole(Element):
 
         def _set_white_noise(a_b: str, **kwargs):
             kwargs.setdefault("BufferSize" + a_b, 0)
-            kwargs.setdefault("Buffer" + a_b, np.zeros((kwargs['BufferSize' + a_b])))
+            kwargs.setdefault("Buffer" + a_b, np.zeros((kwargs["BufferSize" + a_b])))
             return kwargs
 
         def _check_ramp(**kwargs) -> _array:
@@ -400,4 +401,3 @@ class VariableThinMultipole(Element):
         else:
             ampout = 0.0
         return ampout
-
