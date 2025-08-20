@@ -37,10 +37,6 @@
 #include "atrandom.c"
 #include "driftkick.c"
 
-/* constants to be used in the Taylor expansion of the custom function */
-#define oneoversix 0.166666666666667
-#define oneovertwentyfour 0.041666666666667
-
 /* This struct contains the values to set one of the two
    poynoms: A or B */
 struct elemab {
@@ -49,7 +45,7 @@ struct elemab {
     double Sinabove;
     double Phase;
     int NSamples;
-    int MOrders;
+    int Ktaylor;
     double* Func;
     double FuncTimeDelay;
 };
@@ -111,7 +107,7 @@ double get_pol(
     pcg32_random_t* rng
     )
 {
-    int turnidx,MOrders,i; // index
+    int turnidx,i; // index
     double ampt,tpow,thefactorial; // variables in for cycles
 
     // sin mode parameters
@@ -123,6 +119,7 @@ double get_pol(
     double* amp = elem->Amplitude;
     double functdelay;
     double functot;
+    int Ktaylor;
 
     if (!amp) {
         return 0.0;
@@ -148,17 +145,24 @@ double get_pol(
             func = elem->Func;
             functdelay = elem->FuncTimeDelay;
             turnidx = turn % elem->NSamples;
-            MOrders = elem->MOrders;
+            Ktaylor = elem->Ktaylor;
 
             /* calculate the amplitude as a Taylor expansion */
+            /* first order is taken directly from the function table */
             t = t - functdelay;
-            functot = func[0][turnidx];
+            functot = func[Ktaylor*turnidx];
             tpow = 1;
             thefactorial = 1;
-            for (i=1;i<MOrders;i++){
+            /* do a taylor expansion if Ktaylor is more than first order */
+            for (i=1;i<Ktaylor;i++){
+              printf("i = %d\n",i);
               tpow = tpow * t;
               thefactorial = thefactorial * i;
-              functot =  functot + tpow / thefactorial * func[i][turnidx];
+              /* indexing is fortran-like. We start with columns.
+                 cols are taylor components.
+                 rows are turn samples.
+              */
+              functot =  functot + tpow / thefactorial * func[i + Ktaylor*turnidx];
             };
             ampt = ampt * functot;
 
@@ -267,7 +271,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
     if (!Elem) {
-        int MaxOrder, Mode, NSamplesA, NSamplesB, MOrdersA, MOrdersB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, KtaylorA, KtaylorB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -297,8 +301,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
-        MOrdersA=atGetOptionalLong(ElemData, "MOrdersA", 1); check_error();
-        MOrdersB=atGetOptionalLong(ElemData, "MOrdersB", 1); check_error();
+        KtaylorA=atGetOptionalLong(ElemData, "KtaylorA", 1); check_error();
+        KtaylorB=atGetOptionalLong(ElemData, "KtaylorB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
@@ -329,8 +333,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Sinabove = SinBabove;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
-        ElemA->NSamples = MOrdersA;
-        ElemB->NSamples = MOrdersB;
+        ElemA->Ktaylor = KtaylorA;
+        ElemB->Ktaylor = KtaylorB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
         ElemA->FuncTimeDelay = FuncATimeDelay;
@@ -362,7 +366,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double* r_in;
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder, Mode, NSamplesA, NSamplesB, MOrdersA, MOrdersB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, KtaylorA, KtaylorB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -394,8 +398,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
-        MOrdersA=atGetOptionalLong(ElemData, "MOrdersA", 0); check_error();
-        MOrdersB=atGetOptionalLong(ElemData, "MOrdersB", 0); check_error();
+        KtaylorA=atGetOptionalLong(ElemData, "KtaylorA", 0); check_error();
+        KtaylorB=atGetOptionalLong(ElemData, "KtaylorB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         FuncATimeDelay=atGetOptionalDouble(ElemData,"FuncATimeDelay", 0); check_error();
@@ -417,8 +421,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Sinabove = SinBabove;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
-        ElemA->MOrders = MOrdersA;
-        ElemB->MOrders = MOrdersB;
+        ElemA->Ktaylor = KtaylorA;
+        ElemB->Ktaylor = KtaylorB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
         Elem->ElemA = ElemA;
@@ -455,8 +459,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 12,mxCreateString("FuncBTimeDelay"));
             mxSetCell(plhs[1], 13,mxCreateString("NSamplesA"));
             mxSetCell(plhs[1], 14,mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 15,mxCreateString("MOrdersA"));
-            mxSetCell(plhs[1], 16,mxCreateString("MOrdersB"));
+            mxSetCell(plhs[1], 15,mxCreateString("KtaylorA"));
+            mxSetCell(plhs[1], 16,mxCreateString("KtaylorB"));
             mxSetCell(plhs[1], 17,mxCreateString("Periodic"));
             mxSetCell(plhs[1], 18,mxCreateString("T1"));
             mxSetCell(plhs[1], 19,mxCreateString("T2"));
