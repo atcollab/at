@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import IntEnum
 
-import numpy
+import numpy as np
 
 from .conversions import _array
 from .element_object import Element
@@ -18,6 +18,10 @@ class ACMode(IntEnum):
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
+
+def _anyarray(value):
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
 
 class VariableThinMultipole(Element):
@@ -36,10 +40,10 @@ class VariableThinMultipole(Element):
         SinBabove=float,
         NsamplesA=int,
         NsamplesB=int,
-        MOrdersA=int,
-        MOrdersB=int,
-        FuncA=_array,
-        FuncB=_array,
+        KtaylorA=int,
+        KtaylorB=int,
+        FuncA=_anyarray,
+        FuncB=_anyarray,
         Ramps=_array,
         Periodic=bool,
     )
@@ -192,7 +196,6 @@ class VariableThinMultipole(Element):
                 kwargs = _set_arb(a_b, **kwargs)
             return kwargs
 
-<<<<<<< HEAD:pyat/at/lattice/variable_elements.py
         def _set_sine(a_b: str, **kwargs) -> dict[str, Any]:
             frequency = kwargs.get("Frequency" + a_b, None)
             if frequency is None:
@@ -205,13 +208,14 @@ class VariableThinMultipole(Element):
             func = kwargs.get("Func" + a_b, None)
             if func is None:
                 raise AtError("Please provide a value for Func" + a_b)
-            nsamp = len(func)
-            morders = 1
-            if len(func.shape) == 2:
-                morders = func.shape[1]
+            if len(np.squeeze(func.shape)) == 1:
+                nsamp = len(func)
+                ktaylor = 1
+            else:
+                ktaylor, nsamples = func.shape
             kwargs.setdefault("Func" + a_b + "TimeDelay", 0)
-            kwargs["NSamples" + a_b] = nsamp
-            kwargs["MOrders" + a_b] = morders
+            kwargs["NSamples" + a_b] = nsamples
+            kwargs["Ktaylor" + a_b] = ktaylor
             kwargs.setdefault("Periodic", False)
             return kwargs
 
