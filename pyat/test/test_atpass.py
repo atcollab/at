@@ -153,3 +153,19 @@ def test_1d_particle():
     rout_expected = numpy.array([1e-6, 1e-6, 0, 0, 0, 5e-13])
     # rin is changed in place
     numpy.testing.assert_equal(rin, rout_expected)
+
+def test_start_elem(hmba_lattice):
+    hmba_lattice = hmba_lattice.radiation_off(copy=True)
+    rin = numpy.array([0,1e-6,0,0,0,0])
+    rout = atpass(hmba_lattice, rin, 1, start_elem=100)
+    assert rout.shape == (6, 1, 0, 1)
+    expected = numpy.array([ 3.2e-6, -1.1e-6,  0,  0,0,  8.4e-8])
+    numpy.testing.assert_allclose(rin, expected, atol=1e-7)
+
+def test_end_elem(hmba_lattice):
+    hmba_lattice = hmba_lattice.radiation_off(copy=True)
+    rin = numpy.array([0,1e-6,0,0,0,0])
+    rout = atpass(hmba_lattice, rin, 1, start_elem=100, end_elem=110)
+    assert rout.shape == (6, 1, 0, 1)
+    expected = numpy.array([2.6e-6, 1.34e-6, 0, 0,0, 2.4e-8])
+    numpy.testing.assert_allclose(rin, expected, atol=1e-7)
