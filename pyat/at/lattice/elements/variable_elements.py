@@ -1,26 +1,25 @@
-"""Time-dependent Multipole"""
+"""Time-dependent Multipole."""
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
 import numpy as np
 
-from ..exceptions import AtError
+from ..exceptions import AtError, AtWarning
 from .conversions import _array
 from .element_object import Element
 
 
 class ACMode(IntEnum):
-    """Class to define the excitation types"""
+    """Class to define the excitation types."""
 
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
 
 
-def _anyarray(value):
+def _anyarray(value: np.ndarray) -> np.ndarray:
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
@@ -49,7 +48,12 @@ class VariableThinMultipole(Element):
         Periodic=bool,
     )
 
-    def __init__(self, family_name: str, mode: int or ACMode, **kwargs):
+    def __init__(
+        self: VariableThinMultipole,
+        family_name: str,
+        mode: int or ACMode,
+        **kwargs: dict[any, any],
+    ):
         r"""VariableThinMultipole initialization.
 
         Default pass method: ``VariableThinMPolePass``.
@@ -173,7 +177,7 @@ class VariableThinMultipole(Element):
 
         """
 
-        def _check_amplitudes(**kwargs) -> dict[str, Any]:
+        def _check_amplitudes(**kwargs: dict[any, any]) -> dict[str, any]:
             amp_aux = {"A": None, "B": None}
             all_amplitudes_are_none = True
             for key in amp_aux:
@@ -197,7 +201,9 @@ class VariableThinMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        def _set_thismode(mode: int, a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_thismode(
+            mode: int, a_b: str, **kwargs: dict[any, any]
+        ) -> dict[str, any]:
             if mode == ACMode.SINE:
                 kwargs = _set_sine(a_b, **kwargs)
             if mode == ACMode.ARBITRARY:
@@ -206,7 +212,7 @@ class VariableThinMultipole(Element):
                 kwargs = _set_white_noise(a_b, **kwargs)
             return kwargs
 
-        def _set_sine(a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_sine(a_b: str, **kwargs: dict[any, any]) -> dict[str, any]:
             frequency = kwargs.get("Frequency" + a_b, None)
             if frequency is None:
                 raise AtError("Please provide a value for Frequency" + a_b)
@@ -214,12 +220,12 @@ class VariableThinMultipole(Element):
             kwargs.setdefault("Sin" + a_b + "above", -1)
             return kwargs
 
-        def _set_arb(a_b: str, **kwargs) -> dict[str, Any]:
+        def _set_arb(a_b: str, **kwargs: dict[any, any]) -> dict[str, any]:
             func = kwargs.get("Func" + a_b, None)
             if func is None:
                 raise AtError("Please provide a value for Func" + a_b)
             if len(np.squeeze(func.shape)) == 1:
-                nsamp = len(func)
+                nsamples = len(func)
                 ktaylor = 1
             else:
                 ktaylor, nsamples = func.shape
@@ -229,12 +235,12 @@ class VariableThinMultipole(Element):
             kwargs.setdefault("Periodic", False)
             return kwargs
 
-        def _set_white_noise(a_b: str, **kwargs):
+        def _set_white_noise(a_b: str, **kwargs: dict[any, any]) -> dict[any, any]:
             kwargs.setdefault("BufferSize" + a_b, 0)
             kwargs.setdefault("Buffer" + a_b, np.zeros((kwargs["BufferSize" + a_b])))
             return kwargs
 
-        def _check_ramp(**kwargs) -> _array:
+        def _check_ramp(**kwargs: dict[any, any]) -> _array:
             ramps = kwargs.get("Ramps", None)
             if ramps is not None:
                 if len(ramps) != 4:
@@ -262,16 +268,19 @@ class VariableThinMultipole(Element):
                 kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
 
-    def inspect_polynom_values(self, **kwargs) -> dict[str, list]:
+    def inspect_polynom_values(
+        self: VariableThinMultipole, **kwargs: dict[any, any]
+    ) -> dict[str, list]:
         """
         Get the polynom values per turn.
 
         Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
 
-        Keyword arguments:
-            turns(int): Default 1. Number of turns to calculate.
-            T0(float): revolution time in seconds. Use only in SINE mode.
-            tparticle(float): Default 0. Time of the particle in seconds.
+        Arguments:
+        kwargs:
+        turns(int): Default 1. Number of turns to calculate.
+        T0(float): revolution time in seconds. Use only in SINE mode.
+        tparticle(float): Default 0. Time of the particle in seconds.
 
         Returns:
             Dictionary with a list of PolynomA and PolynomB per turn.
@@ -311,7 +320,9 @@ class VariableThinMultipole(Element):
             listpolb.append(np.copy(polb))
         return {"PolynomA": listpola, "PolynomB": listpolb}
 
-    def _get_amp(self, amp: float, ramps: _array, _time: float) -> float:
+    def _get_amp(
+        self: VariableThinMultipole, amp: float, ramps: _array, _time: float
+    ) -> float:
         """get_amp returns the input value `amp` when ramps is False.
 
         If ramps is True, it returns a value linearly interpolated
@@ -341,7 +352,7 @@ class VariableThinMultipole(Element):
         return ampt
 
     def _get_pol(
-        self,
+        self: VariableThinMultipole,
         a_b: str,
         ramps: _array,
         mode: int,
@@ -393,12 +404,12 @@ class VariableThinMultipole(Element):
                 func = getattr(self, "Func" + a_b)
                 functdelay = float(getattr(self, "Func" + a_b + "TimeDelay"))
                 turnidx = np.mod(turn, nsamples)
-                Ktaylor = int(getattr(self, "Ktaylor" + a_b))
+                ktaylor = int(getattr(self, "Ktaylor" + a_b))
                 _time = _time - functdelay
                 functot = func[0, turnidx]
                 thefactorial = 1
                 tpow = 1
-                for i in range(1, Ktaylor):
+                for i in range(1, ktaylor):
                     tpow = _time * tpow
                     thefactorial = thefactorial * i
                     functot = functot + tpow / thefactorial * func[i, turnidx]
