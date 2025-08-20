@@ -393,9 +393,16 @@ class VariableThinMultipole(Element):
                 func = getattr(self, "Func" + a_b)
                 functdelay = float(getattr(self, "Func" + a_b + "TimeDelay"))
                 turnidx = np.mod(turn, nsamples)
-
+                Ktaylor = int(getattr(self, "Ktaylor" + a_b))
                 _time = _time - functdelay
-                _time_2 = _time * _time
+                functot = func[0, turnidx]
+                thefactorial = 1
+                tpow = 1
+                for i in range(1,Ktaylor):
+                    tpow = _time * tpow
+                    thefactorial = thefactorial * i
+                    functot = functot + tpow / thefactorial * func[i,turnidx]
+                ampout = ampout * functot
             else:
                 ampout = 0.0
         else:
