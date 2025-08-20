@@ -70,7 +70,11 @@ class VariableThinMultipole(Element):
         zero, and the polynom to a single zero.
 
         There are three different modes that could be set,
+        :py:attr:`.ACMode.SINE`: sine function
+        :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+        :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
         SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
+
         For example, use at.ACMode.SINE or 0 to create an sin function element.
 
         The **SINE** mode requires amplitude and frequency for A and/or B.
@@ -139,13 +143,17 @@ class VariableThinMultipole(Element):
         One could use the method inspect_polynom_values to check the polynom values
         used in every turn.
 
+        The ramp is defined by four values (t0,t1,t2,t3):
+            * ``t<=t0``: excitation amplitude is zero.
+            * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
+            * ``t1<t<=t2``: excitation amplitude is constant.
+            * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
+            * ``t3<t``: excitation amplitude is zero.
+
         Arguments:
             family_name(str):  Element name
             mode(at.ACMode): defines the mode. Default ACMode.SINE:
-            * :py:attr:`.ACMode.SINE`: sine function
-            * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-            * :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
-            kwargs: as follow.
+            kwargs: described as follow.
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -166,11 +174,6 @@ class VariableThinMultipole(Element):
             It only has an effect if any of the derivatives is not zero.
             Periodic(bool): If True the user definition is repeated. Default False.
             Ramps(list): Four values (t0,t1,t2,t3) defining the ramping steps:
-            * ``t<=t0``: excitation amplitude is zero.
-            * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
-            * ``t1<t<=t2``: excitation amplitude is constant.
-            * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
-            * ``t3<t``: excitation amplitude is zero.
 
         Raises:
         :raise AtError: if none of ``AmplitudeA`` or ``AmplitudeB`` is passed.
@@ -288,10 +291,10 @@ class VariableThinMultipole(Element):
         Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
 
         Arguments:
-        turns(int): Default 1. Number of turns to calculate.
-        T0(float): revolution time in seconds. Use only in SINE mode.
-        tparticle(float): Default 0. Time of the particle in seconds.
-        kwargs: as needed by the mode.
+            turns(int): Default 1. Number of turns to calculate.
+            T0(float): revolution time in seconds. Use only in SINE mode.
+            tparticle(float): Default 0. Time of the particle in seconds.
+            kwargs: as needed by the mode.
 
         Returns:
             Dictionary with a list of PolynomA and PolynomB per turn.
