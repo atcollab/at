@@ -342,9 +342,9 @@ def grid_boundary_search(
     grids = []
 
     if offset is None:
-        _,offsets = ring.find_orbit(dp=dp,refpts=obspt)
+        _, offsets = ring.find_orbit(dp=dp, refpts=obspt)
     else:
-       offsets = offset
+        offsets = offset
 
     for i, obs, orbit in zip(numpy.arange(len(obspt)), obspt, offsets):
         parts, grid = get_parts(config, orbit)
@@ -358,7 +358,13 @@ def grid_boundary_search(
                 )
             )
         ring.track(
-            parts, use_mp=use_mp, in_place=True, refpts=None,start_elem=obs,keep_lattice=True,**kwargs
+            parts,
+            use_mp=use_mp,
+            in_place=True,
+            refpts=None,
+            start_elem=obs,
+            keep_lattice=True,
+            **kwargs,
         )
         allparts.append(parts)
         grids.append(grid)
@@ -401,7 +407,6 @@ def recursive_boundary_search(
     def search_boundary(
         planesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs
     ):
-
         ftol = min(rtol / rsteps)
         cs = numpy.squeeze([numpy.cos(angles), numpy.sin(angles)])
         cs = numpy.around(cs, decimals=9)
