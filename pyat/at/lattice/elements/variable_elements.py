@@ -104,9 +104,11 @@ class VariableThinMultipole(Element):
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
         the the sixth coordinate divided by the speed of light. Therefore, the
         function func is a 2D-array with columns corresponding to the f and its
-        derivatives and rows to turns. For example, a positive kick of 1 with
-        positive derivative 0.1 followed by a negative kick of -1 with negative
-        derivative -0.2 would be [[1,-1],[0.1,-0.2]].
+        derivatives and rows to turns. For example, a positive value on the first turn
+        f(1)=1 with positive derivative f'(1)=0.1 followed by a negative value in the
+        second turn f(2)=-1 with negative derivative f'(2)-0.2 would be
+        Func=[[1,-1],[0.1,-0.2]]. Use FuncA or FuncB, and AmplitudeA or AmplitudeB
+        accordingly.
         tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
             tau = tau - Func[AB]TimeDelay
         The function `value` is then **multiplied by Amplitude A and/or B**.
