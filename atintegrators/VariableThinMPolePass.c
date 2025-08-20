@@ -162,7 +162,6 @@ double get_pol(
             thefactorial = 1;
             /* do a taylor expansion if Ktaylor is more than first order */
             for (i=1;i<Ktaylor;i++){
-              printf("i = %d\n",i);
               tpow = tpow * t;
               thefactorial = thefactorial * i;
               /* indexing is fortran-like. We start with columns.
