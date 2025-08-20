@@ -202,8 +202,9 @@ static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
 static void compute_kicks(int nslice,int nturns,int nelem,
                    double *turnhistory,double *waketableT,double *waketableDX,
                    double *waketableDY,double *waketableQX,double *waketableQY,
-                   double *waketableZ,double *normfact, double *kx,double *ky,
-                   double *kx2,double *ky2,double *kz){
+                   double *waketableZ, double *waketableCX, double *waketableCY,
+                   double *normfact, double *kx,double *ky,
+                   double *kx2,double *ky2,double *kz, double *kcx, double *kcy){
     int rank=0;
     int size=1;
     int i,ii,index;
@@ -219,6 +220,8 @@ static void compute_kicks(int nslice,int nturns,int nelem,
         kx2[i]=0.0;
         ky2[i]=0.0;
         kz[i]=0.0;
+        kcx[i]=0.0;
+        kcy[i]=0.0;
     }
 
     #ifdef MPI
@@ -239,6 +242,9 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,ds,index);
                     if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableQY,waketableT,ds,index);
                     if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*getTableWake(waketableZ,waketableT,ds,index);
+                    if(waketableCX)kcx[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableCX,waketableT,ds,index);
+                    if(waketableCY)kcy[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableCY,waketableT,ds,index);
+                    
                 }            
             }
         }
@@ -249,6 +255,8 @@ static void compute_kicks(int nslice,int nturns,int nelem,
     if(waketableQX)MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     if(waketableQY)MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     if(waketableZ)MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableCX)MPI_Allreduce(MPI_IN_PLACE,kcx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if(waketableCY)MPI_Allreduce(MPI_IN_PLACE,kcy,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
 };
