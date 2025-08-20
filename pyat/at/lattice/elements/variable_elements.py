@@ -302,6 +302,10 @@ class VariableThinMultipole(Element):
         Returns:
             Dictionary with a list of PolynomA and PolynomB per turn.
         """
+        # initialize in case of early return
+        listpola = []
+        listpolb = []
+
         turns = kwargs.setdefault("turns", 1)
         mode = self.Mode
         timeoffset = 0
@@ -310,6 +314,8 @@ class VariableThinMultipole(Element):
             trevol = float(kwargs["T0"])
             tparticle = float(kwargs.setdefault("tparticle", 0))
             timeoffset = trevol + tparticle
+        elif mode == 3:
+            print("Random values are not available here.")
         elif mode == 2:
             # particle time
             timeoffset = float(kwargs.setdefault("tparticle", 0))
@@ -319,9 +325,6 @@ class VariableThinMultipole(Element):
 
         pola = np.full(maxorder + 1, np.nan)
         polb = np.full(maxorder + 1, np.nan)
-
-        listpola = []
-        listpolb = []
 
         for turn in range(turns):
             for order in range(maxorder + 1):
