@@ -398,10 +398,10 @@ class VariableThinMultipole(Element):
                 functot = func[0, turnidx]
                 thefactorial = 1
                 tpow = 1
-                for i in range(1,Ktaylor):
+                for i in range(1, Ktaylor):
                     tpow = _time * tpow
                     thefactorial = thefactorial * i
-                    functot = functot + tpow / thefactorial * func[i,turnidx]
+                    functot = functot + tpow / thefactorial * func[i, turnidx]
                 ampout = ampout * functot
             else:
                 ampout = 0.0
