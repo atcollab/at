@@ -69,118 +69,119 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 %
 % MORE DETAILS
 %
-% This Class creates a thin multipole of any ord
-% sextupole, etc.) and type (Normal or Skew) def
-% AmplitudeB components; the polynoms PolynomA a
-% on every turn depending on the chosen mode, an
-% particle time delay. All modes could be ramped
-% Default pass method: ``VariableThinMPolePass``
+% This Class creates a thin multipole of any order (dipole kick, quadrupole,
+% sextupole, etc.) and type (Normal or Skew) defined by AmplitudeA and/or
+% AmplitudeB components; the polynoms PolynomA and PolynomB are calculated
+% on every turn depending on the chosen mode, and for some modes on the
+% particle time delay. All modes could be ramped.
+% Default pass method: ``VariableThinMPolePass``.
 %
-% Keep in mind that as this element varies on ev
-% the tracking PolynomA and PolynomB are set to 
-% with optics calculations. Therefore, it is pre
-% to IdentityPass when the element should not be
+% Keep in mind that as this element varies on every turn, and at the end of
+% the tracking PolynomA and PolynomB are set to zero, this could interfere
+% with optics calculations. Therefore, it is preferred to set the pass method
+% to IdentityPass when the element should not be active.
 %
-% There are three different modes that could be 
-% :py:attr:`.ACMode.SINE`: sine function
-% :py:attr:`.ACMode.WHITENOISE`: gaussian white 
-% :py:attr:`.ACMode.ARBITRARY`: user defined tur
-% SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. Se
+% There are three different modes that could be set,
+% SINE: sine function
+% WHITENOISE: gaussian white noise
+% ARBITRARY: user defined turn-by-turn kick list
+% SINE = 0, WHITENOISE = 1 and ARBITRARY = 2, when saved to a file.
 %
-% For example, use at.ACMode.SINE or mode = 0 to
+% For example, use SINE or mode = 0 to create an sin function element.
 %
-% The **SINE** mode requires amplitude and frequ
-% The value of the jth component of the polynom 
+% The **SINE** mode requires amplitude and frequency for A and/or B.
+% The value of the jth component of the polynom (A or B) at the nth turn
 % is given by
 %
-% Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_
+% Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_p) + phase],
 %
-% where T0 is the revolution period of the ideal
-% of the pth particle i.e. the sixth coordinate 
-% note that the position of the element on the r
-% could be used to add any delay due to the posi
+% where T0 is the revolution period of the ideal ring, and \tau_p is the delay
+% of the pth particle i.e. the sixth coordinate over the speed of light. Also,
+% note that the position of the element on the ring has no effect, the phase
+% could be used to add any delay due to the position along s. The following is
 % an example of the SINE mode of an skew quad
 %
-% eleskew = at.VariableThinMultipole('VAR_SKEW',
-% AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=
+% eleskew = atvariablethinmultipole('VAR_SKEW',"SINE", ...
+% "AmplitudeA",[0,skewa2],"FrequencyA",freqA,"PhaseA",phaseA)
 %
-% The values of the sin function could be limite
-% threshold using ``Sin[AB]above``. For example,
-% half-sin by setting ``Sin[AB]above`` to zero. 
-% negative half-sin function by setting the ampl
+% The values of the sin function could be limited to be above a defined
+% threshold using ``Sin[AB]above``. For example, you could create a positive
+% half-sin by setting ``Sin[AB]above`` to zero. You could also create a
+% negative half-sin function by setting the amplitude to -1.
 %
-% The **WHITENOISE** mode requires the amplitude
-% distribution is generated with zero-mean and o
-% a pseudo-random stream pcg32. The pcg32 seed i
-% function, therefore using the same stream on a
-% parallel). See https://github.com/atcollab/at/
-% details on the pseudo random stream. For examp
+% The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
+% distribution is generated with zero-mean and one standard deviation from
+% a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
+% function, therefore using the same stream on all trackings (sequencial or
+% parallel). See https://github.com/atcollab/at/discussions/879 for more
+% details on the pseudo random stream. For example,
 %
-% elenoise = at.VariableThinMultipole('MYNOISE',
-% AmplitudeA=[noiseA1])
+% elenoise = atvariablethinmultipole('MYNOISE',"WHITENOISE", ...
+% "AmplitudeA",[noiseA1])
 %
-% creates a vertical kick as gaussian noise of a
+% creates a vertical kick as gaussian noise of amplitude noiseA1.
 %
-% Additionally, one could use the parameter Buff
-% to create buffer to store the random numbers u
-% during tracking. The buffer could be smaller o
-% If the buffer is smaller, it will store from s
-% completely the buffer. If the buffer is larger
+% Additionally, one could use the parameter BufferSizeA or BufferSizeB
+% to create buffer to store the random numbers used in the element settings
+% during tracking. The buffer could be smaller or larger than the tracking.
+% If the buffer is smaller, it will store from start to the moment of filling
+% completely the buffer. If the buffer is larger, all non used places are set
 % to zero.
 %
-% Care should be taken when changing the buffer 
-% done is at the moment of initialization, for e
-% from a file. Buffer and buffer size could be r
-% ensure that the actual buffer length and buffe
+% Care should be taken when changing the buffer and buffer size. The only check
+% done is at the moment of initialization, for example, when reading a lattice
+% from a file. Buffer and buffer size could be replaced at any moment, just
+% ensure that the actual buffer length and buffersize agree.
 %
-% The **ARBITRARY** mode requires the definition
-% to be sampled at every turn. The function and 
+% The **ARBITRARY** mode requires the definition of a custom discrete function
+% to be sampled at every turn. The function and its Taylor expansion with
 % respect to \tau up to any given order is
 %
-% value = f(turn) + f'(turn)*tau + 0.5*f''(turn)
-% + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau
+% value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
+% + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
 %
-% f is an array of values, f',f'',f''',f'''', ar
-% the derivatives wrt \tau, and \tau is the time
-% the the sixth coordinate divided by the speed 
-% function func is a 2D-array with columns corre
-% derivatives, and rows to turns. For example, a
-% f(1)=1 with positive derivative f'(1)=0.1 foll
-% second turn f(2)=-1 with negative derivative f
+% f is an array of values, f',f'',f''',f'''', are arrays containing
+% the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
+% the the sixth coordinate divided by the speed of light. Therefore, the
+% function func is a 2D-array with columns corresponding to the f and its
+% derivatives, and rows to turns. For example, a positive value on the first turn
+% f(1)=1 with positive derivative f'(1)=0.1 followed by a negative value in the
+% second turn f(2)=-1 with negative derivative f'(2)=-0.2 would be
 % Func=[[1,  -1];
 %       [0.1,-0.2]].
-% The time tau could be offset using ``FuncATime
+%
+% The time tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
 %
 % tau = tau - Func[AB]TimeDelay
 %
-% The function value is then **multiplied by Amp
-% Use FuncA or FuncB, and AmplitudeA or Amplitud
-% For example, the following is a positive verti
-% negative on the second turn, and zero on the t
+% The function value is then **multiplied by Amplitude A and/or B**.
+% Use FuncA or FuncB, and AmplitudeA or AmplitudeB accordingly.
+% For example, the following is a positive vertical kick in the first turn,
+% negative on the second turn, and zero on the third turn.
 %
-% elesinglekick = at.VariableThinMultipole('CUST
-% AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+% elesinglekick = atvariablethinmultipole('CUSTOMFUNC',"ARBITRARY", ...
+% "AmplitudeA",1e-4,"FuncA",[1,-1,0],"Periodic",True)
 %
-% As already mentioned, one could include the de
-% from a Taylor expansion in a 2D array. First r
-% every turn, second row for the values of f'' o
+% As already mentioned, one could include the derivatives of the function
+% from a Taylor expansion in a 2D array. First row for the values of f on
+% every turn, second row for the values of f' on every turn, and so on.
 %
-% By default the array is assumed non periodic, 
-% on the particle in turns exceeding the functio
-% ``Periodic`` is set to True, the sequence is r
+% By default the array is assumed non periodic, the function has no effect
+% on the particle in turns exceeding the function definition. If
+% ``Periodic`` is set to True, the sequence is repeated.
 %
-% One could use the method inspect_polynom_value
+% One could use the method inspect_polynom_values to check the polynom values
 % used in every turn.
 %
-% Any mode could be ramped. The ramp is defined 
+% Any mode could be ramped. The ramp is defined by four values (t0,t1,t2,t3):
 %     * ``t<=t0``: excitation amplitude is zero.
-%     * ``t0<t<=t1``: excitation amplitude is li
-%     * ``t1<t<=t2``: excitation amplitude is co
-%     * ``t2<t<=t3``: excitation amplitude is li
+%     * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
+%     * ``t1<t<=t2``: excitation amplitude is constant.
+%     * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
 %     * ``t3<t``: excitation amplitude is zero.
 % See also:
 %
-%  ATINSPECTVARIABLETHINMULTIPOLE
+%  *ATINSPECTVARIABLETHINMULTIPOLE*
 
 % Input parser for option
 [method,rsrc]=getargs(varargin,'VariableThinMPolePass', ...
