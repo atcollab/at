@@ -205,7 +205,7 @@ else
 end
 
 thepols = {'A','B'};
-for i = length(thepols)
+for i = 1:length(thepols)
     rsrc = setparams(rsrc,mode,thepols{i});
     thefieldname = strcat('Polynom',thepols{i});
     if ~isfield(rsrc, thefieldname)
