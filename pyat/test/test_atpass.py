@@ -169,3 +169,16 @@ def test_end_elem(hmba_lattice):
     assert rout.shape == (6, 1, 0, 1)
     expected = numpy.array([2.6e-6, 1.34e-6, 0, 0,0, 2.4e-8])
     numpy.testing.assert_allclose(rin, expected, atol=1e-7)
+
+def test_start_end_elem_errors(hmba_lattice):
+    hmba_lattice = hmba_lattice.radiation_off(copy=True)
+    rin = numpy.array([0,1e-6,0,0,0,0])
+    with pytest.raises(ValueError):
+        rout = atpass(hmba_lattice, rin, 1, start_elem=200)
+    with pytest.raises(ValueError):
+        rout = atpass(hmba_lattice, rin, 1, end_elem=200)
+    with pytest.raises(ValueError):
+        rout = atpass(hmba_lattice, rin, 1, start_elem=100, end_elem=10)
+    with pytest.raises(ValueError):
+        rout = atpass(hmba_lattice, rin, 2, end_elem=10)
+
