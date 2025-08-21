@@ -186,9 +186,9 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % Input parser for option
 [method,rsrc]=getargs(varargin,'VariableThinMPolePass', ...
     'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
-[method,rsrc]                     = getoption(rsrc,'PassMethod',method);
-[cl,rsrc]                         = getoption(rsrc,'Class','VariableMultipole');
-rsrc                              = struct(rsrc{:});
+[method,rsrc] = getoption(rsrc,'PassMethod',method);
+[cl,rsrc] = getoption(rsrc,'Class','VariableThinMultipole');
+rsrc = struct(rsrc{:});
 
 m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
 
