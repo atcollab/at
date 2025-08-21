@@ -44,6 +44,10 @@ class VariableThinMultipole(Element):
         KtaylorB=int,
         FuncA=_anyarray,
         FuncB=_anyarray,
+        BufferA=_anyarray,
+        BufferB=_anyarray,
+        BufferSizeA=int,
+        BufferSizeB=int,
         Ramps=_array,
         Periodic=bool,
     )
@@ -250,8 +254,13 @@ class VariableThinMultipole(Element):
             return kwargs
 
         def _set_white_noise(a_b: str, **kwargs: dict[any, any]) -> dict[any, any]:
-            kwargs.setdefault("BufferSize" + a_b, 0)
-            kwargs.setdefault("Buffer" + a_b, np.zeros((kwargs["BufferSize" + a_b])))
+            bfsize = int(kwargs.setdefault("BufferSize" + a_b, 0))
+            kwargs.setdefault("Buffer" + a_b, np.zeros((bfsize)))
+            kwargs["BufferSize" + a_b] = bfsize
+            # we check the case when Buffer and BufferSize don't match
+            the_userbuffershape = kwargs["Buffer" + a_b].shape
+            if the_userbuffershape[0] != kwargs["BufferSize" + a_b]:
+                raise AtError(("Buffer and BufferSizeMismatch"))
             return kwargs
 
         def _check_ramp(**kwargs: dict[any, any]) -> _array:
