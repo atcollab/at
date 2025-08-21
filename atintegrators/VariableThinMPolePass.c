@@ -474,7 +474,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 4) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(23, 1);
+            plhs[1] = mxCreateCellMatrix(28, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -505,7 +505,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 27,mxCreateString("EApertures"));
         }
     } else {
-        mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
+        mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 4 arguments");
     }
 }
 #endif /* MATLAB_MEX_FILE */
