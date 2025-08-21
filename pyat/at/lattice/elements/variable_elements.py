@@ -140,6 +140,7 @@ class VariableThinMultipole(Element):
         second turn f(2)=-1 with negative derivative f'(2)=-0.2 would be
         Func=[[1,  -1],
               [0.1,-0.2]].
+
         The time tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
 
         tau = tau - Func[AB]TimeDelay
@@ -154,7 +155,7 @@ class VariableThinMultipole(Element):
 
         As already mentioned, one could include the derivatives of the function
         from a Taylor expansion in a 2D array. First row for the values of f on
-        every turn, second row for the values of f'' on every turn, and so on.
+        every turn, second row for the values of f' on every turn, and so on.
 
         By default the array is assumed non periodic, the function has no effect
         on the particle in turns exceeding the function definition. If
