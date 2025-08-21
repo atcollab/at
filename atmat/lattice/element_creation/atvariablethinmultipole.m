@@ -22,26 +22,12 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 %    PhaseB         Phase of SINE excitation for PolynomB
 %    SinAabove      Limit the sin function to be above. Default -1.
 %    SinBabove      Limit the sin function to be above. Default -1.
+%    BufferSizeA    Set the buffer length in WHITENOSE mode.
+%    BufferSizeB    Set the buffer length in WHITENOSE mode.
 %    FuncA          ARBITRARY excitation turn-by-turn (tbt) list for
 %                   PolynomA
 %    FuncB          ARBITRARY excitation turn-by-turn (tbt) list for
 %                   PolynomB
-%    FuncAderiv1    ARBITRARY excitation tbt kick list for PolynomA 1st
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncBderiv1    ARBITRARY excitation tbt kick list for PolynomB 1st
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncAderiv2    ARBITRARY excitation tbt kick list for PolynomA 2nd
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncBderiv2    ARBITRARY excitation tbt kick list for PolynomB 2nd
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncAderiv3    ARBITRARY excitation tbt kick list for PolynomA 3rd
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncBderiv3    ARBITRARY excitation tbt kick list for PolynomB 3rd
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncAderiv4    ARBITRARY excitation tbt kick list for PolynomA 3rd
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
-%    FuncBderiv4    ARBITRARY excitation tbt kick list for PolynomB 3rd
-%                   derivative wrt tau. Default: zeros(1,length(FUNC))
 %    FuncATimeDelay TimeDelay to generate a small time offset on the
 %                   function FUNC. It only has an effect if any of the
 %                   derivatives is not zero. Default: 0.
@@ -83,69 +69,117 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 %
 % MORE DETAILS
 %
-% This function creates a thin multipole of any order (dipole kick, quadrupole,
-% sextupole, etc.) and type (Normal or Skew) defined by the AmplitudeA and/or
-% AmplitudeB components; the polynoms PolynomA and PolynomB are calculated on
-% every turn depending on the chosen mode, and for some modes also on the
-% particle time delay. All modes could be ramped.
+% This Class creates a thin multipole of any ord
+% sextupole, etc.) and type (Normal or Skew) def
+% AmplitudeB components; the polynoms PolynomA a
+% on every turn depending on the chosen mode, an
+% particle time delay. All modes could be ramped
+% Default pass method: ``VariableThinMPolePass``
 %
-% Keep in mind that as this element varies on every turn, and at the end of
-% the tracking PolynomA and PolynomB are set to zero.
+% Keep in mind that as this element varies on ev
+% the tracking PolynomA and PolynomB are set to 
+% with optics calculations. Therefore, it is pre
+% to IdentityPass when the element should not be
 %
-% Passing arrays of zeros as amplitude will initialize the MaxOrder to
-% zero, and the polynom to a single zero.
+% There are three different modes that could be 
+% :py:attr:`.ACMode.SINE`: sine function
+% :py:attr:`.ACMode.WHITENOISE`: gaussian white 
+% :py:attr:`.ACMode.ARBITRARY`: user defined tur
+% SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. Se
 %
-% There are three different modes that could be set:
-%   SINE (0), WHITENOISE (1) and ARBITRARY (2).
-% when creating the element use 'SINE', 'WHITENOISE', or 'ARBITRARY'.
+% For example, use at.ACMode.SINE or mode = 0 to
 %
-% The SINE mode requires amplitude and frequency for A and/or B.
-% The jth component of the polynom (A or B) at the nth turn is given by:
-%   amplitude(j)*sin[ TWOPI*frequency*(n*T0 + \tau_p) + phase],
-% where T0 is the revolution period of the ideal ring, and \tau_p is the delay
-% of the pth particle i.e. the sixth coordinate over the speed of light. Also,
-% note that the position of the element on the ring has no effect, the phase
-% could be used to add any delay due to the position along s.
-% The following is an example of the SINE mode of an skew quad:
-%     atvariablethinmultipole('VAR_SKEW','SINE',
-%         'AmplitudeA',[0,skewa2],'FrequencyA',freqA,'PhaseA',phaseA)
-% The values of the sin function could be limited to be above a defined
-% threshold using ``Sin[AB]above``. For example, you could create a half-sin
-% by setting ``Sin[AB]above`` to zero.
+% The **SINE** mode requires amplitude and frequ
+% The value of the jth component of the polynom 
+% is given by
 %
-% The WHITENOISE mode requires the amplitude of either A or B. For example
-%     atvariablethinmultipole('MYNOISE','WHITENOISE',
-%         'AmplitudeA',[noiseA1])
-% creates a gaussian vertical noise of amplitude noiseA1. The gaussian
-% distribution is generated with zero-mean and one standard deviation from
-% a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
-% function, therefore using the same stream on all trackings (sequencial or
-% parallel). See https://github.com/atcollab/at/discussions/879 for more
-% details on the pseudo random stream.
+% Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_
 %
-% The ARBITRARY mode requires the definition of a custom discrete function.
-% The user defines the value of the function and its Taylor expansion with
-% respect to \tau up to fourth order.
-%     value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
-%             + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4
-% where f is an array of values, f',f'',f''',f'''', are arrays containing
-% the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
-% the the sixth coordinate divided by the speed of light.
-% tau could be offset using FuncATimeDelay or FuncBTimeDelay.
-%   tau <- tau - Func[AB]TimeDelay
-% The function value is then multiplied by Amplitude A and/or B.
-% For example, the following is a positive vertical kick in the first turn,
-% negative on the second turn, and zero on the third turn.
-%     atvariablethinmultipole('CUSTOMFUNC','ARBITRARY', ...
-%         'AmplitudeA',1e-4,'FuncA',[1 -1 0],'Periodic',True);
-% by default the array is assumed non periodic. The function has
-% no effect on the particle in turns exceeding the function definition.
-% If Periodic is set to True, the sequence is repeated.
+% where T0 is the revolution period of the ideal
+% of the pth particle i.e. the sixth coordinate 
+% note that the position of the element on the r
+% could be used to add any delay due to the posi
+% an example of the SINE mode of an skew quad
 %
-% One could use the method inspect_polynom_values to check the polynom values
+% eleskew = at.VariableThinMultipole('VAR_SKEW',
+% AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=
+%
+% The values of the sin function could be limite
+% threshold using ``Sin[AB]above``. For example,
+% half-sin by setting ``Sin[AB]above`` to zero. 
+% negative half-sin function by setting the ampl
+%
+% The **WHITENOISE** mode requires the amplitude
+% distribution is generated with zero-mean and o
+% a pseudo-random stream pcg32. The pcg32 seed i
+% function, therefore using the same stream on a
+% parallel). See https://github.com/atcollab/at/
+% details on the pseudo random stream. For examp
+%
+% elenoise = at.VariableThinMultipole('MYNOISE',
+% AmplitudeA=[noiseA1])
+%
+% creates a vertical kick as gaussian noise of a
+%
+% Additionally, one could use the parameter Buff
+% to create buffer to store the random numbers u
+% during tracking. The buffer could be smaller o
+% If the buffer is smaller, it will store from s
+% completely the buffer. If the buffer is larger
+% to zero.
+%
+% Care should be taken when changing the buffer 
+% done is at the moment of initialization, for e
+% from a file. Buffer and buffer size could be r
+% ensure that the actual buffer length and buffe
+%
+% The **ARBITRARY** mode requires the definition
+% to be sampled at every turn. The function and 
+% respect to \tau up to any given order is
+%
+% value = f(turn) + f'(turn)*tau + 0.5*f''(turn)
+% + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau
+%
+% f is an array of values, f',f'',f''',f'''', ar
+% the derivatives wrt \tau, and \tau is the time
+% the the sixth coordinate divided by the speed 
+% function func is a 2D-array with columns corre
+% derivatives, and rows to turns. For example, a
+% f(1)=1 with positive derivative f'(1)=0.1 foll
+% second turn f(2)=-1 with negative derivative f
+% Func=[[1,  -1];
+%       [0.1,-0.2]].
+% The time tau could be offset using ``FuncATime
+%
+% tau = tau - Func[AB]TimeDelay
+%
+% The function value is then **multiplied by Amp
+% Use FuncA or FuncB, and AmplitudeA or Amplitud
+% For example, the following is a positive verti
+% negative on the second turn, and zero on the t
+%
+% elesinglekick = at.VariableThinMultipole('CUST
+% AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+%
+% As already mentioned, one could include the de
+% from a Taylor expansion in a 2D array. First r
+% every turn, second row for the values of f'' o
+%
+% By default the array is assumed non periodic, 
+% on the particle in turns exceeding the functio
+% ``Periodic`` is set to True, the sequence is r
+%
+% One could use the method inspect_polynom_value
 % used in every turn.
 %
+% Any mode could be ramped. The ramp is defined 
+%     * ``t<=t0``: excitation amplitude is zero.
+%     * ``t0<t<=t1``: excitation amplitude is li
+%     * ``t1<t<=t2``: excitation amplitude is co
+%     * ``t2<t<=t3``: excitation amplitude is li
+%     * ``t3<t``: excitation amplitude is zero.
 % See also:
+%
 %  ATINSPECTVARIABLETHINMULTIPOLE
 
 % Input parser for option
@@ -204,6 +238,18 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         end
     end
 
+    function rsrc = setwhitenoise(rsrc, ab)
+      funcarg = strcat('BufferSize',ab);
+      if ~isfield(rsrc,funcarg)
+          rsrc.(funcarg) = 0;
+      end
+      funcarg = strcat('Buffer',ab);
+      if ~isfield(rsrc,funcarg)
+          bfsize = rsrc.(strcat('BufferSize',ab));
+          rsrc.(funcarg) = zeros(1,bfsize);
+      end
+    end
+
     function rsrc = setparams(rsrc,mode,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
@@ -215,6 +261,9 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
                 if ~isfield(rsrc,'Periodic')
                     rsrc.Periodic = false;
                 end
+            end
+            if strcmpi(mode,'WHITENOISE')
+              rsrc = setwhitenoise(rsrc,ab);
             end
         end
     end
@@ -243,7 +292,6 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         end
         if isfield(rsrc,'AmplitudeB')
             rsrc.AmplitudeB(mxb+1:mxab)=0;
-        end               
+        end
     end
-    
 end
