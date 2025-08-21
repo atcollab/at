@@ -144,7 +144,7 @@ double get_pol(
         return ampt;
     case 1:
         random_value = atrandn_r(rng, 0, 1);
-        ampt *= random_value
+        ampt *= random_value;
         /* save random value into buffer */
         if (turn < elem->BufferSize){
             elem->Buffer[turn] = random_value;
