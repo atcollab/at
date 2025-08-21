@@ -34,7 +34,7 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 %    FuncBTimeDelay TimeDelay to generate a small time offset on the
 %                   function FUNC. It only has an effect if any of the
 %                   derivatives is not zero. Default 0.
-%    Periodic       If true the user input list is repeated. Default: false.
+%    Periodic       If 1 the user input list is repeated. Default: 0.
 %    Ramps          Vector (t0, t1, t2, t3) in turn number to define the
 %                   ramping of the excitation:
 %                   * t<=t0: excitation amplitude is zero.
@@ -64,7 +64,7 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % % turn.
 % >> funca = [1 -1 0];
 % >> atvariablethinmultipole('CUSTOMFUNC','ARBITRARY','AmplitudeA',1e-4, ...
-%                     'FuncA',funca,'Periodic',false);
+%                     'FuncA',funca,'Periodic', 1);
 %
 %
 % MORE DETAILS
@@ -160,7 +160,7 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 % negative on the second turn, and zero on the third turn.
 %
 % elesinglekick = atvariablethinmultipole('CUSTOMFUNC',"ARBITRARY", ...
-% "AmplitudeA",1e-4,"FuncA",[1,-1,0],"Periodic",True)
+% "AmplitudeA",1e-4,"FuncA",[1,-1,0],"Periodic",1)
 %
 % As already mentioned, one could include the derivatives of the function
 % from a Taylor expansion in a 2D array. First row for the values of f on
@@ -168,7 +168,7 @@ function elem=atvariablethinmultipole(fname, mode, varargin)
 %
 % By default the array is assumed non periodic, the function has no effect
 % on the particle in turns exceeding the function definition. If
-% ``Periodic`` is set to True, the sequence is repeated.
+% ``Periodic`` is set to 1, the sequence is repeated.
 %
 % One could use the method inspect_polynom_values to check the polynom values
 % used in every turn.
@@ -255,7 +255,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
             if strcmpi(mode,'ARBITRARY')
                 rsrc = setarb(rsrc,ab);
                 if ~isfield(rsrc,'Periodic')
-                    rsrc.Periodic = false;
+                    rsrc.Periodic = 0;
                 end
             end
             if strcmpi(mode,'WHITENOISE')
