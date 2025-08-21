@@ -332,12 +332,14 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
  *  - nturns: int number of turns to simulate
  *  - refpts: numpy uint32 array denoting elements at which to return state
  *  - reuse: whether to reuse the cached state of the ring
+ *  - start_elem: start tracking at element #start_elem
+ *  - end_elem: end tracking at element #end_elem (exclusive)
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
                              "reuse","omp_num_threads","losses",
-                             "bunch_spos", "bunch_currents", NULL};
+                             "bunch_spos", "bunch_currents", "start_elem", "end_elem", NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
     static int valid = 0;
@@ -363,6 +365,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_uint32 omp_num_threads=0;
     npy_uint32 num_particles, np6;
     npy_uint32 elem_index;
+    npy_uint32 start_elem = 0;
+    npy_uint32 end_elem = 0;
     npy_uint32 *refpts = NULL;
     npy_uint32 nextref;
     unsigned int nextrefindex;
@@ -387,12 +391,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     bspos=NULL;
     bcurrents=NULL;
     
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!ii", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
         &keep_counter, &keep_lattice, &omp_num_threads, &losses,
-        &PyArray_Type, &bspos, &PyArray_Type, &bcurrents)) {
+        &PyArray_Type, &bspos, &PyArray_Type, &bcurrents,
+        &start_elem,&end_elem)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -411,60 +416,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     param.rest_energy=0.0;
     param.charge=-1.0;
     param.num_turns=num_turns;
-    param.bdiff = NULL;
-    
+    param.bdiff = NULL;    
     if (keep_counter)
         param.nturn = last_turn;
     else
         param.nturn = counter;
 
-    set_energy_particle(lattice, energy, particle, &param);
     set_current_fillpattern(bspos, bcurrents, &param);
-
-    num_particles = (PyArray_SIZE(rin)/6);
-    np6 = num_particles*6;
-    drin = PyArray_DATA(rin);
-
-    if (refs) {
-        if (PyArray_TYPE(refs) != NPY_UINT32) {
-            return PyErr_Format(PyExc_ValueError, "refpts is not a uint32 array");
-        }
-        refpts = PyArray_DATA(refs);
-        num_refpts = PyArray_SIZE(refs);
-    }
-    else {
-        refpts = NULL;
-        num_refpts = 0;
-    }
-    outdims[0] = 6;
-    outdims[1] = num_particles;
-    outdims[2] = num_refpts;
-    outdims[3] = num_turns;
-    rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
-    drout = PyArray_DATA((PyArrayObject *)rout);
-
-    if(losses){
-        pdims[0]= num_particles;
-        lxdims[0]= 6;
-        lxdims[1]= num_particles;
-        xnturn = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
-        xnelem = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
-        xlost = PyArray_EMPTY(1, pdims, NPY_BOOL, 1);
-        xlostcoord = PyArray_EMPTY(2, lxdims, NPY_DOUBLE, 1);
-        ixnturn = PyArray_DATA((PyArrayObject *)xnturn);
-        ixnelem = PyArray_DATA((PyArrayObject *)xnelem);
-        bxlost = PyArray_DATA((PyArrayObject *)xlost);
-        dxlostcoord = PyArray_DATA((PyArrayObject *)xlostcoord);
-        unsigned int i;
-        static double r0[6];
-        for(i=0;i<num_particles;i++){
-            bxlost[i]=0;
-            ixnturn[i]=0;
-            ixnelem[i]=0;
-            memcpy(dxlostcoord+6*i,r0,6*sizeof(double));
-        }
-    }
-
 
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
@@ -521,10 +479,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             PyObject *el = PyList_GET_ITEM(lattice, elem_index);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
             double length;
-            if (!PyPassMethod) return print_error(elem_index, rout);    /* No PassMethod: AttributeError */
+            if (!PyPassMethod) return NULL;    /* No PassMethod: AttributeError */
             LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
             Py_DECREF(PyPassMethod);
-            if (!LibraryListPtr) return print_error(elem_index, rout);  /* No trackFunction for the given PassMethod: RuntimeError */
+            if (!LibraryListPtr) return NULL;  /* No trackFunction for the given PassMethod: RuntimeError */
             pylength = PyObject_GetAttrString(el, "Length");
             if (pylength) {
                 length = PyFloat_AsDouble(pylength);
@@ -544,18 +502,88 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         valid = 0;
     }
 
+    /* Check for partial turn tracking */
+    if(end_elem==0) end_elem = num_elements;
+    if(num_elements!=0) {
+        if(start_elem<0 || start_elem>=num_elements) {
+            char errMsg[64];
+            sprintf(errMsg,"start_elem out of range, %d not in [0..%d]",start_elem,num_elements-1);
+            return PyErr_Format(PyExc_ValueError, errMsg);
+        }
+        if(end_elem<0 || end_elem>num_elements) {
+            char errMsg[64];
+            sprintf(errMsg,"end_elem out of range, %d not in [0..%d]",start_elem,num_elements);
+            return PyErr_Format(PyExc_ValueError, errMsg);
+        }
+        if(start_elem>end_elem) {
+            return PyErr_Format(PyExc_ValueError, "end_elem must be greater that start_elem");
+        }
+        if((end_elem!=num_elements) && (num_turns!=1)) {
+            return PyErr_Format(PyExc_ValueError, "partial turn tracking not ending at the end of the ring requires nturns=1");
+        }
+    } else {
+        start_elem = 0;
+        end_elem = 0;
+    }
+
+    /* Particle energy */
     param.RingLength = lattice_length;
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
-    }
-    else {
+    } else {
         double gamma0 = param.energy/param.rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
         param.T0 = param.RingLength/beta0/C0;
     }
+    set_energy_particle(lattice, energy, particle, &param);
+
+    /* Memory allocation for outputs */
+    num_particles = (PyArray_SIZE(rin)/6);
+    np6 = num_particles*6;
+    drin = PyArray_DATA(rin);
+
+    if (refs) {
+        if (PyArray_TYPE(refs) != NPY_UINT32) {
+            return PyErr_Format(PyExc_ValueError, "refpts is not a uint32 array");
+        }
+        refpts = PyArray_DATA(refs);
+        num_refpts = PyArray_SIZE(refs);
+    } else {
+        refpts = NULL;
+        num_refpts = 0;
+    }
+    outdims[0] = 6;
+    outdims[1] = num_particles;
+    outdims[2] = num_refpts;
+    outdims[3] = num_turns;
+    rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
+    drout = PyArray_DATA((PyArrayObject *)rout);
+
+    if(losses){
+        pdims[0]= num_particles;
+        lxdims[0]= 6;
+        lxdims[1]= num_particles;
+        xnturn = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
+        xnelem = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
+        xlost = PyArray_EMPTY(1, pdims, NPY_BOOL, 1);
+        xlostcoord = PyArray_EMPTY(2, lxdims, NPY_DOUBLE, 1);
+        ixnturn = PyArray_DATA((PyArrayObject *)xnturn);
+        ixnelem = PyArray_DATA((PyArrayObject *)xnelem);
+        bxlost = PyArray_DATA((PyArrayObject *)xlost);
+        dxlostcoord = PyArray_DATA((PyArrayObject *)xlostcoord);
+        unsigned int i;
+        static double r0[6];
+        for(i=0;i<num_particles;i++){
+            bxlost[i]=0;
+            ixnturn[i]=0;
+            ixnelem[i]=0;
+            memcpy(dxlostcoord+6*i,r0,6*sizeof(double));
+        }
+    }
 
     for (turn = 0; turn < num_turns; turn++) {
+
         PyObject **element = element_list;
         double *elem_length = elemlength_list;
         track_function *integrator = integrator_list;
@@ -564,10 +592,21 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         struct elem **elemdata = elemdata_list;
         double s_coord = 0.0;
 
-      /*PySys_WriteStdout("turn: %i\n", param.nturn);*/
+        if(start_elem!=0) {
+            /* Update pointers and s_coord when start_elem is not 0 */
+            for(elem_index = 0;elem_index<start_elem;elem_index++ ) {
+                s_coord += *elem_length++;
+                element++;
+                integrator++;
+                pyintegrator++;
+                elemdata++;
+            }
+        }
+
+        /*PySys_WriteStdout("turn: %i\n", param.nturn);*/
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
-        for (elem_index = 0; elem_index < num_elements; elem_index++) {
+        for (elem_index = start_elem; elem_index < end_elem; elem_index++) {
             param.s_coord = s_coord;
             if (elem_index == nextref) {
                 memcpy(drout, drin, np6*sizeof(double));
@@ -593,7 +632,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             integrator++;
             pyintegrator++;
             elemdata++;
-            kwargs++;
         }
         /* the last element in the ring */
         if (num_elements == nextref) {
@@ -601,6 +639,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             drout += np6; /*  shift the location to write to in the output array */
         }
         param.nturn++;
+        start_elem = 0;
     }
     valid = 1;      /* Tracking successful: the lattice can be reused */
     last_turn = param.nturn;  /* Store turn number in a static variable */
@@ -833,7 +872,14 @@ static PyMethodDef AtMethods[] = {
               "    particle (Optional[Particle]):  circulating particle\n"
               "    reuse:   if True, use previously cached description of the lattice.\n"
               "    omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
-              "    losses:  if True, process losses\n\n"
+              "    losses:  if True, process losses\n"
+              "    start_elem: Start tracking at the specified element. The\n"
+              "       behavior is different from :py:func:`..lattice.rotate`, refpts are\n"
+              "       still indexed from the begininig of the ring and s_coord starts at\n"
+              "       the beginning of the ring. Default 0.\n"
+              "    end_elem: End tracking at the specified element (exclusive).\n"
+              "       When end_elem is different from the number of lattice elements,\n"
+              "       nturns=1 is required. Default number of elements.\n\n"
               "Returns:\n"
               "    rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
               "         of particle coordinates\n\n"

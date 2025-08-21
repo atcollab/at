@@ -22,6 +22,8 @@ def atpass(
     losses: bool = False,
     bunch_spos=None,
     bunch_current=None,
+    start_elem: int | None = None,
+    end_elem: int | None = None,
 ): ...
 def elempass(
     element: Element,
