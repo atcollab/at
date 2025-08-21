@@ -68,10 +68,9 @@ class VariableThinMultipole(Element):
         Default pass method: ``VariableThinMPolePass``.
 
         Keep in mind that as this element varies on every turn, and at the end of
-        the tracking PolynomA and PolynomB are set to zero.
-
-        Passing arrays of zeros as amplitude will initialize the MaxOrder to
-        zero, and the polynom to a single zero.
+        the tracking PolynomA and PolynomB are set to zero, this could interfere
+        with optics calculations. Therefore, it is preferred to set the pass method
+        to IdentityPass when the element should not be active.
 
         There are three different modes that could be set,
         :py:attr:`.ACMode.SINE`: sine function
@@ -79,7 +78,7 @@ class VariableThinMultipole(Element):
         :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
         SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
 
-        For example, use at.ACMode.SINE or 0 to create an sin function element.
+        For example, use at.ACMode.SINE or mode = 0 to create an sin function element.
 
         The **SINE** mode requires amplitude and frequency for A and/or B.
         The value of the jth component of the polynom (A or B) at the nth turn
@@ -106,12 +105,24 @@ class VariableThinMultipole(Element):
         a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
         function, therefore using the same stream on all trackings (sequencial or
         parallel). See https://github.com/atcollab/at/discussions/879 for more
-        details on the pseudo random stream. For example
+        details on the pseudo random stream. For example,
 
         elenoise = at.VariableThinMultipole('MYNOISE',at.ACMode.WHITENOISE,
         AmplitudeA=[noiseA1])
 
         creates a vertical kick as gaussian noise of amplitude noiseA1.
+
+        Additionally, one could use the parameter BufferSizeA or BufferSizeB
+        to create buffer to store the random numbers used in the element settings
+        during tracking. The buffer could be smaller or larger than the tracking.
+        If the buffer is smaller, it will store from start to the moment of filling
+        completely the buffer. If the buffer is larger, all non used places are set
+        to zero.
+
+        Care should be taken when changing the buffer and buffer size. The only check
+        done is at the moment of initialization, for example, when reading a lattice
+        from a file. Buffer and buffer size could be replaced at any moment, just
+        ensure that the actual buffer length and buffersize agree.
 
         The **ARBITRARY** mode requires the definition of a custom discrete function
         to be sampled at every turn. The function and its Taylor expansion with
@@ -124,21 +135,26 @@ class VariableThinMultipole(Element):
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
         the the sixth coordinate divided by the speed of light. Therefore, the
         function func is a 2D-array with columns corresponding to the f and its
-        derivatives and rows to turns. For example, a positive value on the first turn
+        derivatives, and rows to turns. For example, a positive value on the first turn
         f(1)=1 with positive derivative f'(1)=0.1 followed by a negative value in the
-        second turn f(2)=-1 with negative derivative f'(2)-0.2 would be
-        Func=[[1,-1],[0.1,-0.2]]. Use FuncA or FuncB, and AmplitudeA or AmplitudeB
-        accordingly.
-        tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
+        second turn f(2)=-1 with negative derivative f'(2)=-0.2 would be
+        Func=[[1,  -1],
+              [0.1,-0.2]].
+        The time tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
 
         tau = tau - Func[AB]TimeDelay
 
-        The function `value` is then **multiplied by Amplitude A and/or B**.
+        The function value is then **multiplied by Amplitude A and/or B**.
+        Use FuncA or FuncB, and AmplitudeA or AmplitudeB accordingly.
         For example, the following is a positive vertical kick in the first turn,
         negative on the second turn, and zero on the third turn.
 
         elesinglekick = at.VariableThinMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
         AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+
+        As already mentioned, one could include the derivatives of the function
+        from a Taylor expansion in a 2D array. First row for the values of f on
+        every turn, second row for the values of f'' on every turn, and so on.
 
         By default the array is assumed non periodic, the function has no effect
         on the particle in turns exceeding the function definition. If
@@ -147,7 +163,7 @@ class VariableThinMultipole(Element):
         One could use the method inspect_polynom_values to check the polynom values
         used in every turn.
 
-        The ramp is defined by four values (t0,t1,t2,t3):
+        Any mode could be ramped. The ramp is defined by four values (t0,t1,t2,t3):
             * ``t<=t0``: excitation amplitude is zero.
             * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
             * ``t1<t<=t2``: excitation amplitude is constant.
@@ -170,8 +186,10 @@ class VariableThinMultipole(Element):
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
             SinAabove(float): Limit the sin function to be above. Default -1.
             SinBabove(float): Limit the sin function to be above. Default -1.
-            FuncA(Sequence[float]):   User defined tbt list for PolynomA
-            FuncB(Sequence[float]):   User defined tbt list for PolynomB
+            BufferSizeA(int): Sets the buffersize in WHITENOISE mode.
+            BufferSizeB(int): Sets the buffersize in WHITENOISE mode.
+            FuncA(Sequence[float]): User defined tbt list for PolynomA
+            FuncB(Sequence[float]): User defined tbt list for PolynomB
             FuncATimeDelay(float): generate a time offset on the function FUNCA.
             It only has an effect if any of the derivatives is not zero.
             FuncBTimeDelay(float): generate a time offset on the function FUNCB.
