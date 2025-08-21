@@ -204,15 +204,20 @@ else
     mode = m.(upper(inmode));
 end
 
-rsrc = setparams(rsrc,mode,'A');
-rsrc = setparams(rsrc,mode,'B');
+thepols = {'A','B'};
+for i = length(thepols)
+    rsrc = setparams(rsrc,mode,thepols{i});
+    thefieldname = strcat('Polynom',thepols{i});
+    if ~isfield(rsrc, thefieldname)
+        rsrc.(thefieldname)=[];
+    end
+end
 rsrc = setmaxorder(rsrc);
 
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
 rsrc=reshape([fieldnames(rsrc) struct2cell(rsrc)]',1,[]);
-elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',mode,...
-               'PolynomA',[],'PolynomB',[],rsrc{:});
+elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',mode,rsrc{:});
 
 
     function rsrc = setsine(rsrc, ab)
