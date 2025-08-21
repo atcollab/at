@@ -116,9 +116,6 @@ double get_pol(
     double whole_sin_above = elem->Sinabove;
     double freq, ph, sinval;
 
-    // random mode parameters
-    double random_value;
-
     // custom mode parameters
     double* func;
     double* amp = elem->Amplitude;
@@ -143,11 +140,10 @@ double get_pol(
         ampt = ampt*sinval*(sinval >= whole_sin_above);
         return ampt;
     case 1:
-        random_value = atrandn_r(rng, 0, 1);
-        ampt *= random_value;
+        ampt *= atrandn_r(rng, 0, 1);
         /* save random value into buffer */
         if (turn < elem->BufferSize){
-            elem->Buffer[turn] = random_value;
+            elem->Buffer[turn] = ampt;
         }
         return ampt;
     case 2:
