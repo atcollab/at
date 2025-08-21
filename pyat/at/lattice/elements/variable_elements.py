@@ -49,7 +49,7 @@ class VariableThinMultipole(Element):
         BufferSizeA=int,
         BufferSizeB=int,
         Ramps=_array,
-        Periodic=bool,
+        Periodic=int,
     )
 
     def __init__(
