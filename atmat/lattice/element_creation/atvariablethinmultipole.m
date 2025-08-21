@@ -1,4 +1,4 @@
-function elem=atvariablethinmultipole(fname, mode, varargin)
+function elem=atvariablethinmultipole(fname, inmode, varargin)
 % ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
 %  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE)
@@ -193,8 +193,17 @@ rsrc = struct(rsrc{:});
 m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
-    error("Please provide at least one amplitude for A or B")
+    rsrc.AmplitudeB = 0;
+    rsrc.AmplitudeA = 0;
 end
+
+% accept name or number mode
+if isnumeric(inmode)
+    mode = inmode;
+else
+    mode = m.(upper(inmode));
+end
+
 rsrc = setparams(rsrc,mode,'A');
 rsrc = setparams(rsrc,mode,'B');
 rsrc = setmaxorder(rsrc);
@@ -202,13 +211,14 @@ rsrc = setmaxorder(rsrc);
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
 rsrc=reshape([fieldnames(rsrc) struct2cell(rsrc)]',1,[]);
-elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
+elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',mode,...
                'PolynomA',[],'PolynomB',[],rsrc{:});
 
 
     function rsrc = setsine(rsrc, ab)
-        if ~isfield(rsrc,strcat('Frequency',ab))
-            error(strcat('Please provide a value for Frequency',ab))
+        funcarg = strcat('Frequency',ab);
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
         end
         funcarg=strcat('Phase',ab);
         if ~isfield(rsrc,funcarg)
@@ -223,7 +233,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
     function rsrc = setarb(rsrc, ab)
         funcarg=strcat('Func',ab);
         if ~isfield(rsrc,funcarg)
-            error(strcat('Please provide a value for Func',ab))
+            rsrc.(funcarg) = zeros(1,1);
         end
         [ktaylor, nsamples] = size(rsrc.(funcarg));
         rsrc.(strcat('NSamples',ab)) = nsamples;
