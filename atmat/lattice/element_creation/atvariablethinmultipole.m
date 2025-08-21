@@ -224,14 +224,9 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
         if ~isfield(rsrc,funcarg)
             error(strcat('Please provide a value for Func',ab))
         end
-        nsamples = length(rsrc.(funcarg));
+        [ktaylor, nsamples] = size(rsrc.(funcarg));
         rsrc.(strcat('NSamples',ab)) = nsamples;
-        for i = 1:4
-            funcarg=strcat('Func',ab,'deriv',num2str(i));
-            if ~isfield(rsrc,funcarg)
-                rsrc.(funcarg) = zeros(1,nsamples);
-            end
-        end
+        rsrc.(strcat('Ktaylor', ab)) = ktaylor;
         funcarg = strcat('Func',ab,'TimeDelay');
         if ~isfield(rsrc,funcarg)
             rsrc.(funcarg) = 0;
