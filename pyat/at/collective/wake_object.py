@@ -25,7 +25,8 @@ class WakeComponent(Enum):
     QX = 3          #: Quadrupole X
     QY = 4          #: Quadrupole Y
     Z = 5           #: Longitudinal
-
+    CX = 6          #: Constant Dipole X
+    CY = 7          #: Constant Dipole Y
 
 # noinspection PyPep8Naming
 class Wake(object):
@@ -69,7 +70,9 @@ class Wake(object):
                            WakeComponent.DY: None,
                            WakeComponent.QX: None,
                            WakeComponent.QY: None,
-                           WakeComponent.Z: None}
+                           WakeComponent.Z: None,
+                           WakeComponent.CX: None,
+                           WakeComponent.CY: None}
 
     @property
     def srange(self):
@@ -100,6 +103,17 @@ class Wake(object):
         """Longitudinal component"""
         return self.components[WakeComponent.Z]
 
+    @property
+    def CX(self):
+        """Constant Dipole X component"""
+        return self.components[WakeComponent.CX]
+        
+    @property
+    def CY(self):
+        """Constant Dipole Y component"""
+        return self.components[WakeComponent.CY]
+        
+        
     def add(self, wtype: WakeType, wcomp: WakeComponent, *args, **kwargs):
         """Add a component to a :py:class:`.Wake`
 

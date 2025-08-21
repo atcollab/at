@@ -2,14 +2,16 @@
 Non-linear optics
 """
 
-import numpy as np
 from typing import Optional, Sequence
+
+import numpy as np
 from scipy.special import factorial
+
 from ..lattice import Element, Lattice
 from ..tracking import internal_lpass
-from .orbit import Orbit, find_orbit
-from .linear import get_tune, get_chrom, linopt6
 from .harmonic_analysis import get_tunes_harmonic
+from .linear import get_chrom, get_tune, linopt4, linopt6
+from .orbit import Orbit, find_orbit
 
 __all__ = ["detuning", "chromaticity", "gen_detuning_elem", "tunes_vs_amp"]
 
@@ -87,26 +89,28 @@ def detuning(
     npoints: Optional[int] = 3,
     nturns: Optional[int] = 512,
     **kwargs,
-):
-    """Computes the tunes for a sequence of amplitudes
+) -> tuple:
+    """Compute the tunes for a sequence of amplitudes.
 
     This function uses :py:func:`tunes_vs_amp` to compute the tunes for
     the specified amplitudes. Then it fits this data and returns
     the detuning coefficiant dQx/Jx, dQy/Jx, dQx/Jy, dQy/Jy and the
-    qx, qy arrays versus x, y arrays
+    qx, qy arrays versus x, y arrays.
+
+    Tracking is done in 4D.
 
     Parameters:
-        ring:       Lattice description
-        xm:         Maximum x amplitude
-        ym:         Maximum y amplitude
-        npoints:    Number of points in each plane
-        nturns:     Number of turns for tracking
-        method:     ``'laskar'`` or ``'fft'``. Default: ``'laskar'``
-        num_harmonics:  Number of harmonic components to compute
-                       (before mask applied)
-        fmin:       Lower bound for tune
-        fmax:       Upper bound for tune
-        hann:       Turn on Hanning window. Default: :py:obj:`False`
+        ring: Lattice description
+        xm: Maximum x amplitude
+        ym: Maximum y amplitude
+        npoints: Number of points in each plane
+        nturns: Number of turns for tracking
+        method: ``'laskar'`` or ``'fft'``. Default: ``'laskar'``
+        num_harmonics: Number of harmonic components to compute
+            (before mask applied)
+        fmin: Lower bound for tune
+        fmax: Upper bound for tune
+        hann: Turn on Hanning window. Default: :py:obj:`False`
 
     Returns:
         q0 (ndarray): qx, qy from horizontal and vertical amplitude scans.
@@ -121,34 +125,36 @@ def detuning(
         q_dy (ndarray): qx, qy tunes as a function of y amplitude (npoints, 2)
                         Only the fractional parts are returned
     """
-    lindata0, _, _ = linopt6(ring)
+    ring4d = ring.disable_6d(copy=True)
+
+    lindata0, *_ = linopt4(ring4d)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
-    x = np.linspace(-xm, xm, npoints)
-    y = np.linspace(-ym, ym, npoints)
-    x2 = x * x
-    y2 = y * y
+    _x = np.linspace(-xm, xm, npoints)
+    _y = np.linspace(-ym, ym, npoints)
+    _x2 = _x * _x
+    _y2 = _y * _y
 
-    q_dx = tunes_vs_amp(ring, amp=x, dim=0, nturns=nturns, **kwargs)
-    q_dy = tunes_vs_amp(ring, amp=y, dim=2, nturns=nturns, **kwargs)
-    q_dx, _ = np.modf(q_dx * ring.periodicity)
-    q_dy, _ = np.modf(q_dy * ring.periodicity)
+    q_dx = tunes_vs_amp(ring4d, amp=_x, dim=0, nturns=nturns, **kwargs)
+    q_dy = tunes_vs_amp(ring4d, amp=_y, dim=2, nturns=nturns, **kwargs)
+    q_dx, _ = np.modf(q_dx * ring4d.periodicity)
+    q_dy, _ = np.modf(q_dy * ring4d.periodicity)
 
     idx = np.isfinite(q_dx[:, 0]) & np.isfinite(q_dx[:, 1])
     idy = np.isfinite(q_dy[:, 0]) & np.isfinite(q_dy[:, 1])
 
-    fx = np.polyfit(x2[idx], q_dx[idx], 1)
-    fy = np.polyfit(y2[idy], q_dy[idy], 1)
+    f_x = np.polyfit(_x2[idx], q_dx[idx], 1)
+    f_y = np.polyfit(_y2[idy], q_dy[idy], 1)
 
-    q0 = np.array([[fx[1, 0], fx[1, 1]], [fy[1, 0], fy[1, 1]]])
-    q1 = np.array(
+    q_0 = np.array([[f_x[1, 0], f_x[1, 1]], [f_y[1, 0], f_y[1, 1]]])
+    q_1 = np.array(
         [
-            [2 * fx[0, 0] / gamma[0], 2 * fx[0, 1] / gamma[0]],
-            [2 * fy[0, 0] / gamma[1], 2 * fy[0, 1] / gamma[1]],
+            [2 * f_x[0, 0] / gamma[0], 2 * f_x[0, 1] / gamma[0]],
+            [2 * f_y[0, 0] / gamma[1], 2 * f_y[0, 1] / gamma[1]],
         ]
     )
 
-    return q0, q1, x, q_dx, y, q_dy
+    return q_0, q_1, _x, q_dx, _y, q_dy
 
 
 def chromaticity(
@@ -236,6 +242,6 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
         A3=r1[1][1],
         T1=-orbit,
         T2=orbit,
-        chrom_maxorder=1
+        chrom_maxorder=1,
     )
     return nonlin_elem
