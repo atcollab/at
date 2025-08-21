@@ -188,8 +188,8 @@ class VariableThinMultipole(Element):
             SinBabove(float): Limit the sin function to be above. Default -1.
             BufferSizeA(int): Sets the buffersize in WHITENOISE mode.
             BufferSizeB(int): Sets the buffersize in WHITENOISE mode.
-            FuncA(Sequence[float]): User defined tbt list for PolynomA
-            FuncB(Sequence[float]): User defined tbt list for PolynomB
+            FuncA(Sequence[float]): User defined turn by turn list for PolynomA
+            FuncB(Sequence[float]): User defined turn by turn list for PolynomB
             FuncATimeDelay(float): generate a time offset on the function FUNCA.
             It only has an effect if any of the derivatives is not zero.
             FuncBTimeDelay(float): generate a time offset on the function FUNCB.
