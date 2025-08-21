@@ -144,22 +144,19 @@ function ampout = get_pol(element , ab, ramps, mode, t, turn, order, periodic)
         nsamples = element.(strcat("NSamples",ab));
         if periodic || turn < nsamples
             func = element.(strcat("Func",ab));
-            funcderiv1 = element.(strcat("Func",ab,"deriv1") );
-            funcderiv2 = element.(strcat("Func",ab,"deriv2") );
-            funcderiv3 = element.(strcat("Func",ab,"deriv3") );
-            funcderiv4 = element.(strcat("Func",ab,"deriv4") );
-            functdelay = element.(strcat("Func",ab,"TimeDelay") );
+            funcdelay = element.(strcat("Func",ab,"TimeDelay"));
+            [ktaylor, nsamples] = size(func);
             turnidx = mod(turn, nsamples)+1;
-
-            t = t - functdelay;
-            t2 = t * t;
-            ampout = ampoutaux * ( ...
-                func(turnidx) ...
-                + funcderiv1(turnidx) * t ...
-                + 0.5 * funcderiv2(turnidx) * t2 ...
-                + 1.0 / 6.0 * funcderiv3(turnidx) * t2 * t ...
-                + 1.0 / 24.0 * funcderiv4(turnidx) * t2 * t2 ...
-            );
+            t = t - funcdelay;
+            functot = func(1,turnidx);
+            thefactorial = 1;
+            tpow = 1;
+            for i = 1:(ktaylor-1)
+                tpow = t *tpow;
+                thefactorial = thefactorial *i;
+                functot = functot + tpow/thefactorial * func(i+1,turnidx);
+            end
+            ampout = ampoutaux * functot;
         else
             ampout = 0.0;
         end
