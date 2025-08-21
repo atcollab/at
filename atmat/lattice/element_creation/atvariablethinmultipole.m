@@ -259,17 +259,16 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',mode,...
     function rsrc = setparams(rsrc,mode,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
-            if strcmpi(mode,'SINE')
+            switch mode
+            case m.SINE
                 rsrc = setsine(rsrc,ab);
-            end
-            if strcmpi(mode,'ARBITRARY')
+            case m.ARBITRARY
                 rsrc = setarb(rsrc,ab);
                 if ~isfield(rsrc,'Periodic')
                     rsrc.Periodic = 0;
                 end
-            end
-            if strcmpi(mode,'WHITENOISE')
-              rsrc = setwhitenoise(rsrc,ab);
+            case m.WHITENOISE
+                rsrc = setwhitenoise(rsrc,ab);
             end
         end
     end
