@@ -254,7 +254,7 @@ class VariableThinMultipole(Element):
             if frequency is None:
                 raise AtError("Please provide a value for Frequency" + a_b)
             kwargs.setdefault("Phase" + a_b, 0)
-            kwargs.setdefault("Sin" + a_b + "above", -1)
+            kwargs.setdefault("Sin" + a_b + "above", -1.1)
             return kwargs
 
         def _set_arb(a_b: str, **kwargs: dict[any, any]) -> dict[str, any]:
