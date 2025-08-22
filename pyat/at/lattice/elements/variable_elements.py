@@ -95,10 +95,10 @@ class VariableThinMultipole(Element):
         eleskew = at.VariableThinMultipole('VAR_SKEW',at.ACMode.SINE,
         AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
 
-        The values of the sin function could be limited to be above a defined
+        The values of the sine function could be limited to be above a defined
         threshold using ``Sin[AB]above``. For example, you could create a positive
-        half-sin by setting ``Sin[AB]above`` to zero. You could also create a
-        negative half-sin function by setting the amplitude to -1.
+        half-sine by setting ``Sin[AB]above`` to zero. You could also create a
+        negative half-sine function by setting the amplitude to -1.
 
         The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
         distribution is generated with zero-mean and one standard deviation from
@@ -131,15 +131,16 @@ class VariableThinMultipole(Element):
         value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
         + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
 
-        f is an array of values, f',f'',f''',f'''', are arrays containing
+        f is a row array of values, f',f'',f''',f'''', are row arrays containing
         the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
         the the sixth coordinate divided by the speed of light. Therefore, the
-        function func is a 2D-array with columns corresponding to the f and its
-        derivatives, and rows to turns. For example, a positive value on the first turn
-        f(1)=1 with positive derivative f'(1)=0.1 followed by a negative value in the
-        second turn f(2)=-1 with negative derivative f'(2)=-0.2 would be
-        Func=[[1,  -1],
-              [0.1,-0.2]].
+        function func is a 2D-array with a given column contains f and its
+        derivatives, and the ith column has the values to be used in the ith turn.
+        For example, a positive value on the first turn f(1)=1 with positive
+        derivative f'(1)=0.1 followed by a negative value in the second turn
+        f(2)=-1 with negative derivative f'(2)=-0.2, and f(3) = 2, would be
+          Func=[[1,  -1   2],
+                [0.1 -0.2 0]].
 
         The time tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
 
@@ -159,7 +160,7 @@ class VariableThinMultipole(Element):
 
         By default the array is assumed non periodic, the function has no effect
         on the particle in turns exceeding the function definition. If
-        ``Periodic`` is set to True, the sequence is repeated.
+        ``Periodic`` is set to 1, the sequence is repeated.
 
         One could use the method inspect_polynom_values to check the polynom values
         used in every turn.
@@ -173,7 +174,7 @@ class VariableThinMultipole(Element):
 
         Arguments:
             family_name(str):  Element name
-            mode(at.ACMode): defines the mode. Default ACMode.SINE:
+            mode(at.ACMode): defines the mode. Default ACMode.SINE
             kwargs: described as follow.
 
         Keyword Arguments:
@@ -185,8 +186,8 @@ class VariableThinMultipole(Element):
             FrequencyB(float): Frequency of the PolynomB sine excitation. Unit Hz
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
-            SinAabove(float): Limit the sin function to be above. Default -1.
-            SinBabove(float): Limit the sin function to be above. Default -1.
+            SinAabove(float): Limit the sin function to be above. Default -1.1
+            SinBabove(float): Limit the sin function to be above. Default -1.1
             BufferSizeA(int): Sets the buffersize in WHITENOISE mode.
             BufferSizeB(int): Sets the buffersize in WHITENOISE mode.
             FuncA(Sequence[float]): User defined turn by turn list for PolynomA
