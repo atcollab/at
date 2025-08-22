@@ -231,7 +231,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',mode,rsrc{:});
         end
         funcarg=strcat('Sin',ab,'above');
         if ~isfield(rsrc,funcarg)
-            rsrc.(funcarg) = -1;
+            rsrc.(funcarg) = -1.1;
         end
     end
 
