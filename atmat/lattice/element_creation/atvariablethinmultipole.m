@@ -20,10 +20,10 @@ function elem=atvariablethinmultipole(fname, inmode, varargin)
 %    FrequencyB     Frequency of SINE excitation for PolynomB. Unit Hz.
 %    PhaseA         Phase of SINE excitation for PolynomA
 %    PhaseB         Phase of SINE excitation for PolynomB
-%    SinAabove      Limit the sin function to be above. Default -1.
-%    SinBabove      Limit the sin function to be above. Default -1.
-%    BufferSizeA    Set the buffer length in WHITENOSE mode.
-%    BufferSizeB    Set the buffer length in WHITENOSE mode.
+%    SinAabove      Limit the sine function to be above. Default -1.1
+%    SinBabove      Limit the sine function to be above. Default -1.1
+%    BufferSizeA    Set the buffer length in WHITENOISE mode.
+%    BufferSizeB    Set the buffer length in WHITENOISE mode.
 %    FuncA          ARBITRARY excitation turn-by-turn (tbt) list for
 %                   PolynomA
 %    FuncB          ARBITRARY excitation turn-by-turn (tbt) list for
@@ -85,9 +85,10 @@ function elem=atvariablethinmultipole(fname, inmode, varargin)
 % SINE: sine function
 % WHITENOISE: gaussian white noise
 % ARBITRARY: user defined turn-by-turn kick list
-% SINE = 0, WHITENOISE = 1 and ARBITRARY = 2, when saved to a file.
+% SINE = 0, WHITENOISE = 1 and ARBITRARY = 2, when the structure is
+% displayed, or in a file.
 %
-% For example, use SINE or mode = 0 to create an sin function element.
+% For example, use SINE or mode = 0 to create an sine function element.
 %
 % The **SINE** mode requires amplitude and frequency for A and/or B.
 % The value of the jth component of the polynom (A or B) at the nth turn
@@ -104,10 +105,10 @@ function elem=atvariablethinmultipole(fname, inmode, varargin)
 % eleskew = atvariablethinmultipole('VAR_SKEW',"SINE", ...
 % "AmplitudeA",[0,skewa2],"FrequencyA",freqA,"PhaseA",phaseA)
 %
-% The values of the sin function could be limited to be above a defined
+% The values of the sine function could be limited to be above a defined
 % threshold using ``Sin[AB]above``. For example, you could create a positive
-% half-sin by setting ``Sin[AB]above`` to zero. You could also create a
-% negative half-sin function by setting the amplitude to -1.
+% half-sine by setting ``Sin[AB]above`` to zero. You could also create a
+% negative half-sine function by setting the amplitude to -1.
 %
 % The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
 % distribution is generated with zero-mean and one standard deviation from
@@ -140,15 +141,16 @@ function elem=atvariablethinmultipole(fname, inmode, varargin)
 % value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
 % + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
 %
-% f is an array of values, f',f'',f''',f'''', are arrays containing
+% f is a row array of values, f',f'',f''',f'''', are row arrays containing
 % the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
 % the the sixth coordinate divided by the speed of light. Therefore, the
-% function func is a 2D-array with columns corresponding to the f and its
-% derivatives, and rows to turns. For example, a positive value on the first turn
-% f(1)=1 with positive derivative f'(1)=0.1 followed by a negative value in the
-% second turn f(2)=-1 with negative derivative f'(2)=-0.2 would be
-% Func=[[1,  -1];
-%       [0.1,-0.2]].
+% function func is a 2D-array with a given column contains f and its
+% derivatives, and the ith column has the values to be used in the ith turn.
+% For example, a positive value on the first turn f(1)=1 with positive
+% derivative f'(1)=0.1 followed by a negative value in the second turn
+% f(2)=-1 with negative derivative f'(2)=-0.2, and f(3) = 2, would be
+%   Func=[[1,  -1   2];
+%         [0.1 -0.2 0]].
 %
 % The time tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
 %
@@ -170,8 +172,8 @@ function elem=atvariablethinmultipole(fname, inmode, varargin)
 % on the particle in turns exceeding the function definition. If
 % ``Periodic`` is set to 1, the sequence is repeated.
 %
-% One could use the method inspect_polynom_values to check the polynom values
-% used in every turn.
+% One could use the function atinspectvariablethinmultiple to check
+% the polynom values used in every turn before actually doing the tracking.
 %
 % Any mode could be ramped. The ramp is defined by four values (t0,t1,t2,t3):
 %     * ``t<=t0``: excitation amplitude is zero.
