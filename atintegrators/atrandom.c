@@ -80,6 +80,7 @@ static void pcg32_srandom_r(pcg32_random_t* rng, uint64_t initstate, uint64_t in
     pcg32_random_r(rng);
     rng->state += initstate;
     pcg32_random_r(rng);
+    rng->hasSpare = false;
 }
 
 static void pcg32_srandom(uint64_t seed, uint64_t seq)
