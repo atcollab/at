@@ -77,11 +77,14 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     """
     if obspt is not None:
         assert np.isscalar(obspt), "Scalar value needed for obspt"
-        ring = ring.rotate(obspt)
+        ringrot = ring.rotate(obspt)
+    else:
+        ringrot = ring
     if orbit is None:
-        orbit0, orbit = ring.find_orbit(dp=dp, refpts=obspt)
-        orbit = orbit0 if obspt is None else np.squeeze(orbit)
-    return orbit, ring
+        # need this call on ring to use keep_lattice=True in obs loop
+        orbit0, orbitobs = ring.find_orbit(dp=dp, refpts=obspt)
+        orbit = orbit0 if obspt is None else np.squeeze(orbitobs)
+    return orbit, ringrot
 
 
 def grid_configuration(
