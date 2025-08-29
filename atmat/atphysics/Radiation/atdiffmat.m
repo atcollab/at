@@ -38,8 +38,6 @@ for i = 1:length(nonsupported_methods)
     thepassm = nonsupported_methods{i};
     lidx = find(atgetcells(ring, 'Class', thepassm));
     if ~isempty(lidx)
-        %warning('AT:PassMethod',['The PassMethod ' thepassm ...
-        %    'is temporarily set to IdentityPass.\n'])
         ring = atsetfieldvalues(ring, lidx, 'PassMethod', 'IdentityPass');
     end
 end
