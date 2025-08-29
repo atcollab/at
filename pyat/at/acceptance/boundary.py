@@ -7,7 +7,7 @@ grid definitions
 from at.lattice import Lattice, AtError, AtWarning, Refpts
 from typing import Optional, Sequence
 from enum import Enum
-import numpy
+import numpy as np
 from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
@@ -32,14 +32,14 @@ def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     """
     Returns an object that defines the grid configuration
     """
-    bounds = numpy.atleast_2d(bounds)
+    bounds = np.atleast_2d(bounds)
     bounds = tuple(map(tuple, bounds))
-    shape = numpy.array(npoints, dtype=numpy.int32)
+    shape = np.array(npoints, dtype=np.int32)
     d = {
-        "planes": numpy.atleast_1d(planes),
-        "planesi": numpy.atleast_1d(get_plane_index(planes)),
-        "amplitudes": numpy.atleast_1d(amplitudes),
-        "shape": numpy.atleast_1d(shape),
+        "planes": np.atleast_1d(planes),
+        "planesi": np.atleast_1d(get_plane_index(planes)),
+        "amplitudes": np.atleast_1d(amplitudes),
+        "shape": np.atleast_1d(shape),
         "bounds": bounds,
         "mode": grid_mode,
         "shift_zero": shift_zero,
@@ -51,7 +51,7 @@ def grid(grid, offset):
     """
     Returns a grid object
     """
-    d = {"grid": numpy.atleast_2d(grid), "offset": numpy.atleast_1d(offset)}
+    d = {"grid": np.atleast_2d(grid), "offset": np.atleast_1d(offset)}
     return namedtuple("grid", d.keys())(**d)
 
 
@@ -59,11 +59,11 @@ def get_plane_index(planes):
     """
     Converts plane to particle coordinate index
     """
-    planesi = numpy.array([], dtype=numpy.int32)
-    for i, p in enumerate(numpy.atleast_1d(planes)):
+    planesi = np.array([], dtype=np.int32)
+    for i, p in enumerate(np.atleast_1d(planes)):
         if isinstance(p, str):
             try:
-                planesi = numpy.append(planesi, _pdict[p])
+                planesi = np.append(planesi, _pdict[p])
             except KeyError:
                 raise AtError("Allowed values for plane are x,xp,y,yp,dp,ct")
         else:
@@ -76,10 +76,10 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     Returns initial closed orbit
     """
     if obspt is not None:
-        assert numpy.isscalar(obspt), "Scalar value needed for obspt"
+        assert np.isscalar(obspt), "Scalar value needed for obspt"
     if orbit is None:
         orbit0, orbit = ring.find_orbit(dp=dp, refpts=obspt)
-        orbit = orbit0 if obspt is None else numpy.squeeze(orbit)
+        orbit = orbit0 if obspt is None else np.squeeze(orbit)
     return orbit
 
 
@@ -91,26 +91,26 @@ def grid_configuration(
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
     Scalar inputs can be used for 1D grid
     """
-    ndims = len(numpy.atleast_1d(planes))
+    ndims = len(np.atleast_1d(planes))
     if ndims > 2 or ndims == 0:
         raise AtError("planes can have 1 or 2 element (1D or 2D aperture)")
     elif ndims == 1 and grid_mode is GridMode.RADIAL:
         grid_mode = GridMode.CARTESIAN
 
-    if numpy.shape(numpy.atleast_1d(npoints)) != (ndims,):
+    if np.shape(np.atleast_1d(npoints)) != (ndims,):
         raise AtError("npoints shape should be (len(planes),)")
-    if numpy.shape(numpy.atleast_1d(amplitudes)) != (ndims,):
+    if np.shape(np.atleast_1d(amplitudes)) != (ndims,):
         raise AtError("amplitudes shape should be (len(planes),)")
-    if numpy.shape(numpy.atleast_2d(bounds)) != (ndims, 2) and bounds is not None:
+    if np.shape(np.atleast_2d(bounds)) != (ndims, 2) and bounds is not None:
         raise AtError("bounds shape should be (len(planes),2)")
 
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
-            bounds = numpy.array([[0, 1], [numpy.pi, 0]])
+            bounds = np.array([[0, 1], [np.pi, 0]])
         bounds[0][bounds[0] == 0] = 1.0e-6
     elif grid_mode is GridMode.CARTESIAN:
         if bounds is None:
-            bounds = numpy.array([[p - 1, 1] for p in range(ndims)])
+            bounds = np.array([[p - 1, 1] for p in range(ndims)])
     else:
         raise AtError("GridMode {0} undefined.".format(grid_mode))
 
@@ -126,19 +126,19 @@ def get_parts(config, offset):
     """
 
     def get_part_grid_uniform(bnd, np, amp):
-        x = [numpy.linspace(*b, n) * a for a, b, n in zip(amp, bnd, np)]
+        x = [np.linspace(*b, n) * a for a, b, n in zip(amp, bnd, np)]
         try:
-            g1, g2 = numpy.meshgrid(*x)
+            g1, g2 = np.meshgrid(*x)
         except ValueError:
-            g1, g2 = numpy.meshgrid(x, 0.0)
-        return numpy.array([g1.flatten(), g2.flatten()])
+            g1, g2 = np.meshgrid(x, 0.0)
+        return np.array([g1.flatten(), g2.flatten()])
 
     def get_part_grid_radial(bnd, np, amp):
-        x = [numpy.linspace(*b, n) for b, n in zip(bnd, np)]
-        g1, g2 = numpy.meshgrid(*x)
-        g1r = amp[0] * numpy.cos(g2) * g1
-        g2r = amp[1] * numpy.sin(g2) * g1
-        return numpy.array([g1r.flatten(), g2r.flatten()])
+        x = [np.linspace(*b, n) for b, n in zip(bnd, np)]
+        g1, g2 = np.meshgrid(*x)
+        g1r = amp[0] * np.cos(g2) * g1
+        g2r = amp[1] * np.sin(g2) * g1
+        return np.array([g1r.flatten(), g2r.flatten()])
 
     pind = config.planesi
     amp = config.amplitudes
@@ -150,9 +150,9 @@ def get_parts(config, offset):
         g = get_part_grid_uniform(bnd, np, amp)
     elif gm is GridMode.RADIAL:
         g = get_part_grid_radial(bnd, np, amp)
-    parts = numpy.zeros((6, numpy.prod(np)))
+    parts = np.zeros((6, np.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
-    offset = numpy.array(offset) + config.shift_zero
+    offset = np.array(offset) + config.shift_zero
     parts = (parts.T + offset).T
     return parts, grid(g, offset[pind])
 
@@ -170,7 +170,7 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
         in_place=True,
         **kwargs,
     )
-    return numpy.invert(td["loss_map"].islost)
+    return np.invert(td["loss_map"].islost)
 
 
 def get_grid_boundary(mask, grid, config):
@@ -180,36 +180,36 @@ def get_grid_boundary(mask, grid, config):
 
     def nearest_order(grid):
         #  keep only max r for each angle
-        angle = numpy.arctan2(*grid)
-        norm = numpy.linalg.norm(grid.T, axis=1)
-        val, inv = numpy.unique(angle, return_inverse=True)
-        gf = numpy.zeros((2, len(val)))
+        angle = np.arctan2(*grid)
+        norm = np.linalg.norm(grid.T, axis=1)
+        val, inv = np.unique(angle, return_inverse=True)
+        gf = np.zeros((2, len(val)))
         for i, v in enumerate(val):
-            inds = numpy.where(inv == i)[0]
+            inds = np.where(inv == i)[0]
             ni = norm[inds]
-            nim = numpy.where(ni == numpy.amax(ni))[0]
+            nim = np.where(ni == np.amax(ni))[0]
             ind = inds[nim][0]
             gf[:, i] = grid[:, ind]
         #  first sort by angle
-        idx = numpy.argsort(numpy.arctan2(*gf))
+        idx = np.argsort(np.arctan2(*gf))
         gf = gf[:, idx]
         #  now sort by closest neighbour on normalized grid
         x, y = gf[0, :].copy(), gf[1, :].copy()
-        dxmin = min(numpy.diff(numpy.unique(x)))
-        dymin = min(numpy.diff(numpy.unique(y)))
+        dxmin = min(np.diff(np.unique(x)))
+        dymin = min(np.diff(np.unique(y)))
         iorder = [0]
         for i in range(1, len(x)):
             xnow = x[iorder[-1]]
             ynow = y[iorder[-1]]
-            dd = numpy.sqrt(((x - xnow) / dxmin) ** 2 + ((y - ynow) / dymin) ** 2)
+            dd = np.sqrt(((x - xnow) / dxmin) ** 2 + ((y - ynow) / dymin) ** 2)
             if i <= 3:
-                ic = [j for j in numpy.argsort(dd) if j not in iorder]
+                ic = [j for j in np.argsort(dd) if j not in iorder]
             else:
-                direction = numpy.sign(iorder[-1] - iorder[-2])
+                direction = np.sign(iorder[-1] - iorder[-2])
                 ic = [
                     j
-                    for j in numpy.argsort(dd)
-                    if j not in iorder and numpy.sign(j - iorder[-1]) == direction
+                    for j in np.argsort(dd)
+                    if j not in iorder and np.sign(j - iorder[-1]) == direction
                 ]
             if len(ic) > 0:
                 iorder.append(ic[0])
@@ -218,14 +218,14 @@ def get_grid_boundary(mask, grid, config):
         ynow = y[iorder[-1]]
         xs = x[iorder[0]]
         ys = y[iorder[0]]
-        dd = numpy.sqrt(((xs - xnow) / dxmin) ** 2 + ((ys - ynow) / dymin) ** 2)
+        dd = np.sqrt(((xs - xnow) / dxmin) ** 2 + ((ys - ynow) / dymin) ** 2)
         if dd < 1.5:
             iorder.append(iorder[0])
         gf = gf[:, iorder]
         return gf
 
     def search_bnd(ma, sa):
-        bnd = numpy.zeros((2, 1))
+        bnd = np.zeros((2, 1))
         for j, m in enumerate(ma):
             bnd = sa[:, j]
             if not m and j > 0:
@@ -234,19 +234,19 @@ def get_grid_boundary(mask, grid, config):
         return bnd
 
     def grid_boundary(mask, grid, config, nclean=2):
-        cnt = numpy.flip(config.shape)
+        cnt = np.flip(config.shape)
         if len(cnt) == 1:
             return vector_boundary(mask, grid)
-        mask2d = numpy.reshape(mask.copy(), cnt)
+        mask2d = np.reshape(mask.copy(), cnt)
         #  remove isolated points
         for i in range(nclean):
-            bnd1 = binary_opening(mask2d, numpy.ones((2, 1)))
-            bnd2 = binary_opening(mask2d, numpy.ones((1, 2)))
-        bnd = numpy.logical_and(bnd1, bnd2)
-        k = numpy.zeros((3, 3), dtype=int)
+            bnd1 = binary_opening(mask2d, np.ones((2, 1)))
+            bnd2 = binary_opening(mask2d, np.ones((1, 2)))
+        bnd = np.logical_and(bnd1, bnd2)
+        k = np.zeros((3, 3), dtype=int)
         k[1] = 1
         k[:, 1] = 1
-        bnd = numpy.logical_and(binary_dilation(bnd == 0, border_value=1), bnd)
+        bnd = np.logical_and(binary_dilation(bnd == 0, border_value=1), bnd)
         bnd = grid.grid[:, bnd.reshape(mask.shape)]
         return nearest_order(bnd)
 
@@ -254,30 +254,30 @@ def get_grid_boundary(mask, grid, config):
         g = grid.grid
         xp, xn = g[0] >= 0, g[0] <= 0
         bp = search_bnd(mask[xp], g[:, xp])
-        bn = search_bnd(numpy.flip(mask[xn]), numpy.flip(g[:, xn], axis=1))
-        return numpy.squeeze([bn[0], bp[0]])
+        bn = search_bnd(np.flip(mask[xn]), np.flip(g[:, xn], axis=1))
+        return np.squeeze([bn[0], bp[0]])
 
     def radial_boundary(mask, grid):
-        angles = numpy.round(numpy.arctan2(*grid.grid), decimals=8)
-        angles, invi = numpy.unique(angles, return_inverse=True)
-        bnd = numpy.zeros((2, len(angles)))
+        angles = np.round(np.arctan2(*grid.grid), decimals=8)
+        angles, invi = np.unique(angles, return_inverse=True)
+        bnd = np.zeros((2, len(angles)))
         for i in range(len(angles)):
             sa = grid.grid[:, invi == i]
             ma = mask[invi == i]
             bnd[:, i] = search_bnd(ma, sa)
         return bnd
 
-    if not numpy.any(mask):
+    if not np.any(mask):
         msg = (
             "No particle survived, please check your grid "
             "or lattice. Acceptance set to [0.0, 0.0]."
         )
         warnings.warn(AtWarning(msg))
-        cnt = numpy.flip(config.shape)
+        cnt = np.flip(config.shape)
         if len(cnt) == 1:
-            return numpy.zeros(2)
+            return np.zeros(2)
         else:
-            return numpy.zeros((2, 1))
+            return np.zeros((2, 1))
 
     if config.mode is GridMode.RADIAL:
         return radial_boundary(mask, grid)
@@ -338,9 +338,9 @@ def grid_boundary_search(
     allparts = []
     grids = []
     if offset is None:
-        offset = [None for _ in numpy.arange(len(obspt))]
+        offset = [None for _ in np.arange(len(obspt))]
 
-    for i, obs, orbit in zip(numpy.arange(len(obspt)), obspt, offset):
+    for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
         orbit = set_ring_orbit(ring, dp, obs, orbit)
         parts, grid = get_parts(config, orbit)
         obs = 0 if obs is None else obs
@@ -365,9 +365,9 @@ def grid_boundary_search(
         grids.append(grid)
     if verbose:
         print("Starting the multi-turn tracking...")
-    allparts = numpy.concatenate(allparts, axis=1)
+    allparts = np.concatenate(allparts, axis=1)
     mask = get_survived(allparts, ring, nturns, use_mp, **kwargs)
-    mask = numpy.split(mask, len(grids))
+    mask = np.split(mask, len(grids))
     survived = [g.grid[:, m] for g, m in zip(grids, mask)]
     boundary = [get_grid_boundary(m, g, config) for g, m in zip(grids, mask)]
     grids = [g.grid for g in grids]
@@ -403,40 +403,40 @@ def recursive_boundary_search(
         planesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs
     ):
         ftol = min(rtol / rsteps)
-        cs = numpy.squeeze([numpy.cos(angles), numpy.sin(angles)])
-        cs = numpy.around(cs, decimals=9)
-        fact = numpy.ones(len(angles))
-        survived = numpy.full(len(angles), True)
-        part = numpy.zeros((6, len(angles)))
-        grid = numpy.array([])
-        mask = numpy.array([])
+        cs = np.squeeze([np.cos(angles), np.sin(angles)])
+        cs = np.around(cs, decimals=9)
+        fact = np.ones(len(angles))
+        survived = np.full(len(angles), True)
+        part = np.zeros((6, len(angles)))
+        grid = np.array([])
+        mask = np.array([])
 
-        while numpy.any(survived):
+        while np.any(survived):
             for i, pi in enumerate(planesi):
                 part[pi, survived] += cs[i, survived] * rsteps[i] * fact[survived]
-            istracked = numpy.array(
+            istracked = np.array(
                 [
-                    not numpy.any([numpy.allclose(p, g, rtol=1.0e-9) for g in grid.T])
+                    not np.any([np.allclose(p, g, rtol=1.0e-9) for g in grid.T])
                     for p in part[planesi].T
                 ]
             )
-            survived = numpy.array(
+            survived = np.array(
                 [
-                    numpy.any([numpy.allclose(p, m, rtol=1.0e-9) for m in mask.T])
+                    np.any([np.allclose(p, m, rtol=1.0e-9) for m in mask.T])
                     for p in part[planesi].T
                 ]
             )
             pt = part[:, istracked]
-            grid = numpy.hstack([grid, pt[planesi]]) if grid.size else pt[planesi]
+            grid = np.hstack([grid, pt[planesi]]) if grid.size else pt[planesi]
             ptmp = (pt.T + offset).T
             survived[istracked] = get_survived(ptmp, newring, nturns, use_mp, **kwargs)
-            pm = part[:, numpy.logical_and(istracked, survived)]
-            mask = numpy.hstack([mask, pm[planesi]]) if mask.size else pm[planesi]
+            pm = part[:, np.logical_and(istracked, survived)]
+            mask = np.hstack([mask, pm[planesi]]) if mask.size else pm[planesi]
             for i in range(len(angles)):
                 if not survived[i] and fact[i] > ftol:
                     deltas = cs[:, i] * rsteps[:] * min(1, 2 * fact[i])
-                    if numpy.any(abs(deltas) > abs(part[planesi, i])):
-                        part[planesi, i] = numpy.zeros(len(planesi))
+                    if np.any(abs(deltas) > abs(part[planesi, i])):
+                        part[planesi, i] = np.zeros(len(planesi))
                     else:
                         for j, pi in enumerate(planesi):
                             part[pi, i] -= deltas[j]
@@ -446,7 +446,7 @@ def recursive_boundary_search(
         for i, pi in enumerate(planesi):
             part[pi] -= cs[i] * rsteps[i] * fact
 
-        p = numpy.squeeze(part[planesi])
+        p = np.squeeze(part[planesi])
         return p, mask, grid
 
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
@@ -458,13 +458,13 @@ def recursive_boundary_search(
         bounds=bounds,
         shift_zero=shift_zero,
     )
-    rtol = min(numpy.atleast_1d(config.amplitudes / config.shape))
+    rtol = min(np.atleast_1d(config.amplitudes / config.shape))
     rstep = config.amplitudes
-    if len(numpy.atleast_1d(config.shape)) == 2:
-        angles = numpy.linspace(*config.bounds[1], config.shape[1])
+    if len(np.atleast_1d(config.shape)) == 2:
+        angles = np.linspace(*config.bounds[1], config.shape[1])
     else:
-        angles = numpy.linspace(*config.bounds[1], 2)
-    angles = numpy.atleast_1d(angles)
+        angles = np.linspace(*config.bounds[1], 2)
+    angles = np.atleast_1d(angles)
 
     if verbose:
         print("\nRunning recursive boundary search:")
@@ -514,13 +514,13 @@ def boundary_search(
     if obspt is not None:
         rp = ring.uint32_refpts(obspt)
     else:
-        rp = numpy.atleast_1d(obspt)
+        rp = np.atleast_1d(obspt)
     if offset is not None:
         try:
-            offset = numpy.broadcast_to(offset, (len(rp), 6))
+            offset = np.broadcast_to(offset, (len(rp), 6))
         except ValueError:
             msg = "offset and refpts have incoherent " "shapes: {0}, {1}".format(
-                numpy.shape(offset), numpy.shape(obspt)
+                np.shape(offset), np.shape(obspt)
             )
             raise AtError(msg)
 
