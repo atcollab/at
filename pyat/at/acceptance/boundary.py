@@ -73,14 +73,15 @@ def get_plane_index(planes):
 
 def set_ring_orbit(ring, dp, obspt, orbit):
     """
-    Returns initial closed orbit
+    Returns initial closed orbit and rotated ring
     """
     if obspt is not None:
         assert np.isscalar(obspt), "Scalar value needed for obspt"
+        ring = ring.rotate(obspt)
     if orbit is None:
         orbit0, orbit = ring.find_orbit(dp=dp, refpts=obspt)
         orbit = orbit0 if obspt is None else np.squeeze(orbit)
-    return orbit
+    return orbit, ring
 
 
 def grid_configuration(
@@ -341,7 +342,7 @@ def grid_boundary_search(
         offset = [None for _ in np.arange(len(obspt))]
 
     for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
-        orbit = set_ring_orbit(ring, dp, obs, orbit)
+        orbit, _ = set_ring_orbit(ring, dp, obs, orbit)
         parts, grid = get_parts(config, orbit)
         obs = 0 if obs is None else obs
         dpp = 0.0 if dp is None else dp
