@@ -73,17 +73,14 @@ def get_plane_index(planes):
 
 def set_ring_orbit(ring, dp, obspt, orbit):
     """
-    Returns a ring starting at obspt and initial
-    closed orbit
+    Returns initial closed orbit
     """
     if obspt is not None:
         assert numpy.isscalar(obspt), "Scalar value needed for obspt"
-        ring = ring.rotate(obspt)
-
     if orbit is None:
-        orbit = ring.find_orbit(dp=dp)[0]
-
-    return orbit, ring
+        orbit0, orbit = ring.find_orbit(dp=dp, refpts=obspt)
+        orbit = orbit0 if obspt is None else numpy.squeeze(orbit)
+    return orbit
 
 
 def grid_configuration(
@@ -320,7 +317,7 @@ def grid_boundary_search(
             if obspt[0] is None:
                 print("Element {0}, obspt={1}".format(ring[0].FamName, 0))
             else:
-                print("Element {0}, obspt={1}".format(ring[obspt].FamName, obspt))
+                print("Element {0}, obspt={1}".format(ring[obspt[0]].FamName, obspt))
         else:
             print(
                 "{0} Elements from {1}, obspt={2} to {3}, obspt={4}".format(
@@ -340,13 +337,11 @@ def grid_boundary_search(
     t0 = time.time()
     allparts = []
     grids = []
-
     if offset is None:
-        _, offsets = ring.find_orbit(dp=dp, refpts=obspt)
-    else:
-        offsets = offset
+        offset = [None for _ in numpy.arange(len(obspt))]
 
-    for i, obs, orbit in zip(numpy.arange(len(obspt)), obspt, offsets):
+    for i, obs, orbit in zip(numpy.arange(len(obspt)), obspt, offset):
+        orbit = set_ring_orbit(ring, dp, obs, orbit)
         parts, grid = get_parts(config, orbit)
         obs = 0 if obs is None else obs
         dpp = 0.0 if dp is None else dp
