@@ -125,16 +125,16 @@ def get_parts(config, offset):
     the offset from which the array can be reconstructed
     """
 
-    def get_part_grid_uniform(bnd, np, amp):
-        x = [np.linspace(*b, n) * a for a, b, n in zip(amp, bnd, np)]
+    def get_part_grid_uniform(bnd, npt, amp):
+        x = [np.linspace(*b, n) * a for a, b, n in zip(amp, bnd, npt)]
         try:
             g1, g2 = np.meshgrid(*x)
         except ValueError:
             g1, g2 = np.meshgrid(x, 0.0)
         return np.array([g1.flatten(), g2.flatten()])
 
-    def get_part_grid_radial(bnd, np, amp):
-        x = [np.linspace(*b, n) for b, n in zip(bnd, np)]
+    def get_part_grid_radial(bnd, npt, amp):
+        x = [np.linspace(*b, n) for b, n in zip(bnd, npt)]
         g1, g2 = np.meshgrid(*x)
         g1r = amp[0] * np.cos(g2) * g1
         g2r = amp[1] * np.sin(g2) * g1
@@ -142,15 +142,15 @@ def get_parts(config, offset):
 
     pind = config.planesi
     amp = config.amplitudes
-    np = config.shape
+    npt = config.shape
     bnd = config.bounds
     gm = config.mode
 
     if gm is GridMode.CARTESIAN:
-        g = get_part_grid_uniform(bnd, np, amp)
+        g = get_part_grid_uniform(bnd, npt, amp)
     elif gm is GridMode.RADIAL:
-        g = get_part_grid_radial(bnd, np, amp)
-    parts = np.zeros((6, np.prod(np)))
+        g = get_part_grid_radial(bnd, npt, amp)
+    parts = np.zeros((6, np.prod(npt)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
     offset = np.array(offset) + config.shift_zero
     parts = (parts.T + offset).T
