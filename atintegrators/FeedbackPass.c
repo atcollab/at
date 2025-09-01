@@ -19,11 +19,16 @@ struct elem
   double closed_orbit;
 };
 
-void FeedbackPass(double *r_in, double gx, double gy, double gz, double *closed_orbit, int num_particles)
+void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
 {	
     double *r6;
     int c;
-    double mx, my, mz, npart;
+    double mx = 0.0;
+    double my = 0.0;
+    double mz = 0.0;
+    double npart;
+    double *closed_orbit = Elem->closed_orbit;
+    
     mx=0.0;
     my=0.0;
     mz=0.0;
@@ -72,7 +77,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         GX=atGetDouble(ElemData,"GX"); check_error();
         GY=atGetDouble(ElemData,"GY"); check_error();
         GZ=atGetDouble(ElemData,"GZ"); check_error();
-        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit");
+        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit"); check_error();
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->GX=GX;
@@ -80,7 +85,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->GZ=GZ;
         Elem->closed_orbit = closed_orbit;
     }
-    FeedbackPass(r_in,Elem->GX,Elem->GY,Elem->GZ,Elem->closed_orbit,num_particles);
+    FeedbackPass(r_in,num_particles,Elem);
     return Elem;
 }
 
@@ -105,7 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         GX=atGetDouble(ElemData,"GX"); check_error();
         GY=atGetDouble(ElemData,"GY"); check_error();
         GZ=atGetDouble(ElemData,"GZ"); check_error();
-        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit");
+        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit"); check_error();
                 
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -119,7 +124,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        FeedbackPass(r_in,0.0,0.0,0.0,closed_orbit,Elem);
+        FeedbackPass(r_in,num_particles,Elem);
     }
     else if (nrhs == 0) {
         /* list of required fields */
