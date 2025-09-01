@@ -26,13 +26,11 @@ void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
     double mx = 0.0;
     double my = 0.0;
     double mz = 0.0;
-    double npart;
+    double npart = 0.0;
     double *closed_orbit = Elem->closed_orbit;
-    
-    mx=0.0;
-    my=0.0;
-    mz=0.0;
-    npart = 0.0;
+    double gx = Elem->GX;
+    double gy = Elem->GY;
+    double gz = Elem->GZ;
     
     for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
         r6 = r_in+c*6;
