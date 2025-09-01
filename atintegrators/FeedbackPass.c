@@ -16,7 +16,7 @@ struct elem
   double GX;
   double GY;
   double GZ;
-  double closed_orbit;
+  double *closed_orbit;
 };
 
 void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
