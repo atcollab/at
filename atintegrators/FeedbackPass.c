@@ -108,7 +108,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         GX=atGetDouble(ElemData,"GX"); check_error();
         GY=atGetDouble(ElemData,"GY"); check_error();
         GZ=atGetDouble(ElemData,"GZ"); check_error();
-        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit"); check_error();
+        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit");check_error();
                 
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
