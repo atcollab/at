@@ -22,16 +22,11 @@ struct elem
 void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
 {	
     int c;
-    double *mx = atMalloc(sizeof(double));
-    double *my = atMalloc(sizeof(double));
-    double *mz = atMalloc(sizeof(double));
-    long *npart = atMalloc(sizeof(long));
-    
-    *mx = 0.0; 
-    *my = 0.0;
-    *mz = 0.0; 
-    *npart = 0;
-    
+    double mx = 0.0;
+    double my = 0.0;
+    double mz = 0.0;
+    long npart = 0.0;
+            
     double *closed_orbit; 
     closed_orbit = Elem->closed_orbit;
     
@@ -43,40 +38,35 @@ void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
         double *r6 = r_in+c*6;
 
         if (!atIsNaN(r6[0])) {
-            *npart += 1; 
-            *mx += r6[0];
-            *my += r6[2];
-            *mz += r6[5]; 
+            npart += 1; 
+            mx += r6[0];
+            my += r6[2];
+            mz += r6[5]; 
         }
     }
 
     #ifdef MPI
-    MPI_Allreduce(MPI_IN_PLACE, npart, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE, mx, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
-    MPI_Allreduce(MPI_IN_PLACE, my, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
-    MPI_Allreduce(MPI_IN_PLACE, mz, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
+    MPI_Allreduce(MPI_IN_PLACE, &npart, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &mx, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
+    MPI_Allreduce(MPI_IN_PLACE, &my, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
+    MPI_Allreduce(MPI_IN_PLACE, &mz, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
     
     
-    if (*npart>0.0){
-        *mx /= *npart;
-        *my /= *npart;
-        *mz /= *npart;    
+    if (npart>0.0){
+        mx /= npart;
+        my /= npart;
+        mz /= npart;    
         for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
             double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0])) {
-                r6[0] -= (*mx-closed_orbit[0])*gx;
-                r6[2] -= (*my-closed_orbit[2])*gy;
-                r6[5] -= (*mz-closed_orbit[5])*gz;    
+                r6[0] -= (mx-closed_orbit[0])*gx;
+                r6[2] -= (my-closed_orbit[2])*gy;
+                r6[5] -= (mz-closed_orbit[5])*gz;    
             }
         }
     }
-    
-    atFree(mx);
-    atFree(my);
-    atFree(mz);
-    atFree(npart);
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -85,9 +75,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double GX, GY, GZ, *closed_orbit;
-        GX=atGetDouble(ElemData,"GX"); check_error();
-        GY=atGetDouble(ElemData,"GY"); check_error();
-        GZ=atGetDouble(ElemData,"GZ"); check_error();
+        GX=atGetOptionalDouble(ElemData,"GX",0.0); check_error();
+        GY=atGetOptionalDouble(ElemData,"GY",0.0); check_error();
+        GZ=atGetOptionalDouble(ElemData,"GZ",0.0); check_error();
         closed_orbit = atGetDoubleArray(ElemData,"closed_orbit"); check_error();
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -118,8 +108,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         double GX,GY,GZ,*closed_orbit;
 
-        GX=atGetDouble(ElemData,"GX"); check_error();
-        GY=atGetDouble(ElemData,"GY"); check_error();
+        GX=atGetOptionalDouble(ElemData,"GX"); check_error();
+        GY=atGetOptionalDouble(ElemData,"GY"); check_error();
         GZ=atGetDouble(ElemData,"GZ"); check_error();
         closed_orbit = atGetDoubleArray(ElemData,"closed_orbit");check_error();
                 
@@ -139,11 +129,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(4,1);
-        mxSetCell(plhs[0],0,mxCreateString("GX"));
-        mxSetCell(plhs[0],1,mxCreateString("GY"));
-        mxSetCell(plhs[0],2,mxCreateString("GZ"));
-        mxSetCell(plhs[0],3,mxCreateString("closed_orbit"));
+        plhs[0] = mxCreateCellMatrix(1,1);
+        mxSetCell(plhs[0],0,mxCreateString("closed_orbit"));
+        if(nlhs>1) /* optional fields */
+        {
+            plhs[1] = mxCreateCellMatrix(3,1);
+            mxSetCell(plhs[1],0,mxCreateString("GX"));
+            mxSetCell(plhs[1],1,mxCreateString("GY"));
+            mxSetCell(plhs[1],2,mxCreateString("GZ"));
+        }
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");
