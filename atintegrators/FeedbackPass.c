@@ -108,9 +108,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         double GX,GY,GZ,*closed_orbit;
 
-        GX=atGetOptionalDouble(ElemData,"GX"); check_error();
-        GY=atGetOptionalDouble(ElemData,"GY"); check_error();
-        GZ=atGetDouble(ElemData,"GZ"); check_error();
+        GX=atGetOptionalDouble(ElemData,"GX",0.0); check_error();
+        GY=atGetOptionalDouble(ElemData,"GY",0.0); check_error();
+        GZ=atGetOptionalDouble(ElemData,"GZ",0.0); check_error();
         closed_orbit = atGetDoubleArray(ElemData,"closed_orbit");check_error();
                 
         
