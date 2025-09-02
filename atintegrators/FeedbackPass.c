@@ -21,27 +21,36 @@ struct elem
 
 void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
 {	
-    double *r6;
     int c;
-    double mx = 0.0;
-    double my = 0.0;
-    double mz = 0.0;
-    double npart = 0.0;
-    double *closed_orbit = Elem->closed_orbit;
+    double *mx = atMalloc(sizeof(double));
+    double *my = atMalloc(sizeof(double));
+    double *mz = atMalloc(sizeof(double));
+    long *npart = atMalloc(sizeof(long));
+    
+    *mx = 0.0; 
+    *my = 0.0;
+    *mz = 0.0; 
+    *npart = 0;
+    
+    double *closed_orbit; 
+    closed_orbit = Elem->closed_orbit;
+    
     double gx = Elem->GX;
     double gy = Elem->GY;
     double gz = Elem->GZ;
     
     for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
-        r6 = r_in+c*6;
+        double *r6 = r_in+c*6;
+        printf("early: %.8f \n", r6[5]);
+
         if (!atIsNaN(r6[0])) {
-            mx += r6[0];
-            my += r6[2];
-            mz += r6[5]; 
-            npart += 1; 
+            *npart += 1; 
+            *mx += r6[0];
+            *my += r6[2];
+            *mz += r6[5]; 
         }
     }
-    
+
     #ifdef MPI
     MPI_Allreduce(MPI_IN_PLACE, npart, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, mx, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD); 
@@ -51,19 +60,27 @@ void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
     #endif
     
     
-    if (npart>0.0){
-        mx /= npart;
-        my /= npart;
-        mz /= npart;    
+    if (*npart>0.0){
+        *mx /= *npart;
+        *my /= *npart;
+        *mz /= *npart;    
         for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
-            r6 = r_in+c*6;
+            double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0])) {
-                r6[0] -= (mx-closed_orbit[0])*gx;
-                r6[2] -= (my-closed_orbit[2])*gy;
-                r6[5] -= (mz-closed_orbit[5])*gz;    
+                r6[0] -= (*mx-closed_orbit[0])*gx;
+                r6[2] -= (*my-closed_orbit[2])*gy;
+                r6[5] -= (*mz-closed_orbit[5])*gz;    
             }
         }
     }
+    printf("%.8f \n", *mz);
+    printf("%.4f \n", closed_orbit[5]);
+    printf("%d \n", *npart);
+    printf("%.2f \n", gz);
+    atFree(mx);
+    atFree(my);
+    atFree(mz);
+    atFree(npart);
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -75,7 +92,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         GX=atGetDouble(ElemData,"GX"); check_error();
         GY=atGetDouble(ElemData,"GY"); check_error();
         GZ=atGetDouble(ElemData,"GZ"); check_error();
-        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit"); check_error();
+        closed_orbit = atGetDoubleArray(ElemData,"closed_orbit"); check_error();
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->GX=GX;
@@ -108,7 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         GX=atGetDouble(ElemData,"GX"); check_error();
         GY=atGetDouble(ElemData,"GY"); check_error();
         GZ=atGetDouble(ElemData,"GZ"); check_error();
-        closed_orbit = atGetDoubleArray(ElemData,"_closed_orbit");check_error();
+        closed_orbit = atGetDoubleArray(ElemData,"closed_orbit");check_error();
                 
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
