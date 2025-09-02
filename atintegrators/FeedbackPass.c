@@ -41,7 +41,6 @@ void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
     
     for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
         double *r6 = r_in+c*6;
-        printf("early: %.8f \n", r6[5]);
 
         if (!atIsNaN(r6[0])) {
             *npart += 1; 
@@ -73,10 +72,14 @@ void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
             }
         }
     }
+    
+    
+    /*
     printf("%.8f \n", *mz);
     printf("%.4f \n", closed_orbit[5]);
     printf("%d \n", *npart);
     printf("%.2f \n", gz);
+    */
     atFree(mx);
     atFree(my);
     atFree(mz);
