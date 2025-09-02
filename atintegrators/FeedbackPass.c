@@ -73,13 +73,6 @@ void FeedbackPass(double *r_in, int num_particles, struct elem *Elem)
         }
     }
     
-    
-    /*
-    printf("%.8f \n", *mz);
-    printf("%.4f \n", closed_orbit[5]);
-    printf("%d \n", *npart);
-    printf("%.2f \n", gz);
-    */
     atFree(mx);
     atFree(my);
     atFree(mz);
