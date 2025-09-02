@@ -18,6 +18,7 @@ __all__ = [
     "SimpleRadiation",
     "QuantumDiffusion",
     "EnergyLoss",
+    "Feedback"
 ]
 
 import warnings
@@ -625,6 +626,36 @@ class EnergyLoss(_DictLongtMotion, Element):
         """
         kwargs.setdefault("PassMethod", self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
+
+class Feedback(Element):
+    """Transverse and Longitudinal Feedback element"""
+
+    def __init__(self, family_name: str,
+                       GX: float = 0.0, 
+                       GY: float = 0.0,
+                       GZ: float = 0.0, 
+                       closed_orbit: float = np.zeros(6), 
+                       **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            GX:             Feedback Gain in Horizontal
+            GY:             Feedback Gain in Vertical
+            GZ:             Feedback Gain in Longitudinal
+            closed_orbit:   6D closed orbit to feedback around
+                        
+        Default PassMethod: ``FeedbackPass``
+        
+        Note that this element does not SET the closed orbit. That 
+        must be handled in the linear maps for x and y, or the timelag
+        for the longitudinal plane. But an accurate closed orbit must be
+        provided in order to have a well behaving feedback. 
+        """
+        kwargs.setdefault("PassMethod", "FeedbackPass")
+        super().__init__(family_name, GX=GX, GY=GY, GZ=GZ, closed_orbit=closed_orbit, **kwargs)
+
+
+
 
 
 Radiative.register(EnergyLoss)
