@@ -23,7 +23,7 @@ __all__ = [
 
 import warnings
 from collections.abc import Iterable
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 
@@ -631,28 +631,31 @@ class Feedback(Element):
     """Transverse and Longitudinal Feedback element"""
 
     def __init__(self, family_name: str,
-                       GX: float = 0.0, 
-                       GY: float = 0.0,
-                       GZ: float = 0.0, 
-                       closed_orbit: float = np.zeros(6), 
-                       **kwargs):
+                       Gx: float = 0.0, 
+                       Gy: float = 0.0,
+                       Gz: float = 0.0, 
+                       closed_orbit: Sequence[float] = np.zeros(6)
+                       ):
         """
         Args:
             family_name:    Name of the element
-            GX:             Feedback Gain in Horizontal
-            GY:             Feedback Gain in Vertical
-            GZ:             Feedback Gain in Longitudinal
-            closed_orbit:   6D closed orbit to feedback around
+            Gx:             Feedback Gain in Horizontal (no units:
+                            damping_time [turns] = 2 / Gx )
+            Gy:             Feedback Gain in Vertical (no units:
+                            damping_time [turns] = 2 / Gy )
+            Gz:             Feedback Gain in Longitudinal (no units:
+                            damping_time [turns] = 2 / Gz )
+            closed_orbit:   6D closed orbit to feedback onto
                         
         Default PassMethod: ``FeedbackPass``
         
         Note that this element does not SET the closed orbit. That 
-        must be handled in the linear maps for x and y, or the timelag
-        for the longitudinal plane. But an accurate closed orbit must be
+        is handled by the lattice (either full ring or linear maps for x and y,
+        or the ct for the longitudinal plane). Aan accurate closed orbit must be
         provided in order to have a well behaving feedback. 
         """
         kwargs.setdefault("PassMethod", "FeedbackPass")
-        super().__init__(family_name, GX=GX, GY=GY, GZ=GZ, closed_orbit=closed_orbit, **kwargs)
+        super().__init__(family_name, Gx=Gx, Gy=Gy, Gz=Gz, closed_orbit=closed_orbit)
 
 
 
