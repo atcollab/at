@@ -75,9 +75,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double GX, GY, GZ, *closed_orbit;
-        GX=atGetOptionalDouble(ElemData,"GX",0.0); check_error();
-        GY=atGetOptionalDouble(ElemData,"GY",0.0); check_error();
-        GZ=atGetOptionalDouble(ElemData,"GZ",0.0); check_error();
+        GX=atGetOptionalDouble(ElemData,"Gx",0.0); check_error();
+        GY=atGetOptionalDouble(ElemData,"Gy",0.0); check_error();
+        GZ=atGetOptionalDouble(ElemData,"Gz",0.0); check_error();
         closed_orbit = atGetDoubleArray(ElemData,"closed_orbit"); check_error();
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -108,9 +108,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         double GX,GY,GZ,*closed_orbit;
 
-        GX=atGetOptionalDouble(ElemData,"GX",0.0); check_error();
-        GY=atGetOptionalDouble(ElemData,"GY",0.0); check_error();
-        GZ=atGetOptionalDouble(ElemData,"GZ",0.0); check_error();
+        GX=atGetOptionalDouble(ElemData,"Gx",0.0); check_error();
+        GY=atGetOptionalDouble(ElemData,"Gy",0.0); check_error();
+        GZ=atGetOptionalDouble(ElemData,"Gz",0.0); check_error();
         closed_orbit = atGetDoubleArray(ElemData,"closed_orbit");check_error();
                 
         
@@ -134,9 +134,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if(nlhs>1) /* optional fields */
         {
             plhs[1] = mxCreateCellMatrix(3,1);
-            mxSetCell(plhs[1],0,mxCreateString("GX"));
-            mxSetCell(plhs[1],1,mxCreateString("GY"));
-            mxSetCell(plhs[1],2,mxCreateString("GZ"));
+            mxSetCell(plhs[1],0,mxCreateString("Gx"));
+            mxSetCell(plhs[1],1,mxCreateString("Gy"));
+            mxSetCell(plhs[1],2,mxCreateString("Gz"));
         }
     }
     else {
