@@ -638,6 +638,7 @@ class Feedback(Element):
         Gy: float = 0.0,
         Gz: float = 0.0,
         closed_orbit: Sequence[float] = np.zeros(6),
+        **kwargs
     ):
         """
         Args:
@@ -658,7 +659,7 @@ class Feedback(Element):
         provided in order to have a well behaving feedback.
         """
         kwargs.setdefault("PassMethod", "FeedbackPass")
-        super().__init__(family_name, Gx=Gx, Gy=Gy, Gz=Gz, closed_orbit=closed_orbit)
+        super().__init__(family_name, Gx=Gx, Gy=Gy, Gz=Gz, closed_orbit=closed_orbit, **kwargs)
 
 
 Radiative.register(EnergyLoss)
