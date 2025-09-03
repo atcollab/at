@@ -18,7 +18,7 @@ __all__ = [
     "SimpleRadiation",
     "QuantumDiffusion",
     "EnergyLoss",
-    "Feedback"
+    "Feedback",
 ]
 
 import warnings
@@ -627,15 +627,18 @@ class EnergyLoss(_DictLongtMotion, Element):
         kwargs.setdefault("PassMethod", self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
 
+
 class Feedback(Element):
     """Transverse and Longitudinal Feedback element"""
 
-    def __init__(self, family_name: str,
-                       Gx: float = 0.0, 
-                       Gy: float = 0.0,
-                       Gz: float = 0.0, 
-                       closed_orbit: Sequence[float] = np.zeros(6)
-                       ):
+    def __init__(
+        self,
+        family_name: str,
+        Gx: float = 0.0,
+        Gy: float = 0.0,
+        Gz: float = 0.0,
+        closed_orbit: Sequence[float] = np.zeros(6),
+    ):
         """
         Args:
             family_name:    Name of the element
@@ -646,19 +649,16 @@ class Feedback(Element):
             Gz:             Feedback Gain in Longitudinal (no units:
                             damping_time [turns] = 2 / Gz )
             closed_orbit:   6D closed orbit to feedback onto
-                        
+
         Default PassMethod: ``FeedbackPass``
-        
-        Note that this element does not SET the closed orbit. That 
+
+        Note that this element does not SET the closed orbit. That
         is handled by the lattice (either full ring or linear maps for x and y,
         or the ct for the longitudinal plane). Aan accurate closed orbit must be
-        provided in order to have a well behaving feedback. 
+        provided in order to have a well behaving feedback.
         """
         kwargs.setdefault("PassMethod", "FeedbackPass")
         super().__init__(family_name, Gx=Gx, Gy=Gy, Gz=Gz, closed_orbit=closed_orbit)
-
-
-
 
 
 Radiative.register(EnergyLoss)
