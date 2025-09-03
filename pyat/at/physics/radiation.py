@@ -431,7 +431,7 @@ def get_radiation_integrals(
 
 
 @check_radiation(True)
-def quantdiffmat(ring: Lattice, orbit: Orbit = None, rounding = None) -> np.ndarray:
+def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
     """Computes the diffusion matrix of the whole ring
 
     Parameters:
@@ -443,9 +443,8 @@ def quantdiffmat(ring: Lattice, orbit: Orbit = None, rounding = None) -> np.ndar
         diffmat (ndarray):  Diffusion matrix (6,6)
     """
     bbcum, _ = _dmatr(ring, orbit=orbit)
-    diffmat = [(bbc + bbc.T) / 2 for bbc in bbcum]
-
-    return diffmat[-1] if rounding is None else np.round(diffmat[-1], rounding)
+    diffmat = (bbcum[-1] + bbcum[-1].T) / 2
+    return diffmat
 
 
 @check_radiation(True)
