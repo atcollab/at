@@ -67,7 +67,8 @@ class RefptsVariable(VariableBase):
 
     def _setfun(self, value: float, ring: Lattice = None):
         if ring is None:
-            raise ValueError("Can't set values if ring is None")
+            raise ValueError("Can't set values if ring is None.\n"
+                             "Try to use an ElementVariable if possible")
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
