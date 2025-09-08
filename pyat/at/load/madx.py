@@ -147,7 +147,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_class
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, tilt_elem, StrParameter, AtWarning
+from ..lattice import Lattice, Particle, StrParameter, AtWarning
 from ..lattice import elements as elt
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
@@ -173,6 +173,17 @@ def sinc(x: float) -> float:
 
 def mad_element(func):
     """Decorator for AT elements"""
+
+    def tilt_elem(elem: elt.Element, rots: float) -> None:
+        cs = np.cos(rots)
+        sn = np.sin(rots)
+        rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
+        rm[0, 2] = sn
+        rm[1, 3] = sn
+        rm[2, 0] = -sn
+        rm[3, 1] = -sn
+        elem.R1 = rm
+        elem.R2 = rm.T
 
     @functools.wraps(func)
     def wrapper(self, *args, tilt=0.0, ktap=0.0, **kwargs):
