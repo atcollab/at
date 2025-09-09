@@ -112,6 +112,9 @@ def _lmat(dmat):
     """
     lmat = np.zeros((6, 6))
     try:
+        v, w = np.linalg.eig(dmat)
+        v[v<0] = 0.0
+        dmat = w@np.diag(v)@np.linalg.inv(w)
         lmat = np.linalg.cholesky(dmat)
     except np.linalg.LinAlgError:
         nz = np.where(dmat != 0)
