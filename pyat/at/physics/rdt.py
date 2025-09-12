@@ -410,7 +410,7 @@ def _computedrivingterms(
                 + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * cpym2[i] - cpxm[i] * pxm2 * cpym2[i])
                 + 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] - pxm[i] * cpym2)
                 + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * cpym2 - pxm2[i] * cpxm * cpym2)
-                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym[i] - pxm * cpym2)
+                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym2[i] - pxm * cpym2)
                 for i in range(nelem)]
             )
             rdts2["h10111"] += (1.0 / 16) * np.sum([
