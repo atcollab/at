@@ -228,7 +228,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       /* list of optional fields */
       int i1 = 0;
       plhs[1] = mxCreateCellMatrix(11, 1);
-      mxSetCell(plhs[1], i0++, mxCreateString("Energy"));
+      mxSetCell(plhs[1], i1++, mxCreateString("Energy"));
       mxSetCell(plhs[1], i1++, mxCreateString("FieldScaling"));
       mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
       mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
