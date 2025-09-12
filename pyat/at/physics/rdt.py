@@ -403,7 +403,7 @@ def _computedrivingterms(
             )
             rdts2["h30001"] += (1.0 / 32) * np.sum([
                 - 1 * b3b2lm[i] * bx3o2bx[i] * (pxm3[i] - pxm[i] * pxm2)
-                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm3[i] - pxm2[i] * pxm)
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm3 - pxm2[i] * pxm)
                 for i in range(nelem)]
             )
             rdts2["h10021"] += (1.0 / 32) * np.sum([
