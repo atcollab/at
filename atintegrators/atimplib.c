@@ -415,13 +415,13 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
         ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
-        selfkick = normfact*wi*kloss*energy;
+        selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 */
         if(i==sliceperturn*(nturns-1)){
             /*At the end of the turn, the vbeamc is
             reverted to -final value, which stores the
             dt information from previous turn. This extra
             circumference is needed to take this into account. */
-            dt = (circumference+turnhistoryZ[i])/bc;
+            dt = (turnhistoryZ[i])/bc;
         }else{
             /* This is dt between each slice*/
             dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
@@ -439,7 +439,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     
     /*This takes the vbeam backwards in time to effectively store the
     final slice position */
-    dt = -turnhistoryZ[sliceperturn*nturns-1]/bc;    
+    dt = (circumference - turnhistoryZ[sliceperturn*nturns-1])/bc;    
     vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
     vbeam[0] = cabs(vbeamc);
@@ -459,17 +459,26 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 };
 
 
-static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain,double detune_angle){
+static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
     double vbeamr = vbeam[0]*cos(vbeam[1]);
     double vbeami = vbeam[0]*sin(vbeam[1]);
     double vcavr = vcav[0]*cos(vcav[1]);
     double vcavi = vcav[0]*sin(vcav[1]);   
     double vgenr = vcavr - vbeamr;
     double vgeni = vcavi - vbeami; 
-    double vga = sqrt(vgenr*vgenr+vgeni*vgeni);   
-    double vgp = atan2(vgeni,vgenr)-vcav[1]+detune_angle;
-    vgen[0] += (vga-vgen[0])*voltgain;
-    vgen[1] += (vgp-vgen[1])*phasegain;
+    double vga = sqrt(vgenr*vgenr+vgeni*vgeni); 
+    double new_gen_phase = atan2(vgeni,vgenr);  
+    double vgp = new_gen_phase-vcav[1]+detune_angle; /*dttmp in mbtrack, basically it is newpsi */
+    /*printf("%f \t %f \n", vga, vgen[0]);
+    printf("%f \t %f \n", new_gen_phase - TWOPI/4, vgen[1]);
+    printf("%f \t %f \n", vgp, vgen[2]);
+    printf("\n");*/
+    vgen[0] *= pow(vga/vgen[0],voltgain);
+    vgen[2] += (vgp-vgen[2])*phasegain; /*psi feedback */
+    /*vgen[1] = new_gen_phase - TWOPI/4;*/
+    double old_phase = vgen[1];
+    double gen_phase = new_gen_phase - TWOPI/4;
+    vgen[1] += (gen_phase - old_phase)*phasegain;
 }
 
 

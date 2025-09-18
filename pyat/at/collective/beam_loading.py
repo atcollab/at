@@ -174,7 +174,7 @@ class BeamLoadingElement(RFCavity, Collective):
         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
         _vbeam=lambda v: _array(v, shape=(2,)),
         _vcav=lambda v: _array(v, shape=(2,)),
-        _vgen=lambda v: _array(v, shape=(2,)),
+        _vgen=lambda v: _array(v, shape=(3,)),
     )
 
     def __init__(
@@ -276,7 +276,9 @@ class BeamLoadingElement(RFCavity, Collective):
                 "integer harmonic."
             )
             raise AtError(error_string)
-
+            
+        self.circumference = ring.circumference
+        self.bunch_spos = ring.bunch_spos
         energy = ring.energy
         harmonic_number = self.system_harmonic * ring.harmonic_number
         self.feedback_angle_offset = kwargs.pop("feedback_angle_offset", 0)
@@ -336,7 +338,7 @@ class BeamLoadingElement(RFCavity, Collective):
                       (self._ts + self.TimeLag) / clight)
         self._vbeam_phasor = numpy.zeros(2)
         self._vbeam = numpy.zeros(2)
-        self._vgen = numpy.zeros(2)
+        self._vgen = numpy.zeros(3)
 
         cavity_voltage = self.Voltage
         if self._cavitymode == 3:
@@ -358,7 +360,7 @@ class BeamLoadingElement(RFCavity, Collective):
         tl = self._nturns * self._nslice * self._nbunch
         self._turnhistory = numpy.zeros((tl, 4), order="F")
         if self._buffersize > 0:
-            self._vgen_buffer = numpy.zeros((2, self._buffersize), order="F")
+            self._vgen_buffer = numpy.zeros((3, self._buffersize), order="F")
             self._vbeam_buffer = numpy.zeros((2, self._buffersize), order="F")
             self._vbunch_buffer = numpy.zeros(
                 (self._nbunch, 2, self._buffersize), order="F"
@@ -366,7 +368,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def _init_bl_params(self, current):
         if (self._cavitymode == 1) and (current > 0.0):
-            theta = -self._vcav[1] + numpy.pi / 2
+            theta = -self._vcav[1] + numpy.pi / 2 #just self._phis
             vb = 2 * current * self.Rshunt
             a = self.Voltage * numpy.cos(theta - self._phis)
             b = (self.Voltage * numpy.sin(theta - self._phis) -
@@ -396,10 +398,23 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vbeam = numpy.array(
             [2 * current * self.Rshunt * numpy.cos(psi), numpy.pi + psi]
         )
+
+        self._vgen = numpy.array([vgen, psi - self._phis, psi])
+
+        omr = self.ResFrequency * 2 * numpy.pi
+        vbp_amp = 2 * current * self.Rshunt * numpy.cos(psi)
+        vbp_phase = numpy.pi + psi
+        vbp_complex = vbp_amp*numpy.cos(vbp_phase) + 1j*vbp_amp*numpy.sin(vbp_phase)
+        
+        dt = (self.circumference - self.bunch_spos[0])/clight    
+        vbp_complex *= numpy.exp((1j*omr-omr/(2*self.Qfactor))*dt)
+    
+    
         self._vbeam_phasor = numpy.array(
-            [2 * current * self.Rshunt * numpy.cos(psi), numpy.pi + psi]
+            [numpy.abs(vbp_complex), numpy.angle(vbp_complex)]
         )
-        self._vgen = numpy.array([vgen, psi])
+                
+
 
     @property
     def Buffersize(self):
@@ -454,12 +469,13 @@ class BeamLoadingElement(RFCavity, Collective):
     def ResFrequency(self):
         """Resonator frequency"""
         return (self.Frequency /
-                (1 - numpy.tan(self.Vgen[1]) / (2 * self.Qfactor)))
+                (1 - numpy.tan(self.Vgen[2]) / (2 * self.Qfactor)))
 
     @property
     def Vbeam(self):
         """Beam phasor (amplitude, phase)"""
         return self._vbeam
+
 
     @property
     def Vbunch(self):
@@ -479,6 +495,8 @@ class BeamLoadingElement(RFCavity, Collective):
     @Vgen.setter
     def Vgen(self, value):
         self._vgen = value
+        
+
 
     @staticmethod
     def build_from_cav(

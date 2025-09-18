@@ -97,17 +97,20 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     int c;
     int *pslice;
     double *kz;
-    double freqres = rffreq/(1-tan(vgenk[1])/(2*qfactor));
     double vgen = vgenk[0];
-    double psi = vgenk[1];
+    double gen_phase = vgenk[1];
+    double psi = vgenk[2];
+
+    double freqres = rffreq/(1-tan(psi)/(2*qfactor));
         
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
 
+
     /*Track RF cavity is always done. */
-    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi+feedback_angle_offset,nturn,circumference/C0,num_particles);
-    
+    /*trackRFCavity_beamloading(r_in,le,vgen/energy,rffreq,gen_phase,num_particles);*/
+    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0.0, -gen_phase, nturn, circumference/C0, num_particles);
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
         void *buffer = atMalloc(sz);
@@ -121,6 +124,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         rotate_table_history(nturnsw,nslice*nbunch,turnhistory,circumference);
         slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
                     turnhistory,pslice,z_cuts);
+
         if(blmode==2){
             compute_kicks_phasor(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                                  qfactor,rshunt,vbeam_phasor,circumference,energy,beta,
@@ -129,6 +133,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
             compute_kicks_longres(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                                   qfactor,rshunt,beta,vbeamk,energy,vbunch);
         }
+
         /*apply kicks and RF*/
         /* OpenMP not efficient. Too much shared data ?
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -145,17 +150,17 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         // First write the values to the buffer
         if(buffersize>0){
             write_buffer(vbeamk, vbeam_buffer, 2, buffersize);
-            write_buffer(vgenk, vgen_buffer, 2, buffersize);
+            write_buffer(vgenk, vgen_buffer, 3, buffersize);
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
 
         update_vbeam_set(fbmode, vbeam_set, vbeamk, vbeam_buffer,
                              buffersize, windowlength);
-        
-        
+
+
         if(cavitymode==1){
-            update_vgen(vbeam_set,vcavk,vgenk,phasegain,voltgain,feedback_angle_offset); 
+            update_vgen(vbeam_set,vcavk,vgenk,voltgain,phasegain,feedback_angle_offset); 
 
         }else if(cavitymode==3){     
             update_passive_frequency(vbeam_set, vcavk, vgenk, phasegain);
