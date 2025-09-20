@@ -46,7 +46,8 @@ from .utils import get_s_pos, get_elements, get_value_refpts, Refpts, set_value_
 
 # noinspection PyProtectedMember
 from .utils import get_uint32_index, get_bool_index, _refcount, Uint32Refpts
-from .utils import refpts_iterator, checktype, get_geometry
+from .utils import refpts_iterator, checktype
+from .geometry import get_geometry
 from .transformation import set_rotation, set_tilt, set_shift
 from ..constants import clight, e_mass
 
