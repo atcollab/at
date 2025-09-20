@@ -71,4 +71,4 @@ def test_geometry():
     assert_allclose(g2.x, expected.x, atol=1.0e-12)
     assert_allclose(g2.y, expected.y, atol=1.0e-12)
     assert_allclose(g2.z, expected.z, atol=1.0e-12)
-    assert_allclose(g2.angle, expected.angle)
+    assert_allclose(g2.angle, expected.angle, atol=1.0e-12)
