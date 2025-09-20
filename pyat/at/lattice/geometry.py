@@ -149,9 +149,11 @@ def get_geometry3(
         if hasattr(elem, "BendingAngle"):
             ang = 0.5 * elem.BendingAngle
             rm = hkick(-ang)
-            conv @= rm
-            xyz += conv @ np.array([length / ang * sin(ang), 0.0, 0.0])
-            conv @= rm
+            # conv @= rm
+            ctemp = conv @ rm
+            xyz += ctemp @ np.array([length / ang * sin(ang), 0.0, 0.0])
+            # conv @= rm
+            np.matmul(ctemp, rm, out=conv)
         else:
             xyz += conv @ np.array([length, 0.0, 0.0])
         if hasattr(elem, "R2"):
