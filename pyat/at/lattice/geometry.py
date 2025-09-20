@@ -145,7 +145,8 @@ def get_geometry3(
     def increment(xyz, conv, elem):
         length = elem.Length
         if hasattr(elem, "R1"):
-            conv @= rots(elem.R1)
+            # conv @= rots(elem.R1)
+            np.matmul(conv.copy(),rots(elem.R1), out=conv)
         if hasattr(elem, "BendingAngle"):
             ang = 0.5 * elem.BendingAngle
             rm = hkick(-ang)
@@ -157,7 +158,8 @@ def get_geometry3(
         else:
             xyz += conv @ np.array([length, 0.0, 0.0])
         if hasattr(elem, "R2"):
-            conv @= rots(elem.R2)
+            # conv @= rots(elem.R2)
+            np.matmul(conv.copy(), rots(elem.R2), out=conv)
         angle = atan2(conv[1, 0], conv[0, 0])
         return tuple(xyz) + (angle,)
 
