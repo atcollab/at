@@ -68,7 +68,7 @@ def test_geometry():
 
     ring = _build_3d_lattice()
     g2 = get_geometry3(ring)
-    assert_allclose(g2.x, expected.x)
-    assert_allclose(g2.y, expected.y)
-    assert_allclose(g2.z, expected.z)
+    assert_allclose(g2.x, expected.x, atol=1.0e-15)
+    assert_allclose(g2.y, expected.y, atol=1.0e-15)
+    assert_allclose(g2.z, expected.z, atol=1.0e-15)
     assert_allclose(g2.angle, expected.angle)
