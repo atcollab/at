@@ -403,21 +403,21 @@ def _computedrivingterms(
             )
             rdts2["h30001"] += (1.0 / 32) * np.sum([
                 - 1 * b3b2lm[i] * bx3o2bx[i] * (pxm3[i] - pxm[i] * pxm2)
-                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm3[i] - pxm2[i] * pxm)
+                - 2 * b3b3lm[i] * bxbx3o2etax[i] * (pxm3 - pxm2[i] * pxm)
                 for i in range(nelem)]
             )
             rdts2["h10021"] += (1.0 / 32) * np.sum([
                 + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] * cpym2[i] - cpxm[i] * pxm2 * cpym2[i])
                 + 2 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] - pxm[i] * cpym2)
                 + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm * cpym2 - pxm2[i] * cpxm * cpym2)
-                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym[i] - pxm * cpym2)
+                - 4 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym2[i] - pxm * cpym2)
                 for i in range(nelem)]
             )
             rdts2["h10111"] += (1.0 / 16) * np.sum([
                 + 1 * b3b2lm[i] * rbxbxby[i] * (pxm[i] - cpxm[i] * pxm2)
                 + 1 * b3b2lm[i] * rbxbyby[i] * (pxm[i] * cpym2[i] * pym2 - pxm[i] * pym2[i] * cpym2)
                 + 2 * b3b3lm[i] * bxrbxbyetax[i] * (pxm - pxm2[i] * cpxm)
-                - 2 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym2[i] * pym2 - pxm * pym2[i] * cpym)
+                - 2 * b3b3lm[i] * rbxbybyetax[i] * (pxm * cpym2[i] * pym2 - pxm * pym2[i] * cpym2)
                 for i in range(nelem)]
             )
             rdts2["h10201"] += (1.0 / 32) * np.sum([
@@ -428,8 +428,8 @@ def _computedrivingterms(
                 for i in range(nelem)]
             )
             rdts2["h11002"] += (1.0 / 16) * np.sum([
-                + 1 * bxbx[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm)
-                                    * (pxm2[i] * cpxm2) + 2 * b3b2lm[i] * etaxm[i] * (cpxm2[i] * pxm2))
+                + 1 * bxbx[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm) * pxm2[i] * cpxm2
+                                 + 2 * b3b2lm[i] * etaxm[i] * cpxm2[i] * pxm2)
                 + 2 * rbxbx3o2etax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm - cpxm[i] * pxm)
                 for i in range(nelem)]
             )
@@ -440,8 +440,8 @@ def _computedrivingterms(
                     for i in range(nelem)]
             )
             rdts2["h00112"] += (1.0 / 16) * np.sum([
-                + 1 * byby[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm)
-                                  * pym2[i] * cpym2 + 2 * b3b2lm[i] * etaxm[i] * cpym2[i] * pym2)
+                + 1 * byby[i] * ((b2b2lm[i] - 2 * b3b2lm[i] * etaxm[i] + 4 * b3b3lm[i] * etaxm[i] * etaxm) * pym2[i] * cpym2
+                                 + 2 * b3b2lm[i] * etaxm[i] * cpym2[i] * pym2)
                 - 2 * rbxrbxbyetax[i] * (b3b3lm[i] * etaxm[i] - b2b3lm[i]) * (pxm[i] * cpxm - cpxm[i] * pxm)
                 for i in range(nelem)]
             )
