@@ -85,36 +85,48 @@ def _mat_encoder(v):
 def _matfile_generator(
     params: dict[str, Any], mat_file: str
 ) -> Generator[Element, None, None]:
-    """Run through Matlab cells and generate AT elements"""
+    """Run through Matlab cells and generate AT elements.
 
-    def mclean(data):
+    Arguments:
+        params: parameter dictionary
+        mat_file: matlab file name
+
+    Yields:
+        pyat Element from dictionary
+    """
+
+    def mclean(data: any) -> any:
         if data.dtype.type is np.str_:
             # Convert strings in arrays back to strings.
-            return str(data[0]) if data.size > 0 else ""
+            dataout = str(data[0]) if data.size > 0 else ""
         elif data.size == 1:
-            v = data[0, 0]
-            if issubclass(v.dtype.type, np.void):
+            vdata = data[0, 0]
+            if issubclass(vdata.dtype.type, np.void):
                 # Object => Return a dict
-                return {f: mclean(v[f]) for f in v.dtype.fields}
+                dataout = {f: mclean(vdata[f]) for f in vdata.dtype.fields}
             else:
                 # Return a scalar
-                return v
+                dataout = vdata
         else:
             # Remove any surplus dimensions in arrays.
-            return np.squeeze(data)
+            dataout = np.squeeze(data)
+        return dataout
 
-    def mcleanhdf5(data):
+    def mcleanhdf5(data: any) -> any:
         matlab_class = data.attrs["MATLAB_class"]
         if matlab_class == b"char":
             # Convert to string
-            return "".join(chr(i) for i in np.asarray(data).flatten())
+            dataout = "".join(chr(i) for i in np.asarray(data).flatten())
         if matlab_class == b"double":
             if data.shape == (1, 1):
-                return data[0, 0]
+                dataout = data[0, 0]
             else:
-                return np.squeeze(np.asarray(data))
+                dataout = np.squeeze(np.asarray(data))
+        return dataout
 
-    def define_default_key(params, mat_input, ignore_chars=""):
+    def define_default_key(
+        params: dict, mat_input: any, ignore_chars: str = ""
+    ) -> tuple:
         matvars = [
             varname for varname in mat_input if not varname.startswith(ignore_chars)
         ]
@@ -131,7 +143,7 @@ def _matfile_generator(
     check = params.pop("check", True)
     quiet = params.pop("quiet", False)
     matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
-    if (2, 0) > matlabfile_ver:
+    if matlabfile_ver < (2, 0):
         mat_input = scipy.io.loadmat(params.setdefault("in_file", mat_file))
         params, key = define_default_key(params, mat_input, ignore_chars="__")
         cell_array = mat_input[key].flat
