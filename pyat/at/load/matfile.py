@@ -7,7 +7,6 @@ from __future__ import annotations
 __all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
 
 import os
-import h5py
 import sys
 from collections.abc import Generator, Sequence
 from math import isfinite
@@ -15,6 +14,7 @@ from os.path import abspath, basename, splitext
 from typing import Any
 from warnings import warn
 
+import h5py
 import numpy as np
 import scipy.io
 
@@ -104,18 +104,20 @@ def _matfile_generator(
             return np.squeeze(data)
 
     def mcleanhdf5(data):
-        matlab_class = data.attrs['MATLAB_class']
-        if matlab_class == b'char':
+        matlab_class = data.attrs["MATLAB_class"]
+        if matlab_class == b"char":
             # Convert to string
             return "".join(chr(i) for i in np.asarray(data).flatten())
-        if matlab_class == b'double':
-            if data.shape == (1,1):
-                return data[0,0]
+        if matlab_class == b"double":
+            if data.shape == (1, 1):
+                return data[0, 0]
             else:
                 return np.squeeze(np.asarray(data))
 
-    def define_default_key(params, mat_input,ignore_chars=''):
-        matvars = [varname for varname in mat_input if not varname.startswith(ignore_chars)]
+    def define_default_key(params, mat_input, ignore_chars=""):
+        matvars = [
+            varname for varname in mat_input if not varname.startswith(ignore_chars)
+        ]
         default_key = matvars[0] if (len(matvars) == 1) else "RING"
         key = params.setdefault("use", default_key)
         if key not in mat_input.keys():
