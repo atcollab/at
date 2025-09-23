@@ -48,7 +48,7 @@ from typing import Callable, Sequence, Iterator, Type
 import numpy
 import numpy.typing as npt
 
-from .elements import Element, Dipole
+from .elements import Element
 from .exceptions import AtError
 
 __all__ = [
@@ -865,7 +865,7 @@ def set_value_refpts(
         attrvalues: Attribute values
         index:      index of the value to set if *attrname* is
           an array. if :py:obj:`None`, the full array is replaced by
-          *attrvalue*. 
+          *attrvalue*.
           In case *attrname* is a scalar attribute, the keyword argument
           index has to be None
         increment:  If :py:obj:`True`, *attrvalues* are added to the
