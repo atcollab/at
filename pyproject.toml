@@ -2,7 +2,9 @@
 requires = [
     "setuptools >= 64",
     "setuptools_scm >= 7",
-    "numpy >= 2.0",
+    "oldest-supported-numpy; python_version <= '3.8'",
+    "numpy >= 2.0; python_version >= '3.9'",
+    "h5py >= 3.0",
     "wheel",
 ]
 # build-backend = "setuptools.build_meta"
@@ -15,25 +17,31 @@ name = "accelerator-toolbox"
 authors = [{ name = "The AT collaboration", email = "atcollab-general@lists.sourceforge.net" }]
 description = "Accelerator Toolbox"
 readme = "pyat/README.rst"
-license = "Apache-2.0"
+license = { file = "LICENSE.txt" }
 dynamic = ["version"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Topic :: Scientific/Engineering :: Physics",
-    "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.7"
 dependencies = [
-    "numpy >= 1.23.5",
-    "scipy >= 1.10.0"
+    "importlib-resources;python_version<'3.9'",
+    "numpy >=1.16.6, <2.0; python_version <= '3.8'",
+    "numpy >= 1.23.5; python_version >= '3.9'",
+    "scipy>=1.4.0"
 ]
 
 [project.urls]
@@ -62,10 +70,12 @@ machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
 build = ["*"]
-# Remove free-threaded builds
-skip = ["cp3{8,9}-*", "cp314t-*"]
+# Pypy does not have Scipy so we cannot support it.
+skip = ["pp*", "cp3{7,8}-musllinux_*"]
 archs = ["auto64"]
 build-verbosity = "1"
+# "build" frontend fails on windows
+# build-frontend = "build"
 
 #[tool.cibuildwheel.linux]
 ## Pass the detected PyAT version to the linux docker containers
