@@ -4,7 +4,6 @@ requires = [
     "setuptools_scm >= 7",
     "oldest-supported-numpy; python_version <= '3.8'",
     "numpy >= 2.0; python_version >= '3.9'",
-    "h5py >= 3.0",
     "wheel",
 ]
 # build-backend = "setuptools.build_meta"
@@ -41,7 +40,8 @@ dependencies = [
     "importlib-resources;python_version<'3.9'",
     "numpy >=1.16.6, <2.0; python_version <= '3.8'",
     "numpy >= 1.23.5; python_version >= '3.9'",
-    "scipy>=1.4.0"
+    "scipy>=1.4.0",
+    "h5py >= 3.0",
 ]
 
 [project.urls]
