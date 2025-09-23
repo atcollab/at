@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["get_geometry", "get_geometry3"]
+__all__ = ["get_geometry"]
 
 from collections.abc import Sequence
 from math import sin, cos, atan2
@@ -20,7 +20,7 @@ _GEOMETRY_DTYPE = [
 ]
 
 
-def get_geometry(
+def _get_geometry2(
     ring: list[Element],
     refpts: Refpts = All,
     start_coordinates: tuple[float, float, float] = (0, 0, 0),
@@ -108,10 +108,11 @@ def get_geometry(
     return geomdata, radius
 
 
-def get_geometry3(
+def get_geometry(
     ring: Sequence[Element],
     refpts: Refpts = All,
     start_coordinates: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0),
+    centred: bool = False,
 ):
     # noinspection PyShadowingNames
     r"""Compute the 3D ring geometry in cartesian coordinates
@@ -121,16 +122,44 @@ def get_geometry3(
         refpts:             Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
         start_coordinates:  *x*, *y*, *z*, *angle* at starting point. *angle* is the
-          initial angle in the xy plane.
+          initial angle in the xy plane. *x* and *y* are ignored if *centred* is
+          :py:obj:`True`.
+        centred:           if :py:obj:`True` the coordinates origin is the
+          centre of the ring.
 
     Returns:
         geomdata:           recarray containing, x, y, z, angle.
+        radius:             machine radius at the beginning of the lattice.
+
+            .. attention::
+               This radius is different from the radius usually defined as
+               :math:`C/2\pi`
 
     Example:
 
-       >>> geomdata = get_geometry3(ring)
+       >>> geomdata, _ = get_geometry(ring)
        >>> xcoord = geomdata.x
     """
+
+    def get_center(xx, yy, tt):
+        dff = (tt[-1] - tt[0] + _GEOMETRY_EPSIL) % (2.0 * np.pi) - _GEOMETRY_EPSIL
+        if abs(dff) < _GEOMETRY_EPSIL:  # Total angle is 2*pi: full ring
+            xcenter = np.mean(xx)
+            ycenter = np.mean(yy)
+        elif abs(dff - np.pi) < _GEOMETRY_EPSIL:  # Total angle is pi: half ring
+            xcenter = 0.5 * xx[-1]
+            ycenter = 0.5 * yy[-1]
+        else:
+            c1 = np.cos(tt[0])
+            s1 = np.sin(tt[0])
+            c2 = np.cos(tt[-1])
+            s2 = np.sin(tt[-1])
+            den = s2 * c1 - s1 * c2
+            a1 = xx[0] * c1 + yy[0] * s1
+            a2 = xx[-1] * c2 + yy[-1] * s2
+            xcenter = (a1 * s2 - a2 * s1) / den
+            ycenter = (a2 * c1 - a1 * c2) / den
+        return xcenter, ycenter
 
     def rots(rotmat):
         cns = rotmat[0, 0]
@@ -145,9 +174,10 @@ def get_geometry3(
     def increment(xyz, conv, elem):
         length = elem.Length
         if hasattr(elem, "R1"):
+            # inplace matrix multiplication requires numpy >= 1.25
             # conv @= rots(elem.R1)
             ctemp = conv.copy()
-            np.matmul(ctemp,rots(elem.R1), out=conv)
+            np.matmul(ctemp, rots(elem.R1), out=conv)
         if hasattr(elem, "BendingAngle"):
             ang = 0.5 * elem.BendingAngle
             rm = hkick(-ang)
@@ -171,4 +201,9 @@ def get_geometry3(
     convi = hkick(t0)
     coords = [start_coordinates] + [increment(xyzc, convi, el) for el in ring]
     geomdata = np.rec.array(coords, dtype=_GEOMETRY_DTYPE)
-    return geomdata[boolrefs]
+    xc, yc = get_center(geomdata.x, geomdata.y, geomdata.angle)
+    radius = np.sqrt((xc - x0) ** 2 + (yc - y0) ** 2)
+    if centred:
+        geomdata.x -= xc
+        geomdata.y -= yc
+    return geomdata[boolrefs], radius

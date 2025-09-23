@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 import at
-from at.lattice import get_geometry3
+from at.lattice import get_geometry
 
 
 def _build_3d_lattice():
@@ -67,7 +67,7 @@ def test_geometry():
     )
 
     ring = _build_3d_lattice()
-    g2 = get_geometry3(ring)
+    g2, _ = get_geometry(ring)
     assert_allclose(g2.x, expected.x, atol=1.0e-12)
     assert_allclose(g2.y, expected.y, atol=1.0e-12)
     assert_allclose(g2.z, expected.z, atol=1.0e-12)
