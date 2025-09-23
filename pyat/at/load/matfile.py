@@ -118,10 +118,7 @@ def _matfile_generator(
             # Convert to string
             dataout = "".join(chr(i) for i in np.asarray(data).flatten())
         if matlab_class == b"double":
-            if data.shape == (1, 1):
-                dataout = data[0, 0]
-            else:
-                dataout = np.squeeze(np.asarray(data))
+            dataout = np.squeeze(np.asarray(data))
         return dataout
 
     def define_default_key(
