@@ -7,6 +7,7 @@ from __future__ import annotations
 __all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
 
 import os
+import h5py
 import sys
 from collections.abc import Generator, Sequence
 from math import isfinite
@@ -102,23 +103,48 @@ def _matfile_generator(
             # Remove any surplus dimensions in arrays.
             return np.squeeze(data)
 
+    def mcleanhdf5(data):
+        matlab_class = data.attrs['MATLAB_class']
+        if matlab_class == b'char':
+            # Convert to string
+            return "".join(chr(i) for i in np.asarray(data).flatten())
+        if matlab_class == b'double':
+            if data.shape == (1,1):
+                return data[0,0]
+            else:
+                return np.squeeze(np.asarray(data))
+
+    def define_default_key(params, mat_input,ignore_chars=''):
+        matvars = [varname for varname in mat_input if not varname.startswith(ignore_chars)]
+        default_key = matvars[0] if (len(matvars) == 1) else "RING"
+        key = params.setdefault("use", default_key)
+        if key not in mat_input.keys():
+            kok = [k for k in mat_input.keys() if "__" not in k]
+            raise AtError(
+                f"Selected '{key}' variable does not exist, please select in: {kok}"
+            )
+        return params, key
+
     # noinspection PyUnresolvedReferences
-    m = scipy.io.loadmat(params.setdefault("in_file", mat_file))
-    matvars = [varname for varname in m if not varname.startswith("__")]
-    default_key = matvars[0] if (len(matvars) == 1) else "RING"
-    key = params.setdefault("use", default_key)
-    if key not in m.keys():
-        kok = [k for k in m.keys() if "__" not in k]
-        raise AtError(
-            f"Selected '{key}' variable does not exist, please select in: {kok}"
-        )
     check = params.pop("check", True)
     quiet = params.pop("quiet", False)
-    cell_array = m[key].flat
-    for index, mat_elem in enumerate(cell_array):
-        elem = mat_elem[0, 0]
-        kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-        yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
+    matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
+    if (2, 0) > matlabfile_ver:
+        mat_input = scipy.io.loadmat(params.setdefault("in_file", mat_file))
+        params, key = define_default_key(params, mat_input, ignore_chars="__")
+        cell_array = mat_input[key].flat
+        for index, mat_elem in enumerate(cell_array):
+            elem = mat_elem[0, 0]
+            kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
+            yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
+    else:
+        mat_input = h5py.File(mat_file)
+        params, key = define_default_key(params, mat_input, ignore_chars="#")
+        cell_array = mat_input[key][0]
+        for index, ref_elem in enumerate(cell_array):
+            elem = mat_input[ref_elem]
+            kwargs = {f: mcleanhdf5(elem[f]) for f in elem.keys()}
+            yield Element.from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
 def ringparam_filter(
