@@ -1,3 +1,5 @@
+"""Lattice geometry"""
+
 from __future__ import annotations
 
 __all__ = ["get_geometry"]
@@ -146,14 +148,14 @@ def get_geometry(
        >>> xcoord = geomdata.x
     """
 
-    def get_center(xx, yy, tt):
+    def get_centre(xx, yy, tt):
         dff = (tt[-1] - tt[0] + _GEOMETRY_EPSIL) % (2.0 * np.pi) - _GEOMETRY_EPSIL
         if abs(dff) < _GEOMETRY_EPSIL:  # Total angle is 2*pi: full ring
-            xcenter = np.mean(xx)
-            ycenter = np.mean(yy)
+            xcentre = np.mean(xx)
+            ycentre = np.mean(yy)
         elif abs(dff - np.pi) < _GEOMETRY_EPSIL:  # Total angle is pi: half ring
-            xcenter = 0.5 * xx[-1]
-            ycenter = 0.5 * yy[-1]
+            xcentre = 0.5 * xx[-1]
+            ycentre = 0.5 * yy[-1]
         else:
             c1 = np.cos(tt[0])
             s1 = np.sin(tt[0])
@@ -162,9 +164,9 @@ def get_geometry(
             den = s2 * c1 - s1 * c2
             a1 = xx[0] * c1 + yy[0] * s1
             a2 = xx[-1] * c2 + yy[-1] * s2
-            xcenter = (a1 * s2 - a2 * s1) / den
-            ycenter = (a2 * c1 - a1 * c2) / den
-        return xcenter, ycenter
+            xcentre = (a1 * s2 - a2 * s1) / den
+            ycentre = (a2 * c1 - a1 * c2) / den
+        return xcentre, ycentre
 
     def rots(rotmat):
         cns = rotmat[0, 0]
@@ -218,7 +220,7 @@ def get_geometry(
     convi = hkick(h_angle) @ vkick(v_angle)
     coords = [coord0] + [increment(xyzc, convi, el) for el in ring]
     geomdata = np.rec.array(coords, dtype=_GEOMETRY_DTYPE)
-    xc, yc = get_center(geomdata.x, geomdata.y, geomdata.angle)
+    xc, yc = get_centre(geomdata.x, geomdata.y, geomdata.angle)
     radius = np.sqrt((xc - x0) ** 2 + (yc - y0) ** 2)
     if centred:
         geomdata.x -= xc
