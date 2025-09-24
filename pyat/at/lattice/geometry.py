@@ -116,6 +116,7 @@ def get_geometry(
     h_angle: float = 0.0,
     v_angle: float = 0.0,
     centred: bool = False,
+    **kwargs,
 ):
     # noinspection PyShadowingNames
     r"""Compute the 3D ring geometry in cartesian coordinates
@@ -208,6 +209,8 @@ def get_geometry(
         vangle = atan2(conv[2, 0], sqrt(conv[0, 0] ** 2 + conv[1, 0] ** 2))
         return tuple(xyz) + (hangle, vangle)
 
+    # Accept the US wording "centered" for compatibility
+    centred = centred or kwargs.pop("centered", False)
     boolrefs = get_bool_index(ring, refpts, endpoint=True)
     x0, y0, z0 = start_coordinates
     xyzc = np.array(start_coordinates)
