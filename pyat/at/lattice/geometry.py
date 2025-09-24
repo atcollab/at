@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["get_geometry"]
 
 from collections.abc import Sequence
-from math import sin, cos, atan2
+from math import sin, cos, atan2, sqrt
 
 import numpy as np
 
@@ -17,6 +17,7 @@ _GEOMETRY_DTYPE = [
     ("y", np.float64),
     ("z", np.float64),
     ("angle", np.float64),
+    ("v_angle", np.float64),
 ]
 
 
@@ -111,7 +112,9 @@ def _get_geometry2(
 def get_geometry(
     ring: Sequence[Element],
     refpts: Refpts = All,
-    start_coordinates: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0),
+    start_coordinates: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    h_angle: float = 0.0,
+    v_angle: float = 0.0,
     centred: bool = False,
 ):
     # noinspection PyShadowingNames
@@ -121,14 +124,15 @@ def get_geometry(
         ring:               Lattice description.
         refpts:             Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        start_coordinates:  *x*, *y*, *z*, *angle* at starting point. *angle* is the
-          initial angle in the xy plane. *x* and *y* are ignored if *centred* is
-          :py:obj:`True`.
+        start_coordinates:  *x*, *y*, *z* at starting point. *x* and *y* are ignored
+          if *centred* is :py:obj:`True`.
+        h_angle:             initial horizontal angle.
+        v_angle:             initial vertical angle.
         centred:           if :py:obj:`True` the coordinates origin is the
           centre of the ring.
 
     Returns:
-        geomdata:           recarray containing, x, y, z, angle.
+        geomdata:           recarray containing, x, y, z, angle, v_angle.
         radius:             machine radius at the beginning of the lattice.
 
             .. attention::
@@ -167,11 +171,19 @@ def get_geometry(
         return np.array([[1.0, 0.0, 0.0], [0, cns, -sns], [0.0, sns, cns]])
 
     def hkick(ang: float):
+        """positive: to the left"""
         cns = cos(ang)
         sns = sin(ang)
         return np.array([[cns, -sns, 0.0], [sns, cns, 0.0], [0.0, 0.0, 1.0]])
 
+    def vkick(ang: float):
+        """positive: upward"""
+        cns = cos(ang)
+        sns = sin(ang)
+        return np.array([[cns, 0.0, -sns], [0.0, 1.0, 0.0], [sns, 0.0, cns]])
+
     def increment(xyz, conv, elem):
+        """Propagation across one element"""
         length = elem.Length
         if hasattr(elem, "R1"):
             # inplace matrix multiplication requires numpy >= 1.25
@@ -192,14 +204,16 @@ def get_geometry(
             # conv @= rots(elem.R2)
             ctemp = conv.copy()
             np.matmul(ctemp, rots(elem.R2), out=conv)
-        angle = atan2(conv[1, 0], conv[0, 0])
-        return tuple(xyz) + (angle,)
+        hangle = atan2(conv[1, 0], conv[0, 0])
+        vangle = atan2(conv[2, 0], sqrt(conv[0, 0] ** 2 + conv[1, 0] ** 2))
+        return tuple(xyz) + (hangle, vangle)
 
     boolrefs = get_bool_index(ring, refpts, endpoint=True)
-    x0, y0, z0, t0 = start_coordinates
-    xyzc = np.array([x0, y0, z0])
-    convi = hkick(t0)
-    coords = [start_coordinates] + [increment(xyzc, convi, el) for el in ring]
+    x0, y0, z0 = start_coordinates
+    xyzc = np.array(start_coordinates)
+    coord0 = start_coordinates + (h_angle, v_angle)
+    convi = hkick(h_angle) @ vkick(v_angle)
+    coords = [coord0] + [increment(xyzc, convi, el) for el in ring]
     geomdata = np.rec.array(coords, dtype=_GEOMETRY_DTYPE)
     xc, yc = get_center(geomdata.x, geomdata.y, geomdata.angle)
     radius = np.sqrt((xc - x0) ** 2 + (yc - y0) ** 2)
