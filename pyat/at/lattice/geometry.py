@@ -135,7 +135,8 @@ def get_geometry(
           centre of the ring.
 
     Returns:
-        geomdata:           recarray containing, x, y, z, angle, v_angle.
+        geomdata:           :py:class:`~numpy.recarray` containing the fields *x*, *y*,
+          *z*, *angle*, *v_angle*.
         radius:             machine radius at the beginning of the lattice.
 
             .. attention::
