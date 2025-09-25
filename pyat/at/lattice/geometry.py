@@ -194,7 +194,7 @@ def get_geometry(
             # conv @= rots(elem.R1)
             ctemp = conv.copy()
             np.matmul(ctemp, rots(elem.R1), out=conv)
-        if hasattr(elem, "BendingAngle"):
+        if hasattr(elem, "BendingAngle") and elem.BendingAngle != 0.0:
             ang = 0.5 * elem.BendingAngle
             rm = hkick(-ang)
             # conv @= rm
@@ -213,10 +213,10 @@ def get_geometry(
         return tuple(xyz) + (hangle, vangle)
 
     # Accept the US wording "centered" for compatibility
-    centred = centred or kwargs.pop("centered", False)
+    centred = kwargs.pop("centered", centred)
     boolrefs = get_bool_index(ring, refpts, endpoint=True)
     x0, y0, z0 = start_coordinates
-    xyzc = np.array(start_coordinates)
+    xyzc = np.array(start_coordinates, dtype=np.float64)
     coord0 = start_coordinates + (h_angle, v_angle)
     convi = hkick(h_angle) @ vkick(v_angle)
     coords = [coord0] + [increment(xyzc, convi, el) for el in ring]
