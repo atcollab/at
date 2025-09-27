@@ -578,7 +578,7 @@ class BaseParser(DictNoDot, StrParser):
 
         def arg_value(k, v):
             if k in str_attr:
-                return v[1:-1] if v[0] == '"' else v
+                return v[1:-1] if v[0] in {'"', "'"} else v
             else:
                 return self.evaluate(v)
 

@@ -101,7 +101,7 @@ class Exporter:
                 print(f"{elname.ljust(10)}: {str(el)}{self.delimiter}", file=file)
 
     def print_sequence(self, file) -> None:
-        line = f"\n{self.seqname.ljust(10)}: SEQUENCE, L={self.length}{self.delimiter}"
+        line = f"{self.seqname.ljust(10)}: SEQUENCE, L={self.length}"
         print(f"\n{line}{self.delimiter}", file=file)
         for elname, at in self.seq:
             print(f"  {elname.ljust(10)}, AT={at}{self.delimiter}", file=file)
