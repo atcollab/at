@@ -13,19 +13,20 @@ __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
 # functions known by MAD-8
 from math import pi, e, sqrt, exp, log, sin, cos, tan
-from math import asin
+from math import asin, atan2
 import re
 
 # constants known by MAD-8
 from scipy.constants import c as clight, e as qelect
 from scipy.constants import physical_constants as _cst
 
-from ..lattice import Lattice
+from ..lattice import Lattice, elements as elt
 
 from .file_input import ignore_class
 
 # noinspection PyProtectedMember
 from .madx import _MadElement, _MadParser, _MadExporter
+from .madx import mad_element, p_to_at, poly_to_mad
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
@@ -35,7 +36,7 @@ from .madx import (
     quadrupole,
     sextupole,
     octupole,
-    multipole,
+    longmultipole,
     sbend,
     rbend,
     kicker,
@@ -90,7 +91,7 @@ _mad8_env = {
     "quadrupole": quadrupole,
     "sextupole": sextupole,
     "octupole": octupole,
-    "multipole": multipole,
+    "longmultipole": longmultipole,
     "sbend": sbend,
     "rbend": rbend,
     "kicker": kicker,
@@ -118,6 +119,51 @@ _ignore_names = [
 _mad8_env.update(
     (name, ignore_class(name, _MadElement, module=__name__)) for name in _ignore_names
 )
+
+
+# noinspection PyPep8Naming
+class multipole(_MadElement):
+    at2mad = {}
+    klist = ["k0l", "k1l", "k2l", "k3l", "k4l", "k5l", "k6l", "k7l", "k8l", "k9l"]
+    tlist = ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9"]
+
+    @mad_element
+    def to_at(self, **params):
+        polya = [0.0]*10
+        polyb = [0.0]*10
+        params.pop("l", None)
+        for k in list(params.keys()):
+            try:
+                order = self.klist.index(k)
+            except ValueError:
+                pass
+            else:
+                strength = params.pop(k)
+                angle = (order + 1) * params.get(self.tlist[order], 0.0)
+                polyb[order] = strength * cos(-angle)
+                polya[order] = strength * sin(-angle)
+        return [
+            elt.ThinMultipole(
+                self.name, p_to_at(polya), p_to_at(polyb), **self.meval(params)
+            )
+        ]
+
+    @classmethod
+    def from_at(cls, kwargs, factor=1.0):
+        el = super().from_at(kwargs)
+        maxorder = kwargs.pop("MaxOrder", -1) + 1
+        nlist = poly_to_mad(kwargs.pop("PolynomB", ())[:maxorder+1], factor=factor)
+        slist = poly_to_mad(kwargs.pop("PolynomA", ())[:maxorder+1], factor=factor)
+        for order, (va, vb) in enumerate(zip(slist, nlist)):
+            if va != 0.0 or vb != 0.0:
+                el[multipole.klist[order]] = sqrt(va * va + vb * vb)
+                tilt = -atan2(va, vb) / (order + 1)
+                if tilt != 0.0:
+                    el[multipole.tlist[order]] = tilt
+        return el
+
+
+_mad8_env.update(multipole=multipole)
 
 
 class Mad8Parser(_MadParser):
@@ -225,6 +271,20 @@ class _Mad8Exporter(_MadExporter):
     delimiter = ""
     continuation = "&"
     bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+
+    AT2MAD = {
+        elt.Quadrupole: quadrupole,
+        elt.Sextupole: sextupole,
+        elt.Octupole: octupole,
+        elt.ThinMultipole: multipole,
+        elt.Multipole: longmultipole,
+        elt.RFCavity: rfcavity,
+        elt.Drift: drift,
+        elt.Bend: sbend,
+        elt.Marker: marker,
+        elt.Monitor: monitor,
+        elt.Corrector: kicker,
+    }
 
 
 def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
