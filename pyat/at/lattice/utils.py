@@ -48,10 +48,8 @@ from typing import Callable, Sequence, Iterator, Type
 import numpy
 import numpy.typing as npt
 
-from .elements import Element, Dipole
+from .elements import Element
 from .exceptions import AtError
-
-_GEOMETRY_EPSIL = 1.0e-3
 
 __all__ = [
     "All",
@@ -77,7 +75,6 @@ __all__ = [
     "get_value_refpts",
     "set_value_refpts",
     "Refpts",
-    "get_geometry",
     "setval",
     "getval",
 ]
@@ -868,7 +865,7 @@ def set_value_refpts(
         attrvalues: Attribute values
         index:      index of the value to set if *attrname* is
           an array. if :py:obj:`None`, the full array is replaced by
-          *attrvalue*. 
+          *attrvalue*.
           In case *attrname* is a scalar attribute, the keyword argument
           index has to be None
         increment:  If :py:obj:`True`, *attrvalues* are added to the
@@ -931,91 +928,3 @@ def get_s_pos(
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
     return s_pos[get_bool_index(ring, refpts, regex=regex)]
-
-
-def get_geometry(
-    ring: list[Element],
-    refpts: Refpts = All,
-    start_coordinates: tuple[float, float, float] = (0, 0, 0),
-    centered: bool = False,
-    regex: bool = False,
-):
-    # noinspection PyShadowingNames
-    r"""Compute the 2D ring geometry in cartesian coordinates
-
-    Parameters:
-        ring:               Lattice description.
-        refpts:     Element selection key.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-        start_coordinates:  *x*, *y*, *angle* at starting point. *x*
-          and *y* are ignored if *centered* is :py:obj:`True`.
-        centered:           if :py:obj:`True` the coordinates origin is the
-          centre of the ring.
-        regex: Use regular expression for *refpts* string matching instead of
-          Unix shell-style wildcards.
-
-    Returns:
-        geomdata:           recarray containing, x, y, angle.
-        radius:             machine radius at the beginning of the lattice.
-
-            .. attention::
-               This radius is different from the radius usually defined as
-               :math:`C/2\pi`
-
-    Example:
-
-       >>> geomdata, radius = get_geometry(ring)
-    """
-
-    geom_dtype = [("x", numpy.float64), ("y", numpy.float64), ("angle", numpy.float64)]
-    boolrefs = get_bool_index(ring, refpts, endpoint=True, regex=regex)
-    nrefs = refpts_count(boolrefs, len(ring))
-    geomdata = numpy.recarray((nrefs,), dtype=geom_dtype)
-    xx = numpy.zeros(len(ring) + 1)
-    yy = numpy.zeros(len(ring) + 1)
-    angle = numpy.zeros(len(ring) + 1)
-    x0, y0, t0 = start_coordinates
-    x, y = 0.0, 0.0
-    t = t0
-
-    xx[0] = x
-    yy[0] = y
-    angle[0] = t
-    for ind, el in enumerate(ring):
-        ll = el.Length
-        if isinstance(el, Dipole) and el.BendingAngle != 0:
-            ang = 0.5 * el.BendingAngle
-            ll *= numpy.sin(ang) / ang
-        else:
-            ang = 0.0
-        t -= ang
-        x += ll * numpy.cos(t)
-        y += ll * numpy.sin(t)
-        t -= ang
-        xx[ind + 1] = x
-        yy[ind + 1] = y
-        angle[ind + 1] = t
-
-    dff = (t + _GEOMETRY_EPSIL) % (2.0 * numpy.pi) - _GEOMETRY_EPSIL
-    if abs(dff) < _GEOMETRY_EPSIL:
-        xcenter = numpy.mean(xx)
-        ycenter = numpy.mean(yy)
-    elif abs(dff - numpy.pi) < _GEOMETRY_EPSIL:
-        xcenter = 0.5 * x
-        ycenter = 0.5 * y
-    else:
-        num = numpy.cos(t) * x + numpy.sin(t) * y
-        den = numpy.sin(t - t0)
-        xcenter = -num * numpy.sin(t0) / den
-        ycenter = num * numpy.cos(t0) / den
-    radius = numpy.sqrt(xcenter * xcenter + ycenter * ycenter)
-    if centered:
-        xx -= xcenter
-        yy -= ycenter
-    else:
-        xx += x0
-        yy += y0
-    geomdata["x"] = xx[boolrefs]
-    geomdata["y"] = yy[boolrefs]
-    geomdata["angle"] = angle[boolrefs]
-    return geomdata, radius

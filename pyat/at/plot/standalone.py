@@ -111,45 +111,71 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
 def plot_geometry(
     ring: Lattice,
     start_coordinates: tuple[float, float, float] = (0, 0, 0),
-    centered: bool = False,
+    centred: bool = False,
+    h_angle: float = 0,
+    v_angle: float = 0,
     ax: Axes = None,
+    plot3d: bool = False,
     **kwargs,
 ):
-    """Compute and plot the 2D ring geometry in cartesian coordinates.
+    """Compute and plot the 2D or 3D ring geometry in cartesian coordinates.
 
     Parameters:
-        ring: Lattice description
+        ring:           Lattice description
         start_coordinates: x,y,angle at starting point
-        centered: it True the coordinates origin is the center of the ring
+        centred:        it True the coordinates origin is the center of the ring
+        h_angle:        initial horizontal angle.
+        v_angle:        initial vertical angle.
         ax: axes for the plot. If not given, new axes are created
+        plot3d:         Draw a 3d line plot
 
     Keyword arguments are forwarded to the underlying
     :py:func:`~matplotlib.pyplot.plot` function
 
     Returns:
-        geomdata: recarray containing, x, y, angle
+        geomdata: :py:class:`~numpy.recarray` containing the fields *x*, *y*,
+          *z*, *angle*, *v_angle*.
         radius: machine radius
         ax: plot axis
 
     Example:
         >>> ring.plot_geometry()
     """
-    if not ax:
-        fig, ax = plt.subplots()
+    # Accept the US wording "centered" for compatibility
+    centred = kwargs.pop("centered", centred)
     geom, radius = ring.get_geometry(
-        start_coordinates=start_coordinates, centered=centered
+        start_coordinates=start_coordinates,
+        h_angle=h_angle,
+        v_angle=v_angle,
+        centred=centred,
     )
-    ax.plot(
-        geom["x"],
-        geom["y"],
-        "o:",
-        linewidth=kwargs.pop("linewidth", 0.5),
-        markersize=kwargs.pop("markersize", 2),
-        **kwargs,
-    )
+    if plot3d:
+        if not ax:
+            fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+        ax.plot(
+            geom["x"],
+            geom["y"],
+            geom["z"],
+            "o:",
+            linewidth=kwargs.pop("linewidth", 0.5),
+            markersize=kwargs.pop("markersize", 2),
+            **kwargs,
+        )
+        ax.set_zlabel("z [m]")
+    else:
+        if not ax:
+            fig, ax = plt.subplots()
+        ax.plot(
+            geom["x"],
+            geom["y"],
+            "o:",
+            linewidth=kwargs.pop("linewidth", 0.5),
+            markersize=kwargs.pop("markersize", 2),
+            **kwargs,
+        )
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
-    ax.set_aspect("equal", "box")
+    ax.set_aspect("equalxy", "box")
     return geom, radius, ax
 
 
