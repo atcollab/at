@@ -119,6 +119,8 @@ def _matfile_generator(
             dataout = "".join(chr(i) for i in np.asarray(data).flatten())
         if matlab_class == b"double":
             dataout = np.squeeze(np.asarray(data))
+        if matlab_class == b"struct":
+            dataout = {f: mcleanhdf5(data[f]) for f in data.keys()}
         return dataout
 
     def define_default_key(
