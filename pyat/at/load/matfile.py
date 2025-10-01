@@ -114,13 +114,16 @@ def _matfile_generator(
 
     def mcleanhdf5(data: any) -> any:
         matlab_class = data.attrs["MATLAB_class"]
-        if matlab_class == b"char":
+        if matlab_class == b"struct":
+            # Return a dict from recursion
+            dataout = {f: mcleanhdf5(data[f]) for f in data.keys()}
+        elif matlab_class == b"char":
             # Convert to string
             dataout = "".join(chr(i) for i in np.asarray(data).flatten())
-        if matlab_class == b"double":
+        else:
+            # e.g. matlab_class == b"double":
+            # Remove any surplus dimensions in arrays.
             dataout = np.squeeze(np.asarray(data))
-        if matlab_class == b"struct":
-            dataout = {f: mcleanhdf5(data[f]) for f in data.keys()}
         return dataout
 
     def define_default_key(
