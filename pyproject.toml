@@ -33,7 +33,8 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "numpy >= 1.23.5",
-    "scipy >= 1.10.0"
+    "scipy >= 1.10.0",
+    "h5py >= 3.0",
 ]
 
 [project.urls]
