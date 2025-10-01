@@ -13,6 +13,7 @@ from .particle_object import Particle
 from .variables import VariableList
 from .elements import *
 from .utils import *
+from .geometry import *
 from .transformation import *
 from .lattice_object import *
 # from .lattice_variables import *
