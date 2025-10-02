@@ -515,7 +515,8 @@ class VariableBase(Generic[Number], abc.ABC):
         return int(self._safe_value)
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
+        return self.name
+#       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
         return repr(self._safe_value)
