@@ -46,6 +46,7 @@ from .madx import (
     monitor,
     hmonitor,
     vmonitor,
+    _Sequence,
     _value,
 )
 
@@ -85,6 +86,9 @@ _mad8_env = {
     "pmass": pmass,  # [GeV]
     "clight": clight,
     "qelect": qelect,
+    "centre": "centre",
+    "entry": "entry",
+    "exit": "exit",
     # Elements
     "drift": drift,
     "marker": marker,
@@ -101,6 +105,7 @@ _mad8_env = {
     "monitor": monitor,
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
+    "sequence": _Sequence,
     # Commands
     "value": _value,
     "__builtins__": {},
@@ -205,14 +210,15 @@ class Mad8Parser(_MadParser):
     _continuation = "&"
     _blockcomment = ("comment", "endcomment")
 
-    def __init__(self, **kwargs):
+    def __init__(self, *filenames: str, **kwargs):
         """
         Args:
+            *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(_mad8_env, **kwargs)
+        super().__init__(_mad8_env, *filenames, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""
