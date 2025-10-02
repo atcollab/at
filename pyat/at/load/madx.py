@@ -675,12 +675,13 @@ class _Sequence(SequenceDescr):
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
-            if abs(dl) > 1.0e-5:
+            fdl = float(dl)  # Expand prarameters
+            if abs(fdl) > 1.0e-5:
                 yield from drift(name=f"drift_{drcounter}", l=dl).expand(parser)
                 drcounter += 1
-                if dl < 0.0:
+                if fdl < 0.0:
                     eltype = type(el).__name__.upper()
-                    wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-dl} m")
+                    wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-fdl} m")
                     warnings.warn(wrn, stacklevel=3)
 
         drcounter = 0
@@ -695,7 +696,7 @@ class _Sequence(SequenceDescr):
         yield from insert_drift(self.length - end, elem)  # Final drift
 
 
-class _BeamDescr(ElementDescr):
+class _Beam(ElementDescr):
     """Descriptor for the MAD-X BEAM object"""
 
     @staticmethod
@@ -768,7 +769,7 @@ class _Call:
         self.parser.parse_files(file, final=False)
 
 
-class _Beam:
+class _BeamGenerator:
     """Implement the BEAM Mad command"""
 
     default_beam = {
@@ -792,11 +793,11 @@ class _Beam:
         self.parser = parser
 
     def __call__(self, sequence=None, **kwargs):
-        """create a :py:class:`_BeamDescr` object and store it as 'beam%sequence'"""
+        """create a :py:class:`_Beam` object and store it as 'beam%sequence'"""
         name = "beam%" if sequence is None else f"beam%{sequence}"
         beamobj = self.parser.get(name, None)
         if beamobj is None:
-            beamobj = _BeamDescr(self.default_beam)
+            beamobj = _Beam(self.default_beam)
             self.parser[name] = beamobj
 
         for k, v in kwargs.items():
@@ -838,6 +839,9 @@ _madx_env = {
     "prad": erad * emass / pmass,  # [m]
     "clight": clight,
     "qelect": qelect,
+    "centre": "centre",
+    "entry": "entry",
+    "exit": "exit",
     # Elements
     "drift": drift,
     "marker": marker,
@@ -855,6 +859,7 @@ _madx_env = {
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
     "instrument": instrument,
+    "sequence": _Sequence,
     # Commands
     "value": _value,
     "__builtins__": {},
@@ -883,11 +888,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
 
     _str_arguments = {"file", "refer", "refpos", "sequence", "from"}
 
-    def __init__(self, env: dict, **kwargs):
+    def __init__(self, env: dict, *filenames: str, **kwargs):
         """Common behaviour for MAD-X and MAD8
 
         Args:
             env: global namespace used for evaluating commands
+            *filenames: files to be read at initialisation
             verbose:    If :py:obj:`True`, print details on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
             **kwargs: Initial variable definitions
@@ -895,15 +901,13 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         super().__init__(
             env,
             call=_Call(self),
-            beam=_Beam(self),
-            sequence=_Sequence,
-            centre="centre",
-            entry="entry",
-            exit="exit",
+            beam=_BeamGenerator(self),
             **kwargs,
         )
         self.current_sequence = None
         self["beam"]()
+        if filenames:
+            self.parse_files(*filenames)
 
     def clear(self):
         super().clear()
@@ -1109,14 +1113,15 @@ class MadxParser(_MadParser):
     _continuation = None
     _blockcomment = ("/*", "*/")
 
-    def __init__(self, **kwargs):
+    def __init__(self, *filenames: str, **kwargs):
         """
         Args:
+            *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(_madx_env, **kwargs)
+        super().__init__(_madx_env, *filenames, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation"""
