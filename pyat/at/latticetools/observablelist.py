@@ -651,6 +651,26 @@ class ObservableList(list):
         """
         return sum(np.sum(res) for res in self._collect("residual", *obsid, err=err))
 
+    def get_targets(self, *obsid: str | int, err: float | None = None) -> tuple:
+        """Return the target values of observables.
+
+        Args:
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
+                default, an Exception is raised.
+        """
+        return self._collect("target", *obsid)
+
+    def get_flat_targets(self, *obsid: str | int) -> tuple:
+        """Return a 1-D array of target values of observables.
+
+        Args:
+            *obsid: name or index of selected observables (Default all)
+            err:    Default observable value to be used when the evaluation failed. By
+              default, an Exception is raised.
+        """
+        return _flatten(self._collect("target", *obsid))
+
     shapes = property(get_shapes, doc="Shapes of all values")
     flat_shape = property(get_flat_shape, doc="Shape of the flattened values")
     values = property(get_values, doc="values of all observables")
@@ -675,3 +695,5 @@ class ObservableList(list):
     flat_weights = property(get_flat_weights, doc="1-D array of Observable weights")
     residuals = property(get_residuals, doc="Residuals of all observable")
     sum_residuals = property(get_sum_residuals, doc="Sum of all residual values")
+    targets = property(get_targets, doc="Target values of all observables")
+    flat_targets = property(get_flat_targets, doc="1-D array of target values")
