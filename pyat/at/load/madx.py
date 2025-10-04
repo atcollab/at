@@ -85,7 +85,7 @@ elements of a MAD-X file.
 The :py:meth:`MadxParser.parse_files` method reads one or several MAD-X files and
 populates the parser
 
->>> parser.parse_files("lattice.seq", use="PS")
+>>> parser.parse_files("lattice.seq")
 
 The parser can be examined and modified using the standard python syntax:
 
@@ -111,8 +111,7 @@ periodicity=1, harmonic_number=0, beam_current=0.0, nbunch=1, use='PS')
 
 3. Exporting to MAD-X files
 ---------------------------
-Exporting a PyAT lattice to a MAD-X files produces a single MAD ``SEQUENCE`` of
-``LINE``.
+Exporting a PyAT lattice to a MAD-X file produces a single MAD ``SEQUENCE`` or ``LINE``.
 
 See :py:func:`save_madx` for usage.
 
@@ -604,6 +603,8 @@ class _Line(SequenceDescr):
 class _Sequence(SequenceDescr):
     """Descriptor for the MADX SEQUENCE"""
 
+    str_attr = {"refer"}
+
     _offset = {"entry": 1.0, "centre": 0.0, "exit": -1.0}
 
     def __init__(
@@ -839,9 +840,6 @@ _madx_env = {
     "prad": erad * emass / pmass,  # [m]
     "clight": clight,
     "qelect": qelect,
-    "centre": "centre",
-    "entry": "entry",
-    "exit": "exit",
     # Elements
     "drift": drift,
     "marker": marker,
