@@ -143,8 +143,7 @@ from scipy.constants import physical_constants as _cst
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
-from .file_input import LowerCaseParser, UnorderedParser
-from .file_input import set_argparser, ignore_class
+from .file_input import LowerCaseParser, UnorderedParser, ignore_class
 from .file_output import Exporter
 from ..lattice import Lattice, Particle, StrParameter, AtWarning
 from ..lattice import elements as elt
@@ -232,12 +231,6 @@ def p_dict(keys: Iterable[str], a: Iterable[float]) -> dict[str, float]:
 def p_list(a: Iterable[float], factor: float = 1.0):
     """Return a Polynom list"""
     return list(poly_to_mad(a, factor=factor))
-
-
-# noinspection PyUnusedLocal
-def _keyparser(parser, argcount, argstr):
-    """Return the pair key, value for the given 'key' argument"""
-    return argstr, parser.evaluate(argstr)
 
 
 # ------------------------------
@@ -558,12 +551,18 @@ class ignore(_MadElement):
             return drift.from_at(kwargs)
 
 
-@set_argparser(_keyparser)
-def _value(**kwargs):
+class _Value:
     """VALUE command"""
-    kwargs.pop("copy", False)
-    for key, v in kwargs.items():
-        print(f"{key}: {v}")
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def argparser(parser, argcount, argstr):
+        return argstr, parser.evaluate(argstr)
+
+    def __call__(self, **kwargs):
+        kwargs.pop("copy", False)
+        for key, v in kwargs.items():
+            print(f"{key}: {v}")
 
 
 class _Line(SequenceDescr):
@@ -859,7 +858,7 @@ _madx_env = {
     "instrument": instrument,
     "sequence": _Sequence,
     # Commands
-    "value": _value,
+    "value": _Value(),
     "__builtins__": {},
 }
 

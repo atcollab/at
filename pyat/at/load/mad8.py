@@ -47,7 +47,7 @@ from .madx import (
     hmonitor,
     vmonitor,
     _Sequence,
-    _value,
+    _Value,
 )
 
 twopi = 2 * pi
@@ -107,7 +107,7 @@ _mad8_env = {
     "vmonitor": vmonitor,
     "sequence": _Sequence,
     # Commands
-    "value": _value,
+    "value": _Value(),
     "__builtins__": {},
 }
 

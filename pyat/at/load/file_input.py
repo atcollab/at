@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "set_argparser",
     "skip_class",
     "ignore_class",
     "AnyDescr",
@@ -122,16 +121,6 @@ def _no_default(func):
             self._use_default = True
 
     return wrapper
-
-
-def set_argparser(argparser):
-    """Decorator which adds an "argparser" attribute to a function"""
-
-    def decorator(func):
-        func.argparser = argparser
-        return func
-
-    return decorator
 
 
 def skip_class(
