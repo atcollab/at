@@ -46,7 +46,8 @@ from .madx import (
     monitor,
     hmonitor,
     vmonitor,
-    _value,
+    _Sequence,
+    _Value,
 )
 
 twopi = 2 * pi
@@ -56,69 +57,6 @@ emass = 1.0e-03 * _cst["electron mass energy equivalent in MeV"][0]  # [GeV]
 pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
 _attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
-
-
-_mad8_env = {
-    # Constants
-    "_true_": True,
-    "_yes_": True,
-    "_t_": True,
-    "_on_": True,
-    "_false_": False,
-    "_no_": False,
-    "_f_": False,
-    "_off_": False,
-    "pi": pi,
-    "e": e,
-    "abs": abs,
-    "sqrt": sqrt,
-    "exp": exp,
-    "log": log,
-    "sin": sin,
-    "cos": cos,
-    "tan": tan,
-    "asin": asin,
-    "twopi": 2 * pi,
-    "degrad": 180.0 / pi,
-    "raddeg": pi / 180.0,
-    "emass": emass,  # [GeV]
-    "pmass": pmass,  # [GeV]
-    "clight": clight,
-    "qelect": qelect,
-    # Elements
-    "drift": drift,
-    "marker": marker,
-    "quadrupole": quadrupole,
-    "sextupole": sextupole,
-    "octupole": octupole,
-    "longmultipole": longmultipole,
-    "sbend": sbend,
-    "rbend": rbend,
-    "kicker": kicker,
-    "hkicker": hkicker,
-    "vkicker": vkicker,
-    "rfcavity": rfcavity,
-    "monitor": monitor,
-    "hmonitor": hmonitor,
-    "vmonitor": vmonitor,
-    # Commands
-    "value": _value,
-    "__builtins__": {},
-}
-
-
-_ignore_names = [
-    "solenoid",
-    "rfmultipole",
-    "crabcavity",
-    "elseparator",
-    "collimator",
-    "tkicker",
-]
-
-_mad8_env.update(
-    (name, ignore_class(name, _MadElement, module=__name__)) for name in _ignore_names
-)
 
 
 # noinspection PyPep8Naming
@@ -163,7 +101,72 @@ class multipole(_MadElement):
         return el
 
 
-_mad8_env.update(multipole=multipole)
+_mad8_env = {
+    # Constants
+    "_true_": True,
+    "_yes_": True,
+    "_t_": True,
+    "_on_": True,
+    "_false_": False,
+    "_no_": False,
+    "_f_": False,
+    "_off_": False,
+    "pi": pi,
+    "e": e,
+    "abs": abs,
+    "sqrt": sqrt,
+    "exp": exp,
+    "log": log,
+    "sin": sin,
+    "cos": cos,
+    "tan": tan,
+    "asin": asin,
+    "twopi": 2 * pi,
+    "degrad": 180.0 / pi,
+    "raddeg": pi / 180.0,
+    "emass": emass,  # [GeV]
+    "pmass": pmass,  # [GeV]
+    "clight": clight,
+    "qelect": qelect,
+    "centre": "centre",
+    "entry": "entry",
+    "exit": "exit",
+    # Elements
+    "drift": drift,
+    "marker": marker,
+    "quadrupole": quadrupole,
+    "sextupole": sextupole,
+    "octupole": octupole,
+    "multipole": multipole,
+    "longmultipole": longmultipole,
+    "sbend": sbend,
+    "rbend": rbend,
+    "kicker": kicker,
+    "hkicker": hkicker,
+    "vkicker": vkicker,
+    "rfcavity": rfcavity,
+    "monitor": monitor,
+    "hmonitor": hmonitor,
+    "vmonitor": vmonitor,
+    "sequence": _Sequence,
+    # Commands
+    "value": _Value(),
+    "__builtins__": {},
+}
+
+
+_ignore_names = [
+    "solenoid",
+    "rfmultipole",
+    "crabcavity",
+    "elseparator",
+    "collimator",
+    "tkicker",
+]
+
+_mad8_env.update(
+    (name, ignore_class(name, _MadElement, module=__name__)) for name in _ignore_names
+)
 
 
 class Mad8Parser(_MadParser):
@@ -205,14 +208,15 @@ class Mad8Parser(_MadParser):
     _continuation = "&"
     _blockcomment = ("comment", "endcomment")
 
-    def __init__(self, **kwargs):
+    def __init__(self, *filenames: str, **kwargs):
         """
         Args:
+            *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(_mad8_env, **kwargs)
+        super().__init__(_mad8_env, *filenames, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace"""

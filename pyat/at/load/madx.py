@@ -85,7 +85,7 @@ elements of a MAD-X file.
 The :py:meth:`MadxParser.parse_files` method reads one or several MAD-X files and
 populates the parser
 
->>> parser.parse_files("lattice.seq", use="PS")
+>>> parser.parse_files("lattice.seq")
 
 The parser can be examined and modified using the standard python syntax:
 
@@ -111,8 +111,7 @@ periodicity=1, harmonic_number=0, beam_current=0.0, nbunch=1, use='PS')
 
 3. Exporting to MAD-X files
 ---------------------------
-Exporting a PyAT lattice to a MAD-X files produces a single MAD ``SEQUENCE`` of
-``LINE``.
+Exporting a PyAT lattice to a MAD-X file produces a single MAD ``SEQUENCE`` or ``LINE``.
 
 See :py:func:`save_madx` for usage.
 
@@ -144,8 +143,7 @@ from scipy.constants import physical_constants as _cst
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
-from .file_input import LowerCaseParser, UnorderedParser
-from .file_input import set_argparser, ignore_class
+from .file_input import LowerCaseParser, UnorderedParser, ignore_class
 from .file_output import Exporter
 from ..lattice import Lattice, Particle, StrParameter, AtWarning
 from ..lattice import elements as elt
@@ -235,12 +233,6 @@ def p_list(a: Iterable[float], factor: float = 1.0):
     return list(poly_to_mad(a, factor=factor))
 
 
-# noinspection PyUnusedLocal
-def _keyparser(parser, argcount, argstr):
-    """Return the pair key, value for the given 'key' argument"""
-    return argstr, parser.evaluate(argstr)
-
-
 # ------------------------------
 #  Base class for MAD-X elements
 # ------------------------------
@@ -249,9 +241,9 @@ def _keyparser(parser, argcount, argstr):
 class _MadElement(ElementDescr):
     """Description of MADX elements"""
 
-    str_attr = {"apertype", "refer", "refpos", "sequence", "from"}
+    str_attr = {"apertype", "from"}
 
-    def __init__(self, *args, at=0.0, **kwargs):
+    def __init__(self, *args, at: float = 0.0, **kwargs):
         self.at = at
         # Cannot use "from" as argument or attribute
         setattr(self, "from", kwargs.pop("from", None))
@@ -259,6 +251,7 @@ class _MadElement(ElementDescr):
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
+        """Return the entry and exit positions of the element"""
         half_length = 0.5 * self.length
         offset = offset + refer * half_length + self.at
         frm = getattr(self, "from")
@@ -559,12 +552,18 @@ class ignore(_MadElement):
             return drift.from_at(kwargs)
 
 
-@set_argparser(_keyparser)
-def _value(**kwargs):
+class _Value:
     """VALUE command"""
-    kwargs.pop("copy", False)
-    for key, v in kwargs.items():
-        print(f"{key}: {v}")
+
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def argparser(parser, argcount, argstr):
+        return argstr, parser.evaluate(argstr)
+
+    def __call__(self, **kwargs):
+        kwargs.pop("copy", False)
+        for key, v in kwargs.items():
+            print(f"{key} = {v}")
 
 
 class _Line(SequenceDescr):
@@ -604,6 +603,8 @@ class _Line(SequenceDescr):
 class _Sequence(SequenceDescr):
     """Descriptor for the MADX SEQUENCE"""
 
+    str_attr = {"refer", "refpos"}
+
     _offset = {"entry": 1.0, "centre": 0.0, "exit": -1.0}
 
     def __init__(
@@ -633,7 +634,8 @@ class _Sequence(SequenceDescr):
         super().__call__(*args, copy=False, **kwargs)
         return self if copy else None
 
-    def reference(self, parser, refer, refpos):
+    def reference(self, parser, refer, refpos) -> float:
+        """Return the abscissa of the reference point of the current structure"""
         if refpos is None:
             orig = 0.5 * (refer - 1.0) * self.length
         else:
@@ -656,6 +658,7 @@ class _Sequence(SequenceDescr):
         return orig
 
     def flatten(self, parser, offset: float = 0.0, refer: float = 1.0, refpos=None):
+        """Iterate over a sequence and its sub-sequences"""
         offset = offset + self.reference(parser, refer, refpos) + self.at
         for fname, *anames in self:
             try:
@@ -675,12 +678,13 @@ class _Sequence(SequenceDescr):
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
-            if abs(dl) > 1.0e-5:
+            fdl = float(dl)  # Expand parameters
+            if abs(fdl) > 1.0e-5:
                 yield from drift(name=f"drift_{drcounter}", l=dl).expand(parser)
                 drcounter += 1
-                if dl < 0.0:
+                if fdl < 0.0:
                     eltype = type(el).__name__.upper()
-                    wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-dl} m")
+                    wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-fdl} m")
                     warnings.warn(wrn, stacklevel=3)
 
         drcounter = 0
@@ -695,7 +699,7 @@ class _Sequence(SequenceDescr):
         yield from insert_drift(self.length - end, elem)  # Final drift
 
 
-class _BeamDescr(ElementDescr):
+class _Beam(ElementDescr):
     """Descriptor for the MAD-X BEAM object"""
 
     @staticmethod
@@ -768,7 +772,7 @@ class _Call:
         self.parser.parse_files(file, final=False)
 
 
-class _Beam:
+class _BeamGenerator:
     """Implement the BEAM Mad command"""
 
     default_beam = {
@@ -792,11 +796,11 @@ class _Beam:
         self.parser = parser
 
     def __call__(self, sequence=None, **kwargs):
-        """create a :py:class:`_BeamDescr` object and store it as 'beam%sequence'"""
+        """create a :py:class:`_Beam` object and store it as 'beam%sequence'"""
         name = "beam%" if sequence is None else f"beam%{sequence}"
         beamobj = self.parser.get(name, None)
         if beamobj is None:
-            beamobj = _BeamDescr(self.default_beam)
+            beamobj = _Beam(self.default_beam)
             self.parser[name] = beamobj
 
         for k, v in kwargs.items():
@@ -855,8 +859,9 @@ _madx_env = {
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
     "instrument": instrument,
+    "sequence": _Sequence,
     # Commands
-    "value": _value,
+    "value": _Value(),
     "__builtins__": {},
 }
 
@@ -883,11 +888,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
 
     _str_arguments = {"file", "refer", "refpos", "sequence", "from"}
 
-    def __init__(self, env: dict, **kwargs):
+    def __init__(self, env: dict, *filenames: str, **kwargs):
         """Common behaviour for MAD-X and MAD8
 
         Args:
             env: global namespace used for evaluating commands
+            *filenames: files to be read at initialisation
             verbose:    If :py:obj:`True`, print details on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
             **kwargs: Initial variable definitions
@@ -895,15 +901,13 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         super().__init__(
             env,
             call=_Call(self),
-            beam=_Beam(self),
-            sequence=_Sequence,
-            centre="centre",
-            entry="entry",
-            exit="exit",
+            beam=_BeamGenerator(self),
             **kwargs,
         )
         self.current_sequence = None
         self["beam"]()
+        if filenames:
+            self.parse_files(*filenames)
 
     def clear(self):
         super().clear()
@@ -1109,14 +1113,15 @@ class MadxParser(_MadParser):
     _continuation = None
     _blockcomment = ("/*", "*/")
 
-    def __init__(self, **kwargs):
+    def __init__(self, *filenames: str, **kwargs):
         """
         Args:
+            *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
             **kwargs:   Initial variable definitions
         """
-        super().__init__(_madx_env, **kwargs)
+        super().__init__(_madx_env, *filenames, **kwargs)
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation"""

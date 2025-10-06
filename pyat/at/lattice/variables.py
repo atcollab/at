@@ -91,7 +91,7 @@ __all__ = [
 ]
 
 import abc
-from operator import add, sub, mul, truediv, pos, neg
+from operator import add, sub, mul, truediv, neg
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
 from typing import Any, Generic, TypeVar
@@ -103,6 +103,14 @@ from .parser import ParamDef, _nop
 
 # Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
+
+
+def _name(obj, priority: int):
+    """Return the parenthesised name of the object"""
+    if isinstance(obj, ParamBase):
+        return obj.name if obj._priority >= priority else f"({obj.name})"
+    else:
+        return str(obj)
 
 
 class _Evaluator(Generic[Number], abc.ABC):
@@ -457,37 +465,48 @@ class VariableBase(Generic[Number], abc.ABC):
 
     def __add__(self, other):
         fun = _BinaryOperator(add, self, other)
-        return ParamBase(fun)
+        name = "+".join((_name(self, 10), _name(other, 10)))
+        return ParamBase(fun, name=name, priority=10)
 
     __radd__ = __add__
 
     def __pos__(self):
-        return ParamBase(_UnaryOperator(pos, self))
+        return self
 
     def __neg__(self):
-        return ParamBase(_UnaryOperator(neg, self))
+        name = "-" + _name(self, 20)
+        return ParamBase(_UnaryOperator(neg, self), name=name, priority=0)
+
+    def __abs__(self):
+        name = f"abs({_name(self, 0)})"
+        return ParamBase(_UnaryOperator(abs, self), name=name, priority=20)
 
     def __sub__(self, other):
         fun = _BinaryOperator(sub, self, other)
-        return ParamBase(fun)
+        name = "-".join((_name(self, 10), _name(other, 10)))
+        return ParamBase(fun, name=name, priority=10)
 
     def __rsub__(self, other):
         fun = _BinaryOperator(sub, other, self)
-        return ParamBase(fun)
+        name = "-".join((_name(other, 10), _name(self, 10)))
+        return ParamBase(fun, name=name, priority=10)
 
     def __mul__(self, other):
         fun = _BinaryOperator(mul, self, other)
-        return ParamBase(fun)
+        name = "*".join((_name(self, 20), _name(other, 20)))
+        return ParamBase(fun, name=name, priority=20)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
         fun = _BinaryOperator(truediv, self, other)
-        return ParamBase(fun)
+        name = "/".join((_name(self, 20), _name(other, 20)))
+        return ParamBase(fun, name=name, priority=20)
 
     def __rtruediv__(self, other):
         fun = _BinaryOperator(truediv, other, self)
-        return ParamBase(fun)
+        name = "/".join((_name(other, 20), _name(self, 20)))
+        return ParamBase(fun, name=name, priority=20)
 
     def __float__(self):
         return float(self._safe_value)
@@ -496,7 +515,8 @@ class VariableBase(Generic[Number], abc.ABC):
         return int(self._safe_value)
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
+        return self.name
+#       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
         return repr(self._safe_value)
@@ -524,6 +544,7 @@ class ParamBase(VariableBase[Number], ParamDef):
         conversion: Callable[[Any], Number] = _nop,
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
+        priority: int = 20,
     ) -> None:
         """
 
@@ -538,6 +559,7 @@ class ParamBase(VariableBase[Number], ParamDef):
             raise TypeError("'Evaluate' must be an _Evaluate object")
         self._evaluator = evaluator
         self._conversion = conversion
+        self._priority = priority
         super().__init__(name=name, bounds=bounds, delta=delta)
 
     def _getfun(self, **kwargs) -> Number:

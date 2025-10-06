@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "set_argparser",
     "skip_class",
     "ignore_class",
     "AnyDescr",
@@ -122,16 +121,6 @@ def _no_default(func):
             self._use_default = True
 
     return wrapper
-
-
-def set_argparser(argparser):
-    """Decorator which adds an "argparser" attribute to a function"""
-
-    def decorator(func):
-        func.argparser = argparser
-        return func
-
-    return decorator
 
 
 def skip_class(
@@ -431,9 +420,9 @@ class BaseParser(DictNoDot, StrParser):
 
     def __init__(
         self,
-        env: dict,
-        *args,
+        env: dict[str, Any],
         strict: bool = True,
+        verbose: bool = False,
         always_force: bool = True,
         **kwargs,
     ):
@@ -442,7 +431,6 @@ class BaseParser(DictNoDot, StrParser):
             env: global namespace used for evaluating commands
             verbose: If True, print detail on the processing
             strict: If :py:obj:`False`, assign 0 to undefined variables
-            *args: dict initialiser
             **kwargs: dict initialiser
         """
         self.skip_comments = CommentHandler(self._linecomment, self._blockcomment)
@@ -453,7 +441,7 @@ class BaseParser(DictNoDot, StrParser):
         self.always_force = always_force
         self._use_default = True
 
-        super().__init__(*args, **kwargs)
+        super().__init__(verbose=verbose, **kwargs)
 
         if not strict:
             self[self._undef_key] = 0
@@ -921,15 +909,15 @@ class UnorderedParser(BaseParser):
     of failures is constant (hopefully zero)
     """
 
-    def __init__(self, env: dict, *args, **kwargs):
+    def __init__(self, env: dict[str, Any], **kwargs):
         """
         Args:
-            env: global namespace
+            env: global namespace used for evaluating commands
             verbose: If True, print detail on the processing
-            *args: dict initialiser
+            strict: If :py:obj:`False`, assign 0 to undefined variables
             **kwargs: dict initialiser
         """
-        super().__init__(env, *args, always_force=False, **kwargs)
+        super().__init__(env, always_force=False, **kwargs)
 
     def _finalise(self, final: bool = True) -> None:
         """Loop on evaluation of the pending statements"""
