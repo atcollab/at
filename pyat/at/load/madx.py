@@ -241,9 +241,9 @@ def p_list(a: Iterable[float], factor: float = 1.0):
 class _MadElement(ElementDescr):
     """Description of MADX elements"""
 
-    str_attr = {"apertype", "refer", "refpos", "sequence", "from"}
+    str_attr = {"apertype", "from"}
 
-    def __init__(self, *args, at=0.0, **kwargs):
+    def __init__(self, *args, at: float = 0.0, **kwargs):
         self.at = at
         # Cannot use "from" as argument or attribute
         setattr(self, "from", kwargs.pop("from", None))
@@ -251,6 +251,7 @@ class _MadElement(ElementDescr):
         super().__init__(*args, **kwargs)
 
     def limits(self, parser: MadxParser, offset: float, refer: float):
+        """Return the entry and exit positions of the element"""
         half_length = 0.5 * self.length
         offset = offset + refer * half_length + self.at
         frm = getattr(self, "from")
@@ -562,7 +563,7 @@ class _Value:
     def __call__(self, **kwargs):
         kwargs.pop("copy", False)
         for key, v in kwargs.items():
-            print(f"{key}: {v}")
+            print(f"{key} = {v}")
 
 
 class _Line(SequenceDescr):
@@ -602,7 +603,7 @@ class _Line(SequenceDescr):
 class _Sequence(SequenceDescr):
     """Descriptor for the MADX SEQUENCE"""
 
-    str_attr = {"refer"}
+    str_attr = {"refer", "refpos"}
 
     _offset = {"entry": 1.0, "centre": 0.0, "exit": -1.0}
 
@@ -633,7 +634,8 @@ class _Sequence(SequenceDescr):
         super().__call__(*args, copy=False, **kwargs)
         return self if copy else None
 
-    def reference(self, parser, refer, refpos):
+    def reference(self, parser, refer, refpos) -> float:
+        """Return the abscissa of the reference point of the current structure"""
         if refpos is None:
             orig = 0.5 * (refer - 1.0) * self.length
         else:
@@ -656,6 +658,7 @@ class _Sequence(SequenceDescr):
         return orig
 
     def flatten(self, parser, offset: float = 0.0, refer: float = 1.0, refpos=None):
+        """Iterate over a sequence and its sub-sequences"""
         offset = offset + self.reference(parser, refer, refpos) + self.at
         for fname, *anames in self:
             try:
@@ -675,7 +678,7 @@ class _Sequence(SequenceDescr):
     def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
-            fdl = float(dl)  # Expand prarameters
+            fdl = float(dl)  # Expand parameters
             if abs(fdl) > 1.0e-5:
                 yield from drift(name=f"drift_{drcounter}", l=dl).expand(parser)
                 drcounter += 1
