@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Combiner", "ParamDef", "ParamBase"]
+__all__ = ["Combiner", "ParamDef", "ParamBase", "_nop"]
 
 import abc
 from operator import add, sub, mul, truediv, neg
