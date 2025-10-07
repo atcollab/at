@@ -42,8 +42,10 @@ class Param(ParamBase, VariableBase[Number]):
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
+        if conversion is not None:
+            value = conversion(value)
         super().__init__(
-            _Constant(conversion(value)),
+            _Constant(value),
             name=name,
             conversion=conversion,
             bounds=bounds,
