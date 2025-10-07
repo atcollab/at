@@ -85,118 +85,25 @@ from __future__ import annotations
 
 __all__ = [
     "VariableBase",
-    "ParamBase",
     "CustomVariable",
     "VariableList",
 ]
 
 import abc
-from operator import add, sub, mul, truediv, neg
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
-from .parser import ParamDef, _nop
+from .parambase import Combiner
 
 # Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
 
 
-def _name(obj, priority: int):
-    """Return the parenthesised name of the object"""
-    if isinstance(obj, ParamBase):
-        return obj.name if obj._priority >= priority else f"({obj.name})"
-    else:
-        return str(obj)
-
-
-class _Evaluator(Generic[Number], abc.ABC):
-    """Abstract base class for evaluators
-
-    An evaluator is a callable object that returns a scalar value.
-    """
-
-    @abc.abstractmethod
-    def __call__(self) -> Number:
-        """Evaluate and return the value
-
-        Returns:
-            The evaluated value
-        """
-        ...
-
-
-class _Constant(_Evaluator[Number]):
-    """An evaluator that always returns a constant value"""
-
-    __slots__ = "value"
-
-    def __init__(self, value: Number):
-        """Initialize a constant evaluator
-
-        Args:
-            value: The constant value to return
-
-        Raises:
-            TypeError: If the value is not a scalar (int or float)
-        """
-        if not isinstance(value, (int, float)):
-            raise TypeError("The parameter value must be a scalar")
-        self.value: Number = value
-
-    def __call__(self) -> Number:
-        return self.value
-
-
-class _BinaryOperator(_Evaluator[Number]):
-    __slots__ = ["operator", "left_operand", "right_operand"]
-
-    @staticmethod
-    def _convert_to_evaluator(value):
-        """Convert a value to an evaluator"""
-        if isinstance(value, (int, float)):
-            return _Constant(value)
-        elif isinstance(value, VariableBase):
-            return value
-        raise TypeError(f"Parameter operation not defined for type {type(value)}")
-
-    def __init__(self, operator, left, right) -> None:
-        """Initialize a binary operator
-
-        Args:
-            operator: The operator function to apply
-            left: The left operand of the operator
-            right: The right operand of the operator
-        """
-        self.operator = operator
-        self.right_operand = self._convert_to_evaluator(right)
-        self.left_operand = self._convert_to_evaluator(left)
-
-    def __call__(self) -> Number:
-        return self.operator(self.left_operand.value, self.right_operand.value)
-
-
-class _UnaryOperator(_Evaluator[Number]):
-    __slots__ = ["operator", "operand"]
-
-    def __init__(self, operator, operand) -> None:
-        """Initialize a unary operator
-
-        Args:
-            operator: The operator function to apply
-            operand: The operand to apply the operator to
-        """
-        self.operator = operator
-        self.operand = operand
-
-    def __call__(self) -> Number:
-        return self.operator(self.operand.value)
-
-
-class VariableBase(Generic[Number], abc.ABC):
+class VariableBase(Combiner, Generic[Number], abc.ABC):
     """A Variable abstract base class
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
@@ -205,7 +112,7 @@ class VariableBase(Generic[Number], abc.ABC):
 
     # Class constants
     DEFAULT_DELTA = 1.0
-    COUNTER_PREFIX = "var"
+    _COUNTER_PREFIX = "var"
 
     _counter = 0
 
@@ -229,7 +136,6 @@ class VariableBase(Generic[Number], abc.ABC):
             ring:       provided to an attempt to get the initial value of the
               variable
         """
-        self.name: str = self._generate_name(name)  #: Variable name
         if bounds is None:
             bounds = (None, None)
         self.bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
@@ -238,17 +144,17 @@ class VariableBase(Generic[Number], abc.ABC):
         self.history_length = history_length
         self._initial = np.nan
         self._history: deque[Number] = deque([], self.history_length)
+        super().__init__(name=self._generate_name(name), **kwargs)
         try:
             self.get(ring=ring, initial=True)
         except ValueError:
             pass
-        super().__init__(**kwargs)
 
     @classmethod
     def _generate_name(cls, name: str) -> str:
         """Generate unique name for variable"""
         cls._counter += 1
-        return name if name else f"{cls.COUNTER_PREFIX}{cls._counter}"
+        return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
 
     def _check_bounds(self, value: Number) -> None:
         """Verify value is within bounds"""
@@ -463,111 +369,12 @@ class VariableBase(Generic[Number], abc.ABC):
         """
         return "\n".join((self._header(), self._line()))
 
-    def __add__(self, other):
-        fun = _BinaryOperator(add, self, other)
-        name = "+".join((_name(self, 10), _name(other, 10)))
-        return ParamBase(fun, name=name, priority=10)
-
-    __radd__ = __add__
-
-    def __pos__(self):
-        return self
-
-    def __neg__(self):
-        name = "-" + _name(self, 20)
-        return ParamBase(_UnaryOperator(neg, self), name=name, priority=0)
-
-    def __abs__(self):
-        name = f"abs({_name(self, 0)})"
-        return ParamBase(_UnaryOperator(abs, self), name=name, priority=20)
-
-    def __sub__(self, other):
-        fun = _BinaryOperator(sub, self, other)
-        name = "-".join((_name(self, 10), _name(other, 10)))
-        return ParamBase(fun, name=name, priority=10)
-
-    def __rsub__(self, other):
-        fun = _BinaryOperator(sub, other, self)
-        name = "-".join((_name(other, 10), _name(self, 10)))
-        return ParamBase(fun, name=name, priority=10)
-
-    def __mul__(self, other):
-        fun = _BinaryOperator(mul, self, other)
-        name = "*".join((_name(self, 20), _name(other, 20)))
-        return ParamBase(fun, name=name, priority=20)
-
-    __rmul__ = __mul__
-
-    def __truediv__(self, other):
-        fun = _BinaryOperator(truediv, self, other)
-        name = "/".join((_name(self, 20), _name(other, 20)))
-        return ParamBase(fun, name=name, priority=20)
-
-    def __rtruediv__(self, other):
-        fun = _BinaryOperator(truediv, other, self)
-        name = "/".join((_name(other, 20), _name(self, 20)))
-        return ParamBase(fun, name=name, priority=20)
-
-    def __float__(self):
-        return float(self._safe_value)
-
-    def __int__(self):
-        return int(self._safe_value)
-
     def __str__(self):
         return self.name
 #       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
         return repr(self._safe_value)
-
-
-class ParamBase(VariableBase[Number], ParamDef):
-    """Read-only base class for parameters
-
-    It is used for computed parameters and should not be instantiated
-    otherwise. See :py:class:`.Variable` for a description of inherited
-    methods
-    """
-
-    COUNTER_PREFIX = "calc"
-
-    _counter = 0
-    _evaluator: _Evaluator[Number]
-    _conversion: Callable[[Any], Number]
-
-    def __init__(
-        self,
-        evaluator: _Evaluator[Number],
-        *,
-        name: str = "",
-        conversion: Callable[[Any], Number] = _nop,
-        bounds: tuple[Number, Number] | None = None,
-        delta: Number = 1.0,
-        priority: int = 20,
-    ) -> None:
-        """
-
-        Args:
-            evaluator:  Evaluator function
-            name:       Name of the parameter
-            conversion: data conversion function
-            bounds:     Lower and upper bounds of the parameter value
-            delta:      Initial variation step
-        """
-        if not isinstance(evaluator, _Evaluator):
-            raise TypeError("'Evaluate' must be an _Evaluate object")
-        self._evaluator = evaluator
-        self._conversion = conversion
-        self._priority = priority
-        super().__init__(name=name, bounds=bounds, delta=delta)
-
-    def _getfun(self, **kwargs) -> Number:
-        return self._conversion(self._evaluator())
-
-    @property
-    def _safe_value(self):
-        return self._getfun()
 
 
 class CustomVariable(VariableBase[Number]):
