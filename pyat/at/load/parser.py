@@ -5,7 +5,7 @@ __all__ = ["StrParser", "StrParameter"]
 import abc
 from collections.abc import Callable
 from typing import Any
-from ..lattice import ParamDef, _nop
+from ..lattice import ParamDef
 
 
 class StrParser(abc.ABC):
@@ -57,7 +57,10 @@ class StrParameter(ParamDef):
     """
 
     def __init__(
-        self, parser: StrParser, expr: str, conversion: Callable[[Any], Any] = _nop
+        self,
+        parser: StrParser,
+        expr: str,
+        conversion: Callable[[Any], Any] | None = None,
     ):
         """Initialise a string parameter
 
