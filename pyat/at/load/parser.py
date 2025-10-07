@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["StrParser", "ParamDef", "StrParameter"]
+__all__ = ["StrParser", "StrParameter"]
 
 import abc
 from collections.abc import Callable
 from typing import Any
+from ..lattice import ParamDef
 
 
 def _nop(value: Any) -> Any:
@@ -59,79 +60,6 @@ class StrParser(abc.ABC):
             NameError: If the expression contains variables
         """
         ...
-
-
-class ParamDef(abc.ABC):
-    """Abstract base class for parameter definitions
-
-    This class defines the interface for parameter objects that can be used
-    as element attributes. It provides methods for getting and setting values,
-    as well as for converting values to the appropriate type.
-    """
-
-    def __init__(self, *, conversion: Callable[[Any], Any] = _nop):
-        """Initialise a parameter definition
-
-        Args:
-            conversion: Function to convert values to the appropriate type
-        """
-        self._conversion = conversion
-
-    def __copy__(self):
-        # Parameters are not copied
-        return self
-
-    def __deepcopy__(self, memo):
-        # Parameters are not deep-copied
-        return self
-
-    @abc.abstractmethod
-    def get(self, **kwargs) -> Any:
-        """Get the current value of the parameter
-
-        Args:
-            **kwargs: Additional arguments for specific implementations
-
-        Returns:
-            The current value of the parameter
-        """
-        ...
-
-    # noinspection PyUnusedLocal
-    def set(self, value: Any) -> None:
-        """Set the value of the parameter
-
-        By default, parameters are read-only. Subclasses should override this
-        method to provide write access.
-
-        Args:
-            value: The new value for the parameter
-
-        Raises:
-            TypeError: Always raised by this default implementation
-        """
-        classname = self.__class__.__name__
-        raise TypeError(f"{classname!r} is read-only")
-
-    value = property(get, set, doc="Actual value of the parameter")
-
-    def set_conversion(self, conversion: Callable[[Any], Any]) -> None:
-        """Set the data type conversion function
-
-        This method is called when a parameter is assigned to an
-        :py:class:`.Element` attribute. It can only be set once.
-
-        Args:
-            conversion: Function to convert values to the appropriate type
-
-        Raises:
-            ValueError: If attempting to change an already set conversion function
-        """
-        if conversion is not self._conversion:
-            if self._conversion is _nop:
-                self._conversion = conversion
-            else:
-                raise ValueError("Cannot change the data type of the parameter")
 
 
 class StrParameter(ParamDef):
@@ -243,20 +171,7 @@ class StrParameter(ParamDef):
         else:
             return val
 
-    def get(self, **kwargs) -> Any:
-        """Get the current value of the parameter
-
-        Evaluates the expression using the parser and applies the conversion function.
-
-        Args:
-            **kwargs: Additional arguments (not used in this implementation)
-
-        Returns:
-            The evaluated and converted value of the expression
-        """
-        return self._conversion(self.parser.evaluate(self.expr))
-
     @property
     def value(self) -> Any:
         """Current value of the parameter"""
-        return self.get()
+        return self._conversion(self.parser.evaluate(self.expr))
