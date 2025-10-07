@@ -9,7 +9,7 @@ import weakref
 import numpy as np
 import numpy.typing as npt
 
-from .parambase import Combiner, ParamBase, _Constant, ParamDef, _nop
+from .parambase import Combiner, ParamBase, _Constant, ParamDef
 from .variables import VariableBase, Number
 
 _ACCEPTED = ParamDef
@@ -30,7 +30,7 @@ class Param(ParamBase, VariableBase[Number]):
         value: Number,
         *,
         name: str = "",
-        conversion: Callable[[Any], Number] = _nop,
+        conversion: Callable[[Any], Number] | None = None,
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
     ) -> None:
@@ -68,7 +68,7 @@ class Param(ParamBase, VariableBase[Number]):
     def _safe_value(self):
         return self._evaluator()
 
-    def set_conversion(self, conversion: Callable[[Any], Number]) -> None:
+    def set_conversion(self, conversion: Callable[[Any], Any]) -> None:
         oldv = self._evaluator()
         super().set_conversion(conversion)
         self._evaluator = _Constant(conversion(oldv))
