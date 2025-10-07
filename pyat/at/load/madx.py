@@ -145,8 +145,8 @@ from .utils import split_ignoring_parentheses, protect, restore
 from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser, ignore_class
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, StrParameter, AtWarning
-from ..lattice import elements as elt
+from .parser import StrParameter
+from ..lattice import Lattice, elements as elt, Particle, AtWarning
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 

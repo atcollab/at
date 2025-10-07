@@ -26,7 +26,8 @@ from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Lattice, elements as elt, params_filter, StrParser
+from .parser import StrParser
+from ..lattice import Lattice, elements as elt, params_filter
 
 _dot = re.compile(r'("?)(\.?[a-zA-Z_][\w.:]*)\1')  # look for MAD identifiers
 _colon = re.compile(r":(?!=)")  # split on :=

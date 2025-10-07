@@ -12,8 +12,7 @@ from typing import Any
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
-from ..parser import _nop, ParamDef
-from ..variables import ParamBase
+from ..parambase import Combiner, ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
 
 
@@ -405,7 +404,7 @@ class Element:
 
     def parameterise(
         self, attrname: str, index: int | None = None, name: str = ""
-    ) -> ParamBase:
+    ) -> Combiner:
         """Convert attribute to parameter preserving value.
 
         The value of the attribute is kept unchanged. If the attribute is
@@ -431,7 +430,7 @@ class Element:
         current_value = self.get_parameter(attrname, index=index)
 
         # If it's already a parameter, return it
-        if isinstance(current_value, ParamBase):
+        if isinstance(current_value, Combiner):
             return current_value
 
         # Create a new parameter with the current value
