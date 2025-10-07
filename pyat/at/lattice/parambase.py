@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Combiner", "ParamDef", "ParamBase", "_nop"]
+__all__ = ["Combiner", "ParamDef", "ParamBase"]
 
 import abc
 from operator import add, sub, mul, truediv, neg
@@ -182,13 +182,12 @@ class ParamDef(abc.ABC):
     values to the appropriate type.
     """
 
-    def __init__(self, *, conversion: Callable[[Any], Any] = _nop):
-        """Initialise a parameter definition
-
+    def __init__(self, *, conversion: Callable[[Any], Any] | None = None):
+        """
         Args:
             conversion: Function to convert values to the appropriate type
         """
-        self._conversion = conversion
+        self._conversion = _nop if conversion is None else conversion
 
     def __copy__(self):
         # Parameters are not copied
@@ -264,7 +263,6 @@ class ParamBase(Combiner, ParamDef):
 
     def __str__(self):
         return self.name
-#       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
         return repr(self._safe_value)
