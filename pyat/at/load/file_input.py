@@ -543,14 +543,10 @@ class BaseParser(DictNoDot, StrParser):
             idx = _named.search(exc.args[-1])  # Missing pos. arg.
             if idx is None:
                 idx = _singlequoted.search(exc.args[0])  # Not allowed in seq.
-            if idx is None:
-                return "TypeError"
-            else:
-                return idx[1]
+            return "TypeError" if idx is None else idx[1]
         elif isinstance(exc, ValueError):  # overlap
-            print(exc.args[0])
             names = _singlequoted.search(exc.args[0])
-            return names[-1]
+            return "ValueError" if names is None else names[1]
         else:
             return None
 

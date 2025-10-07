@@ -5,21 +5,7 @@ __all__ = ["StrParser", "StrParameter"]
 import abc
 from collections.abc import Callable
 from typing import Any
-from ..lattice import ParamDef
-
-
-def _nop(value: Any) -> Any:
-    """No-operation function that returns its input unchanged
-
-    This function is used as a default conversion function in parameter classes.
-
-    Args:
-        value: Any value
-
-    Returns:
-        The input value unchanged
-    """
-    return value
+from ..lattice import ParamDef, _nop
 
 
 class StrParser(abc.ABC):
