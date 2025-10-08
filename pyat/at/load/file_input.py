@@ -26,7 +26,8 @@ from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
 import numpy as np
 
 from .utils import split_ignoring_parentheses, protect, restore
-from ..lattice import Lattice, elements as elt, params_filter, StrParser
+from .parser import StrParser
+from ..lattice import Lattice, elements as elt, params_filter
 
 _dot = re.compile(r'("?)(\.?[a-zA-Z_][\w.:]*)\1')  # look for MAD identifiers
 _colon = re.compile(r":(?!=)")  # split on :=
@@ -542,14 +543,10 @@ class BaseParser(DictNoDot, StrParser):
             idx = _named.search(exc.args[-1])  # Missing pos. arg.
             if idx is None:
                 idx = _singlequoted.search(exc.args[0])  # Not allowed in seq.
-            if idx is None:
-                return "TypeError"
-            else:
-                return idx[1]
+            return "TypeError" if idx is None else idx[1]
         elif isinstance(exc, ValueError):  # overlap
-            print(exc.args[0])
             names = _singlequoted.search(exc.args[0])
-            return names[-1]
+            return "ValueError" if names is None else names[1]
         else:
             return None
 

@@ -9,19 +9,19 @@ import weakref
 import numpy as np
 import numpy.typing as npt
 
-from .parser import ParamDef, _nop
-from .variables import ParamBase, _Constant, Number
+from .parambase import Combiner, ParamBase, _Constant, ParamDef
+from .variables import VariableBase, Number
 
 _ACCEPTED = ParamDef
 
 
-class Param(ParamBase[Number]):
+class Param(ParamBase, VariableBase[Number]):
     """Standalone scalar parameter
 
     See :py:class:`.Variable` for a description of inherited methods
     """
 
-    COUNTER_PREFIX = "param"
+    _COUNTER_PREFIX = "param"
 
     _counter = 0
 
@@ -30,7 +30,7 @@ class Param(ParamBase[Number]):
         value: Number,
         *,
         name: str = "",
-        conversion: Callable[[Any], Number] = _nop,
+        conversion: Callable[[Any], Number] | None = None,
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
     ) -> None:
@@ -42,14 +42,15 @@ class Param(ParamBase[Number]):
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
+        if conversion is not None:
+            value = conversion(value)
         super().__init__(
-            _Constant(conversion(value)),
+            _Constant(value),
             name=name,
             conversion=conversion,
             bounds=bounds,
             delta=delta,
         )
-        self._history.append(self._evaluator())
 
     def _getfun(self, ring=None) -> Number:
         return self._evaluator()
@@ -57,7 +58,19 @@ class Param(ParamBase[Number]):
     def _setfun(self, value, ring=None) -> None:
         self._evaluator = _Constant(self._conversion(value))
 
-    def set_conversion(self, conversion: Callable[[Any], Number]) -> None:
+    @property
+    def value(self) -> Number:
+        return self._evaluator()
+
+    @value.setter
+    def value(self, value: Number) -> None:
+        self.set(value)
+
+    @property
+    def _safe_value(self):
+        return self._evaluator()
+
+    def set_conversion(self, conversion: Callable[[Any], Any]) -> None:
         oldv = self._evaluator()
         super().set_conversion(conversion)
         self._evaluator = _Constant(conversion(oldv))
@@ -72,7 +85,7 @@ class _SafeArray(np.ndarray):
 
     def __setitem__(self, key: Any, value: Any) -> None:
         """Set an item in the array, preventing parameter assignment."""
-        if isinstance(value, ParamBase):
+        if isinstance(value, Combiner):
             raise TypeError("Cannot set a parameter into an array")
         super().__setitem__(key, value)
 
@@ -86,8 +99,8 @@ def AttributeArray(
 ) -> np.ndarray:
     """Create an array of attributes, which may contain parameters.
 
-    This function creates either a ParamArray (if the input contains parameters)
-    or a SafeArray (if the input contains only regular values).
+    This function creates either a :py:class:`ParamArray` (if the input contains
+    parameters) or a :py:class:`_SafeArray` (if the input contains only regular values).
 
     Args:
         value: Input array or sequence
@@ -118,16 +131,16 @@ class ParamArray(np.ndarray):
     class ValueArray(np.ndarray):
         """Subclass of ndarray which reports changes back to its parent ParamArray.
 
-        This array is used as the value property of ParamArray. When items in this array
-        are modified, the changes are propagated back to the parent ParamArray.
+        This array is used as the value property of :py:class:`ParamArray`. When items
+        in this array are modified, the changes are propagated back to the
+        :py:class:`ParamArray` parent.
 
         This is the array obtained with an element get_attribute.
         It is also the one used when setting an item of an array attribute.
         """
 
-        def __new__(cls, parent: "ParamArray", dtype: npt.DTypeLike = float):
-            """Create a new ValueArray instance.
-
+        def __new__(cls, parent: ParamArray, dtype: npt.DTypeLike = float):
+            """
             Args:
                 parent: The parent ParamArray
                 dtype: Data type of the array
@@ -155,7 +168,6 @@ class ParamArray(np.ndarray):
     def __new__(
         cls, value: Any, shape: tuple[int, ...] = (-1,), dtype: npt.DTypeLike = float
     ):
-        """Create a new ParamArray instance."""
         obj = np.asfortranarray(value, dtype="O").reshape(shape).view(cls)
         obj._dtype = dtype
         return obj
@@ -174,11 +186,11 @@ class ParamArray(np.ndarray):
 
     @property
     def value(self) -> np.ndarray:
-        """Get a numeric array with the current values of all parameters.
+        """Numeric array with the current values of all the parameters.
 
-        This property returns a ValueArray that contains the numeric values of all
-        parameters in the array. Changes to this array are propagated back to
-        the parameters.
+        This property returns a :py:class:`ValueArray` that contains the numeric values
+        of all parameters in the array. Changes to this array are propagated back to
+        the :py:class:`ParamArray` parent.
 
         Returns:
             A numeric array with the current parameter values
@@ -200,4 +212,4 @@ class ParamArray(np.ndarray):
         return repr(self.value)
 
     def __str__(self) -> str:
-        return np.array2string(self, formatter={"object": str})
+        return np.array2string(self, formatter={"all": str})

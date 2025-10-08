@@ -12,8 +12,7 @@ from typing import Any
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
-from ..parser import _nop, ParamDef
-from ..variables import ParamBase
+from ..parambase import ParamBase, ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
 
 
