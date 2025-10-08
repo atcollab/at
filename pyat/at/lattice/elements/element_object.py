@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
-from ..parambase import Combiner, ParamDef, _nop
+from ..parambase import ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
 
 
@@ -395,8 +395,12 @@ class Element:
             True if the attribute, or array item is parameterised, False otherwise
         """
         # Check if any attribute is parameterised
+        # Works for AT and MADX parameters
         if attrname is None:
-            return len(self._parameters) > 0
+            if len(self._parameters) > 0:
+                return True
+            # Check for MADX parameters
+            return any(self.is_parameterised(attribute) for attribute in self.__dict__)
 
         # Get the attribute or specific index
         attribute = self.get_parameter(attrname, index=index)
@@ -404,7 +408,7 @@ class Element:
 
     def parameterise(
         self, attrname: str, index: int | None = None, name: str = ""
-    ) -> Combiner:
+    ) -> _ACCEPTED:
         """Convert attribute to parameter preserving value.
 
         The value of the attribute is kept unchanged. If the attribute is
@@ -430,7 +434,7 @@ class Element:
         current_value = self.get_parameter(attrname, index=index)
 
         # If it's already a parameter, return it
-        if isinstance(current_value, Combiner):
+        if isinstance(current_value, _ACCEPTED):
             return current_value
 
         # Create a new parameter with the current value
@@ -460,10 +464,11 @@ class Element:
 
         Attributes which are not parameters are silently ignored.
         """
+        # Worls for AT and MADX parameters
         if attrname is None:
             # freeze all the attributes
             # make a copy of the parameters dict to avoid modifications during iteration
-            for name, attr in self._parameters.copy().items():
+            for name, attr in list(self._parameters.items()):
                 setattr(self, name, attr.value)
         else:
             attr = self.get_parameter(attrname)
