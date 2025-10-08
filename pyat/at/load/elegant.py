@@ -418,13 +418,14 @@ _elegant_env = {
     "HMONITOR": HMON,
     "VMON": VMON,
     "VMONITOR": VMON,
-
-    "__builtins__": {}
+    "__builtins__": {},
 }
 
 _ignore_names = ["SOLENOID", "SCRAPER", "ECOL", "RCOL", "CSRDRIF"]
 
-_elegant_env.update((name, ignore_class(name, _ElegantElement)) for name in _ignore_names)
+_elegant_env.update(
+    (name, ignore_class(name, _ElegantElement)) for name in _ignore_names
+)
 
 _skip_names = [
     "MAXAMP",

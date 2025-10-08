@@ -19,9 +19,9 @@ import numpy as np
 import scipy.io
 
 # imports necessary in 'globals()' for 'eval'
-from numpy import array
+from numpy import array  # noqa: F401
 from numpy import nan as NaN  # noqa: F401
-from numpy import uint8
+from numpy import uint8  # noqa: F401
 
 from ..lattice import (
     AtError,
@@ -491,7 +491,8 @@ def _element_to_m(elem: Element) -> str:
             mod_opt = {"threshold": max_array, "max_line_width": np.inf}
             if arr.ndim > 1:
                 # replace endline character by ; to indicate the end of a 1D array
-                # replace [SPACE by [ to remove extra space from +sign of first array element
+                # replace [SPACE by [ to remove extra space from +sign of
+                # first array element
                 return (
                     np.array2string(arg, **mod_opt)
                     .replace("\n", ";")
