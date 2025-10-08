@@ -835,7 +835,7 @@ _madx_env = {
     "emass": emass,  # [GeV]
     "pmass": pmass,  # [GeV]
     "nmass": 1.0e-03 * _cst["neutron mass energy equivalent in MeV"][0],  # [GeV]
-    "umass": 1.0e-03 * _cst["atomic mass constant energy equivalent in MeV"][0],  # [GeV]
+    "umass": 1.0e-03 * _cst["atomic mass constant energy equivalent in MeV"][0],  # GeV
     "mumass": 1.0e-03 * _cst["muon mass energy equivalent in MeV"][0],  # [GeV]
     "hbar": _hb / qelect * 1.0e-09,  # [GeV.s]
     "erad": erad,  # [m]
