@@ -46,7 +46,7 @@ class Exporter:
 
             raise NameError(f"Cannot store {elem.name}")
 
-        def scan(ring: Lattice) -> Generator[tuple[str, ElementDescr], None, None]:
+        def scan(ring: Lattice) -> Generator[tuple[str, float], None, None]:
             """Run through the lattice and store the converted elements"""
             end = 0.0
             for atelem in ring:
@@ -115,15 +115,17 @@ class Exporter:
         print(f"\n{self.seqname.ljust(10)}: LINE=( {self.continuation}", file=file)
         for lnum in range(nl):
             print(
-                f"  {elnames(self.seq[10*lnum:10*(lnum+1)])}, {self.continuation}",
+                f"  {elnames(self.seq[10 * lnum : 10 * (lnum + 1)])},"
+                f" {self.continuation}",
                 file=file,
             )
-        print(f"  {elnames(self.seq[10*nl:])}){self.delimiter}\n", file=file)
+        print(f"  {elnames(self.seq[10 * nl :])}){self.delimiter}\n", file=file)
 
     def export(self, filename: str | None = None) -> None:
         def do_export(file):
             print(
-                f"! Converted by PyAT from in_file={self.in_file}, use={self.in_use!r}\n",
+                f"! Converted by PyAT from in_file={self.in_file},"
+                f" use={self.in_use!r}\n",
                 file=file,
             )
             self.print_beam(file)
