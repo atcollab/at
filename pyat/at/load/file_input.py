@@ -37,7 +37,7 @@ _singlequoted = re.compile(r"'([\w.]*)'")  # look for single-quoted items
 _named = re.compile(r"name=([\w.]*)")  # look for 'name=MADid' items
 
 
-class CommentHandler(object):
+class CommentHandler:
     """
     Handle comments in the file.
     """
