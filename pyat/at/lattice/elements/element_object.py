@@ -12,7 +12,7 @@ from typing import Any
 import numpy as np
 
 from .conversions import _array, _array66, _int, _float
-from ..parambase import ParamBase, ParamDef, _nop
+from ..parambase import ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
 
 
@@ -349,6 +349,7 @@ class Element:
         Returns:
             True if the attribute, or array item is parameterised, False otherwise
         """
+        # Check AT or MADX parameters
         # Check if any attribute is parameterised
         if attrname is None:
             return any(self.is_parameterised(attribute) for attribute in self.__dict__)
@@ -369,7 +370,7 @@ class Element:
 
     def parameterise(
         self, attrname: str, index: int | None = None, name: str = ""
-    ) -> ParamBase:
+    ) -> _ACCEPTED:
         """Convert attribute to parameter preserving value.
 
         The value of the attribute is kept unchanged. If the attribute is
@@ -395,7 +396,7 @@ class Element:
         current_value = self.get_parameter(attrname, index=index)
 
         # If it's already a parameter, return it
-        if isinstance(current_value, ParamBase):
+        if isinstance(current_value, _ACCEPTED):
             return current_value
 
         # Create a new parameter with the current value
@@ -428,6 +429,7 @@ class Element:
 
         def _freeze_attribute(attrname: str, attr: Any) -> None:
             """Helper function to freeze a parameterised attribute."""
+            # Accepts AT or MADX parameters
             if isinstance(attr, ParamDef):
                 setattr(self, attrname, attr.value)
             elif isinstance(attr, np.ndarray):
