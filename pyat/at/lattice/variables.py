@@ -52,6 +52,7 @@ that their sum is constant:
 
         If *total_length* is None, it is set to the initial total length
         '''
+
         def __init__(self, drift1, drift2, total_length=None, **kwargs):
             # store the 2 variable elements
             self.drift1 = drift1
@@ -391,10 +392,10 @@ class CustomVariable(VariableBase):
         )
 
     def _getfun(self, ring=None) -> Number:
-        return self.getfun(*self.args, ring=ring, **self.kwargs)
+        return self.getfun(*self.args, **self.kwargs)
 
     def _setfun(self, value: Number, ring=None):
-        self.setfun(value, *self.args, ring=ring, **self.kwargs)
+        self.setfun(value, *self.args, **self.kwargs)
 
 
 class VariableList(list):

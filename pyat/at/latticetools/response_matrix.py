@@ -231,6 +231,7 @@ def _resp(
 
 class _PicklableFunction:
     """Necessary to pickle interactively defined functions"""
+
     def __init__(self, fun):
         self._fun = fun
 
@@ -440,13 +441,15 @@ class ResponseMatrix(_SvdSolver):
                 yield beg, end
                 beg = end
 
-        # for efficiency of parallel computation, the variable's refpts must be integer
-        for var in variables:
-            var.refpts = ring.get_uint32_index(var.refpts)
+        if ring is not None:
+            # for efficiency of parallel computation, the variable's refpts
+            # must be integer
+            for var in variables:
+                var.refpts = ring.get_uint32_index(var.refpts)
         self.ring = ring
         self.variables = variables
         self.observables = observables
-        variables.get(ring=ring, initial=True)
+        # Get the shape of observables
         observables.evaluate(ring=ring, initial=True)
         super().__init__(len(observables.flat_values), len(variables))
         self._ob = [self._obsmask[beg:end] for beg, end in limits(self.observables)]
@@ -560,7 +563,6 @@ class ResponseMatrix(_SvdSolver):
             response:       Response matrix
         """
         self._eval_args = kwargs
-        self.observables.evaluate(self.ring)
 
         if use_mp:
             global _globring

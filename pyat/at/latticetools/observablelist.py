@@ -434,9 +434,10 @@ class ObservableList(list):
         if self.needs is None or initial:
             self._setup(ring)
 
-        trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata = ringeval(
-            ring, dp=dp, dct=dct, df=df
-        )
+        if ring is not None:
+            trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata = ringeval(
+                ring, dp=dp, dct=dct, df=df
+            )
         return _ObsResults(obseval(ring, ob) for ob in self)
 
     def check(self) -> bool:
