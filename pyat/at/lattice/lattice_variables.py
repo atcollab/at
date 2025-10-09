@@ -57,22 +57,24 @@ class RefptsVariable(VariableBase):
             bounds (tuple[float, float]):   Lower and upper bounds of the
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
-            ring (Lattice): If specified, it is used to get and store the initial
-              value of the variable. Otherwise, the initial value is set to None
+            ring (Lattice): Default lattice. It will be used if *ring* is not provided
+              to the :py:class:`~RefptsVariable.get` or :py:class:`~RefptsVariable.set`
+              methods. Note that if *ring* is fixed, you should consider using a
+              :py:class:`ELementVariable` instead.
         """
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         self.refpts = refpts
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, ring: Lattice = None):
+    def _setfun(self, value: float, ring: Lattice = None, **_):
         if ring is None:
             raise ValueError("Can't set values if ring is None.\n"
                              "Try to use an ElementVariable if possible")
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
-    def _getfun(self, ring: Lattice = None) -> float:
+    def _getfun(self, ring: Lattice = None, **_) -> float:
         if ring is None:
             raise ValueError("Can't get values if ring is None")
         values = np.array([self._getf(elem) for elem in ring.select(self.refpts)])
@@ -124,11 +126,11 @@ class ElementVariable(VariableBase):
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, **kwargs):
+    def _setfun(self, value: float, **_):
         for elem in self._elements:
             self._setf(elem, value)
 
-    def _getfun(self, **kwargs) -> float:
+    def _getfun(self, **_) -> float:
         values = np.array([self._getf(elem) for elem in self._elements])
         return np.average(values)
 
