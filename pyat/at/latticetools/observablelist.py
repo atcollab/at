@@ -279,6 +279,7 @@ class ObservableList(list):
             method (Callable):  Method for linear optics. Used for
               :py:class:`.LocalOpticsObservable`.
               Default: :py:obj:`~.linear.linopt6`
+            **kwargs:       Other keywords are passed to the evaluation functions.
         """
 
         def obseval(ring, obs):
