@@ -23,14 +23,11 @@ method and the following properties:
 from __future__ import annotations
 
 __all__ = [
-    "EvaluationVariable",
     "ObservableList",
 ]
 
 from collections.abc import Iterable, Iterator
 from functools import reduce
-from typing import ClassVar
-import contextlib
 
 import numpy as np
 import numpy.typing as npt
@@ -39,17 +36,17 @@ import numpy.typing as npt
 from .observables import Observable, ElementObservable, Need
 from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
-from ..lattice import Lattice, Refpts, All, ItemVariable
+from ..lattice import Lattice, Orbit, Refpts, All
 from ..physics import linopt6
 from ..tracking import internal_lpass
 
 
-def _flatten(vals, order="F") -> npt.NDArray[np.float64]:
+def _flatten(vals, order="F") -> npt.NDArray[float]:
     return np.concatenate([np.reshape(v, -1, order=order) for v in vals])
 
 
 class _ObsResIter(Iterator):
-    """Iterator object for the _ObsResult class."""
+    """Iterator object for the _ObsResult class"""
 
     def __init__(self, obsiter):
         self.base = obsiter
@@ -60,14 +57,12 @@ class _ObsResIter(Iterator):
 
 
 class _ObsResults(tuple):
-    """Tuple-like object for the output of  ObservableList.evaluate.
+    """Tuple-like object for the output of  ObservableList.evaluate
 
     _ObsResult implements a special treatment when the evaluation ends with an error.
     The error is stored instead of the value. This object raises the error a posteriori,
     when accessing the missing value.
     """
-
-    __slots__ = ()
 
     def __getitem__(self, item):
         # Raises the stored error when accessing a missing value
@@ -86,12 +81,11 @@ class _ObsResults(tuple):
 class ObservableList(list):
     """Handles a list of Observables to be evaluated together.
 
-    :py:class:`ObservableList` supports all the :py:class:`list` methods, like
+    :py:class:`ObservableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
     """
 
-    # class attributes
-    _needs_ring: ClassVar[set[Need]] = {
+    needs_ring = {
         Need.RING,
         Need.ORBIT,
         Need.MATRIX,
@@ -101,52 +95,37 @@ class ObservableList(list):
         Need.EMITTANCE,
         Need.GEOMETRY,
     }
-    _needs_orbit: ClassVar[set[Need]] = {
+    needs_orbit = {
         Need.ORBIT,
         Need.MATRIX,
         Need.GLOBALOPTICS,
         Need.LOCALOPTICS,
         Need.EMITTANCE,
     }
-    _needs_optics: ClassVar[set[Need]] = {Need.GLOBALOPTICS, Need.LOCALOPTICS}
+    needs_optics = {Need.GLOBALOPTICS, Need.LOCALOPTICS}
 
     def __init__(
         self,
         obsiter: Iterable[Observable] = (),
-        ring: Lattice | None = None,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
             obsiter:    Iterable of :py:class:`.Observable`\ s
-            ring:       Default lattice. It will be used if *ring* is not provided to
-              the :py:meth:`~ObservableList.evaluate` function.
-
-        The following keyword arguments define the default values to be used when not
-        given to the :py:meth:`~ObservableList.evaluate` method
 
         Keyword Args:
-            orbit (Orbit):  Initial orbit. Avoids looking for the closed
+            orbit (Orbit):      Initial orbit. Avoids looking for the closed
               orbit if it is already known. Used for
-              :py:class:`.MatrixObservable` and :py:class:`.LocalOpticsObservable`
-            twiss_in:       Initial conditions for transfer line optics.
+              :py:class:`MatrixObservable` and :py:class:`LocalOpticsObservable`
+            twiss_in:           Initial conditions for transfer line optics.
               See :py:func:`.get_optics`. Used for
-              :py:class:`.LocalOpticsObservable`
-            r_in (Orbit):   Initial trajectory, used for
-              :py:class:`.TrajectoryObservable`, Default: zeros(6)
-            dp (float):     Momentum deviation. Defaults to :py:obj:`None`
-            dct (float):    Path lengthening. Defaults to :py:obj:`None`
-            df (float):     Deviation from the nominal RF frequency.
-              Defaults to :py:obj:`None`
+              :py:class:`LocalOpticsObservable`
             method (Callable):  Method for linear optics. Used for
-              :py:class:`.LocalOpticsObservable`.
+              :py:class:`LocalOpticsObservable`.
               Default: :py:obj:`~.linear.linopt6`
-            use_mp (bool):  Activate parallel calculation. Used for
-              :py:class:`.RDTObservable`, Default: :py:obj:`False`
-            pool_size (int | None):    Number of processes used for parallelization.
-              Used for :py:class:`.RDTObservable`, Default: :py:obj:`None`
-            **kwargs:       Other keywords are passed to the evaluation functions.
+            r_in (Orbit):       Initial trajectory, used for
+              :py:class:`TrajectoryObservable`, Default: zeros(6)
 
 
         Example:
@@ -178,7 +157,6 @@ class ObservableList(list):
 
             Get a flattened array of tunes and horizontal emittance
         """
-        self.ring = ring
         self.orbitrefs = None
         self.opticsrefs = None
         self.passrefs = None
@@ -190,7 +168,7 @@ class ObservableList(list):
         super().__init__(obsiter)
 
     # noinspection PyProtectedMember
-    def _setup(self, ring: Lattice | None):
+    def _setup(self, ring: Lattice):
         # Compute the union of all needs
         needs = set()
         rdt_type = set()
@@ -201,9 +179,8 @@ class ObservableList(list):
             if isinstance(obs, RDTObservable):
                 rdt_type.add(obs._rdt_type)
 
-        if (needs & self._needs_ring) and ring is None:
-            msg = "At least one Observable needs a ring argument."
-            raise ValueError(msg)
+        if (needs & self.needs_ring) and ring is None:
+            raise ValueError("At least one Observable needs a ring argument")
 
         self.needs = needs
         self.rdt_type = rdt_type
@@ -238,44 +215,33 @@ class ObservableList(list):
             self.passrefs = passrefs
             self.matrixrefs = matrixrefs
 
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            return type(self)(super().__getitem__(index), **self.kwargs)
-        else:
-            return super().__getitem__(index)
-
     def __iadd__(self, other: ObservableList):
         if not isinstance(other, ObservableList):
-            msg = f"Cannot add a {type(other)} to an ObservableList."
-            raise TypeError(msg)
+            raise TypeError(f"Cannot add a {type(other)} to an ObservableList")
         self.extend(other)
         return self
 
     def __add__(self, other) -> ObservableList:
-        nobs = ObservableList(self, **self.kwargs)
+        nobs = ObservableList(self)
         nobs += other
         return nobs
 
     def append(self, obs: Observable):
         """Append observable to the end of the list."""
         if not isinstance(obs, Observable):
-            msg = f"Cannot add a {type(obs)} to an ObservableList."
-            raise TypeError(msg)
+            raise TypeError(f"Cannot append a {type(obs)} to an ObservableList")
         self.needs = None
         super().append(obs)
 
     def extend(self, obsiter: Iterable[Observable]):
         """Extend list by appending Observables from the iterable."""
         self.needs = None
-        with contextlib.suppress(AttributeError):
-            self.kwargs |= obsiter.kwargs
         super().extend(obsiter)
 
     def insert(self, index: int, obs: Observable):
         """Insert Observable before index."""
         if not isinstance(obs, Observable):
-            msg = f"Cannot insert a {type(obs)} to an ObservableList."
-            raise TypeError(msg)
+            raise TypeError(f"Cannot insert a {type(obs)} in an ObservableList")
         self.needs = None
         super().insert(index, obs)
 
@@ -313,10 +279,6 @@ class ObservableList(list):
             method (Callable):  Method for linear optics. Used for
               :py:class:`.LocalOpticsObservable`.
               Default: :py:obj:`~.linear.linopt6`
-            use_mp (bool):  Activate parallel calculation. Used for
-              :py:class:`.RDTObservable`, Default: :py:obj:`False`
-            pool_size (int | None):    Number of processes used for parallelization.
-              Used for :py:class:`.RDTObservable`, Default: :py:obj:`None`
             **kwargs:       Other keywords are passed to the evaluation functions.
         """
 
@@ -350,21 +312,22 @@ class ObservableList(list):
             return obs.evaluate(*data, initial=initial, **kw)
 
         @frequency_control
-        def ringeval(ring, o0, dp=None, dct=None, df=None):
+        def ringeval(ring, o0):
             """Optics computations."""
             keep_lattice = False
             trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = rdtdata = (
                 None
             )
             needs = self.needs
-            needs_o0 = (needs & self._needs_orbit) and (o0 is None)
+            needs_o0 = (needs & self.needs_orbit) and (o0 is None)
 
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
-                trajs = r_out[:, :, :, 0].T
+                trajs = r_out[:, 0, :, 0].T
                 keep_lattice = True
 
+            # if needs & self.needs_orbit:
             if Need.ORBIT in needs or needs_o0:
                 # Closed orbit computation
                 try:
@@ -395,7 +358,7 @@ class ObservableList(list):
                 )
                 keep_lattice = True
 
-            if (needs & self._needs_optics) and o0 is not None:
+            if (needs & self.needs_optics) and o0 is not None:
                 # Linear optics computation
                 try:
                     _, rgdata, eldata = ring.get_optics(
@@ -408,7 +371,7 @@ class ObservableList(list):
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
                         twiss_in=twiss_in,
-                        method=method,
+                        method=method
                     )
                 except AtError as err:
                     rgdata = eldata = err
@@ -443,9 +406,10 @@ class ObservableList(list):
 
             return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata
 
-        if ring is None:
-            ring = self.ring
         kw = self.kwargs.copy()
+        rg = kw.pop("ring", None)
+        if ring is None:
+            ring = rg
         kw.update(kwargs)
         r_in = kw.pop("r_in", np.zeros(6))
         twiss_in = kw.pop("twiss_in", None)
@@ -464,7 +428,7 @@ class ObservableList(list):
 
         if ring is not None:
             trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata = ringeval(
-                ring, orbit, dp=dp, dct=dct, df=df
+                ring, orbit
             )
 
         return _ObsResults(obseval(ring, ob) for ob in self)
@@ -480,12 +444,6 @@ class ObservableList(list):
         """
         return all(obs.check() for obs in self)
 
-    @property
-    def axis_label(self):
-        """y-axis label combining the axis_label of all observables (read only)."""
-        labs = {obs.axis_label for obs in self if obs.axis_label is not None}
-        return ", ".join(labs)
-
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
         """Set the excluded mask on the selected observable."""
@@ -495,19 +453,20 @@ class ObservableList(list):
         self.needs = None
 
     def _lookup(self, *ids: int | str) -> list[Observable]:
-        """Observable lookup function."""
+        """Observable lookup function"""
 
-        def select(obsid):
-            if isinstance(obsid, str):
+        def select(id):
+            if isinstance(id, str):
                 for obs in self:
-                    if obs.name == obsid:
+                    if obs.name == id:
                         return obs
-                raise KeyError(obsid)
+                else:
+                    raise KeyError(id)
             else:
-                return self[obsid]
+                return self[id]
 
         if ids:
-            return [select(oid) for oid in ids]
+            return [select(id) for id in ids]
         else:
             return self
 
@@ -609,7 +568,7 @@ class ObservableList(list):
 
     def get_flat_deviations(
         self, *obsid: str | int, err: float | None = None, order: str = "F"
-    ) -> npt.NDArray[np.float64]:
+    ) -> npt.NDArray[float]:
         """Return a 1-D array of deviations from target values.
 
         Args:
@@ -670,7 +629,7 @@ class ObservableList(list):
         """Return the residuals of observables.
 
         Args:
-            *obsid: name or index of selected observables (Default all)
+             *obsid: name or index of selected observables (Default all)
             err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
@@ -694,7 +653,7 @@ class ObservableList(list):
             err:    Default observable value to be used when the evaluation failed. By
                 default, an Exception is raised.
         """
-        return self._collect("target", *obsid, err=err)
+        return self._collect("target", *obsid)
 
     def get_flat_targets(self, *obsid: str | int) -> tuple:
         """Return a 1-D array of target values of observables.
@@ -714,7 +673,7 @@ class ObservableList(list):
         get_weighted_values, doc="Weighted values of all observables"
     )
     flat_weighted_values = property(
-        get_flat_weighted_values, doc="1-D array of Observable weighted values"
+        get_flat_weighted_values, doc="1-D array of Observable weigthed values"
     )
     deviations = property(get_deviations, doc="Deviations from target values")
     flat_deviations = property(
@@ -727,74 +686,8 @@ class ObservableList(list):
         get_flat_weighted_deviations,
         doc="1-D array of weighted deviations from target values",
     )
-    weights = property(get_weights, doc="Weights of all observables")
     flat_weights = property(get_flat_weights, doc="1-D array of Observable weights")
     residuals = property(get_residuals, doc="Residuals of all observable")
     sum_residuals = property(get_sum_residuals, doc="Sum of all residual values")
     targets = property(get_targets, doc="Target values of all observables")
     flat_targets = property(get_flat_targets, doc="1-D array of target values")
-
-
-class EvaluationVariable(ItemVariable):
-    r"""A reference to a parameter given to the ObservableList.evaluate method.
-
-    The variable drives the default value of a :py:meth:`.ObservableList.evaluate`
-    keyword argument.
-    """
-
-    def __init__(self, obslist: ObservableList, key, *args, **kwargs):
-        # noinspection PyUnresolvedReferences
-        """
-        Args:
-            obslist:    The :py:class:`.ObservableList` to control,
-            key:        Index or attribute name of the variable.  A :py:class:`str`
-              argument is interpreted as a dictionary key. Attribute names must be
-              decorated with ``attr_(attrname)`` to distinguish them from directory
-              keys.
-            *args:      additional sequence of indices or attribute names allowing to
-              extract elements deeper in the object structure.
-
-        Keyword Args:
-            name (str):     Name of the Variable. Default: ``''``
-            bounds (tuple[float, float]):   Lower and upper bounds of the
-              variable value. Default: (-inf, inf)
-            delta (float):  Step. Default: 1.0
-
-        Example:
-            Create a *twiss_in* input for computing optics in transfer-line mode:
-
-            >>> twiss_in = {"alpha": np.zeros(2), "beta": np.array([9.0, 2.5])}
-
-            Create the :py:class:`.ObservableList`:
-
-            >>> obs = at.ObservableList(
-            ...     [
-            ...         at.LocalOpticsObservable([0], "beta", plane="x"),
-            ...         at.LocalOpticsObservable([0], "beta", plane="y"),
-            ...     ],
-            ...     ring=ring,
-            ...     dp=0.01,
-            ...     orbit=np.zeros(6),
-            ...     twiss_in=twiss_in,
-            ... )
-
-            Create a variable controlling :math:`\\delta`:
-
-            >>> v3 = at.EvaluationVariable(obs, "dp")
-            >>> v3.value
-            0.01
-
-            Create a variable controlling :math:`p_x`:
-
-            >>> v2 = at.EvaluationVariable(obs, "orbit", 1)
-            >>> v2.value
-            np.float64(0.0)
-
-            Create a variable controlling :math:`\\beta_x`:
-
-            >>> v1 = at.EvaluationVariable(obs, "twiss_in", "beta", 0)
-            >>> v1.value
-            np.float64(9.0)
-        """
-        obslist.kwargs.setdefault(key, 0.0)
-        super().__init__(obslist.kwargs, key, *args, **kwargs)
