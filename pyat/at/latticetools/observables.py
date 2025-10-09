@@ -44,25 +44,25 @@ container which performs the required optics computation and feeds each
 from __future__ import annotations
 
 __all__ = [
-    "ElementObservable",
-    "EmittanceObservable",
-    "GeometryObservable",
-    "GlobalOpticsObservable",
-    "LatticeObservable",
-    "LocalOpticsObservable",
-    "MatrixObservable",
-    "Need",
     "Observable",
-    "OrbitObservable",
     "RingObservable",
+    "EmittanceObservable",
+    "GlobalOpticsObservable",
+    "ElementObservable",
+    "OrbitObservable",
+    "GeometryObservable",
+    "LocalOpticsObservable",
+    "LatticeObservable",
+    "MatrixObservable",
     "TrajectoryObservable",
+    "Need",
 ]
 
-from collections.abc import Callable, Set as AbstractSet
+from collections.abc import Callable, Set
 from functools import partial
 from enum import Enum
 from itertools import repeat
-from typing import ClassVar
+from typing import Union
 
 import numpy as np
 import numpy.typing as npt
@@ -70,7 +70,7 @@ import numpy.typing as npt
 from ..lattice import AtError, AxisDef, axis_, plane_
 from ..lattice import Lattice, Refpts, End
 
-RefIndex = int | tuple[int, ...] | slice
+RefIndex = Union[int, tuple[int, ...], slice]
 
 
 # Observables must be pickleable. For this, the evaluation function must be a
@@ -101,13 +101,13 @@ class _ArrayAccess:
 
 
 def _record_access(param, index, data, **_):
-    """Access a selected item in a record array."""
+    """Access a selected item in a record array"""
     val = getattr(data, param)
     return val if index is None else val[index]
 
 
 def _fun_access(fun, index, data, **_):
-    """Access a selected item in the output of a user-defined function."""
+    """Access a selected item in the output of a user-defined function"""
     val = fun(data)
     return val if index is None else val[index]
 
@@ -159,13 +159,13 @@ def _all_rows(index: RefIndex | None):
     if index is None:
         return None
     if isinstance(index, tuple):
-        return (slice(None), *index)
+        return (slice(None),) + index
     else:
         return slice(None), index
 
 
-def _get_fun(fname, fdict) -> Callable | None:
-    """Get a processing from its name."""
+def _get_fun(fname, fdict) -> Callable:
+    """Get a processing from its name"""
     if callable(fname):
         return fname
     else:
@@ -246,7 +246,7 @@ class Observable:
         target: npt.ArrayLike | None = None,
         weight: npt.ArrayLike = 1.0,
         bounds=(0.0, 0.0),
-        needs: AbstractSet[Need] | None = None,
+        needs: Set[Need] | None = None,
         postfun: Callable | str | None = None,
         **kwargs,
     ):
@@ -266,7 +266,7 @@ class Observable:
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
-              :py:class:`Need` enumeration.
+              :py:class:`Need` enumeration
 
         Keyword Args:
             **kwargs:       Keyword arguments provided to the evaluation function
@@ -286,8 +286,6 @@ class Observable:
           *ringdata*, *elemdata*, *r_out*, *params*, *geomdata*,
         - *args* are the positional arguments provided to the observable constructor,
         - *kwargs* are the keyword arguments provided to the observable constructor,
-          to the constructor of the enclosing :py:class:`.ObservableList` and to the
-          :py:meth:`~.ObservableList.evaluate` method.
         - *value* is the value of the observable.
 
         For user-defined evaluation functions using linear optics data or
@@ -302,7 +300,7 @@ class Observable:
             name = f"{postfun.__name__}({name})"
             fun = _Convolve(postfun, fun)
         self.fun: Callable = fun  #: Evaluation function
-        self.needs: AbstractSet[Need] = needs or set()  #: Set of requirements
+        self.needs: Set[Need] = needs or set()  #: Set of requirements
         self.name: str = name  #: Observable name
         self.target: npt.ArrayLike | None = target  #: Target value
         self.w: npt.NDArray[float] = np.asarray(weight, dtype=float)
@@ -363,6 +361,7 @@ class Observable:
 
     def _setup(self, ring: Lattice):
         """Setup function called when the observable is added to a list."""
+        pass
 
     def evaluate(
         self, *data, initial: bool = False, **evalkw
@@ -399,7 +398,7 @@ class Observable:
         return val
 
     def check(self) -> bool:
-        """Check if evaluation is done.
+        """Check if evaluation is done
 
         Returns:
             ok: :py:obj:`True` if evaluation is done, :py:obj:`False` otherwise.
@@ -534,16 +533,14 @@ class RingObservable(Observable):
 
         It is called as:
 
-        :pycode:`value = fun(ring, **kwargs)`
+        :pycode:`value = fun(ring)`
 
         - *ring* is the lattice description,
-        - *kwargs* are the keyword arguments provided to the observable constructor,
-          to the constructor of the enclosing :py:class:`.ObservableList` and to the
-          :py:meth:`~.ObservableList.evaluate` method.
         - *value* is the value of the Observable.
 
         Examples:
-            >>> def circumference(ring, **kwargs):
+
+            >>> def circumference(ring):
             ...     return ring.get_s_pos(len(ring))[0]
             >>> obs = RingObservable(circumference)
 
@@ -623,8 +620,9 @@ class ElementObservable(Observable):
         ok = super().check()
         shp = self._shape
         if ok and shp and shp[0] <= 0:
-            msg = f"Observable {self.name!r}: No location selected in the lattice."
-            raise AtError(msg)
+            raise AtError(
+                f"Observable {self.name!r}: No location selected in the lattice."
+            )
         return ok
 
     def _all_lines(self):
@@ -649,9 +647,7 @@ class ElementObservable(Observable):
             vini = self.initial
             if vini is None:
                 vini = repeat(None)
-            viter = zip(
-                self._locations, vini, vnow, vmin, vmax, deviation, strict=False
-            )
+            viter = zip(self._locations, vini, vnow, vmin, vmax, deviation)
             values = "\n".join(self._line(*vv) for vv in viter)
             return "\n".join((self.name, values))
 
@@ -672,7 +668,7 @@ class GeometryObservable(ElementObservable):
     Process the *geomdata* output of :py:func:`.get_geometry`.
     """
 
-    _field_list: ClassVar[set[str]] = {"x", "y", "angle"}
+    _field_list = {"x", "y", "angle"}
 
     def __init__(self, refpts: Refpts, param: str, name: str | None = None, **kwargs):
         # noinspection PyUnresolvedReferences
@@ -698,13 +694,13 @@ class GeometryObservable(ElementObservable):
         shape of *value*.
 
         Example:
+
             >>> obs = GeometryObservable(at.Monitor, param="x")
 
             Observe x coordinate of monitors
         """
         if param not in self._field_list:
-            msg = f"Expected {param!r} to be one of {self._field_list!r}"
-            raise ValueError(msg)
+            raise ValueError(f"Expected {param!r} to be one of {self._field_list!r}")
         name = self._set_name(name, "geometry", param)
         fun = partial(_record_access, param, None)
         needs = {Need.GEOMETRY}
@@ -804,6 +800,7 @@ class MatrixObservable(ElementObservable):
         shape of *value*.
 
         Example:
+
             >>> obs = MatrixObservable(at.Monitor, axis=("x", "px"))
 
             Observe the transfer matrix from origin to monitor locations and
@@ -823,8 +820,8 @@ class _GlobalOpticsObservable(Observable):
         r"""Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ringdata, ring=ring. **kwargs)` and returning the
-              value of the Observable
+              :pycode:`value = fun(ringdata, ring=ring)` and returning the value of
+              the Observable
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
@@ -866,7 +863,6 @@ class LocalOpticsObservable(ElementObservable):
         self,
         refpts: Refpts,
         param: str | Callable,
-        *,
         plane: AxisDef = Ellipsis,
         name: str | None = None,
         all_points: bool = False,
@@ -957,19 +953,17 @@ class LocalOpticsObservable(ElementObservable):
 
         The observable value is computed as:
 
-        :pycode:`value = fun(elemdata, **kwargs)[plane]`
+        :pycode:`value = fun(elemdata)[plane]`
 
         - *elemdata* is the output of :py:func:`.get_optics`, evaluated at the *refpts*
           of the observable,
-        - *kwargs* are the keyword arguments provided to the observable constructor,
-          to the constructor of the enclosing :py:class:`.ObservableList` and to the
-          :py:meth:`~.ObservableList.evaluate` method,
         - *value* is the value of the Observable and must have one line per
           refpoint. Alternatively, it may be a single line, but then the
-          *summary* keyword must be set to :py:obj:`True`,
+          *summary* keyword must be set to :py:obj:`True`.
         - the *plane* keyword then selects the desired values in the function output.
 
         Examples:
+
             >>> obs = LocalOpticsObservable(at.Monitor, "beta")
 
             Observe the beta in both planes at all :py:class:`.Monitor`
@@ -981,7 +975,7 @@ class LocalOpticsObservable(ElementObservable):
 
             Observe the maximum vertical beta in Quadrupoles
 
-            >>> def phase_advance(elemdata, **kwargs):
+            >>> def phase_advance(elemdata):
             ...     mu = elemdata.mu
             ...     return mu[-1] - mu[0]
             >>>
@@ -1048,6 +1042,7 @@ class LatticeObservable(ElementObservable):
               Example: :pycode:`statfun=numpy.mean`.
 
         Example:
+
             >>> obs = LatticeObservable(
             ...     at.Sextupole, "KickAngle", index=0, statfun=np.sum
             ... )
@@ -1141,16 +1136,15 @@ class EmittanceObservable(Observable):
 
         It is called as:
 
-        :pycode:`value = fun(paramdata, **kwargs)`
+        :pycode:`value = fun(paramdata)`
 
-        - *paramdata* if the :py:class:`.RingParameters` object returned by
-          :py:func:`.envelope_parameters`.
-        - *kwargs* are the keyword arguments provided to the observable constructor,
-          to the constructor of the enclosing :py:class:`.ObservableList` and to the
-          :py:meth:`~.ObservableList.evaluate` method,
-        - *value* is the value of the Observable.
+        *paramdata* if the :py:class:`.RingParameters` object returned by
+        :py:func:`.envelope_parameters`.
+
+        *value* is the value of the Observable.
 
         Example:
+
             >>> EmittanceObservable("emittances", plane="h")
 
             Observe the horizontal emittance
@@ -1167,7 +1161,6 @@ class EmittanceObservable(Observable):
 # noinspection PyPep8Naming
 def GlobalOpticsObservable(
     param: str,
-    *,
     plane: AxisDef = Ellipsis,
     name: str | None = None,
     use_integer: bool = False,
@@ -1208,15 +1201,13 @@ def GlobalOpticsObservable(
 
     It is called as:
 
-    :pycode:`value = fun(ring, ringdata, **kwargs)`
+    :pycode:`value = fun(ring, ringdata)`
 
     - *ringdata* is the output of :py:func:`.get_optics`,
-    - *kwargs* are the keyword arguments provided to the observable constructor,
-      to the constructor of the enclosing :py:class:`.ObservableList` and to the
-      :py:meth:`~.ObservableList.evaluate` method.
     - *value* is the value of the Observable.
 
     Examples:
+
         >>> obs = GlobalOpticsObservable("tune", use_integer=True)
 
         Observe the tune in both planes, including the integer part (slower)
