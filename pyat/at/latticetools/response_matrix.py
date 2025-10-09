@@ -22,7 +22,7 @@ The :py:class:`ResponseMatrix` class defines a general-purpose response matrix, 
 on a :py:class:`.VariableList` of quantities which will be independently varied, and an
 :py:class:`.ObservableList` of quantities which will be recorded for each step.
 
-For instance let's take the horizontal displacements of all quadrupoles as variables:
+For instance, let's take the horizontal displacements of all quadrupoles as variables:
 
 >>> variables = VariableList(
 ...     RefptsVariable(ik, "dx", name=f"dx_{ik}", delta=0.0001)
@@ -55,8 +55,8 @@ The response matrix may be filled by several means:
    The shape of the array is checked.
 #. :py:meth:`~ResponseMatrix.load` loads data from a file containing previously
    saved values or experimentally measured values,
-#. :py:meth:`~ResponseMatrix.build_tracking` computes the matrix using tracking,
-#. For some specialized response matrices a
+#. :py:meth:`~ResponseMatrix.build` computes the matrix using tracking,
+#. For some specialised response matrices a
    :py:meth:`~OrbitResponseMatrix.build_analytical` method is available.
 
 Matrix normalisation
@@ -111,7 +111,7 @@ Exclusion of variables and observables
 Variables may be added to a set of excluded values, and similarly for observables.
 Excluding an item does not change the response matrix. The values are excluded from the
 pseudo-inversion of the response, possibly reducing the number of singular values.
-After inversion the correction matrix is expanded to its original size by inserting
+After inversion, the correction matrix is expanded to its original size by inserting
 zero lines and columns at the location of excluded items. This way:
 
 - error and correction vectors keep the same size independently of excluded values,
@@ -147,7 +147,10 @@ from collections.abc import Sequence, Generator, Callable
 from typing import Any, ClassVar
 from itertools import chain
 from functools import partial
+from contextlib import contextmanager
 import math
+import marshal
+import types
 
 import numpy as np
 import numpy.typing as npt
@@ -159,7 +162,7 @@ from .observablelist import ObservableList
 from ..lattice import AtError, AtWarning, Refpts, Uint32Refpts, All
 from ..lattice import AxisDef, plane_, Lattice, Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
-from ..lattice.variables import VariableList
+from ..lattice.variables import VariableBase, VariableList
 
 FloatArray = npt.NDArray[np.float64]
 
@@ -172,16 +175,16 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def sequence_split(seq: Sequence, nslices: int) -> Generator[Sequence, None, None]:
-    """Split a sequence into multiple sub-sequences.
+    """Split a sequence into multiple subsequences.
 
     The length of *seq* does not have to be a multiple of *nslices*.
 
     Args:
         seq: sequence to split
-        nslices: number of sub-sequences
+        nslices: number of subsequences
 
     Returns:
-        subseqs: Iterator over sub-sequences
+        subseqs: Iterator over subsequences
     """
 
     def _split(seqsizes):
@@ -199,8 +202,17 @@ def sequence_split(seq: Sequence, nslices: int) -> Generator[Sequence, None, Non
     return _split(lsubseqs)
 
 
+# noinspection PyUnusedLocal
+def _nocheck(v: VariableBase) -> None:
+    pass
+
+
 def _resp(
-    ring: Lattice, observables: ObservableList, variables: VariableList, **kwargs
+    ring: Lattice,
+    observables: ObservableList,
+    variables: VariableList,
+    checkfun: Callable[[VariableBase], None] = _nocheck,
+    **kwargs,
 ):
     def _resp_one(variable: RefptsVariable):
         """Single response"""
@@ -211,14 +223,36 @@ def _resp(
         observables.evaluate(ring, **kwargs)
         om = observables.flat_values
         variable.reset(ring=ring)
+        checkfun(variable)
         return (op - om) / (2.0 * variable.delta)
 
     return [_resp_one(v) for v in variables]
 
 
-def _resp_fork(variables: VariableList, **kwargs):
-    """Response for fork parallel method."""
-    return _resp(_globring, _globobs, variables, **kwargs)
+class _PicklableFunction:
+    """Necessary to pickle interactively defined functions"""
+
+    def __init__(self, fun):
+        self._fun = fun
+
+    def __call__(self, *args, **kwargs):
+        return self._fun(*args, **kwargs)
+
+    def __getstate__(self):
+        # try:
+        #     return pickle.dumps(self._fun)
+        # except Exception:
+        #     return marshal.dumps((self._fun.__code__, self._fun.__name__))
+        return marshal.dumps((self._fun.__code__, self._fun.__name__))
+
+    def __setstate__(self, state):
+        # try:
+        #     self._fun = pickle.loads(state)
+        # except Exception:
+        #     code, name = marshal.loads(state)
+        #     self._fun = types.FunctionType(code, {}, name)
+        code, name = marshal.loads(state)
+        self._fun = types.FunctionType(code, {}, name)
 
 
 class _SvdSolver(abc.ABC):
@@ -277,7 +311,7 @@ class _SvdSolver(abc.ABC):
     def check_norm(self) -> tuple[FloatArray, FloatArray]:
         """Display the norm of the rows and columns of the weighted response matrix.
 
-        Adjusting the variables and observable weights to equalize the norms
+        Adjusting the variables and observable weights to equalise the norms
         of rows and columns is important.
 
         Returns:
@@ -334,19 +368,19 @@ class _SvdSolver(abc.ABC):
         return cormat
 
     def get_correction(
-        self, observed: FloatArray, nvals: int | None = None
+        self, deviation: FloatArray, nvals: int | None = None
     ) -> FloatArray:
         """Compute the correction of the given observation.
 
         Args:
-            observed:   Vector of observed deviations,
+            deviation:  Vector of observed deviations,
             nvals:      Desired number of singular values. If :py:obj:`None`, use
               all singular values
 
         Returns:
             corr:       Correction vector
         """
-        return -self.correction_matrix(nvals=nvals) @ observed
+        return -self.correction_matrix(nvals=nvals) @ deviation
 
     def save(self, file) -> None:
         """Save a response matrix in the NumPy .npy format.
@@ -358,7 +392,7 @@ class _SvdSolver(abc.ABC):
               be appended to the filename if it does not already have one.
         """
         if self._response is None:
-            raise AtError("No response matrix: run build_tracking() or load() first")
+            raise AtError("No response matrix: run build() or load() first")
         np.save(file, self._response)
 
     def load(self, file) -> None:
@@ -389,15 +423,15 @@ class ResponseMatrix(_SvdSolver):
 
     def __init__(
         self,
-        ring: Lattice,
         variables: VariableList,
         observables: ObservableList,
+        ring: Lattice | None = None,
     ):
         r"""
         Args:
-            ring:           Design lattice, used to compute the response
             variables:      List of :py:class:`Variable <.VariableBase>`\ s
             observables:    List of :py:class:`.Observable`\s
+            ring:           Design lattice
         """
 
         def limits(obslist):
@@ -407,31 +441,43 @@ class ResponseMatrix(_SvdSolver):
                 yield beg, end
                 beg = end
 
-        # for efficiency of parallel computation, the variable's refpts must be integer
-        for var in variables:
-            var.refpts = ring.get_uint32_index(var.refpts)
+        if ring is not None:
+            # for efficiency of parallel computation, the variable's refpts
+            # must be integer
+            for var in variables:
+                var.refpts = ring.get_uint32_index(var.refpts)
         self.ring = ring
         self.variables = variables
         self.observables = observables
-        variables.get(ring=ring, initial=True)
+        # Get the shape of observables
         observables.evaluate(ring=ring, initial=True)
         super().__init__(len(observables.flat_values), len(variables))
         self._ob = [self._obsmask[beg:end] for beg, end in limits(self.observables)]
 
-    def __add__(self, other: ResponseMatrix):
+    def __add__(self, other: ResponseMatrix) -> ResponseMatrix:
         if not isinstance(other, ResponseMatrix):
             raise TypeError(
                 f"Cannot add {type(other).__name__} and {type(self).__name__}"
             )
         return ResponseMatrix(
-            self.ring,
             VariableList(self.variables + other.variables),
             self.observables + other.observables,
+            ring=self.ring,
         )
 
     def __str__(self):
         no, nv = self.shape
         return f"{type(self).__name__}({no} observables, {nv} variables)"
+
+    @contextmanager
+    def _save_variables(self) -> Generator[None, None, None]:
+        print("Saving variables")
+        self.variables.get(ring=self.ring, initial=True)
+        try:
+            yield
+        finally:
+            print("Restoring variables")
+            self.variables.reset(ring=self.ring)
 
     @property
     def varweights(self) -> np.ndarray:
@@ -469,24 +515,25 @@ class ResponseMatrix(_SvdSolver):
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,))):
-            print(f'step {it+1}, nvals = {nv}')
+            print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self._eval_args)
-            err = obs.flat_deviations
-            if np.any(np.isnan(err)):
+            deviation = obs.flat_deviations
+            if np.any(np.isnan(deviation)):
                 raise AtError(
                     f"Step {it + 1}: Invalid observables, cannot compute correction"
                 )
-            corr = self.get_correction(obs.flat_deviations, nvals=nv)
+            corr = self.get_correction(deviation, nvals=nv)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
                 self.variables.increment(corr, ring=ring)
         return sumcorr
 
-    def build_tracking(
+    def build(
         self,
         use_mp: bool = False,
         pool_size: int | None = None,
         start_method: str | None = None,
+        checkfun: Callable[[VariableBase], None] = _nocheck,
         **kwargs,
     ) -> FloatArray:
         """Build the response matrix.
@@ -496,11 +543,13 @@ class ResponseMatrix(_SvdSolver):
             pool_size:          number of processes. If None,
               :pycode:`min(len(self.variables, nproc)` is used
             start_method:       python multiprocessing start method.
-              :py:obj:`None` uses the python default that is considered safe.
+              :py:obj:`None` uses the python default, considered safe.
               Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
               Default for linux is ``'fork'``, default for macOS and  Windows
               is ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
               calculation, however it is considered unsafe.
+            checkfun:       Function called after each variable has been scanned.
+              ``checkfun(v: VariableBase) -> None``.
 
         Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
@@ -514,8 +563,6 @@ class ResponseMatrix(_SvdSolver):
             response:       Response matrix
         """
         self._eval_args = kwargs
-        self.observables.evaluate(self.ring)
-        ring = self.ring.deepcopy()
 
         if use_mp:
             global _globring
@@ -523,22 +570,31 @@ class ResponseMatrix(_SvdSolver):
             ctx = multiprocessing.get_context(start_method)
             if pool_size is None:
                 pool_size = min(len(self.variables), os.cpu_count())
-            obschunks = sequence_split(self.variables, pool_size)
-            if ctx.get_start_method() == "fork":
-                _globring = ring
-                _globobs = self.observables
-                _single_resp = partial(_resp_fork, **kwargs)
-            else:
-                _single_resp = partial(_resp, ring, self.observables, **kwargs)
+            varchunks = sequence_split(self.variables, pool_size)
+            _single_resp = partial(
+                _resp,
+                self.ring,
+                self.observables,
+                checkfun=_PicklableFunction(checkfun),
+                **kwargs,
+            )
             with concurrent.futures.ProcessPoolExecutor(
                 max_workers=pool_size,
                 mp_context=ctx,
             ) as pool:
-                results = list(chain(*pool.map(_single_resp, obschunks)))
+                with self._save_variables():
+                    results = list(chain(*pool.map(_single_resp, varchunks)))
             _globring = None
             _globobs = None
         else:
-            results = _resp(ring, self.observables, self.variables, **kwargs)
+            with self._save_variables():
+                results = _resp(
+                    self.ring,
+                    self.observables,
+                    self.variables,
+                    checkfun=checkfun,
+                    **kwargs,
+                )
 
         resp = np.stack(results, axis=-1)
         self.response = resp
@@ -570,6 +626,7 @@ class ResponseMatrix(_SvdSolver):
         Returns:
             target: observable target
         """
+
         def _get(obs):
             return obs.target
 
@@ -673,7 +730,7 @@ class ResponseMatrix(_SvdSolver):
 
             Exclude the 1st variable, the variable named "var1" and the last variable.
         """
-        nameset = set(nm for nm in varid if isinstance(nm, str))
+        nameset = {nm for nm in varid if isinstance(nm, str)}
         varidx = [nm for nm in varid if not isinstance(nm, str)]
         mask = np.array([var.name in nameset for var in self.variables])
         mask[varidx] = True
@@ -836,7 +893,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             )
             variables.append(cavvar)
 
-        super().__init__(ring, variables, observables)
+        super().__init__(variables, observables, ring=ring)
         self.plane = pl
         self.steerrefs = ids
         self.nbsteers = nbsteers
@@ -1090,14 +1147,14 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         # Variables
         variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
 
-        super().__init__(ring, variables, observables)
+        super().__init__(variables, observables, ring=ring)
         self.plane = pl
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
 
     def build_analytical(self, **kwargs) -> FloatArray:
-        """Build analytically the response matrix.
+        """Analytically build the response matrix.
 
         Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
@@ -1135,7 +1192,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         :py:meth:`solve`.
 
         Args:
-            refpts:    location of Monitors to exclude
+            refpts: location of Monitors to exclude
+            obsid:  name or index of observable to be excluded
 
         Raises:
             ValueError: No observable with the given name.

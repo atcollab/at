@@ -15,7 +15,6 @@ from __future__ import annotations
 __all__ = ["RefptsVariable", "ElementVariable"]
 
 from collections.abc import Sequence
-from typing import Union, Optional
 
 import numpy as np
 
@@ -43,7 +42,7 @@ class RefptsVariable(VariableBase):
     """
 
     def __init__(
-        self, refpts: Refpts, attrname: str, index: Optional[int] = None, **kwargs
+        self, refpts: Refpts, attrname: str, index: int | None = None, **kwargs
     ):
         r"""
         Parameters:
@@ -57,21 +56,24 @@ class RefptsVariable(VariableBase):
             bounds (tuple[float, float]):   Lower and upper bounds of the
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
-            ring (Lattice): If specified, it is used to get and store the initial
-              value of the variable. Otherwise, the initial value is set to None
+            ring (Lattice): Default lattice. It will be used if *ring* is not provided
+              to the :py:meth:`~.VariableBase.get` or :py:meth:`~.VariableBase.set`
+              methods. Note that if *ring* is fixed, you should consider using a
+              :py:class:`.ElementVariable` instead.
         """
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         self.refpts = refpts
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, ring: Lattice = None):
+    def _setfun(self, value: float, ring: Lattice = None, **_):
         if ring is None:
-            raise ValueError("Can't set values if ring is None")
+            raise ValueError("Can't set values if ring is None.\n"
+                             "Try to use an ElementVariable if possible")
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
-    def _getfun(self, ring: Lattice = None) -> float:
+    def _getfun(self, ring: Lattice = None, **_) -> float:
         if ring is None:
             raise ValueError("Can't get values if ring is None")
         values = np.array([self._getf(elem) for elem in ring.select(self.refpts)])
@@ -95,9 +97,9 @@ class ElementVariable(VariableBase):
 
     def __init__(
         self,
-        elements: Union[Element, Sequence[Element]],
+        elements: Element | Sequence[Element],
         attrname: str,
-        index: Optional[int] = None,
+        index: int | None = None,
         **kwargs,
     ):
         r"""
@@ -123,11 +125,11 @@ class ElementVariable(VariableBase):
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, **kwargs):
+    def _setfun(self, value: float, **_):
         for elem in self._elements:
             self._setf(elem, value)
 
-    def _getfun(self, **kwargs) -> float:
+    def _getfun(self, **_) -> float:
         values = np.array([self._getf(elem) for elem in self._elements])
         return np.average(values)
 

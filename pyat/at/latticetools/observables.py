@@ -64,16 +64,13 @@ from enum import Enum
 from itertools import repeat
 from typing import Union
 
-# For sys.version_info.minor < 9:
-from typing import Tuple
-
 import numpy as np
 import numpy.typing as npt
 
 from ..lattice import AtError, AxisDef, axis_, plane_
 from ..lattice import Lattice, Refpts, End
 
-RefIndex = Union[int, Tuple[int, ...], slice]
+RefIndex = Union[int, tuple[int, ...], slice]
 
 
 # Observables must be pickleable. For this, the evaluation function must be a
@@ -82,14 +79,13 @@ RefIndex = Union[int, Tuple[int, ...], slice]
 
 
 class _Convolve:
-
     def __init__(self, modfun, fun, *args, **kwargs):
         self.modfun = modfun
         self.fun = fun
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self, *a):
+    def __call__(self, *a, **_):
         return self.modfun(self.fun(*a), *self.args, **self.kwargs)
 
 
@@ -99,35 +95,35 @@ class _ArrayAccess:
     def __init__(self, index):
         self.index = _all_rows(index)
 
-    def __call__(self, data):
+    def __call__(self, data, **_):
         index = self.index
         return data if index is None else data[self.index]
 
 
-def _record_access(param, index, data):
+def _record_access(param, index, data, **_):
     """Access a selected item in a record array"""
     val = getattr(data, param)
     return val if index is None else val[index]
 
 
-def _fun_access(fun, index, data):
+def _fun_access(fun, index, data, **_):
     """Access a selected item in the output of a user-defined function"""
     val = fun(data)
     return val if index is None else val[index]
 
 
-def _muf_access(_, index, data):
-    mu = _record_access("mu", index, data)
+def _muf_access(_, index, data, **kwargs):
+    mu = _record_access("mu", index, data, **kwargs)
     return np.remainder(mu, 2.0 * np.pi)
 
 
-def _mu2pi_access(_, index, data):
-    mu = _record_access("mu", index, data)
+def _mu2pi_access(_, index, data, **kwargs):
+    mu = _record_access("mu", index, data, **kwargs)
     return mu / 2.0 / np.pi
 
 
-def _mu2pif_access(_, index, data):
-    mu = _record_access("mu", index, data)
+def _mu2pif_access(_, index, data, **kwargs):
+    mu = _record_access("mu", index, data, **kwargs)
     return np.remainder(mu / 2.0 / np.pi, 1.0)
 
 
@@ -182,8 +178,8 @@ class _Tune:
     def __init__(self, idx: RefIndex):
         self.fun = partial(_record_access, "mu", _all_rows(idx))
 
-    def __call__(self, data):
-        mu = self.fun(data)
+    def __call__(self, data, **kwargs):
+        mu = self.fun(data, **kwargs)
         return np.squeeze(mu, axis=0) / 2.0 / np.pi
 
 
@@ -194,8 +190,8 @@ class _Ring:
         self.get_val = partial(_record_access, attrname, index)
         self.refpts = refpts
 
-    def __call__(self, ring):
-        vals = [self.get_val(el) for el in ring.select(self.refpts)]
+    def __call__(self, lattice, **_):
+        vals = [self.get_val(el) for el in lattice.select(self.refpts)]
         return np.array(vals)
 
 
@@ -367,7 +363,9 @@ class Observable:
         """Setup function called when the observable is added to a list."""
         pass
 
-    def evaluate(self, *data, initial: bool = False) -> npt.NDArray[float] | Exception:
+    def evaluate(
+        self, *data, initial: bool = False, **evalkw
+    ) -> npt.NDArray[float] | Exception:
         """Compute and store the value of the observable.
 
         The direct evaluation of a single :py:class:`Observable` is normally
@@ -390,7 +388,9 @@ class Observable:
                 self._value = err
                 return err
 
-        val = np.asarray(self.fun(*data, *self.args, **self.kwargs))
+        kw = self.kwargs.copy()
+        kw.update(evalkw)
+        val = np.asarray(self.fun(*data, *self.args, **kw))
         if initial:
             self.initial = val
         self._shape = val.shape
@@ -981,7 +981,11 @@ class LocalOpticsObservable(ElementObservable):
             >>>
             >>> allobs.append(
             ...     LocalOpticsObservable(
-            ...         [33, 101], phase_advance, plane="y", all_points=True, summary=True
+            ...         [33, 101],
+            ...         phase_advance,
+            ...         plane="y",
+            ...         all_points=True,
+            ...         summary=True,
             ...     )
             ... )
 
