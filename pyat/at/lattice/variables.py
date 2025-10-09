@@ -118,27 +118,30 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
 
     def __init__(
         self,
-        *,
+        *args,
         name: str = "",
         bounds: tuple[Number, Number] | None = None,
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
-        ring=None,
         **kwargs,
     ) -> None:
         """
         Parameters:
+            *args:      Positional arguments passed to the _setfun and _getfun methods
             name:       Name of the Variable
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             history_length: Maximum length of the history buffer. :py:obj:`None`
               means infinite
-            ring:       provided to an attempt to get the initial value of the
-              variable
+
+        Keyword Args:
+            **kwargs:    Keyword arguments passed to the _setfun and _getfun methods
         """
+        self.args = args
+        self.kwargs = kwargs
         if bounds is None:
             bounds = (None, None)
-        self.bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
+        self._bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
         self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
@@ -146,7 +149,7 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         self._history: deque[Number] = deque([], self.history_length)
         super().__init__(name=self._generate_name(name), **kwargs)
         try:
-            self.get(ring=ring, initial=True)
+            self.get(initial=True)
         except ValueError:
             pass
 
@@ -156,21 +159,30 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         cls._counter += 1
         return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
 
-    def _check_bounds(self, value: Number) -> None:
-        """Verify value is within bounds"""
-        min_val, max_val = self.bounds
+    @property
+    def bounds(self) -> tuple[float, float]:
+        """Bounds of the variable"""
+        vmin, vmax = self._bounds
+        return -np.inf if vmin is None else vmin, np.inf if vmax is None else vmax
+
+    def check_bounds(self, value: Number) -> None:
+        """Check that a value is within the variable bounds
+
+        Raises:
+            ValueError: If the value is not within bounds
+        """
+        min_val, max_val = self._bounds
         if min_val is not None and value < min_val:
             raise ValueError(f"Value {value} must be larger or equal to {min_val}")
         if max_val is not None and value > max_val:
             raise ValueError(f"Value {value} must be smaller or equal to {max_val}")
 
-    # noinspection PyUnusedLocal
-    def _setfun(self, value: Number, ring=None) -> None:
+    def _setfun(self, value: Number, *args, **kwargs) -> None:
         classname = self.__class__.__name__
         raise TypeError(f"{classname!r} is read-only")
 
     @abc.abstractmethod
-    def _getfun(self, **kwargs) -> Number: ...
+    def _getfun(self, *args, **kwargs) -> Number: ...
 
     @property
     def history(self) -> list[Number]:
@@ -215,22 +227,26 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
             exc.args = (f"{self.name}: history too short (need at least 2 values)",)
             raise
 
-    def set(self, value: Number, ring=None) -> None:
+    def set(self, value: Number, **setkw) -> None:
         """Set the variable value
 
         Args:
-            value:  New value to be applied on the variable
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+            value:      New value to be applied on the variable
+
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
         """
-        self._check_bounds(value)
-        self._setfun(value, ring=ring)
+        self.check_bounds(value)
+        kw = self.kwargs.copy()
+        kw.update(setkw)
+        self._setfun(value, *self.args, **kw)
         if np.isnan(self._initial):
             self._initial = value
         self._history.append(value)
 
     def get(
-        self, ring=None, *, initial: bool = False, check_bounds: bool = False
+        self, *, initial: bool = False, check_bounds: bool = False, **getkw
     ) -> Number:
         """Get the actual variable value
 
@@ -242,15 +258,23 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
             check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
               of bounds
 
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+            **getkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
+
         Returns:
             value:      Value of the variable
         """
-        value = self._getfun(ring=ring)
+        kw = self.kwargs.copy()
+        kw.update(getkw)
+        value = self._getfun(*self.args, **kw)
         if initial or np.isnan(self._initial):
             self._initial = value
             self._history = deque([value], self.history_length)
         if check_bounds:
-            self._check_bounds(value)
+            self.check_bounds(value)
         return value
 
     value = property(get, set, doc="Actual value")
@@ -262,12 +286,14 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         except IndexError:
             return np.nan
 
-    def set_previous(self, ring=None) -> None:
+    def set_previous(self, **setkw) -> None:
         """Reset to the value before the last one
 
-        Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
 
         Raises:
             IndexError: If there are fewer than 2 values in the history
@@ -275,16 +301,18 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         if len(self._history) >= 2:
             self._history.pop()  # Remove the last value
             previous_value = self._history.pop()  # retrieve the previous value
-            self.set(previous_value, ring=ring)
+            self.set(previous_value, **setkw)
         else:
             raise IndexError(f"{self.name}: history too short (need at least 2 values)")
 
-    def reset(self, ring=None) -> None:
+    def reset(self, **setkw) -> None:
         """Reset to the initial value and clear the history buffer
 
-        Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to reset the variable.
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
 
         Raises:
             IndexError: If no initial value has been set yet
@@ -292,63 +320,65 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         initial_value = self._initial
         if not np.isnan(initial_value):
             self._history = deque([], self.history_length)
-            self.set(initial_value, ring=ring)
+            self.set(initial_value, **setkw)
         else:
             raise IndexError(
                 f"Cannot reset {self.name}: No initial value has been set yet"
             )
 
-    def increment(self, incr: Number, ring=None) -> None:
+    def increment(self, incr: Number, **setkw) -> None:
         """Increment the variable value
 
         Args:
             incr:   Increment value
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to increment the variable.
+
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
         """
         try:
             current_value = self.last_value
         except IndexError:
             # If no value has been set yet, get the initial value
-            self.get(ring=ring, initial=True)
+            self.get(initial=True, **setkw)
             current_value = self.last_value
 
-        self.set(current_value + incr, ring=ring)
+        self.set(current_value + incr, **setkw)
 
-    def _step(self, step: Number, ring=None) -> None:
-        """Apply a step relative to the initial value
-
-        Args:
-            step:   Step value to add to the initial value
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-        """
+    def _step(self, step: Number, **setkw) -> None:
+        """Apply a step relative to the initial value"""
         try:
             initial_value = self.initial_value
         except IndexError:
             # If no initial value has been set yet, get it
-            self.get(ring=ring, initial=True)
+            self.get(initial=True, **setkw)
             initial_value = self.initial_value
 
-        self.set(initial_value + step, ring=ring)
+        self.set(initial_value + step, **setkw)
 
-    def step_up(self, ring=None) -> None:
+    def step_up(self, **setkw) -> None:
         """Set to initial_value + delta
 
-        Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
         """
-        self._step(self.delta, ring=ring)
+        self._step(self.delta, **setkw)
 
-    def step_down(self, ring=None) -> None:
+    def step_down(self, **setkw) -> None:
         """Set to initial_value - delta
 
-        Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
         """
-        self._step(-self.delta, ring=ring)
+        self._step(-self.delta, **setkw)
 
     @staticmethod
     def _header():
@@ -395,16 +425,21 @@ class CustomVariable(VariableBase[Number]):
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
         history_length: int | None = None,
-        ring=None,
         **kwargs,
     ) -> None:
         """
         Parameters:
             getfun:     Function for getting the variable value. Called as
-              :pycode:`getfun(*args, ring=ring, **kwargs) -> Number`
+              :pycode:`getfun(*args, **kwargs) -> Number`.
+              *args* are the positional arguments given to the constructor, *kwargs*
+              are the keyword arguments given to the constructor augmented with the
+              keywords given to the :py:meth:`~.Variable.get` function.
             setfun:     Function for setting the variable value. Called as
-              :pycode:`setfun(value: Number, *args, ring=ring, **kwargs): None`
-            name:       Name of the Variable
+              :pycode:`setfun(value: Number, *args, **kwargs): None`.
+              *args* are the positional arguments given to the constructor, *kwargs*
+              are the keyword arguments given to the constructor augmented with the
+              keywords given to the :py:meth:`~.Variable.set` function.
+            name:       Name of the Variable. If empty, a unique name is generated.
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             *args:      Variable argument list transmitted to both the *getfun*
@@ -418,21 +453,20 @@ class CustomVariable(VariableBase[Number]):
         """
         self.getfun = getfun
         self.setfun = setfun
-        self.args = args
-        self.kwargs = kwargs
         super().__init__(
+            *args,
             name=name,
             bounds=bounds,
             delta=delta,
             history_length=history_length,
-            ring=ring,
+            **kwargs,
         )
 
-    def _getfun(self, ring=None) -> Number:
-        return self.getfun(*self.args, ring=ring, **self.kwargs)
+    def _getfun(self, *args, **kwargs) -> Number:
+        return self.getfun(*args, **kwargs)
 
-    def _setfun(self, value: Number, ring=None):
-        self.setfun(value, *self.args, ring=ring, **self.kwargs)
+    def _setfun(self, value: Number, *args, **kwargs) -> None:
+        self.setfun(value, *self.args, **self.kwargs)
 
 
 class VariableList(list):
@@ -487,6 +521,16 @@ class VariableList(list):
         """
         for var, incr in zip(self, increment):
             var.increment(incr, ring=ring)
+
+    def reset(self, ring=None) -> None:
+        """Reset to all variables their initial value and clear their history buffer
+
+        Args:
+            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to reset the variable.
+        """
+        for var in self:
+            var.reset(ring=ring)
 
     # noinspection PyProtectedMember
     def status(self, **kwargs) -> str:
