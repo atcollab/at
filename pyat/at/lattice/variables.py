@@ -128,18 +128,22 @@ class VariableBase(abc.ABC):
     ) -> None:
         """
         Parameters:
+            *args:      Positional arguments passed to the _setfun and _getfun methods
             name:       Name of the Variable
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             history_length: Maximum length of the history buffer. :py:obj:`None`
               means infinite
+
+        Keyword Args:
+            **kwargs:    Keyword arguments passed to the _setfun and _getfun methods
         """
         self.name: str = self._generate_name(name)  #: Variable name
         self.args = args
         self.kwargs = kwargs
         if bounds is None:
             bounds = (None, None)
-        self.bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
+        self._bounds: tuple[Number | None, Number | None] = bounds  #: Variable bounds
         self.delta: Number = delta  #: Increment step
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
@@ -156,15 +160,24 @@ class VariableBase(abc.ABC):
         cls._counter += 1
         return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
 
-    def _check_bounds(self, value: Number) -> None:
-        """Verify value is within bounds"""
-        min_val, max_val = self.bounds
+    @property
+    def bounds(self) -> tuple[float, float]:
+        """Bounds of the variable"""
+        vmin, vmax = self._bounds
+        return -np.inf if vmin is None else vmin, np.inf if vmax is None else vmax
+
+    def check_bounds(self, value: Number) -> None:
+        """Check that a value is within the variable bounds
+
+        Raises:
+            ValueError: If the value is not within bounds
+        """
+        min_val, max_val = self._bounds
         if min_val is not None and value < min_val:
             raise ValueError(f"Value {value} must be larger or equal to {min_val}")
         if max_val is not None and value > max_val:
             raise ValueError(f"Value {value} must be smaller or equal to {max_val}")
 
-    # noinspection PyUnusedLocal
     def _setfun(self, value: Number, *args, **kwargs) -> None:
         classname = self.__class__.__name__
         raise TypeError(f"{classname!r} is read-only")
@@ -227,7 +240,7 @@ class VariableBase(abc.ABC):
             **setkw:    Other keyword arguments to be passed to the setfun function.
               They augment the keyword arguments given in the constructor.
         """
-        self._check_bounds(value)
+        self.check_bounds(value)
         kw = self.kwargs.copy()
         kw.update(setkw)
         self._setfun(value, *self.args, **kw)
@@ -262,7 +275,7 @@ class VariableBase(abc.ABC):
             self._initial = value
             self._history = deque([value], self.history_length)
         if check_bounds:
-            self._check_bounds(value)
+            self.check_bounds(value)
         return value
 
     value = property(get, set, doc="Actual value")
@@ -424,10 +437,16 @@ class CustomVariable(VariableBase):
         """
         Parameters:
             getfun:     Function for getting the variable value. Called as
-              :pycode:`getfun(*args, ring=ring, **kwargs) -> Number`
+              :pycode:`getfun(*args, **kwargs) -> Number`.
+              *args* are the positional arguments given to the constructor, *kwargs*
+              are the keyword arguments given to the constructor augmented with the
+              keywords given to the :py:meth:`~.Variable.get` function.
             setfun:     Function for setting the variable value. Called as
-              :pycode:`setfun(value: Number, *args, ring=ring, **kwargs): None`
-            name:       Name of the Variable
+              :pycode:`setfun(value: Number, *args, **kwargs): None`.
+              *args* are the positional arguments given to the constructor, *kwargs*
+              are the keyword arguments given to the constructor augmented with the
+              keywords given to the :py:meth:`~.Variable.set` function.
+            name:       Name of the Variable. If empty, a unique name is generated.
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             *args:      Variable argument list transmitted to both the *getfun*

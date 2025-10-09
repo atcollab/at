@@ -15,7 +15,6 @@ from __future__ import annotations
 __all__ = ["RefptsVariable", "ElementVariable"]
 
 from collections.abc import Sequence
-from typing import Union, Optional
 
 import numpy as np
 
@@ -43,7 +42,7 @@ class RefptsVariable(VariableBase):
     """
 
     def __init__(
-        self, refpts: Refpts, attrname: str, index: Optional[int] = None, **kwargs
+        self, refpts: Refpts, attrname: str, index: int | None = None, **kwargs
     ):
         r"""
         Parameters:
@@ -58,9 +57,9 @@ class RefptsVariable(VariableBase):
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
             ring (Lattice): Default lattice. It will be used if *ring* is not provided
-              to the :py:class:`~RefptsVariable.get` or :py:class:`~RefptsVariable.set`
+              to the :py:meth:`~.VariableBase.get` or :py:meth:`~.VariableBase.set`
               methods. Note that if *ring* is fixed, you should consider using a
-              :py:class:`ELementVariable` instead.
+              :py:class:`.ElementVariable` instead.
         """
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
@@ -98,9 +97,9 @@ class ElementVariable(VariableBase):
 
     def __init__(
         self,
-        elements: Union[Element, Sequence[Element]],
+        elements: Element | Sequence[Element],
         attrname: str,
-        index: Optional[int] = None,
+        index: int | None = None,
         **kwargs,
     ):
         r"""
