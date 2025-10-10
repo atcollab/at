@@ -144,7 +144,7 @@ import concurrent.futures
 import abc
 import warnings
 from collections.abc import Sequence, Generator, Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypeAlias
 from itertools import chain
 from functools import partial
 from contextlib import contextmanager
@@ -164,7 +164,7 @@ from ..lattice import AxisDef, plane_, Lattice, Monitor, checkattr
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableBase, VariableList
 
-FloatArray = npt.NDArray[np.float64]
+FloatArray: TypeAlias = npt.NDArray[np.float64]
 
 _orbit_correctors = checkattr("KickAngle")
 
@@ -416,7 +416,7 @@ class ResponseMatrix(_SvdSolver):
     produce combined responses.
     """
 
-    ring: Lattice
+    ring: Lattice | None
     variables: VariableList  #: List of matrix :py:class:`Variable <.VariableBase>`\ s
     observables: ObservableList  #: List of matrix :py:class:`.Observable`\s
     _eval_args: dict[str, Any] = {}
@@ -490,7 +490,7 @@ class ResponseMatrix(_SvdSolver):
         return self.observables.flat_weights
 
     def correct(
-        self, ring: Lattice, nvals: int = None, niter: int = 1, apply: bool = False
+        self, ring: Lattice, nvals: int | None = None, niter: int = 1, apply: bool = False
     ) -> FloatArray:
         """Compute and optionally apply the correction.
 

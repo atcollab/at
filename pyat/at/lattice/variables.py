@@ -121,7 +121,7 @@ class VariableBase(abc.ABC):
         self,
         *args,
         name: str = "",
-        bounds: tuple[Number, Number] | None = None,
+        bounds: tuple[Number | None, Number | None] | None = None,
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
         **kwargs,
