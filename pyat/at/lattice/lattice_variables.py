@@ -66,14 +66,14 @@ class RefptsVariable(VariableBase):
         self.refpts = refpts
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, ring: Lattice = None, **_):
+    def _setfun(self, value: float, ring: Lattice | None = None, **_):
         if ring is None:
             raise ValueError("Can't set values if ring is None.\n"
                              "Try to use an ElementVariable if possible")
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
-    def _getfun(self, ring: Lattice = None, **_) -> float:
+    def _getfun(self, ring: Lattice | None = None, **_) -> float:
         if ring is None:
             raise ValueError("Can't get values if ring is None")
         values = np.array([self._getf(elem) for elem in ring.select(self.refpts)])
