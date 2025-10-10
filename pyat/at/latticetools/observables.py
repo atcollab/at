@@ -164,7 +164,7 @@ def _all_rows(index: RefIndex | None):
         return slice(None), index
 
 
-def _get_fun(fname, fdict) -> Callable:
+def _get_fun(fname, fdict) -> Callable | None:
     """Get a processing from its name"""
     if callable(fname):
         return fname
@@ -286,6 +286,8 @@ class Observable:
           *ringdata*, *elemdata*, *r_out*, *params*, *geomdata*,
         - *args* are the positional arguments provided to the observable constructor,
         - *kwargs* are the keyword arguments provided to the observable constructor,
+          to the constructor of the enclosing :py:class:`.ObservableList` and to the
+          :py:meth:`~.ObservableList.evaluate` method.
         - *value* is the value of the observable.
 
         For user-defined evaluation functions using linear optics data or
@@ -533,14 +535,17 @@ class RingObservable(Observable):
 
         It is called as:
 
-        :pycode:`value = fun(ring)`
+        :pycode:`value = fun(ring, **kwargs)`
 
         - *ring* is the lattice description,
+        - *kwargs* are the keyword arguments provided to the observable constructor,
+          to the constructor of the enclosing :py:class:`.ObservableList` and to the
+          :py:meth:`~.ObservableList.evaluate` method.
         - *value* is the value of the Observable.
 
         Examples:
 
-            >>> def circumference(ring):
+            >>> def circumference(ring, **kwargs):
             ...     return ring.get_s_pos(len(ring))[0]
             >>> obs = RingObservable(circumference)
 
@@ -820,8 +825,8 @@ class _GlobalOpticsObservable(Observable):
         r"""Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ringdata, ring=ring)` and returning the value of
-              the Observable
+              :pycode:`value = fun(ringdata, ring=ring. **kwargs)` and returning the
+              value of the Observable
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
@@ -953,13 +958,16 @@ class LocalOpticsObservable(ElementObservable):
 
         The observable value is computed as:
 
-        :pycode:`value = fun(elemdata)[plane]`
+        :pycode:`value = fun(elemdata, **kwargs)[plane]`
 
         - *elemdata* is the output of :py:func:`.get_optics`, evaluated at the *refpts*
           of the observable,
+        - *kwargs* are the keyword arguments provided to the observable constructor,
+          to the constructor of the enclosing :py:class:`.ObservableList` and to the
+          :py:meth:`~.ObservableList.evaluate` method,
         - *value* is the value of the Observable and must have one line per
           refpoint. Alternatively, it may be a single line, but then the
-          *summary* keyword must be set to :py:obj:`True`.
+          *summary* keyword must be set to :py:obj:`True`,
         - the *plane* keyword then selects the desired values in the function output.
 
         Examples:
@@ -975,7 +983,7 @@ class LocalOpticsObservable(ElementObservable):
 
             Observe the maximum vertical beta in Quadrupoles
 
-            >>> def phase_advance(elemdata):
+            >>> def phase_advance(elemdata, **kwargs):
             ...     mu = elemdata.mu
             ...     return mu[-1] - mu[0]
             >>>
@@ -1136,12 +1144,14 @@ class EmittanceObservable(Observable):
 
         It is called as:
 
-        :pycode:`value = fun(paramdata)`
+        :pycode:`value = fun(paramdata, **kwargs)`
 
-        *paramdata* if the :py:class:`.RingParameters` object returned by
-        :py:func:`.envelope_parameters`.
-
-        *value* is the value of the Observable.
+        - *paramdata* if the :py:class:`.RingParameters` object returned by
+          :py:func:`.envelope_parameters`.
+        - *kwargs* are the keyword arguments provided to the observable constructor,
+          to the constructor of the enclosing :py:class:`.ObservableList` and to the
+          :py:meth:`~.ObservableList.evaluate` method,
+        - *value* is the value of the Observable.
 
         Example:
 
@@ -1201,9 +1211,12 @@ def GlobalOpticsObservable(
 
     It is called as:
 
-    :pycode:`value = fun(ring, ringdata)`
+    :pycode:`value = fun(ring, ringdata, **kwargs)`
 
     - *ringdata* is the output of :py:func:`.get_optics`,
+    - *kwargs* are the keyword arguments provided to the observable constructor,
+      to the constructor of the enclosing :py:class:`.ObservableList` and to the
+      :py:meth:`~.ObservableList.evaluate` method.
     - *value* is the value of the Observable.
 
     Examples:
