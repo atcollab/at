@@ -120,7 +120,7 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         self,
         *args,
         name: str = "",
-        bounds: tuple[Number, Number] | None = None,
+        bounds: tuple[Number | None, Number | None] | None = None,
         delta: Number = DEFAULT_DELTA,
         history_length: int | None = None,
         **kwargs,
@@ -161,7 +161,7 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
 
     @property
     def bounds(self) -> tuple[float, float]:
-        """Bounds of the variable"""
+        """Lower and upper bounds of the variable"""
         vmin, vmax = self._bounds
         return -np.inf if vmin is None else vmin, np.inf if vmax is None else vmax
 
@@ -236,6 +236,8 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the *setfun* function.
+              They augment the keyword arguments given in the constructor.
         """
         self.check_bounds(value)
         kw = self.kwargs.copy()
@@ -251,8 +253,6 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         """Get the actual variable value
 
         Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to get the variable value.
             initial:    If :py:obj:`True`, clear the history and set the variable
               initial value
             check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
@@ -261,7 +261,7 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
-            **getkw:    Other keyword arguments to be passed to the setfun function.
+            **getkw:    Other keyword arguments to be passed to the *getfun* function.
               They augment the keyword arguments given in the constructor.
 
         Returns:
