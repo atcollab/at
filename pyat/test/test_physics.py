@@ -396,6 +396,7 @@ def test_quantdiff(hmba_lattice):
     dmat = physics.radiation.quantdiffmat(hmba_lattice)
     lmat = physics.radiation._lmat(dmat)
     # fmt: off
+    print(lmat)
     assert_close(lmat, np.array(
                 [[1.45502986e-07,  0.00000000e+00,  0.00000000e+00,
                 0.00000000e+00,  0.00000000e+00,  0.00000000e+00],
