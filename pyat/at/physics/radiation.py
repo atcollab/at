@@ -115,7 +115,7 @@ def _lmat(dmat):
         v, w = np.linalg.eigh(dmat)
         eps = np.finfo(float).eps # set eps to numerical accuracy
         tol = eps * np.abs(v).max()
-        v[v < tol] = 0.#tol   # push small/megative values slightly above 0
+        v[v < tol] = tol   # push small/megative values slightly above 0
         dmat = w@np.diag(v)@w.T
         lmat = np.linalg.cholesky(dmat)
     except np.linalg.LinAlgError:
