@@ -162,7 +162,7 @@ class VariableBase(abc.ABC):
 
     @property
     def bounds(self) -> tuple[float, float]:
-        """Bounds of the variable"""
+        """Lower and upper bounds of the variable"""
         vmin, vmax = self._bounds
         return -np.inf if vmin is None else vmin, np.inf if vmax is None else vmax
 
@@ -237,7 +237,7 @@ class VariableBase(abc.ABC):
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            **setkw:    Other keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
         self.check_bounds(value)
@@ -262,7 +262,7 @@ class VariableBase(abc.ABC):
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
-            **getkw:    Other keyword arguments to be passed to the setfun function.
+            **getkw:    Other keyword arguments to be passed to the *getfun* function.
               They augment the keyword arguments given in the constructor.
 
         Returns:
