@@ -182,7 +182,7 @@ class ParamDef(abc.ABC):
     values to the appropriate type.
     """
 
-    def __init__(self, *, conversion: Callable[[Any], Any] | None = None):
+    def __init__(self, *, conversion: Callable[[Any], Any] | None = _nop):
         """
         Args:
             conversion: Function to convert values to the appropriate type
@@ -236,6 +236,7 @@ class ParamBase(Combiner, ParamDef):
             self,
             evaluator: _Evaluator,
             *,
+            conversion: Callable[[Any], Any] = _nop,
             priority: int = 20,
             **kwargs
     ) -> None:
@@ -252,6 +253,7 @@ class ParamBase(Combiner, ParamDef):
         self._evaluator = evaluator
         self._priority = priority
         super().__init__(**kwargs)
+        self._conversion = conversion
 
     @property
     def value(self) -> Any:

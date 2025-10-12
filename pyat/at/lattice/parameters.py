@@ -9,7 +9,7 @@ import weakref
 import numpy as np
 import numpy.typing as npt
 
-from .parambase import Combiner, ParamBase, _Constant, ParamDef
+from .parambase import Combiner, ParamBase, _Constant, ParamDef, _nop
 from .variables import VariableBase, Number
 
 _ACCEPTED = ParamDef
@@ -30,7 +30,7 @@ class Param(ParamBase, VariableBase[Number]):
         value: Number,
         *,
         name: str = "",
-        conversion: Callable[[Any], Number] | None = None,
+        conversion: Callable[[Any], Any] = _nop,
         bounds: tuple[Number, Number] | None = None,
         delta: Number = 1.0,
     ) -> None:
@@ -42,8 +42,7 @@ class Param(ParamBase, VariableBase[Number]):
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
         """
-        if conversion is not None:
-            value = conversion(value)
+        value = conversion(value)
         super().__init__(
             _Constant(value),
             name=name,
@@ -52,10 +51,10 @@ class Param(ParamBase, VariableBase[Number]):
             delta=delta,
         )
 
-    def _getfun(self, ring=None) -> Number:
+    def _getfun(self, **_) -> Number:
         return self._evaluator()
 
-    def _setfun(self, value, ring=None) -> None:
+    def _setfun(self, value, **_) -> None:
         self._evaluator = _Constant(self._conversion(value))
 
     @property
