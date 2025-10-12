@@ -105,7 +105,6 @@ class _UnaryOperator(_Evaluator[Number]):
 class Combiner(abc.ABC):
     """Abstract base class for arithmetic combinations of parameters"""
     def __init__(self, name: str, **kwargs):
-        print("Combiner", kwargs)
         self.name = name
         super().__init__(**kwargs)
 
@@ -183,7 +182,7 @@ class ParamDef(abc.ABC):
     values to the appropriate type.
     """
 
-    def __init__(self, *, conversion: Callable[[Any], Any] | None = _nop, **kwargs):
+    def __init__(self, *, conversion: Callable[[Any], Any] | None = _nop):
         """
         Args:
             conversion: Function to convert values to the appropriate type
