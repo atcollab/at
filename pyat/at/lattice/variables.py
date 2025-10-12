@@ -147,7 +147,7 @@ class VariableBase(Combiner, Generic[Number], abc.ABC):
         self.history_length = history_length
         self._initial = np.nan
         self._history: deque[Number] = deque([], self.history_length)
-        super().__init__(name=self._generate_name(name), **kwargs)
+        super().__init__(name=self._generate_name(name))
         try:
             self.get(initial=True)
         except ValueError:
