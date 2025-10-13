@@ -97,13 +97,13 @@ from typing import Generic, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from .parambase import Combiner
+from .parambase import Operand
 
 # Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
 
 
-class VariableBase(Combiner, Generic[Number], abc.ABC):
+class VariableBase(Operand, Generic[Number], abc.ABC):
     """A Variable abstract base class
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
