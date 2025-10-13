@@ -9,7 +9,7 @@ import weakref
 import numpy as np
 import numpy.typing as npt
 
-from .parambase import Combiner, ParamBase, _Constant, ParamDef, _nop
+from .parambase import Operand, ParamBase, _Constant, ParamDef, _nop
 from .variables import VariableBase, Number
 
 _ACCEPTED = ParamDef
@@ -18,7 +18,7 @@ _ACCEPTED = ParamDef
 class Param(ParamBase, VariableBase[Number]):
     """Standalone scalar parameter
 
-    See :py:class:`.Variable` for a description of inherited methods
+    See :py:class:`.VariableBase` for a description of inherited methods
     """
 
     _COUNTER_PREFIX = "param"
@@ -84,7 +84,7 @@ class _SafeArray(np.ndarray):
 
     def __setitem__(self, key: Any, value: Any) -> None:
         """Set an item in the array, preventing parameter assignment."""
-        if isinstance(value, Combiner):
+        if isinstance(value, Operand):
             raise TypeError("Cannot set a parameter into an array")
         super().__setitem__(key, value)
 
