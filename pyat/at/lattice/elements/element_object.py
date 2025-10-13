@@ -109,7 +109,7 @@ class Element:
         themselves when accessing attributes.
         """
         try:
-            return self._parameters[attrname].value
+            return self._parameters[attrname].fast_value()
         except KeyError as exc:
             cl = self.__class__.__name__
             el = object.__getattribute__(self, "FamName")

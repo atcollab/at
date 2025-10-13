@@ -80,7 +80,7 @@ class StrParameter(ParamDef):
         return self.expr
 
     def __repr__(self):
-        return f"{self.value}"
+        return repr(self.value)
 
     def __float__(self):
         return float(self.value)
@@ -160,7 +160,5 @@ class StrParameter(ParamDef):
         else:
             return val
 
-    @property
-    def value(self) -> Any:
-        """Current value of the parameter"""
+    def fast_value(self) -> Any:
         return self._conversion(self.parser.evaluate(self.expr))
