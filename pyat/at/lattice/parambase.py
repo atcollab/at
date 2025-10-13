@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Combiner", "ParamDef", "ParamBase"]
+__all__ = ["Operand", "ParamDef", "ParamBase"]
 
 import abc
 from operator import add, sub, mul, truediv, neg
@@ -65,7 +65,7 @@ class _BinaryOperator(_Evaluator[Number]):
         """Convert a value to an evaluator"""
         if isinstance(value, (int, float)):
             return _Constant(value)
-        elif isinstance(value, Combiner):
+        elif isinstance(value, Operand):
             return value
         raise TypeError(f"Parameter operation not defined for type {type(value)}")
 
@@ -102,8 +102,11 @@ class _UnaryOperator(_Evaluator[Number]):
         return self.operator(self.operand.value)
 
 
-class Combiner(abc.ABC):
+class Operand(abc.ABC):
     """Abstract base class for arithmetic combinations of parameters"""
+
+    name: str  #: Operand name
+
     def __init__(self, name: str, **kwargs):
         self.name = name
         super().__init__(**kwargs)
@@ -182,12 +185,13 @@ class ParamDef(abc.ABC):
     values to the appropriate type.
     """
 
-    def __init__(self, *, conversion: Callable[[Any], Any] | None = _nop):
+    def __init__(self, *, conversion: Callable[[Any], Any] | None = _nop, **kwargs):
         """
         Args:
             conversion: Function to convert values to the appropriate type
         """
         self._conversion = _nop if conversion is None else conversion
+        super().__init__(**kwargs)
 
     def __copy__(self):
         # Parameters are not copied
@@ -222,21 +226,20 @@ class ParamDef(abc.ABC):
         ...
 
 
-class ParamBase(Combiner, ParamDef):
+class ParamBase(ParamDef, Operand):
     """Read-only base class for parameters
 
     It is used for computed parameters and should not be instantiated
-    otherwise. See :py:class:`.Variable` for a description of inherited
-    methods
+    otherwise.
     """
 
     _evaluator: _Evaluator
+    _priority: int
 
     def __init__(
             self,
             evaluator: _Evaluator,
             *,
-            conversion: Callable[[Any], Any] = _nop,
             priority: int = 20,
             **kwargs
     ) -> None:
@@ -253,7 +256,6 @@ class ParamBase(Combiner, ParamDef):
         self._evaluator = evaluator
         self._priority = priority
         super().__init__(**kwargs)
-        self._conversion = conversion
 
     @property
     def value(self) -> Any:
