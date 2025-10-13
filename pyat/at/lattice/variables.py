@@ -280,7 +280,7 @@ class VariableBase(Operand, Generic[Number], abc.ABC):
     value = property(get, set, doc="Actual value")
 
     @property
-    def _safe_value(self):
+    def _print_value(self):
         try:
             return self._history[-1]
         except IndexError:
@@ -387,7 +387,7 @@ class VariableBase(Operand, Generic[Number], abc.ABC):
         )
 
     def _line(self):
-        vnow = self._safe_value
+        vnow = self._print_value
         vini = self._initial
         return f"{self.name:>12s}{vini: 16e}{vnow: 16e}{vnow - vini: 16e}"
 
@@ -399,12 +399,8 @@ class VariableBase(Operand, Generic[Number], abc.ABC):
         """
         return "\n".join((self._header(), self._line()))
 
-    def __str__(self):
-        return self.name
-#       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
-
     def __repr__(self):
-        return repr(self._safe_value)
+        return repr(self._print_value)
 
 
 class CustomVariable(VariableBase[Number]):

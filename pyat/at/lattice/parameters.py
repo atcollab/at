@@ -54,20 +54,19 @@ class Param(ParamBase, VariableBase[Number]):
     def _getfun(self, **_) -> Number:
         return self._evaluator()
 
-    def _setfun(self, value, **_) -> None:
+    def _setfun(self, value: Number, **_) -> None:
         self._evaluator = _Constant(self._conversion(value))
+
+    def fast_value(self) -> Number:
+        return self._evaluator()
 
     @property
     def value(self) -> Number:
-        return self._evaluator()
+        return self.fast_value()
 
     @value.setter
-    def value(self, value: Number) -> None:
+    def value(self, value: Number):
         self.set(value)
-
-    @property
-    def _safe_value(self):
-        return self._evaluator()
 
     def set_conversion(self, conversion: Callable[[Any], Any]) -> None:
         oldv = self._evaluator()
@@ -183,8 +182,7 @@ class ParamArray(np.ndarray):
         super().__setstate__(state)
         self._value = ParamArray.ValueArray(self, dtype=self._dtype)
 
-    @property
-    def value(self) -> np.ndarray:
+    def fast_value(self):
         """Numeric array with the current values of all the parameters.
 
         This property returns a :py:class:`ValueArray` that contains the numeric values
@@ -206,6 +204,10 @@ class ParamArray(np.ndarray):
             for x, y in it:
                 x[...] = y[...]
         return self._value
+
+    @property
+    def value(self) -> np.ndarray:
+        return self.fast_value()
 
     def __repr__(self) -> str:
         return repr(self.value)
