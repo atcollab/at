@@ -121,7 +121,13 @@ class Operand(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def _safe_value(self): ...
+    def value(self): ...
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return repr(self.value)
 
     def __add__(self, other):
         op = _BinaryOperator(add, self, other)
@@ -171,10 +177,10 @@ class Operand(abc.ABC):
         return ParamBase(evaluator=op, name=name, priority=20)
 
     def __float__(self):
-        return float(self._safe_value)
+        return float(self.value)
 
     def __int__(self):
-        return int(self._safe_value)
+        return int(self.value)
 
 
 class ParamDef(abc.ABC):
@@ -219,11 +225,16 @@ class ParamDef(abc.ABC):
             else:
                 raise ValueError("Cannot change the data type of the parameter")
 
-    @property
     @abc.abstractmethod
+    def fast_value(self) -> Any:
+        """Return the value of the parameter"""
+        # This method is called by the __getattr__ method of Element
+        ...
+
+    @property
     def value(self) -> Any:
         """Current value of the parameter"""
-        ...
+        return self.fast_value()
 
 
 class ParamBase(ParamDef, Operand):
@@ -257,16 +268,5 @@ class ParamBase(ParamDef, Operand):
         self._priority = priority
         super().__init__(**kwargs)
 
-    @property
-    def value(self) -> Any:
+    def fast_value(self):
         return self._conversion(self._evaluator())
-
-    @property
-    def _safe_value(self):
-        return self._conversion(self._evaluator())
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return repr(self._safe_value)
