@@ -130,9 +130,13 @@ class Operand(abc.ABC):
         return repr(self.value)
 
     def __add__(self, other):
-        op = _BinaryOperator(add, self, other)
-        name = "+".join((self._nm(self, 10), self._nm(other, 10)))
-        return ParamBase(evaluator=op, name=name, priority=10)
+        try:
+            op = _BinaryOperator(add, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "+".join((self._nm(self, 10), self._nm(other, 10)))
+            return ParamBase(evaluator=op, name=name, priority=10)
 
     __radd__ = __add__
 
@@ -150,31 +154,51 @@ class Operand(abc.ABC):
         return ParamBase(evaluator=op, name=name, priority=20)
 
     def __sub__(self, other):
-        op = _BinaryOperator(sub, self, other)
-        name = "-".join((self._nm(self, 10), self._nm(other, 10)))
-        return ParamBase(evaluator=op, name=name, priority=10)
+        try:
+            op = _BinaryOperator(sub, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "-".join((self._nm(self, 10), self._nm(other, 10)))
+            return ParamBase(evaluator=op, name=name, priority=10)
 
     def __rsub__(self, other):
-        op = _BinaryOperator(sub, other, self)
-        name = "-".join((self._nm(other, 10), self._nm(self, 10)))
-        return ParamBase(evaluator=op, name=name, priority=10)
+        try:
+            op = _BinaryOperator(sub, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "-".join((self._nm(other, 10), self._nm(self, 10)))
+            return ParamBase(evaluator=op, name=name, priority=10)
 
     def __mul__(self, other):
-        op = _BinaryOperator(mul, self, other)
-        name = "*".join((self._nm(self, 20), self._nm(other, 20)))
-        return ParamBase(evaluator=op, name=name, priority=20)
+        try:
+            op = _BinaryOperator(mul, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "*".join((self._nm(self, 20), self._nm(other, 20)))
+            return ParamBase(evaluator=op, name=name, priority=20)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        op = _BinaryOperator(truediv, self, other)
-        name = "/".join((self._nm(self, 20), self._nm(other, 20)))
-        return ParamBase(evaluator=op, name=name, priority=20)
+        try:
+            op = _BinaryOperator(truediv, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "/".join((self._nm(self, 20), self._nm(other, 20)))
+            return ParamBase(evaluator=op, name=name, priority=20)
 
     def __rtruediv__(self, other):
-        op = _BinaryOperator(truediv, other, self)
-        name = "/".join((self._nm(other, 20), self._nm(self, 20)))
-        return ParamBase(evaluator=op, name=name, priority=20)
+        try:
+            op = _BinaryOperator(truediv, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "/".join((self._nm(other, 20), self._nm(self, 20)))
+            return ParamBase(evaluator=op, name=name, priority=20)
 
     def __float__(self):
         return float(self.value)
