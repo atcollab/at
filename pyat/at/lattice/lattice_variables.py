@@ -14,14 +14,15 @@ from __future__ import annotations
 
 __all__ = ["RefptsVariable", "ElementVariable"]
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Callable
+from typing import Any
 
 import numpy as np
 
 from .elements import Element
 from .lattice_object import Lattice
 from .utils import Refpts, getval, setval
-from .variables import VariableBase
+from .variables import VariableBase, Number
 
 
 class RefptsVariable(VariableBase):
@@ -40,6 +41,10 @@ class RefptsVariable(VariableBase):
     As a consequence, a *ring* keyword argument (:py:class:`.Lattice` object) must be
     supplied for getting or setting the variable.
     """
+
+    _getf: Callable[[Element], Number]
+    _setf: Callable[[Element, Number], None]
+    refpts: Refpts
 
     def __init__(
         self, refpts: Refpts, attrname: str, index: int | None = None, **kwargs
@@ -66,14 +71,14 @@ class RefptsVariable(VariableBase):
         self.refpts = refpts
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, ring: Lattice | None = None, **_):
+    def _setfun(self, value: Number, ring: Lattice | None = None, **_) -> None:
         if ring is None:
             raise ValueError("Can't set values if ring is None.\n"
                              "Try to use an ElementVariable if possible")
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
-    def _getfun(self, ring: Lattice | None = None, **_) -> float:
+    def _getfun(self, ring: Lattice | None = None, **_) -> Number:
         if ring is None:
             raise ValueError("Can't get values if ring is None")
         values = np.array([self._getf(elem) for elem in ring.select(self.refpts)])
@@ -94,6 +99,10 @@ class ElementVariable(VariableBase):
     occurrences of this object. But it will not affect any copy, neither shallow nor
     deep, of the original object.
     """
+
+    _getf: Callable[[Element], Any]
+    _setf: Callable[[Element, Any], None]
+    _elements: set[Element]
 
     def __init__(
         self,
@@ -125,15 +134,15 @@ class ElementVariable(VariableBase):
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, **_):
+    def _setfun(self, value: Number, **_) -> None:
         for elem in self._elements:
             self._setf(elem, value)
 
-    def _getfun(self, **_) -> float:
+    def _getfun(self, **_) -> Number:
         values = np.array([self._getf(elem) for elem in self._elements])
         return np.average(values)
 
     @property
-    def elements(self):
+    def elements(self) -> set[Element]:
         """Return the set of elements acted upon by the variable"""
         return self._elements
