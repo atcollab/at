@@ -60,6 +60,7 @@ class RDTObservable(ElementObservable):
         self,
         refpts: Refpts,
         param: str,
+        *,
         name: str | None = None,
         second_order: bool = False,
         **kwargs,
@@ -72,7 +73,7 @@ class RDTObservable(ElementObservable):
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
             second_order:   Compute second order terms. Computation is significantly
-              longer using this method
+              longer using this method.
 
         Keyword Args:
             procfun:        Post-processing function. It can be any numpy ufunc or a

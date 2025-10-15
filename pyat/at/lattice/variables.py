@@ -84,20 +84,19 @@ keeping their sum constant:
 from __future__ import annotations
 
 __all__ = [
-    "VariableBase",
     "CustomVariable",
+    "VariableBase",
     "VariableList",
 ]
 
 import abc
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
-from typing import Union
 
 import numpy as np
 import numpy.typing as npt
 
-Number = Union[int, float]
+Number = int | float
 
 
 def _nop(value):
@@ -105,7 +104,7 @@ def _nop(value):
 
 
 class VariableBase(abc.ABC):
-    """A Variable abstract base class
+    """A Variable abstract base class.
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
     :py:meth:`~VariableBase._setfun` methods
@@ -134,7 +133,7 @@ class VariableBase(abc.ABC):
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             history_length: Maximum length of the history buffer. :py:obj:`None`
-              means infinite
+              means infinite.
 
         Keyword Args:
             **kwargs:    Keyword arguments passed to the _setfun and _getfun methods
@@ -157,43 +156,46 @@ class VariableBase(abc.ABC):
 
     @classmethod
     def _generate_name(cls, name: str) -> str:
-        """Generate unique name for variable"""
+        """Generate unique name for variable."""
         cls._counter += 1
         return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
 
     @property
     def bounds(self) -> tuple[float, float]:
-        """Lower and upper bounds of the variable"""
+        """Lower and upper bounds of the variable."""
         vmin, vmax = self._bounds
         return -np.inf if vmin is None else vmin, np.inf if vmax is None else vmax
 
     def check_bounds(self, value: Number) -> None:
-        """Check that a value is within the variable bounds
+        """Check that a value is within the variable bounds.
 
         Raises:
             ValueError: If the value is not within bounds
         """
         min_val, max_val = self._bounds
         if min_val is not None and value < min_val:
-            raise ValueError(f"Value {value} must be larger or equal to {min_val}")
+            msg = f"Value {value} must be larger or equal to {min_val}"
+            raise ValueError(msg)
         if max_val is not None and value > max_val:
-            raise ValueError(f"Value {value} must be smaller or equal to {max_val}")
+            msg = f"Value {value} must be smaller or equal to {max_val}"
+            raise ValueError(msg)
 
     def _setfun(self, value: Number, *args, **kwargs) -> None:
         classname = self.__class__.__name__
-        raise TypeError(f"{classname!r} is read-only")
+        msg = f"{classname!r} is read-only"
+        raise TypeError(msg)
 
     @abc.abstractmethod
     def _getfun(self, *args, **kwargs) -> Number: ...
 
     @property
     def history(self) -> list[Number]:
-        """History of the values of the variable"""
+        """History of the values of the variable."""
         return list(self._history)
 
     @property
     def initial_value(self) -> Number:
-        """Initial value of the variable
+        """Initial value of the variable.
 
         Raises:
             IndexError: If no initial value has been set yet
@@ -201,11 +203,12 @@ class VariableBase(abc.ABC):
         if not np.isnan(self._initial):
             return self._initial
         else:
-            raise IndexError(f"{self.name}: No initial value has been set yet")
+            msg = f"{self.name}: No initial value has been set yet"
+            raise IndexError(msg)
 
     @property
     def last_value(self) -> Number:
-        """Last value of the variable
+        """Last value of the variable.
 
         Raises:
             IndexError: If no value has been set yet
@@ -218,7 +221,7 @@ class VariableBase(abc.ABC):
 
     @property
     def previous_value(self) -> Number:
-        """Value before the last one
+        """Value before the last one.
 
         Raises:
             IndexError: If there are fewer than 2 values in the history
@@ -230,7 +233,7 @@ class VariableBase(abc.ABC):
             raise
 
     def set(self, value: Number, **setkw) -> None:
-        """Set the variable value
+        """Set the variable value.
 
         Args:
             value:      New value to be applied on the variable
@@ -252,7 +255,7 @@ class VariableBase(abc.ABC):
     def get(
         self, *, initial: bool = False, check_bounds: bool = False, **getkw
     ) -> Number:
-        """Get the actual variable value
+        """Get the actual variable value.
 
         Args:
             initial:    If :py:obj:`True`, clear the history and set the variable
@@ -289,7 +292,7 @@ class VariableBase(abc.ABC):
             return np.nan
 
     def set_previous(self, **setkw) -> None:
-        """Reset to the value before the last one
+        """Reset to the value before the last one.
 
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
@@ -305,10 +308,11 @@ class VariableBase(abc.ABC):
             previous_value = self._history.pop()  # retrieve the previous value
             self.set(previous_value, **setkw)
         else:
-            raise IndexError(f"{self.name}: history too short (need at least 2 values)")
+            msg = f"{self.name}: history too short (need at least 2 values)"
+            raise IndexError(msg)
 
     def reset(self, **setkw) -> None:
-        """Reset to the initial value and clear the history buffer
+        """Reset to the initial value and clear the history buffer.
 
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
@@ -324,12 +328,11 @@ class VariableBase(abc.ABC):
             self._history = deque([], self.history_length)
             self.set(initial_value, **setkw)
         else:
-            raise IndexError(
-                f"Cannot reset {self.name}: No initial value has been set yet"
-            )
+            msg = f"Cannot reset {self.name}: No initial value has been set yet"
+            raise IndexError(msg)
 
     def increment(self, incr: Number, **setkw) -> None:
-        """Increment the variable value
+        """Increment the variable value.
 
         Args:
             incr:   Increment value
@@ -350,7 +353,7 @@ class VariableBase(abc.ABC):
         self.set(current_value + incr, **setkw)
 
     def _step(self, step: Number, **setkw) -> None:
-        """Apply a step relative to the initial value"""
+        """Apply a step relative to the initial value."""
         try:
             initial_value = self.initial_value
         except IndexError:
@@ -361,7 +364,7 @@ class VariableBase(abc.ABC):
         self.set(initial_value + step, **setkw)
 
     def step_up(self, **setkw) -> None:
-        """Set to initial_value + delta
+        """Set to initial_value + delta.
 
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
@@ -372,7 +375,7 @@ class VariableBase(abc.ABC):
         self._step(self.delta, **setkw)
 
     def step_down(self, **setkw) -> None:
-        """Set to initial_value - delta
+        """Set to initial_value - delta.
 
         Keyword Args:
             ring:       Depending on the variable type, a :py:class:`.Lattice` argument
@@ -394,7 +397,7 @@ class VariableBase(abc.ABC):
         return f"{self.name:>12s}{vini: 16e}{vnow: 16e}{vnow - vini: 16e}"
 
     def status(self):
-        """Return a string describing the current status of the variable
+        """Return a string describing the current status of the variable.
 
         Returns:
             status: Variable description
@@ -409,14 +412,15 @@ class VariableBase(abc.ABC):
 
     def __str__(self):
         return self.name
-#       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
+
+    #       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
 
     def __repr__(self):
         return repr(self._safe_value)
 
 
 class CustomVariable(VariableBase):
-    r"""A Variable with user-defined get and set functions
+    r"""A Variable with user-defined get and set functions.
 
     This is a convenience function allowing user-defined *get* and *set*
     functions. But subclassing :py:class:`.Variable` should always be preferred
@@ -478,7 +482,7 @@ class CustomVariable(VariableBase):
 
 
 class VariableList(list):
-    """Container for Variable objects
+    """Container for Variable objects.
 
     :py:class:`VariableList` supports all :py:class:`list` methods, like
     appending, insertion or concatenation with the "+" operator.
@@ -491,7 +495,7 @@ class VariableList(list):
             return super().__getitem__(index)
 
     def get(self, ring=None, **kwargs) -> Sequence[float]:
-        r"""Get the current values of Variables
+        r"""Get the current values of Variables.
 
         Args:
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
@@ -509,7 +513,7 @@ class VariableList(list):
         return np.array([var.get(ring=ring, **kwargs) for var in self])
 
     def set(self, values: Iterable[float], ring=None) -> None:
-        r"""Set the values of Variables
+        r"""Set the values of Variables.
 
         Args:
             values:     Iterable of values
@@ -520,7 +524,7 @@ class VariableList(list):
             var.set(val, ring=ring)
 
     def increment(self, increment: Iterable[float], ring=None) -> None:
-        r"""Increment the values of Variables
+        r"""Increment the values of Variables.
 
         Args:
             increment:  Iterable of values
@@ -531,7 +535,7 @@ class VariableList(list):
             var.increment(incr, ring=ring)
 
     def reset(self, ring=None) -> None:
-        """Reset to all variables their initial value and clear their history buffer
+        """Reset to all variables their initial value and clear their history buffer.
 
         Args:
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
@@ -542,7 +546,7 @@ class VariableList(list):
 
     # noinspection PyProtectedMember
     def status(self, **kwargs) -> str:
-        """String description of the variables"""
+        """String description of the variables."""
         values = "\n".join(var._line(**kwargs) for var in self)
         return "\n".join((VariableBase._header(), values))
 
@@ -551,7 +555,7 @@ class VariableList(list):
 
     @property
     def deltas(self) -> npt.NDArray[Number]:
-        """delta values of the variables"""
+        """delta values of the variables."""
         return np.array([var.delta for var in self])
 
     @deltas.setter
