@@ -37,7 +37,8 @@ class Param(ParamBase, VariableBase[Number]):
         """
         Args:
             value:      Initial value of the parameter
-            name:       Name of the parameter
+            name:       Name of the parameter. If omitted or blank, a unique name is
+              generated.
             conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
             delta:      Initial variation step
