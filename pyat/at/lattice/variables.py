@@ -128,7 +128,8 @@ class VariableBase(Operand, Generic[Number], abc.ABC):
         """
         Parameters:
             *args:      Positional arguments passed to the _setfun and _getfun methods
-            name:       Name of the Variable
+            name:       Name of the Variable. If omitted or blank, a unique name is
+              generated.
             bounds:     Lower and upper bounds of the variable value
             delta:      Initial variation step
             history_length: Maximum length of the history buffer. :py:obj:`None`
