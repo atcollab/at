@@ -1,8 +1,5 @@
-"""
-Import/export AT lattice from/to different formats:
-- .mat files
-- .m files
-"""
+"""Import/export AT lattice from/to different formats."""
+
 from .rpn import *
 from .allfiles import *
 from .matfile import *

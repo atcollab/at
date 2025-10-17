@@ -1,26 +1,26 @@
 """
-Conversion utilities for creating pyat elements
+Conversion utilities for creating pyat elements.
 """
 
 from __future__ import annotations
 
 __all__ = [
+    "RingParam",
     "element_from_dict",
     "element_to_dict",
     "find_class",
-    "keep_elements",
     "keep_attributes",
-    "split_ignoring_parentheses",
-    "RingParam",
+    "keep_elements",
     "protect",
     "restore",
+    "split_ignoring_parentheses",
 ]
 
 import collections
-import os
 import re
 import sysconfig
-from typing import Any
+from typing import Any, ClassVar
+from pathlib import Path
 from warnings import warn
 from collections.abc import Callable, Generator
 
@@ -34,10 +34,11 @@ from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
+_integrator_path = Path(integrators.__path__[0])
 
 
 def _no_encoder(v):
-    """type encoding for .mat files"""
+    """type encoding for .mat files."""
     return v
 
 
@@ -60,17 +61,18 @@ def _warn(index: int, message: str, elem_dict: dict) -> None:
 
 
 class RingParam(elt.Element):
-    """Private class for Matlab RingParam element
+    """Private class for Matlab RingParam element.
 
     :meta private:
     """
 
     # noinspection PyProtectedMember
-    _BUILD_ATTRIBUTES = elt.Element._BUILD_ATTRIBUTES + [
+    _BUILD_ATTRIBUTES: ClassVar[list[str]] = [
+        *elt.Element._BUILD_ATTRIBUTES,
         "Energy",
         "Periodicity",
     ]
-    _conversions = dict(
+    _conversions: ClassVar[dict] = dict(
         elt.Element._conversions,
         Energy=float,
         Periodicity=int,
@@ -141,14 +143,14 @@ _drop_attrs = {
     "in_file": None,
     "use": None,
     "mat_key": None,
-    "mat_file": None,  # Not used anymore...
+    "mat_file": None,  # Not used any more...
     "m_file": None,
     "repr_file": None,
 }
 
 
 def _hasattrs(kwargs: dict, *attributes) -> bool:
-    """Checks the presence of keys in a :py:class:`dict`
+    """Checks the presence of keys in a :py:class:`dict`.
 
     Returns :py:obj:`True` if any of the ``attributes`` is in ``kwargs``
 
@@ -161,26 +163,23 @@ def _hasattrs(kwargs: dict, *attributes) -> bool:
         found (bool):   :py:obj:`True` if the element has any of the specified
           attributes.
     """
-    for attribute in attributes:
-        if attribute in kwargs:
-            return True
-    return False
+    return any(attribute in kwargs for attribute in attributes)
 
 
 def keep_attributes(ring: Lattice):
-    """Remove Lattice attributes which must not be saved on file"""
+    """Remove Lattice attributes which must not be saved on file."""
     return {k: v for k, v in ring.attrs.items() if _drop_attrs.get(k, k) is not None}
 
 
 def keep_elements(ring: Lattice) -> Generator[Element, None, None]:
-    """Remove the 'RingParam' Marker"""
+    """Remove the 'RingParam' Marker."""
     for elem in ring:
         if not (isinstance(elem, Marker) and getattr(elem, "tag", None) == "RingParam"):
             yield elem
 
 
 def _from_contents(elem: dict) -> type[Element]:
-    """Deduce the element class from its contents"""
+    """Deduce the element class from its contents."""
 
     def low_order(key):
         polynom = np.array(elem[key], dtype=np.float64).reshape(-1)
@@ -234,7 +233,7 @@ def _from_contents(elem: dict) -> type[Element]:
 def find_class(elem_dict: dict, quiet: bool = False, index: int | None = None) -> type(
     Element
 ):
-    """Deduce the class of an element from its attributes
+    """Deduce the class of an element from its attributes.
 
     `find_class` looks first at the "Class" field, if existing. It then tries to deduce
     the class from "FamName", from "PassMethod", and finally form the element contents.
@@ -276,7 +275,7 @@ def find_class(elem_dict: dict, quiet: bool = False, index: int | None = None) -
         return cls
 
     pass_method = elem_dict.get("PassMethod", "")  # try from passmethod
-    cls = _PASS_MAP.get(pass_method, None)
+    cls = _PASS_MAP.get(pass_method)
     if cls is not None:
         return cls
     elif not quiet:
@@ -291,7 +290,7 @@ def element_from_dict(
     check: bool = True,
     quiet: bool = False,
 ) -> Element:
-    """Builds an :py:class:`.Element` from a dictionary of attributes
+    """Builds an :py:class:`.Element` from a dictionary of attributes.
 
     Parameters:
         elem_dict:      Dictionary of element attributes
@@ -324,10 +323,9 @@ def element_from_dict(
         if pass_method is not None:
             pass_to_class = _PASS_MAP.get(pass_method)
             length = float(elem_dict.get("Length", 0.0))
-            file_name = pass_method + _ext_suffix
-            file_path = os.path.join(integrators.__path__[0], file_name)
-            if not os.path.isfile(os.path.realpath(file_path)):
-                message = f"PassMethod {pass_method} is missing {file_name}."
+            file_path = (_integrator_path / pass_method).with_suffix(_ext_suffix)
+            if not file_path.exists():
+                message = f"PassMethod {pass_method} is missing {file_path}."
                 _warn(index, message, elem_dict)
             elif (pass_method == "IdentityPass") and (length != 0.0):
                 message = (
@@ -354,7 +352,7 @@ def element_from_dict(
 
 
 def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
-    """Convert a :py:class:`.Element` to a :py:class:`dict`
+    """Convert a :py:class:`.Element` to a :py:class:`dict`.
 
     Parameters:
         elem:           :py:class:`.Element`
@@ -375,7 +373,7 @@ def split_ignoring_parentheses(
     fence: tuple[str, str] = ("\\(", "\\)"),
     maxsplit: int = -1,
 ) -> list[str]:
-    """Split a string while keeping protected expressions intact
+    """Split a string while keeping protected expressions intact.
 
     Example: "l=0,hom(4,0.0,0)" -> ["l=0", "hom(4,0.0,0)"]
     """
