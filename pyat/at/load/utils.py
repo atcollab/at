@@ -230,9 +230,9 @@ def _from_contents(elem: dict) -> type[Element]:
         return elt.Element
 
 
-def find_class(elem_dict: dict, quiet: bool = False, index: int | None = None) -> type(
-    Element
-):
+def find_class(
+    elem_dict: dict, quiet: bool = False, index: int | None = None
+) -> type[Element]:
     """Deduce the class of an element from its attributes.
 
     `find_class` looks first at the "Class" field, if existing. It then tries to deduce
