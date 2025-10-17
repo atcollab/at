@@ -4,6 +4,7 @@ __all__ = ["Exporter"]
 
 import sys
 from collections.abc import Sequence, Generator
+from pathlib import Path
 
 from .file_input import ElementDescr
 from ..lattice import Lattice, elements as elt
@@ -18,7 +19,7 @@ class Exporter:
 
     def __init__(self, ring: Lattice, **kwargs):
         def store_elem(store, elem: ElementDescr):
-            """Store an element in the selected dictionary"""
+            """Store an element in the selected dictionary."""
 
             def name_gen(name: str, max: int = 10000):
                 yield name
@@ -44,10 +45,11 @@ class Exporter:
                         store[nm] = elem
                     return nm
 
-            raise NameError(f"Cannot store {elem.name}")
+            msg = f"Cannot store {elem.name}"
+            raise NameError(msg)
 
         def scan(ring: Lattice) -> Generator[tuple[str, float], None, None]:
-            """Run through the lattice and store the converted elements"""
+            """Run through the lattice and store the converted elements."""
             end = 0.0
             for atelem in ring:
                 attyp = type(atelem)
@@ -98,7 +100,7 @@ class Exporter:
         print(file=file)
         for elname, el in store.items():
             if el is not None:
-                print(f"{elname.ljust(10)}: {str(el)}{self.delimiter}", file=file)
+                print(f"{elname.ljust(10)}: {el}{self.delimiter}", file=file)
 
     def print_sequence(self, file) -> None:
         line = f"{self.seqname.ljust(10)}: SEQUENCE, L={self.length}"
@@ -141,5 +143,6 @@ class Exporter:
         if filename is None:
             do_export(sys.stdout)
         else:
-            with open(filename, "w") as mfile:
+            filename = Path(filename)
+            with filename.open("w") as mfile:
                 do_export(mfile)

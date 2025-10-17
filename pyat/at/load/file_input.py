@@ -15,8 +15,7 @@ __all__ = [
     "skip_class",
 ]
 
-from os import getcwd
-from os.path import join, normpath, dirname
+from pathlib import Path
 import re
 from itertools import repeat, count
 from functools import wraps
@@ -301,7 +300,7 @@ class AnyDescr:
 class ElementDescr(AnyDescr, dict):
     """Simple representation of an element as a :py:class:`dict`."""
 
-    _mentioned = set()
+    _mentioned: ClassVar[set[str]] = set()
     at2mad: ClassVar[dict[str, str]] = {"Length": "L"}
     array_fmt = str.maketrans("[]()", "{}{}")
     bool_fmt = None
@@ -437,7 +436,7 @@ class BaseParser(DictNoDot, StrParser):
         """
         self.skip_comments = CommentHandler(self._linecomment, self._blockcomment)
         self.env = env
-        self.bases: list[str] = []
+        self.bases: list[Path] = []
         self.kwargs = kwargs
         self.strict = strict
         self.always_force = always_force
@@ -517,7 +516,7 @@ class BaseParser(DictNoDot, StrParser):
             for _loop in range(5):
                 try:
                     return eval(expr, self.env, self)
-                except NameError as exc:
+                except NameError as exc:  # noqa: PERF203
                     var = self._reason(exc)
                     self._print(f"Set {var!r} to {default_value} ({_loop})")
                     self[var] = default_value
@@ -720,7 +719,7 @@ class BaseParser(DictNoDot, StrParser):
                 continue
             while cmd is not None:
                 reason = cmd[0]
-                cmd = self._lookup(reason)
+                cmd = self._lookup(reason)  # noqa: PLW2901 (reassignment of cmd)
             miss.add(reason)
         return miss
 
@@ -857,7 +856,7 @@ class BaseParser(DictNoDot, StrParser):
 
     def parse_files(
         self,
-        *filenames: str,
+        *filenames: str | Path,
         final: bool = True,
         prolog: None | int | Callable[..., None] = None,
         epilog: Callable[..., None] | None = None,
@@ -878,13 +877,14 @@ class BaseParser(DictNoDot, StrParser):
         ElementDescr._mentioned.clear()
         for nf, fnm in enumerate(filenames):
             bases = self.bases
-            fn = normpath(join(bases[-1] if bases else getcwd(), fnm))
+            # fn = normpath(join(bases[-1] if bases else getcwd(), fnm))
+            fn = (bases[-1] if bases else Path.cwd() / Path(fnm)).resolve()
             if not bases:
-                self.in_file.append(fnm)
-            self.bases.append(dirname(fnm))
-            print("Processing", fnm)
+                self.in_file.append(str(fn))
+            self.bases.append(fn.parent)
+            print(f"Processing {fn}")
             try:
-                with open(fnm) as f:
+                with fn.open() as f:
                     if callable(prolog):
                         prolog(f)
                     elif isinstance(prolog, int):
@@ -896,7 +896,7 @@ class BaseParser(DictNoDot, StrParser):
                     if callable(epilog):
                         epilog(f)
             finally:
-                print("End", fnm)
+                print("End", fn)
                 self.bases.pop()
 
 
