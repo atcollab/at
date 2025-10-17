@@ -1,14 +1,13 @@
 """Generic function to save and load python AT lattices. The format is
-determined by the file extension
+determined by the file extension.
 """
 
 from __future__ import annotations
 
-__all__ = ["load_lattice", "save_lattice", "register_format"]
+__all__ = ["load_lattice", "register_format", "save_lattice"]
 
 import os.path
 from collections.abc import Callable
-from typing import Optional
 
 from at.lattice import Lattice
 
@@ -17,7 +16,7 @@ _save_extension = {}
 
 
 def load_lattice(filepath: str, **kwargs) -> Lattice:
-    """Load a Lattice object from a file
+    """Load a Lattice object from a file.
 
     The file format is indicated by the filepath extension. The file name is stored in
     the *in_file* Lattice attribute. The selected variable, if relevant, is stored
@@ -49,13 +48,13 @@ def load_lattice(filepath: str, **kwargs) -> Lattice:
     try:
         load_func = _load_extension[ext.lower()]
     except KeyError:
-        print("File load failed: unknow extension {}.".format(ext))
+        print(f"File load failed: unknow extension {ext}.")
     else:
         return load_func(filepath, **kwargs)
 
 
 def save_lattice(ring: Lattice, filepath: str, **kwargs) -> None:
-    """Save a Lattice object
+    """Save a Lattice object.
 
     The file format is indicated by the filepath extension.
 
@@ -71,18 +70,18 @@ def save_lattice(ring: Lattice, filepath: str, **kwargs) -> None:
     try:
         save_func = _save_extension[ext.lower()]
     except KeyError:
-        print("File save failed: unknow extension {}.".format(ext))
+        print(f"File save failed: unknow extension {ext}.")
     else:
         return save_func(ring, filepath, **kwargs)
 
 
 def register_format(
     extension: str,
-    load_func: Optional[Callable[..., Lattice]] = None,
-    save_func: Optional[Callable[..., None]] = None,
+    load_func: Callable[..., Lattice] | None = None,
+    save_func: Callable[..., None] | None = None,
     descr: str = "",
 ):
-    """Register format-specific processing functions
+    """Register format-specific processing functions.
 
     Parameters:
         extension:      File extension string.

@@ -132,10 +132,10 @@ The exclusion masks can be reset with  :py:meth:`~.ResponseMatrix.reset_vars` an
 from __future__ import annotations
 
 __all__ = [
-    "sequence_split",
-    "ResponseMatrix",
     "OrbitResponseMatrix",
+    "ResponseMatrix",
     "TrajectoryResponseMatrix",
+    "sequence_split",
 ]
 
 import os
@@ -215,7 +215,7 @@ def _resp(
     **kwargs,
 ):
     def _resp_one(variable: RefptsVariable):
-        """Single response"""
+        """Single response."""
         variable.step_up(ring=ring)
         observables.evaluate(ring, **kwargs)
         op = observables.flat_values
@@ -230,7 +230,7 @@ def _resp(
 
 
 class _PicklableFunction:
-    """Necessary to pickle interactively defined functions"""
+    """Necessary to pickle interactively defined functions."""
 
     def __init__(self, fun):
         self._fun = fun
@@ -273,14 +273,14 @@ class _SvdSolver(abc.ABC):
         self._varmask = np.ones(nvar, dtype=bool)
 
     def reset_vars(self):
-        """Reset the variable exclusion mask: enable all variables"""
+        """Reset the variable exclusion mask: enable all variables."""
         self._varmask = np.ones(self.shape[1], dtype=bool)
         self._v = None
         self._uh = None
         self.singular_values = None
 
     def reset_obs(self):
-        """Reset the observable exclusion mask: enable all observables"""
+        """Reset the observable exclusion mask: enable all observables."""
         self._obsmask = np.ones(self.shape[0], dtype=bool)
         self._v = None
         self._uh = None
@@ -330,17 +330,17 @@ class _SvdSolver(abc.ABC):
         """Response matrix."""
         resp = self._response
         if resp is None:
-            raise AtError("No matrix yet: run build() or load() first")
+            msg = "No matrix yet: run build() or load() first."
+            raise AtError(msg)
         return resp
 
     @response.setter
     def response(self, response: FloatArray) -> None:
         l1, c1 = self._shape
         l2, c2 = response.shape
-        if l1 != l1 or c1 != c2:
-            raise ValueError(
-                f"Input matrix has incompatible shape. Expected: {self.shape}"
-            )
+        if l1 != l2 or c1 != c2:
+            msg = f"Input matrix has incompatible shape. Expected: {self.shape}."
+            raise ValueError(msg)
         self._response = response
 
     @property
@@ -392,7 +392,8 @@ class _SvdSolver(abc.ABC):
               be appended to the filename if it does not already have one.
         """
         if self._response is None:
-            raise AtError("No response matrix: run build() or load() first")
+            msg = "No response matrix: run build() or load() first."
+            raise AtError(msg)
         np.save(file, self._response)
 
     def load(self, file) -> None:
@@ -431,7 +432,7 @@ class ResponseMatrix(_SvdSolver):
         Args:
             variables:      List of :py:class:`Variable <.VariableBase>`\ s
             observables:    List of :py:class:`.Observable`\s
-            ring:           Design lattice
+            ring:           Design lattice.
         """
 
         def limits(obslist):
@@ -456,9 +457,8 @@ class ResponseMatrix(_SvdSolver):
 
     def __add__(self, other: ResponseMatrix) -> ResponseMatrix:
         if not isinstance(other, ResponseMatrix):
-            raise TypeError(
-                f"Cannot add {type(other).__name__} and {type(self).__name__}"
-            )
+            msg = f"Cannot add {type(other).__name__} and {type(self).__name__}."
+            raise TypeError(msg)
         return ResponseMatrix(
             VariableList(self.variables + other.variables),
             self.observables + other.observables,
@@ -490,7 +490,12 @@ class ResponseMatrix(_SvdSolver):
         return self.observables.flat_weights
 
     def correct(
-        self, ring: Lattice, nvals: int | None = None, niter: int = 1, apply: bool = False
+        self,
+        ring: Lattice,
+        *,
+        nvals: int | None = None,
+        niter: int = 1,
+        apply: bool = False,
     ) -> FloatArray:
         """Compute and optionally apply the correction.
 
@@ -509,7 +514,8 @@ class ResponseMatrix(_SvdSolver):
             correction: Vector of correction values
         """
         if niter > 1 and not apply:
-            raise ValueError("If niter > 1, 'apply' must be True")
+            msg = "If niter > 1, 'apply' must be True."
+            raise ValueError(msg)
         obs = self.observables
         if apply:
             self.variables.get(ring=ring, initial=True)
@@ -519,9 +525,8 @@ class ResponseMatrix(_SvdSolver):
             obs.evaluate(ring, **self._eval_args)
             deviation = obs.flat_deviations
             if np.any(np.isnan(deviation)):
-                raise AtError(
-                    f"Step {it + 1}: Invalid observables, cannot compute correction"
-                )
+                msg = f"Step {it + 1}: Invalid observables, cannot compute correction."
+                raise AtError(msg)
             corr = self.get_correction(deviation, nvals=nv)
             sumcorr = sumcorr + corr  # non-broadcastable sumcorr
             if apply:
@@ -530,6 +535,7 @@ class ResponseMatrix(_SvdSolver):
 
     def build(
         self,
+        *,
         use_mp: bool = False,
         pool_size: int | None = None,
         start_method: str | None = None,
@@ -578,12 +584,14 @@ class ResponseMatrix(_SvdSolver):
                 checkfun=_PicklableFunction(checkfun),
                 **kwargs,
             )
-            with concurrent.futures.ProcessPoolExecutor(
-                max_workers=pool_size,
-                mp_context=ctx,
-            ) as pool:
-                with self._save_variables():
-                    results = list(chain(*pool.map(_single_resp, varchunks)))
+            with (
+                concurrent.futures.ProcessPoolExecutor(
+                    max_workers=pool_size,
+                    mp_context=ctx,
+                ) as pool,
+                self._save_variables(),
+            ):
+                results = list(chain(*pool.map(_single_resp, varchunks)))
             _globring = None
             _globobs = None
         else:
@@ -602,23 +610,22 @@ class ResponseMatrix(_SvdSolver):
 
     def build_analytical(self) -> FloatArray:
         """Build the response matrix."""
-        raise NotImplementedError(
-            f"build_analytical not implemented for {self.__class__.__name__}"
-        )
+        msg = f"build_analytical not implemented for {self.__class__.__name__}."
+        raise NotImplementedError(msg)
 
     def _on_obs(self, fun: Callable, *args, obsid: int | str = 0):
-        """Apply a function to the selected observable"""
+        """Apply a function to the selected observable."""
         if not isinstance(obsid, str):
             return fun(self.observables[obsid], *args)
         else:
             for obs in self.observables:
                 if obs.name == obsid:
                     return fun(obs, *args)
-            else:
-                raise ValueError(f"Observable {obsid} not found")
+            msg = f"Observable {obsid} not found."
+            raise ValueError(msg)
 
     def get_target(self, *, obsid: int | str = 0) -> FloatArray:
-        r"""Return the target of the specified observable
+        r"""Return the target of the specified observable.
 
         Args:
             obsid:  :py:class:`.Observable` name or index in the observable list.
@@ -633,7 +640,7 @@ class ResponseMatrix(_SvdSolver):
         return self._on_obs(_get, obsid=obsid)
 
     def set_target(self, target: npt.ArrayLike, *, obsid: int | str = 0) -> None:
-        r"""Set the target of the specified observable
+        r"""Set the target of the specified observable.
 
         Args:
             target: observable target. Must be broadcastable to the shape of the
@@ -648,7 +655,7 @@ class ResponseMatrix(_SvdSolver):
 
     def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
-        r"""Add an observable item to the set of excluded values
+        r"""Add an observable item to the set of excluded values.
 
         After excluding observation points, the matrix must be inverted again using
         :py:meth:`solve`.
@@ -692,7 +699,8 @@ class ResponseMatrix(_SvdSolver):
                     exclude(obs, mask)
                     break
             else:
-                raise ValueError(f"Observable {obsid} not found")
+                msg = f"Observable {obsid} not found."
+                raise ValueError(msg)
 
     @property
     def excluded_obs(self) -> dict:
@@ -736,12 +744,13 @@ class ResponseMatrix(_SvdSolver):
         mask[varidx] = True
         miss = nameset - {var.name for var, ok in zip(self.variables, mask) if ok}
         if miss:
-            raise ValueError(f"Unknown variables: {miss}")
+            msg = f"Unknown variables: {miss}."
+            raise ValueError(msg)
         self._varmask &= np.logical_not(mask)
 
     @property
     def excluded_vars(self) -> list:
-        """List of excluded variables"""
+        """List of excluded variables."""
         return [var.name for var, ok in zip(self.variables, self._varmask) if not ok]
 
 
@@ -859,7 +868,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
         deltas = np.broadcast_to(steerdelta, nbsteers)
-        if steersum and stsumweight is None or cavrefs and cavdelta is None:
+        if (steersum and stsumweight is None) or (cavrefs and cavdelta is None):
             cavd, stsw = set_norm()
 
         # Observables
@@ -883,7 +892,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
-                raise ValueError("Cavities are not active")
+                msg = "Cavities are not active."
+                raise ValueError(msg)
             # noinspection PyUnboundLocalVariable
             cavvar = RefptsVariable(
                 cavrefs,
@@ -953,7 +963,7 @@ class OrbitResponseMatrix(ResponseMatrix):
     def normalise(
         self, cav_ampl: float | None = 2.0, stsum_ampl: float | None = 2.0
     ) -> None:
-        """Normalise the response matrix
+        """Normalise the response matrix.
 
         Adjust the RF cavity delta and/or the weight of steerer summation so that the
         weighted response matrix is normalised.
@@ -1207,7 +1217,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude all monitors with name "BPM_02"
         """
-        super().exclude_obs(obsid=0, refpts=refpts)
+        super().exclude_obs(obsid=obsid, refpts=refpts)
 
     def exclude_vars(self, *varid: int | str, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
