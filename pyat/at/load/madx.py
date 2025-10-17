@@ -258,7 +258,8 @@ class _MadElement(ElementDescr):
         frm = getattr(self, "from")
         if frm is not None:
             offset += parser[frm].at
-        return np.array([-half_length, half_length]) + offset
+        # return np.array([-half_length, half_length]) + offset
+        return offset - half_length, offset + half_length
 
     def meval(self, params: dict):
         """Evaluation of superfluous parameters."""
