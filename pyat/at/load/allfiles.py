@@ -6,7 +6,7 @@ from __future__ import annotations
 
 __all__ = ["load_lattice", "register_format", "save_lattice"]
 
-import os.path
+from pathlib import Path
 from collections.abc import Callable
 
 from at.lattice import Lattice
@@ -15,7 +15,7 @@ _load_extension = {}
 _save_extension = {}
 
 
-def load_lattice(filepath: str, **kwargs) -> Lattice:
+def load_lattice(filepath: str | Path, **kwargs) -> Lattice:
     """Load a Lattice object from a file.
 
     The file format is indicated by the filepath extension. The file name is stored in
@@ -44,7 +44,8 @@ def load_lattice(filepath: str, **kwargs) -> Lattice:
 
     .. Admonition:: Known extensions are:
     """
-    _, ext = os.path.splitext(filepath)
+    filepath = Path(filepath)
+    ext = filepath.suffix
     try:
         load_func = _load_extension[ext.lower()]
     except KeyError:
@@ -53,7 +54,7 @@ def load_lattice(filepath: str, **kwargs) -> Lattice:
         return load_func(filepath, **kwargs)
 
 
-def save_lattice(ring: Lattice, filepath: str, **kwargs) -> None:
+def save_lattice(ring: Lattice, filepath: str | Path, **kwargs) -> None:
     """Save a Lattice object.
 
     The file format is indicated by the filepath extension.
@@ -66,7 +67,8 @@ def save_lattice(ring: Lattice, filepath: str, **kwargs) -> None:
 
     .. Admonition:: Known extensions are:
     """
-    _, ext = os.path.splitext(filepath)
+    filepath = Path(filepath)
+    ext = filepath.suffix
     try:
         save_func = _save_extension[ext.lower()]
     except KeyError:
