@@ -7,7 +7,6 @@ from __future__ import annotations
 __all__ = ["load_m", "load_mat", "load_var", "save_m", "save_mat"]
 
 import sys
-from os import PathLike
 from collections.abc import Generator, Sequence, Mapping
 from math import isfinite
 from pathlib import Path
@@ -82,7 +81,7 @@ def _mat_encoder(v):
 
 
 def _matfile_generator(
-    params: dict[str, Any], mat_file: PathLike
+    params: dict[str, Any], mat_file: Path
 ) -> Generator[Element, None, None]:
     """Run through Matlab cells and generate AT elements.
 
@@ -361,9 +360,7 @@ def load_m(filename: str, **kwargs) -> Lattice:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
 
-    def mfile_generator(
-        params: dict, m_file: PathLike
-    ) -> Generator[Element, None, None]:
+    def mfile_generator(params: dict, m_file: Path) -> Generator[Element, None, None]:
         """Run through the lines of a Matlab m-file and generate AT elements."""
         params.setdefault("in_file", str(m_file))
         with m_file.open() as file:
@@ -449,7 +446,7 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
     yield from keep_elements(ring)
 
 
-def save_mat(ring: Lattice, filename: str | PathLike, **kwargs) -> None:
+def save_mat(ring: Lattice, filename: str | Path, **kwargs) -> None:
     """Save a :py:class:`.Lattice` as a Matlab mat-file.
 
     Parameters:
@@ -535,7 +532,7 @@ def _element_to_m(elem: Element) -> str:
     return "{:>15}({});...".format(m_name(elem.__class__), ", ".join(argstrs))
 
 
-def save_m(ring: Lattice, filename: str | PathLike | None = None) -> None:
+def save_m(ring: Lattice, filename: str | Path | None = None) -> None:
     """Save a :py:class:`.Lattice` as a Matlab m-file.
 
     Parameters:
