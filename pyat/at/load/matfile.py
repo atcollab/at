@@ -4,13 +4,13 @@ Load lattices from Matlab files.
 
 from __future__ import annotations
 
-__all__ = ["load_mat", "save_mat", "load_m", "save_m", "load_var"]
+__all__ = ["load_m", "load_mat", "load_var", "save_m", "save_mat"]
 
-import os
 import sys
-from collections.abc import Generator, Sequence
+from os import PathLike
+from collections.abc import Generator, Sequence, Mapping
 from math import isfinite
-from os.path import abspath, basename, splitext
+from pathlib import Path
 from typing import Any
 from warnings import warn
 
@@ -71,7 +71,7 @@ _mat_constructor = {
 
 
 def _mat_encoder(v):
-    """type encoding for .mat files"""
+    """type encoding for .mat files."""
     if isinstance(v, int):
         return float(v)
     if isinstance(v, Particle):
@@ -82,7 +82,7 @@ def _mat_encoder(v):
 
 
 def _matfile_generator(
-    params: dict[str, Any], mat_file: str
+    params: dict[str, Any], mat_file: PathLike
 ) -> Generator[Element, None, None]:
     """Run through Matlab cells and generate AT elements.
 
@@ -94,7 +94,7 @@ def _matfile_generator(
         pyat Element from dictionary
     """
 
-    def mclean(data: any) -> any:
+    def mclean(data: Any) -> Any:
         if data.dtype.type is np.str_:
             # Convert strings in arrays back to strings.
             dataout = str(data[0]) if data.size > 0 else ""
@@ -111,11 +111,11 @@ def _matfile_generator(
             dataout = np.squeeze(data)
         return dataout
 
-    def mcleanhdf5(data: any) -> any:
+    def mcleanhdf5(data: Any) -> Any:
         matlab_class = data.attrs["MATLAB_class"]
         if matlab_class == b"struct":
             # Return a dict from recursion
-            dataout = {f: mcleanhdf5(data[f]) for f in data.keys()}
+            dataout = {f: mcleanhdf5(data[f]) for f in data}
         elif matlab_class == b"char":
             # Convert to string
             dataout = "".join(chr(i) for i in np.asarray(data).flatten())
@@ -126,26 +126,26 @@ def _matfile_generator(
         return dataout
 
     def define_default_key(
-        params: dict, mat_input: any, ignore_chars: str = ""
+        params: dict[str, Any], mat_input: Mapping, ignore_chars: str = ""
     ) -> tuple:
         matvars = [
             varname for varname in mat_input if not varname.startswith(ignore_chars)
         ]
         default_key = matvars[0] if (len(matvars) == 1) else "RING"
         key = params.setdefault("use", default_key)
-        if key not in mat_input.keys():
-            kok = [k for k in mat_input.keys() if "__" not in k]
-            raise AtError(
-                f"Selected '{key}' variable does not exist, please select in: {kok}"
-            )
+        if key not in mat_input:
+            kok = [k for k in mat_input if "__" not in k]
+            msg = f"Selected '{key}' variable does not exist, please select in: {kok}"
+            raise AtError(msg)
         return params, key
 
     # noinspection PyUnresolvedReferences
     check = params.pop("check", True)
     quiet = params.pop("quiet", False)
+    params.setdefault("in_file", str(mat_file))
     matlabfile_ver = scipy.io.matlab.matfile_version(mat_file)
     if matlabfile_ver < (2, 0):
-        mat_input = scipy.io.loadmat(params.setdefault("in_file", mat_file))
+        mat_input = scipy.io.loadmat(mat_file)
         params, key = define_default_key(params, mat_input, ignore_chars="__")
         cell_array = mat_input[key].flat
         for index, mat_elem in enumerate(cell_array):
@@ -158,7 +158,7 @@ def _matfile_generator(
         cell_array = mat_input[key][0]
         for index, ref_elem in enumerate(cell_array):
             elem = mat_input[ref_elem]
-            kwargs = {f: mcleanhdf5(elem[f]) for f in elem.keys()}
+            kwargs = {f: mcleanhdf5(elem[f]) for f in elem}
             yield Element.from_matlab(kwargs, index=index, check=check, quiet=quiet)
 
 
@@ -166,7 +166,7 @@ def ringparam_filter(
     params: dict[str, Any], elem_iterator: Filter, *args
 ) -> Generator[Element, None, None]:
     """Run through all elements, process and optionally removes
-    RingParam elements
+    RingParam elements.
 
     Parameters:
         params:         Lattice building parameters (see :py:class:`.Lattice`)
@@ -203,9 +203,8 @@ def ringparam_filter(
             ringparams.append(elem)
             for k, v in elem.items():
                 k2 = _m2p.get(k, k)
-                if k2 is not None:
-                    if k2 != "cell_harmnumber" or isfinite(v):
-                        params.setdefault(k2, v)
+                if k2 is not None and (k2 != "cell_harmnumber" or isfinite(v)):
+                    params.setdefault(k2, v)
             if keep_all:
                 pars = vars(elem).copy()
                 name = pars.pop("FamName")
@@ -223,7 +222,7 @@ def ringparam_filter(
 
 
 def load_mat(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a Matlab mat-file
+    """Create a :py:class:`.Lattice`  from a Matlab mat-file.
 
     Parameters:
         filename:           Name of a '.mat' file
@@ -254,6 +253,7 @@ def load_mat(filename: str, **kwargs) -> Lattice:
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
+    filename = Path(filename)
     if "key" in kwargs:  # process the deprecated 'key' keyword
         kwargs.setdefault("use", kwargs.pop("key"))
     if "mat_key" in kwargs:  # process the deprecated 'mat_key' keyword
@@ -261,14 +261,14 @@ def load_mat(filename: str, **kwargs) -> Lattice:
     return Lattice(
         ringparam_filter,
         _matfile_generator,
-        abspath(filename),
+        filename.resolve(),
         iterator=params_filter,
         **kwargs,
     )
 
 
 def _element_from_m(line: str) -> Element:
-    """Builds an :py:class:`.Element` from a line in an m-file
+    """Builds an :py:class:`.Element` from a line in an m-file.
 
     Parameters:
         line:           Matlab string representation of an :py:class:`.Element`
@@ -281,7 +281,7 @@ def _element_from_m(line: str) -> Element:
         return [a.strip() for a in split_ignoring_parentheses(value)]
 
     def makedir(mat_struct):
-        """Build directory from Matlab struct arguments"""
+        """Build directory from Matlab struct arguments."""
 
         def pairs(it):
             while True:
@@ -308,7 +308,7 @@ def _element_from_m(line: str) -> Element:
         return np.squeeze(np.array([row.split() for row in lns], dtype=np.float64))
 
     def convert(value):
-        """convert Matlab syntax to numpy syntax"""
+        """convert Matlab syntax to numpy syntax."""
         if value.startswith("["):
             result = makearray(value)
         elif value.startswith("struct"):
@@ -337,7 +337,7 @@ def _element_from_m(line: str) -> Element:
 
 
 def load_m(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a Matlab m-file
+    """Create a :py:class:`.Lattice`  from a Matlab m-file.
 
     Parameters:
         filename:           Name of a '.m' file
@@ -361,9 +361,12 @@ def load_m(filename: str, **kwargs) -> Lattice:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
 
-    def mfile_generator(params: dict, m_file: str) -> Generator[Element, None, None]:
-        """Run through the lines of a Matlab m-file and generate AT elements"""
-        with open(params.setdefault("in_file", m_file)) as file:
+    def mfile_generator(
+        params: dict, m_file: PathLike
+    ) -> Generator[Element, None, None]:
+        """Run through the lines of a Matlab m-file and generate AT elements."""
+        params.setdefault("in_file", str(m_file))
+        with m_file.open() as file:
             _ = next(file)  # Matlab function definition
             _ = next(file)  # Cell array opening
             for lineno, line in enumerate(file):
@@ -380,17 +383,18 @@ def load_m(filename: str, **kwargs) -> Lattice:
                 else:
                     yield elem
 
+    filename = Path(filename)
     return Lattice(
         ringparam_filter,
         mfile_generator,
-        abspath(filename),
+        filename.resolve(),
         iterator=params_filter,
         **kwargs,
     )
 
 
 def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice` from a Matlab cell array
+    """Create a :py:class:`.Lattice` from a Matlab cell array.
 
     Parameters:
         matlat:             Matlab lattice
@@ -422,7 +426,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
 
 def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
-    """Prepend a RingParam element to a lattice"""
+    """Prepend a RingParam element to a lattice."""
 
     def required(rng):
         # Public lattice attributes
@@ -431,7 +435,7 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
         for kp, km in _p2m.items():
             try:
                 v = getattr(rng, kp)
-            except AttributeError:
+            except AttributeError:  # noqa: PERF203
                 pass
             else:
                 params.pop(kp, None)
@@ -445,8 +449,8 @@ def matlab_ring(ring: Lattice) -> Generator[Element, None, None]:
     yield from keep_elements(ring)
 
 
-def save_mat(ring: Lattice, filename: str, **kwargs) -> None:
-    """Save a :py:class:`.Lattice` as a Matlab mat-file
+def save_mat(ring: Lattice, filename: str | PathLike, **kwargs) -> None:
+    """Save a :py:class:`.Lattice` as a Matlab mat-file.
 
     Parameters:
         ring:       Lattice description
@@ -467,7 +471,7 @@ def save_mat(ring: Lattice, filename: str, **kwargs) -> None:
 
 
 def _element_to_m(elem: Element) -> str:
-    """Builds the Matlab-evaluable string for an :py:class:`.Element`
+    """Builds the Matlab-evaluable string for an :py:class:`.Element`.
 
     Parameters:
         elem:           :py:class:`.Element`
@@ -531,8 +535,8 @@ def _element_to_m(elem: Element) -> str:
     return "{:>15}({});...".format(m_name(elem.__class__), ", ".join(argstrs))
 
 
-def save_m(ring: Lattice, filename: str | None = None) -> None:
-    """Save a :py:class:`.Lattice` as a Matlab m-file
+def save_m(ring: Lattice, filename: str | PathLike | None = None) -> None:
+    """Save a :py:class:`.Lattice` as a Matlab m-file.
 
     Parameters:
         ring:           Lattice description
@@ -553,9 +557,9 @@ def save_m(ring: Lattice, filename: str | None = None) -> None:
     if filename is None:
         save(sys.stdout)
     else:
-        with open(filename, "w") as mfile:
-            [funcname, _] = splitext(basename(filename))
-            print(f"function ring = {funcname}()", file=mfile)
+        filename = Path(filename)
+        with filename.open("w") as mfile:
+            print(f"function ring = {filename.stem}()", file=mfile)
             save(mfile)
             print("    function v=False()\n        v=false;\n    end", file=mfile)
             print("    function v=True()\n        v=true;\n    end", file=mfile)
@@ -568,13 +572,16 @@ def _mat_file(ring):
     try:
         in_file = ring.in_file
     except AttributeError:
-        raise AttributeError("'Lattice' object has no attribute 'mat_file'") from None
+        msg = "'Lattice' object has no attribute 'mat_file'"
+        raise AttributeError(msg) from None
     if isinstance(in_file, str):
-        _, ext = os.path.splitext(in_file)
+        ext = Path(in_file).suffix
         if ext != ".mat":
-            raise AttributeError("'Lattice' object has no attribute 'mat_file'")
+            msg = "'Lattice' object has no attribute 'mat_file'"
+            raise AttributeError(msg)
     else:
-        raise AttributeError("'Lattice' object has no attribute 'mat_file'")
+        msg = "'Lattice' object has no attribute 'mat_file'"
+        raise AttributeError(msg)
     return in_file
 
 
@@ -583,7 +590,8 @@ def _mat_key(ring):
     try:
         mat_key = ring.use
     except AttributeError:
-        raise AttributeError("'Lattice' object has no attribute 'mat_key'") from None
+        msg = "'Lattice' object has no attribute 'mat_key'"
+        raise AttributeError(msg) from None
     return mat_key
 
 

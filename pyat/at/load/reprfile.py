@@ -1,5 +1,5 @@
 """Text representation of a python AT lattice with each element represented by
-its :py:func:`repr` string
+its :py:func:`repr` string.
 """
 
 from __future__ import annotations
@@ -7,8 +7,8 @@ from __future__ import annotations
 __all__ = ["load_repr", "save_repr"]
 
 import sys
-from os.path import abspath
-from typing import Optional
+from pathlib import Path
+from collections.abc import Generator
 
 import numpy as np
 
@@ -27,7 +27,7 @@ _CLASS_MAP = {cls.__name__: cls for cls in Element.subclasses()}
 
 
 def _element_from_string(elem_string: str) -> Element:
-    """Builds an :py:class:`.Element` from its python :py:func:`repr` string
+    """Builds an :py:class:`.Element` from its python :py:func:`repr` string.
 
     Parameters:
         elem_string:    String representation of an :py:class:`.Element`
@@ -38,8 +38,8 @@ def _element_from_string(elem_string: str) -> Element:
     return eval(elem_string, globals(), _CLASS_MAP)
 
 
-def load_repr(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a text repr-file
+def load_repr(filename: str | Path, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a text repr-file.
 
     Parameters:
         filename:           Name of a '.m' file
@@ -61,19 +61,21 @@ def load_repr(filename: str, **kwargs) -> Lattice:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
 
-    def elem_iterator(params, repr_file):
-        with open(params.setdefault("in_file", repr_file), "rt") as file:
+    def elem_iterator(params: dict, repr_file: Path) -> Generator[Element, None, None]:
+        params.setdefault("in_file", str(repr_file))
+        with repr_file.open("rt") as file:
             # the 1st line is the dictionary of saved lattice parameters
             for k, v in eval(next(file)).items():
                 params.setdefault(k, v)
             for line in file:
                 yield _element_from_string(line.strip())
 
-    return Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
+    filename = Path(filename)
+    return Lattice(filename.resolve(), iterator=elem_iterator, **kwargs)
 
 
-def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
-    """Save a :py:class:`.Lattice` as a repr-file
+def save_repr(ring: Lattice, filename: str | Path | None = None) -> None:
+    """Save a :py:class:`.Lattice` as a repr-file.
 
     Parameters:
         ring:           Lattice description
@@ -94,7 +96,8 @@ def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
         if filename is None:
             save(sys.stdout)
         else:
-            with open(filename, "wt") as reprfile:
+            filename = Path(filename)
+            with filename.open("w") as reprfile:
                 save(reprfile)
 
 
@@ -102,6 +105,5 @@ register_format(
     ".repr",
     load_repr,
     save_repr,
-    descr=("Text representation of a python AT Lattice. "
-           "See :py:func:`.load_repr`."),
+    descr=("Text representation of a python AT Lattice. See :py:func:`.load_repr`."),
 )

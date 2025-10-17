@@ -6,7 +6,7 @@ This parser is quite similar to the Elegant parser in elegant.py.
 """
 
 import logging as log
-from os.path import abspath
+from pathlib import Path
 import re
 import numpy
 from at.lattice.elements import (
@@ -149,7 +149,7 @@ def tokenise_expression(expression):
 
 def parse_float(expression, variables):
     """Evaluate the provided arithmetic expression substituting variables."""
-    log.debug("parse_float {}".format(expression))
+    log.debug(f"parse_float {expression}")
     try:
         return float(expression)
     except ValueError:
@@ -163,7 +163,7 @@ def parse_float(expression, variables):
                 dformat_matches = re.match("(-?\\d+.?\\d*)d(-?\\d+)", token)
                 if dformat_matches:
                     mantissa, exponent = dformat_matches.groups()
-                    tokens.append("{}e{}".format(mantissa, exponent))
+                    tokens.append(f"{mantissa}e{exponent}")
                 else:
                     tokens.append(token)
 
@@ -186,7 +186,7 @@ def parse_float(expression, variables):
                 b1 = tokens.index("(")
                 b2 = len(tokens) - 1 - tokens[::-1].index(")")
                 return evaluate(
-                    tokens[:b1] + [evaluate(tokens[b1 + 1 : b2])] + tokens[b2 + 1 :]
+                    [*tokens[:b1], evaluate(tokens[b1 + 1 : b2]), *tokens[b2 + 1 :]]
                 )
             except ValueError:
                 # No open parentheses found.
@@ -195,29 +195,37 @@ def parse_float(expression, variables):
             for i, token in enumerate(tokens[:-1]):
                 if token == "/":
                     return evaluate(
-                        tokens[: i - 1]
-                        + [float(tokens[i - 1]) / float(tokens[i + 1])]
-                        + tokens[i + 2 :]
+                        [
+                            *tokens[: i - 1],
+                            float(tokens[i - 1]) / float(tokens[i + 1]),
+                            *tokens[i + 2 :],
+                        ]
                     )
                 if token == "*":
                     return evaluate(
-                        tokens[: i - 1]
-                        + [float(tokens[i - 1]) * float(tokens[i + 1])]
-                        + tokens[i + 2 :]
+                        [
+                            *tokens[: i - 1],
+                            float(tokens[i - 1]) * float(tokens[i + 1]),
+                            *tokens[i + 2 :],
+                        ]
                     )
             # Evaluate + and - from left to right.
             for i, token in enumerate(tokens[:-1]):
                 if token == "+":
                     return evaluate(
-                        tokens[: i - 1]
-                        + [float(tokens[i - 1]) + float(tokens[i + 1])]
-                        + tokens[i + 2 :]
+                        [
+                            *tokens[: i - 1],
+                            float(tokens[i - 1]) + float(tokens[i + 1]),
+                            *tokens[i + 2 :],
+                        ]
                     )
                 if token == "-":
                     return evaluate(
-                        tokens[: i - 1]
-                        + [float(tokens[i - 1]) - float(tokens[i + 1])]
-                        + tokens[i + 2 :]
+                        [
+                            *tokens[: i - 1],
+                            float(tokens[i - 1]) - float(tokens[i + 1]),
+                            *tokens[i + 2 :],
+                        ]
                     )
 
         return evaluate(tokens)
@@ -275,7 +283,8 @@ def parse_chunk(value, elements, chunks):
         elif part in chunks:
             chunk.extend(chunks[part])
         else:
-            raise Exception("part {} not understood".format(part))
+            msg = f"part {part} not understood"
+            raise Exception(msg)
     return chunk
 
 
@@ -330,7 +339,7 @@ def parse_hom(hom_string, variables):
 
 
 def tracy_element_from_string(name, element_string, variables):
-    log.debug("Parsing tracy element {}".format(element_string))
+    log.debug(f"Parsing tracy element {element_string}")
     parts = utils.split_ignoring_parentheses(element_string, ",")
     params = {}
     element_type = parts[0]
@@ -353,8 +362,8 @@ def tracy_element_from_string(name, element_string, variables):
     return ELEMENT_MAP[element_type](name, params, variables)
 
 
-def load_tracy(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a Tracy file
+def load_tracy(filename: str | Path, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a Tracy file.
 
     Parameters:
         filename:           Name of a Tracy file
@@ -374,23 +383,26 @@ def load_tracy(filename: str, **kwargs) -> Lattice:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     try:
+
         def elem_iterator(params, tracy_file):
-            with open(params.setdefault("in_file", tracy_file)) as f:
+            params.setdefault("in_file", str(tracy_file))
+            with tracy_file.open() as f:
                 contents = f.read()
                 element_lines, energy = expand_tracy(
                     contents, lattice_key, harmonic_number
                 )
                 params.setdefault("energy", energy)
-                for line in element_lines:
-                    yield line
+                yield from element_lines
 
+        filename = Path(filename)
         if "lattice_key" in kwargs:  # process the deprecated 'lattice_key' keyword
             kwargs.setdefault("use", kwargs.pop("lattice_key"))
         harmonic_number = kwargs.pop("harmonic_number")
         lattice_key = kwargs.pop("use", "cell")
-        return Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
+        return Lattice(filename.resolve(), iterator=elem_iterator, **kwargs)
     except Exception as e:
-        raise ValueError("Failed to load tracy " "lattice {}: {}".format(filename, e))
+        msg = f"Failed to load tracy lattice {filename}: {e}"
+        raise ValueError(msg) from e
 
 
 register_format(".lat", load_tracy, descr="Tracy format. See :py:func:`.load_tracy`.")

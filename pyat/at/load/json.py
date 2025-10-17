@@ -6,7 +6,6 @@ from __future__ import annotations
 
 __all__ = ["load_json", "save_json"]
 
-from os.path import abspath
 from pathlib import Path
 import json
 from typing import Any
@@ -37,7 +36,7 @@ class _AtEncoder(json.JSONEncoder):
 
 
 def save_json(
-    ring: Lattice, filename: str | None = None, compact: bool = False
+    ring: Lattice, filename: str | Path | None = None, compact: bool = False
 ) -> None:
     """Save a :py:class:`.Lattice` as a JSON file.
 
@@ -61,11 +60,12 @@ def save_json(
     if filename is None:
         print(json.dumps(data, cls=_AtEncoder, indent=indent))
     else:
-        with Path(filename).open("w") as jsonfile:
+        filename = Path(filename)
+        with filename.open("w") as jsonfile:
             json.dump(data, jsonfile, cls=_AtEncoder, indent=indent)
 
 
-def load_json(filename: str, **kwargs) -> Lattice:
+def load_json(filename: str | Path, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a JSON file.
 
     Parameters:
@@ -81,14 +81,15 @@ def load_json(filename: str, **kwargs) -> Lattice:
         :py:meth:`.Lattice.load` for a generic lattice-loading method.
     """
 
-    def json_generator(params: dict[str, Any], fn):
-        with Path(params.setdefault("in_file", fn)).open() as jsonfile:
+    def json_generator(params: dict[str, Any], fn: Path):
+        params.setdefault("in_file", str(fn))
+        with fn.open() as jsonfile:
             data = json.load(jsonfile)
         # Check the file signature - For later use
         try:
             atjson = data["atjson"]
         except KeyError:
-            atjson = 1
+            atjson = 1  # noqa: F841
         # Get elements
         elements = data["elements"]
         # Get lattice properties
@@ -104,7 +105,8 @@ def load_json(filename: str, **kwargs) -> Lattice:
         for idx, elem_dict in enumerate(elements):
             yield Element.from_matlab(elem_dict, index=idx, check=False)
 
-    return Lattice(abspath(filename), iterator=json_generator, **kwargs)
+    filename = Path(filename)
+    return Lattice(filename.resolve(), iterator=json_generator, **kwargs)
 
 
 register_format(
