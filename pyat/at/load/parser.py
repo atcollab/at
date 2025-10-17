@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["StrParser", "StrParameter"]
+__all__ = ["StrParameter", "StrParser"]
 
 import abc
 from collections.abc import Callable
@@ -9,7 +9,7 @@ from ..lattice import ParamDef
 
 
 class StrParser(abc.ABC):
-    """Abstract base class for string expression parsers
+    """Abstract base class for string expression parsers.
 
     This class defines the interface for parsers that can evaluate string expressions.
     Concrete implementations should provide the evaluate method.
@@ -17,7 +17,7 @@ class StrParser(abc.ABC):
 
     @abc.abstractmethod
     def evaluate(self, expr: str) -> Any:
-        """Evaluate a string expression in the context of this parser
+        """Evaluate a string expression in the context of this parser.
 
         Args:
             expr: The string expression to evaluate
@@ -29,7 +29,7 @@ class StrParser(abc.ABC):
 
     @abc.abstractmethod
     def _check_constant(self, expr: str) -> Any:
-        """Check if an expression is constant
+        """Check if an expression is constant.
 
         This method attempts to evaluate the expression in a context where no variables
         are defined. If the evaluation succeeds, the expression is considered constant
@@ -49,7 +49,7 @@ class StrParser(abc.ABC):
 
 
 class StrParameter(ParamDef):
-    """String expression parameter
+    """String expression parameter.
 
     A StrParameter represents an expression which can be evaluated in the context
     of a StrParser. This is typically used for MAD-X style parameters where
@@ -62,7 +62,7 @@ class StrParameter(ParamDef):
         expr: str,
         conversion: Callable[[Any], Any] | None = None,
     ):
-        """Initialise a string parameter
+        """Initialise a string parameter.
 
         Args:
             parser: StrParser instance defining the context for evaluation

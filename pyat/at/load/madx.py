@@ -132,6 +132,7 @@ from math import pi, e, sqrt, exp, log, log10, sin, cos, tan
 from math import asin, acos, atan, sinh, cosh, tanh, erf, erfc
 from itertools import chain
 from collections.abc import Sequence, Generator, Iterable
+from pathlib import Path
 from typing import Any, ClassVar
 import re
 
@@ -226,7 +227,9 @@ def p_to_at(a: float | Sequence[float]) -> np.ndarray:
 
 def p_dict(keys: Iterable[str], a: Iterable[float]) -> dict[str, float]:
     """return K1, K2... from an AT Polynom."""
-    return {k: v for k, v in zip(keys, poly_to_mad(a)) if k and (v != 0.0)}
+    return {
+        k: v for k, v in zip(keys, poly_to_mad(a), strict=False) if k and (v != 0.0)
+    }
 
 
 def p_list(a: Iterable[float], factor: float = 1.0):
@@ -258,7 +261,6 @@ class _MadElement(ElementDescr):
         frm = getattr(self, "from")
         if frm is not None:
             offset += parser[frm].at
-        # return np.array([-half_length, half_length]) + offset
         return offset - half_length, offset + half_length
 
     def meval(self, params: dict):
@@ -527,7 +529,6 @@ class instrument(monitor):
 
 # noinspection PyPep8Naming
 class longmultipole(_MadElement):
-
     @classmethod
     def from_at(cls, kwargs):
         length = kwargs.get("Length", 0.0)
@@ -542,7 +543,6 @@ class longmultipole(_MadElement):
 
 # noinspection PyPep8Naming
 class ignore(_MadElement):
-
     @classmethod
     def from_at(cls, kwargs):
         length = kwargs.get("Length", 0.0)
@@ -1130,7 +1130,7 @@ class MadxParser(_MadParser):
 
 
 def load_madx(
-    *files: str,
+    *files: str | Path,
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
@@ -1221,7 +1221,7 @@ class _MadxExporter(_MadExporter):
     }
 
 
-def save_madx(ring: Lattice, filename: str | None = None, **kwargs):
+def save_madx(ring: Lattice, filename: str | Path | None = None, **kwargs):
     """Save a :py:class:`.Lattice` as a MAD-X file.
 
     Args:
