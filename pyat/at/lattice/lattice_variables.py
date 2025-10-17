@@ -54,7 +54,7 @@ class RefptsVariable(VariableBase):
             refpts:     Location of variable :py:class:`.Element`\ s
             attrname:   Attribute name
             index:      Index in the attribute array. Use :py:obj:`None` for
-              scalar attributes
+              scalar attributes.
 
         Keyword Args:
             name (str):     Name of the Variable. Default: ``''``
@@ -73,14 +73,18 @@ class RefptsVariable(VariableBase):
 
     def _setfun(self, value: Number, ring: Lattice | None = None, **_) -> None:
         if ring is None:
-            raise ValueError("Can't set values if ring is None.\n"
-                             "Try to use an ElementVariable if possible")
+            msg = (
+                "Can't set values if ring is None.\n"
+                "Try to use an ElementVariable if possible"
+            )
+            raise ValueError(msg)
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
     def _getfun(self, ring: Lattice | None = None, **_) -> Number:
         if ring is None:
-            raise ValueError("Can't get values if ring is None")
+            msg = "Can't get values if ring is None"
+            raise ValueError(msg)
         values = np.array([self._getf(elem) for elem in ring.select(self.refpts)])
         return np.average(values)
 
@@ -117,7 +121,7 @@ class ElementVariable(VariableBase):
               attribute is varied
             attrname:   Attribute name
             index:      Index in the attribute array. Use :py:obj:`None` for
-              scalar attributes
+              scalar attributes.
 
         Keyword Args:
             name (str):     Name of the Variable. Default: ``''``
@@ -144,5 +148,5 @@ class ElementVariable(VariableBase):
 
     @property
     def elements(self) -> set[Element]:
-        """Return the set of elements acted upon by the variable"""
+        """Return the set of elements acted upon by the variable."""
         return self._elements

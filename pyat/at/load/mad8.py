@@ -1,4 +1,4 @@
-r"""Using `MAD8`_ files with PyAT
+r"""Using `MAD8`_ files with PyAT.
 =================================
 
 Using MAD8 files is similar to using MAD-X files: see
@@ -10,6 +10,8 @@ Using MAD8 files is similar to using MAD-X files: see
 from __future__ import annotations
 
 __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
+
+from typing import ClassVar
 
 # functions known by MAD-8
 from math import pi, e, sqrt, exp, log, sin, cos, tan
@@ -61,9 +63,9 @@ _attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square br
 
 # noinspection PyPep8Naming
 class multipole(_MadElement):
-    at2mad = {}
-    klist = ["k0l", "k1l", "k2l", "k3l", "k4l", "k5l", "k6l", "k7l", "k8l", "k9l"]
-    tlist = ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9"]
+    at2mad: ClassVar[dict[str, str]] = {}
+    klist = ("k0l", "k1l", "k2l", "k3l", "k4l", "k5l", "k6l", "k7l", "k8l", "k9l")
+    tlist = ("t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9")
 
     @mad_element
     def to_at(self, **params):
@@ -171,7 +173,7 @@ _mad8_env.update(
 
 class Mad8Parser(_MadParser):
     # noinspection PyUnresolvedReferences
-    r"""MAD-X specific parser
+    r"""MAD-X specific parser.
 
     The parser is a subclass of :py:class:`dict` and is database containing all the
     MAD-X variables.
@@ -214,12 +216,12 @@ class Mad8Parser(_MadParser):
             *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
-            **kwargs:   Initial variable definitions
+            **kwargs:   Initial variable definitions.
         """
         super().__init__(_mad8_env, *filenames, **kwargs)
 
     def _format_command(self, expr: str) -> str:
-        """Evaluate an expression using *self* as local namespace"""
+        """Evaluate an expression using *self* as local namespace."""
         expr = _attr.sub(r".\1", expr)  # Attribute access: VAR[ATTR]
         expr = expr.replace("^", "**")  # Exponentiation
         return super()._format_command(expr)
@@ -233,7 +235,7 @@ def load_mad8(
     parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
-    """Create a :py:class:`.Lattice` from MAD8 files
+    """Create a :py:class:`.Lattice` from MAD8 files.
 
     - The *energy* and *particle* of the generated lattice are taken from the MAD8
       ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
@@ -274,9 +276,9 @@ def load_mad8(
 class _Mad8Exporter(_MadExporter):
     delimiter = ""
     continuation = "&"
-    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+    bool_fmt: ClassVar[dict[bool, str]] = {False: ".FALSE.", True: ".TRUE."}
 
-    AT2MAD = {
+    AT2MAD: ClassVar[dict] = {
         elt.Quadrupole: quadrupole,
         elt.Sextupole: sextupole,
         elt.Octupole: octupole,
@@ -292,7 +294,7 @@ class _Mad8Exporter(_MadExporter):
 
 
 def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
-    """Save a :py:class:`.Lattice` as a MAD8 file
+    """Save a :py:class:`.Lattice` as a MAD8 file.
 
     Args:
         ring:   lattice
