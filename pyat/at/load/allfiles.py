@@ -11,8 +11,8 @@ from collections.abc import Callable
 
 from at.lattice import Lattice
 
-_load_extension = {}
-_save_extension = {}
+_load_extension: dict[str, Callable[..., Lattice]] = {}
+_save_extension: dict[str, Callable[..., None]] = {}
 
 
 def load_lattice(filepath: str | Path, **kwargs) -> Lattice:
