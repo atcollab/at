@@ -28,6 +28,7 @@ __all__ = [
 
 from collections.abc import Iterable, Iterator
 from functools import reduce
+from typing import ClassVar
 
 import numpy as np
 import numpy.typing as npt
@@ -36,7 +37,7 @@ import numpy.typing as npt
 from .observables import Observable, ElementObservable, Need
 from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
-from ..lattice import Lattice, Orbit, Refpts, All
+from ..lattice import Lattice, Refpts, All
 from ..physics import linopt6
 from ..tracking import internal_lpass
 
@@ -46,7 +47,7 @@ def _flatten(vals, order="F") -> npt.NDArray[np.float64]:
 
 
 class _ObsResIter(Iterator):
-    """Iterator object for the _ObsResult class"""
+    """Iterator object for the _ObsResult class."""
 
     def __init__(self, obsiter):
         self.base = obsiter
@@ -57,12 +58,14 @@ class _ObsResIter(Iterator):
 
 
 class _ObsResults(tuple):
-    """Tuple-like object for the output of  ObservableList.evaluate
+    """Tuple-like object for the output of  ObservableList.evaluate.
 
     _ObsResult implements a special treatment when the evaluation ends with an error.
     The error is stored instead of the value. This object raises the error a posteriori,
     when accessing the missing value.
     """
+
+    __slots__ = ()
 
     def __getitem__(self, item):
         # Raises the stored error when accessing a missing value
@@ -85,7 +88,7 @@ class ObservableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
-    _needs_ring = {
+    _needs_ring: ClassVar[set[Need]] = {
         Need.RING,
         Need.ORBIT,
         Need.MATRIX,
@@ -95,14 +98,14 @@ class ObservableList(list):
         Need.EMITTANCE,
         Need.GEOMETRY,
     }
-    _needs_orbit = {
+    _needs_orbit: ClassVar[set[Need]] = {
         Need.ORBIT,
         Need.MATRIX,
         Need.GLOBALOPTICS,
         Need.LOCALOPTICS,
         Need.EMITTANCE,
     }
-    _needs_optics = {Need.GLOBALOPTICS, Need.LOCALOPTICS}
+    _needs_optics: ClassVar[set[Need]] = {Need.GLOBALOPTICS, Need.LOCALOPTICS}
 
     def __init__(
         self,
@@ -114,6 +117,8 @@ class ObservableList(list):
         r"""
         Args:
             obsiter:    Iterable of :py:class:`.Observable`\ s
+            ring:       Default lattice. It will be used if *ring* is not provided to
+              the :py:meth:`~ObservableList.evaluate` function.
 
         The following keyword arguments define the default values to be used when not
         given to the :py:meth:`~ObservableList.evaluate` method
@@ -194,7 +199,8 @@ class ObservableList(list):
                 rdt_type.add(obs._rdt_type)
 
         if (needs & self._needs_ring) and ring is None:
-            raise ValueError("At least one Observable needs a ring argument")
+            msg = "At least one Observable needs a ring argument."
+            raise ValueError(msg)
 
         self.needs = needs
         self.rdt_type = rdt_type
@@ -231,7 +237,8 @@ class ObservableList(list):
 
     def __iadd__(self, other: ObservableList):
         if not isinstance(other, ObservableList):
-            raise TypeError(f"Cannot add a {type(other)} to an ObservableList")
+            msg = f"Cannot add a {type(other)} to an ObservableList."
+            raise TypeError(msg)
         self.extend(other)
         return self
 
@@ -243,7 +250,8 @@ class ObservableList(list):
     def append(self, obs: Observable):
         """Append observable to the end of the list."""
         if not isinstance(obs, Observable):
-            raise TypeError(f"Cannot append a {type(obs)} to an ObservableList")
+            msg = f"Cannot add a {type(obs)} to an ObservableList."
+            raise TypeError(msg)
         self.needs = None
         super().append(obs)
 
@@ -255,7 +263,8 @@ class ObservableList(list):
     def insert(self, index: int, obs: Observable):
         """Insert Observable before index."""
         if not isinstance(obs, Observable):
-            raise TypeError(f"Cannot insert a {type(obs)} in an ObservableList")
+            msg = f"Cannot insert a {type(obs)} to an ObservableList."
+            raise TypeError(msg)
         self.needs = None
         super().insert(index, obs)
 
@@ -470,20 +479,19 @@ class ObservableList(list):
         self.needs = None
 
     def _lookup(self, *ids: int | str) -> list[Observable]:
-        """Observable lookup function"""
+        """Observable lookup function."""
 
-        def select(id):
-            if isinstance(id, str):
+        def select(obsid):
+            if isinstance(obsid, str):
                 for obs in self:
-                    if obs.name == id:
+                    if obs.name == obsid:
                         return obs
-                else:
-                    raise KeyError(id)
+                raise KeyError(obsid)
             else:
-                return self[id]
+                return self[obsid]
 
         if ids:
-            return [select(id) for id in ids]
+            return [select(oid) for oid in ids]
         else:
             return self
 
@@ -646,7 +654,7 @@ class ObservableList(list):
         """Return the residuals of observables.
 
         Args:
-             *obsid: name or index of selected observables (Default all)
+            *obsid: name or index of selected observables (Default all)
             err:    Default observable value to be used when the evaluation failed. By
               default, an Exception is raised.
         """
@@ -670,7 +678,7 @@ class ObservableList(list):
             err:    Default observable value to be used when the evaluation failed. By
                 default, an Exception is raised.
         """
-        return self._collect("target", *obsid)
+        return self._collect("target", *obsid, err=err)
 
     def get_flat_targets(self, *obsid: str | int) -> tuple:
         """Return a 1-D array of target values of observables.
