@@ -11,6 +11,7 @@ from __future__ import annotations
 
 __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
+from pathlib import Path
 from typing import ClassVar
 
 # functions known by MAD-8
@@ -69,13 +70,13 @@ class multipole(_MadElement):
 
     @mad_element
     def to_at(self, **params):
-        polya = [0.0]*10
-        polyb = [0.0]*10
+        polya = [0.0] * 10
+        polyb = [0.0] * 10
         params.pop("l", None)
         for k in list(params.keys()):
             try:
                 order = self.klist.index(k)
-            except ValueError:
+            except ValueError:  # noqa: PERF203
                 pass
             else:
                 strength = params.pop(k)
@@ -92,9 +93,9 @@ class multipole(_MadElement):
     def from_at(cls, kwargs, factor=1.0):
         el = super().from_at(kwargs)
         maxorder = kwargs.pop("MaxOrder", -1) + 1
-        nlist = poly_to_mad(kwargs.pop("PolynomB", ())[:maxorder+1], factor=factor)
-        slist = poly_to_mad(kwargs.pop("PolynomA", ())[:maxorder+1], factor=factor)
-        for order, (va, vb) in enumerate(zip(slist, nlist)):
+        nlist = poly_to_mad(kwargs.pop("PolynomB", ())[: maxorder + 1], factor=factor)
+        slist = poly_to_mad(kwargs.pop("PolynomA", ())[: maxorder + 1], factor=factor)
+        for order, (va, vb) in enumerate(zip(slist, nlist, strict=True)):
             if va != 0.0 or vb != 0.0:
                 el[multipole.klist[order]] = sqrt(va * va + vb * vb)
                 tilt = -atan2(va, vb) / (order + 1)
@@ -228,7 +229,7 @@ class Mad8Parser(_MadParser):
 
 
 def load_mad8(
-    *files: str,
+    *files: str | Path,
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
@@ -293,7 +294,7 @@ class _Mad8Exporter(_MadExporter):
     }
 
 
-def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
+def save_mad8(ring: Lattice, filename: str | Path | None = None, **kwargs):
     """Save a :py:class:`.Lattice` as a MAD8 file.
 
     Args:
