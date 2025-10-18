@@ -1,4 +1,4 @@
-"""Base :py:class:`.Element` object"""
+"""Base :py:class:`.Element` object."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ __all__ = ["Element"]
 
 import re
 from collections.abc import Generator
+from contextlib import suppress
 from copy import copy, deepcopy
 from typing import Any
 
@@ -17,7 +18,7 @@ from ..parameters import _ACCEPTED, Param, ParamArray
 
 
 class Element:
-    """Base class for AT elements"""
+    """Base class for AT elements."""
 
     _BUILD_ATTRIBUTES = ["FamName"]
     _conversions = {
@@ -42,7 +43,7 @@ class Element:
     _entrance_fields = ["T1", "R1"]
     _exit_fields = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
-    __slots__ = ["_parameters", "__dict__"]
+    __slots__ = ["__dict__", "_parameters"]
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
@@ -53,7 +54,7 @@ class Element:
     def __init__(self, family_name: str, **kwargs):
         """
         Parameters:
-            family_name:    Name of the element
+            family_name:    Name of the element.
 
         All keywords will be set as attributes of the element
         """
@@ -88,19 +89,15 @@ class Element:
             if isinstance(value, (ParamDef, ParamArray)):
                 # Store the parameter and remove the attribute
                 self._parameters[attrname] = value
-                try:
+                with suppress(AttributeError):
+                    # Don't care if the attribute does not exist
                     object.__delattr__(self, attrname)
-                except AttributeError:
-                    # Attribute doesn't exist, which is fine
-                    pass
             else:
                 # Store the attribute and remove the parameter
                 object.__setattr__(self, attrname, value)
-                try:
+                with suppress(KeyError):
+                    # Don't care if the parameter does not exist
                     del self._parameters[attrname]
-                except KeyError:
-                    # Parameter doesn't exist, which is fine
-                    pass
 
     def __getattr__(self, attrname: str) -> Any:
         """Override __getattr__ to handle parameter values.
@@ -113,7 +110,8 @@ class Element:
         except KeyError as exc:
             cl = self.__class__.__name__
             el = object.__getattribute__(self, "FamName")
-            raise AttributeError(f"{cl}({el!r}) has no attribute {attrname!r}") from exc
+            msg = f"{cl}({el!r}) has no attribute {attrname!r}"
+            raise AttributeError(msg) from exc
 
     def __delattr__(self, attrname: str) -> None:
         """Override __delattr__ to handle parameter deletions."""
@@ -125,9 +123,8 @@ class Element:
             except KeyError as exc:
                 cl = self.__class__.__name__
                 el = object.__getattribute__(self, "FamName")
-                raise AttributeError(
-                    f"{cl}({el!r}) has no attribute {attrname!r}"
-                ) from exc
+                msg = f"{cl}({el!r}) has no attribute {attrname!r}"
+                raise AttributeError(msg) from exc
 
     def __str__(self):
         return "\n".join(
@@ -146,8 +143,8 @@ class Element:
         # For pickling Elements: make a copy of parameters
         return self.__dict__, {"_parameters": self._parameters.copy()}
 
-    def _ident(self, attrname: str | None = None, index: bool = None):
-        """Return an element's identifier for error messages"""
+    def _ident(self, attrname: str | None = None, index: int | None = None):
+        """Return an element's identifier for error messages."""
         if attrname is None:
             return f"{self.__class__.__name__}({self.FamName!r})"
         elif index is None:
@@ -166,13 +163,13 @@ class Element:
         yield cls
 
     def keys(self):
-        """Return a set of all attribute names"""
+        """Return a set of all attribute names."""
         v = set(vars(self).keys())
         v.update(self._parameters.keys())
         return v
 
     def to_dict(self, freeze: bool = True):
-        """Return a copy of the element parameters"""
+        """Return a copy of the element parameters."""
         if freeze:
             return {k: getattr(self, k) for k in self.keys()}
         else:
@@ -181,7 +178,7 @@ class Element:
             return v
 
     def get_parameter(self, attrname: str, index: int | None = None) -> Any:
-        """Extract a parameter of an element
+        """Extract a parameter of an element.
 
         Unlike :py:func:`getattr`, :py:func:`get_parameter` returns the
         parameter itself instead of its value. If the item is not a parameter,
@@ -201,14 +198,14 @@ class Element:
             try:
                 attr = self._parameters[attrname]
             except KeyError:
-                raise AttributeError(
-                    f"{self._ident()} has no attribute {attrname!r}"
-                ) from None
+                msg = f"{self._ident()} has no attribute {attrname!r}"
+                raise AttributeError(msg) from None
         if index is not None:
             try:
                 attr = attr[index]
             except IndexError as exc:
-                raise IndexError(f"{self._ident(attrname)}: {exc}") from None
+                msg = f"{self._ident(attrname)}: {exc}"
+                raise IndexError(msg) from None
         return attr
 
     def equals(self, other) -> bool:
@@ -221,7 +218,7 @@ class Element:
 
     def divide(self, frac) -> list[Element]:
         # noinspection PyUnresolvedReferences
-        """split the element in len(frac) pieces whose length is frac[i]*self.Length
+        """split the element in len(frac) pieces whose length is frac[i]*self.Length.
 
         Parameters:
             frac:           length of each slice expressed as a fraction of the
@@ -239,27 +236,24 @@ class Element:
         return [self]
 
     def swap_faces(self, copy=False):
-        """Swap the faces of an element, alignment errors are ignored"""
+        """Swap the faces of an element, alignment errors are ignored."""
 
         def swapattr(element, attro, attri):
             val = element.get_parameter(attri)  # get the parameter itself
             delattr(element, attri)
             return attro, val
 
-        if copy:
-            el = self.copy()
-        else:
-            el = self
+        el = self.copy() if copy else self
         # Remove and swap entrance and exit attributes
         attrs = el.keys()
         fin = dict(
             swapattr(el, kout, kin)
-            for kin, kout in zip(el._entrance_fields, el._exit_fields)
+            for kin, kout in zip(el._entrance_fields, el._exit_fields, strict=True)
             if kin in attrs and kin not in el._no_swap
         )
         fout = dict(
             swapattr(el, kin, kout)
-            for kin, kout in zip(el._entrance_fields, el._exit_fields)
+            for kin, kout in zip(el._entrance_fields, el._exit_fields, strict=True)
             if kout in attrs and kout not in el._no_swap
         )
         # Apply swapped entrance and exit attributes
@@ -274,23 +268,23 @@ class Element:
         update(**kwargs)
         update(mapping, **kwargs)
         update(iterable, **kwargs)
-        Update the element attributes with the given arguments
+        Update the element attributes with the given arguments.
         """
         attrs = dict(*args, **kwargs)
         for key, value in attrs.items():
             setattr(self, key, value)
 
     def copy(self) -> Element:
-        """Return a shallow copy of the element"""
+        """Return a shallow copy of the element."""
         return copy(self)
 
     def deepcopy(self) -> Element:
-        """Return a deep copy of the element"""
+        """Return a deep copy of the element."""
         return deepcopy(self)
 
     @property
     def definition(self) -> tuple[str, tuple, dict]:
-        """tuple (class_name, args, kwargs) defining the element"""
+        """tuple (class_name, args, kwargs) defining the element."""
         attrs = {k: getattr(self, k) for k, v in self.items()}
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
@@ -304,7 +298,7 @@ class Element:
         return self.__class__.__name__, arguments, keywords
 
     def items(self, freeze: bool = True) -> Generator[tuple[str, Any], None, None]:
-        """Iterates through the data members"""
+        """Iterates through the data members."""
         v = self.to_dict(freeze=freeze)
         for k in ["FamName", "Length", "PassMethod"]:
             yield k, v.pop(k)
@@ -312,14 +306,15 @@ class Element:
             yield k, val
 
     def is_compatible(self, other: Element) -> bool:
-        """Checks if another :py:class:`Element` can be merged"""
+        """Checks if another :py:class:`Element` can be merged."""
         return False
 
     def merge(self, other) -> None:
-        """Merge another element"""
+        """Merge another element."""
         if not self.is_compatible(other):
             badname = getattr(other, "FamName", type(other))
-            raise TypeError(f"Cannot merge {self.FamName} and {badname}")
+            msg = f"Cannot merge {self.FamName} and {badname}"
+            raise TypeError(msg)
 
     # noinspection PyMethodMayBeStatic
     def _get_longt_motion(self):
@@ -331,12 +326,12 @@ class Element:
 
     @property
     def longt_motion(self) -> bool:
-        """:py:obj:`True` if the element affects the longitudinal motion"""
+        """:py:obj:`True` if the element affects the longitudinal motion."""
         return self._get_longt_motion()
 
     @property
     def is_collective(self) -> bool:
-        """:py:obj:`True` if the element involves collective effects"""
+        """:py:obj:`True` if the element involves collective effects."""
         return self._get_collective()
 
     def set_parameter(
@@ -383,7 +378,7 @@ class Element:
     def is_parameterised(
         self, attrname: str | None = None, index: int | None = None
     ) -> bool:
-        """Check for the parameterisation of an element
+        """Check for the parameterisation of an element.
 
         Args:
             attrname:   Attribute name. If :py:obj:`None`, checks if any attribute is
