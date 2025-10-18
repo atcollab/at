@@ -1,4 +1,6 @@
-"""Variables are **references** to scalar attributes of lattice elements. There are 2
+"""Definition of variables.
+
+Variables are **references** to scalar attributes of lattice elements. There are 2
 kinds of element variables:
 
 - an :py:class:`ElementVariable` is associated to an element object, and acts on all
@@ -12,7 +14,7 @@ kinds of element variables:
 
 from __future__ import annotations
 
-__all__ = ["RefptsVariable", "ElementVariable"]
+__all__ = ["ElementVariable", "RefptsVariable"]
 
 from collections.abc import Sequence, Callable
 from typing import Any

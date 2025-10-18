@@ -10,7 +10,7 @@ from .parameters import Param
 def set_parameter(
     self, refpts: Refpts, attrname: str, value: Any, index: int | None = None
 ) -> None:
-    """Set a parameter as an attribute of the selected elements
+    """Set a parameter as an attribute of the selected elements.
 
     Args:
         refpts:     Element selector
@@ -27,7 +27,7 @@ def set_parameter(
 def parameterise(
     self, refpts: Refpts, attrname: str, index: int | None = None, name: str = ""
 ) -> Param:
-    """Convert an attribute of the selected elements into a parameter
+    """Convert an attribute of the selected elements into a parameter.
 
     A single parameter is created and assigned to all the selected
     elements. Its initial value is the mean of the original values.
@@ -85,7 +85,7 @@ def is_parameterised(
 def unparameterise(
     self, refpts: Refpts = All, attrname: str | None = None, index: int | None = None
 ) -> None:
-    """Freeze the value of attributes of the selected elements
+    """Freeze the value of attributes of the selected elements.
 
     Args:
         refpts:     Element selector. The default value is `All`, which includes
