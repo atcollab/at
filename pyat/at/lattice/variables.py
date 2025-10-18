@@ -98,13 +98,14 @@ import numpy as np
 import numpy.typing as npt
 
 from .parambase import Operand
+import contextlib
 
 # Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
 
 
-class VariableBase(Operand, Generic[Number], abc.ABC):
-    """A Variable abstract base class
+class VariableBase(Operand, abc.ABC, Generic[Number]):
+    """A Variable abstract base class.
 
     Derived classes must implement the :py:meth:`~VariableBase._getfun` and
     :py:meth:`~VariableBase._setfun` methods
@@ -149,10 +150,8 @@ class VariableBase(Operand, Generic[Number], abc.ABC):
         self._initial = np.nan
         self._history: deque[Number] = deque([], self.history_length)
         super().__init__(name=self._generate_name(name))
-        try:
+        with contextlib.suppress(ValueError):
             self.get(initial=True)
-        except ValueError:
-            pass
 
     @classmethod
     def _generate_name(cls, name: str) -> str:
@@ -509,7 +508,7 @@ class VariableList(list):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
         """
-        for var, val in zip(self, values):
+        for var, val in zip(self, values, strict=False):
             var.set(val, ring=ring)
 
     def increment(self, increment: Iterable[float], ring=None) -> None:
@@ -520,11 +519,11 @@ class VariableList(list):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to increment the variable.
         """
-        for var, incr in zip(self, increment):
+        for var, incr in zip(self, increment, strict=False):
             var.increment(incr, ring=ring)
 
     def reset(self, ring=None) -> None:
-        """Reset to all variables their initial value and clear their history buffer
+        """Reset to all variables their initial value and clear their history buffer.
 
         Args:
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
@@ -550,5 +549,5 @@ class VariableList(list):
     @deltas.setter
     def deltas(self, value: Number | Sequence[Number]) -> None:
         deltas = np.broadcast_to(value, len(self))
-        for var, delta in zip(self, deltas):
+        for var, delta in zip(self, deltas, strict=False):
             var.delta = delta
