@@ -963,14 +963,13 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             finally:
                 if isinstance(res, _Sequence):
                     self.current_sequence = res
+        elif label is None:
+            self.current_sequence.append((cmdname, *argnames))
         else:
-            if label is None:
-                self.current_sequence.append((cmdname, *argnames))
-            else:
-                try:
-                    res = super()._command(label, cmdname, *argnames, **kwargs)
-                finally:
-                    self.current_sequence.append((label, *argnames))
+            try:
+                res = super()._command(label, cmdname, *argnames, **kwargs)
+            finally:
+                self.current_sequence.append((label, *argnames))
         return res
 
     def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
