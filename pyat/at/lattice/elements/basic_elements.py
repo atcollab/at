@@ -144,9 +144,6 @@ class SliceMoments(Element):
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "nslice"]
     _conversions = dict(Element._conversions, nslice=_int)
 
-    # Instance attributes
-    nslice: int
-
     def __init__(self, family_name: str, nslice: int, **kwargs):
         """
         Args:
@@ -213,10 +210,10 @@ class SliceMoments(Element):
     @startturn.setter
     def startturn(self, value):
         if value < 0:
-            msg = "startturn must be greater or equal to 0"
+            msg = "start-turn must be greater or equal to 0"
             raise ValueError(msg)
         if value >= self._endturn:
-            msg = "startturn must be smaller than endturn"
+            msg = "start-turn must be smaller than endturn"
             raise ValueError(msg)
         self._startturn = value
 
@@ -228,10 +225,10 @@ class SliceMoments(Element):
     @endturn.setter
     def endturn(self, value):
         if value <= 0:
-            msg = "endturn must be greater than 0"
+            msg = "end-turn must be greater than 0"
             raise ValueError(msg)
         if value <= self._startturn:
-            msg = "endturn must be greater than startturn"
+            msg = "end-turn must be greater than startturn"
             raise ValueError(msg)
         self._endturn = value
 
@@ -326,7 +323,7 @@ class Drift(LongElement):
         drifts = np.ndarray((len(drfrac),), dtype="O")
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
-        line: list[Element | None] = [None] * nline
+        line = [None] * nline  # type: list[Optional[Element]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
@@ -368,13 +365,6 @@ class RFCavity(LongtMotion, LongElement):
         HarmNumber=int,
         TimeLag=float,
     )
-
-    # Instance attributes
-    Voltage: float
-    Frequency: float
-    HarmNumber: int
-    TimeLag: float
-    Energy: float
 
     def __init__(
         self,
@@ -447,7 +437,6 @@ class M66(Element):
 
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
     _conversions = dict(Element._conversions, M66=_array66)
-    _file_classname = "Matrix66"
 
     def __init__(self, family_name: str, m66=None, **kwargs):
         """
@@ -564,17 +553,19 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
         Default PassMethod: ``SimpleRadiationRadPass``
         """
         assert taux >= 0.0, "taux must be greater than or equal to 0"
-        dampx = 1 if taux == 0.0 else np.exp(-2 / taux)
+        dampx = 1 if taux == 0.0 else np.exp(-1 / taux)
 
         assert tauy >= 0.0, "tauy must be greater than or equal to 0"
-        dampy = 1 if tauy == 0.0 else np.exp(-2 / tauy)
+        dampy = 1 if tauy == 0.0 else np.exp(-1 / tauy)
 
         assert tauz >= 0.0, "tauz must be greater than or equal to 0"
-        dampz = 1 if tauz == 0.0 else np.exp(-2 / tauz)
+        dampz = 1 if tauz == 0.0 else np.exp(-1 / tauz)
 
         kwargs.setdefault("PassMethod", self.default_pass[True])
         kwargs.setdefault("U0", U0)
-        kwargs.setdefault("damp_mat_diag", np.array([1, dampx, 1, dampy, dampz, 1]))
+        kwargs.setdefault(
+            "damp_mat_diag", np.array([dampx, dampx, dampy, dampy, dampz, dampz])
+        )
 
         super().__init__(family_name, **kwargs)
 
