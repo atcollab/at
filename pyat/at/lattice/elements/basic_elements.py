@@ -1,28 +1,27 @@
-"""Basic :py:class:`.Element` classes"""
+"""Basic :py:class:`.Element` classes."""
 
 from __future__ import annotations
 
 __all__ = [
+    "M66",
+    "Aperture",
+    "BeamMoments",
+    "Collimator",
+    "Drift",
+    "EnergyLoss",
+    "LongElement",
+    "LongtAperture",
     "Marker",
     "Monitor",
-    "BeamMoments",
-    "SliceMoments",
-    "Aperture",
-    "LongtAperture",
-    "LongElement",
-    "Drift",
-    "Collimator",
+    "QuantumDiffusion",
     "RFCavity",
-    "M66",
     "SimpleQuantDiff",
     "SimpleRadiation",
-    "QuantumDiffusion",
-    "EnergyLoss",
+    "SliceMoments",
 ]
 
 import warnings
 from collections.abc import Iterable
-from typing import Optional
 
 import numpy as np
 
@@ -36,15 +35,15 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 class LongElement(Element):
-    """Base class for long elements"""
+    """Base class for long elements."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Length"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "Length"]
 
     def __init__(self, family_name: str, length: float, *args, **kwargs):
         """
         Args:
             family_name:    Name of the element
-            length:         Element length [m]
+            length:         Element length [m].
 
         Other arguments and keywords are given to the base class
         """
@@ -94,10 +93,7 @@ class LongElement(Element):
 
         if not (type(other) is type(self) and self.PassMethod == other.PassMethod):
             return False
-        for fname in ("RApertures", "EApertures"):
-            if not compatible_field(fname):
-                return False
-        return True
+        return all(compatible_field(fname) for fname in ("RApertures", "EApertures"))
 
     def merge(self, other) -> None:
         super().merge(other)
@@ -105,20 +101,20 @@ class LongElement(Element):
 
 
 class Marker(Element):
-    """Marker element"""
+    """Marker element."""
 
 
 class Monitor(Element):
-    """Monitor element"""
+    """Monitor element."""
 
 
 class BeamMoments(Element):
-    """Element to compute bunches mean and std"""
+    """Element to compute bunches mean and std."""
 
     def __init__(self, family_name: str, **kwargs):
         """
         Args:
-            family_name:    Name of the element
+            family_name:    Name of the element.
 
         Default PassMethod: ``BeamMomentsPass``
         """
@@ -133,26 +129,26 @@ class BeamMoments(Element):
 
     @property
     def stds(self):
-        """Beam 6d standard deviation"""
+        """Beam 6d standard deviation."""
         return self._stds
 
     @property
     def means(self):
-        """Beam 6d centre of mass"""
+        """Beam 6d centre of mass."""
         return self._means
 
 
 class SliceMoments(Element):
-    """Element computing the mean and std of slices"""
+    """Element computing the mean and std of slices."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["nslice"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "nslice"]
     _conversions = dict(Element._conversions, nslice=_int)
 
     def __init__(self, family_name: str, nslice: int, **kwargs):
         """
         Args:
             family_name:    Name of the element
-            nslice:         Number of slices
+            nslice:         Number of slices.
 
         Keyword arguments:
             startturn:      Start turn of the acquisition (Default 0)
@@ -185,58 +181,62 @@ class SliceMoments(Element):
 
     @property
     def stds(self):
-        """Slices x,y,dp standard deviation"""
+        """Slices x,y,dp standard deviation."""
         return self._stds.reshape((3, self._nbunch, self.nslice, self._dturns))
 
     @property
     def means(self):
-        """Slices x,y,dp centre of mass"""
+        """Slices x,y,dp centre of mass."""
         return self._means.reshape((3, self._nbunch, self.nslice, self._dturns))
 
     @property
     def spos(self):
-        """Slices s position"""
+        """Slices s position."""
         return self._spos.reshape((self._nbunch, self.nslice, self._dturns))
 
     @property
     def weights(self):
         """Slices weights in mA if beam current >0,
         otherwise fraction of total number of
-        particles in the bunch
+        particles in the bunch.
         """
         return self._weights.reshape((self._nbunch, self.nslice, self._dturns))
 
     @property
     def startturn(self):
-        """Start turn of the acquisition"""
+        """Start turn of the acquisition."""
         return self._startturn
 
     @startturn.setter
     def startturn(self, value):
         if value < 0:
-            raise ValueError("startturn must be greater or equal to 0")
+            msg = "start-turn must be greater or equal to 0"
+            raise ValueError(msg)
         if value >= self._endturn:
-            raise ValueError("startturn must be smaller than endturn")
+            msg = "start-turn must be smaller than endturn"
+            raise ValueError(msg)
         self._startturn = value
 
     @property
     def endturn(self):
-        """End turn of the acquisition"""
+        """End turn of the acquisition."""
         return self._endturn
 
     @endturn.setter
     def endturn(self, value):
         if value <= 0:
-            raise ValueError("endturn must be greater than 0")
+            msg = "end-turn must be greater than 0"
+            raise ValueError(msg)
         if value <= self._startturn:
-            raise ValueError("endturn must be greater than startturn")
+            msg = "end-turn must be greater than startturn"
+            raise ValueError(msg)
         self._endturn = value
 
 
 class Aperture(Element):
-    """Transverse aperture element"""
+    """Transverse aperture element."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Limits"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "Limits"]
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
     def __init__(self, family_name, limits, **kwargs):
@@ -245,16 +245,16 @@ class Aperture(Element):
             family_name:    Name of the element
             limits:         (4,) array of physical aperture:
               [xmin, xmax, ymin, ymax]
-        Default PassMethod: ``AperturePass``
+        Default PassMethod: ``AperturePass``.
         """
         kwargs.setdefault("PassMethod", "AperturePass")
         super().__init__(family_name, Limits=limits, **kwargs)
 
 
 class LongtAperture(Element):
-    """Longitudinal aperture element"""
+    """Longitudinal aperture element."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Limits"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "Limits"]
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
     def __init__(self, family_name, limits, **kwargs):
@@ -263,20 +263,20 @@ class LongtAperture(Element):
             family_name:    Name of the element
             limits:         (4,) array of physical aperture:
               [dpmin, dpmax, ctmin, ctmax]
-        Default PassMethod: ``LongtAperturePass``
+        Default PassMethod: ``LongtAperturePass``.
         """
         kwargs.setdefault("PassMethod", "LongtAperturePass")
         super().__init__(family_name, Limits=limits, **kwargs)
 
 
 class Drift(LongElement):
-    """Drift space element"""
+    """Drift space element."""
 
     def __init__(self, family_name: str, length: float, **kwargs):
         """
         Args:
             family_name:    Name of the element
-            length:         Element length [m]
+            length:         Element length [m].
 
         Default PassMethod: ``DriftPass``
         """
@@ -287,7 +287,7 @@ class Drift(LongElement):
         self, insert_list: Iterable[tuple[float, Element | None]]
     ) -> list[Element]:
         # noinspection PyUnresolvedReferences
-        """insert elements inside a drift
+        """insert elements inside a drift.
 
         Arguments:
             insert_list: iterable, each item of insert_list is itself an
@@ -314,7 +314,7 @@ class Drift(LongElement):
             >>> Drift("dr", 2.0).insert(((0.5, Quadrupole("qp", 0.4, 0.0)),))
             [Drift('dr', 0.8), Quadrupole('qp', 0.4), Drift('dr', 0.8)]
         """
-        frac, elements = zip(*insert_list)
+        frac, elements = zip(*insert_list, strict=True)
         lg = [0.0 if el is None else el.Length for el in elements]
         fr = np.asarray(frac, dtype=float)
         lg = 0.5 * np.asarray(lg, dtype=float) / self.Length
@@ -330,9 +330,9 @@ class Drift(LongElement):
 
 
 class Collimator(Drift):
-    """Collimator element"""
+    """Collimator element."""
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["RApertures"]
+    _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "RApertures"]
 
     def __init__(self, family_name: str, length: float, limits, **kwargs):
         """
@@ -340,7 +340,7 @@ class Collimator(Drift):
             family_name:    Name of the element
             length:         Element length [m]
             limits:         (4,) array of physical aperture:
-              [xmin, xmax, zmin, zmax] [m]
+              [xmin, xmax, zmin, zmax] [m].
 
         Default PassMethod: ``DriftPass``
         """
@@ -348,9 +348,10 @@ class Collimator(Drift):
 
 
 class RFCavity(LongtMotion, LongElement):
-    """RF cavity element"""
+    """RF cavity element."""
 
-    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + [
+    _BUILD_ATTRIBUTES = [
+        *LongElement._BUILD_ATTRIBUTES,
         "Voltage",
         "Frequency",
         "HarmNumber",
@@ -382,7 +383,7 @@ class RFCavity(LongtMotion, LongElement):
             voltage:        RF voltage [V]
             frequency:      RF frequency [Hz]
             harmonic_number:
-            energy:         ring energy [eV]
+            energy:         ring energy [eV].
 
         Keyword Arguments:
             TimeLag=0:      Cavity time lag
@@ -432,16 +433,16 @@ class RFCavity(LongtMotion, LongElement):
 
 
 class M66(Element):
-    """Linear (6, 6) transfer matrix"""
+    """Linear (6, 6) transfer matrix."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["M66"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
     _conversions = dict(Element._conversions, M66=_array66)
 
     def __init__(self, family_name: str, m66=None, **kwargs):
         """
         Args:
             family_name:    Name of the element
-            m66:            Transfer matrix. Default: Identity matrix
+            m66:            Transfer matrix. Default: Identity matrix.
 
         Default PassMethod: ``Matrix66Pass``
         """
@@ -487,7 +488,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
             espread:       Equilibrium energy spread
             taux:          Horizontal damping time [turns]
             tauy:          Vertical damping time [turns]
-            tauz:          Longitudinal damping time [turns]
+            tauz:          Longitudinal damping time [turns].
 
         Default PassMethod: ``SimpleQuantDiffPass``
         """
@@ -523,7 +524,7 @@ class SimpleQuantDiff(_DictLongtMotion, Element):
 
 
 class SimpleRadiation(_DictLongtMotion, Radiative, Element):
-    """Simple radiation damping and energy loss"""
+    """Simple radiation damping and energy loss."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(
@@ -547,44 +548,35 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
             taux:          Horizontal damping time [turns]
             tauy:          Vertical damping time [turns]
             tauz:          Longitudinal damping time [turns]
-            U0:            Energy loss per turn [eV]
+            U0:            Energy loss per turn [eV].
 
         Default PassMethod: ``SimpleRadiationRadPass``
         """
         assert taux >= 0.0, "taux must be greater than or equal to 0"
-        if taux == 0.0:
-            dampx = 1
-        else:
-            dampx = np.exp(-2 / taux)
+        dampx = 1 if taux == 0.0 else np.exp(-1 / taux)
 
         assert tauy >= 0.0, "tauy must be greater than or equal to 0"
-        if tauy == 0.0:
-            dampy = 1
-        else:
-            dampy = np.exp(-2 / tauy)
+        dampy = 1 if tauy == 0.0 else np.exp(-1 / tauy)
 
         assert tauz >= 0.0, "tauz must be greater than or equal to 0"
-        if tauz == 0.0:
-            dampz = 1
-        else:
-            dampz = np.exp(-2 / tauz)
+        dampz = 1 if tauz == 0.0 else np.exp(-1 / tauz)
 
         kwargs.setdefault("PassMethod", self.default_pass[True])
         kwargs.setdefault("U0", U0)
         kwargs.setdefault(
-            "damp_mat_diag", np.array([1, dampx, 1, dampy, dampz, 1])
+            "damp_mat_diag", np.array([dampx, dampx, dampy, dampy, dampz, dampz])
         )
 
         super().__init__(family_name, **kwargs)
 
 
 class QuantumDiffusion(_DictLongtMotion, Element):
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Lmatp"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "Lmatp"]
     default_pass = {False: "IdentityPass", True: "QuantDiffPass"}
     _conversions = dict(Element._conversions, Lmatp=_array66)
 
     def __init__(self, family_name: str, lmatp: np.ndarray, **kwargs):
-        """Quantum diffusion element
+        """Quantum diffusion element.
 
         Args:
             family_name:    Name of the element
@@ -598,12 +590,12 @@ class QuantumDiffusion(_DictLongtMotion, Element):
 
 
 class EnergyLoss(_DictLongtMotion, Element):
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["EnergyLoss"]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "EnergyLoss"]
     _conversions = dict(Element._conversions, EnergyLoss=float)
     default_pass = {False: "IdentityPass", True: "EnergyLossRadPass"}
 
     def __init__(self, family_name: str, energy_loss: float, **kwargs):
-        """Energy loss element
+        """Energy loss element.
 
         The :py:class:`EnergyLoss` element is taken into account in
         :py:func:`.radiation_parameters`: it adds damping by contributing to the
@@ -611,11 +603,11 @@ class EnergyLoss(_DictLongtMotion, Element):
         generate any diffusion. This makes sense only if the losses summarised in
         the element occur in non-dispersive locations.
 
-        It is a single thin, straight non-focusing radiative element that does not contribute
-        to the diffusion. It's typical usage is to model the energy loss and contribution
-        to the damping times from a thin wiggler located in a non dispersive region.
-        More complex cases with focusing and / or  diffusion are not correctly handled by this
-        element.
+        It is a single thin, straight non-focusing radiative element that does not
+        contribute to the diffusion. It's typical usage is to model the energy loss
+        and contribution to the damping times from a thin wiggler located in a
+        non dispersive region. More complex cases with focusing and / or  diffusion
+        are not correctly handled by this element.
 
         Args:
             family_name:    Name of the element
