@@ -649,7 +649,9 @@ class ElementObservable(Observable):
             vini = self.initial
             if vini is None:
                 vini = repeat(None)
-            viter = zip(self._locations, vini, vnow, vmin, vmax, deviation)
+            viter = zip(
+                self._locations, vini, vnow, vmin, vmax, deviation, strict=False
+            )
             values = "\n".join(self._line(*vv) for vv in viter)
             return "\n".join((self.name, values))
 

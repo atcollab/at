@@ -520,7 +520,7 @@ class ResponseMatrix(_SvdSolver):
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
-        for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,))):
+        for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,)), strict=True):
             print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self._eval_args)
             deviation = obs.flat_deviations
@@ -694,7 +694,7 @@ class ResponseMatrix(_SvdSolver):
         if not isinstance(obsid, str):
             exclude(self.observables[obsid], self._ob[obsid])
         else:
-            for obs, mask in zip(self.observables, self._ob):
+            for obs, mask in zip(self.observables, self._ob, strict=True):
                 if obs.name == obsid:
                     exclude(obs, mask)
                     break
@@ -720,7 +720,10 @@ class ResponseMatrix(_SvdSolver):
                 refpts = np.arange(0 if np.all(mask) else mask.size, dtype=np.uint32)
             return refpts
 
-        return {ob.name: ex(ob, mask) for ob, mask in zip(self.observables, self._ob)}
+        return {
+            ob.name: ex(ob, mask)
+            for ob, mask in zip(self.observables, self._ob, strict=True)
+        }
 
     def exclude_vars(self, *varid: int | str) -> None:
         # noinspection PyUnresolvedReferences
@@ -742,7 +745,9 @@ class ResponseMatrix(_SvdSolver):
         varidx = [nm for nm in varid if not isinstance(nm, str)]
         mask = np.array([var.name in nameset for var in self.variables])
         mask[varidx] = True
-        miss = nameset - {var.name for var, ok in zip(self.variables, mask) if ok}
+        miss = nameset - {
+            var.name for var, ok in zip(self.variables, mask, strict=True) if ok
+        }
         if miss:
             msg = f"Unknown variables: {miss}."
             raise ValueError(msg)
@@ -751,7 +756,11 @@ class ResponseMatrix(_SvdSolver):
     @property
     def excluded_vars(self) -> list:
         """List of excluded variables."""
-        return [var.name for var, ok in zip(self.variables, self._varmask) if not ok]
+        return [
+            var.name
+            for var, ok in zip(self.variables, self._varmask, strict=True)
+            if not ok
+        ]
 
 
 class OrbitResponseMatrix(ResponseMatrix):
@@ -888,7 +897,9 @@ class OrbitResponseMatrix(ResponseMatrix):
             observables.append(sumobs)
 
         # Variables
-        variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
+        variables = VariableList(
+            steerer(ik, delta) for ik, delta in zip(ids, deltas, strict=True)
+        )
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
             if not all(active):
@@ -1155,7 +1166,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         )
         observables = ObservableList([bpms])
         # Variables
-        variables = VariableList(steerer(ik, delta) for ik, delta in zip(ids, deltas))
+        variables = VariableList(
+            steerer(ik, delta) for ik, delta in zip(ids, deltas, strict=True)
+        )
 
         super().__init__(variables, observables, ring=ring)
         self.plane = pl

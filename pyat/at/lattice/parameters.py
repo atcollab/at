@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Param", "ParamArray", "AttributeArray"]
+__all__ = ["AttributeArray", "Param", "ParamArray"]
 
 from collections.abc import Callable
 from typing import Any
@@ -16,7 +16,7 @@ _ACCEPTED = ParamDef
 
 
 class Param(ParamBase, VariableBase[Number]):
-    """Standalone scalar parameter
+    """Standalone scalar parameter.
 
     See :py:class:`.VariableBase` for a description of inherited methods
     """
@@ -41,7 +41,7 @@ class Param(ParamBase, VariableBase[Number]):
               generated.
             conversion: data conversion function
             bounds:     Lower and upper bounds of the parameter value
-            delta:      Initial variation step
+            delta:      Initial variation step.
         """
         value = conversion(value)
         super().__init__(
@@ -85,7 +85,8 @@ class _SafeArray(np.ndarray):
     def __setitem__(self, key: Any, value: Any) -> None:
         """Set an item in the array, preventing parameter assignment."""
         if isinstance(value, Operand):
-            raise TypeError("Cannot set a parameter into an array")
+            msg = "Cannot set a parameter into an array"
+            raise TypeError(msg)
         super().__setitem__(key, value)
 
     def __repr__(self) -> str:
@@ -142,7 +143,7 @@ class ParamArray(np.ndarray):
             """
             Args:
                 parent: The parent ParamArray
-                dtype: Data type of the array
+                dtype: Data type of the array.
 
             Returns:
                 A new ValueArray instance
