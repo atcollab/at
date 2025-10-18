@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Operand", "ParamDef", "ParamBase"]
+__all__ = ["Operand", "ParamBase", "ParamDef"]
 
 import abc
 from operator import add, sub, mul, truediv, neg
@@ -12,22 +12,22 @@ Number = TypeVar("Number", int, float)
 
 
 def _nop(value: Any) -> Any:
-    """No-operation function that returns its input unchanged
+    """No-operation function that returns its input unchanged.
 
     This function is used as a default conversion function in parameter classes.
     """
     return value
 
 
-class _Evaluator(Generic[Number], abc.ABC):
-    """Abstract base class for evaluators
+class _Evaluator(abc.ABC, Generic[Number]):
+    """Abstract base class for evaluators.
 
     An evaluator is a callable object that returns a scalar value.
     """
 
     @abc.abstractmethod
     def __call__(self) -> Number:
-        """Evaluate and return the value
+        """Evaluate and return the value.
 
         Returns:
             The evaluated value
@@ -36,12 +36,12 @@ class _Evaluator(Generic[Number], abc.ABC):
 
 
 class _Constant(_Evaluator[Number]):
-    """An evaluator that always returns a constant value"""
+    """An evaluator that always returns a constant value."""
 
-    __slots__ = "value"
+    __slots__ = ["value"]
 
     def __init__(self, value: Number):
-        """Initialize a constant evaluator
+        """Initialize a constant evaluator.
 
         Args:
             value: The constant value to return
@@ -50,7 +50,8 @@ class _Constant(_Evaluator[Number]):
             TypeError: If the value is not a scalar (int or float)
         """
         if not isinstance(value, (int, float)):
-            raise TypeError("The parameter value must be a scalar")
+            msg = "The parameter value must be a scalar"
+            raise TypeError(msg)
         self.value: Number = value
 
     def __call__(self) -> Number:
@@ -58,19 +59,20 @@ class _Constant(_Evaluator[Number]):
 
 
 class _BinaryOperator(_Evaluator[Number]):
-    __slots__ = ["operator", "left_operand", "right_operand"]
+    __slots__ = ["left_operand", "operator", "right_operand"]
 
     @staticmethod
     def _convert_to_evaluator(value):
-        """Convert a value to an evaluator"""
+        """Convert a value to an evaluator."""
         if isinstance(value, (int, float)):
             return _Constant(value)
         elif isinstance(value, Operand):
             return value
-        raise TypeError(f"Parameter operation not defined for type {type(value)}")
+        msg = f"Parameter operation not defined for type {type(value)}"
+        raise TypeError(msg)
 
     def __init__(self, operator, left, right) -> None:
-        """Initialize a binary operator
+        """Initialize a binary operator.
 
         Args:
             operator: The operator function to apply
@@ -86,10 +88,10 @@ class _BinaryOperator(_Evaluator[Number]):
 
 
 class _UnaryOperator(_Evaluator[Number]):
-    __slots__ = ["operator", "operand"]
+    __slots__ = ["operand", "operator"]
 
     def __init__(self, operator, operand) -> None:
-        """Initialize a unary operator
+        """Initialize a unary operator.
 
         Args:
             operator: The operator function to apply
@@ -103,7 +105,7 @@ class _UnaryOperator(_Evaluator[Number]):
 
 
 class Operand(abc.ABC):
-    """Abstract base class for arithmetic combinations of parameters"""
+    """Abstract base class for arithmetic combinations of parameters."""
 
     name: str  #: Operand name
 
@@ -113,7 +115,7 @@ class Operand(abc.ABC):
 
     @staticmethod
     def _nm(obj, priority: int):
-        """Return the parenthesised name of the object"""
+        """Return the parenthesised name of the object."""
         if isinstance(obj, ParamBase):
             return obj.name if obj._priority >= priority else f"({obj.name})"
         else:
@@ -208,7 +210,7 @@ class Operand(abc.ABC):
 
 
 class ParamDef(abc.ABC):
-    """Abstract base class for parameter definitions
+    """Abstract base class for parameter definitions.
 
     This class defines the interface for parameter objects that can be used
     as element attributes. It provides a *value* property and a method for converting
@@ -218,7 +220,7 @@ class ParamDef(abc.ABC):
     def __init__(self, *, conversion: Callable[[Any], Any] | None = _nop, **kwargs):
         """
         Args:
-            conversion: Function to convert values to the appropriate type
+            conversion: Function to convert values to the appropriate type.
         """
         self._conversion = _nop if conversion is None else conversion
         super().__init__(**kwargs)
@@ -232,7 +234,7 @@ class ParamDef(abc.ABC):
         return self
 
     def set_conversion(self, conversion: Callable[[Any], Any]) -> None:
-        """Set the data type conversion function
+        """Set the data type conversion function.
 
         This method is called when a parameter is assigned to an
         :py:class:`.Element` attribute. It can only be set once.
@@ -247,22 +249,23 @@ class ParamDef(abc.ABC):
             if self._conversion is _nop:
                 self._conversion = conversion
             else:
-                raise ValueError("Cannot change the data type of the parameter")
+                msg = "Cannot change the data type of the parameter"
+                raise ValueError(msg)
 
     @abc.abstractmethod
     def fast_value(self) -> Any:
-        """Return the value of the parameter"""
+        """Return the value of the parameter."""
         # This method is called by the __getattr__ method of Element
         ...
 
     @property
     def value(self) -> Any:
-        """Current value of the parameter"""
+        """Current value of the parameter."""
         return self.fast_value()
 
 
 class ParamBase(ParamDef, Operand):
-    """Read-only base class for parameters
+    """Read-only base class for parameters.
 
     It is used for computed parameters and should not be instantiated
     otherwise.
@@ -271,23 +274,18 @@ class ParamBase(ParamDef, Operand):
     _evaluator: _Evaluator
     _priority: int
 
-    def __init__(
-            self,
-            evaluator: _Evaluator,
-            *,
-            priority: int = 20,
-            **kwargs
-    ) -> None:
+    def __init__(self, evaluator: _Evaluator, *, priority: int = 20, **kwargs) -> None:
         """
 
         Args:
             evaluator:  Evaluator function
             name:       Name of the parameter
             conversion: data conversion function
-            priority:   priority of the operator
+            priority:   priority of the operator.
         """
         if not isinstance(evaluator, _Evaluator):
-            raise TypeError("'Evaluate' must be an _Evaluate object")
+            msg = "'Evaluate' must be an _Evaluate object"
+            raise TypeError(msg)
         self._evaluator = evaluator
         self._priority = priority
         super().__init__(**kwargs)
