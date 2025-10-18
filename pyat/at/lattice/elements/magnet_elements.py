@@ -371,8 +371,7 @@ class Quadrupole(Radiative, Multipole):
     DefaultOrder = 1
 
     def __init__(self, family_name: str, length: float, k: float = 0.0, **kwargs):
-        """Quadrupole(FamName, Length, Strength=0, **keywords).
-
+        """
         Args:
             family_name:    Name of the element
             length:         Element length [m]
