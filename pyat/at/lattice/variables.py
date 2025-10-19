@@ -92,6 +92,7 @@ __all__ = [
 import abc
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
+import contextlib
 
 import numpy as np
 import numpy.typing as npt
@@ -148,11 +149,9 @@ class VariableBase(abc.ABC):
         #: Maximum length of the history buffer. :py:obj:`None` means infinite
         self.history_length = history_length
         self._initial = np.nan
-        self._history = deque([], self.history_length)
-        try:
+        self._history: deque[Number] = deque([], self.history_length)
+        with contextlib.suppress(ValueError):
             self.get(initial=True)
-        except ValueError:
-            pass
 
     @classmethod
     def _generate_name(cls, name: str) -> str:
@@ -285,7 +284,7 @@ class VariableBase(abc.ABC):
     value = property(get, set, doc="Actual value")
 
     @property
-    def _safe_value(self):
+    def _print_value(self):
         try:
             return self._history[-1]
         except IndexError:
@@ -392,7 +391,7 @@ class VariableBase(abc.ABC):
         )
 
     def _line(self):
-        vnow = self._safe_value
+        vnow = self._print_value
         vini = self._initial
         return f"{self.name:>12s}{vini: 16e}{vnow: 16e}{vnow - vini: 16e}"
 
@@ -405,18 +404,16 @@ class VariableBase(abc.ABC):
         return "\n".join((self._header(), self._line()))
 
     def __float__(self):
-        return float(self._safe_value)
+        return float(self._print_value)
 
     def __int__(self):
-        return int(self._safe_value)
+        return int(self._print_value)
 
     def __str__(self):
         return self.name
 
-    #       return f"{self.__class__.__name__}({self._safe_value}, name={self.name!r})"
-
     def __repr__(self):
-        return repr(self._safe_value)
+        return repr(self._print_value)
 
 
 class CustomVariable(VariableBase):
@@ -520,7 +517,7 @@ class VariableList(list):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to set the variable.
         """
-        for var, val in zip(self, values):
+        for var, val in zip(self, values, strict=False):
             var.set(val, ring=ring)
 
     def increment(self, increment: Iterable[float], ring=None) -> None:
@@ -531,7 +528,7 @@ class VariableList(list):
             ring:   Depending on the variable type, a :py:class:`.Lattice` argument
               may be necessary to increment the variable.
         """
-        for var, incr in zip(self, increment):
+        for var, incr in zip(self, increment, strict=False):
             var.increment(incr, ring=ring)
 
     def reset(self, ring=None) -> None:
@@ -561,5 +558,5 @@ class VariableList(list):
     @deltas.setter
     def deltas(self, value: Number | Sequence[Number]) -> None:
         deltas = np.broadcast_to(value, len(self))
-        for var, delta in zip(self, deltas):
+        for var, delta in zip(self, deltas, strict=False):
             var.delta = delta
