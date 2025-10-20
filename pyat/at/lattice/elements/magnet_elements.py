@@ -54,9 +54,14 @@ class _LinkedArray(np.ndarray):
 class ThinMultipole(Element):
     """Thin multipole element"""
 
+    # Class attributes
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _conversions = dict(Element._conversions, K=float, H=float)
     _stacklevel = 4  # Stacklevel for warnings
+
+    # Instance attributes
+    PolynomA: np.ndarray  #: Integrated skew strengths
+    PolynomB: np.ndarray  #: Integrated straight strengths
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -235,8 +240,13 @@ class ThinMultipole(Element):
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
 
+    # Class attributes
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["PolynomA", "PolynomB"]
     _stacklevel = 6  # Stacklevel for warnings
+
+    # Instance attributes
+    PolynomA: np.ndarray  #: Skew strengths
+    PolynomB: np.ndarray  #: Straight strengths
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -271,7 +281,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         else:
             return False
 
-    def setter(self, attrname: str) -> Callable[[int, Any], None]:
+    def _setter(self, attrname: str) -> Callable[[int, Any], None]:
         def setr(key, value):
             getattr(self, attrname)[key] = np.array(value) / self.Length
 
@@ -282,11 +292,11 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         """Integrated skew strength."""
         pa = self.PolynomA
         ipa = _LinkedArray(pa.shape, dtype=pa.dtype, buffer=self.Length * pa)
-        ipa.setitem = self.setter("PolynomA")
+        ipa.setitem = self._setter("PolynomA")
         return ipa
 
     @IntegratedPolynomA.setter
-    def IntegratedPolynomA(self, value) -> None:
+    def IntegratedPolynomA(self, value):
         self.PolynomA = np.array(value) / self.Length
 
     @property
