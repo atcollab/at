@@ -220,7 +220,7 @@ class ThinMultipole(Element):
 
     @property
     def IntegratedPolynomA(self) -> np.ndarray:
-        """Integrated skew strength."""
+        """Integrated skew strengths."""
         return self.PolynomA
 
     @IntegratedPolynomA.setter
@@ -229,7 +229,7 @@ class ThinMultipole(Element):
 
     @property
     def IntegratedPolynomB(self) -> np.ndarray:
-        """Integrated straight strength."""
+        """Integrated normal strengths."""
         return self.PolynomB
 
     @IntegratedPolynomB.setter
@@ -289,7 +289,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomA(self) -> np.ndarray:
-        """Integrated skew strength (*Length* * *PolynomA*)."""
+        """Integrated skew strengths (*Length* * *PolynomA*)."""
         pa = self.PolynomA
         ipa = _LinkedArray(pa.shape, dtype=pa.dtype, buffer=self.Length * pa)
         ipa.setitem = self._setter("PolynomA")
@@ -301,10 +301,10 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomB(self) -> np.ndarray:
-        """Integrated straight strength (*Length* * *PolynomB*)."""
+        """Integrated normal strengths (*Length* * *PolynomB*)."""
         pb = self.PolynomB
         ipb = _LinkedArray(pb.shape, dtype=pb.dtype, buffer=self.Length * pb)
-        ipb.setitem = self.setter("PolynomB")
+        ipb.setitem = self._setter("PolynomB")
         return ipb
 
     @IntegratedPolynomB.setter
