@@ -67,8 +67,8 @@ class ThinMultipole(Element):
         """
         Args:
             family_name:    Name of the element
-            poly_a:         Array of skew multipole components
-            poly_b:         Array of normal multipole components
+            poly_a:         Array of integrated skew multipole components
+            poly_b:         Array of integrated normal multipole components
 
         Keyword arguments:
             MaxOrder:       Number of desired multipoles. Default: highest
@@ -289,7 +289,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomA(self) -> np.ndarray:
-        """Integrated skew strength."""
+        """Integrated skew strength (*Length* * *PolynomA*)."""
         pa = self.PolynomA
         ipa = _LinkedArray(pa.shape, dtype=pa.dtype, buffer=self.Length * pa)
         ipa.setitem = self._setter("PolynomA")
@@ -301,7 +301,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomB(self) -> np.ndarray:
-        """Integrated straight strength."""
+        """Integrated straight strength (*Length* * *PolynomB*)."""
         pb = self.PolynomB
         ipb = _LinkedArray(pb.shape, dtype=pb.dtype, buffer=self.Length * pb)
         ipb.setitem = self.setter("PolynomB")
