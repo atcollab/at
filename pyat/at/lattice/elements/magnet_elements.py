@@ -34,16 +34,16 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 class _LinkedArray(np.ndarray):
     """Linked array.
 
-    A class triggering an action on any modification of its elements.
+    A numpy array triggering an action on any modification of its elements.
     """
 
     setitem: Callable[[int, Any], None]
 
     def __setitem__(self, key, value):
-        # internal action
+        # normal action
         super().__setitem__(key, value)
         with contextlib.suppress(AttributeError):
-            # external action
+            # external action, if one is defined
             self.setitem(key, value)
 
     def __repr__(self) -> str:
