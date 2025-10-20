@@ -213,6 +213,24 @@ class ThinMultipole(Element):
     def H(self, strength):
         self.PolynomB[2] = strength
 
+    @property
+    def IntegratedPolynomA(self) -> np.ndarray:
+        """Integrated skew strength."""
+        return self.PolynomA
+
+    @IntegratedPolynomA.setter
+    def IntegratedPolynomA(self, value) -> None:
+        self.PolynomA = value
+
+    @property
+    def IntegratedPolynomB(self) -> np.ndarray:
+        """Integrated straight strength."""
+        return self.PolynomB
+
+    @IntegratedPolynomB.setter
+    def IntegratedPolynomB(self, value) -> None:
+        self.PolynomB = value
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
@@ -268,7 +286,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         return ipa
 
     @IntegratedPolynomA.setter
-    def IntegratedPolynomA(self, value):
+    def IntegratedPolynomA(self, value) -> None:
         self.PolynomA = np.array(value) / self.Length
 
     @property
@@ -280,7 +298,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         return ipb
 
     @IntegratedPolynomB.setter
-    def IntegratedPolynomB(self, value):
+    def IntegratedPolynomB(self, value) -> None:
         self.PolynomB = np.array(value) / self.Length
 
 
