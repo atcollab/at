@@ -15,8 +15,9 @@ __all__ = [
 ]
 
 import warnings
-from collections.abc import Generator
+from collections.abc import Generator, Callable
 from typing import Any
+import contextlib
 
 import numpy as np
 
@@ -28,6 +29,26 @@ from .basic_elements import LongElement
 
 # AtWarning from this module should always be issued (not only on the first occurrence)
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
+
+
+class _LinkedArray(np.ndarray):
+    """Linked array.
+
+    A class triggering an action on any modification of its elements.
+    """
+
+    setitem: Callable[[int, Any], None]
+
+    def __setitem__(self, key, value):
+        # internal action
+        super().__setitem__(key, value)
+        with contextlib.suppress(AttributeError):
+            # external action
+            self.setitem(key, value)
+
+    def __repr__(self) -> str:
+        # Simulate a standard ndarray
+        return repr(self.view(np.ndarray))
 
 
 class ThinMultipole(Element):
@@ -231,6 +252,36 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             return True
         else:
             return False
+
+    def setter(self, attrname: str) -> Callable[[int, Any], None]:
+        def setr(key, value):
+            getattr(self, attrname)[key] = np.array(value) / self.Length
+
+        return setr
+
+    @property
+    def IntegratedPolynomA(self) -> np.ndarray:
+        """Integrated skew strength."""
+        pa = self.PolynomA
+        ipa = _LinkedArray(pa.shape, dtype=pa.dtype, buffer=self.Length * pa)
+        ipa.setitem = self.setter("PolynomA")
+        return ipa
+
+    @IntegratedPolynomA.setter
+    def IntegratedPolynomA(self, value):
+        self.PolynomA = np.array(value) / self.Length
+
+    @property
+    def IntegratedPolynomB(self) -> np.ndarray:
+        """Integrated straight strength."""
+        pb = self.PolynomB
+        ipb = _LinkedArray(pb.shape, dtype=pb.dtype, buffer=self.Length * pb)
+        ipb.setitem = self.setter("PolynomB")
+        return ipb
+
+    @IntegratedPolynomB.setter
+    def IntegratedPolynomB(self, value):
+        self.PolynomB = np.array(value) / self.Length
 
 
 class Dipole(Radiative, Multipole):
