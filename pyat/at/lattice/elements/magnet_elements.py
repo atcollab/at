@@ -473,7 +473,7 @@ class Dipole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=0:         Number of desired multipoles
-            NumIntSt=10:        Number of integration steps
+            NumIntSteps=10:     Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
