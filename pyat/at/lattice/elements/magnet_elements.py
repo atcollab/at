@@ -33,7 +33,7 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _k_property(attrname: str, order: int, doc: str):
-    """Return a property for a field component in MAD convention"""
+    """Return a property for a field component in MAD convention."""
 
     def kget(mult: ThinMultipole) -> float:
         if order > mult.MaxOrder:
@@ -48,7 +48,7 @@ def _k_property(attrname: str, order: int, doc: str):
 
 
 def _s_property(attrname: str, doc: str):
-    """Return a property giving the strength of the main field component"""
+    """Return a property for the strength of the main field component."""
 
     def kget(mult: ThinMultipole) -> float:
         order = getattr(mult, "DefaultOrder", None)
