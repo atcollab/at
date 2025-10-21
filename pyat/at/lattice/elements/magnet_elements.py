@@ -32,6 +32,19 @@ from .basic_elements import LongElement
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
+def _warn(doc: str) -> str:
+    return "\n".join(
+        (
+            doc,
+            "",
+            "The MAD field expansion differs from the AT expansion by a factor n!. "
+            "See `PALS <https://pals-project.readthedocs.io/en/latest/element-parameters.html"
+            "#magneticmultipolep-magnetic-multipole-parameters>`_ "
+            "for a definition of the MAD/PALS field expansion.",
+        )
+    )
+
+
 def _k_property(attrname: str, order: int, doc: str):
     """Return a property for a field component in MAD convention."""
 
@@ -53,7 +66,7 @@ def _s_property(attrname: str, doc: str):
     def kget(mult: ThinMultipole) -> float:
         order = getattr(mult, "DefaultOrder", None)
         if order is None:
-            msg = "Undefined order\nYou need to set a 'DefaultOrder' attribute"
+            msg = "Undefined order. You need to set a 'DefaultOrder' attribute."
             raise AttributeError(msg)
         elif order > mult.MaxOrder:
             return 0.0
@@ -63,7 +76,7 @@ def _s_property(attrname: str, doc: str):
     def kset(mult: ThinMultipole, value: float) -> None:
         order = getattr(mult, "DefaultOrder", None)
         if order is None:
-            msg = "Undefined order\nYou need to set a 'DefaultOrder' attribute"
+            msg = "Undefined order. You need to set a 'DefaultOrder' attribute."
             raise AttributeError(msg)
         getattr(mult, attrname)[order] = np.array(value)
 
@@ -275,41 +288,41 @@ class ThinMultipole(Element):
     def IntegratedPolynomB(self, value) -> None:
         self.PolynomB = value
 
-    Kn0L = _k_property("IntegratedPolynomB", 0, "Integrated normal dipolar strength")
-    Ks0L = _k_property("IntegratedPolynomA", 0, "Integrated skew dipolar strength")
+    Kn0L = _k_property("IntegratedPolynomB", 0, "Integrated normal dipolar strength.")
+    Ks0L = _k_property("IntegratedPolynomA", 0, "Integrated skew dipolar strength.")
     Kn1L = _k_property(
         "IntegratedPolynomB",
         1,
-        "Integrated normal quadrupolar strength [m^-1]",
+        "Integrated normal quadrupolar strength [m^-1].",
     )
     Ks1L = _k_property(
         "IntegratedPolynomA",
         1,
-        "Integrated skew quadrupolar strength [m^-1]",
+        "Integrated skew quadrupolar strength [m^-1].",
     )
     Kn2L = _k_property(
         "IntegratedPolynomB",
         2,
-        "Integrated normal sextupolar strength in MAD convention [m^-2]",
-    )
+        _warn("Integrated normal sextupolar strength in MAD convention [m^-2].",
+    ))
     Ks2L = _k_property(
         "IntegratedPolynomA",
         2,
-        "Integrated skew sextupolar strength in MAD convention [m^-2]",
-    )
+        _warn("Integrated skew sextupolar strength in MAD convention [m^-2].",
+    ))
     Kn3L = _k_property(
         "IntegratedPolynomB",
         3,
-        "Integrated normal octupolar strength in MAD convention [m^-3]",
-    )
+        _warn("Integrated normal octupolar strength in MAD convention [m^-3].",
+    ))
     Ks3L = _k_property(
         "IntegratedPolynomA",
         3,
-        "Integrated skew octupolar strength in MAD convention [m^-3]",
-    )
+        _warn("Integrated skew octupolar strength in MAD convention [m^-3].",
+    ))
     IntegratedStrength = _s_property(
         "IntegratedPolynomB",
-        "Integrated strength of the main field component",
+        "Integrated strength of the main field component.",
     )
 
 
@@ -387,21 +400,23 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     def IntegratedPolynomB(self, value) -> None:
         self.PolynomB = np.array(value) / self.Length
 
-    Strength = _s_property("PolynomB", "Strength of the main field component")
-    Kn0 = _k_property("PolynomB", 0, "Normal dipolar strength [m^-1]")
-    Ks0 = _k_property("PolynomA", 0, "Skew dipolar strength [m^-1]")
-    Kn1 = _k_property("PolynomB", 1, "Normal quadrupolar strength [m^-2]")
-    Ks1 = _k_property("PolynomA", 1, "Skew quadrupolar strength [m^-2]")
+    Strength = _s_property("PolynomB", "Strength of the main field component.")
+    Kn0 = _k_property("PolynomB", 0, "Normal dipolar strength [m^-1].")
+    Ks0 = _k_property("PolynomA", 0, "Skew dipolar strength [m^-1].")
+    Kn1 = _k_property("PolynomB", 1, "Normal quadrupolar strength [m^-2].")
+    Ks1 = _k_property("PolynomA", 1, "Skew quadrupolar strength [m^-2].")
     Kn2 = _k_property(
-        "PolynomB", 2, "Normal sextupolar strength in MAD convention [m^-3]"
+        "PolynomB", 2, _warn("Normal sextupolar strength in MAD convention [m^-3].")
     )
     Ks2 = _k_property(
-        "PolynomA", 2, "Skew sextupolar strength in MAD convention [m^-3]"
+        "PolynomA", 2, _warn("Skew sextupolar strength in MAD convention [m^-3].")
     )
     Kn3 = _k_property(
-        "PolynomB", 3, "Normal octupolar strength in MAD convention [m^-4]"
+        "PolynomB", 3, _warn("Normal octupolar strength in MAD convention [m^-4].")
     )
-    Ks3 = _k_property("PolynomA", 3, "Skew octupolar strength in MAD convention [m^-4]")
+    Ks3 = _k_property(
+        "PolynomA", 3, _warn("Skew octupolar strength in MAD convention [m^-4].")
+    )
 
 
 class Dipole(Radiative, Multipole):
