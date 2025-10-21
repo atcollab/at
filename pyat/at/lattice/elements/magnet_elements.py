@@ -38,8 +38,8 @@ def _warn(doc: str) -> str:
             doc,
             "",
             "The MAD field expansion differs from the AT expansion by a factor n!. "
-            "See `PALS <https://pals-project.readthedocs.io/en/latest/element-parameters.html"
-            "#magneticmultipolep-magnetic-multipole-parameters>`_ "
+            "See `PALS <https://pals-project.readthedocs.io/en/latest/element-"
+            "parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
             "for a definition of the MAD/PALS field expansion.",
         )
     )
@@ -55,7 +55,7 @@ def _k_property(attrname: str, order: int, doc: str):
             return factorial(order) * float(getattr(mult, attrname)[order])
 
     def kset(mult: ThinMultipole, value: float) -> None:
-        getattr(mult, attrname)[order] = np.array(value) / factorial(order)
+        getattr(mult, attrname)[order] = value / factorial(order)
 
     return property(kget, kset, doc=doc)
 
@@ -78,7 +78,7 @@ def _s_property(attrname: str, doc: str):
         if order is None:
             msg = "Undefined order. You need to set a 'DefaultOrder' attribute."
             raise AttributeError(msg)
-        getattr(mult, attrname)[order] = np.array(value)
+        getattr(mult, attrname)[order] = value
 
     return property(kget, kset, doc=doc)
 
@@ -113,7 +113,7 @@ class ThinMultipole(Element):
 
     # Instance attributes
     PolynomA: np.ndarray  #: Integrated skew strengths
-    PolynomB: np.ndarray  #: Integrated straight strengths
+    PolynomB: np.ndarray  #: Integrated normal strengths
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -305,30 +305,22 @@ class ThinMultipole(Element):
     Kn2L = _k_property(
         "IntegratedPolynomB",
         2,
-        _warn(
-            "Integrated normal sextupolar strength in MAD convention [m^-2].",
-        ),
+        _warn("Integrated normal sextupolar strength in MAD convention [m^-2]."),
     )
     Ks2L = _k_property(
         "IntegratedPolynomA",
         2,
-        _warn(
-            "Integrated skew sextupolar strength in MAD convention [m^-2].",
-        ),
+        _warn("Integrated skew sextupolar strength in MAD convention [m^-2]."),
     )
     Kn3L = _k_property(
         "IntegratedPolynomB",
         3,
-        _warn(
-            "Integrated normal octupolar strength in MAD convention [m^-3].",
-        ),
+        _warn("Integrated normal octupolar strength in MAD convention [m^-3]."),
     )
     Ks3L = _k_property(
         "IntegratedPolynomA",
         3,
-        _warn(
-            "Integrated skew octupolar strength in MAD convention [m^-3].",
-        ),
+        _warn("Integrated skew octupolar strength in MAD convention [m^-3]."),
     )
     IntegratedStrength = _s_property(
         "IntegratedPolynomB",
@@ -481,10 +473,10 @@ class Dipole(Radiative, Multipole):
         Keyword arguments:
             EntranceAngle=0.0:  entrance angle
             ExitAngle=0.0:      exit angle
-            PolynomB:           straight multipoles
+            PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=0:         Number of desired multipoles
-            NumIntSt=10:        Number of integration steps
+            NumIntSteps=10:     Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
@@ -572,7 +564,7 @@ class Quadrupole(Radiative, Multipole):
             k:              Focusing strength [m^-2].
 
         Keyword Arguments:
-            PolynomB:           straight multipoles
+            PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=1:         Number of desired multipoles
             NumIntSteps=10:     Number of integration steps
@@ -614,7 +606,7 @@ class Sextupole(Multipole):
             h:              Sextupolar strength [m^-3].
 
         Keyword Arguments:
-            PolynomB:           straight multipoles
+            PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder:           Number of desired multipoles
             NumIntSteps=10:     Number of integration steps
