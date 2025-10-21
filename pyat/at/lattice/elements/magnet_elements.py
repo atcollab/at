@@ -1,4 +1,32 @@
-""":py:class:`.Element` classes for magnets."""
+r""":py:class:`.Element` classes for magnets
+
+.. _at-field-expansion:
+
+Expansion of the magnetic field in AT
+----------------------------------
+
+The multipole magnets are expressed according to the following expression for the
+multipole expansion of the magnetic field:
+
+.. math:: \frac{B_y + iB_x}{B\rho} = \sum_{n=0}^{MaxOrder}(b_n+ ia_n)(x+iy)^n
+
+where :math:`n` is the multipole order (0 for dipole, 1 for quadrupole…).
+
+The :math:`b_n` coefficients describe the "normal" magnetic field (mid-plane symmetry)
+and are given in the `PolynomB` sequence.
+
+The :math:`a_n` coefficients describe the "skew" magnetic field and are given in the
+`PolynomA` sequence.
+
+.. note::
+
+   This field expansion differs from the one used in MAD or other programs. See `PALS
+   <https://pals-project.readthedocs.io/en/latest/element-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_
+   for a definition of the MAD/PALS field expansion. Practically, we have:
+
+   .. math:: \begin{eqnarray} Kn_n &= n!\:b_n \\ Ks_n &= n!\:a_n \end{eqnarray}
+
+"""
 
 from __future__ import annotations
 
@@ -33,14 +61,16 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _warn(doc: str) -> str:
+    """Add a notice on PALS field expansion"""
     return "\n".join(
         (
             doc,
             "",
             "The MAD field expansion differs from the AT expansion by a factor n!. "
-            "See `PALS <https://pals-project.readthedocs.io/en/latest/element-"
-            "parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
-            "for a definition of the MAD/PALS field expansion.",
+            "See :ref:`here <at-field-expansion>` for the definition of the AT field "
+            "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
+            "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
+            "for the MAD/PALS field expansion.",
         )
     )
 
