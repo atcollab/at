@@ -367,7 +367,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     # Instance attributes
     PolynomA: np.ndarray  #: Skew strengths
-    PolynomB: np.ndarray  #: Straight strengths
+    PolynomB: np.ndarray  #: Normal strengths
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
