@@ -65,7 +65,7 @@ def _s_property(attrname: str, doc: str):
         if order is None:
             msg = "Undefined order\nYou need to set a 'DefaultOrder' attribute"
             raise AttributeError(msg)
-        getattr(mult, attrname)[order] = np.array(value) / factorial(order)
+        getattr(mult, attrname)[order] = np.array(value)
 
     return property(kget, kset, doc=doc)
 
