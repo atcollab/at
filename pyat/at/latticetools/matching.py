@@ -125,7 +125,8 @@ def match(
         # Check that there is no ElementVariable
         for var in variables:
             if isinstance(var, ElementVariable):
-                raise TypeError("When 'copy' is True, no ElementVariable is accepted")
+                msg = "When 'copy' is True, no ElementVariable is accepted."
+                raise TypeError(msg)
         newring = ring.deepcopy()
         _match(newring, variables, constraints, **kwargs)
         return newring
