@@ -112,6 +112,11 @@ def _lmat(dmat):
     """
     lmat = np.zeros((6, 6))
     try:
+        v, w = np.linalg.eigh(dmat)
+        eps = np.finfo(float).eps # set eps to numerical accuracy
+        tol = eps * np.abs(v).max()
+        v[v < tol] = tol   # push small/megative values slightly above 0
+        dmat = w@np.diag(v)@w.T
         lmat = np.linalg.cholesky(dmat)
     except np.linalg.LinAlgError:
         nz = np.where(dmat != 0)
@@ -443,8 +448,8 @@ def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
         diffmat (ndarray):  Diffusion matrix (6,6)
     """
     bbcum, _ = _dmatr(ring, orbit=orbit)
-    diffmat = [(bbc + bbc.T) / 2 for bbc in bbcum]
-    return np.round(diffmat[-1], 24)
+    diffmat = (bbcum[-1] + bbcum[-1].T) / 2
+    return diffmat
 
 
 @check_radiation(True)
