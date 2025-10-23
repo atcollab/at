@@ -93,12 +93,12 @@ import abc
 from collections import deque
 from collections.abc import Iterable, Sequence, Callable
 from typing import Generic, TypeVar
+import contextlib
 
 import numpy as np
 import numpy.typing as npt
 
 from .parambase import Operand
-import contextlib
 
 # Define a type variable for numeric types
 Number = TypeVar("Number", int, float)
