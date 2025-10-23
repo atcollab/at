@@ -303,7 +303,7 @@ class ElementDescr(AnyDescr, dict):
     _mentioned: ClassVar[set[str]] = set()
     at2mad: ClassVar[dict[str, str]] = {"Length": "L"}
     array_fmt = str.maketrans("[]()", "{}{}")
-    bool_fmt = None
+    bool_fmt = {False: "False", True: "True"}
 
     def __init__(self, *args, origin=None, **kwargs):
         super().__init__(*args, **kwargs)
