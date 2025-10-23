@@ -671,9 +671,10 @@ class Octupole(Multipole):
 class Corrector(LongElement):
     """Corrector element"""
 
+    # Class attributes
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["KickAngle"]
 
-    # instance attributes
+    # Instance attributes
     KickAngle: np.ndarray  #: (H, V) deviation angles
 
     def __init__(self, family_name: str, length: float, kick_angle, **kwargs):
