@@ -35,6 +35,28 @@ represents the path lengthening with respect to the reference particle. :math:`\
 is the delay with respect to the reference particle: the particle is late for
 :math:`\tau > 0`.
 
+Magnetic field expansion
+------------------------
+
+The multipole magnets are expressed according to the following expression for the
+multipole expansion of the magnetic field:
+
+.. math:: \frac{B_y + iB_x}{B\rho} = \sum_{n=0}^{MaxOrder}(b_n+ ia_n)(x+iy)^n
+
+where :math:`n` is the multipole order (0 for dipole, 1 for quadrupole…).
+
+The :math:`b_n` coefficients describe the "normal" magnetic field (mid-plane symmetry)
+and are given in the `PolynomB` sequence.
+
+The :math:`a_n` coefficients describe the "skew" magnetic field and are given in the
+`PolynomA` sequence.
+
+.. note::
+
+   This field expansion differs from the one used in MAD or other programs. See `PALS
+   <https://pals-project.readthedocs.io/en/latest/element-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_
+   for a definition of the MAD/PALS field expansion.
+
 Tracking
 --------
 All the AT processing is based on tracking. For instance, linear optics properties
