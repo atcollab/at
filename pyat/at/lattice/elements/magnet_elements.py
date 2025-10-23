@@ -46,7 +46,7 @@ import warnings
 from collections.abc import Generator, Callable
 from typing import Any
 import contextlib
-from math import factorial
+from math import factorial, tan, atan
 
 import numpy as np
 
@@ -144,6 +144,7 @@ class ThinMultipole(Element):
     # Instance attributes
     PolynomA: np.ndarray  #: Integrated skew strengths
     PolynomB: np.ndarray  #: Integrated normal strengths
+    MaxOrder: int  #: Highest multipole order
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -320,8 +321,20 @@ class ThinMultipole(Element):
     def IntegratedPolynomB(self, value) -> None:
         self.PolynomB = value
 
-    Kn0L = _k_property("IntegratedPolynomB", 0, "Integrated normal dipolar strength.")
-    Ks0L = _k_property("IntegratedPolynomA", 0, "Integrated skew dipolar strength.")
+    Kn0L = _k_property(
+        "IntegratedPolynomB",
+        0,
+        "Integrated normal dipolar strength.\n\n"
+        "*Kn0L* is the opposite of the horizontal momentum kick: "
+        r":math:`\Delta p_x = -\mathrm{Kn0L}`",
+    )
+    Ks0L = _k_property(
+        "IntegratedPolynomA",
+        0,
+        "Integrated skew dipolar strength.\n\n"
+        "*Ks0L* is the vertical momentum kick: "
+        r":math:`\Delta p_y = \mathrm{Ks0L}`",
+    )
     Kn1L = _k_property(
         "IntegratedPolynomB",
         1,
@@ -368,6 +381,8 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     # Instance attributes
     PolynomA: np.ndarray  #: Skew strengths
     PolynomB: np.ndarray  #: Normal strengths
+    MaxOrder: int  #: Highest multipole order
+    NumIntSteps: int  #: Number of integration slices
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b, **kwargs):
         """
@@ -410,7 +425,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomA(self) -> np.ndarray:
-        """Integrated skew strengths (*Length* * *PolynomA*)."""
         pa = self.PolynomA
         ipa = _LinkedArray(pa.shape, dtype=pa.dtype, buffer=self.Length * pa)
         ipa.setitem = self._setter("PolynomA")
@@ -422,7 +436,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomB(self) -> np.ndarray:
-        """Integrated normal strengths (*Length* * *PolynomB*)."""
         pb = self.PolynomB
         ipb = _LinkedArray(pb.shape, dtype=pb.dtype, buffer=self.Length * pb)
         ipb.setitem = self._setter("PolynomB")
@@ -661,7 +674,11 @@ class Octupole(Multipole):
 class Corrector(LongElement):
     """Corrector element."""
 
-    _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "KickAngle"]
+    # Class attributes
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ["KickAngle"]
+
+    # Instance attributes
+    KickAngle: np.ndarray  #: (H, V) deviation angles
 
     def __init__(self, family_name: str, length: float, kick_angle, **kwargs):
         """
@@ -678,6 +695,24 @@ class Corrector(LongElement):
         """
         kwargs.setdefault("PassMethod", "CorrectorPass")
         super().__init__(family_name, length, KickAngle=kick_angle, **kwargs)
+
+    @property
+    def Kn0L(self) -> float:
+        r"""Opposite of the horizontal momentum kick - :math:`\Delta p_x = -\mathrm{Kn0L}`."""
+        return -tan(self.KickAngle[0])
+
+    @Kn0L.setter
+    def Kn0L(self, value: float) -> None:
+        self.KickAngle[0] = -atan(value)
+
+    @property
+    def Ks0L(self) -> float:
+        r"""Vertical momentum kick - :math:`\Delta p_y = \mathrm{Ks0L}`."""
+        return tan(self.KickAngle[1])
+
+    @Ks0L.setter
+    def Ks0L(self, value: float) -> None:
+        self.KickAngle[1] = atan(value)
 
 
 class Wiggler(Radiative, LongElement):
