@@ -323,13 +323,15 @@ class ThinMultipole(Element):
         "IntegratedPolynomB",
         0,
         "Integrated normal dipolar strength.\n\n"
-        "*Kn0L* is the opposite of the horizontal momentum kick",
+        "*Kn0L* is the opposite of the horizontal momentum kick: "
+        r":math:`\Delta p_x = -\mathrm{Kn0L}`",
     )
     Ks0L = _k_property(
         "IntegratedPolynomA",
         0,
         "Integrated skew dipolar strength.\n\n"
-        "*Ks0L* is the vertical momentum kick",
+        "*Ks0L* is the vertical momentum kick: "
+        r":math:`\Delta p_y = \mathrm{Ks0L}`",
     )
     Kn1L = _k_property(
         "IntegratedPolynomB",
@@ -421,7 +423,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomA(self) -> np.ndarray:
-        """Integrated skew strengths (*Length* * *PolynomA*)."""
         pa = self.PolynomA
         ipa = _LinkedArray(pa.shape, dtype=pa.dtype, buffer=self.Length * pa)
         ipa.setitem = self._setter("PolynomA")
@@ -433,7 +434,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def IntegratedPolynomB(self) -> np.ndarray:
-        """Integrated normal strengths (*Length* * *PolynomB*)."""
         pb = self.PolynomB
         ipb = _LinkedArray(pb.shape, dtype=pb.dtype, buffer=self.Length * pb)
         ipb.setitem = self._setter("PolynomB")
@@ -694,7 +694,7 @@ class Corrector(LongElement):
 
     @property
     def Kn0L(self) -> float:
-        "Opposite of the horizontal momentum kick."
+        r"""Opposite of the horizontal momentum kick - :math:`\Delta p_x = -\mathrm{Kn0L}`."""
         return -tan(self.KickAngle[0])
 
     @Kn0L.setter
@@ -703,7 +703,7 @@ class Corrector(LongElement):
 
     @property
     def Ks0L(self) -> float:
-        "Vertical momentum kick."
+        r"""Vertical momentum kick - :math:`\Delta p_y = \mathrm{Ks0L}`."""
         return tan(self.KickAngle[1])
 
     @Ks0L.setter
