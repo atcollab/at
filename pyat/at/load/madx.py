@@ -1178,8 +1178,8 @@ def load_madx(
 
 
 class _MadExporter(Exporter):
-    use_line = False
-    AT2MAD: ClassVar[dict] = {}
+    use_line: ClassVar[bool] = False
+    AT2MAD: ClassVar[dict[type[elt.Element], _MadElement]] = {}
 
     def generate_madelems(
         self, eltype: type[elt.Element], elemdict: dict
@@ -1201,11 +1201,11 @@ class _MadExporter(Exporter):
 
 
 class _MadxExporter(_MadExporter):
-    delimiter = ";"
-    continuation = ""
+    delimiter: ClassVar[str] = ";"
+    continuation: ClassVar[str] = ""
     bool_fmt: ClassVar[dict[bool, str]] = {False: "FALSE", True: "TRUE"}
 
-    AT2MAD: ClassVar[dict] = {
+    AT2MAD: ClassVar[dict[type[elt.Element], _MadElement]] = {
         elt.Quadrupole: quadrupole,
         elt.Sextupole: sextupole,
         elt.Octupole: octupole,
