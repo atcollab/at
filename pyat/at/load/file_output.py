@@ -5,17 +5,18 @@ __all__ = ["Exporter"]
 import sys
 from collections.abc import Sequence, Generator
 from pathlib import Path
+from typing import ClassVar
 
 from .file_input import ElementDescr
 from ..lattice import Lattice, elements as elt
 
 
 class Exporter:
-    delimiter: str = ";"
-    continuation: str = ""
-    label_fmt = str.maketrans("*/+-", "..__")  # Not allowed in destination format
-    bool_fmt = None
-    use_line = True
+    delimiter: ClassVar[str] = ";"
+    continuation: ClassVar[str] = ""
+    label_fmt: ClassVar = str.maketrans("*/+-", "..__")  # Not allowed in output format
+    bool_fmt: ClassVar[dict[bool, str]] = {False: "False", True: "True"}
+    use_line: ClassVar[bool] = True
 
     def __init__(self, ring: Lattice, **kwargs):
         def store_elem(store, elem: ElementDescr):
@@ -82,7 +83,7 @@ class Exporter:
         self.seq = list(scan(ring))
         self.length = ring.cell_length
         self.in_file = getattr(ring, "in_file", "<unknown>")
-        self.in_use = getattr(ring, "use", "<unknown")
+        self.in_use = getattr(ring, "use", "<unknown>")
         self.energy = ring.energy
         self.particle = ring.particle
         self.is_6d = ring.is_6d
