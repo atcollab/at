@@ -91,8 +91,8 @@ __all__ = [
 
 import abc
 from collections import deque
-from collections.abc import Iterable, Sequence, Callable
-from typing import Generic, TypeVar
+from collections.abc import Iterable, Sequence, Callable, MutableMapping
+from typing import Any, Generic, TypeVar
 import contextlib
 
 import numpy as np
@@ -405,6 +405,59 @@ class VariableBase(Operand, abc.ABC, Generic[Number]):
 
     def __repr__(self):
         return repr(self._print_value)
+
+
+class MappingVariable(VariableBase[Number]):
+    """A Variable controlling a dictionary item."""
+    def __init__(self, mmap: MutableMapping, key: Any, **kwargs):
+        """
+        Args:
+            map: Mapping containing the variable value
+            key: variable key
+
+        Keyword Args:
+            name:       Name of the Variable. If empty, a unique name is generated.
+            bounds:     Lower and upper bounds of the variable value
+            delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite.
+        """
+        self.map = mmap
+        self.key = key
+        super().__init__(**kwargs)
+
+    def _getfun(self, *args, **kwargs) -> Number:
+        return self.map[self.key]
+
+    def _setfun(self, value: Number, *args, **kwargs) -> None:
+        self.map[self.key] = value
+
+
+class AttributeVariable(VariableBase[Number]):
+    """A Variable controlling an attribute of an object."""
+
+    def __init__(self, obj: object, attrname: str, **kwargs):
+        """
+        Args:
+            obj:        Object containing the variable value
+            attrname:   variable key
+
+        Keyword Args:
+            name:       Name of the Variable. If empty, a unique name is generated.
+            bounds:     Lower and upper bounds of the variable value
+            delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite.
+        """
+        self.obj = obj
+        self.attrname = attrname
+        super().__init__(**kwargs)
+
+    def _getfun(self, *args, **kwargs) -> Number:
+        return getattr(self.obj, self.attrname)
+
+    def _setfun(self, value: Number, *args, **kwargs) -> None:
+        setattr(self.obj, self.attrname, value)
 
 
 class CustomVariable(VariableBase[Number]):
