@@ -275,8 +275,8 @@ def load_mad8(
 
 
 class _Mad8Exporter(_MadExporter):
-    delimiter = ""
-    continuation = "&"
+    delimiter: ClassVar[str] = ""
+    continuation: ClassVar[str] = "&"
     bool_fmt: ClassVar[dict[bool, str]] = {False: ".FALSE.", True: ".TRUE."}
 
     AT2MAD: ClassVar[dict] = {
