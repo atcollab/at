@@ -13,8 +13,9 @@ import numpy as np
 
 from .conversions import _array, _array66, _int, _float
 
-# noinspection PyProtectedMember
-from ..variables import _nop
+
+def _nop(value):
+    return value
 
 
 class Element:

@@ -84,24 +84,42 @@ keeping their sum constant:
 from __future__ import annotations
 
 __all__ = [
+    "AttributeVariable",
     "CustomVariable",
+    "ItemVariable",
     "VariableBase",
     "VariableList",
 ]
 
 import abc
 from collections import deque
-from collections.abc import Iterable, Sequence, Callable
+from collections.abc import (
+    Iterable,
+    Sequence,
+    Callable,
+    MutableMapping,
+    MutableSequence,
+)
+from typing import Any
 import contextlib
+from operator import itemgetter
 
 import numpy as np
 import numpy.typing as npt
 
+from .utils import setval, getval
+
 Number = int | float
 
 
-def _nop(value):
-    return value
+class _ItemSetter:
+    __slots__ = ["key"]
+
+    def __init__(self, key):
+        self.key = key
+
+    def __call__(self, elem, value):
+        elem[self.key] = value
 
 
 class VariableBase(abc.ABC):
@@ -244,9 +262,7 @@ class VariableBase(abc.ABC):
               They augment the keyword arguments given in the constructor.
         """
         self.check_bounds(value)
-        kw = self.kwargs.copy()
-        kw.update(setkw)
-        self._setfun(value, *self.args, **kw)
+        self._setfun(value, *self.args, **(self.kwargs | setkw))
         if np.isnan(self._initial):
             self._initial = value
         self._history.append(value)
@@ -271,9 +287,7 @@ class VariableBase(abc.ABC):
         Returns:
             value:      Value of the variable
         """
-        kw = self.kwargs.copy()
-        kw.update(getkw)
-        value = self._getfun(*self.args, **kw)
+        value = self._getfun(*self.args, **(self.kwargs | getkw))
         if initial or np.isnan(self._initial):
             self._initial = value
             self._history = deque([value], self.history_length)
@@ -414,6 +428,85 @@ class VariableBase(abc.ABC):
 
     def __repr__(self):
         return repr(self._print_value)
+
+
+class ItemVariable(VariableBase):
+    """A Variable controlling an item of a dictionary or a sequence."""
+
+    def __init__(self, obj: MutableSequence | MutableMapping, key: Any, **kwargs):
+        """
+        Args:
+            obj:        Mapping or Sequence containing the variable value
+            key:        dictionary key or sequence index
+
+        Keyword Args:
+            name:       Name of the Variable. If empty, a unique name is generated.
+            bounds:     Lower and upper bounds of the variable value
+            delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite.
+
+        Example:
+            >>> dct = {"a": 42.0, "b": 21.0}
+            >>> v1 = at.ItemVariable(dct, "a")
+            >>> v1.value
+            42.0
+
+            *v1* points to the item *"a"* of the dictionary *dct*
+
+            >>> lst = [0.0, 1.0, 2.0, 3.0]
+            >>> v2 = at.ItemVariable(lst, 1)
+            >>> v2.value
+            1.0
+
+            *v2* points to the 2nd item of the list *lst*
+        """
+        self._getf = itemgetter(key)
+        self._setf = _ItemSetter(key)
+        super().__init__(obj, **kwargs)
+
+    def _getfun(self, mmap, **kwargs) -> Number:
+        return self._getf(mmap)
+
+    def _setfun(self, value: Number, mmap, **kwargs) -> None:
+        self._setf(mmap, value)
+
+
+class AttributeVariable(VariableBase):
+    """A Variable controlling an attribute of an object."""
+
+    def __init__(self, obj, attrname: str, index: int | None = None, **kwargs):
+        """
+        Args:
+            obj:        Object containing the variable value
+            attrname:   attribute name of the variable
+            index:      Index in the attribute array. Use :py:obj:`None` for
+              scalar attributes.
+
+        Keyword Args:
+            name:       Name of the Variable. If empty, a unique name is generated.
+            bounds:     Lower and upper bounds of the variable value
+            delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite.
+
+        Example:
+            >>> ring = at.Lattice.load("hmba.mat")
+            >>> v3 = at.AttributeVariable(ring, "energy")
+            >>> v3.value
+            6000000000.0
+
+            *v3* points to the *"energy"* attribute of *ring*
+        """
+        self._getf = getval(attrname, index=index)
+        self._setf = setval(attrname, index=index)
+        super().__init__(obj, **kwargs)
+
+    def _getfun(self, obj, **kwargs) -> Number:
+        return self._getf(obj)
+
+    def _setfun(self, value: Number, obj, **kwargs) -> None:
+        self._setf(obj, value)
 
 
 class CustomVariable(VariableBase):
