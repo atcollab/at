@@ -17,17 +17,6 @@ from ..lattice import VariableBase
 from ..latticetools import ObservableList
 
 
-@contextmanager
-def _save_variables(var: VariableBase) -> Generator[None, None, None]:
-    print("Saving variable")
-    var.get(initial=True)
-    try:
-        yield
-    finally:
-        print("Restoring variable")
-        var.reset()
-
-
 def plot_response(
     var: VariableBase,
     obs: ObservableList,
@@ -36,7 +25,8 @@ def plot_response(
     xlabel: str = "",
     ylabel: str = "",
     title: str = "",
-):
+    color_offset: int = 0
+) -> Axes:
     """Plot *obs* values as a function of *var*.
 
     Args:
@@ -48,6 +38,7 @@ def plot_response(
         xlabel: x-axis label. If empty, the variable name will be used.
         ylabel: y-axis label.
         title: plot title.
+        color_offset: offset in the matplotlib line color cycle.
 
     Example:
         >>> obs = at.ObservableList(
@@ -89,10 +80,12 @@ def plot_response(
     with var.restore():
         vals = [(v, *compute(v)) for v in rng]
         xx, *yy = zip(*vals, strict=True)
-        for hy, ob in zip(yy, obs, strict=True):
-            ax.plot(xx, np.array(hy), label=ob.name)
+        for n, (hy, ob) in enumerate(zip(yy, obs, strict=True)):
+            fmt = getattr(ob, "fmt", f"C{n + color_offset}")
+            ax.plot(xx, np.array(hy), fmt, label=ob.name)
         ax.set_xlabel(xlabel or var.name)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         ax.legend()
         ax.grid(True)
+        return ax
