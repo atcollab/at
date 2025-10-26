@@ -97,11 +97,12 @@ from collections.abc import (
     Iterable,
     Sequence,
     Callable,
+    Generator,
     MutableMapping,
     MutableSequence,
 )
 from typing import Any
-import contextlib
+from contextlib import suppress, contextmanager
 from operator import itemgetter
 
 import numpy as np
@@ -168,7 +169,7 @@ class VariableBase(abc.ABC):
         self.history_length = history_length
         self._initial = np.nan
         self._history: deque[Number] = deque([], self.history_length)
-        with contextlib.suppress(ValueError):
+        with suppress(ValueError):
             self.get(initial=True)
 
     @classmethod
@@ -417,6 +418,32 @@ class VariableBase(abc.ABC):
         """
         return "\n".join((self._header(), self._line()))
 
+    @contextmanager
+    def restore(self, **setkw) -> Generator[None, None, None]:
+        """Context manager that saves and restore a variable.
+
+        The value of the :py:class:`Variable <VariableBase>` is initially saved, and
+        then restored when exiting the context.
+
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
+
+        Example:
+            >>> var = AttributeVariable(ring, "energy")
+            >>> with var.restore():
+            ...     do_something(var)
+        """
+        # print(f"save {self.name}")
+        v0 = self.get(**setkw)
+        try:
+            yield
+        finally:
+            # print(f"restore {self.name}")
+            self.set(v0, **setkw)
+
     def __float__(self):
         return float(self._print_value)
 
@@ -639,6 +666,25 @@ class VariableList(list):
         """String description of the variables."""
         values = "\n".join(var._line(**kwargs) for var in self)
         return "\n".join((VariableBase._header(), values))
+
+    @contextmanager
+    def restore(self, **kwargs):
+        """Context manager that saves and restore the variable list.
+
+        The value of the :py:class:`VariableList` is initially saved, and then restored
+        when exiting the context.
+
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
+        # print("Saving variables")
+        v0 = self.get(**kwargs)
+        try:
+            yield
+        finally:
+            # print("Restoring variables")
+            self.set(v0, **kwargs)
 
     def __str__(self) -> str:
         return self.status()
