@@ -6,7 +6,7 @@ from __future__ import annotations
 
 __all__ = ["plot_response"]
 
-from collections.abc import Generator, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -30,15 +30,20 @@ def plot_response(
     """Plot *obs* values as a function of *var*.
 
     Args:
-        var: Variable object.
-        obs: list of Observables.
-        rng: range of variation for the variable.
-        ax: :py:class:`~matplotlib.axes.Axes` object. If :py:obj:`None`, a new figure
-          will be created.
-        xlabel: x-axis label. If empty, the variable name will be used.
-        ylabel: y-axis label.
-        title: plot title.
-        color_offset: offset in the matplotlib line color cycle.
+        var:            Variable object.
+        obs:            list of Observables.
+        rng:            range of variation for the variable.
+        ax:             :py:class:`~matplotlib.axes.Axes` object. If :py:obj:`None`,
+          a new figure will be created.
+        xlabel:         x-axis label. If empty, the variable name will be used.
+        ylabel:         y-axis label.
+        title:          plot title.
+        color_offset:   offset in the matplotlib line color cycle.
+        **kwargs:       Additional keyword arguments are transmitted to the
+          :py:class:`~matplotlib.axes.Axes` creation function.
+
+    Returns:
+        ax:             the :py:class:`~matplotlib.axes.Axes` object.
 
     Example:
         Minimal example using only default values:
@@ -131,9 +136,9 @@ def plot_response(
     with var.restore():
         vals = [(v, *compute(v)) for v in rng]
         xx, *yy = zip(*vals, strict=True)
-        lines = [
+        lines = [  # noqa: F841
             plot1(xx, np.array(y), ob, n + color_offset)
-            for n, (y, ob) in enumerate(zip(yy, obs))
+            for n, (y, ob) in enumerate(zip(yy, obs, strict=True))
         ]
         ax.set_xlabel(xlabel or var.name)
         ax.set_ylabel(ylabel)
