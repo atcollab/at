@@ -6,8 +6,7 @@ from __future__ import annotations
 
 __all__ = ["plot_response"]
 
-from collections.abc import Generator, Iterable
-from contextlib import contextmanager
+from collections.abc import Generator, Iterable, Mapping
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +24,8 @@ def plot_response(
     xlabel: str = "",
     ylabel: str = "",
     title: str = "",
-    color_offset: int = 0
+    color_offset: int = 0,
+    **kwargs
 ) -> Axes:
     """Plot *obs* values as a function of *var*.
 
@@ -41,29 +41,71 @@ def plot_response(
         color_offset: offset in the matplotlib line color cycle.
 
     Example:
+        Minimal example using only default values:
+
         >>> obs = at.ObservableList(
-        ...    [at.EmittanceObservable("emittances", plane="x"),
-        ...     at.EmittanceObservable("emittances", plane="y")],
-        ...    ring=ring
+        ...     [
+        ...         at.EmittanceObservable("emittances", plane="x"),
+        ...         at.EmittanceObservable("emittances", plane="y"),
+        ...     ],
+        ...     ring=ring,
         ... )
         >>> var = at.AttributeVariable(ring, "energy", name="energy [eV]")
-        >>> plot_response(
-        ...     var, obs, np.arange(3.0e9, 6.01e9, 0.5e9),
-        ...     ylabel="Emittance [m]")
-        ... )
+        >>> plot_response(var, obs, np.arange(3.0e9, 6.01e9, 0.5e9))
+        >>>
 
         .. image:: /images/emittance_response.*
            :alt: emittance response
 
-        >>> obs = at.ObservableList(
-        ...    [at.LocalOpticsObservable([0], "beta", plane="x"),
-        ...     at.LocalOpticsObservable([0], "beta", plane="y")],
-        ...    ring=ring
+        Example showing the formatting possibilities by:
+
+        - using the :py:attr:`.Observable.plot_fmt` attribute for line formatting,
+        - using  the :py:attr:`.Observable.name` attribute for curve labels,
+        - using dual y-axis by calling :py:func:`plot_response` twice,
+        - avoiding duplicate line colors with the *color_offset* parameter,
+        - using the *ylabel* and *title* parameters.
+
+        >>> obsleft =at.ObservableList(
+        ...     [
+        ...         at.LocalOpticsObservable(
+        ...             [0], "beta", plane="x",
+        ...             name=r"$\\beta_x$",
+        ...             plot_fmt={"linewidth": 3.0, "marker": "o"}
+        ...         ),
+        ...         at.LocalOpticsObservable(
+        ...             [0], "beta", plane="y", name=r"$\\beta_z$", plot_fmt="--"
+        ...         )
+        ...     ],
+        ...     ring=ring
         ... )
-        >>> var = at.RefptsVariable(
-        ...     "QF1[AE]", "PolynomB", index=1, name = "QF1 strength", ring=ring
+        >>>
+        >>> obsright =at.ObservableList(
+        ...     [
+        ...         at.GlobalOpticsObservable("tune", plane="x", name=r"$\\nu_x$"),
+        ...         at.GlobalOpticsObservable("tune", plane="y", name=r"$\\nu_x$"),
+        ...     ],
+        ...     ring=ring
         ... )
-        >>> at.plot_response(var, obs, np.arange(2.4, 2.7, 0.02), ylabel="beta[m]")
+        >>> # On the left y-axis
+        >>> ax = at.plot_response(
+        ...     var,
+        ...     obsleft,
+        ...     np.arange(2.4, 2.7, 0.02),
+        ...     ylabel="beta [m]",
+        ...     title="Example of plot_response"
+        ... )
+        >>> # On the right y-axis
+        >>> ax2 = at.plot_response(
+        ...     var,
+        ...     obsright,
+        ...     np.arange(2.4, 2.7, 0.02),
+        ...     ylabel="tune",
+        ...     ax=ax.twinx(),
+        ...     color_offset=2
+        ... )
+        >>> ax.set_ylim(0.0, 10.0)
+        >>> ax2.set_ylim(0.0, 1.2)
+        >>> ax2.grid(False)
 
         .. image:: /images/beta_response.*
            :alt: beta response
@@ -71,18 +113,28 @@ def plot_response(
     """
 
     def compute(v):
+        """Evaluate the observables for 1 variable value."""
         var.value = v
         obs.evaluate()
         return obs.values
 
+    def plot1(x, y, obs, ncurve):
+        """Plot 1 curve."""
+        fmt = getattr(obs, "plot_fmt", f"C{ncurve}")
+        if isinstance(fmt, Mapping):
+            return ax.plot(x, y, label=obs.name, **fmt)
+        else:
+            return ax.plot(x, y, fmt, label=obs.name)
+
     if ax is None:
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(subplot_kw=kwargs)
     with var.restore():
         vals = [(v, *compute(v)) for v in rng]
         xx, *yy = zip(*vals, strict=True)
-        for n, (hy, ob) in enumerate(zip(yy, obs, strict=True)):
-            fmt = getattr(ob, "fmt", f"C{n + color_offset}")
-            ax.plot(xx, np.array(hy), fmt, label=ob.name)
+        lines = [
+            plot1(xx, np.array(y), ob, n + color_offset)
+            for n, (y, ob) in enumerate(zip(yy, obs))
+        ]
         ax.set_xlabel(xlabel or var.name)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
