@@ -99,7 +99,7 @@ NE = length(ring);
 [get_w,varargs]=getflag(varargs,'get_w');
 [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
 [dp,varargs]=getoption(varargs,'dp',0.0);
-[dpargs,varargs]=getoption(varargs,{'orbit','dct','df'});
+[dpargs,varargs]=getoption(varargs,{'dct','df'});
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
 [coupled,varargs]=getoption(varargs,'coupled',true);
 [mkey,varargs]=getoption(varargs,'mkey','M');
@@ -120,21 +120,32 @@ else
 end
 
 if isempty(twiss_in)        % Circular machine
-    [orbit,orbitin]=findorbit4(ring,dp,refpts,dpargs{:},'XYStep',XYStep, 'strict', -1);
+    [orbit,orbitin] = findorbit4(ring, dp, refpts, orbitin, ...
+                                dpargs{:}, ...
+                                'XYStep', XYStep, ...
+                                'strict', -1);
     dp=orbitin(5);
-    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,orbitin,'XYStep',XYStep, 'strict', -1);
-    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,orbitin,'XYStep',XYStep, 'strict', -1);
+    [orbitP,o1P] = findorbit4(ring, dp+0.5*DPStep, refpts, orbitin, ...
+                              'XYStep',XYStep, ...
+                              'strict', -1);
+    [orbitM,o1M] = findorbit4(ring, dp-0.5*DPStep, refpts, orbitin, ...
+                              'XYStep',XYStep, ...
+                              'strict', -1);
 else                        % Transfer line
-    if ~isempty(orbitin), orbitin=zeros(6,1); end
-    orbit=linepass(ring,orbitin,refpts);
+    if isempty(orbitin)
+        orbitaux = zeros(6,1);
+    else
+        orbitaux = orbitin;
+    end
+    orbit=linepass(ring,orbitaux,refpts);
     try
         disp0=twiss_in.Dispersion;
     catch
         disp0=zeros(4,1);
     end
     dorbit=0.5*[DPStep*disp0;DPStep;0];
-    orbitP=linepass(ring,orbitin+dorbit,refpts);
-    orbitM=linepass(ring,orbitin-dorbit,refpts,'KeepLattice');
+    orbitP=linepass(ring,orbitaux+dorbit,refpts);
+    orbitM=linepass(ring,orbitaux-dorbit,refpts,'KeepLattice');
 end
 dispersion = (orbitP-orbitM)/DPStep;
 
