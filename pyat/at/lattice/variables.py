@@ -89,6 +89,7 @@ __all__ = [
     "ItemVariable",
     "VariableBase",
     "VariableList",
+    "attr_",
 ]
 
 import abc
@@ -101,26 +102,65 @@ from collections.abc import (
     MutableMapping,
     MutableSequence,
 )
-from typing import Any
 from contextlib import suppress, contextmanager
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 import numpy as np
 import numpy.typing as npt
 
-from .utils import setval, getval
-
 Number = int | float
 
 
-class _ItemSetter:
-    __slots__ = ["key"]
+class attr_(str):
+    __slots__ = []
 
-    def __init__(self, key):
+
+class _AttrSetGet:
+    """Class object setting/getting an attribute of an object."""
+    __slots__ = ["attrname", "obj"]
+
+    def __init__(self, obj, attrname: str):
+        self.obj = obj
+        self.attrname = attrname
+
+    def setfun(self, value):
+        setattr(self.obj, self.attrname, value)
+
+    def getfun(self):
+        return getattr(self.obj, self.attrname)
+
+
+class _ItemSetGet:
+    """Class object setting/getting an item of an object."""
+    __slots__ = ["key", "obj"]
+
+    def __init__(self, obj: MutableMapping | MutableSequence, key: str | int | tuple[int]):
+        self.obj = obj
         self.key = key
 
-    def __call__(self, elem, value):
-        elem[self.key] = value
+    def setfun(self, value):
+        self.obj[self.key] = value
+
+    def getfun(self):
+        return self.obj[self.key]
+
+
+class _SetGet:
+    """"""
+    def __init__(self, *args: attr_ | str | int | tuple[int]):
+        def getter(key):
+            return attrgetter(key) if isinstance(key, attr_) else itemgetter(key)
+
+        self.getters = [getter(key) for key in args[:-1]]
+        self.key = args[-1]
+
+    def __call__(self, obj):
+        for getter in self.getters:
+            obj = getter(obj)
+        if isinstance(self.key, attr_):
+            return _AttrSetGet(obj, self.key)
+        else:
+            return _ItemSetGet(obj, self.key)
 
 
 class VariableBase(abc.ABC):
@@ -420,6 +460,7 @@ class VariableBase(abc.ABC):
 
     @contextmanager
     def restore(self, **setkw) -> Generator[None, None, None]:
+        # noinspection PyUnresolvedReferences
         """Context manager that saves and restore a variable.
 
         The value of the :py:class:`Variable <VariableBase>` is initially saved, and
@@ -460,11 +501,12 @@ class VariableBase(abc.ABC):
 class ItemVariable(VariableBase):
     """A Variable controlling an item of a dictionary or a sequence."""
 
-    def __init__(self, obj: MutableSequence | MutableMapping, key: Any, **kwargs):
+    def __init__(self, obj: MutableSequence | MutableMapping, *args, **kwargs) -> None:
+        # noinspection PyUnresolvedReferences
         """
         Args:
             obj:        Mapping or Sequence containing the variable value
-            key:        dictionary key or sequence index
+            *args:      Sequence of dictionary key, sequence index or attribute name.
 
         Keyword Args:
             name:       Name of the Variable. If empty, a unique name is generated.
@@ -488,21 +530,20 @@ class ItemVariable(VariableBase):
 
             *v2* points to the 2nd item of the list *lst*
         """
-        self._getf = itemgetter(key)
-        self._setf = _ItemSetter(key)
-        super().__init__(obj, **kwargs)
+        super().__init__(_SetGet(*args)(obj), **kwargs)
 
-    def _getfun(self, mmap, **kwargs) -> Number:
-        return self._getf(mmap)
+    def _setfun(self, value, obj):
+        obj.setfun(value)
 
-    def _setfun(self, value: Number, mmap, **kwargs) -> None:
-        self._setf(mmap, value)
+    def _getfun(self, obj):
+        return obj.getfun()
 
 
 class AttributeVariable(VariableBase):
     """A Variable controlling an attribute of an object."""
 
     def __init__(self, obj, attrname: str, index: int | None = None, **kwargs):
+        # noinspection PyUnresolvedReferences
         """
         Args:
             obj:        Object containing the variable value
@@ -525,15 +566,14 @@ class AttributeVariable(VariableBase):
 
             *v3* points to the *"energy"* attribute of *ring*
         """
-        self._getf = getval(attrname, index=index)
-        self._setf = setval(attrname, index=index)
-        super().__init__(obj, **kwargs)
+        args = (attr_(attrname),) if index is None else (attr_(attrname), index)
+        super().__init__(_SetGet(*args)(obj), **kwargs)
 
-    def _getfun(self, obj, **kwargs) -> Number:
-        return self._getf(obj)
+    def _setfun(self, value, obj):
+        obj.setfun(value)
 
-    def _setfun(self, value: Number, obj, **kwargs) -> None:
-        self._setf(obj, value)
+    def _getfun(self, obj):
+        return obj.getfun()
 
 
 class CustomVariable(VariableBase):

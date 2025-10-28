@@ -27,6 +27,7 @@ def plot_response(
     color_offset: int = 0,
     **kwargs
 ) -> Axes:
+    # noinspection PyUnresolvedReferences
     """Plot *obs* values as a function of *var*.
 
     Args:

@@ -23,6 +23,7 @@ method and the following properties:
 from __future__ import annotations
 
 __all__ = [
+    "EvaluationVariable",
     "ObservableList",
 ]
 
@@ -37,7 +38,7 @@ import numpy.typing as npt
 from .observables import Observable, ElementObservable, Need
 from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
-from ..lattice import Lattice, Refpts, All
+from ..lattice import Lattice, Refpts, All, ItemVariable
 from ..physics import linopt6
 from ..tracking import internal_lpass
 
@@ -354,7 +355,6 @@ class ObservableList(list):
                 trajs = r_out[:, 0, :, 0].T
                 keep_lattice = True
 
-            # if needs & self._needs_orbit:
             if Need.ORBIT in needs or needs_o0:
                 # Closed orbit computation
                 try:
@@ -717,3 +717,8 @@ class ObservableList(list):
     sum_residuals = property(get_sum_residuals, doc="Sum of all residual values")
     targets = property(get_targets, doc="Target values of all observables")
     flat_targets = property(get_flat_targets, doc="1-D array of target values")
+
+
+class EvaluationVariable(ItemVariable):
+    def __init__(self, obslist: ObservableList, *args, **kwargs):
+        super().__init__(obslist.kwargs, *args, **kwargs)
