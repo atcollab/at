@@ -720,5 +720,37 @@ class ObservableList(list):
 
 
 class EvaluationVariable(ItemVariable):
+    """A reference to a parameter given to the ObservableList.evaluate method.
+
+    The variable drives the default value of a :py:meth:`.ObservableList.evaluate`
+    keyword argument.
+    """
     def __init__(self, obslist: ObservableList, *args, **kwargs):
+        """
+        Args:
+            obslist:    The :py:class:`.ObservableList` to control,
+            *args:      A sequence of directory keys or sequence indices leading to
+              the desired parameter. The parameter must have been created at
+              instantiation of the :py:class:`.ObservableList`
+
+        Keyword Args:
+            name (str):     Name of the Variable. Default: ``''``
+            bounds (tuple[float, float]):   Lower and upper bounds of the
+              variable value. Default: (-inf, inf)
+            delta (float):  Step. Default: 1.0
+
+        Example:
+            >>> from at import LocalOpticsObservable
+            >>> obs = ObservableList(
+            ...     [LocalOpticsObservable("beta", plane="x")],
+            ...     dp=0.01
+            ... )
+            >>> var = EvaluationVariable(obs, "dp")
+            >>> var.value
+            0.01
+
+            The *dp* keyword is used when evaluating a LocalOpticsObservable. Its
+            default value is set to 0.01. The created variable allows to vary this
+            value before evaluation.
+        """
         super().__init__(obslist.kwargs, *args, **kwargs)

@@ -134,7 +134,7 @@ class _ItemSetGet:
     """Class object setting/getting an item of an object."""
     __slots__ = ["key", "obj"]
 
-    def __init__(self, obj: MutableMapping | MutableSequence, key: str | int | tuple[int]):
+    def __init__(self, obj: MutableMapping | MutableSequence, key):
         self.obj = obj
         self.key = key
 
@@ -146,8 +146,15 @@ class _ItemSetGet:
 
 
 class _SetGet:
-    """"""
-    def __init__(self, *args: attr_ | str | int | tuple[int]):
+    """Generalisation of itemgetter and attrgetter."""
+    def __init__(self, *args):
+        """
+        Args:
+            *args:      Sequence of dictionary key, sequence index or attribute name.
+
+        Returns:
+            Callable object extracting an item in the given object.
+        """
         def getter(key):
             return attrgetter(key) if isinstance(key, attr_) else itemgetter(key)
 
