@@ -102,7 +102,7 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
         plt.plot(*boundary, label="Acceptance")
         plt.title(f"2D {pl0['label']}-{pl1['label']} acceptance")
         plt.xlabel(f"{pl0['label']}{pl0['unit']}")
-        plt.xlabel(f"{pl1['label']}{pl1['unit']}")
+        plt.ylabel(f"{pl1['label']}{pl1['unit']}")
     plt.legend()
     plt.show(block=block)
     return boundary, survived, grid
