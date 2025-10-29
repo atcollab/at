@@ -28,7 +28,7 @@ def plot_response(
     **kwargs
 ) -> Axes:
     # noinspection PyUnresolvedReferences
-    """Plot *obs* values as a function of *var*.
+    r"""Plot *obs* values as a function of *var*.
 
     Args:
         var:            Variable object.
@@ -75,11 +75,11 @@ def plot_response(
         ...     [
         ...         at.LocalOpticsObservable(
         ...             [0], "beta", plane="x",
-        ...             name=r"$\\beta_x$",
+        ...             name=r"$\beta_x$",
         ...             plot_fmt={"linewidth": 3.0, "marker": "o"}
         ...         ),
         ...         at.LocalOpticsObservable(
-        ...             [0], "beta", plane="y", name=r"$\\beta_z$", plot_fmt="--"
+        ...             [0], "beta", plane="y", name=r"$\beta_z$", plot_fmt="--"
         ...         )
         ...     ],
         ...     ring=ring
@@ -87,8 +87,8 @@ def plot_response(
         >>>
         >>> obsright =at.ObservableList(
         ...     [
-        ...         at.GlobalOpticsObservable("tune", plane="x", name=r"$\\nu_x$"),
-        ...         at.GlobalOpticsObservable("tune", plane="y", name=r"$\\nu_x$"),
+        ...         at.GlobalOpticsObservable("tune", plane="x", name=r"$\nu_x$"),
+        ...         at.GlobalOpticsObservable("tune", plane="y", name=r"$\nu_x$"),
         ...     ],
         ...     ring=ring
         ... )
@@ -120,15 +120,15 @@ def plot_response(
 
         >>> obs =at.ObservableList(
         ...     [
-        ...         at.LocalOpticsObservable([0], "beta", plane="x", name=r"$\\beta_x$"),
-        ...         at.LocalOpticsObservable([0], "beta", plane="y", name=r"$\\beta_z$")
+        ...         at.LocalOpticsObservable([0], "beta", plane="x", name=r"$\beta_x$"),
+        ...         at.LocalOpticsObservable([0], "beta", plane="y", name=r"$\beta_z$")
         ...     ],
         ...     ring=ring,
         ...     dp = 0.0
         ... )
-        >>> var = at.EvaluationVariable(obs, "dp", name=r"$\\delta$")
+        >>> var = at.EvaluationVariable(obs, "dp", name=r"$\delta$")
         >>> ax=at.plot_response(
-        ... var, obs, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\\beta\\;[m]$"
+        ... var, obs, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\beta\;[m]$"
         ... )
 
         .. image:: /images/delta_response.*
