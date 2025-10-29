@@ -90,6 +90,7 @@ __all__ = [
     "VariableBase",
     "VariableList",
     "attr_",
+    "membergetter",
 ]
 
 import abc
@@ -112,62 +113,109 @@ Number = int | float
 
 
 class attr_(str):
+    """subclass of :py:class:`str` used to differentiate directory keys and
+    attribute names.
+    """
+
     __slots__ = []
 
 
-class _AttrSetGet:
+class _AttributeAccessor:
     """Class object setting/getting an attribute of an object."""
+
     __slots__ = ["attrname", "obj"]
 
     def __init__(self, obj, attrname: str):
         self.obj = obj
         self.attrname = attrname
 
-    def setfun(self, value):
+    def set(self, value: float):
         setattr(self.obj, self.attrname, value)
 
-    def getfun(self):
+    def get(self) -> float:
         return getattr(self.obj, self.attrname)
 
 
-class _ItemSetGet:
+class _ItemAccessor:
     """Class object setting/getting an item of an object."""
+
     __slots__ = ["key", "obj"]
 
     def __init__(self, obj: MutableMapping | MutableSequence, key):
         self.obj = obj
         self.key = key
 
-    def setfun(self, value):
+    def set(self, value: float):
         self.obj[self.key] = value
 
-    def getfun(self):
+    def get(self) -> float:
         return self.obj[self.key]
 
 
-class _SetGet:
-    """Generalisation of itemgetter and attrgetter."""
-    def __init__(self, *args):
-        """
-        Args:
-            *args:      Sequence of dictionary key, sequence index or attribute name.
+class membergetter:
+    """Generalised attribute and item lookup.
 
-        Returns:
-            Callable object extracting an item in the given object.
+    Callable object fetching attributes or items from its operand object. This
+    generalises :py:func:`~operator.attrgetter` and :py:func:`~operator.itemgetter` and
+    allows to extract elements deep in the object structure. For example:
+
+    - With ``f1 = membergetter("key1", [2])``, then ``f1(obj)`` returns
+      ``obj["key1"][2]``,
+    - With ``f2 = membergetter("key2", attr_("attr1"), [key3])``, then ``f2(obj)``
+      returns ``obj["key2"].attr1["key3"]``.
+    """
+
+    def __init__(self, *args):
+        r"""
+        Args:
+            *args:      Sequence of dictionary keys, sequence indices or
+              attribute names. A :py:class:`str` argument is interpreted as a
+              dictionary key. Attribute names must be decorated with ``attr_(attrname)``
+              to distinguish them from directory keys.
+
+              - ``f1 = SetGet("key1")(obj)`` returns ``obj["key1"]``,
+              - ``f2 = SetGet(attr("attr1"))(obj)`` returns ``obj.attr1``
+
+        Example:
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
+            >>> f = membergetter("b", 1)
+            >>> f(dct)
+            1.0
         """
+
         def getter(key):
             return attrgetter(key) if isinstance(key, attr_) else itemgetter(key)
 
-        self.getters = [getter(key) for key in args[:-1]]
         self.key = args[-1]
+        self.getters = [getter(key) for key in args]
 
     def __call__(self, obj):
         for getter in self.getters:
             obj = getter(obj)
+        return obj
+
+    def accessor(self, obj):
+        """Return an accessor object.
+
+        The returned object has *set* and *get* methods acting on the selected item of
+        the object *obj*.
+
+        Example:
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
+            >>> v2 = membergetter("b", 1)
+            >>> accessor = v2.accessor(dct)
+            >>> accessor.get()
+            1.0
+            >>> accessor.set(42.0)
+            >>> dct
+            {'a': 42.0, 'b': [0.0, 42.0, 2.0, 3.0]}
+        """
+        for getter in self.getters[:-1]:
+            obj = getter(obj)
         if isinstance(self.key, attr_):
-            return _AttrSetGet(obj, self.key)
+            return _AttributeAccessor(obj, self.key)
         else:
-            return _ItemSetGet(obj, self.key)
+            return _ItemAccessor(obj, self.key)
 
 
 class VariableBase(abc.ABC):
@@ -508,12 +556,19 @@ class VariableBase(abc.ABC):
 class ItemVariable(VariableBase):
     """A Variable controlling an item of a dictionary or a sequence."""
 
-    def __init__(self, obj: MutableSequence | MutableMapping, *args, **kwargs) -> None:
+    def __init__(
+        self, obj: MutableSequence | MutableMapping, key, *args, **kwargs
+    ) -> None:
         # noinspection PyUnresolvedReferences
         """
         Args:
-            obj:        Mapping or Sequence containing the variable value
-            *args:      Sequence of dictionary key, sequence index or attribute name.
+            obj:        Mapping or Sequence containing the variable value,
+            key:        Index or attribute name of the variable.  A :py:class:`str`
+              argument is interpreted as a dictionary key. Attribute names must be
+              decorated with ``attr_(attrname)`` to distinguish them from directory
+              keys.
+            *args:      additional sequence of indices or attribute names allowing to
+              extract elements deeper in the object structure.
 
         Keyword Args:
             name:       Name of the Variable. If empty, a unique name is generated.
@@ -523,27 +578,26 @@ class ItemVariable(VariableBase):
               means infinite.
 
         Example:
-            >>> dct = {"a": 42.0, "b": 21.0}
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
             >>> v1 = at.ItemVariable(dct, "a")
             >>> v1.value
             42.0
 
-            *v1* points to the item *"a"* of the dictionary *dct*
+            *v1* points to *dct["a"]*
 
-            >>> lst = [0.0, 1.0, 2.0, 3.0]
-            >>> v2 = at.ItemVariable(lst, 1)
+            >>> v2 = at.ItemVariable(dct, "b", 1)
             >>> v2.value
             1.0
 
-            *v2* points to the 2nd item of the list *lst*
+            *v2* points to ``dct["b"][1]``
         """
-        super().__init__(_SetGet(*args)(obj), **kwargs)
+        super().__init__(membergetter(key, *args).accessor(obj), **kwargs)
 
     def _setfun(self, value, obj):
-        obj.setfun(value)
+        obj.set(value)
 
     def _getfun(self, obj):
-        return obj.getfun()
+        return obj.get()
 
 
 class AttributeVariable(VariableBase):
@@ -574,13 +628,13 @@ class AttributeVariable(VariableBase):
             *v3* points to the *"energy"* attribute of *ring*
         """
         args = (attr_(attrname),) if index is None else (attr_(attrname), index)
-        super().__init__(_SetGet(*args)(obj), **kwargs)
+        super().__init__(membergetter(*args).accessor(obj), **kwargs)
 
     def _setfun(self, value, obj):
-        obj.setfun(value)
+        obj.set(value)
 
     def _getfun(self, obj):
-        return obj.getfun()
+        return obj.get()
 
 
 class CustomVariable(VariableBase):

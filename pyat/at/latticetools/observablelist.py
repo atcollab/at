@@ -398,7 +398,7 @@ class ObservableList(list):
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
                         twiss_in=twiss_in,
-                        method=method
+                        method=method,
                     )
                 except AtError as err:
                     rgdata = eldata = err
@@ -720,18 +720,22 @@ class ObservableList(list):
 
 
 class EvaluationVariable(ItemVariable):
-    """A reference to a parameter given to the ObservableList.evaluate method.
+    r"""A reference to a parameter given to the ObservableList.evaluate method.
 
     The variable drives the default value of a :py:meth:`.ObservableList.evaluate`
     keyword argument.
     """
-    def __init__(self, obslist: ObservableList, *args, **kwargs):
+
+    def __init__(self, obslist: ObservableList, key, *args, **kwargs):
         """
         Args:
             obslist:    The :py:class:`.ObservableList` to control,
-            *args:      A sequence of directory keys or sequence indices leading to
-              the desired parameter. The parameter must have been created at
-              instantiation of the :py:class:`.ObservableList`
+            key:        Index or attribute name of the variable.  A :py:class:`str`
+              argument is interpreted as a dictionary key. Attribute names must be
+              decorated with ``attr_(attrname)`` to distinguish them from directory
+              keys.
+            *args:      additional sequence of indices or attribute names allowing to
+              extract elements deeper in the object structure.
 
         Keyword Args:
             name (str):     Name of the Variable. Default: ``''``
@@ -740,17 +744,39 @@ class EvaluationVariable(ItemVariable):
             delta (float):  Step. Default: 1.0
 
         Example:
-            >>> from at import LocalOpticsObservable
-            >>> obs = ObservableList(
-            ...     [LocalOpticsObservable("beta", plane="x")],
-            ...     dp=0.01
+            Create a *twiss_in* input for computing optics in transfer-line mode:
+
+            >>> twiss_in = {"alpha": np.zeros(2), "beta": np.array([9.0, 2.5])}
+
+            Create the :py:class:`.ObservableList`:
+
+            >>> obs = at.ObservableList(
+            ...     [
+            ...         at.LocalOpticsObservable([0], "beta", plane="x"),
+            ...         at.LocalOpticsObservable([0], "beta", plane="y"),
+            ...     ],
+            ...     ring=ring,
+            ...     dp=0.01,
+            ...     orbit=np.zeros(6),
+            ...     twiss_in=twiss_in,
             ... )
-            >>> var = EvaluationVariable(obs, "dp")
-            >>> var.value
+
+            Create a variable controlling :math:`\\delta`:
+
+            >>> v3 = at.EvaluationVariable(obs, "dp")
+            >>> v3.value
             0.01
 
-            The *dp* keyword is used when evaluating a LocalOpticsObservable. Its
-            default value is set to 0.01. The created variable allows to vary this
-            value before evaluation.
+            Create a variable controlling :math:`p_x`:
+
+            >>> v2 = at.EvaluationVariable(obs, "orbit", 1)
+            >>> v2.value
+            np.float64(0.0)
+
+            Create a variable controlling :math:`\\beta_x`:
+
+            >>> v1 = at.EvaluationVariable(obs, "twiss_in", "beta", 0)
+            >>> v1.value
+            np.float64(9.0)
         """
-        super().__init__(obslist.kwargs, *args, **kwargs)
+        super().__init__(obslist.kwargs, key, *args, **kwargs)
