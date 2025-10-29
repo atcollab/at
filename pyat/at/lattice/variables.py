@@ -176,11 +176,11 @@ class membergetter:
               - ``f1 = SetGet("key1")(obj)`` returns ``obj["key1"]``,
               - ``f2 = SetGet(attr("attr1"))(obj)`` returns ``obj.attr1``
 
-            Example:
-                >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
-                >>> f = membergetter("b", 1)
-                >>> f(dct)
-                1.0
+        Example:
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
+            >>> f = membergetter("b", 1)
+            >>> f(dct)
+            1.0
         """
 
         def getter(key):
@@ -583,7 +583,7 @@ class ItemVariable(VariableBase):
             >>> v1.value
             42.0
 
-            *v1* points to *dct["a"]*
+            *v1* points to ``dct["a"]``
 
             >>> v2 = at.ItemVariable(dct, "b", 1)
             >>> v2.value

@@ -116,6 +116,23 @@ def plot_response(
         .. image:: /images/beta_response.*
            :alt: beta response
 
+        Example varying an evaluation parameter:
+
+        >>> obs =at.ObservableList(
+        ...     [
+        ...         at.LocalOpticsObservable([0], "beta", plane="x", name=r"$\\beta_x$"),
+        ...         at.LocalOpticsObservable([0], "beta", plane="y", name=r"$\\beta_z$")
+        ...     ],
+        ...     ring=ring,
+        ...     dp = 0.0
+        ... )
+        >>> var = at.EvaluationVariable(obs, "dp", name=r"$\\delta$")
+        >>> ax=at.plot_response(
+        ... var, obs, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\\beta\\;[m]$"
+        ... )
+
+        .. image:: /images/delta_response.*
+           :alt: delta response
     """
 
     def compute(v):
