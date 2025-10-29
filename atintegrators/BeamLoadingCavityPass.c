@@ -88,8 +88,15 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vcavk = Elem->vcav;
     double *vgenk = Elem->vgen;    
     double feedback_angle_offset = Elem->feedback_angle_offset;
+    double phis = Elem->phis;
 
+    double tlag_phase = tlag*TWOPI*rffreq/C0;
 
+    double ts = phis * C0 / TWOPI / rffreq + tlag;
+    double ts_to_phase = ts * TWOPI * rffreq / C0;
+    
+    double phis_to_tlag = phis*C0/TWOPI/rffreq;
+    
     double vbeam_set[] = {vbeamk[0], vbeamk[1]};
     double tot_current = 0.0;
     int i;
@@ -100,17 +107,21 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double vgen = vgenk[0];
     double gen_phase = vgenk[1];
     double psi = vgenk[2];
-
+    double vgr = vgenk[3];
     double freqres = rffreq/(1-tan(psi)/(2*qfactor));
         
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
 
-
+    double phase = gen_phase - phis;
+    
+    printf("gen phase: %f \t %f \n", gen_phase, phase);
+    printf("tlag: %f \t %f \t %f \t %f \t %f \n", tlag, tlag_phase, phis_to_tlag, phis, ts);
     /*Track RF cavity is always done. */
     /*trackRFCavity_beamloading(r_in,le,vgen/energy,rffreq,gen_phase,num_particles);*/
-    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0.0, -gen_phase, nturn, circumference/C0, num_particles);
+    /*trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -psi+phis, nturn, circumference/C0, num_particles);*/
+    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, -ts, -gen_phase, nturn, circumference/C0, num_particles);
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
         void *buffer = atMalloc(sz);
@@ -150,7 +161,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         // First write the values to the buffer
         if(buffersize>0){
             write_buffer(vbeamk, vbeam_buffer, 2, buffersize);
-            write_buffer(vgenk, vgen_buffer, 3, buffersize);
+            write_buffer(vgenk, vgen_buffer, 4, buffersize);
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
@@ -195,6 +206,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *vbeam;
         double *vgen;
         double *vcav;
+        double phis;
 
         /*attributes for RF cavity*/
         Length=atGetDouble(ElemData,"Length"); check_error();
@@ -224,6 +236,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         vgen_buffer=atGetDoubleArray(ElemData,"_vgen_buffer"); check_error();
         vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
         vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
+        phis=atGetDouble(ElemData,"_phis"); check_error();
         /*optional attributes*/
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
@@ -265,6 +278,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vbunch_buffer = vbunch_buffer;
         Elem->feedback_angle_offset = feedback_angle_offset;
         Elem->fbmode = fbmode;
+        Elem->phis = phis;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
 
@@ -306,7 +320,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       struct elem El, *Elem=&El;
       
       long nslice,nturns,blmode,cavitymode,fbmode,buffersize,windowlength;
-      double wakefact;
+      double wakefact, phis;
       double normfact, phasegain, voltgain;
       double *turnhistory;
       double *z_cuts;
@@ -348,6 +362,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vgen_buffer=atGetDoubleArray(ElemData,"_vgen_buffer"); check_error();
       vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
       vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
+      phis=atGetDouble(ElemData,"_phis"); check_error();
+      
       /*optional attributes*/
       Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
@@ -382,7 +398,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
       Elem->feedback_angle_offset = feedback_angle_offset;
-
+      Elem->phis = phis;
+      
       Elem->fbmode = fbmode;
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
@@ -397,7 +414,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(26,1);
+      plhs[0] = mxCreateCellMatrix(27,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -424,6 +441,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],23,mxCreateString("_vbunch_buffer"));
       mxSetCell(plhs[0],24,mxCreateString("_buffersize"));
       mxSetCell(plhs[0],25,mxCreateString("_windowlength"));
+      mxSetCell(plhs[0],26,mxCreateString("_phis"));
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(3,1);

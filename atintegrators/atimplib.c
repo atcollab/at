@@ -460,25 +460,60 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 
 
 static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
+
     double vbeamr = vbeam[0]*cos(vbeam[1]);
     double vbeami = vbeam[0]*sin(vbeam[1]);
-    double vcavr = vcav[0]*cos(vcav[1]);
-    double vcavi = vcav[0]*sin(vcav[1]);   
+    
+    double vcavr = -vcav[0]*sin(vcav[1]);
+    double vcavi = vcav[0]*cos(vcav[1]);   
+
+    double vgenr = -vgen[0]*sin(vgen[1]);
+    double vgeni = vgen[0]*cos(vgen[1]);       
+
+    /*
+    double vga = sqrt(vgenr*vgenr + vgeni*vgeni);
+    double vgp = -atan2(vgeni, vgenr);
+    */
+
+    /* 
     double vgenr = vcavr - vbeamr;
-    double vgeni = vcavi - vbeami; 
-    double vga = sqrt(vgenr*vgenr+vgeni*vgeni); 
-    double new_gen_phase = atan2(vgeni,vgenr);  
-    double vgp = new_gen_phase-vcav[1]+detune_angle; /*dttmp in mbtrack, basically it is newpsi */
-    /*printf("%f \t %f \n", vga, vgen[0]);
-    printf("%f \t %f \n", new_gen_phase - TWOPI/4, vgen[1]);
-    printf("%f \t %f \n", vgp, vgen[2]);
-    printf("\n");*/
-    vgen[0] *= pow(vga/vgen[0],voltgain);
-    vgen[2] += (vgp-vgen[2])*phasegain; /*psi feedback */
-    /*vgen[1] = new_gen_phase - TWOPI/4;*/
-    double old_phase = vgen[1];
-    double gen_phase = new_gen_phase - TWOPI/4;
-    vgen[1] += (gen_phase - old_phase)*phasegain;
+    double vgeni = vcavi - vbeami;
+    */
+    
+    double vcavr_meas = vgenr + vbeamr;
+    double vcavi_meas = vgeni + vbeami;
+    
+    
+    printf("vcavr: %f \t vcavi %f \n", vcavr, vcavi);          
+    printf("vbeamr: %f \t vbeami %f \n", vbeamr, vbeami); 
+    printf("vgenr: %f \t vgeni %f \n", vgenr, vgeni); 
+    printf("vcavr_meas: %f \t vcavi_meas %f \n", vcavr_meas, vcavi_meas);          
+    printf("\n");
+    
+    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
+    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
+
+    double phis = vcav[1];   
+    double ptmp = phis_meas - phis; /* this applies to thetag*/
+    printf("sync phase: %f \t %f \t %f \t %f \n", ptmp, phis_meas, phis, vcav[1]);
+
+    double dttmp = vgen[1] - vgen[2] - phis_meas + detune_angle;
+
+    printf("silly test: %f \n", vgen[1] - vgen[2] - phis); 
+
+    printf("dttmp: %f \n", dttmp);
+    printf("thetag: %f \n", vgen[1]);
+    printf("psi: %f \n", vgen[2]);
+    printf("vcav: %f \t %f \n\n", vcav[0], vcav_meas);
+    
+
+    double dtmp = vcav[0] / vcav_meas;
+    
+    
+    vgen[3] *= pow(dtmp,voltgain);
+    vgen[2] += dttmp*phasegain; 
+    vgen[1] -= ptmp*phasegain;
+    vgen[0] = vgen[3]*cos(vgen[2]);
 }
 
 
@@ -489,7 +524,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
     */
     double vset = vcav[0];
-    double psi = vgen[1];
+    double psi = vgen[2];
     double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
     double delta_v = vset - vpeak;
     double grad = vbeam[0]*sin(psi)/cos(psi); 
@@ -511,7 +546,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     delta_psi is inf, which even when multiplied by 0 gives nan
     */
     if (grad!=0.0){
-        vgen[1] += sg*delta_psi*phasegain;
+        vgen[2] += sg*delta_psi*phasegain;
     }
 }
 
