@@ -46,7 +46,7 @@ import warnings
 from collections.abc import Generator, Callable
 from typing import Any
 import contextlib
-from math import factorial, tan, atan
+from math import tan, atan
 
 import numpy as np
 
@@ -61,12 +61,12 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _warn(doc: str) -> str:
-    """Add a notice on PALS field expansion"""
+    """Add a notice on AT / PALS field expansion"""
     return "\n".join(
         (
             doc,
             "",
-            "The MAD field expansion differs from the AT expansion by a factor n!. "
+            "The AT field expansion differs from the MAD expansion by a factor n!. "
             "See :ref:`here <at-field-expansion>` for the definition of the AT field "
             "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
             "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
@@ -76,16 +76,16 @@ def _warn(doc: str) -> str:
 
 
 def _k_property(attrname: str, order: int, doc: str) -> property:
-    """Return a property for a field component in MAD convention."""
+    """Return a property for a field component."""
 
     def kget(mult: ThinMultipole) -> float:
         if order > mult.MaxOrder:
             return 0.0
         else:
-            return factorial(order) * float(getattr(mult, attrname)[order])
+            return float(getattr(mult, attrname)[order])
 
     def kset(mult: ThinMultipole, value: float) -> None:
-        getattr(mult, attrname)[order] = value / factorial(order)
+        getattr(mult, attrname)[order] = value
 
     return property(kget, kset, doc=doc)
 
@@ -346,22 +346,22 @@ class ThinMultipole(Element):
     Kn2L = _k_property(
         "IntegratedPolynomB",
         2,
-        _warn("Integrated normal sextupolar strength in MAD convention [m^-2]."),
+        _warn("Integrated normal sextupolar strength [m^-2]."),
     )
     Ks2L = _k_property(
         "IntegratedPolynomA",
         2,
-        _warn("Integrated skew sextupolar strength in MAD convention [m^-2]."),
+        _warn("Integrated skew sextupolar strength [m^-2]."),
     )
     Kn3L = _k_property(
         "IntegratedPolynomB",
         3,
-        _warn("Integrated normal octupolar strength in MAD convention [m^-3]."),
+        _warn("Integrated normal octupolar strength [m^-3]."),
     )
     Ks3L = _k_property(
         "IntegratedPolynomA",
         3,
-        _warn("Integrated skew octupolar strength in MAD convention [m^-3]."),
+        _warn("Integrated skew octupolar strength [m^-3]."),
     )
     IntegratedStrength = _s_property(
         "IntegratedPolynomB",
@@ -448,18 +448,10 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     Ks0 = _k_property("PolynomA", 0, "Skew dipolar strength [m^-1].")
     Kn1 = _k_property("PolynomB", 1, "Normal quadrupolar strength [m^-2].")
     Ks1 = _k_property("PolynomA", 1, "Skew quadrupolar strength [m^-2].")
-    Kn2 = _k_property(
-        "PolynomB", 2, _warn("Normal sextupolar strength in MAD convention [m^-3].")
-    )
-    Ks2 = _k_property(
-        "PolynomA", 2, _warn("Skew sextupolar strength in MAD convention [m^-3].")
-    )
-    Kn3 = _k_property(
-        "PolynomB", 3, _warn("Normal octupolar strength in MAD convention [m^-4].")
-    )
-    Ks3 = _k_property(
-        "PolynomA", 3, _warn("Skew octupolar strength in MAD convention [m^-4].")
-    )
+    Kn2 = _k_property("PolynomB", 2, _warn("Normal sextupolar m^-3]."))
+    Ks2 = _k_property("PolynomA", 2, _warn("Skew sextupolar m^-3]."))
+    Kn3 = _k_property("PolynomB", 3, _warn("Normal octupolar strength [m^-4]."))
+    Ks3 = _k_property("PolynomA", 3, _warn("Skew octupolar strength m^-4]."))
 
 
 class Dipole(Radiative, Multipole):
