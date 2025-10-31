@@ -160,13 +160,13 @@ from .observables import TrajectoryObservable, OrbitObservable, LatticeObservabl
 from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
 from ..lattice import AtError, AtWarning, Refpts, Uint32Refpts, All
-from ..lattice import AxisDef, plane_, Lattice, Monitor, checkattr
+from ..lattice import AxisDef, plane_, Lattice, Monitor, Corrector, checktype
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableBase, VariableList
 
 FloatArray: TypeAlias = npt.NDArray[np.float64]
 
-_orbit_correctors = checkattr("KickAngle")
+_orbit_correctors = checktype(Corrector)
 
 _globring: Lattice | None = None
 _globobs: ObservableList | None = None
@@ -782,20 +782,23 @@ class OrbitResponseMatrix(ResponseMatrix):
     and optionally the sum of steerer angles named ``sum(h_kicks)`` or
     ``sum(v_kicks)``
 
-    The variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default
-    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
-    should be explicitly created.
+    The matrix is built by varying the :py:attr:`.Element.Kn0L` or
+    :py:attr:`.Element.Ks0L` attribute of the steerers. These attributes are available
+    for all magnts.
 
     By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements having a *KickAngle* attribute.
+    variables are all the elements :py:class:`.Corrector` elements.
     This is equivalent to:
 
     >>> resp_v = OrbitResponseMatrix(
-    ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
+    ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.Corrector
     ... )
     """
 
+    # Class variables
+    _attr: ClassVar[dict[int, str]] = {0: "Kn0L", 1: "Ks0L"}
+
+    # Instance variables
     bpmrefs: Uint32Refpts  #: location of position monitors
     steerrefs: Uint32Refpts  #: location of steerers
 
@@ -822,9 +825,8 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
               Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used and must be present in the selected elements.
-              Default: All Elements having a *KickAngle* attribute.
+            steerrefs:  Location of orbit steerers.
+              Default: all :py:class:`.Corrector` elements.
             cavrefs:    Location of RF cavities. Their *Frequency* attribute
               is used. If :py:obj:`None`, no cavity is included in the response.
               Cavities must be active. Cavity variables are appended to the steerer
@@ -851,7 +853,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         def steerer(ik, delta):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attrname, index=pl, name=name, delta=delta)
 
         def set_norm():
             bpm = LocalOpticsObservable(bpmrefs, "beta", plane=pl)
@@ -874,6 +876,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         pl = plane_(plane, key="index")
         plcode = plane_(plane, key="code")
+        attrname = self._attr[pl]
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
         deltas = np.broadcast_to(steerdelta, nbsteers)
@@ -887,10 +890,9 @@ class OrbitResponseMatrix(ResponseMatrix):
             # noinspection PyUnboundLocalVariable
             sumobs = LatticeObservable(
                 steerrefs,
-                "KickAngle",
+                attrname,
                 name=f"{plcode}_kicks",
                 target=0.0,
-                index=pl,
                 weight=stsumweight if stsumweight else stsw / 2.0,
                 statfun=np.sum,
             )
@@ -1108,16 +1110,19 @@ class TrajectoryResponseMatrix(ResponseMatrix):
     Observables are the trajectory position at selected points, named ``trajectory[x]``
     for the horizontal plane or ``trajectory[y]`` for the vertical plane.
 
-    The variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default
-    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
-    should be explicitly created.
+    The matrix is built by varying the :py:attr:`.Element.Kn0L` or
+    :py:attr:`.Element.Ks0L` attribute of the steerers. These attributes are available
+    for all magnts.
 
     By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements having a *KickAngle* attribute.
+    variables are all the elements :py:class:`.Corrector` elements.
 
     """
 
+    # Class variables
+    _attr: ClassVar[dict[int, str]] = {0: "Kn0L", 1: "Ks0L"}
+
+    # Instance variables
     bpmrefs: Uint32Refpts
     steerrefs: Uint32Refpts
     _default_twiss_in: ClassVar[dict] = {"beta": np.ones(2), "alpha": np.zeros(2)}
@@ -1141,9 +1146,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
               Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used and must be present in the selected elements.
-              Default: All Elements having a *KickAngle* attribute.
+            steerrefs:  Location of orbit steerers.
+              Default: all :py:class:`.Corrector` elements.
             bpmweight:  Weight on position readings. Must be broadcastable to the
               number of BPMs
             bpmtarget:  Target position
@@ -1153,7 +1157,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
         def steerer(ik, delta):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
+            attrname = self._attr[pl]
+            return RefptsVariable(ik, attrname, index=pl, name=name, delta=delta)
 
         pl = plane_(plane, key="index")
         plcode = plane_(plane, key="code")
