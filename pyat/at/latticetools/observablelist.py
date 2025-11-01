@@ -30,6 +30,7 @@ __all__ = [
 from collections.abc import Iterable, Iterator
 from functools import reduce
 from typing import ClassVar
+import contextlib
 
 import numpy as np
 import numpy.typing as npt
@@ -244,7 +245,7 @@ class ObservableList(list):
         return self
 
     def __add__(self, other) -> ObservableList:
-        nobs = ObservableList(self)
+        nobs = ObservableList(self, **self.kwargs)
         nobs += other
         return nobs
 
@@ -259,6 +260,8 @@ class ObservableList(list):
     def extend(self, obsiter: Iterable[Observable]):
         """Extend list by appending Observables from the iterable."""
         self.needs = None
+        with contextlib.suppress(AttributeError):
+            self.kwargs |= obsiter.kwargs
         super().extend(obsiter)
 
     def insert(self, index: int, obs: Observable):
