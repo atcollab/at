@@ -784,11 +784,10 @@ class OrbitResponseMatrix(ResponseMatrix):
 
     The matrix is built by varying the :py:attr:`.Element.Kn0L` or
     :py:attr:`.Element.Ks0L` attribute of the steerers. These attributes are available
-    for all magnts.
+    for all magnets.
 
     By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements :py:class:`.Corrector` elements.
-    This is equivalent to:
+    variables are all the :py:class:`.Corrector` elements. This is equivalent to:
 
     >>> resp_v = OrbitResponseMatrix(
     ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.Corrector
@@ -853,7 +852,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         def steerer(ik, delta):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, attrname, index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attrname, name=name, delta=delta)
 
         def set_norm():
             bpm = LocalOpticsObservable(bpmrefs, "beta", plane=pl)
@@ -1112,7 +1111,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
 
     The matrix is built by varying the :py:attr:`.Element.Kn0L` or
     :py:attr:`.Element.Ks0L` attribute of the steerers. These attributes are available
-    for all magnts.
+    for all magnets.
 
     By default, the observables are all the :py:class:`.Monitor` elements, and the
     variables are all the elements :py:class:`.Corrector` elements.
@@ -1158,7 +1157,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         def steerer(ik, delta):
             name = f"{plcode}{ik:04}"
             attrname = self._attr[pl]
-            return RefptsVariable(ik, attrname, index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attrname, name=name, delta=delta)
 
         pl = plane_(plane, key="index")
         plcode = plane_(plane, key="code")
