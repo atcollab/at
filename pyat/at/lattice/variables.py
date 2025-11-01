@@ -84,15 +84,27 @@ keeping their sum constant:
 from __future__ import annotations
 
 __all__ = [
+    "AttributeVariable",
     "CustomVariable",
+    "ItemVariable",
     "VariableBase",
     "VariableList",
+    "attr_",
+    "membergetter",
 ]
 
 import abc
 from collections import deque
-from collections.abc import Iterable, Sequence, Callable
-import contextlib
+from collections.abc import (
+    Iterable,
+    Sequence,
+    Callable,
+    Generator,
+    MutableMapping,
+    MutableSequence,
+)
+from contextlib import suppress, contextmanager
+from operator import itemgetter, attrgetter
 
 import numpy as np
 import numpy.typing as npt
@@ -100,8 +112,110 @@ import numpy.typing as npt
 Number = int | float
 
 
-def _nop(value):
-    return value
+class attr_(str):
+    """subclass of :py:class:`str` used to differentiate directory keys and
+    attribute names.
+    """
+
+    __slots__ = []
+
+
+class _AttributeAccessor:
+    """Class object setting/getting an attribute of an object."""
+
+    __slots__ = ["attrname", "obj"]
+
+    def __init__(self, obj, attrname: str):
+        self.obj = obj
+        self.attrname = attrname
+
+    def set(self, value: float):
+        setattr(self.obj, self.attrname, value)
+
+    def get(self) -> float:
+        return getattr(self.obj, self.attrname)
+
+
+class _ItemAccessor:
+    """Class object setting/getting an item of an object."""
+
+    __slots__ = ["key", "obj"]
+
+    def __init__(self, obj: MutableMapping | MutableSequence, key):
+        self.obj = obj
+        self.key = key
+
+    def set(self, value: float):
+        self.obj[self.key] = value
+
+    def get(self) -> float:
+        return self.obj[self.key]
+
+
+class membergetter:
+    """Generalised attribute and item lookup.
+
+    Callable object fetching attributes or items from its operand object. This
+    generalises :py:func:`~operator.attrgetter` and :py:func:`~operator.itemgetter` and
+    allows to extract elements deep in the object structure. For example:
+
+    - With ``f1 = membergetter("key1", [2])``, then ``f1(obj)`` returns
+      ``obj["key1"][2]``,
+    - With ``f2 = membergetter("key2", attr_("attr1"), [key3])``, then ``f2(obj)``
+      returns ``obj["key2"].attr1["key3"]``.
+    """
+
+    def __init__(self, *args):
+        r"""
+        Args:
+            *args:      Sequence of dictionary keys, sequence indices or
+              attribute names. A :py:class:`str` argument is interpreted as a
+              dictionary key. Attribute names must be decorated with ``attr_(attrname)``
+              to distinguish them from directory keys.
+
+              - ``f1 = SetGet("key1")(obj)`` returns ``obj["key1"]``,
+              - ``f2 = SetGet(attr("attr1"))(obj)`` returns ``obj.attr1``
+
+        Example:
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
+            >>> f = membergetter("b", 1)
+            >>> f(dct)
+            1.0
+        """
+
+        def getter(key):
+            return attrgetter(key) if isinstance(key, attr_) else itemgetter(key)
+
+        self.key = args[-1]
+        self.getters = [getter(key) for key in args]
+
+    def __call__(self, obj):
+        for getter in self.getters:
+            obj = getter(obj)
+        return obj
+
+    def accessor(self, obj):
+        """Return an accessor object.
+
+        The returned object has *set* and *get* methods acting on the selected item of
+        the object *obj*.
+
+        Example:
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
+            >>> v2 = membergetter("b", 1)
+            >>> accessor = v2.accessor(dct)
+            >>> accessor.get()
+            1.0
+            >>> accessor.set(42.0)
+            >>> dct
+            {'a': 42.0, 'b': [0.0, 42.0, 2.0, 3.0]}
+        """
+        for getter in self.getters[:-1]:
+            obj = getter(obj)
+        if isinstance(self.key, attr_):
+            return _AttributeAccessor(obj, self.key)
+        else:
+            return _ItemAccessor(obj, self.key)
 
 
 class VariableBase(abc.ABC):
@@ -150,7 +264,7 @@ class VariableBase(abc.ABC):
         self.history_length = history_length
         self._initial = np.nan
         self._history: deque[Number] = deque([], self.history_length)
-        with contextlib.suppress(ValueError):
+        with suppress(ValueError):
             self.get(initial=True)
 
     @classmethod
@@ -244,9 +358,7 @@ class VariableBase(abc.ABC):
               They augment the keyword arguments given in the constructor.
         """
         self.check_bounds(value)
-        kw = self.kwargs.copy()
-        kw.update(setkw)
-        self._setfun(value, *self.args, **kw)
+        self._setfun(value, *self.args, **(self.kwargs | setkw))
         if np.isnan(self._initial):
             self._initial = value
         self._history.append(value)
@@ -271,9 +383,7 @@ class VariableBase(abc.ABC):
         Returns:
             value:      Value of the variable
         """
-        kw = self.kwargs.copy()
-        kw.update(getkw)
-        value = self._getfun(*self.args, **kw)
+        value = self._getfun(*self.args, **(self.kwargs | getkw))
         if initial or np.isnan(self._initial):
             self._initial = value
             self._history = deque([value], self.history_length)
@@ -403,6 +513,33 @@ class VariableBase(abc.ABC):
         """
         return "\n".join((self._header(), self._line()))
 
+    @contextmanager
+    def restore(self, **setkw) -> Generator[None, None, None]:
+        # noinspection PyUnresolvedReferences
+        """Context manager that saves and restore a variable.
+
+        The value of the :py:class:`Variable <VariableBase>` is initially saved, and
+        then restored when exiting the context.
+
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+            **setkw:    Other keyword arguments to be passed to the setfun function.
+              They augment the keyword arguments given in the constructor.
+
+        Example:
+            >>> var = AttributeVariable(ring, "energy")
+            >>> with var.restore():
+            ...     do_something(var)
+        """
+        # print(f"save {self.name}")
+        v0 = self.get(**setkw)
+        try:
+            yield
+        finally:
+            # print(f"restore {self.name}")
+            self.set(v0, **setkw)
+
     def __float__(self):
         return float(self._print_value)
 
@@ -414,6 +551,90 @@ class VariableBase(abc.ABC):
 
     def __repr__(self):
         return repr(self._print_value)
+
+
+class ItemVariable(VariableBase):
+    """A Variable controlling an item of a dictionary or a sequence."""
+
+    def __init__(
+        self, obj: MutableSequence | MutableMapping, key, *args, **kwargs
+    ) -> None:
+        # noinspection PyUnresolvedReferences
+        """
+        Args:
+            obj:        Mapping or Sequence containing the variable value,
+            key:        Index or attribute name of the variable.  A :py:class:`str`
+              argument is interpreted as a dictionary key. Attribute names must be
+              decorated with ``attr_(attrname)`` to distinguish them from directory
+              keys.
+            *args:      additional sequence of indices or attribute names allowing to
+              extract elements deeper in the object structure.
+
+        Keyword Args:
+            name:       Name of the Variable. If empty, a unique name is generated.
+            bounds:     Lower and upper bounds of the variable value
+            delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite.
+
+        Example:
+            >>> dct = {"a": 42.0, "b": [0.0, 1.0, 2.0, 3.0]}
+            >>> v1 = at.ItemVariable(dct, "a")
+            >>> v1.value
+            42.0
+
+            *v1* points to ``dct["a"]``
+
+            >>> v2 = at.ItemVariable(dct, "b", 1)
+            >>> v2.value
+            1.0
+
+            *v2* points to ``dct["b"][1]``
+        """
+        super().__init__(membergetter(key, *args).accessor(obj), **kwargs)
+
+    def _setfun(self, value, obj):
+        obj.set(value)
+
+    def _getfun(self, obj):
+        return obj.get()
+
+
+class AttributeVariable(VariableBase):
+    """A Variable controlling an attribute of an object."""
+
+    def __init__(self, obj, attrname: str, index: int | None = None, **kwargs):
+        # noinspection PyUnresolvedReferences
+        """
+        Args:
+            obj:        Object containing the variable value
+            attrname:   attribute name of the variable
+            index:      Index in the attribute array. Use :py:obj:`None` for
+              scalar attributes.
+
+        Keyword Args:
+            name:       Name of the Variable. If empty, a unique name is generated.
+            bounds:     Lower and upper bounds of the variable value
+            delta:      Initial variation step
+            history_length: Maximum length of the history buffer. :py:obj:`None`
+              means infinite.
+
+        Example:
+            >>> ring = at.Lattice.load("hmba.mat")
+            >>> v3 = at.AttributeVariable(ring, "energy")
+            >>> v3.value
+            6000000000.0
+
+            *v3* points to the *"energy"* attribute of *ring*
+        """
+        args = (attr_(attrname),) if index is None else (attr_(attrname), index)
+        super().__init__(membergetter(*args).accessor(obj), **kwargs)
+
+    def _setfun(self, value, obj):
+        obj.set(value)
+
+    def _getfun(self, obj):
+        return obj.get()
 
 
 class CustomVariable(VariableBase):
@@ -546,6 +767,25 @@ class VariableList(list):
         """String description of the variables."""
         values = "\n".join(var._line(**kwargs) for var in self)
         return "\n".join((VariableBase._header(), values))
+
+    @contextmanager
+    def restore(self, **kwargs):
+        """Context manager that saves and restore the variable list.
+
+        The value of the :py:class:`VariableList` is initially saved, and then restored
+        when exiting the context.
+
+        Keyword Args:
+            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
+              may be necessary to set the variable.
+        """
+        # print("Saving variables")
+        v0 = self.get(**kwargs)
+        try:
+            yield
+        finally:
+            # print("Restoring variables")
+            self.set(v0, **kwargs)
 
     def __str__(self) -> str:
         return self.status()
