@@ -23,12 +23,14 @@ method and the following properties:
 from __future__ import annotations
 
 __all__ = [
+    "EvaluationVariable",
     "ObservableList",
 ]
 
 from collections.abc import Iterable, Iterator
 from functools import reduce
 from typing import ClassVar
+import contextlib
 
 import numpy as np
 import numpy.typing as npt
@@ -37,7 +39,7 @@ import numpy.typing as npt
 from .observables import Observable, ElementObservable, Need
 from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
-from ..lattice import Lattice, Refpts, All
+from ..lattice import Lattice, Refpts, All, ItemVariable
 from ..physics import linopt6
 from ..tracking import internal_lpass
 
@@ -243,7 +245,7 @@ class ObservableList(list):
         return self
 
     def __add__(self, other) -> ObservableList:
-        nobs = ObservableList(self)
+        nobs = ObservableList(self, **self.kwargs)
         nobs += other
         return nobs
 
@@ -258,6 +260,8 @@ class ObservableList(list):
     def extend(self, obsiter: Iterable[Observable]):
         """Extend list by appending Observables from the iterable."""
         self.needs = None
+        with contextlib.suppress(AttributeError):
+            self.kwargs |= obsiter.kwargs
         super().extend(obsiter)
 
     def insert(self, index: int, obs: Observable):
@@ -354,7 +358,6 @@ class ObservableList(list):
                 trajs = r_out[:, 0, :, 0].T
                 keep_lattice = True
 
-            # if needs & self._needs_orbit:
             if Need.ORBIT in needs or needs_o0:
                 # Closed orbit computation
                 try:
@@ -398,7 +401,7 @@ class ObservableList(list):
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
                         twiss_in=twiss_in,
-                        method=method
+                        method=method,
                     )
                 except AtError as err:
                     rgdata = eldata = err
@@ -717,3 +720,66 @@ class ObservableList(list):
     sum_residuals = property(get_sum_residuals, doc="Sum of all residual values")
     targets = property(get_targets, doc="Target values of all observables")
     flat_targets = property(get_flat_targets, doc="1-D array of target values")
+
+
+class EvaluationVariable(ItemVariable):
+    r"""A reference to a parameter given to the ObservableList.evaluate method.
+
+    The variable drives the default value of a :py:meth:`.ObservableList.evaluate`
+    keyword argument.
+    """
+
+    def __init__(self, obslist: ObservableList, key, *args, **kwargs):
+        """
+        Args:
+            obslist:    The :py:class:`.ObservableList` to control,
+            key:        Index or attribute name of the variable.  A :py:class:`str`
+              argument is interpreted as a dictionary key. Attribute names must be
+              decorated with ``attr_(attrname)`` to distinguish them from directory
+              keys.
+            *args:      additional sequence of indices or attribute names allowing to
+              extract elements deeper in the object structure.
+
+        Keyword Args:
+            name (str):     Name of the Variable. Default: ``''``
+            bounds (tuple[float, float]):   Lower and upper bounds of the
+              variable value. Default: (-inf, inf)
+            delta (float):  Step. Default: 1.0
+
+        Example:
+            Create a *twiss_in* input for computing optics in transfer-line mode:
+
+            >>> twiss_in = {"alpha": np.zeros(2), "beta": np.array([9.0, 2.5])}
+
+            Create the :py:class:`.ObservableList`:
+
+            >>> obs = at.ObservableList(
+            ...     [
+            ...         at.LocalOpticsObservable([0], "beta", plane="x"),
+            ...         at.LocalOpticsObservable([0], "beta", plane="y"),
+            ...     ],
+            ...     ring=ring,
+            ...     dp=0.01,
+            ...     orbit=np.zeros(6),
+            ...     twiss_in=twiss_in,
+            ... )
+
+            Create a variable controlling :math:`\\delta`:
+
+            >>> v3 = at.EvaluationVariable(obs, "dp")
+            >>> v3.value
+            0.01
+
+            Create a variable controlling :math:`p_x`:
+
+            >>> v2 = at.EvaluationVariable(obs, "orbit", 1)
+            >>> v2.value
+            np.float64(0.0)
+
+            Create a variable controlling :math:`\\beta_x`:
+
+            >>> v1 = at.EvaluationVariable(obs, "twiss_in", "beta", 0)
+            >>> v1.value
+            np.float64(9.0)
+        """
+        super().__init__(obslist.kwargs, key, *args, **kwargs)

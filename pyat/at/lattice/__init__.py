@@ -9,10 +9,9 @@ from .exceptions import *
 from .axisdef import *
 from .options import *
 from .particle_object import Particle
-# from .variables import *
-from .variables import VariableList
 from .elements import *
 from .utils import *
+from .variables import *
 from .geometry import *
 from .transformation import *
 from .lattice_object import *

@@ -58,7 +58,7 @@ __all__ = [
     "TrajectoryObservable",
 ]
 
-from collections.abc import Callable, Set as AbstractSet
+from collections.abc import Callable, Set as AbstractSet, Mapping
 from functools import partial
 from enum import Enum
 from itertools import repeat
@@ -238,6 +238,17 @@ class Need(Enum):
 class Observable:
     """Base class for Observables. Can be used for user-defined observables."""
 
+    # instance attributes
+    name: str  #: Observable name.
+    #: Line formatting used when plotting the Observable. See
+    #: :py:meth:`~matplotlib.axes.Axes.plot` for a description of line formatting.
+    #: *plot_fmt* may be a :py:class:`str` for simple formatting (ex.: ``"o-"``) or a
+    #: :py:class:`dict` for detailed formatting (ex.: :pycode:`{"linewidth": 3.0}`).
+    plot_fmt: str | Mapping
+    fun: Callable  #: Evaluation function.
+    needs: AbstractSet[Need]  #: Set of requirements.
+    target: npt.ArrayLike | None  #: Target value.
+
     def __init__(
         self,
         fun: Callable,
@@ -248,6 +259,7 @@ class Observable:
         bounds=(0.0, 0.0),
         needs: AbstractSet[Need] | None = None,
         postfun: Callable | str | None = None,
+        plot_fmt: str | Mapping | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -267,6 +279,12 @@ class Observable:
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
               :py:class:`Need` enumeration.
+            plot_fmt:        Line formatting used when plotting the Observable. See
+              :py:meth:`~matplotlib.axes.Axes.plot` for a description of line
+              formatting. *plot_fmt* may be a :py:class:`str` for simple formatting
+              (ex.: ``"o-"``) or a :py:class:`dict` for detailed formatting (ex.:
+              :pycode:`{"linewidth": 3.0}`).
+
 
         Keyword Args:
             **kwargs:       Keyword arguments provided to the evaluation function
@@ -301,15 +319,17 @@ class Observable:
         if postfun:
             name = f"{postfun.__name__}({name})"
             fun = _Convolve(postfun, fun)
-        self.fun: Callable = fun  #: Evaluation function
-        self.needs: AbstractSet[Need] = needs or set()  #: Set of requirements
-        self.name: str = name  #: Observable name
-        self.target: npt.ArrayLike | None = target  #: Target value
+        self.fun = fun
+        self.needs = needs or set()
+        self.name = name
+        self.target = target
         self.w: npt.NDArray[float] = np.asarray(weight, dtype=float)
         self.lbound, self.ubound = bounds
         self.initial: npt.NDArray[float] | None = None
         self._value: npt.NDArray[float] | Exception | None = None
         self._shape: tuple[int, ...] | None = None
+        if plot_fmt is not None:
+            self.plot_fmt = plot_fmt
         self.args = args
         self.kwargs = kwargs
 
