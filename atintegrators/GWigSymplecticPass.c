@@ -6,6 +6,8 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .05  205-11-07      O. Blanco
+ *                     Check if gamma is well defined
  * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
  *              Adding rotations and translations to wiggler.
  *				Bug fix in wiggler initialisation.
@@ -81,6 +83,13 @@ void GWigSymplecticPass(double *r, double gamma, double Ltot, double Lw,
     int c;
     double *r6;
     struct gwig pWig;
+
+    /* when element is tracked alone.*/
+    if (isnan(gamma) || gamma == 0){
+      atError("GWigSymplecticPass: Energy  not defined.");
+      return;
+    }
+
     /* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
     GWigInit2(&pWig, gamma,Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, By,Bx,T1,T2,R1,R2);
 
