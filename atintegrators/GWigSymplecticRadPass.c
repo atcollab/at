@@ -247,10 +247,12 @@ void GWigSymplecticRadPass(double *orbit_in, double gamma, double le, double Lw,
 /********** END PHYSICS SECTION **********************************************/
 /*****************************************************************************/
 #if defined(MATLAB_MEX_FILE)
+typedef mxArray atElem;
 #define atError(...) mexErrMsgIdAndTxt("AT:PassError", __VA_ARGS__)
 #endif
 
 #if defined(PYAT)
+typedef PyObject atElem;
 #define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #endif
 
