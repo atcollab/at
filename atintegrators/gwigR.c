@@ -417,7 +417,7 @@ static void GWigInit2(struct gwigR *Wig,double design_energy, double Ltot, doubl
     Wig->Po = Wig->E0/XMC2;
     Wig->Pmethod = Nmeth;
     Wig->PN = Nstep;
-    Wig->Nw = (int)(Ltot / Lw);
+    Wig->Nw = round(Ltot / Lw);
     Wig->NHharm = NHharm;
     Wig->NVharm = NVharm;
     Wig->PB0 = Bmax;
