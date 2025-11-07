@@ -24,6 +24,7 @@
  *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
  */
 
+#include "atcommon.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "wigrad.c"
