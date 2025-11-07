@@ -2,6 +2,9 @@
  *----------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .05  205-11-07       O. Blanco
+ *                      Define Wig->Nw using round()
+ *
  * .04  2003-04-29      YK Wu, Duke University
  *			using scientific notation for constants. 
  *                      Checked with TRACY pascal code.

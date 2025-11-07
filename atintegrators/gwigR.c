@@ -2,6 +2,9 @@
  *----------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .05  205-11-07       O. Blanco, ALBA
+ *                      Define Wig->Nw using round()
+ *
  * .07  2024-05-09      J. Arenillas, ALBA, jarenillas@axt.email
  *                      New expression for the comptation of radiation kicks.
  *						Adding new functions for the computation of wiggler diffusion matrix.
