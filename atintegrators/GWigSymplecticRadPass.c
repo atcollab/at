@@ -6,7 +6,7 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
- * .05  205-11-07      O. Blanco
+ * .05  205-11-07      O. Blanco, ALBA
  *                     Check if gamma is well defined
  * .04  2024-10-21     L. Farvacque
  *              Merged tracking and diffusion matrices

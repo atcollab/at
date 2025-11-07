@@ -6,7 +6,7 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
- * .05  205-11-07      O. Blanco
+ * .05  205-11-07      O. Blanco, ALBA
  *                     Check if gamma is well defined
  * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
  *              Adding rotations and translations to wiggler.

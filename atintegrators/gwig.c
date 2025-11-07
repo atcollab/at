@@ -2,7 +2,7 @@
  *----------------------------------------------------------------------------
  * Modification Log:
  * -----------------
- * .05  205-11-07       O. Blanco
+ * .05  205-11-07       O. Blanco, ALBA
  *                      Define Wig->Nw using round()
  *
  * .04  2003-04-29      YK Wu, Duke University
