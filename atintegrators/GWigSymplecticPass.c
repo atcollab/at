@@ -130,7 +130,7 @@ typedef mxArray atElem;
 
 #if defined(PYAT)
 typedef PyObject atElem;
-#define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
+#define atError(...) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #endif
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
