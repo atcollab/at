@@ -6,6 +6,8 @@
  *---------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .05  205-11-07      O. Blanco
+ *                     Check if gamma is well defined
  * .04  2024-10-21     L. Farvacque
  *              Merged tracking and diffusion matrices
  * .03  2024-05-06     J. Arenillas, ALBA, jarenillas@axt.email
@@ -174,6 +176,12 @@ void GWigSymplecticRadPass(double *orbit_in, double gamma, double le, double Lw,
 	double dl1 = SL*KICK1;
     double dl0 = SL*KICK2;
 	int Niter = Nstep*(le/Lw);
+
+    /* when element is tracked alone.*/
+    if (isnan(gamma) || gamma == 0){
+      atError("GWigSymplecticRadPass: Energy  not defined.");
+      return;
+    }
 
     GWigInit2(&pWig, gamma,le, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0,0,By,Bx,T1,T2,R1,R2);
 
