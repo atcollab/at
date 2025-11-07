@@ -3,7 +3,7 @@
  * Modification Log:
  * -----------------
  * .05  205-11-07       O. Blanco, ALBA
- *                      Define Wig->Nw using round()
+ *                      Define Wig->Nw without cast to int.
  *
  * .04  2003-04-29      YK Wu, Duke University
  *			using scientific notation for constants. 
@@ -31,6 +31,8 @@
 #include <math.h>
 #include <stdio.h>
 
+
+
 static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             int HSplitPole, int VSplitPole, double *By, double *Bx,
@@ -43,7 +45,7 @@ static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
     Wig->Po = sqrt(gamma*gamma - 1.0);
     Wig->Pmethod = Nmeth;
     Wig->PN = Nstep;
-    Wig->Nw = round(Ltot / Lw);
+    Wig->Nw = round(Ltot/Lw);
     Wig->NHharm = NHharm;
     Wig->NVharm = NVharm;
     Wig->PB0 = Bmax;

@@ -25,6 +25,7 @@
 #include "atlalib.c"
 #include "gwig.c"
 
+
 struct elem {
     double Energy;
     double Length;
@@ -119,6 +120,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 {
     double gamma;
+    double wig_l_ratio, len_tolerance;
 
     if (!Elem) {
         double *R1, *R2, *T1, *T2;
@@ -161,6 +163,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
     }
     gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+    /* Check wiggle total lenth and period length */
+    wig_l_ratio = Elem->Length/Elem->Lw;
+    len_tolerance = 1e-9;
+    if (fabs(wig_l_ratio - round(wig_l_ratio) >= len_tolerance))
+      atError("Wiggler total length is not a multiple of a period length.");
 
     GWigSymplecticPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
             Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,

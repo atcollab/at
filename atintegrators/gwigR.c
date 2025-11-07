@@ -3,7 +3,7 @@
  * Modification Log:
  * -----------------
  * .05  205-11-07       O. Blanco, ALBA
- *                      Define Wig->Nw using round()
+ *                      Define Wig->Nw without cast to int.
  *
  * .07  2024-05-09      J. Arenillas, ALBA, jarenillas@axt.email
  *                      New expression for the comptation of radiation kicks.
