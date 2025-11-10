@@ -45,7 +45,7 @@ static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
     Wig->Po = sqrt(gamma*gamma - 1.0);
     Wig->Pmethod = Nmeth;
     Wig->PN = Nstep;
-    Wig->Nw = round(Ltot/Lw);
+    Wig->Nw = round(Ltot / Lw);
     Wig->NHharm = NHharm;
     Wig->NVharm = NVharm;
     Wig->PB0 = Bmax;
