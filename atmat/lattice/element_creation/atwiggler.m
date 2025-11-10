@@ -48,10 +48,10 @@ function elem=atwiggler(fname,varargin)
 [By,rsrc] = getoption(rsrc,'By',[1;1;0;1;1;0]);
 [method,rsrc] = getoption(rsrc,'PassMethod',method);
 [cl,rsrc] = getoption(rsrc,'Class','Wiggler');
-GWIG_EPS = 1e-6;
+GWIG_EPS = 1e-9;
 dNw = Ltot/Lw-round(Ltot/Lw);
 if dNw > GWIG_EPS
-    error(' Wiggler: Ltot/Lw is not an integer.');
+    error(' Wiggler: LENGTH/LW is not an integer.');
 end
 
 By=reshape(By,6,[]);
