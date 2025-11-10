@@ -120,7 +120,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 {
     double gamma;
-    double wig_l_ratio, len_tolerance;
 
     if (!Elem) {
         double *R1, *R2, *T1, *T2;
