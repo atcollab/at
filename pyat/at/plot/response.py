@@ -1,4 +1,4 @@
-"""Plot :py:class:`.Observable` value as a function of
+"""Plot :py:class:`.Observable` values as a function of a
 :py:class:`Variable <.VariableBase>`.
 """
 
@@ -6,9 +6,9 @@ from __future__ import annotations
 
 __all__ = ["plot_response"]
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
+import itertools
 
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
@@ -18,30 +18,29 @@ from ..latticetools import ObservableList
 
 def plot_response(
     var: VariableBase,
-    obs: ObservableList,
-    rng: Iterable[float],
-    ax: Axes | None = None,
+    *args,
+    axes: Axes | None = None,
     xlabel: str = "",
     ylabel: str = "",
-    title: str = "",
-    color_offset: int = 0,
     **kwargs
 ) -> Axes:
     # noinspection PyUnresolvedReferences
-    r"""Plot *obs* values as a function of *var*.
+    r"""plot_response(var: VariableBase, rng: Iterable[float], obsleft: ObservableList, obsright: ObservableList, **kwargs) -> Axes
+    Plot :py:class:`.Observable` values as a function of a :py:class:`Variable <.VariableBase>`.
 
     Args:
-        var:            Variable object.
-        obs:            list of Observables.
-        rng:            range of variation for the variable.
-        ax:             :py:class:`~matplotlib.axes.Axes` object. If :py:obj:`None`,
-          a new figure will be created.
-        xlabel:         x-axis label. If empty, the variable name will be used.
-        ylabel:         y-axis label.
-        title:          plot title.
-        color_offset:   offset in the matplotlib line color cycle.
-        **kwargs:       Additional keyword arguments are transmitted to the
-          :py:class:`~matplotlib.axes.Axes` creation function.
+        var:        Variable object,
+        rng:        range of variation for the variable,
+        obsleft:    List of Observables plotted on the left axis,
+        obsright:   Optional list of Observables plotted on the right axis.
+
+    Keyword Args:
+        axes:           :py:class:`~matplotlib.axes.Axes` object. If :py:obj:`None`,
+          a new figure is created.
+        xlabel:         x-axis label. Default: variable name.
+        ylabel:         y-axis label. Default: observable axis label.
+
+    Additional keyword arguments are transmitted to the :py:class:`~matplotlib.axes.Axes` creation function.
 
     Returns:
         ax:             the :py:class:`~matplotlib.axes.Axes` object.
@@ -57,7 +56,7 @@ def plot_response(
         ...     ring=ring,
         ... )
         >>> var = at.AttributeVariable(ring, "energy", name="energy [eV]")
-        >>> plot_response(var, obs, np.arange(3.0e9, 6.01e9, 0.5e9))
+        >>> plot_response(var, obsleft, np.arange(3.0e9, 6.01e9, 0.5e9))
         >>>
 
         .. image:: /images/emittance_response.*
@@ -126,41 +125,66 @@ def plot_response(
         ...     ring=ring,
         ...     dp = 0.0
         ... )
-        >>> var = at.EvaluationVariable(obs, "dp", name=r"$\delta$")
+        >>> var = at.EvaluationVariable(obsleft, "dp", name=r"$\delta$")
         >>> ax=at.plot_response(
-        ... var, obs, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\beta\;[m]$"
+        ... var, obsleft, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\beta\;[m]$"
         ... )
 
         .. image:: /images/delta_response.*
            :alt: delta response
     """
 
-    def compute(v):
+    def compute(v, obs):
         """Evaluate the observables for 1 variable value."""
         var.value = v
-        obs.evaluate()
-        return obs.values
+        for ob in obs:
+            yield from ob.evaluate()
 
-    def plot1(x, y, obs, ncurve):
-        """Plot 1 curve."""
-        fmt = getattr(obs, "plot_fmt", f"C{ncurve}")
-        if isinstance(fmt, Mapping):
-            return ax.plot(x, y, label=obs.name, **fmt)
-        else:
-            return ax.plot(x, y, fmt, label=obs.name)
+    def axes1(axes: Axes, obs: ObservableList, ylabel: str):
+        """Plot all observables on a given axis."""
 
-    if ax is None:
-        _, ax = plt.subplots(subplot_kw=kwargs)
-    with var.restore():
-        vals = [(v, *compute(v)) for v in rng]
-        xx, *yy = zip(*vals, strict=True)
-        lines = [  # noqa: F841
-            plot1(xx, np.array(y), ob, n + color_offset)
-            for n, (y, ob) in enumerate(zip(yy, obs, strict=True))
-        ]
-        ax.set_xlabel(xlabel or var.name)
-        ax.set_ylabel(ylabel)
-        ax.set_title(title)
-        ax.legend()
-        ax.grid(True)
-        return ax
+        def plot1(obs, ncurve):
+            """Plot 1 curve."""
+            fmt = getattr(obs, "plot_fmt", f"C{ncurve}")
+            if isinstance(fmt, Mapping):
+                return axes.plot(xx, next(values), label=obs.label, **fmt)
+            else:
+                return axes.plot(xx, next(values), fmt, label=obs.label)
+
+        axes.set_ylabel(ylabel or obs.axis_label)
+        for ob in obs:
+            yield from plot1(ob, next(line_counter))
+
+    if isinstance(args[0], ObservableList):
+        obsleft, rng, *obsright = args
+    else:
+        rng, obsleft, *obsright = args
+
+    if axes is None:
+        _, axleft = plt.subplots(subplot_kw=kwargs)
+    elif isinstance(axes, Axes):
+        axleft = axes
+    else:
+        msg = "The 'axes' argument must be an Axes object."
+        raise ValueError(msg)
+
+    allaxes = (axleft, axleft.twinx()) if obsright else (axleft,)
+    allobs = (obsleft, *obsright)
+
+    # Compute all the observable values
+    with (var.restore()):
+        vals = [(v, *compute(v, allobs)) for v in rng]
+
+    xx, *yy = zip(*vals, strict=True)
+    values = iter(yy)
+    line_counter = itertools.count()
+
+    lines = []
+    for ax, obs, ylab in zip(allaxes, allobs, (ylabel, ""), strict=False):
+        lines.extend(axes1(ax, obs, ylab))
+
+    axleft.set_xlabel(xlabel or var.name)
+    axleft.legend(handles=lines)
+    axleft.grid(True)
+
+    return allaxes

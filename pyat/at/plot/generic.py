@@ -116,14 +116,10 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
     if axes is None:
         # Create new axes
         nplots = len(plots)
-        fig = plt.figure()
-        axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]',
-                                 facecolor=[1.0, 1.0, 1.0, 0.0],
-                                 title=title)
+        axsyn, axleft = plot_synopt(ring, **synargs)
+        axleft.set_title(title)
+        axleft.set_xlabel("s [m]")
         axright = axleft.twinx() if (nplots >= 2) else None
-        axleft.set_title(ring.name, fontdict={'fontsize': 'medium'},
-                         loc='left')
-        axsyn = plot_synopt(ring, axes=axleft, **synargs)
     else:
         # Use existing axes
         axleft, axright = axes

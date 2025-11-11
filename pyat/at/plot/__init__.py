@@ -14,3 +14,4 @@ else:
     from .resonances import *
     from .response_matrix import *
     from .response import *
+    from .observables import *

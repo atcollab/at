@@ -159,7 +159,7 @@ def _all_rows(index: RefIndex | None):
     if index is None:
         return None
     if isinstance(index, tuple):
-        return (slice(None), *index)
+        return slice(None), *index
     else:
         return slice(None), index
 
@@ -170,6 +170,23 @@ def _get_fun(fname, fdict) -> Callable | None:
         return fname
     else:
         return fdict[fname]
+
+
+def _subscript(plane):
+    idx = axis_(plane, key="index")
+    if isinstance(idx, tuple):
+        return "".join(str(i) for i in idx)
+    else:
+        return ""
+
+
+def _mod_name(name, fun, *args):
+    if name:
+        if fun:
+            name = f"{fun.__name__}({name})"
+        if args:
+            name = _mod_name(name, *args)
+    return name
 
 
 class _Tune:
@@ -238,8 +255,13 @@ class Need(Enum):
 class Observable:
     """Base class for Observables. Can be used for user-defined observables."""
 
-    # instance attributes
+    # Class attributes
+    _default = ("{param}[{plane}]", "{param}", lambda x: x)
+    _pinfo = {}
+
+    # Instance attributes
     name: str  #: Observable name.
+    label: str  #: Label used in plot legends.
     #: Line formatting used when plotting the Observable. See
     #: :py:meth:`~matplotlib.axes.Axes.plot` for a description of line formatting.
     #: *plot_fmt* may be a :py:class:`str` for simple formatting (ex.: ``"o-"``) or a
@@ -260,6 +282,7 @@ class Observable:
         needs: AbstractSet[Need] | None = None,
         postfun: Callable | str | None = None,
         plot_fmt: str | Mapping | None = None,
+        label: str | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -314,11 +337,12 @@ class Observable:
         or :py:class:`EmittanceObservable` which provide the corresponding
         *data* argument.
         """
-        name = fun.__name__ if name is None else name
+        name = name or fun.__name__
         postfun = _get_fun(postfun, _arrayproc)
         if postfun:
-            name = f"{postfun.__name__}({name})"
             fun = _Convolve(postfun, fun)
+        name = _mod_name(name, postfun)
+        label = _mod_name(label, postfun)
         self.fun = fun
         self.needs = needs or set()
         self.name = name
@@ -330,8 +354,31 @@ class Observable:
         self._shape: tuple[int, ...] | None = None
         if plot_fmt is not None:
             self.plot_fmt = plot_fmt
+        self.label = label or name
+        self._axis_label = kwargs.pop("axis_label", None)
         self.args = args
         self.kwargs = kwargs
+
+    @classmethod
+    def _ax_lab(cls, param, plane) -> str | None:
+        if isinstance(param, Callable):
+            return None
+        else:
+            _, fmt, code = cls._pinfo.get(param, cls._default)
+            return fmt.format(plane=code(plane))
+
+    @classmethod
+    def _pl_lab(cls, param, plane) -> str | None:
+        if isinstance(param, Callable):
+            return None
+        else:
+            fmt, _, code = cls._pinfo.get(param, cls._default)
+            return fmt.format(plane=code(plane))
+
+    @property
+    def axis_label(self):
+        """Label used for the y-axes of plots (read only)."""
+        return self._axis_label
 
     def __str__(self):
         """Return the string representation of the Observable."""
@@ -590,6 +637,7 @@ class ElementObservable(Observable):
         name: str | None = None,
         statfun: Callable | str | None = None,
         postfun: Callable | str | None = None,
+        label: str = "",
         **kwargs,
     ):
         r"""Args:
@@ -620,19 +668,19 @@ class ElementObservable(Observable):
         **even if nrefs == 1**. The *target*, *weight* and *bounds* inputs must be
         broadcastable to the shape of *value*.
         """
-        name = fun.__name__ if name is None else name
+        name = name or fun.__name__
         postfun = _get_fun(postfun, _arrayproc)
         if postfun:
-            name = f"{postfun.__name__}({name})"
             fun = _Convolve(postfun, fun)
         statfun = _get_fun(statfun, _statproc)
         if statfun:
             summary = kwargs.pop("summary", True)
-            name = f"{statfun.__name__}({name})"
             fun = _Convolve(statfun, fun, axis=0)
         else:
             summary = kwargs.pop("summary", False)
-        super().__init__(fun, name=name, **kwargs)
+        name = _mod_name(name, postfun, statfun)
+        label = _mod_name(label, postfun, statfun)
+        super().__init__(fun, name=name, label=label, **kwargs)
         self.summary = summary
         self.refpts = refpts
         self._boolrefs = None
@@ -692,9 +740,16 @@ class GeometryObservable(ElementObservable):
     Process the *geomdata* output of :py:func:`.get_geometry`.
     """
 
-    _field_list: ClassVar[set[str]] = {"x", "y", "angle"}
+    _pinfo = {"x": "x [m]", "y": "y [m]", "angle": "angle"}
 
-    def __init__(self, refpts: Refpts, param: str, name: str | None = None, **kwargs):
+    def __init__(
+        self,
+        refpts: Refpts,
+        param: str,
+        name: str | None = None,
+        label: str | None = None,
+        **kwargs,
+    ):
         # noinspection PyUnresolvedReferences
         r"""Args:
             refpts:         Observation points.
@@ -722,13 +777,24 @@ class GeometryObservable(ElementObservable):
 
             Observe x coordinate of monitors
         """
-        if param not in self._field_list:
-            msg = f"Expected {param!r} to be one of {self._field_list!r}"
+
+        if param not in self._pinfo:
+            msg = f"Expected {param!r} to be one of {self._pinfo.keys()!r}"
             raise ValueError(msg)
         name = self._set_name(name, "geometry", param)
         fun = partial(_record_access, param, None)
         needs = {Need.GEOMETRY}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=param,
+            axis_label=self._pinfo[param],
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 class OrbitObservable(ElementObservable):
@@ -737,8 +803,15 @@ class OrbitObservable(ElementObservable):
     Process the *orbit* output of :py:func:`.find_orbit`.
     """
 
+    _plist = ["x [m]", "$p_x$", "y [m]", "$p_y$", "angle"]
+
     def __init__(
-        self, refpts: Refpts, axis: AxisDef = None, name: str | None = None, **kwargs
+        self,
+        refpts: Refpts,
+        axis: AxisDef = None,
+        name: str | None = None,
+        label: str | None = None,
+        **kwargs,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -777,10 +850,21 @@ class OrbitObservable(ElementObservable):
 
             Observe the horizontal closed orbit at monitor locations
         """
-        name = self._set_name(name, "orbit", axis_(axis, key="code"))
-        fun = _ArrayAccess(axis_(axis, key="index"))
+        descr = axis_(axis)
+        name = self._set_name(name, "orbit", descr["code"])
+        fun = _ArrayAccess(descr["index"])
         needs = {Need.ORBIT}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=descr["label"],
+            axis_label="".join((descr["label"], descr["unit"])),
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 class MatrixObservable(ElementObservable):
@@ -795,6 +879,7 @@ class MatrixObservable(ElementObservable):
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
         name: str | None = None,
+        label: str | None = None,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
@@ -832,12 +917,41 @@ class MatrixObservable(ElementObservable):
         name = self._set_name(name, "matrix", axis_(axis, key="code"))
         fun = _ArrayAccess(axis_(axis, key="index"))
         needs = {Need.MATRIX}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=f"$T_{{{_subscript(axis)}}}$",
+            axis_label="T [m]",
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 class _GlobalOpticsObservable(Observable):
+    _pinfo = {
+        "tune": (r"$\nu_{{{plane}}}$", "Tune", partial(plane_, key="label")),
+        "chromaticity": (
+            r"$\xi_{{{plane}}}$",
+            "Chromaticity",
+            partial(plane_, key="label"),
+        ),
+        "damping_time": (
+            r"$\tau_{{{plane}}}$",
+            "Damping time [s]",
+            partial(plane_, key="label"),
+        ),
+    }
+
     def __init__(
-        self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
+        self,
+        param: str,
+        plane: AxisDef = None,
+        name: str | None = None,
+        label: str | None = None,
+        **kwargs,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -864,6 +978,7 @@ class _GlobalOpticsObservable(Observable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
         """
+
         needs = {Need.GLOBALOPTICS}
         name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
@@ -873,7 +988,17 @@ class _GlobalOpticsObservable(Observable):
             fun = partial(_record_access, param, plane_(plane, key="index"))
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
-        super().__init__(fun, needs=needs, name=name, **kwargs)
+
+        super().__init__(
+            fun,
+            needs=needs,
+            name=name,
+            label=self._pl_lab(param, plane),
+            axis_label=self._ax_lab(param, plane),
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 class LocalOpticsObservable(ElementObservable):
@@ -881,6 +1006,77 @@ class LocalOpticsObservable(ElementObservable):
 
     Process the local output of :py:func:`.get_optics`.
     """
+
+    _pinfo = {
+        "alpha": (r"$\alpha_{{{plane}}}$", "alpha", partial(plane_, key="label")),
+        "beta": (r"$\beta_{{{plane}}}$", "beta [m]", partial(plane_, key="label")),
+        "gamma": (r"$\gamma_{{{plane}}}$", "gamma", partial(plane_, key="label")),
+        "mu": (
+            r"$\mu_{{{plane}}}$",
+            "phase advance [rad]",
+            partial(plane_, key="label"),
+        ),
+        "muf": (
+            r"$\mu_{{{plane}}}$",
+            "phase advance [rad]",
+            partial(plane_, key="label"),
+        ),
+        "mu2pi": (
+            r"$\mu_{{{plane}}}/2\pi$",
+            "phase advance",
+            partial(plane_, key="label"),
+        ),
+        "mu2pif": (
+            r"$\mu_{plane}/2 \pi$",
+            "phase advance",
+            partial(plane_, key="label"),
+        ),
+        "closed_orbit": (
+            r"${{{plane}}}_{{co}}$",
+            "closed orbit",
+            partial(axis_, key="code"),
+        ),
+        "dispersion": (
+            r"$\eta_{{{plane}}}$",
+            r"dispersion [m]",
+            partial(axis_, key="code"),
+        ),
+        "s_pos": ("s", "s [m]", partial(plane_, key="label")),
+        "M": (r"$M_{{{plane}}}$", "M", _subscript),
+        "A": (r"$A_{{{plane}}}$", "A", _subscript),
+        "B": (r"$B_{{{plane}}}$", "B", _subscript),
+        "C": (r"$C_{{{plane}}}$", "C", _subscript),
+        "R": (r"$R_{{{plane}}}$", "R", _subscript),
+        "W": (r"$W_{{{plane}}}$", "W", partial(plane_, key="label")),
+        "Wp": (r"$Wp_{{{plane}}}$", "Wp", partial(plane_, key="label")),
+        "dalpha": (
+            r"$\partial \alpha_{{{plane}}}/ \partial \delta$",
+            r"$\partial \alpha / \partial \delta$",
+            partial(plane_, key="label"),
+        ),
+        "dbeta": (
+            r"$\partial \beta_{{{plane}}}/ \partial \delta$",
+            r"$\partial \beta/ \partial \delta$ [m]",
+            partial(plane_, key="label"),
+        ),
+        "dmu": (
+            r"$\partial \mu_{{{plane}}}/ \partial \delta$",
+            r"$\partial \mu/ \partial \delta$ [rad]",
+            partial(plane_, key="label"),
+        ),
+        "ddispersion": (
+            r"$\partial \eta_{{{plane}}}/ \partial \delta$",
+            r"$\partial \eta/ \partial \delta$ [m]",
+            partial(axis_, key="code"),
+        ),
+        "dR": (
+            r"$\partial R_{{{plane}}}/ \partial \delta$",
+            r"$\partial R/ \partial \delta$",
+            _subscript,
+        ),
+    }
+
+    _default = ("{param}[{plane}]", "{param}", lambda x: x)
 
     def __init__(
         self,
@@ -890,6 +1086,7 @@ class LocalOpticsObservable(ElementObservable):
         plane: AxisDef = Ellipsis,
         name: str | None = None,
         all_points: bool = False,
+        label: str | None = None,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
@@ -1019,6 +1216,7 @@ class LocalOpticsObservable(ElementObservable):
             between the 1st and last given reference points, here the elements
             33 and 101 of the lattice
         """
+
         if param in {"M", "closed_orbit", "dispersion", "A", "R"}:
             ax_ = axis_
         else:
@@ -1036,7 +1234,17 @@ class LocalOpticsObservable(ElementObservable):
             if param in {"W", "Wp", "dalpha", "dbeta", "dmu", "ddispersion", "dR"}:
                 needs.add(Need.W_FUNCTIONS)
 
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=self._pl_lab(param, plane),
+            axis_label=self._ax_lab(param, plane),
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 class LatticeObservable(ElementObservable):
@@ -1048,6 +1256,7 @@ class LatticeObservable(ElementObservable):
         attrname: str,
         index: int | None = None,
         name: str | None = None,
+        label: str | None = None,
         **kwargs,
     ):
         # noinspection PyUnresolvedReferences
@@ -1078,6 +1287,8 @@ class LatticeObservable(ElementObservable):
         needs = {Need.RING}
         name = self._set_name(name, attrname, index)
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        if label:
+            self.label = label
 
 
 class TrajectoryObservable(ElementObservable):
@@ -1091,6 +1302,7 @@ class TrajectoryObservable(ElementObservable):
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
         name: str | None = None,
+        label: str | None = None,
         **kwargs,
     ):
         r"""Args:
@@ -1118,10 +1330,21 @@ class TrajectoryObservable(ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
         """
-        name = self._set_name(name, "trajectory", axis_(axis, key="code"))
-        fun = _ArrayAccess(axis_(axis, key="index"))
+        descr = axis_(axis)
+        name = self._set_name(name, "trajectory", descr["code"])
+        fun = _ArrayAccess(descr["index"])
         needs = {Need.TRAJECTORY}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=descr["label"],
+            axis_label="".join((descr["label"], descr["unit"])),
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 class EmittanceObservable(Observable):
@@ -1130,14 +1353,47 @@ class EmittanceObservable(Observable):
     Process the output of :py:func:`.envelope_parameters`.
     """
 
+    _pinfo = {
+        "emittances": (
+            r"$\epsilon_{{{plane}}}$",
+            "Emittance [m]",
+            partial(plane_, key="label"),
+        ),
+        "J": (
+            r"$\mathrm{{J}}_{{{plane}}}$",
+            "Damping partition number",
+            partial(plane_, key="label"),
+        ),
+        "Tau": (
+            r"$\tau_{{{plane}}}$",
+            "Damping time [s]",
+            partial(plane_, key="label"),
+        ),
+        "sigma_e": (r"$\sigma_e$", "Energy spread", partial(plane_, key="label")),
+        "sigma_l": (r"$\sigma_l$", "Bunch length [m]", partial(plane_, key="label")),
+        "phi_s": (r"$\phi_s$", "Synchronous phase [rad]", partial(plane_, key="label")),
+        "f_s": (
+            r"$f_s$",
+            "Synchrotron frequency [Hz]",
+            partial(plane_, key="label"),
+        ),
+        "tunes6": (r"$\nu_{{{plane}}}$", "Tune", partial(plane_, key="label")),
+        "voltage": ("V", "V [V]", partial(plane_, key="label")),
+    }
+
     def __init__(
-        self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
+        self,
+        param: str,
+        plane: AxisDef = None,
+        name: str | None = None,
+        label: str | None = None,
+        **kwargs,
     ):
         r"""Args:
             param:          Parameter name (see :py:func:`.envelope_parameters`) or
               :ref:`user-defined evaluation function <emittance_eval>`
             plane:          One out of {0, 'x', 'h', 'H'} for horizontal plane,
-             one out of {1, 'y', 'v', 'V'} for vertival plane or one out of
+             one out of {1, 'y', 'v', 'V'} for vertical plane or one out of
              {2, 'z', 'l', 'L'} for longitudinal plane
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated.
@@ -1175,13 +1431,23 @@ class EmittanceObservable(Observable):
 
             Observe the horizontal emittance
         """
+
         name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
             fun = param
         else:
             fun = partial(_record_access, param, plane_(plane, key="index"))
         needs = {Need.EMITTANCE}
-        super().__init__(fun, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            needs=needs,
+            name=name,
+            label=self._pl_lab(param, plane),
+            axis_label=self._ax_lab(param, plane),
+            **kwargs,
+        )
+        if label:
+            self.label = label
 
 
 # noinspection PyPep8Naming

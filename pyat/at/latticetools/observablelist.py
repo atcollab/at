@@ -473,6 +473,12 @@ class ObservableList(list):
         """
         return all(obs.check() for obs in self)
 
+    @property
+    def axis_label(self):
+        """y-axis label"""
+        labs = {obs.axis_label for obs in self if obs.axis_label is not None}
+        return ", ".join(labs)
+
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
         """Set the excluded mask on the selected observable."""

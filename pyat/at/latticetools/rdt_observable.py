@@ -62,6 +62,7 @@ class RDTObservable(ElementObservable):
         param: str,
         *,
         name: str | None = None,
+        label: str | None = None,
         second_order: bool = False,
         **kwargs,
     ):
@@ -154,5 +155,9 @@ class RDTObservable(ElementObservable):
         name = self._set_name(name, param, None)
         fun = partial(_rdt_access, param)
 
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun, refpts, needs=needs, name=name, axis_label="RDT", **kwargs
+        )
         self._rdt_type = RDT_code[param]
+        if label:
+            self.label = label
