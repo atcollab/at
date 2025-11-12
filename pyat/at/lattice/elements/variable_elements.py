@@ -1,163 +1,470 @@
-"""Time-dependent Multipole"""
+"""Time-dependent Multipole."""
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
-import numpy
+import numpy as np
 
+from ..exceptions import AtError, AtWarning
 from .conversions import _array
 from .element_object import Element
-from ..exceptions import AtError
 
 
 class ACMode(IntEnum):
-    """Class to define the excitation types"""
+    """Class to define the excitation types."""
 
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
 
 
-class VariableMultipole(Element):
-    """Class to generate an AT variable thin multipole element"""
+def _anyarray(value: np.ndarray) -> np.ndarray:
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+
+class VariableThinMultipole(Element):
+    """Turn by turn variable thin multipole."""
+
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
     _conversions = dict(
         Element._conversions,
-        Mode=int,
         AmplitudeA=_array,
         AmplitudeB=_array,
         FrequencyA=float,
         FrequencyB=float,
         PhaseA=float,
         PhaseB=float,
-        Seed=int,
-        NSamplesA=int,
-        NSamplesB=int,
-        FuncA=_array,
-        FuncB=_array,
+        SinAabove=float,
+        SinBabove=float,
+        NsamplesA=int,
+        NsamplesB=int,
+        KtaylorA=int,
+        KtaylorB=int,
+        FuncA=_anyarray,
+        FuncB=_anyarray,
+        BufferA=_anyarray,
+        BufferB=_anyarray,
+        BufferSizeA=int,
+        BufferSizeB=int,
         Ramps=_array,
-        Periodic=bool,
+        Periodic=int,
     )
 
     def __init__(
-        self, family_name, AmplitudeA=None, AmplitudeB=None, mode=ACMode.SINE, **kwargs
-    ):
-        # noinspection PyUnresolvedReferences,SpellCheckingInspection
-        r"""
-        Parameters:
-            family_name(str):    Element name
+        self: VariableThinMultipole,
+        family_name: str,
+        mode: int or ACMode,
+        **kwargs: dict[any, any],
+    ) -> VariableThinMultipole:
+        r"""Init VariableThinMultipole.
+
+        This Class creates a thin multipole of any order (dipole kick, quadrupole,
+        sextupole, etc.) and type (Normal or Skew) defined by AmplitudeA and/or
+        AmplitudeB components; the polynoms PolynomA and PolynomB are calculated
+        on every turn depending on the chosen mode, and for some modes on the
+        particle time delay. All modes could be ramped.
+        Default pass method: ``VariableThinMPolePass``.
+
+        Keep in mind that as this element varies on every turn, and at the end of
+        the tracking PolynomA and PolynomB are set to zero, this could interfere
+        with optics calculations. Therefore, it is preferred to set the pass method
+        to IdentityPass when the element should not be active.
+
+        There are three different modes that could be set,
+        :py:attr:`.ACMode.SINE`: sine function
+        :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+        :py:attr:`.ACMode.ARBITRARY`: user defined turn-by-turn kick list
+        SINE = 0, WHITENOISE = 1 and ARBITRARY = 2. See ACMode.
+
+        For example, use at.ACMode.SINE or mode = 0 to create an sin function element.
+
+        The **SINE** mode requires amplitude and frequency for A and/or B.
+        The value of the jth component of the polynom (A or B) at the nth turn
+        is given by
+
+        Amplitude[j]*sin[TWOPI*frequency*(n*T0 + \tau_p) + phase],
+
+        where T0 is the revolution period of the ideal ring, and \tau_p is the delay
+        of the pth particle i.e. the sixth coordinate over the speed of light. Also,
+        note that the position of the element on the ring has no effect, the phase
+        could be used to add any delay due to the position along s. The following is
+        an example of the SINE mode of an skew quad
+
+        eleskew = at.VariableThinMultipole('VAR_SKEW',at.ACMode.SINE,
+        AmplitudeA=[0,skewa2],FrequencyA=freqA,PhaseA=phaseA)
+
+        The values of the sine function could be limited to be above a defined
+        threshold using ``Sin[AB]above``. For example, you could create a positive
+        half-sine by setting ``Sin[AB]above`` to zero. You could also create a
+        negative half-sine function by setting the amplitude to -1.
+
+        The **WHITENOISE** mode requires the amplitude of A and/or B. The gaussian
+        distribution is generated with zero-mean and one standard deviation from
+        a pseudo-random stream pcg32. The pcg32 seed is fixed by the tracking
+        function, therefore using the same stream on all trackings (sequencial or
+        parallel). See https://github.com/atcollab/at/discussions/879 for more
+        details on the pseudo random stream. For example,
+
+        elenoise = at.VariableThinMultipole('MYNOISE',at.ACMode.WHITENOISE,
+        AmplitudeA=[noiseA1])
+
+        creates a vertical kick as gaussian noise of amplitude noiseA1.
+
+        Additionally, one could use the parameter BufferSizeA or BufferSizeB
+        to create buffer to store the random numbers used in the element settings
+        during tracking. The buffer could be smaller or larger than the tracking.
+        If the buffer is smaller, it will store from start to the moment of filling
+        completely the buffer. If the buffer is larger, all non used places are set
+        to zero.
+
+        Care should be taken when changing the buffer and buffer size. The only check
+        done is at the moment of initialization, for example, when reading a lattice
+        from a file. Buffer and buffer size could be replaced at any moment, just
+        ensure that the actual buffer length and buffersize agree.
+
+        The **ARBITRARY** mode requires the definition of a custom discrete function
+        to be sampled at every turn. The function and its Taylor expansion with
+        respect to \tau up to any given order is
+
+        value = f(turn) + f'(turn)*tau + 0.5*f''(turn)*tau**2
+        + 1/6*f'''(turn)*tau**3 + 1/24*f''''(turn)*tau**4 ...
+
+        f is a row array of values, f',f'',f''',f'''', are row arrays containing
+        the derivatives wrt \tau, and \tau is the time delay of the particle, i.e.
+        the the sixth coordinate divided by the speed of light. Therefore, the
+        function func is a 2D-array with a given column contains f and its
+        derivatives, and the ith column has the values to be used in the ith turn.
+        For example, a positive value on the first turn f(1)=1 with positive
+        derivative f'(1)=0.1 followed by a negative value in the second turn
+        f(2)=-1 with negative derivative f'(2)=-0.2, and f(3) = 2, would be
+          Func=[[1,  -1   2],
+                [0.1 -0.2 0]].
+
+        The time tau could be offset using ``FuncATimeDelay`` or ``FuncBTimeDelay``.
+
+        tau = tau - Func[AB]TimeDelay
+
+        The function value is then **multiplied by Amplitude A and/or B**.
+        Use FuncA or FuncB, and AmplitudeA or AmplitudeB accordingly.
+        For example, the following is a positive vertical kick in the first turn,
+        negative on the second turn, and zero on the third turn.
+
+        elesinglekick = at.VariableThinMultipole('CUSTOMFUNC',at.ACMODE.ARBITRARY,
+        AmplitudeA=1e-4,FuncA=[1,-1,0],Periodic=True)
+
+        As already mentioned, one could include the derivatives of the function
+        from a Taylor expansion in a 2D array. First row for the values of f on
+        every turn, second row for the values of f' on every turn, and so on.
+
+        By default the array is assumed non periodic, the function has no effect
+        on the particle in turns exceeding the function definition. If
+        ``Periodic`` is set to 1, the sequence is repeated.
+
+        One could use the method inspect_polynom_values to check the polynom values
+        used in every turn.
+
+        Any mode could be ramped. The ramp is defined by four values (t0,t1,t2,t3):
+            * ``t<=t0``: excitation amplitude is zero.
+            * ``t0<t<=t1``: excitation amplitude is linearly ramped up.
+            * ``t1<t<=t2``: excitation amplitude is constant.
+            * ``t2<t<=t3``: excitation amplitude is linearly ramped down.
+            * ``t3<t``: excitation amplitude is zero.
+
+        Arguments:
+            family_name(str):  Element name
+            mode(at.ACMode): defines the mode. Default ACMode.SINE
+            kwargs: described as follow.
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
-              Default None
+            Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
-              Default None
-            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
+            Default None
+            FrequencyA(float): Frequency of the PolynomA sine excitation. Unit Hz
+            FrequencyB(float): Frequency of the PolynomB sine excitation. Unit Hz
+            PhaseA(float): Phase of the sine excitation for PolynomA. Default 0 rad
+            PhaseB(float): Phase of the sine excitation for PolynomB. Default 0 rad
+            SinAabove(float): Limit the sin function to be above. Default -1.1
+            SinBabove(float): Limit the sin function to be above. Default -1.1
+            BufferSizeA(int): Sets the buffersize in WHITENOISE mode.
+            BufferSizeB(int): Sets the buffersize in WHITENOISE mode.
+            FuncA(Sequence[float]): User defined turn by turn list for PolynomA
+            FuncB(Sequence[float]): User defined turn by turn list for PolynomB
+            FuncATimeDelay(float): generate a time offset on the function FUNCA.
+            It only has an effect if any of the derivatives is not zero.
+            FuncBTimeDelay(float): generate a time offset on the function FUNCB.
+            It only has an effect if any of the derivatives is not zero.
+            Periodic(bool): If True the user definition is repeated. Default False.
+            Ramps(list): Four values (t0,t1,t2,t3) defining the ramping steps:
 
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
-            FrequencyA(float): Frequency of the sine excitation for PolynomA
-            FrequencyB(float): Frequency of the sine excitation for PolynomB
-            PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
-            PhaseB(float): Phase of the sine excitation for PolynomB. Default 0
-            MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
-            FuncA(list): User defined tbt kick list for PolynomA
-            FuncB(list): User defined tbt kick list for PolynomB
-            Periodic(bool): If True (default) the user defined kick is repeated
-            Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
-                         of the excitation
-
-              * ``t<t0``: excitation amplitude is zero
-              * ``t0<t<t1``: exciation amplitude is linearly ramped up
-              * ``t1<t<t2``: exciation amplitude is constant
-              * ``t2<t<t3``: exciation amplitude is linearly ramped down
-              * ``t3<t``: exciation amplitude is zero
+        Raises:
+        :raise AtError: if none of ``AmplitudeA`` or ``AmplitudeB`` is passed.
+        :raise AtError: if ramp is not vector of length 4 when using ``Ramps``.
+        :raise AtError: when frequency is not defined if using Mode ``ACMode.SINE``.
+        :raise AtError: when the custom function is not defined if using
+        mode ``ACMode.ARBITRARY``.
 
         Examples:
-
-            >>> acmpole = at.VariableMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, FrequencyB=frequency
-            ... )
-            >>> acmpole = at.VariableMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, mode=at.ACMode.WHITENOISE
-            ... )
-            >>> acmpole = at.VariableMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, FuncB=fun, mode=at.ACMode.ARBITRARY
-            ... )
-
-        .. note::
-
-            * For all excitation modes at least one amplitude has to be provided.
-              The default excitation is ``ACMode.SINE``
-            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
-            * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
+            >>> acmpole = at.VariableThinMultipole('ACSKEW',
+            at.ACMode.SINE, AmplitudeA=[0,amp], FrequencyA=freq)
+            >>> acmpole = at.VariableThinMultipole('ACHKICK',
+            at.ACMode.WHITENOISE, AmplitudeB=amp)
+            >>> acmpole = at.VariableThinMultipole('ACMPOLE',
+            at.ACMode.ARBITRARY, AmplitudeB=[0,0,amp], FuncB=fun)
         """
+
+        def _check_amplitudes(**kwargs: dict[any, any]) -> dict[str, any]:
+            amp_aux = {"A": None, "B": None}
+            all_amplitudes_are_none = True
+            for key in amp_aux:
+                if "amplitude" + key in kwargs:
+                    raise AtWarning(
+                        "amplitude" + key + " should be Amplitude" + key + "."
+                    )
+                lower_case_kwargs = {k.lower(): v for k, v in kwargs.items()}
+                amp_aux[key] = lower_case_kwargs.pop("amplitude" + key.lower(), None)
+                if amp_aux[key] is not None:
+                    all_amplitudes_are_none = False
+            if all_amplitudes_are_none:
+                raise AtError("Please provide at least one amplitude for A or B")
+            return amp_aux
+
+        def _getmaxorder(ampa: np.ndarray, ampb: np.ndarray) -> int:
+            mxa, mxb = 0, 0
+            if ampa is not None:
+                mxa = np.max(np.append(np.nonzero(ampa), 0))
+            if ampb is not None:
+                mxb = np.max(np.append(np.nonzero(ampb), 0))
+            return max(mxa, mxb)
+
+        def _set_thismode(
+            mode: int, a_b: str, **kwargs: dict[any, any]
+        ) -> dict[str, any]:
+            if mode == ACMode.SINE:
+                kwargs = _set_sine(a_b, **kwargs)
+            if mode == ACMode.ARBITRARY:
+                kwargs = _set_arb(a_b, **kwargs)
+            if mode == ACMode.WHITENOISE:
+                kwargs = _set_white_noise(a_b, **kwargs)
+            return kwargs
+
+        def _set_sine(a_b: str, **kwargs: dict[any, any]) -> dict[str, any]:
+            frequency = kwargs.get("Frequency" + a_b, None)
+            if frequency is None:
+                raise AtError("Please provide a value for Frequency" + a_b)
+            kwargs.setdefault("Phase" + a_b, 0)
+            kwargs.setdefault("Sin" + a_b + "above", -1.1)
+            return kwargs
+
+        def _set_arb(a_b: str, **kwargs: dict[any, any]) -> dict[str, any]:
+            func = kwargs.get("Func" + a_b, None)
+            if func is None:
+                raise AtError("Please provide a value for Func" + a_b)
+            if len(np.squeeze(func.shape)) == 1:
+                nsamples = len(func)
+                ktaylor = 1
+            else:
+                ktaylor, nsamples = func.shape
+            kwargs.setdefault("Func" + a_b + "TimeDelay", 0)
+            kwargs["NSamples" + a_b] = nsamples
+            kwargs["Ktaylor" + a_b] = ktaylor
+            kwargs.setdefault("Periodic", False)
+            return kwargs
+
+        def _set_white_noise(a_b: str, **kwargs: dict[any, any]) -> dict[any, any]:
+            bfsize = int(kwargs.setdefault("BufferSize" + a_b, 0))
+            kwargs.setdefault("Buffer" + a_b, np.zeros((bfsize)))
+            kwargs["BufferSize" + a_b] = bfsize
+            # we check the case when Buffer and BufferSize don't match
+            the_userbuffershape = kwargs["Buffer" + a_b].shape
+            if the_userbuffershape[0] != kwargs["BufferSize" + a_b]:
+                raise AtError(("Buffer and BufferSizeMismatch"))
+            return kwargs
+
+        def _check_ramp(**kwargs: dict[any, any]) -> _array:
+            ramps = kwargs.get("Ramps", None)
+            if ramps is not None:
+                if len(ramps) != 4:
+                    raise AtError("Ramps has to be a vector with 4 elements")
+                ramps = np.asarray(ramps)
+            return ramps
+
+        # init begins
+        kwargs.setdefault("Mode", mode)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-        self.MaxOrder = kwargs.pop("MaxOrder", 0)
-        self.Periodic = kwargs.pop("Periodic", True)
-        self.Mode = int(mode)
-        if AmplitudeA is None and AmplitudeB is None:
-            raise AtError("Please provide at least one amplitude for A or B")
-        AmplitudeB = self._set_params(AmplitudeB, mode, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, mode, "A", **kwargs)
-        self._setmaxorder(AmplitudeA, AmplitudeB)
-        if mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-        self.PolynomA = numpy.zeros(self.MaxOrder + 1)
-        self.PolynomB = numpy.zeros(self.MaxOrder + 1)
-        ramps = kwargs.pop("Ramps", None)
-        if ramps is not None:
-            assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
-            self.Ramps = ramps
+        if len(kwargs) > 2:
+            amp_aux = _check_amplitudes(**kwargs)
+            for key, value in amp_aux.items():
+                if value is not None:
+                    kwargs["Amplitude" + key] = value
+                    kwargs = _set_thismode(mode, key, **kwargs)
+            maxorder = _getmaxorder(amp_aux["A"], amp_aux["B"])
+            kwargs["MaxOrder"] = kwargs.get("MaxOrder", maxorder)
+            for key in amp_aux:
+                kwargs["Polynom" + key] = kwargs.get(
+                    "Polynom" + key, np.zeros(maxorder + 1)
+                )
+            ramps = _check_ramp(**kwargs)
+            if ramps is not None:
+                kwargs["Ramps"] = ramps
         super().__init__(family_name, **kwargs)
 
-    def _setmaxorder(self, ampa, ampb):
-        mxa, mxb = 0, 0
-        if ampa is not None:
-            mxa = numpy.max(numpy.nonzero(ampa))
-        if ampb is not None:
-            mxb = numpy.max(numpy.nonzero(ampb))
-        self.MaxOrder = max(mxa, mxb)
-        if ampa is not None:
-            delta = self.MaxOrder - len(ampa)
-            if delta > 0:
-                ampa = numpy.pad(ampa, (0, delta))
-            self.AmplitudeA = ampa
-        if ampb is not None:
-            delta = self.MaxOrder + 1 - len(ampb)
-            if delta > 0:
-                ampb = numpy.pad(ampb, (0, delta))
-            self.AmplitudeB = ampb
+    def inspect_polynom_values(
+        self: VariableThinMultipole, **kwargs: dict[any, any]
+    ) -> dict[str, list]:
+        """
+        Get the polynom values per turn.
 
-    def _set_params(self, amplitude, mode, ab, **kwargs):
-        if amplitude is not None:
-            if numpy.isscalar(amplitude):
-                amp = numpy.zeros(self.MaxOrder)
-                amplitude = numpy.append(amp, amplitude)
-            if mode == ACMode.SINE:
-                self._set_sine(ab, **kwargs)
-            if mode == ACMode.ARBITRARY:
-                self._set_arb(ab, **kwargs)
-        return amplitude
+        Translations (T1,T2) and Rotations (R1,R2) in the element are ignored.
 
-    def _set_sine(self, ab, **kwargs):
-        frequency = kwargs.pop("Frequency" + ab, None)
-        phase = kwargs.pop("Phase" + ab, 0)
-        assert frequency is not None, "Please provide a value for Frequency" + ab
-        setattr(self, "Frequency" + ab, frequency)
-        setattr(self, "Phase" + ab, phase)
+        Arguments:
+            kwargs: as follow.
 
-    def _set_arb(self, ab, **kwargs):
-        func = kwargs.pop("Func" + ab, None)
-        nsamp = len(func)
-        assert func is not None, "Please provide a value for Func" + ab
-        setattr(self, "Func" + ab, func)
-        setattr(self, "NSamples" + ab, nsamp)
+        Keyword Arguments:
+            turns(int): Default 1. Number of turns to calculate.
+            T0(float): revolution time in seconds. Use only in SINE mode.
+            tparticle(float): Default 0. Time of the particle in seconds.
+            kwargs: as needed by the mode.
+
+        Returns:
+            Dictionary with a list of PolynomA and PolynomB per turn.
+        """
+        # initialize in case of early return
+        listpola = []
+        listpolb = []
+
+        turns = kwargs.setdefault("turns", 1)
+        mode = self.Mode
+        timeoffset = 0
+        if mode == 0:
+            # revolution time
+            trevol = float(kwargs["T0"])
+            tparticle = float(kwargs.setdefault("tparticle", 0))
+            timeoffset = trevol + tparticle
+        elif mode == 3:
+            print("Random values are not available here.")
+        elif mode == 2:
+            # particle time
+            timeoffset = float(kwargs.setdefault("tparticle", 0))
+        ramps = getattr(self, "Ramps", 0)
+        periodic = getattr(self, "Periodic", False)
+        maxorder = self.MaxOrder
+
+        pola = np.full(maxorder + 1, np.nan)
+        polb = np.full(maxorder + 1, np.nan)
+
+        for turn in range(turns):
+            for order in range(maxorder + 1):
+                if hasattr(self, "AmplitudeA"):
+                    pola[order] = self._get_pol(
+                        "A", ramps, mode, timeoffset * turn, turn, order, periodic
+                    )
+                if hasattr(self, "AmplitudeB"):
+                    polb[order] = self._get_pol(
+                        "B", ramps, mode, timeoffset * turn, turn, order, periodic
+                    )
+            listpola.append(np.copy(pola))
+            listpolb.append(np.copy(polb))
+        return {"PolynomA": listpola, "PolynomB": listpolb}
+
+    def _get_amp(
+        self: VariableThinMultipole, amp: float, ramps: _array, _time: float
+    ) -> float:
+        """get_amp returns the input value `amp` when ramps is False.
+
+        If ramps is True, it returns a value linearly interpolated
+        accoding to the ramping turn.
+
+        Parameters:
+            amp: amplitude component.
+            ramps: array containing the turns that define the ramp
+            _time: turn
+
+        Returns:
+            amp if no ramp.
+            amp multiplied by the ramp state.
+        """
+        ampt = amp
+        if ramps != 0:
+            if _time <= ramps[0]:
+                ampt = 0.0
+            elif _time <= ramps[1]:
+                ampt = amp * (_time - ramps[0]) / (ramps[1] - ramps[0])
+            elif _time <= ramps[2]:
+                ampt = amp
+            elif _time <= ramps[3]:
+                ampt = amp - amp * (_time - ramps[2]) / (ramps[3] - ramps[2])
+            else:
+                ampt = 0.0
+        return ampt
+
+    def _get_pol(
+        self: VariableThinMultipole,
+        a_b: str,
+        ramps: _array,
+        mode: int,
+        _time: float,
+        turn: int,
+        order: int,
+        periodic: bool,
+    ) -> float:
+        """
+        Return the polynom component of a given order.
+
+        Parameters:
+            a_b: either 'A' or 'B' indicating the polynom.
+            ramps: array containing the ramp definition.
+            mode: value to specify the type of variable element.
+            _time: time for this mode
+            turn: turn to check
+            order: order of the polynom
+            periodic: whether the sequence is periodic or not.
+
+        Returns:
+            the amplitude for the polynom component
+        """
+        allamp = getattr(self, "Amplitude" + a_b)
+        amp = allamp[order]
+        ampout = 0
+        # check if amp is zero
+        if amp == 0:
+            return ampout
+
+        # get the ramp value
+        ampout = self._get_amp(amp, ramps, turn)
+
+        if mode == 0:
+            # sin mode parameters
+            whole_sin_above = getattr(self, "Sin" + a_b + "above")
+            freq = getattr(self, "Frequency" + a_b)
+            phase = getattr(self, "Phase" + a_b)
+            sinval = np.sin(2 * np.pi * freq * _time + phase)
+            if sinval >= whole_sin_above:
+                ampout = ampout * sinval
+            else:
+                ampout = 0
+        elif mode == 1:
+            ampout = np.nan
+        elif mode == 2:
+            nsamples = getattr(self, "NSamples" + a_b)
+            if periodic or turn < nsamples:
+                func = getattr(self, "Func" + a_b)
+                functdelay = float(getattr(self, "Func" + a_b + "TimeDelay"))
+                turnidx = np.mod(turn, nsamples)
+                ktaylor = int(getattr(self, "Ktaylor" + a_b))
+                _time = _time - functdelay
+                functot = func[0, turnidx]
+                thefactorial = 1
+                tpow = 1
+                for i in range(1, ktaylor):
+                    tpow = _time * tpow
+                    thefactorial = thefactorial * i
+                    functot = functot + tpow / thefactorial * func[i, turnidx]
+                ampout = ampout * functot
+            else:
+                ampout = 0.0
+        else:
+            ampout = 0.0
+        return ampout
