@@ -24,15 +24,19 @@ def plot_observables(
     slices: int = _SLICES,
     **kwargs,
 ) -> tuple[Axes]:
+    # noinspection PyUnresolvedReferences
     r"""Plot element observables along a lattice.
 
     Args:
         ring:   Lattice description
         obsleft: List of :py:class:`.ElementObservable` plotted against the left axis.
           if refpts is :py:obj:`.All`, a line is drawn. Otherwise, markers are drawn.
-        obsright: List of :py:class:`.ElementObservable` plotted against the right axis.
+          It is recommended to use Observables with scalar values. Otherwise, all the
+          values are plotted but share the same line properties and legend,
+        obsright: Optional ist of :py:class:`.ElementObservable` plotted against the
+          right axis.
         axes: :py:class:`~.matplotlib.axes.Axes` in which the observables are plotted.
-          if :py:obj:`None`, new axes are created.
+          if :py:obj:`None`, a new figure is created.
         s_range:            Lattice range of interest, default: whole lattice,
         slices: Number of lattice slices for getting smooth curves. Default: 400.
 
@@ -49,8 +53,51 @@ def plot_observables(
         monitor (dict):     Same definition as for dipole
 
     Returns:
-        axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 1 element if no
-          plot on the right axis, 2 elements otherwise.
+        axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
+          is a plot on the right y-axis, 1 element otherwise.
+
+    Examples:
+        Minimal example using default values:
+
+        >>> obsmu = at.ObservableList(
+        ...     [
+        ...         at.LocalOpticsObservable(at.All, "mu", plane=0),
+        ...         at.LocalOpticsObservable(at.All, "mu", plane=1),
+        ...     ]
+        ... )
+        >>>
+        >>> ax1, = at.plot_observables(ring, obsmu)
+
+        .. image:: /images/plot_observables/phase_obs.*
+           :alt: phase advance plot
+
+        This example demonstrates the use of the postfun post-processing attribute of
+        observables to plot the beam envelopes for arbitrary emitttance values:
+
+        >>> # Define the emittances
+        >>> emit_x = 130.0e-12
+        >>> emit_y = 10.0e-12
+        >>>
+        >>> # beam size computation
+        >>> sigma_x = lambda x: 1.0e6 * np.sqrt(x * emit_x)  # result in um
+        >>> sigma_y = lambda y: 1.0e6 * np.sqrt(y * emit_y)  # result in um
+        >>>
+        >>> # Observables
+        >>> obsenv = at.ObservableList(
+        ...     [
+        ...         at.LocalOpticsObservable(
+        ...             at.All, "beta", plane="x", postfun=sigma_x, label=r"$\sigma_x$"
+        ...         ),
+        ...         at.LocalOpticsObservable(
+        ...             at.All, "beta", plane="y", postfun=sigma_y, label=r"$\sigma_y$"
+        ...         ),
+        ...     ]
+        ... )
+        >>> (ax2,) = at.plot_observables(ring, obsenv, title="Beam envelopes")
+        >>> ax1.set_ylabel(r"Beam size [${\mu}m$]")
+
+        .. image:: /images/plot_observables/envelope_obs.*
+           :alt: envelope plot
     """
 
     def get_format(obs: ElementObservable, default: str) -> tuple[tuple, Mapping]:

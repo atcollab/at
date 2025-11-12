@@ -26,21 +26,27 @@ def plot_response(
 ) -> Axes:
     # noinspection PyUnresolvedReferences
     r"""plot_response(var: VariableBase, rng: Iterable[float], obsleft: ObservableList, obsright: ObservableList, **kwargs) -> Axes
-    Plot :py:class:`.Observable` values as a function of a :py:class:`Variable <.VariableBase>`.
+    Plot :py:class:`.Observable` values as a function of a
+    :py:class:`Variable <.VariableBase>`.
 
     Args:
         var:        Variable object,
         rng:        range of variation for the variable,
-        obsleft:    List of Observables plotted on the left axis,
+        obsleft:    List of Observables plotted on the left axis. It is recommended to
+          use Observables with scalar values. Otherwise, all the values are plotted but
+          share the same line properties and legend,
         obsright:   Optional list of Observables plotted on the right axis.
 
     Keyword Args:
-        axes:           :py:class:`~matplotlib.axes.Axes` object. If :py:obj:`None`,
-          a new figure is created.
-        xlabel:         x-axis label. Default: variable name.
-        ylabel:         y-axis label. Default: observable axis label.
+        axes:           :py:class:`~matplotlib.axes.Axes` object in which the figure
+          is plotted. If :py:obj:`None`, a new figure is created.
+        xlabel:         x-axis label. May contain Latex math code.
+          Default: variable name.
+        ylabel:         y-axis label. May contain Latex math code.
+          Default: observable :py:attr:`~.ObservableList.axis_label`.
 
-    Additional keyword arguments are transmitted to the :py:class:`~matplotlib.axes.Axes` creation function.
+    Additional keyword arguments are transmitted to the
+    :py:class:`~matplotlib.axes.Axes` creation function.
 
     Returns:
         ax:             the :py:class:`~matplotlib.axes.Axes` object.
@@ -48,15 +54,18 @@ def plot_response(
     Example:
         Minimal example using only default values:
 
-        >>> obs = at.ObservableList(
-        ...     [
-        ...         at.EmittanceObservable("emittances", plane="x"),
-        ...         at.EmittanceObservable("emittances", plane="y"),
-        ...     ],
+        >>> obsl = at.ObservableList(
+        ...     [at.EmittanceObservable("emittances", plane="x")],
+        ...     ring=ring,
+        ... )
+        >>> obsr = at.ObservableList(
+        ...     [at.EmittanceObservable("sigma_e")],
         ...     ring=ring,
         ... )
         >>> var = at.AttributeVariable(ring, "energy", name="energy [eV]")
-        >>> plot_response(var, obsleft, np.arange(3.0e9, 6.01e9, 0.5e9))
+        >>> ax1, ax2 = at.plot_response(
+        ...     var, np.arange(3.0e9, 6.01e9, 0.5e9), obsl, obsr
+        ... )
         >>>
 
         .. image:: /images/emittance_response.*
@@ -65,52 +74,39 @@ def plot_response(
         Example showing the formatting possibilities by:
 
         - using the :py:attr:`.Observable.plot_fmt` attribute for line formatting,
-        - using  the :py:attr:`.Observable.name` attribute for curve labels,
-        - using dual y-axis by calling :py:func:`plot_response` twice,
-        - avoiding duplicate line colors with the *color_offset* parameter,
-        - using the *ylabel* and *title* parameters.
+        - using dual y-axis,
+        - using the *ylim* and *title* parameters.
 
         >>> obsleft =at.ObservableList(
         ...     [
         ...         at.LocalOpticsObservable(
         ...             [0], "beta", plane="x",
-        ...             name=r"$\beta_x$",
         ...             plot_fmt={"linewidth": 3.0, "marker": "o"}
         ...         ),
-        ...         at.LocalOpticsObservable(
-        ...             [0], "beta", plane="y", name=r"$\beta_z$", plot_fmt="--"
-        ...         )
+        ...         at.LocalOpticsObservable([0], "beta", plane="y", plot_fmt="--")
         ...     ],
         ...     ring=ring
         ... )
         >>>
         >>> obsright =at.ObservableList(
         ...     [
-        ...         at.GlobalOpticsObservable("tune", plane="x", name=r"$\nu_x$"),
-        ...         at.GlobalOpticsObservable("tune", plane="y", name=r"$\nu_x$"),
+        ...         at.GlobalOpticsObservable("tune", plane="x"),
+        ...         at.GlobalOpticsObservable("tune", plane="y"),
         ...     ],
         ...     ring=ring
         ... )
-        >>> # On the left y-axis
+        >>>
+        >>> var = RefptsVariable(
+        ...     "QF1[AE]", "Kn1L", name="QF1 integrated strength", ring=ring
+        ... )
         >>> ax = at.plot_response(
         ...     var,
+        ...     np.arange(0.732, 0.852, 0.01),
         ...     obsleft,
-        ...     np.arange(2.4, 2.7, 0.02),
-        ...     ylabel="beta [m]",
+        ...     obsright,
+        ...     ylim=[0.0, 10.0],
         ...     title="Example of plot_response"
         ... )
-        >>> # On the right y-axis
-        >>> ax2 = at.plot_response(
-        ...     var,
-        ...     obsright,
-        ...     np.arange(2.4, 2.7, 0.02),
-        ...     ylabel="tune",
-        ...     ax=ax.twinx(),
-        ...     color_offset=2
-        ... )
-        >>> ax.set_ylim(0.0, 10.0)
-        >>> ax2.set_ylim(0.0, 1.2)
-        >>> ax2.grid(False)
 
         .. image:: /images/beta_response.*
            :alt: beta response
@@ -119,16 +115,14 @@ def plot_response(
 
         >>> obs =at.ObservableList(
         ...     [
-        ...         at.LocalOpticsObservable([0], "beta", plane="x", name=r"$\beta_x$"),
-        ...         at.LocalOpticsObservable([0], "beta", plane="y", name=r"$\beta_z$")
+        ...         at.LocalOpticsObservable([0], "beta", plane="x"),
+        ...         at.LocalOpticsObservable([0], "beta", plane="y")
         ...     ],
         ...     ring=ring,
         ...     dp = 0.0
         ... )
         >>> var = at.EvaluationVariable(obsleft, "dp", name=r"$\delta$")
-        >>> ax=at.plot_response(
-        ... var, obsleft, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\beta\;[m]$"
-        ... )
+        >>> ax=at.plot_response(var, obsleft, np.arange(-0.03, 0.0301,0.001))
 
         .. image:: /images/delta_response.*
            :alt: delta response

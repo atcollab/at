@@ -596,6 +596,13 @@ class RingObservable(Observable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
+
         .. _ring_eval:
         .. rubric:: User-defined evaluation function
 
@@ -773,6 +780,13 @@ class GeometryObservable(ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
+
         Example:
             >>> obs = GeometryObservable(at.Monitor, param="x")
 
@@ -838,6 +852,13 @@ class OrbitObservable(ElementObservable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
+
         .. rubric:: Shape of the value
 
         If *axis* is :py:obj:`None` (whole orbit vector), then *value* has shape
@@ -870,9 +891,9 @@ class OrbitObservable(ElementObservable):
 
 
 class MatrixObservable(ElementObservable):
-    """Observe the closed orbit at selected locations.
+    """Observe coefficients of the transfer matrix.
 
-    Processs the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
+    Process the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
     depending upon :py:meth:`~.Lattice.is_6d`.
     """
 
@@ -909,6 +930,15 @@ class MatrixObservable(ElementObservable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
+        * **orbit**:   Initial orbit. Avoids looking for the closed orbit if it is
+          already known,
 
         Example:
             >>> obs = MatrixObservable(at.Monitor, axis=("x", "px"))
@@ -981,6 +1011,13 @@ class _GlobalOpticsObservable(Observable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
         """
 
         needs = {Need.GLOBALOPTICS}
@@ -1130,6 +1167,7 @@ class LocalOpticsObservable(ElementObservable):
         These values must be provided to the :py:meth:`~.ObservableList.evaluate`
         method. Default values may be given at instantiation.
 
+        * **ring**:     Lattice description,
         * **orbit**:   Initial orbit. Avoids looking for the closed orbit if it is
           already known,
         * **twiss_in**: Initial conditions for transfer line optics.
@@ -1296,6 +1334,13 @@ class LatticeObservable(ElementObservable):
               function or a function name in {"mean", "std", "var", "min", "max"}.
               Example: :pycode:`statfun=numpy.mean`.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
+
         Example:
             >>> obs = LatticeObservable(
             ...     at.Sextupole, "KickAngle", index=0, statfun=np.sum
@@ -1367,6 +1412,7 @@ class TrajectoryObservable(ElementObservable):
         These values must be provided to the :py:meth:`~.ObservableList.evaluate`
         method. Default values may be given at instantiation.
 
+        * **ring**:     Lattice description,
         * **r_in**:   Initial coordinates of one or several tracked particles.
         """
         descr = axis_(axis)
@@ -1451,6 +1497,13 @@ class EmittanceObservable(Observable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:     Lattice description,
 
         .. _emittance_eval:
         .. rubric:: User-defined evaluation function

@@ -475,7 +475,7 @@ class ObservableList(list):
 
     @property
     def axis_label(self):
-        """y-axis label"""
+        """y-axis label combining the axis_label of all observables (read only)."""
         labs = {obs.axis_label for obs in self if obs.axis_label is not None}
         return ", ".join(labs)
 

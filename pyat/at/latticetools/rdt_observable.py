@@ -93,6 +93,16 @@ class RDTObservable(ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:         Lattice description,
+        * **use_mp**:       Activate parallel calculation. Default: :py:obj:`False`
+        * **pool_size**:    Number of processes used for parallelization.
+          Default: :py:obj:`None`
+
         .. _rdt_param:
         .. rubric:: RDT parameter names
 
