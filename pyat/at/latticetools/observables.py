@@ -256,8 +256,8 @@ class Observable:
     """Base class for Observables. Can be used for user-defined observables."""
 
     # Class attributes
-    _default = ("{param}[{plane}]", "{param}", lambda x: x)
-    _pinfo = {}
+    _default: ClassVar[dict] = ("{param}[{plane}]", "{param}", lambda x: x)
+    _pinfo: ClassVar[dict] = {}
 
     # Instance attributes
     name: str  #: Observable name.
@@ -740,7 +740,8 @@ class GeometryObservable(ElementObservable):
     Process the *geomdata* output of :py:func:`.get_geometry`.
     """
 
-    _pinfo = {"x": "x [m]", "y": "y [m]", "angle": "angle"}
+    # Class attributes
+    _pinfo: ClassVar[dict] = {"x": "x [m]", "y": "y [m]", "angle": "angle"}
 
     def __init__(
         self,
@@ -803,7 +804,8 @@ class OrbitObservable(ElementObservable):
     Process the *orbit* output of :py:func:`.find_orbit`.
     """
 
-    _plist = ["x [m]", "$p_x$", "y [m]", "$p_y$", "angle"]
+    # Class attributes
+    _plist: ClassVar = ["x [m]", "$p_x$", "y [m]", "$p_y$", "angle"]
 
     def __init__(
         self,
@@ -931,7 +933,9 @@ class MatrixObservable(ElementObservable):
 
 
 class _GlobalOpticsObservable(Observable):
-    _pinfo = {
+
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
         "tune": (r"$\nu_{{{plane}}}$", "Tune", partial(plane_, key="label")),
         "chromaticity": (
             r"$\xi_{{{plane}}}$",
@@ -1007,7 +1011,8 @@ class LocalOpticsObservable(ElementObservable):
     Process the local output of :py:func:`.get_optics`.
     """
 
-    _pinfo = {
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
         "alpha": (r"$\alpha_{{{plane}}}$", "alpha", partial(plane_, key="label")),
         "beta": (r"$\beta_{{{plane}}}$", "beta [m]", partial(plane_, key="label")),
         "gamma": (r"$\gamma_{{{plane}}}$", "gamma", partial(plane_, key="label")),
@@ -1119,6 +1124,21 @@ class LocalOpticsObservable(ElementObservable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **orbit**:   Initial orbit. Avoids looking for the closed orbit if it is
+          already known,
+        * **twiss_in**: Initial conditions for transfer line optics.
+          See :py:func:`.get_optics`,
+        * **dp**:     Momentum deviation. Defaults to :py:obj:`None`,
+        * **dct**:    Path lengthening. Defaults to :py:obj:`None`,
+        * **df**:     Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`,
+        * **method**:  Method for linear optics. Default: :py:obj:`~.linear.linopt6`.
 
         .. rubric:: Shape of the value
 
@@ -1297,10 +1317,21 @@ class TrajectoryObservable(ElementObservable):
     Process the *r_out* output if :py:meth:`.Lattice.track`
     """
 
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
+        "x": (r"$x_{{{plane}}}$", r"x [m]", lambda x: x),
+        "px": (r"$p_{{x{plane}}}$", r"$p_x$", lambda x: x),
+        "y": (r"$y_{{{plane}}}$", r"y [m]", lambda x: x),
+        "py": (r"$p_{{y{plane}}}$", r"$p_y$", lambda x: x),
+        "dp": (r"$\delta_{{{plane}}}$", r"$\delta$", lambda x: x),
+        "ct": (r"$\beta c \tau_{{{plane}}}$", r"path lengthening [m]", lambda x: x),
+    }
+
     def __init__(
         self,
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
+        npart: int = 0,
         name: str | None = None,
         label: str | None = None,
         **kwargs,
@@ -1308,8 +1339,9 @@ class TrajectoryObservable(ElementObservable):
         r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
-            axis:          Index in the orbit array, If :py:obj:`Ellipsis`,
+            axis:           Index in the orbit array, If :py:obj:`Ellipsis`,
               the whole array is specified
+            npart:          Particle number,
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated.
 
@@ -1329,18 +1361,25 @@ class TrajectoryObservable(ElementObservable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **r_in**:   Initial coordinates of one or several tracked particles.
         """
         descr = axis_(axis)
         name = self._set_name(name, "trajectory", descr["code"])
-        fun = _ArrayAccess(descr["index"])
+        fun = _ArrayAccess((npart, descr["index"]))
         needs = {Need.TRAJECTORY}
         super().__init__(
             fun,
             refpts,
             needs=needs,
             name=name,
-            label=descr["label"],
-            axis_label="".join((descr["label"], descr["unit"])),
+            label=self._pl_lab(descr["code"], npart),
+            axis_label=self._ax_lab(descr["code"], npart),
             **kwargs,
         )
         if label:
@@ -1353,7 +1392,8 @@ class EmittanceObservable(Observable):
     Process the output of :py:func:`.envelope_parameters`.
     """
 
-    _pinfo = {
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
         "emittances": (
             r"$\epsilon_{{{plane}}}$",
             "Emittance [m]",

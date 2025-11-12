@@ -355,7 +355,7 @@ class ObservableList(list):
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
-                trajs = r_out[:, 0, :, 0].T
+                trajs = r_out[:, :, :, 0].T
                 keep_lattice = True
 
             if Need.ORBIT in needs or needs_o0:
