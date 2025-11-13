@@ -46,7 +46,15 @@ def plot_response(
           Default: observable :py:attr:`~.ObservableList.axis_label`.
 
     Additional keyword arguments are transmitted to the
-    :py:class:`~matplotlib.axes.Axes` creation function.
+    :py:class:`~matplotlib.axes.Axes` creation function.They apply to the main (left)
+    axis and are ignored when plotting in exising axes:
+
+    Keyword Args:
+        title (str):    Plot title,
+        ylim (tuple):     Y-axis limits,
+        *: for other keywords see
+          :py:obj:`~.matplotlib.figure.Figure.add_subplot`
+
 
     Returns:
         axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there

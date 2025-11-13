@@ -39,13 +39,16 @@ def plot_synopt(
         axes:           :py:class:`~matplotlib.axes.Axes` for plotting the
           synoptic. If :py:obj:`None`, a new figure will be created. Otherwise,
           a new axes object sharing the same x-axis as the given one is created.
-        labels:         display the name of selected elements.
-        dipole:         Dictionary of properties overloading the default
-          properties. If :py:obj:`None`, dipoles will not be shown.
-        quadrupole:     Same definition as for dipole
-        sextupole:      Same definition as for dipole
-        multipole:      Same definition as for dipole
-        monitor:        Same definition as for dipole
+        labels (Refpts):    Select the elements for which the name is displayed.
+          Default: :py:obj:`None`,
+        dipole (dict):      Dictionary of properties overloading the default
+          properties of the dipole representation.
+          Example: :pycode:`{"facecolor": "xkcd:electric blue"}`. If :py:obj:`None`,
+          dipoles are not shown.
+        quadrupole (dict):  Same definition as for dipole,
+        sextupole (dict):   Same definition as for dipole,
+        multipole (dict):   Same definition as for dipole,
+        monitor (dict):     Same definition as for dipole.
 
     Returns:
         synopt_axes (Axes): Synoptic axes

@@ -33,24 +33,37 @@ def plot_observables(
           if refpts is :py:obj:`.All`, a line is drawn. Otherwise, markers are drawn.
           It is recommended to use Observables with scalar values. Otherwise, all the
           values are plotted but share the same line properties and legend,
-        obsright: Optional ist of :py:class:`.ElementObservable` plotted against the
-          right axis.
+        obsright: Optional list of :py:class:`.ElementObservable` plotted against the
+          right axis,
         axes: :py:class:`~.matplotlib.axes.Axes` in which the observables are plotted.
-          if :py:obj:`None`, a new figure is created.
+          if :py:obj:`None`, a new figure is created,
         s_range:            Lattice range of interest, default: whole lattice,
         slices: Number of lattice slices for getting smooth curves. Default: 400.
 
+    The following keywords are transmitted to the :py:func:`.plot_synopt` function.They
+    apply to the main (left) axis and are ignored when plotting in exising axes:
+
     Keyword Args:
-        title (str):        Plot title,
         labels (Refpts):    Select elements for which the name is displayed.
-          Default: :py:obj:`None`
+          Default: :py:obj:`None`,
         dipole (dict):      Dictionary of properties overloading the default
-          properties of dipole representation. See :py:func:`.plot_synopt`
-          for details
-        quadrupole (dict):  Same definition as for dipole
-        sextupole (dict):   Same definition as for dipole
-        multipole (dict):   Same definition as for dipole
-        monitor (dict):     Same definition as for dipole
+          properties of the dipole representation.
+          Example: :pycode:`{"facecolor": "xkcd:electric blue"}`. If :py:obj:`None`,
+          dipoles are not shown.
+        quadrupole (dict):  Same definition as for dipole,
+        sextupole (dict):   Same definition as for dipole,
+        multipole (dict):   Same definition as for dipole,
+        monitor (dict):     Same definition as for dipole.
+
+    The following keyword arguments are transmitted to the
+    :py:class:`~matplotlib.axes.Axes` creation function.They apply to the main (left)
+    axis and are ignored when plotting in exising axes:
+
+    Keyword Args:
+        title (str):    Plot title,
+        ylim (tuple):     Y-axis limits,
+        *: for other keywords see
+          :py:obj:`~.matplotlib.figure.Figure.add_subplot`
 
     Returns:
         axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
