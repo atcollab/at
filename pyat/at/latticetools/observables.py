@@ -1364,12 +1364,12 @@ class TrajectoryObservable(ElementObservable):
 
     # Class attributes
     _pinfo: ClassVar[dict] = {
-        "x": (r"$x_{{{plane}}}$", r"x [m]", lambda x: x),
-        "px": (r"$p_{{x{plane}}}$", r"$p_x$", lambda x: x),
-        "y": (r"$y_{{{plane}}}$", r"y [m]", lambda x: x),
-        "py": (r"$p_{{y{plane}}}$", r"$p_y$", lambda x: x),
-        "dp": (r"$\delta_{{{plane}}}$", r"$\delta$", lambda x: x),
-        "ct": (r"$\beta c \tau_{{{plane}}}$", r"path lengthening [m]", lambda x: x),
+        "x": (r"$x_{{{plane}}}$", "position [m]", lambda x: x),
+        "px": (r"$p_{{x{plane}}}$", "transverse momentum", lambda x: x),
+        "y": (r"$y_{{{plane}}}$", "position [m]", lambda x: x),
+        "py": (r"$p_{{y{plane}}}$", "transverse momentum", lambda x: x),
+        "dp": (r"$\delta_{{{plane}}}$", "off-momentum", lambda x: x),
+        "ct": (r"$\beta c \tau_{{{plane}}}$", "path lengthening [m]", lambda x: x),
     }
 
     def __init__(

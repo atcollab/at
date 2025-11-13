@@ -8,6 +8,7 @@ __all__ = ["plot_response"]
 
 from collections.abc import Mapping
 import itertools
+from typing import Iterable
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -18,15 +19,16 @@ from ..latticetools import ObservableList
 
 def plot_response(
     var: VariableBase,
-    *args,
+    rng: Iterable[float],
+    obsleft: ObservableList,
+    *obsright: ObservableList,
     axes: Axes | None = None,
     xlabel: str = "",
     ylabel: str = "",
     **kwargs
-) -> Axes:
+) -> tuple[Axes]:
     # noinspection PyUnresolvedReferences
-    r"""plot_response(var: VariableBase, rng: Iterable[float], obsleft: ObservableList, obsright: ObservableList, **kwargs) -> Axes
-    Plot :py:class:`.Observable` values as a function of a
+    r"""Plot :py:class:`.Observable` values as a function of a
     :py:class:`Variable <.VariableBase>`.
 
     Args:
@@ -36,8 +38,6 @@ def plot_response(
           use Observables with scalar values. Otherwise, all the values are plotted but
           share the same line properties and legend,
         obsright:   Optional list of Observables plotted on the right axis.
-
-    Keyword Args:
         axes:           :py:class:`~matplotlib.axes.Axes` object in which the figure
           is plotted. If :py:obj:`None`, a new figure is created.
         xlabel:         x-axis label. May contain Latex math code.
@@ -49,7 +49,8 @@ def plot_response(
     :py:class:`~matplotlib.axes.Axes` creation function.
 
     Returns:
-        ax:             the :py:class:`~matplotlib.axes.Axes` object.
+        axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
+          is a plot on the right y-axis, 1 element otherwise.
 
     Example:
         Minimal example using only default values:
@@ -122,7 +123,7 @@ def plot_response(
         ...     dp = 0.0
         ... )
         >>> var = at.EvaluationVariable(obsleft, "dp", name=r"$\delta$")
-        >>> ax=at.plot_response(var, obsleft, np.arange(-0.03, 0.0301,0.001))
+        >>> ax=at.plot_response(var, np.arange(-0.03, 0.0301,0.001), obsleft)
 
         .. image:: /images/delta_response.*
            :alt: delta response
@@ -134,7 +135,7 @@ def plot_response(
         for ob in obs:
             yield from ob.evaluate()
 
-    def axes1(axes: Axes, obs: ObservableList, ylabel: str):
+    def axes1(axes: Axes, obs: ObservableList):
         """Plot all observables on a given axis."""
 
         def plot1(obs, ncurve):
@@ -145,14 +146,13 @@ def plot_response(
             else:
                 return axes.plot(xx, next(values), fmt, label=obs.label)
 
-        axes.set_ylabel(ylabel or obs.axis_label)
+        axes.set_ylabel(obs.axis_label)
         for ob in obs:
             yield from plot1(ob, next(line_counter))
 
-    if isinstance(args[0], ObservableList):
-        obsleft, rng, *obsright = args
-    else:
-        rng, obsleft, *obsright = args
+    if isinstance(rng, ObservableList):
+        # swap arguments for the old argument order
+        rng, obsleft = obsleft, rng
 
     if axes is None:
         _, axleft = plt.subplots(subplot_kw=kwargs)
@@ -174,10 +174,12 @@ def plot_response(
     line_counter = itertools.count()
 
     lines = []
-    for ax, obs, ylab in zip(allaxes, allobs, (ylabel, ""), strict=False):
-        lines.extend(axes1(ax, obs, ylab))
+    for ax, obs in zip(allaxes, allobs, strict=True):
+        lines.extend(axes1(ax, obs))
 
     axleft.set_xlabel(xlabel or var.name)
+    if ylabel:
+        axleft.set_ylabel(ylabel)
     axleft.legend(handles=lines)
     axleft.grid(True)
 
