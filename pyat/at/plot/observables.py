@@ -16,7 +16,7 @@ _SLICES = 400
 
 
 class _RingSplitter:
-    """generate a ring split in small slices for plotting"""
+    """Generate a ring split in small slices for plotting."""
 
     def __init__(self, ring: Lattice, s_range: tuple[float, float], slices: int):
         ring.s_range = s_range
@@ -26,7 +26,7 @@ class _RingSplitter:
         self.slices = slices
 
     @property
-    def ring(self):
+    def ring(self) -> Lattice:
         if self._ring1:
             return self._ring1
         else:
@@ -37,13 +37,15 @@ class _RingSplitter:
 
 
 def plot_observables(
-        ring: Lattice,
-        obsleft: ObservableList,
-        *obsright: ObservableList,
-        s_range: tuple[float, float] | None = None,
-        axes: Axes | None = None,
-        slices: int = _SLICES,
-        **kwargs,
+    ring: Lattice,
+    obsleft: ObservableList,
+    *obsright: ObservableList,
+    s_range: tuple[float, float] | None = None,
+    axes: Axes | None = None,
+    xlabel: str = "",
+    ylabel: str = "",
+    slices: int = _SLICES,
+    **kwargs,
 ) -> tuple[Axes]:
     # noinspection PyUnresolvedReferences
     r"""Plot element observables along a lattice.
@@ -60,6 +62,8 @@ def plot_observables(
           if :py:obj:`None`, a new figure is created,
         s_range:            Lattice range of interest, default: whole lattice,
         slices: Number of lattice slices for getting smooth curves. Default: 400.
+        xlabel:         x-axis label. Default: ``s [m]``.
+        ylabel:         y-axis label. Default: :py:attr:`.ObservableList.axis_label`.
 
     The following keywords are transmitted to the :py:func:`.plot_synopt` function.They
     apply to the main (left) axis and are ignored when plotting in exising axes:
@@ -90,6 +94,16 @@ def plot_observables(
         axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
           is a plot on the right y-axis, 1 element otherwise.
 
+    .. hint::
+
+        The legend of the plot is controlled by the :py:attr:`.Observable.label`
+        attributes. Default values are provided, but labels may explicitly set.
+
+        Labels may contain LaTeX math code. Example: ``"$\beta_x$"`` will appear as
+        ":math:`\beta_x`".
+
+        Labels starting with an underscore do not appear in the legend.
+
     Examples:
         Minimal example using default values:
 
@@ -100,7 +114,7 @@ def plot_observables(
         ...     ]
         ... )
         >>>
-        >>> ax1, = at.plot_observables(ring, obsmu)
+        >>> (ax1,) = at.plot_observables(ring, obsmu)
 
         .. image:: /images/plot_observables/phase_obs.*
            :alt: phase advance plot
@@ -127,8 +141,10 @@ def plot_observables(
         ...         ),
         ...     ]
         ... )
-        >>> (ax2,) = at.plot_observables(ring, obsenv, title="Beam envelopes")
-        >>> ax1.set_ylabel(r"Beam size [${\mu}m$]")
+        >>> (ax2,) = at.plot_observables(
+        ...     ring, obsenv, ylabel=r"Beam size [${\mu}m$]", title="Beam envelopes"
+        ... )
+        >>> )
 
         .. image:: /images/plot_observables/envelope_obs.*
            :alt: envelope plot
@@ -206,7 +222,9 @@ def plot_observables(
     for ax, obs in zip(allaxes, allobs, strict=True):
         lines.extend(axes1(ax, obs))
 
-    axleft.set_xlabel("s [m]")
+    axleft.set_xlabel(xlabel or "s [m]")
+    if ylabel:
+        axleft.set_ylabel(ylabel)
     axleft.legend(handles=[ln for ln in lines if not ln.get_label().startswith("_")])
     axleft.grid(True)
     return allaxes

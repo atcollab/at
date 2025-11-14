@@ -6,9 +6,8 @@ from __future__ import annotations
 
 __all__ = ["plot_response"]
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
 import itertools
-from typing import Iterable
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -25,7 +24,7 @@ def plot_response(
     axes: Axes | None = None,
     xlabel: str = "",
     ylabel: str = "",
-    **kwargs
+    **kwargs,
 ) -> tuple[Axes]:
     # noinspection PyUnresolvedReferences
     r"""Plot :py:class:`.Observable` values as a function of a
@@ -40,10 +39,8 @@ def plot_response(
         obsright:   Optional list of Observables plotted on the right axis.
         axes:           :py:class:`~matplotlib.axes.Axes` object in which the figure
           is plotted. If :py:obj:`None`, a new figure is created.
-        xlabel:         x-axis label. May contain Latex math code.
-          Default: variable name.
-        ylabel:         y-axis label. May contain Latex math code.
-          Default: observable :py:attr:`~.ObservableList.axis_label`.
+        xlabel:         x-axis label. Default: variable name.
+        ylabel:         y-axis label. Default: :py:attr:`.ObservableList.axis_label`.
 
     Additional keyword arguments are transmitted to the
     :py:class:`~matplotlib.axes.Axes` creation function.They apply to the main (left)
@@ -59,6 +56,16 @@ def plot_response(
     Returns:
         axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
           is a plot on the right y-axis, 1 element otherwise.
+
+    .. hint::
+
+        The legend of the plot is controlled by the :py:attr:`.Observable.label`
+        attributes. Default values are provided, but labels may explicitly set.
+
+        Labels may contain LaTeX math code. Example: ``"$\beta_x$"`` will appear as
+        ":math:`\beta_x`".
+
+        Labels starting with an underscore do not appear in the legend.
 
     Example:
         Minimal example using only default values:
@@ -86,23 +93,23 @@ def plot_response(
         - using dual y-axis,
         - using the *ylim* and *title* parameters.
 
-        >>> obsleft =at.ObservableList(
+        >>> obsleft = at.ObservableList(
         ...     [
         ...         at.LocalOpticsObservable(
         ...             [0], "beta", plane="x",
         ...             plot_fmt={"linewidth": 3.0, "marker": "o"}
         ...         ),
-        ...         at.LocalOpticsObservable([0], "beta", plane="y", plot_fmt="--")
+        ...         at.LocalOpticsObservable([0], "beta", plane="y", plot_fmt="--"),
         ...     ],
-        ...     ring=ring
+        ...     ring=ring,
         ... )
         >>>
-        >>> obsright =at.ObservableList(
+        >>> obsright = at.ObservableList(
         ...     [
         ...         at.GlobalOpticsObservable("tune", plane="x"),
         ...         at.GlobalOpticsObservable("tune", plane="y"),
         ...     ],
-        ...     ring=ring
+        ...     ring=ring,
         ... )
         >>>
         >>> var = RefptsVariable(
@@ -114,7 +121,7 @@ def plot_response(
         ...     obsleft,
         ...     obsright,
         ...     ylim=[0.0, 10.0],
-        ...     title="Example of plot_response"
+        ...     title="Example of plot_response",
         ... )
 
         .. image:: /images/beta_response.*
@@ -122,16 +129,16 @@ def plot_response(
 
         Example varying an evaluation parameter:
 
-        >>> obs =at.ObservableList(
+        >>> obs = at.ObservableList(
         ...     [
         ...         at.LocalOpticsObservable([0], "beta", plane="x"),
-        ...         at.LocalOpticsObservable([0], "beta", plane="y")
+        ...         at.LocalOpticsObservable([0], "beta", plane="y"),
         ...     ],
         ...     ring=ring,
-        ...     dp = 0.0
+        ...     dp=0.0,
         ... )
         >>> var = at.EvaluationVariable(obsleft, "dp", name=r"$\delta$")
-        >>> ax=at.plot_response(var, np.arange(-0.03, 0.0301,0.001), obsleft)
+        >>> ax = at.plot_response(var, np.arange(-0.03, 0.0301, 0.001), obsleft)
 
         .. image:: /images/delta_response.*
            :alt: delta response
@@ -174,7 +181,7 @@ def plot_response(
     allobs = (obsleft, *obsright)
 
     # Compute all the observable values
-    with (var.restore()):
+    with var.restore():
         vals = [(v, *compute(v, allobs)) for v in rng]
 
     xx, *yy = zip(*vals, strict=True)

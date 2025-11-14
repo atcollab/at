@@ -90,6 +90,7 @@ class ObservableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
+    # class attributes
     _needs_ring: ClassVar[set[Need]] = {
         Need.RING,
         Need.ORBIT,
@@ -236,6 +237,12 @@ class ObservableList(list):
             self.rdtrefs = rdtrefs
             self.passrefs = passrefs
             self.matrixrefs = matrixrefs
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return type(self)(super().__getitem__(index), **self.kwargs)
+        else:
+            return super().__getitem__(index)
 
     def __iadd__(self, other: ObservableList):
         if not isinstance(other, ObservableList):
@@ -707,7 +714,7 @@ class ObservableList(list):
         get_weighted_values, doc="Weighted values of all observables"
     )
     flat_weighted_values = property(
-        get_flat_weighted_values, doc="1-D array of Observable weigthed values"
+        get_flat_weighted_values, doc="1-D array of Observable weighted values"
     )
     deviations = property(get_deviations, doc="Deviations from target values")
     flat_deviations = property(

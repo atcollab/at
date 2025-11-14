@@ -261,7 +261,13 @@ class Observable:
 
     # Instance attributes
     name: str  #: Observable name.
-    label: str  #: Label used in plot legends.
+    #: Label used in plot legends.
+    #:
+    #: It may contain LaTeX math code. Example: ``"$\beta_x$"`` will appear as
+    #: :math:`\beta_x`.
+    #:
+    #: Labels starting with a ``_`` will not appear in the legends.
+    label: str
     #: Line formatting used when plotting the Observable. See
     #: :py:meth:`~matplotlib.axes.Axes.plot` for a description of line formatting.
     #: *plot_fmt* may be a :py:class:`str` for simple formatting (ex.: ``"o-"``) or a
@@ -963,7 +969,6 @@ class MatrixObservable(ElementObservable):
 
 
 class _GlobalOpticsObservable(Observable):
-
     # Class attributes
     _pinfo: ClassVar[dict] = {
         "tune": (r"$\nu_{{{plane}}}$", "Tune", partial(plane_, key="label")),
