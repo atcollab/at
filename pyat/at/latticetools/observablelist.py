@@ -736,6 +736,7 @@ class EvaluationVariable(ItemVariable):
     """
 
     def __init__(self, obslist: ObservableList, key, *args, **kwargs):
+        # noinspection PyUnresolvedReferences
         """
         Args:
             obslist:    The :py:class:`.ObservableList` to control,

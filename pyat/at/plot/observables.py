@@ -15,14 +15,35 @@ from .synopt import plot_synopt
 _SLICES = 400
 
 
+class _RingSplitter:
+    """generate a ring split in small slices for plotting"""
+
+    def __init__(self, ring: Lattice, s_range: tuple[float, float], slices: int):
+        ring.s_range = s_range
+        self._ring0 = ring
+        self._ring1 = None
+        self.s = None
+        self.slices = slices
+
+    @property
+    def ring(self):
+        if self._ring1:
+            return self._ring1
+        else:
+            rg = self._ring0.slice(slices=self.slices)
+            self.s = rg.get_s_pos(range(len(rg) + 1))
+            self._ring1 = rg
+            return rg
+
+
 def plot_observables(
-    ring: Lattice,
-    obsleft: ObservableList,
-    *obsright: ObservableList,
-    s_range: tuple[float, float] | None = None,
-    axes: Axes | None = None,
-    slices: int = _SLICES,
-    **kwargs,
+        ring: Lattice,
+        obsleft: ObservableList,
+        *obsright: ObservableList,
+        s_range: tuple[float, float] | None = None,
+        axes: Axes | None = None,
+        slices: int = _SLICES,
+        **kwargs,
 ) -> tuple[Axes]:
     # noinspection PyUnresolvedReferences
     r"""Plot element observables along a lattice.
@@ -127,20 +148,22 @@ def plot_observables(
             """Plot a single observable."""
             if obs.refpts is All:
                 args, kwargs = get_format(obs, f"C{next(curve_counter)}")
-                return axes.plot(
-                    curve_s, next(curve_values), *args, label=obs.label, **kwargs
-                )
+                x = curve_s
             else:
                 args, kwargs = get_format(obs, f"oC{next(dot_counter)}")
                 x = dot_s[obs._boolrefs]
-                return axes.plot(x, next(dot_values), *args, label=obs.label, **kwargs)
+
+            return axes.plot(x, obs.value, *args, label=obs.label, **kwargs)
 
         axes.set_ylabel(obs.axis_label)
         for ob in obs:
             yield from plot1(ob)
 
-    def select(obs: ObservableList) -> None:
-        """Distribute observables between curves and dots"""
+    def evaluate(obs: ObservableList) -> None:
+        """Evaluates one observable."""
+        curves = ObservableList(**obs.kwargs)
+        dots = ObservableList(**obs.kwargs)
+
         for ob in obs:
             if not isinstance(ob, ElementObservable):
                 msg = f"{ob.name} is not an ElementObservable object."
@@ -149,10 +172,16 @@ def plot_observables(
                 curves.append(ob)
             else:
                 dots.append(ob)
-        dots.kwargs.update(obs.kwargs)
-        curves.kwargs.update(obs.kwargs)
 
-    ring.s_range = s_range
+        if curves:
+            # Evaluate curve data
+            curves.evaluate(ring=splitter.ring)
+
+        if dots:
+            # Evaluate marker data
+            dots.evaluate(ring=ring)
+
+    splitter = _RingSplitter(ring, s_range, slices)
 
     if axes is None:
         _, axleft = plot_synopt(ring, **kwargs)
@@ -165,22 +194,11 @@ def plot_observables(
     allaxes = (axleft, axleft.twinx()) if obsright else (axleft,)
     allobs = (obsleft, *obsright)
 
-    curves = ObservableList()
-    dots = ObservableList()
     for obs in allobs:
-        select(obs)
+        evaluate(obs)
 
-    if curves:
-        # Evaluate curve data
-        rg = ring.slice(slices=slices)
-        curve_s = rg.get_s_pos(range(len(rg) + 1))
-        curve_values = iter(curves.evaluate(ring=rg))
-
-    if dots:
-        # Evaluate marker data
-        dot_s = ring.get_s_pos(range(len(ring) + 1))
-        dot_values = iter(dots.evaluate(ring=ring))
-
+    curve_s = splitter.s
+    dot_s = ring.get_s_pos(range(len(ring) + 1))
     curve_counter = itertools.count()
     dot_counter = itertools.count()
 
@@ -189,6 +207,6 @@ def plot_observables(
         lines.extend(axes1(ax, obs))
 
     axleft.set_xlabel("s [m]")
-    axleft.legend(handles=[l for l in lines if not l.get_label().startswith("_")])
+    axleft.legend(handles=[ln for ln in lines if not ln.get_label().startswith("_")])
     axleft.grid(True)
     return allaxes
