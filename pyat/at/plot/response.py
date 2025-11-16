@@ -57,7 +57,7 @@ def plot_response(
         axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
           is a plot on the right y-axis, 1 element otherwise.
 
-    .. hint::
+    .. note::
 
         The legend of the plot is controlled by the :py:attr:`.Observable.label`
         attributes. Default values are provided, but labels may explicitly set.
