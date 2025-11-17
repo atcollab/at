@@ -24,11 +24,11 @@ MONITOR = {"label": "Monitors", "linestyle": None, "marker": 10, "color": "k"}
 def plot_synopt(
     ring: Lattice,
     axes: matplotlib.axes.Axes = None,
-    dipole: dict | None = {},
-    quadrupole: dict | None = {},
-    sextupole: dict | None = {},
-    multipole: dict | None = {},
-    monitor: dict | None = {},
+    dipole: dict | None = {},  # noqa: B006
+    quadrupole: dict | None = {},  # noqa: B006
+    sextupole: dict | None = {},  # noqa: B006
+    multipole: dict | None = {},  # noqa: B006
+    monitor: dict | None = {},  # noqa: B006
     labels: Refpts = None,
     **kwargs,
 ):
