@@ -32,21 +32,18 @@ def _match(
     method: str | None = None,
     verbose: int = 2,
     max_nfev: int = 1000,
-    dp: float | None = None,
-    dct: float | None = None,
-    df: float | None = None,
     **kwargs,
 ) -> None:
     def fun(vals):
         """Evaluation function for the minimiser."""
         variables.set(vals, ring=ring)
-        constraints.evaluate(ring, dp=dp, dct=dct, df=df)
+        constraints.evaluate(ring=ring)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
 
     vini = variables.get(ring=ring, initial=True, check_bounds=True)
     bounds = np.array([var.bounds for var in variables])
 
-    constraints.evaluate(ring, initial=True, dp=dp, dct=dct, df=df)
+    constraints.evaluate(ring=ring, initial=True)
     constraints.check()
     ntargets = constraints.flat_values.size
 
@@ -104,9 +101,6 @@ def match(
           'lm' for unbounded problems, 'trf' otherwise.
         verbose:        Level of verbosity
         max_nfev:       Maximum number of function evaluation
-        dp:             Momentum deviation.
-        dct:            Path lengthening.
-        df:             Deviation from the nominal RF frequency.
         **kwargs:       Keyword arguments sent to
           :py:func:`~scipy.optimize.least_squares`
 
