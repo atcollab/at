@@ -796,4 +796,5 @@ class EvaluationVariable(ItemVariable):
             >>> v1.value
             np.float64(9.0)
         """
+        obslist.kwargs.setdefault(key, 0.0)
         super().__init__(obslist.kwargs, key, *args, **kwargs)
