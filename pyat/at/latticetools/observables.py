@@ -106,10 +106,10 @@ def _record_access(param, index, data, **_):
     return val if index is None else val[index]
 
 
-def _fun_access(fun, index, data, **_):
+def _fun_access(fun, index, data, **kwargs):
     """Access a selected item in the output of a user-defined function."""
-    val = fun(data)
-    return val if index is None else val[index]
+    val = fun(data, **kwargs)
+    return val if index is None else val[_all_rows(index)]
 
 
 def _muf_access(_, index, data, **kwargs):
