@@ -1017,11 +1017,12 @@ class _GlobalOpticsObservable(Observable):
 
         needs = {Need.GLOBALOPTICS}
         name = self._set_name(name, param, plane_(plane, key="code"))
+        index = plane_(plane, key="index")
         if callable(param):
-            fun = partial(_fun_access, param, plane_(plane, key="index"))
+            fun = partial(_fun_access, param, index)
             needs.add(Need.CHROMATICITY)
         else:
-            fun = partial(_record_access, param, plane_(plane, key="index"))
+            fun = partial(_record_access, param, index)
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
 
