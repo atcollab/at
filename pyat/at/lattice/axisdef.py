@@ -11,9 +11,9 @@ AxisDef = Union[AxisCode, Tuple[AxisCode, AxisCode]]
 
 _axis_def = {
     "x": {"index": 0, "label": "x", "unit": " [m]"},
-    "px": {"index": 1, "label": r"$p_x$", "unit": " [rad]"},
+    "px": {"index": 1, "label": r"$p_x$", "unit": ""},
     "y": {"index": 2, "label": "y", "unit": " [m]"},
-    "py": {"index": 3, "label": r"$p_y$", "unit": " [rad]"},
+    "py": {"index": 3, "label": r"$p_y$", "unit": ""},
     "dp": {"index": 4, "label": r"$\delta$", "unit": ""},
     "ct": {"index": 5, "label": r"$\beta c \tau$", "unit": " [m]"},
 }

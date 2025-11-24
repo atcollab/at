@@ -62,6 +62,7 @@ class RDTObservable(ElementObservable):
         param: str,
         *,
         name: str | None = None,
+        label: str | None = None,
         second_order: bool = False,
         **kwargs,
     ):
@@ -91,6 +92,16 @@ class RDTObservable(ElementObservable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring**:         Lattice description,
+        * **use_mp**:       Activate parallel calculation. Default: :py:obj:`False`
+        * **pool_size**:    Number of processes used for parallelization.
+          Default: :py:obj:`None`
 
         .. _rdt_param:
         .. rubric:: RDT parameter names
@@ -154,5 +165,9 @@ class RDTObservable(ElementObservable):
         name = self._set_name(name, param, None)
         fun = partial(_rdt_access, param)
 
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun, refpts, needs=needs, name=name, axis_label="RDT", **kwargs
+        )
         self._rdt_type = RDT_code[param]
+        if label:
+            self.label = label

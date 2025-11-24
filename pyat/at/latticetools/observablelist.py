@@ -90,6 +90,7 @@ class ObservableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
+    # class attributes
     _needs_ring: ClassVar[set[Need]] = {
         Need.RING,
         Need.ORBIT,
@@ -237,6 +238,12 @@ class ObservableList(list):
             self.passrefs = passrefs
             self.matrixrefs = matrixrefs
 
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return type(self)(super().__getitem__(index), **self.kwargs)
+        else:
+            return super().__getitem__(index)
+
     def __iadd__(self, other: ObservableList):
         if not isinstance(other, ObservableList):
             msg = f"Cannot add a {type(other)} to an ObservableList."
@@ -355,7 +362,7 @@ class ObservableList(list):
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
-                trajs = r_out[:, 0, :, 0].T
+                trajs = r_out[:, :, :, 0].T
                 keep_lattice = True
 
             if Need.ORBIT in needs or needs_o0:
@@ -472,6 +479,12 @@ class ObservableList(list):
             AtError:    any value is doubtful: evaluation failed, empty value…
         """
         return all(obs.check() for obs in self)
+
+    @property
+    def axis_label(self):
+        """y-axis label combining the axis_label of all observables (read only)."""
+        labs = {obs.axis_label for obs in self if obs.axis_label is not None}
+        return ", ".join(labs)
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
@@ -701,7 +714,7 @@ class ObservableList(list):
         get_weighted_values, doc="Weighted values of all observables"
     )
     flat_weighted_values = property(
-        get_flat_weighted_values, doc="1-D array of Observable weigthed values"
+        get_flat_weighted_values, doc="1-D array of Observable weighted values"
     )
     deviations = property(get_deviations, doc="Deviations from target values")
     flat_deviations = property(
@@ -730,6 +743,7 @@ class EvaluationVariable(ItemVariable):
     """
 
     def __init__(self, obslist: ObservableList, key, *args, **kwargs):
+        # noinspection PyUnresolvedReferences
         """
         Args:
             obslist:    The :py:class:`.ObservableList` to control,
