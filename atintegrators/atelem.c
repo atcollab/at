@@ -202,8 +202,9 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
 
 typedef PyObject atElem;
 #define check_error() if (PyErr_Occurred()) return NULL
-#define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
-#define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
+# atError and atWarning must be followed by a call to check_error() in the main trackFunction
+#define atError(...) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
+#define atWarning(...) PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__)
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
 #define atEnergy(ringenergy,elemenergy) (ringenergy)
 #define atGamma(ringenergy,elemenergy,rest_energy) ((rest_energy) == 0.0 ? 1.0E-9*(ringenergy)/__E0 : (ringenergy)/(rest_energy))

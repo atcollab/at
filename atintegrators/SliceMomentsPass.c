@@ -145,11 +145,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int startturn = atGetLong(ElemData,"_startturn"); check_error();
         int endturn = atGetLong(ElemData,"_endturn"); check_error();
         if (endturn<0 || startturn<0){
-            atError("starturn and endturn have to be greater than 0");
+            atError("starturn and endturn have to be greater than 0"); check_error();
         } else if (endturn<0 || startturn<0){
-            atError("starturn has to be smaller than endturn.");
+            atError("starturn has to be smaller than endturn."); check_error();
         } else if (endturn > Param->num_turns){
-            atWarning("endturn exceed the total number of turns");
+            atWarning("endturn exceed the total number of turns"); check_error();
         };
         int dims[] = {3, Param->nbunch*nslice, endturn-startturn};
         int dimsw[] = {Param->nbunch*nslice,  endturn-startturn};
