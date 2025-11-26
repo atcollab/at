@@ -6,7 +6,7 @@ import copy
 import warnings
 from collections.abc import Sequence, Generator, Iterable
 import json
-from ..lattice import Particle
+from ..lattice import Particle, transformation
 from ..lattice import Lattice, RFCavity
 from ..lattice import Element, Drift, ThinMultipole, Marker
 from ..lattice import AtWarning
@@ -145,7 +145,7 @@ class MultipoleElement(BasicElement):
                 "pitch": rot_y,
                 "yaw": rot_x,
             }
-            at.transform_elem(elem, **transforms)
+            transformation.transform_elem(elem, **transforms)
 
     def _set_xs_transforms(self, dict_elem):
         transforms = self.atparams.get("transforms", None)
@@ -474,7 +474,7 @@ def save_xsuite(
     lattice = _format_lattice(lattice)
     indent = None if compact else 2
     for e in lattice:
-        offset, tilt, pitch, yaw = at.get_offsets_rotations(e)
+        offset, tilt, pitch, yaw = transformation.get_offsets_rotations(e)
         e.transforms = {
             "shift_x": np.round(offset[0], 15),
             "shift_y": np.round(offset[1], 15),
