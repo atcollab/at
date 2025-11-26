@@ -14,3 +14,4 @@ from .file_input import *  # noqa: F401, F403
 from .file_output import *
 from .madx import *  # noqa: F401, F403
 from .mad8 import *  # noqa: F401, F403
+from .xsuite import *  # noqa: F401, F403
