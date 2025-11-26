@@ -202,7 +202,7 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
 
 typedef PyObject atElem;
 #define check_error() if (PyErr_Occurred()) return NULL
-# atError and atWarning must be followed by a call to check_error() in the main trackFunction
+/* atError and atWarning must be followed by a call to check_error() in the main trackFunction */
 #define atError(...) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__)
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
