@@ -136,6 +136,17 @@ class MultipoleElement(BasicElement):
         rot_x = self.xsuite_params.pop("rot_x_rad", 0.0)
         rot_y = self.xsuite_params.pop("rot_y_rad", 0.0)
         rot_s = self.xsuite_params.pop("rot_s_rad", 0.0)
+        anchor = self.xsuite_params.pop("rot_shift_anchor", 0.0)
+        if anchor == 0:
+            reference = transformation.ReferencePoint.ENTRANCE
+        elif anchor == 0.5:
+            reference = transformation.ReferencePoint.CENTRE
+        else:
+            msg = "Anchor point for rotation different from 0 or 1, setting" \
+            "to AT default: ReferencePoint.CENTRE"
+            warnings.warn(AtWarning(msg))
+            reference = transformation.ReferencePoint.CENTRE              
+        
         if np.any(np.array([shift_x, shift_y, shift_s, rot_x, rot_y, rot_s]) != 0.0):
             transforms = {
                 "dx": shift_x,
@@ -144,6 +155,7 @@ class MultipoleElement(BasicElement):
                 "tilt": rot_s,
                 "pitch": rot_y,
                 "yaw": rot_x,
+                "reference": reference,
             }
             transformation.transform_elem(elem, **transforms)
 
@@ -496,6 +508,7 @@ def save_xsuite(
             "rot_s_rad": tilt,
             "rot_y_rad": pitch,
             "rot_x_rad": yaw,
+            "rot_shift_anchor": 0.5,
         }
     elements = {e.FamName: at_to_xsuite(e.FamName, e.to_dict()) for e in lattice}
     element_names = [e.FamName for e in lattice]
