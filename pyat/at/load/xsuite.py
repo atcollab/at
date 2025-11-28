@@ -501,7 +501,7 @@ def save_xsuite(
     lattice = _format_lattice(lattice)
     indent = None if compact else 2
     for e in lattice:
-        refpoint = getattr(e, 'ReferencePoint', transformation.ReferencePoint.CENTRE)
+        refpoint = transformation.ReferencePoint[getattr(e, 'ReferencePoint', 'CENTRE')]
         offset, tilt, yaw, pitch = transformation.get_offsets_rotations(e, reference=refpoint)
         if np.any(np.array([offset[0], offset[1], offset[2], tilt, pitch, yaw]) != 0.0):
             if refpoint == transformation.ReferencePoint.ENTRANCE:
