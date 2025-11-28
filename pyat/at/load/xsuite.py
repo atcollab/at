@@ -175,10 +175,11 @@ class MultipoleElement(BasicElement):
         ks += ksl
         self.atparams["PolynomB"] = self.p_to_at(list(kn))
         self.atparams["PolynomA"] = self.p_to_at(list(ks))
-        if self.atparams["PolynomB"][1] != 0.0:
+        if(self.xsuite_params.get('edge_entry_model', 'linear') == 'full'):
             self.atparams["FringeQuadEntrance"] = self.xsuite_params.get(
                 "edge_entry_active", 1
             )
+        if(self.xsuite_params.get('edge_entry_model', 'linear') == 'full'):
             self.atparams["FringeQuadExit"] = self.xsuite_params.get(
                 "edge_exit_active", 1
             )
@@ -206,6 +207,11 @@ class MultipoleElement(BasicElement):
             self.xsuite_params["edge_exit_active"] = self.atparams.get(
                 "FringeQuadExit", 0
             )
+        elif self.atparams.get('BendingAngle', 0.0) == 0.0:
+            self.xsuite_params["edge_exit_active"] = 0
+            self.xsuite_params["edge_entry_active"] = 0
+
+
 
     @staticmethod
     def poly_from_xsuite(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
@@ -284,8 +290,12 @@ class DipoleElement(MultipoleElement):
         active_exit = self.xsuite_params.get("edge_exit_active", 1)
         if active_entry == 0:
             self.atparams["FringeBendEntrance"] = 0
+        elif self.xsuite_params.get("edge_entry_model", "linear") == "full":
+                self.atparams["FringeQuadEntrance"] = 1
         if active_exit == 0:
             self.atparams["FringeBendExit"] = 0
+        elif self.xsuite_params.get("edge_exit_model", "linear") == "full":
+                self.atparams["FringeQuadExit"] = 1
 
     def _set_xs_angle_faces(self):
         gap = self.atparams.pop("FullGap", None)
@@ -297,18 +307,22 @@ class DipoleElement(MultipoleElement):
                 }
             )
         self.xsuite_params.update({"k0_from_h": True})
-        dfr_entry = self.atparams.get("FringeBendEntrance", 1)
-        dfr_exit = self.atparams.get("FringeBendExit", 1)
-        qfr_entry = self.atparams.get("FringeQuadEntrance", 0)
-        qfr_exit = self.atparams.get("FringeQuadExit", 0)
+        dfr_entry = self.atparams.pop("FringeBendEntrance", 1)
+        dfr_exit = self.atparams.pop("FringeBendExit", 1)
+        qfr_entry = self.atparams.pop("FringeQuadEntrance", 0)
+        qfr_exit = self.atparams.pop("FringeQuadExit", 0)
         if dfr_entry != 0:
             self.xsuite_params["edge_entry_active"] = 1
             if qfr_entry == 1:
                 self.xsuite_params["edge_entry_model"] = "full"
+            else:
+                self.xsuite_params["edge_entry_model"] = "dipole-only"
         if dfr_exit != 0:
             self.xsuite_params["edge_exit_active"] = 1
             if qfr_exit == 1:
                 self.xsuite_params["edge_exit_model"] = "full"
+            else:
+                self.xsuite_params["edge_entry_model"] = "dipole-only"
 
     def get_at_element(self) -> Element:
         self._set_at_angle_faces()
@@ -476,12 +490,12 @@ def save_xsuite(
     for e in lattice:
         offset, tilt, pitch, yaw = transformation.get_offsets_rotations(e)
         e.transforms = {
-            "shift_x": np.round(offset[0], 15),
-            "shift_y": np.round(offset[1], 15),
-            "shift_s": np.round(offset[2], 15),
-            "rot_s_rad": np.round(tilt, 15),
-            "rot_y_rad": np.round(pitch, 15),
-            "rot_x_rad": np.round(yaw, 15),
+            "shift_x": offset[0],
+            "shift_y": offset[1],
+            "shift_s": offset[2],
+            "rot_s_rad": tilt,
+            "rot_y_rad": pitch,
+            "rot_x_rad": yaw,
         }
     elements = {e.FamName: at_to_xsuite(e.FamName, e.to_dict()) for e in lattice}
     element_names = [e.FamName for e in lattice]

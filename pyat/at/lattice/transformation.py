@@ -21,6 +21,7 @@ __all__ = [
     "set_shift",
     "set_tilt",
     "set_rotation",
+    "transform_options",
 ]
 
 from enum import Enum
@@ -34,6 +35,13 @@ from .utils import Refpts, All, refpts_iterator, _refcount
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
 _z_axis = np.array([0.0, 0.0, 1.0])
+
+
+class _TransFormOptions:
+    rounding = None
+
+
+transform_options = _TransFormOptions()
 
 
 # noinspection PyPep8Naming
@@ -271,6 +279,11 @@ def get_offsets_rotations(
     tilt = np.arctan2(-r3d[0, 1], r3d[0, 0])
     yaw = np.arcsin(r3d[0, 2])
     pitch = np.arctan2(-r3d[1, 2], r3d[2, 2])
+    if transform_options.rounding is not None:
+        offsets = np.round(offsets, transform_options.rounding)
+        tilt = np.round(tilt, transform_options.rounding)
+        yaw = np.round(yaw, transform_options.rounding)
+        pitch = np.round(pitch, transform_options.rounding)
     return offsets, tilt, yaw, pitch
 
 
@@ -346,6 +359,14 @@ def transform_elem(
 
         def _set(ini, val):
             return ini if val is None else val
+        
+    if transform_options.rounding is not None:
+        if dx is not None: dx = np.round(dx, transform_options.rounding)
+        if dy is not None: dy = np.round(dy, transform_options.rounding)
+        if dz is not None: dz = np.round(dz, transform_options.rounding)
+        if pitch is not None: pitch = np.round(pitch, transform_options.rounding)
+        if yaw is not None: yaw  = np.round(yaw, transform_options.rounding)
+        if tilt is not None: tilt = np.round(tilt, transform_options.rounding)
 
     elem_length = getattr(elem, "Length", 0)
     elem_bending_angle = getattr(elem, "BendingAngle", 0)
