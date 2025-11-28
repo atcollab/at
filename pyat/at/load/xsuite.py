@@ -137,7 +137,7 @@ class MultipoleElement(BasicElement):
         rot_y = self.xsuite_params.pop("rot_y_rad", 0.0)
         rot_s = self.xsuite_params.pop("rot_s_rad", 0.0)
         anchor = self.xsuite_params.pop("rot_shift_anchor", 0.0)
-        if anchor == 0:
+        if anchor == 0.0:
             reference = transformation.ReferencePoint.ENTRANCE
         elif anchor == 0.5:
             reference = transformation.ReferencePoint.CENTRE
@@ -157,6 +157,7 @@ class MultipoleElement(BasicElement):
                 "yaw": rot_x,
                 "reference": reference,
             }
+            print(transforms)
             transformation.transform_elem(elem, **transforms)
 
     def _set_xs_transforms(self, dict_elem):
@@ -500,16 +501,22 @@ def save_xsuite(
     lattice = _format_lattice(lattice)
     indent = None if compact else 2
     for e in lattice:
-        offset, tilt, pitch, yaw = transformation.get_offsets_rotations(e)
-        e.transforms = {
-            "shift_x": offset[0],
-            "shift_y": offset[1],
-            "shift_s": offset[2],
-            "rot_s_rad": tilt,
-            "rot_y_rad": pitch,
-            "rot_x_rad": yaw,
-            "rot_shift_anchor": 0.5,
-        }
+        refpoint = getattr(e, 'ReferencePoint', transformation.ReferencePoint.CENTRE)
+        offset, tilt, yaw, pitch = transformation.get_offsets_rotations(e, reference=refpoint)
+        if np.any(np.array([offset[0], offset[1], offset[2], tilt, pitch, yaw]) != 0.0):
+            if refpoint == transformation.ReferencePoint.ENTRANCE:
+                anchor = 0
+            else:
+                anchor = 0.5
+            e.transforms = {
+                "shift_x": offset[0],
+                "shift_y": offset[1],
+                "shift_s": offset[2],
+                "rot_s_rad": tilt,
+                "rot_y_rad": pitch,
+                "rot_x_rad": yaw,
+                "rot_shift_anchor": anchor,
+            }
     elements = {e.FamName: at_to_xsuite(e.FamName, e.to_dict()) for e in lattice}
     element_names = [e.FamName for e in lattice]
     with open(filename, "wt") as jsonfile:

@@ -202,8 +202,8 @@ def _ld_and_r3d_from_r_matrix(r_matrix):
 class ReferencePoint(Enum):
     """Definition of the reference point for the geometric transformations."""
 
-    CENTRE = "CENTRE"  #: Origin at the centre of the element.
     ENTRANCE = "ENTRANCE"  #: Origin at the entrance of the element.
+    CENTRE = "CENTRE"  #: Origin at the centre of the element.
 
 
 # noinspection PyPep8Naming
@@ -350,6 +350,9 @@ def transform_elem(
     See Also:
         :py:func:`get_offsets_rotations`
     """
+
+    elem.ReferencePoint = reference
+
     if relative:
 
         def _set(ini, val):
