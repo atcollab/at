@@ -153,8 +153,8 @@ class MultipoleElement(BasicElement):
                 "dy": shift_y,
                 "dz": shift_s,
                 "tilt": rot_s,
-                "pitch": rot_y,
-                "yaw": rot_x,
+                "pitch": rot_x,
+                "yaw": rot_y,
                 "reference": reference,
             }
             print(transforms)
@@ -188,14 +188,12 @@ class MultipoleElement(BasicElement):
         ks += ksl
         self.atparams["PolynomB"] = self.p_to_at(list(kn))
         self.atparams["PolynomA"] = self.p_to_at(list(ks))
-        if(self.xsuite_params.get('edge_entry_model', 'linear') == 'full'):
-            self.atparams["FringeQuadEntrance"] = self.xsuite_params.get(
+        self.atparams["FringeQuadEntrance"] = self.xsuite_params.get(
                 "edge_entry_active", 1
-            )
-        if(self.xsuite_params.get('edge_entry_model', 'linear') == 'full'):
-            self.atparams["FringeQuadExit"] = self.xsuite_params.get(
+                )
+        self.atparams["FringeQuadExit"] = self.xsuite_params.get(
                 "edge_exit_active", 1
-            )
+                )
 
     def _set_xs_poly(self):
         pola = self.p_to_xsuite(self.atparams.pop("PolynomA", np.zeros(4)))
@@ -513,8 +511,8 @@ def save_xsuite(
                 "shift_y": offset[1],
                 "shift_s": offset[2],
                 "rot_s_rad": tilt,
-                "rot_y_rad": pitch,
-                "rot_x_rad": yaw,
+                "rot_x_rad": pitch,
+                "rot_y_rad": yaw,
                 "rot_shift_anchor": anchor,
             }
     elements = {e.FamName: at_to_xsuite(e.FamName, e.to_dict()) for e in lattice}
