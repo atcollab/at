@@ -25,25 +25,57 @@ from ..lattice.lattice_variables import ElementVariable
 
 
 def _match(
-    ring: Lattice,
     variables: VariableList,
     constraints: ObservableList,
     *,
     method: str | None = None,
     verbose: int = 2,
     max_nfev: int = 1000,
-    **kwargs,
-) -> None:
-    def fun(vals):
+    optim_kw: dict | None = None,
+    **eval_kw,
+) -> np.ndarray:
+    """Observable matching.
+
+    Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
+    function.
+
+    Args:
+        variables:      Variable parameters
+        constraints:    Constraints to fulfill
+
+    Keyword Args:
+         method:         Minimisation algorithm (see
+          :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
+          'lm' for unbounded problems, 'trf' otherwise.
+        verbose:        Level of verbosity
+        max_nfev:       Maximum number of function evaluation
+        optim_kw:       Dictionary of optimiser keyword arguments sent to
+          :py:func:`~scipy.optimize.least_squares`
+        ••eval_kw:      Evaluation keywords provided to the
+          :py:meth:`ObservableList.evaluate`method. For instance *"ring"*,
+          *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*, *"r_in"*… Default values are taken
+          from the ObservableList
+
+    Returns:
+        Matching result: solution for the variable values.
+
+    Raises:
+        RuntimeError: If optimisation fails
+    """
+
+    def fun(vals) -> np.ndarray:
         """Evaluation function for the minimiser."""
-        variables.set(vals, ring=ring)
-        constraints.evaluate(ring=ring)
+        variables.set(vals, ring=eval_kw.get("ring"))
+        constraints.evaluate(**eval_kw)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
 
-    vini = variables.get(ring=ring, initial=True, check_bounds=True)
+    if optim_kw is None:
+        optim_kw = {}
+
+    vini = variables.get(ring=eval_kw.get("ring"), initial=True, check_bounds=True)
     bounds = np.array([var.bounds for var in variables])
 
-    constraints.evaluate(ring=ring, initial=True)
+    constraints.evaluate(initial=True, **eval_kw)
     constraints.check()
     ntargets = constraints.flat_values.size
 
@@ -58,14 +90,14 @@ def _match(
             f" using method {method}\n"
         )
 
-    least_squares(
+    opt = least_squares(
         fun,
         vini,
         bounds=(bounds[:, 0], bounds[:, 1]),
         verbose=verbose,
         max_nfev=max_nfev,
         method=method,
-        **kwargs,
+        **optim_kw,
     )
 
     if verbose >= 1:
@@ -73,6 +105,8 @@ def _match(
         print(constraints)
         print("\nVariables:")
         print(variables)
+
+    return opt.x
 
 
 def match(
@@ -96,13 +130,25 @@ def match(
           perform the match in-line
 
     Keyword Args:
-        method:         Minimisation algorithm (see
+        dp (float | None):  Momentum deviation. Default taken from the ObservableList,
+        dct (float | None): Path lengthening. Default taken from the ObservableList,
+        df (float | None):  Deviation from the nominal RF frequency. Default taken from
+          the ObservableList,
+        orbit (Orbit | None):  Initial orbit. Avoids looking for the closed orbit if
+          it is already known. Used for :py:class:`.MatrixObservable` and
+          :py:class:`.LocalOpticsObservable`. Default taken from the ObservableList,
+        twiss_in:           Initial conditions for transfer line optics
+          See :py:func:`.get_optics`. Used for :py:class:`.LocalOpticsObservable`.
+          Default taken from the ObservableList,
+        r_in (Orbit |None): Initial trajectory, used for
+          :py:class:`.TrajectoryObservable`. Default taken from the ObservableList,
+        method:             Minimisation algorithm (see
           :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
-          'lm' for unbounded problems, 'trf' otherwise.
-        verbose:        Level of verbosity
-        max_nfev:       Maximum number of function evaluation
-        **kwargs:       Keyword arguments sent to
-          :py:func:`~scipy.optimize.least_squares`
+          'lm' for unbounded problems, 'trf' otherwise,
+        verbose:            Level of verbosity,
+        max_nfev:           Maximum number of function evaluation,
+        **kwargs:           The other keyword arguments sent to,
+          :py:func:`~scipy.optimize.least_squares`.
 
     Returns:
         Modified Lattice if copy=True, None otherwise
@@ -115,6 +161,13 @@ def match(
 
         See :doc:`/p/notebooks/matching`
     """
+
+    eval_kw = {}
+    for key in ["dp", "dct", "df", "orbit", "twiss_in", "r_in"]:
+        v = kwargs.pop(key, None)
+        if v is not None:
+            eval_kw[key] = v
+
     if copy:
         # Check that there is no ElementVariable
         for var in variables:
@@ -122,8 +175,8 @@ def match(
                 msg = "When 'copy' is True, no ElementVariable is accepted."
                 raise TypeError(msg)
         newring = ring.deepcopy()
-        _match(newring, variables, constraints, **kwargs)
+        _match(variables, constraints, ring=newring, optim_kw=kwargs, **eval_kw)
         return newring
     else:
-        _match(ring, variables, constraints, **kwargs)
+        _match(variables, constraints, ring=ring, optim_kw=kwargs, **eval_kw)
         return None
