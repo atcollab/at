@@ -46,15 +46,15 @@ def _match(
     Keyword Args:
          method:         Minimisation algorithm (see
           :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
-          'lm' for unbounded problems, 'trf' otherwise.
-        verbose:        Level of verbosity
-        max_nfev:       Maximum number of function evaluation
+          'lm' for unbounded problems, 'trf' otherwise,
+        verbose:        Level of verbosity,
+        max_nfev:       Maximum number of function evaluation,
         optim_kw:       Dictionary of optimiser keyword arguments sent to
-          :py:func:`~scipy.optimize.least_squares`
+          :py:func:`~scipy.optimize.least_squares`,
         ••eval_kw:      Evaluation keywords provided to the
           :py:meth:`ObservableList.evaluate`method. For instance *"ring"* (for
-          lattice-dependent observables°, *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*,
-          *"r_in"*… Default values are taken from the ObservableList
+          lattice-dependent observables), *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*,
+          *"r_in"*… Default values are taken from the ObservableList.
 
     Returns:
         Matching result: solution for the variable values.
