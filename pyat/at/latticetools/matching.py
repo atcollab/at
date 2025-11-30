@@ -115,6 +115,9 @@ def match(
     constraints: ObservableList,
     *,
     copy: bool = False,
+    method: str | None = None,
+    verbose: int = 2,
+    max_nfev: int = 1000,
     **kwargs,
 ) -> Lattice | None:
     """Match constraints by varying variables.
@@ -128,6 +131,11 @@ def match(
         constraints:    Constraints to fulfill
         copy:           If :py:obj:`True`, return a modified copy of *ring*, otherwise
           perform the match in-line
+        method:             Minimisation algorithm (see
+          :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
+          'lm' for unbounded problems, 'trf' otherwise,
+        verbose:            Level of verbosity,
+        max_nfev:           Maximum number of function evaluation,
 
     Keyword Args:
         dp (float | None):  Momentum deviation. Default taken from the ObservableList,
@@ -142,11 +150,6 @@ def match(
           Default taken from the ObservableList,
         r_in (Orbit |None): Initial trajectory, used for
           :py:class:`.TrajectoryObservable`. Default taken from the ObservableList,
-        method:             Minimisation algorithm (see
-          :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
-          'lm' for unbounded problems, 'trf' otherwise,
-        verbose:            Level of verbosity,
-        max_nfev:           Maximum number of function evaluation,
         **kwargs:           The other keyword arguments sent to,
           :py:func:`~scipy.optimize.least_squares`.
 
@@ -162,6 +165,7 @@ def match(
         See :doc:`/p/notebooks/matching`
     """
 
+    # Separate the keywords for evaluation
     eval_kw = {}
     for key in ["dp", "dct", "df", "orbit", "twiss_in", "r_in"]:
         v = kwargs.pop(key, None)
@@ -175,8 +179,26 @@ def match(
                 msg = "When 'copy' is True, no ElementVariable is accepted."
                 raise TypeError(msg)
         newring = ring.deepcopy()
-        _match(variables, constraints, ring=newring, optim_kw=kwargs, **eval_kw)
+        _match(
+            variables,
+            constraints,
+            ring=newring,
+            method=method,
+            verbose=verbose,
+            max_nfev=max_nfev,
+            optim_kw=kwargs,
+            **eval_kw,
+        )
         return newring
     else:
-        _match(variables, constraints, ring=ring, optim_kw=kwargs, **eval_kw)
+        _match(
+            variables,
+            constraints,
+            ring=ring,
+            method=method,
+            verbose=verbose,
+            max_nfev=max_nfev,
+            optim_kw=kwargs,
+            **eval_kw,
+        )
         return None
