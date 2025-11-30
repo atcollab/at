@@ -593,10 +593,10 @@ class ItemVariable(VariableBase):
         """
         super().__init__(membergetter(key, *args).accessor(obj), **kwargs)
 
-    def _setfun(self, value, obj):
+    def _setfun(self, value, obj, **_):
         obj.set(value)
 
-    def _getfun(self, obj):
+    def _getfun(self, obj, **_):
         return obj.get()
 
 
@@ -630,10 +630,10 @@ class AttributeVariable(VariableBase):
         args = (attr_(attrname),) if index is None else (attr_(attrname), index)
         super().__init__(membergetter(*args).accessor(obj), **kwargs)
 
-    def _setfun(self, value, obj):
+    def _setfun(self, value, obj, **_):
         obj.set(value)
 
-    def _getfun(self, obj):
+    def _getfun(self, obj, **_):
         return obj.get()
 
 
