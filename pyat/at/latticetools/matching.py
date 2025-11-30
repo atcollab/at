@@ -52,9 +52,9 @@ def _match(
         optim_kw:       Dictionary of optimiser keyword arguments sent to
           :py:func:`~scipy.optimize.least_squares`
         ••eval_kw:      Evaluation keywords provided to the
-          :py:meth:`ObservableList.evaluate`method. For instance *"ring"*,
-          *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*, *"r_in"*… Default values are taken
-          from the ObservableList
+          :py:meth:`ObservableList.evaluate`method. For instance *"ring"* (for
+          lattice-dependent observables°, *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*,
+          *"r_in"*… Default values are taken from the ObservableList
 
     Returns:
         Matching result: solution for the variable values.
@@ -74,6 +74,7 @@ def _match(
 
     vini = variables.get(ring=eval_kw.get("ring"), initial=True, check_bounds=True)
     bounds = np.array([var.bounds for var in variables])
+    x_scale = np.array([var.delta for var in variables])
 
     constraints.evaluate(initial=True, **eval_kw)
     constraints.check()
@@ -94,6 +95,7 @@ def _match(
         fun,
         vini,
         bounds=(bounds[:, 0], bounds[:, 1]),
+        x_scale=x_scale,
         verbose=verbose,
         max_nfev=max_nfev,
         method=method,
