@@ -433,7 +433,11 @@ def element_track(
 
     # check if Energy is required
     needs_energy = ("GWigSymplecticPass", "GWigSymplecticRadPass", "RFCavityPass")
-    if (element.PassMethod in needs_energy) and ("energy" not in kwargs):
+    if (
+        element.PassMethod in needs_energy
+        and not hasattr(element, "Energy")
+        and ("energy" not in kwargs)
+    ):
         raise AtError("Energy is required.")
 
     return _element_pass(element, r_in, **kwargs)
