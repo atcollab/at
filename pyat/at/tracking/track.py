@@ -432,7 +432,7 @@ def element_track(
         r_in = r_in.copy()
 
     # check if Energy is required
-    needs_energy = ("GWigSymplecticPass", "GWigSymplecticRadPass")
+    needs_energy = ("GWigSymplecticPass", "GWigSymplecticRadPass", "RFCavityPass")
     if (element.PassMethod in needs_energy) and ("energy" not in kwargs):
         raise AtError("Energy is required.")
 
