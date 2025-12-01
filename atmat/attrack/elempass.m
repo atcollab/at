@@ -28,7 +28,8 @@ if ~isempty(particle)
 end
 
 % check pass methods that require energy
-needs_energy = {'GWigSymplecticPass', 'GWigSymplecticRadPass'};
+needs_energy = {'GWigSymplecticPass', 'GWigSymplecticRadPass', ...
+                'RFCavityPass'};
 if any(strcmp(needs_energy,methodname)) && varenergy == 0
     error('Energy needs to be defined');
 else
