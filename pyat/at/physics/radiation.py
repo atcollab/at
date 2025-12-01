@@ -71,7 +71,7 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
     def substitute(elem):
         if elem.PassMethod not in _new_methods:
             elem = elem.copy()
-            elem.PassMethod = "StrMPoleSymplectic4RadPass"
+            elem.PassMethod = "BndMPoleSymplectic4RadPass"
         return elem
 
     def elem_diffusion(elem: Element, elemorb):
