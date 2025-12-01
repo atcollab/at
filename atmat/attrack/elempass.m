@@ -30,8 +30,10 @@ end
 % check pass methods that require energy
 needs_energy = {'GWigSymplecticPass', 'GWigSymplecticRadPass', ...
                 'RFCavityPass'};
-if any(strcmp(needs_energy,methodname)) && varenergy == 0
-    error('Energy needs to be defined');
+if any(strcmp(needs_energy,methodname))
+    if ~isfield(elem,'Energy') && varenergy == 0
+        error('Energy needs to be defined');
+    end
 else
     props.Energy = varenergy;
 end
