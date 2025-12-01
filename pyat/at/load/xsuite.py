@@ -135,7 +135,7 @@ class MultipoleElement(BasicElement):
         shift_s = self.xsuite_params.pop("shift_s", 0.0)
         rot_x = self.xsuite_params.pop("rot_x_rad", 0.0)
         rot_y = self.xsuite_params.pop("rot_y_rad", 0.0)
-        rot_s = self.xsuite_params.pop("rot_s_rad", 0.0)
+        rot_s = self.xsuite_params.pop("rot_s_rad_no_frame", 0.0)
         anchor = self.xsuite_params.pop("rot_shift_anchor", 0.0)
         if anchor == 0.0:
             reference = transformation.ReferencePoint.ENTRANCE
@@ -153,7 +153,7 @@ class MultipoleElement(BasicElement):
                 "dy": shift_y,
                 "dz": shift_s,
                 "tilt": rot_s,
-                "pitch": rot_x,
+                "pitch": -rot_x,
                 "yaw": rot_y,
                 "reference": reference,
             }
@@ -516,8 +516,8 @@ def save_xsuite(
                 "shift_x": offset[0],
                 "shift_y": offset[1],
                 "shift_s": offset[2],
-                "rot_s_rad": tilt,
-                "rot_x_rad": pitch,
+                "rot_s_rad_no_frame": tilt,
+                "rot_x_rad": -pitch,
                 "rot_y_rad": yaw,
                 "rot_shift_anchor": anchor,
             }
