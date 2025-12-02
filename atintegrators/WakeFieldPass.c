@@ -161,9 +161,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->z_cuts=z_cuts;
     }
     if(num_particles<Param->nbunch){
-        atError("Number of particles has to be greater or equal to the number of bunches.");
+        atError("Number of particles has to be greater or equal to the number of bunches."); check_error();
     }else if (num_particles%Param->nbunch!=0){
-        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
+        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load."); check_error();
     }
     WakeFieldPass(r_in,num_particles,Param->RingLength,Param->nbunch,Param->bunch_spos,
                   Param->bunch_currents,Elem);
