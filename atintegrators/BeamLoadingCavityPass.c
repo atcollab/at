@@ -264,20 +264,20 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     energy = atEnergy(Param->energy, Elem->Energy);
 
     if(num_particles<Param->nbunch){
-        atError("Number of particles has to be greater or equal to the number of bunches.");
+        atError("Number of particles has to be greater or equal to the number of bunches."); check_error();
     }else if (num_particles%Param->nbunch!=0){
-        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
+        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load."); check_error();
     }
     if(Elem->cavitymode==0 || Elem->cavitymode>=4){
-        atError("Unknown cavitymode provided.");    
+        atError("Unknown cavitymode provided."); check_error();
     } 
     if(Elem->blmode==0 || Elem->blmode>=3){
-        atError("Unknown blmode provided.");    
+        atError("Unknown blmode provided."); check_error();
     } 
 
     #ifdef _MSC_VER
     if(Elem->blmode==2){
-        atError("Beam loading Phasor mode not implemented in Windows.");
+        atError("Beam loading Phasor mode not implemented in Windows."); check_error();
     }
     #endif
     BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
