@@ -33,7 +33,7 @@ def match(
     optim_kw: dict | None = None,
     **eval_kw,
 ) -> np.ndarray:
-    """Observable matching.
+    r"""Observable matching.
 
     Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
     function.
@@ -50,8 +50,8 @@ def match(
           :py:func:`~scipy.optimize.least_squares`,
 
     Keyword Args:
-        ••eval_kw:      Evaluation keywords provided to the
-          :py:meth:`ObservableList.evaluate`method. For instance *"ring"* (for
+        \*\*eval_kw:    Evaluation keywords provided to the
+          :py:meth:`ObservableList.evaluate` method. For instance *"ring"* (for
           lattice-dependent observables), *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*,
           *"r_in"*… Default values are taken from the ObservableList.
 
@@ -121,7 +121,7 @@ def ring_match(
     max_nfev: int = 1000,
     **kwargs,
 ) -> Lattice | None:
-    """Match constraints by varying variables.
+    r"""Match constraints by varying variables.
 
     Minimisation is performed by the :py:func:`~scipy.optimize.least_squares`
     function.
@@ -149,9 +149,9 @@ def ring_match(
         twiss_in:           Initial conditions for transfer line optics
           See :py:func:`.get_optics`. Used for :py:class:`.LocalOpticsObservable`.
           Default taken from the ObservableList,
-        r_in (Orbit |None): Initial trajectory, used for
+        r_in (Orbit | None): Initial trajectory, used for
           :py:class:`.TrajectoryObservable`. Default taken from the ObservableList,
-        **kwargs:           The other keyword arguments sent to,
+        \*\*kwargs:         The other keyword arguments sent to,
           :py:func:`~scipy.optimize.least_squares`.
 
     Returns:
