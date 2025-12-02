@@ -208,7 +208,8 @@ def lattice_track(
           continue the sequence
         keep_lattice (bool):    Use elements persisted from a previous
           call. If :py:obj:`True`, assume that the lattice has not changed
-          since the previous call.
+          since the previous call. Ignored if *lattice* differs from the cached one.
+          Default: :py:obj:`False`
         keep_counter (bool):    Keep the turn number from the previous
           call.
         turn (int):             Starting turn number. Ignored if
