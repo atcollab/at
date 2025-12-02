@@ -303,13 +303,13 @@ class DipoleElement(MultipoleElement):
         active_exit = self.xsuite_params.get("edge_exit_active", 1)
         if active_entry == 0:
             self.atparams["FringeBendEntrance"] = 0
-        elif self.xsuite_params.get("_edge_entry_model", 0) == 1:
+        elif self.xsuite_params.get("_edge_entry_model", 0) != 2:
             self.atparams["FringeQuadEntrance"] = 1
         else:
             self.atparams["FringeQuadEntrance"] = 0
         if active_exit == 0:
             self.atparams["FringeBendExit"] = 0
-        elif self.xsuite_params.get("_edge_exit_model", 0) == 1:
+        elif self.xsuite_params.get("_edge_exit_model", 0) != 2:
             self.atparams["FringeQuadExit"] = 1
         else:
             self.atparams["FringeQuadExit"] = 0       
@@ -333,13 +333,13 @@ class DipoleElement(MultipoleElement):
             if qfr_entry == 1:
                 self.xsuite_params["edge_entry_model"] = "full"
             else:
-                self.xsuite_params["edge_entry_model"] = "dipole-only"
+                self.xsuite_params["edge_entry_model"] = "linear"
         if dfr_exit != 0:
             self.xsuite_params["edge_exit_active"] = 1
             if qfr_exit == 1:
                 self.xsuite_params["edge_exit_model"] = "full"
             else:
-                self.xsuite_params["edge_exit_model"] = "dipole-only"
+                self.xsuite_params["edge_exit_model"] = "linear"
 
     def get_at_element(self) -> Element:
         self._set_at_angle_faces()
