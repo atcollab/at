@@ -13,8 +13,7 @@ Examples of matching are given in :doc:`/p/notebooks/matching`.
 
 from __future__ import annotations
 
-__all__ = ["match"]
-
+__all__ = ["match", "ring_match"]
 
 import numpy as np
 from scipy.optimize import least_squares
@@ -24,7 +23,7 @@ from ..lattice import Lattice, VariableList
 from ..lattice.lattice_variables import ElementVariable
 
 
-def _match(
+def match(
     variables: VariableList,
     constraints: ObservableList,
     *,
@@ -42,15 +41,15 @@ def _match(
     Args:
         variables:      Variable parameters
         constraints:    Constraints to fulfill
-
-    Keyword Args:
-         method:         Minimisation algorithm (see
+        method:         Minimisation algorithm (see
           :py:func:`~scipy.optimize.least_squares`). If :py:obj:`None`, use
           'lm' for unbounded problems, 'trf' otherwise,
         verbose:        Level of verbosity,
         max_nfev:       Maximum number of function evaluation,
         optim_kw:       Dictionary of optimiser keyword arguments sent to
           :py:func:`~scipy.optimize.least_squares`,
+
+    Keyword Args:
         ••eval_kw:      Evaluation keywords provided to the
           :py:meth:`ObservableList.evaluate`method. For instance *"ring"* (for
           lattice-dependent observables), *"dp"*, *"dct"*, *"orbit"*, *"twiss_in"*,
@@ -111,7 +110,7 @@ def _match(
     return opt.x
 
 
-def match(
+def ring_match(
     ring: Lattice,
     variables: VariableList,
     constraints: ObservableList,
@@ -181,7 +180,7 @@ def match(
                 msg = "When 'copy' is True, no ElementVariable is accepted."
                 raise TypeError(msg)
         newring = ring.deepcopy()
-        _match(
+        match(
             variables,
             constraints,
             ring=newring,
@@ -193,7 +192,7 @@ def match(
         )
         return newring
     else:
-        _match(
+        match(
             variables,
             constraints,
             ring=ring,
@@ -204,3 +203,6 @@ def match(
             **eval_kw,
         )
         return None
+
+
+Lattice.match = ring_match
