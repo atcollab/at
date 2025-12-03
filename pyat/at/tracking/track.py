@@ -13,35 +13,20 @@ __all__ = [
 
 import multiprocessing
 from collections.abc import Iterable
-from enum import Enum
 from functools import partial
 from warnings import warn
+from enum import Enum
 
-import numpy as np
+import numpy
 
-from ..cconfig import iscuda, isopencl
-from ..lattice import (
-    AtError,
-    AtWarning,
-    DConstant,
-    Element,
-    End,
-    Lattice,
-    Refpts,
-    get_uint32_index,
-    random,
-)
-from .atpass import atpass as _atpass
-from .atpass import elempass as _elempass
-from .atpass import reset_rng
-from .utils import (
-    disable_varelem,
-    format_results,
-    fortran_align,
-    has_collective,
-    initialize_lpass,
-    variable_refs,
-)
+from .atpass import atpass as _atpass, elempass as _elempass, reset_rng
+from .utils import fortran_align, has_collective, format_results
+from .utils import initialize_lpass, disable_varelem, variable_refs
+from ..lattice import AtError, AtWarning, DConstant, random
+from ..lattice import Lattice, Element, Refpts, End
+from ..lattice import get_uint32_index
+from ..cconfig import iscuda
+from ..cconfig import isopencl
 
 
 class MPMode(Enum):
@@ -62,10 +47,10 @@ _mp_table = {
 }
 
 if iscuda() or isopencl():
-    from .gpu import gpuinfo as _gpuinfo
     from .gpu import gpupass as _gpupass
+    from .gpu import gpuinfo as _gpuinfo
 
-_imax = np.iinfo(int).max
+_imax = numpy.iinfo(int).max
 _globring: list[Element] | None = None
 
 
@@ -86,7 +71,7 @@ def _atpass_spawn(ring, seed, rank, rin, **kwargs):
 def _pass(ring, r_in, pool_size, start_method, seed, **kwargs):
     ctx = multiprocessing.get_context(start_method)
     # Split input in as many slices as processes
-    args = enumerate(np.array_split(r_in, pool_size, axis=1))
+    args = enumerate(numpy.array_split(r_in, pool_size, axis=1))
     # Generate a new starting point for C RNGs
     global _globring
     _globring = ring
@@ -340,7 +325,7 @@ def lattice_track(
     trackparam = {}
     part_kw = ["energy", "particle"]
     try:
-        npart = np.shape(r_in)[1]
+        npart = numpy.shape(r_in)[1]
     except IndexError:
         npart = 1
 
@@ -352,12 +337,12 @@ def lattice_track(
 
     lattice = initialize_lpass(lattice, nturns, kwargs)
     ldtype = [
-        ("islost", np.bool_),
-        ("turn", np.uint32),
-        ("elem", np.uint32),
-        ("coord", np.float64, (6,)),
+        ("islost", numpy.bool_),
+        ("turn", numpy.uint32),
+        ("elem", numpy.uint32),
+        ("coord", numpy.float64, (6,)),
     ]
-    loss_map = np.recarray((npart,), ldtype)
+    loss_map = numpy.recarray((npart,), ldtype)
     lat_kw = ["turn"]
     [trackparam.update((kw, kwargs.get(kw))) for kw in kwargs if kw in lat_kw]
     trackparam.update({"refpts": get_uint32_index(lattice, refpts), "nturns": nturns})
@@ -390,19 +375,15 @@ def lattice_track(
     return rout, trackparam, trackdata
 
 
-def element_track(
-    element: Element, r_in: np.ndarray, in_place: bool = False, **kwargs: dict[str, any]
-) -> np.ndarray:
-    """:py:func:`element_track` tracks particles through one element.
-
-    It calls the element-specific tracking function specified in the
-    Element's *PassMethod* field.
+def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
+    """
+    :py:func:`element_track` tracks particles through one element of a
+    calling the element-specific tracking function specified in the
+    Element's *PassMethod* field
 
     Usage:
       >>> element_track(element, r_in)
       >>> element.track(r_in)
-      >>> element_track(element, r_in, energy=1e9)
-
 
     Parameters:
         element: element to track through
@@ -424,23 +405,12 @@ def element_track(
     Returns:
         r_out: (6, N, R, T) array containing output coordinates of N particles
           at R reference points for T turns
-
-    Raises:
-        AtError: when energy is required by the pass method.
     """
     if not in_place:
         r_in = r_in.copy()
 
-    # check if Energy is required
-    needs_energy = ("GWigSymplecticPass", "GWigSymplecticRadPass", "RFCavityPass")
-    if (
-        element.PassMethod in needs_energy
-        and not hasattr(element, "Energy")
-        and ("energy" not in kwargs)
-    ):
-        raise AtError("Energy is required.")
-
-    return _element_pass(element, r_in, **kwargs)
+    rout = _element_pass(element, r_in, **kwargs)
+    return rout
 
 
 def gpu_core_count(gpuPool: list[int] | None):
