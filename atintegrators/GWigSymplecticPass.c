@@ -121,6 +121,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     double gamma;
 
+    if (Param->energy == 0){
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+    }
+
     if (!Elem) {
         double *R1, *R2, *T1, *T2;
         double *By, *Bx;
