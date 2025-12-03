@@ -188,14 +188,11 @@ class MultipoleElement(BasicElement):
         ks += ksl
         self.atparams["PolynomB"] = self.p_to_at(list(kn))
         self.atparams["PolynomA"] = self.p_to_at(list(ks))
-        if "FringeQuadEntrance" not in self.atparams.keys():
-            self.atparams["FringeQuadEntrance"] = self.xsuite_params.get(
-                    "edge_entry_active", 1
-                    )
-        if "FringeQuadExit" not in self.atparams.keys():
-            self.atparams["FringeQuadExit"] = self.xsuite_params.get(
-                    "edge_exit_active", 1
-                    )
+        if self.xsuite_params.get('angle', 0.0) == 0.0:
+            if self.xsuite_params.get("edge_entry_active", 0) ==1:
+                self.atparams["FringeQuadEntrance"] = 1
+            if self.xsuite_params.get("edge_exit_active", 0) == 1:
+                self.atparams["FringeQuadExit"] = 1
 
     def _set_xs_poly(self):
         pola = self.p_to_xsuite(self.atparams.pop("PolynomA", np.zeros(4)))
@@ -214,12 +211,10 @@ class MultipoleElement(BasicElement):
             self.xsuite_params["knl"] = list(polb)
             self.xsuite_params["ksl"] = list(pola)
         if korder == 1:
-            self.xsuite_params["edge_entry_active"] = self.atparams.get(
-                "FringeQuadEntrance", 0
-            )
-            self.xsuite_params["edge_exit_active"] = self.atparams.get(
-                "FringeQuadExit", 0
-            )
+            qfrin = self.atparams.get("FringeQuadEntrance", 0)
+            qfrout = self.atparams.get("FringeQuadExit", 0)
+            self.xsuite_params["edge_entry_active"] = qfrin
+            self.xsuite_params["edge_exit_active"] = qfrout              
         elif self.atparams.get('BendingAngle', 0.0) == 0.0:
             self.xsuite_params["edge_exit_active"] = 0
             self.xsuite_params["edge_entry_active"] = 0
@@ -299,20 +294,20 @@ class DipoleElement(MultipoleElement):
             self.xsuite_params["edge_entry_angle"] += hangle
             self.xsuite_params["edge_exit_angle"] += hangle
             self.xsuite_params["length"] /= np.sinc(hangle)
-        active_entry = self.xsuite_params.get("edge_entry_active", 1)
-        active_exit = self.xsuite_params.get("edge_exit_active", 1)
-        if active_entry == 0:
+
+        entry_active = self.xsuite_params.get("_edge_entry_active", 1)
+        entry_model = self.xsuite_params.get("_edge_entry_model", 0)
+        if entry_model == -1 or entry_active==0:
             self.atparams["FringeBendEntrance"] = 0
-        elif self.xsuite_params.get("_edge_entry_model", 0) != 2:
+        elif entry_model == 1:
             self.atparams["FringeQuadEntrance"] = 1
-        else:
-            self.atparams["FringeQuadEntrance"] = 0
-        if active_exit == 0:
+ 
+        exit_active = self.xsuite_params.get("_edge_exit_active", 1)
+        exit_model = self.xsuite_params.get("_edge_exit_model", 0)
+        if exit_model == -1 or exit_active==0:
             self.atparams["FringeBendExit"] = 0
-        elif self.xsuite_params.get("_edge_exit_model", 0) != 2:
+        elif exit_model == 1:
             self.atparams["FringeQuadExit"] = 1
-        else:
-            self.atparams["FringeQuadExit"] = 0       
 
     def _set_xs_angle_faces(self):
         gap = self.atparams.pop("FullGap", None)
@@ -328,18 +323,20 @@ class DipoleElement(MultipoleElement):
         dfr_exit = self.atparams.pop("FringeBendExit", 1)
         qfr_entry = self.atparams.pop("FringeQuadEntrance", 0)
         qfr_exit = self.atparams.pop("FringeQuadExit", 0)
-        if dfr_entry != 0:
-            self.xsuite_params["edge_entry_active"] = 1
-            if qfr_entry == 1:
-                self.xsuite_params["edge_entry_model"] = "full"
-            else:
-                self.xsuite_params["edge_entry_model"] = "linear"
-        if dfr_exit != 0:
-            self.xsuite_params["edge_exit_active"] = 1
-            if qfr_exit == 1:
-                self.xsuite_params["edge_exit_model"] = "full"
-            else:
-                self.xsuite_params["edge_exit_model"] = "linear"
+
+        if dfr_entry == 0:
+            self.xsuite_params["edge_entry_model"] = "suppressed"
+        elif qfr_entry == 1:
+            self.xsuite_params["edge_entry_model"] = "full"
+        else:
+            self.xsuite_params["edge_entry_model"] = "linear"
+
+        if dfr_exit == 0:
+            self.xsuite_params["edge_exit_model"] = "suppressed"
+        elif qfr_exit == 1:
+            self.xsuite_params["edge_exit_model"] = "full"
+        else:
+            self.xsuite_params["edge_exit_model"] = "linear"
 
     def get_at_element(self) -> Element:
         self._set_at_angle_faces()
