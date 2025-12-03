@@ -189,6 +189,10 @@ class MultipoleElement(BasicElement):
         self.atparams["PolynomB"] = self.p_to_at(list(kn))
         self.atparams["PolynomA"] = self.p_to_at(list(ks))
         if self.xsuite_params.get('angle', 0.0) == 0.0:
+            if self.xsuite_params.get('length', 0.0) == 0.0:
+                self.atparams['PassMethod'] = 'ThinMPolePass'
+            else:
+                self.atparams['PassMethod'] = 'ExactMultipolePass'
             if self.xsuite_params.get("edge_entry_active", 0) ==1:
                 self.atparams["FringeQuadEntrance"] = 1
             if self.xsuite_params.get("edge_exit_active", 0) == 1:
