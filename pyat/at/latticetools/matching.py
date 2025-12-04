@@ -64,14 +64,14 @@ def match(
 
     def fun(vals) -> np.ndarray:
         """Evaluation function for the minimiser."""
-        variables.set(vals, ring=eval_kw.get("ring"))
+        variables.set(vals, **eval_kw)
         constraints.evaluate(**eval_kw)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
 
     if optim_kw is None:
         optim_kw = {}
 
-    vini = variables.get(ring=eval_kw.get("ring"), initial=True, check_bounds=True)
+    vini = variables.get(initial=True, check_bounds=True, **eval_kw)
     bounds = np.array([var.bounds for var in variables])
     x_scale = np.array([var.delta for var in variables])
 
