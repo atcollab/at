@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 __all__ = [
-    "lattice_track",
-    "element_track",
-    "internal_lpass",
-    "internal_epass",
-    "internal_plpass",
-    "gpu_info",
-    "gpu_core_count",
     "MPMode",
+    "element_track",
+    "gpu_core_count",
+    "gpu_info",
+    "internal_epass",
+    "internal_lpass",
+    "internal_plpass",
+    "lattice_track",
 ]
 
 import multiprocessing
@@ -31,7 +31,7 @@ from ..cconfig import isopencl
 
 class MPMode(Enum):
     """
-    Multi Processing mode
+    Multi Processing mode.
     """
 
     CPU = 1  #: CPU multiprocessing
@@ -55,14 +55,14 @@ _globring: list[Element] | None = None
 
 
 def _atpass_fork(seed, rank, rin, **kwargs):
-    """Single forked job"""
+    """Single forked job."""
     reset_rng(rank=rank, seed=seed)
     result = _atpass(_globring, rin, **kwargs)
     return rin, result
 
 
 def _atpass_spawn(ring, seed, rank, rin, **kwargs):
-    """Single spawned job"""
+    """Single spawned job."""
     reset_rng(rank=rank, seed=seed)
     result = _atpass(ring, rin, **kwargs)
     return rin, result
@@ -99,7 +99,7 @@ def _lattice_pass(
     r_in,
     nturns: int = 1,
     refpts: Refpts = End,
-    no_varelem=True,
+    no_varelem: bool = True,
     seed: int | None = None,
     use_gpu: bool = False,
     **kwargs,
@@ -107,15 +107,15 @@ def _lattice_pass(
     kwargs["reuse"] = kwargs.pop("keep_lattice", False)
     if no_varelem:
         lattice = disable_varelem(lattice)
-    else:
-        if sum(variable_refs(lattice)) > 0:
-            kwargs["reuse"] = False
+    elif sum(variable_refs(lattice)) > 0:
+        kwargs["reuse"] = False
     refs = get_uint32_index(lattice, refpts)
     if seed is not None:
         reset_rng(seed=seed)
     if use_gpu:
         if not (iscuda() or isopencl()):
-            raise AtError("No GPU support enabled")
+            msg = "No GPU support enabled"
+            raise AtError(msg)
         else:
             return _gpupass(lattice, r_in, nturns, refpts=refs, **kwargs)
     else:
@@ -129,11 +129,10 @@ def _plattice_pass(
     nturns: int = 1,
     refpts: Refpts = End,
     seed: int | None = None,
-    pool_size: int = None,
-    start_method: str = None,
+    pool_size: int | None = None,
+    start_method: str | None = None,
     **kwargs,
 ):
-    verbose = kwargs.pop("verbose", False)
     refpts = get_uint32_index(lattice, refpts)
     any_collective = has_collective(lattice)
     kwargs["reuse"] = kwargs.pop("keep_lattice", False)
@@ -208,7 +207,8 @@ def lattice_track(
           continue the sequence
         keep_lattice (bool):    Use elements persisted from a previous
           call. If :py:obj:`True`, assume that the lattice has not changed
-          since the previous call.
+          since the previous call. Ignored if *lattice* differs from the cached one.
+          Default: :py:obj:`False`
         keep_counter (bool):    Keep the turn number from the previous
           call.
         turn (int):             Starting turn number. Ignored if
@@ -379,7 +379,7 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
     """
     :py:func:`element_track` tracks particles through one element of a
     calling the element-specific tracking function specified in the
-    Element's *PassMethod* field
+    Element's *PassMethod* field.
 
     Usage:
       >>> element_track(element, r_in)
