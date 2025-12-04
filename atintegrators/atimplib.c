@@ -384,7 +384,8 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
 static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
                           double normfact, double *kz,double freq, double qfactor,
                           double rshunt, double *vbeam, double circumference,
-                          double energy, double beta, double *vbeamk, double *vbunch){ 
+                          double energy, double beta, double *vbeamk, double *vbunch,
+                          double *vgenk, double *ave_vcav, double *bunch_spos, double rffreq){ 
                           
     #ifndef _MSC_VER  
     int i,ib;
@@ -403,7 +404,11 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double *vbi = vbunch+nbunch;
     double totalW=0.0;
     double *totalWb = atMalloc(nbunch*sizeof(double));
+    double dphase_slice = 0.0;
+    double final_drift=circumference - bunch_spos[nbunch-1]; /*awful, should change*/
     
+    
+        
     for (i=0;i<sliceperturn;i++) {
         ib = (int)(i/nslice);
         kz[i]=0.0;
@@ -412,36 +417,57 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         totalWb[ib] = 0.0;
     }
 
+
     for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
         ib = (int)((i-sliceperturn*(nturns-1))/nslice);
+
         wi = turnhistoryW[i];
-        selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 */
+        selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/
+
+        
+        
+        
         if(i==sliceperturn*(nturns-1)){
-            /*At the end of the turn, the vbeamc is
-            reverted to -final value, which stores the
-            dt information from previous turn. This extra
-            circumference is needed to take this into account. */
-            dt = (turnhistoryZ[i])/bc;
+
+            /*dt = (circumference + turnhistoryZ[i])/bc;*/  /*OLD FORMAT*/
+            dt = (turnhistoryZ[i] + circumference - final_drift)/bc;
         }else{
+        
             /* This is dt between each slice*/
             dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
         }
+
+        /* - before complex_I */
         vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+        
         /*vbeamkc is average kick i.e. average vbeam*/   
         vbeamkc += (vbeamc+selfkick)*wi;
+        
+        ave_vcav[0] += creal(vbeamc+selfkick)*wi;
+        ave_vcav[0] += -vgenk[0] * sin(vgenk[1] + dphase_slice)*wi;
+        
+        ave_vcav[1] += cimag(vbeamc+selfkick)*wi;
+        ave_vcav[1] += vgenk[0] * cos(vgenk[1] + dphase_slice)*wi;
+        
         totalW += wi;
         totalWb[ib] += wi;
         kz[i-sliceperturn*(nturns-1)] = creal((vbeamc + selfkick)/energy);
+        
+
         vbr[ib] += creal((vbeamc + selfkick)*wi);
         vbi[ib] += cimag((vbeamc + selfkick)*wi);
         vbeamc += 2*selfkick;    
     }
-    
-    /*This takes the vbeam backwards in time to effectively store the
-    final slice position */
-    dt = (circumference - turnhistoryZ[sliceperturn*nturns-1])/bc;    
-    vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
+
+    ave_vcav[0] /= totalW;
+    ave_vcav[1] /= totalW;
+    
+    
+    /*dt = (-turnhistoryZ[sliceperturn*nturns-1])/bc;*/ /* OLD FORMAT */  
+    dt = (final_drift-turnhistoryZ[sliceperturn*nturns-1])/bc;
+    vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+    
     vbeam[0] = cabs(vbeamc);
     vbeam[1] = carg(vbeamc);
     vbeamkc /= (totalW);
@@ -459,7 +485,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 };
 
 
-static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
+static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle, double *ave_vcav){
 
     double vbeamr = vbeam[0]*cos(vbeam[1]);
     double vbeami = vbeam[0]*sin(vbeam[1]);
@@ -480,32 +506,47 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
     double vgeni = vcavi - vbeami;
     */
     
-    double vcavr_meas = vgenr + vbeamr;
-    double vcavi_meas = vgeni + vbeami;
+    double vcavr_meas_old = vgenr + vbeamr;
+    double vcavi_meas_old = vgeni + vbeami;
     
+    double vcavr_meas_new = ave_vcav[0];
+    double vcavi_meas_new = ave_vcav[1];
+
+    double vcavr_meas = vcavr_meas_old;
+    double vcavi_meas = vcavi_meas_old;
     
-    printf("vcavr: %f \t vcavi %f \n", vcavr, vcavi);          
+    /*
+    printf("\n\nvcavr, vcavi old: %f \t %f \t \n\n", vcavr_meas_old, vcavi_meas_old);
+    printf("\n\nvcavr, vcavi new: %f \t %f \t \n\n", vcavr_meas_new, vcavi_meas_new);
+    */  
+    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
+    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
+        
+    /*
+    printf("vcavr_set: %f \t vcavi_set: %f \n", vcavr, vcavi);          
     printf("vbeamr: %f \t vbeami %f \n", vbeamr, vbeami); 
     printf("vgenr: %f \t vgeni %f \n", vgenr, vgeni); 
     printf("vcavr_meas: %f \t vcavi_meas %f \n", vcavr_meas, vcavi_meas);          
     printf("\n");
-    
-    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
-    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
+    */
+
 
     double phis = vcav[1];   
     double ptmp = phis_meas - phis; /* this applies to thetag*/
+    /*
     printf("sync phase: %f \t %f \t %f \t %f \n", ptmp, phis_meas, phis, vcav[1]);
+    */
+    
+    double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
 
-    double dttmp = vgen[1] - vgen[2] - phis_meas + detune_angle;
-
+    /*
     printf("silly test: %f \n", vgen[1] - vgen[2] - phis); 
 
     printf("dttmp: %f \n", dttmp);
     printf("thetag: %f \n", vgen[1]);
     printf("psi: %f \n", vgen[2]);
     printf("vcav: %f \t %f \n\n", vcav[0], vcav_meas);
-    
+    */
 
     double dtmp = vcav[0] / vcav_meas;
     

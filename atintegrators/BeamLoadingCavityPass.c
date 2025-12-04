@@ -88,14 +88,6 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vcavk = Elem->vcav;
     double *vgenk = Elem->vgen;    
     double feedback_angle_offset = Elem->feedback_angle_offset;
-    double phis = Elem->phis;
-
-    double tlag_phase = tlag*TWOPI*rffreq/C0;
-
-    double ts = phis * C0 / TWOPI / rffreq + tlag;
-    double ts_to_phase = ts * TWOPI * rffreq / C0;
-    
-    double phis_to_tlag = phis*C0/TWOPI/rffreq;
     
     double vbeam_set[] = {vbeamk[0], vbeamk[1]};
     double tot_current = 0.0;
@@ -108,23 +100,24 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double gen_phase = vgenk[1];
     double psi = vgenk[2];
     double vgr = vgenk[3];
-    double freqres = rffreq/(1-tan(psi)/(2*qfactor));
-        
+
+    double delta = pow(rffreq * tan(psi) / qfactor, 2) + 4 * pow(rffreq,2);
+    double freqres = (rffreq * tan(psi) / qfactor + sqrt(delta)) / 2;
+
+    
+    double ave_vcav[] = {0.0, 0.0};
+             
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
-
-    double phase = gen_phase - phis;
     
-    printf("gen phase: %f \t %f \n", gen_phase, phase);
-    printf("tlag: %f \t %f \t %f \t %f \t %f \n", tlag, tlag_phase, phis_to_tlag, phis, ts);
+    
     /*Track RF cavity is always done. */
-    /*trackRFCavity_beamloading(r_in,le,vgen/energy,rffreq,gen_phase,num_particles);*/
-    /*trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -psi+phis, nturn, circumference/C0, num_particles);*/
-    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, -ts, -gen_phase, nturn, circumference/C0, num_particles);
+    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0, -gen_phase, nturn, circumference/C0, num_particles);
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
         void *buffer = atMalloc(sz);
+        
         double *dptr = (double *) buffer;
         int *iptr;
         kz = dptr;
@@ -139,12 +132,12 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
         if(blmode==2){
             compute_kicks_phasor(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                                  qfactor,rshunt,vbeam_phasor,circumference,energy,beta,
-                                 vbeamk,vbunch);                        
+                                 vbeamk,vbunch, vgenk, ave_vcav, bunch_spos, rffreq);                        
         }else if(blmode==1){
             compute_kicks_longres(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                                   qfactor,rshunt,beta,vbeamk,energy,vbunch);
         }
-
+                
         /*apply kicks and RF*/
         /* OpenMP not efficient. Too much shared data ?
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -157,7 +150,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
                 r6[4] += kz[islice]; 
             }
         }
-        
+
         // First write the values to the buffer
         if(buffersize>0){
             write_buffer(vbeamk, vbeam_buffer, 2, buffersize);
@@ -171,7 +164,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
 
 
         if(cavitymode==1){
-            update_vgen(vbeam_set,vcavk,vgenk,voltgain,phasegain,feedback_angle_offset); 
+            update_vgen(vbeam_set,vcavk,vgenk,voltgain,phasegain,feedback_angle_offset, ave_vcav); 
 
         }else if(cavitymode==3){     
             update_passive_frequency(vbeam_set, vcavk, vgenk, phasegain);

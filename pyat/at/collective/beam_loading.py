@@ -421,8 +421,8 @@ class BeamLoadingElement(RFCavity, Collective):
         vbp_phase = numpy.pi + psi
         vbp_complex = vbp_amp*numpy.cos(vbp_phase) + 1j*vbp_amp*numpy.sin(vbp_phase)
         
-        dt = (self.circumference - self.bunch_spos[0])/clight    
-        vbp_complex *= numpy.exp((1j*omr-omr/(2*self.Qfactor))*dt)
+        #dt = (self.circumference - self.bunch_spos[0])/clight    
+        #vbp_complex *= numpy.exp((1j*omr-omr/(2*self.Qfactor))*dt)
     
     
         self._vbeam_phasor = numpy.array(
@@ -483,8 +483,10 @@ class BeamLoadingElement(RFCavity, Collective):
     @property
     def ResFrequency(self):
         """Resonator frequency"""
-        return (self.Frequency /
-                (1 - numpy.tan(self.Vgen[2]) / (2 * self.Qfactor)))
+        delta = (self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor)**2 + 4 * self.Frequency**2
+        freqres = (self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor + numpy.sqrt(delta)) / 2
+        
+        return freqres
 
     @property
     def Vbeam(self):
