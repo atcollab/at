@@ -556,24 +556,24 @@ class SimpleRadiation(_DictLongtMotion, Radiative, Element):
         if taux == 0.0:
             dampx = 1
         else:
-            dampx = np.exp(-1 / taux)
+            dampx = np.exp(-2 / taux)
 
         assert tauy >= 0.0, "tauy must be greater than or equal to 0"
         if tauy == 0.0:
             dampy = 1
         else:
-            dampy = np.exp(-1 / tauy)
+            dampy = np.exp(-2 / tauy)
 
         assert tauz >= 0.0, "tauz must be greater than or equal to 0"
         if tauz == 0.0:
             dampz = 1
         else:
-            dampz = np.exp(-1 / tauz)
+            dampz = np.exp(-2 / tauz)
 
         kwargs.setdefault("PassMethod", self.default_pass[True])
         kwargs.setdefault("U0", U0)
         kwargs.setdefault(
-            "damp_mat_diag", np.array([dampx, dampx, dampy, dampy, dampz, dampz])
+            "damp_mat_diag", np.array([1, dampx, 1, dampy, dampz, 1])
         )
 
         super().__init__(family_name, **kwargs)
