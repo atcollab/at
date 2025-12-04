@@ -47,11 +47,39 @@ class BasicElement(Element):
         "RFCavity": "Cavity",
     }
 
+    _at2xsuite_integrator = {
+        "BndMPoleSymplectic4Pass": 'rot-kick-rot',
+        "ExactSectorBendPass": 'bend-kick-bend',
+        "StrMPoleSymplectic4Pass": 'mat-kick-mat',
+        "ExactMultipolePass": "drift-kick-drift-exact",
+        "DriftPass": "expanded",
+        "ExactDriftPass": "exact",
+    }
+
+    _xsuite_integrator_switch = ["Quadrupole",
+                                 "Sextupole",
+                                 "Multipole",
+                                 "RBend",
+                                 "Bend",
+                                 "Octupole",
+                                 "Drift",
+                                 ]
+    
+    _at_integrator_switch = ["Quadrupole",
+                             "Sextupole",
+                             "Multipole",
+                             "Dipole",
+                             "Bend",
+                             "Drift",
+                             ]
+
+
     def __init__(self, name: str, xsuite_params: dict = {}, atparams: dict = {}):
         self.name = name
         self.xsuite_params = copy.deepcopy(xsuite_params)
         self.atparams = copy.deepcopy(atparams)
         self._at2xsuite_attr = {v: k for k, v in self._xsuite2at_attr.items()}
+        self._xsuite2at_integrator = {v: k for k, v in self._at2xsuite_integrator.items()}
         super().__init__(name)
 
     def _params_to_at(self):
@@ -99,14 +127,30 @@ class BasicElement(Element):
         cls = self.xsuite_params["__class__"]
         self.xsuite_params["__class__"] = self._at2xsuite_class.get(cls, defaultclass)
 
+    def _integrator_to_xsuite(self):
+        integrator = self.atparams.get("PassMethod", None)
+        cls = self.xsuite_params["__class__"]
+        xs_integrator = self._at2xsuite_integrator.get(integrator, None)
+        if xs_integrator is not None and cls in self._xsuite_integrator_switch:
+            self.xsuite_params["model"] = xs_integrator
+
+    def _integrator_to_at(self):
+        integrator = self.xsuite_params.get("model", None)
+        cls = self.atparams.get["Class"]
+        at_integrator = self._xsuite2at_integrator.get(integrator, None)
+        if at_integrator is not None and cls in self._at_integrator_switch:
+            self.xsuite_params["PassMethod"] = at_integrator
+            
     def get_at_element(self) -> Element:
         self._params_to_at()
         self._class_to_at()
+        self._integrator_to_at()
         return super().from_dict(self.atparams)
 
     def get_xsuite_dict(self) -> dict:
         self._params_to_xsuite()
         self._class_to_xsuite()
+        self._integrator_to_xsuite()
         return self.xsuite_params
 
 
@@ -223,8 +267,6 @@ class MultipoleElement(BasicElement):
             self.xsuite_params["edge_exit_active"] = 0
             self.xsuite_params["edge_entry_active"] = 0
 
-
-
     @staticmethod
     def poly_from_xsuite(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
         """Convert polynomials from XSUITE to AT"""
@@ -283,7 +325,6 @@ class DipoleElement(MultipoleElement):
 
     def __init__(self, name: str, xsuite_params: dict = {}, atparams: dict = {}):
         super().__init__(name, xsuite_params, atparams)
-        self.xsuite_params["model"] = "drift-kick-drift-exact"
 
     def _set_at_angle_faces(self):
         entry_hgap = self.xsuite_params.pop("edge_entry_hgap", None)
@@ -295,8 +336,8 @@ class DipoleElement(MultipoleElement):
             self.atparams.update({"FullGap": entry_hgap})
         if self.xsuite_params.get("__class__") == "RBend":
             hangle = abs(0.5 * self.xsuite_params.get("angle"))
-            self.xsuite_params["edge_entry_angle"] += hangle
-            self.xsuite_params["edge_exit_angle"] += hangle
+            self.xsuite_params["edge_entry_angle"] = self.xsuite_params.get("edge_entry_angle", 0) + hangle
+            self.xsuite_params["edge_exit_angle"] = self.xsuite_params.get("edge_exit_angle", 0) + hangle
             self.xsuite_params["length"] /= np.sinc(hangle)
 
         entry_active = self.xsuite_params.get("_edge_entry_active", 1)
@@ -371,10 +412,14 @@ class CavityElement(BasicElement):
         self.atparams["harmonic_number"] = harmnumber
 
     def _set_at_lag(self):
-        om = 2 * np.pi * self.xsuite_params.get("frequency")
-        pl = self.xsuite_params.pop("lag", 0.0)
-        tl = pl / om * cst.clight / 360
-        self.atparams["TimeLag"] = tl
+        freq = self.xsuite_params.get("frequency", 0)
+        if freq > 0:
+            om = 2 * np.pi * self.xsuite_params.get("frequency")
+            pl = self.xsuite_params.pop("lag", 0.0)
+            tl = pl / om * cst.clight / 360
+            self.atparams["TimeLag"] = tl
+        else:
+            self.xsuite_params["__class__"] = 'Drift'
 
     def _set_xs_lag(self):
         om = 2 * np.pi * self.atparams.get("Frequency")
@@ -462,15 +507,22 @@ def _generate_thin(thick_multipole):
     _ = d_thick.pop("PassMethod")
     name = d_thick.pop("FamName")
     length = d_thick.pop("Length")
-    dr_entrance = Drift(name + "_Entrance", length / 2)
-    dr_exit = Drift(name + "_Exit", length / 2)
+    pa = d_thick.pop("PolynomA")
+    pb = d_thick.pop("PolynomB")
     mult = ThinMultipole(
         name,
-        d_thick.pop("PolynomA") * length,
-        d_thick.pop("PolynomB") * length,
-        **d_thick,
+         pa,
+         pb,
+         **d_thick,
     )
-    return [dr_entrance, mult, dr_exit]
+    if length >0.0:
+        dr_entrance = Drift(name + "_Entrance", length / 2)
+        dr_exit = Drift(name + "_Exit", length / 2)
+        mult.PolynomA *= length
+        mult.PolynomB *= length
+        return [dr_entrance, mult, dr_exit]
+    else:
+        return [mult]
 
 
 def _set_unique_names(lattice):
