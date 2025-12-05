@@ -117,21 +117,21 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     }
     
     /* construct fill pattern from bunch_spos and bunch_currents */
-    /*double *fillpattern = malloc(sizeof(double)*M);*/
-    double fillpattern[M];
-    double running_spos = 0.0;
-    int counter = 0;
+    double fillpattern[M];    
     for(i=0;i<M;i++){
-        running_spos = main_bucket*i;
-        if (bunch_spos[counter] - running_spos < 0.1){
-            fillpattern[i] = bunch_currents[counter];
-            counter += 1;
-        }else{
-            fillpattern[i] = 0.0;   
-        }     
-        /*printf("bucket %d curr %f ", i, fillpattern[i]);*/
+        fillpattern[i] = 0.0;
+    }
+    double spos, cur;
+    int ind;
+    for(i=0;i<nbunch;i++){
+        spos = bunch_spos[i];
+        cur = bunch_currents[i];
+        ind = (int) M*spos/circumference;
+        fillpattern[ind] = cur;
     }
     
+
+
     /*Track RF cavity is always done. */
     
     trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0, -gen_phase, nturn, circumference/C0, num_particles);
@@ -147,11 +147,9 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         iptr = (int *) dptr;
         pslice = iptr; 
         iptr += num_particles;
-       
         rotate_table_history(nturnsw, nslice*nbunch, turnhistory, circumference);
         slice_bunch(r_in, num_particles, nslice, nturnsw, nbunch, bunch_spos,
                     bunch_currents, turnhistory, pslice, z_cuts);
-
         compute_kicks_phasor(nslice, nbunch, nturnsw, turnhistory, normfact, vbeam_kicks,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
                              beta, ave_vbeam, vbunch, bunch_spos, M, fillpattern);                        

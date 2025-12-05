@@ -326,7 +326,6 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double main_bucket = circumference / M;
 
     
-        
     for (i=0;i<nslice*nbunch;i++) {
         ibunch = (int)(i/nslice);
         vbeam_kicks[i]=0.0;
@@ -335,7 +334,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     }
 
     /* The vbeam_complex will always be sent to the center of the next bucket */
-    
+
     for(ibunch=0; ibunch<M; ibunch++){
         bucket_curr = fillpattern[ibunch];
         
@@ -348,7 +347,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                     /* TurnhistoryZ goes from -bucket991 to bucket0 */
                     dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter])/bc;
                 }else{
-                    printf("not used yet");
+                    printf("not used yet \n");
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
                 }
@@ -359,27 +358,27 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
                 
                 vbeam_complex += 2*selfkick;    
+               
             }
-           /* printf("counter %d \n", total_slice_counter); */
             /* back to the center of the bucket */
             dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter])/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-            /*printf("dt1: %f \n", dt*1e12);*/
+
+            vbr[bunch_counter] = cabs(vbeam_complex);
+            vbi[bunch_counter] = carg(vbeam_complex);
+     
             bunch_counter += 1;
         }
 
         ave_vbeam[0] += cabs(vbeam_complex)/M;
         ave_vbeam[1] += carg(vbeam_complex)/M;
         
-        vbr[ibunch] = cabs(vbeam_complex);
-        vbi[ibunch] = carg(vbeam_complex);
         /* advance the phasor to the center of the next bucket */
        
         dt = main_bucket/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
         
     }
-    
     /* store the phasor for the next turn */
     vbeam_phasor[0] = cabs(vbeam_complex);
     vbeam_phasor[1] = carg(vbeam_complex);
@@ -405,7 +404,6 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
         
     double phis = vcav[1];   
     double ptmp = phis_meas - phis; /* this applies to thetag*/
-    printf("phismeas %f phis %f \n", phis_meas, phis);
     
     double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
 
