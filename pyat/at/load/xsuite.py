@@ -1,14 +1,15 @@
 from __future__ import annotations
 from os.path import abspath
-from typing import Optional, Any
+from typing import Any
 import numpy as np
 import copy
 import warnings
+import re
 from collections.abc import Sequence, Generator, Iterable
 import json
 from ..lattice import Particle, transformation
 from ..lattice import Lattice, RFCavity
-from ..lattice import Element, Drift, ThinMultipole, Marker
+from ..lattice import Element, Drift, ThinMultipole
 from ..lattice import AtWarning
 from ..lattice import constants as cst
 
@@ -48,38 +49,41 @@ class BasicElement(Element):
     }
 
     _at2xsuite_integrator = {
-        "BndMPoleSymplectic4Pass": 'rot-kick-rot',
-        "ExactSectorBendPass": 'bend-kick-bend',
-        "StrMPoleSymplectic4Pass": 'mat-kick-mat',
+        "BndMPoleSymplectic4Pass": "rot-kick-rot",
+        "ExactSectorBendPass": "bend-kick-bend",
+        "StrMPoleSymplectic4Pass": "mat-kick-mat",
         "ExactMultipolePass": "drift-kick-drift-exact",
         "DriftPass": "expanded",
         "ExactDriftPass": "exact",
     }
 
-    _xsuite_integrator_switch = ["Quadrupole",
-                                 "Sextupole",
-                                 "Multipole",
-                                 "RBend",
-                                 "Bend",
-                                 "Octupole",
-                                 "Drift",
-                                 ]
-    
-    _at_integrator_switch = ["Quadrupole",
-                             "Sextupole",
-                             "Multipole",
-                             "Dipole",
-                             "Bend",
-                             "Drift",
-                             ]
+    _xsuite_integrator_switch = [
+        "Quadrupole",
+        "Sextupole",
+        "Multipole",
+        "RBend",
+        "Bend",
+        "Octupole",
+        "Drift",
+    ]
 
+    _at_integrator_switch = [
+        "Quadrupole",
+        "Sextupole",
+        "Multipole",
+        "Dipole",
+        "Bend",
+        "Drift",
+    ]
 
     def __init__(self, name: str, xsuite_params: dict = {}, atparams: dict = {}):
         self.name = name
         self.xsuite_params = copy.deepcopy(xsuite_params)
         self.atparams = copy.deepcopy(atparams)
         self._at2xsuite_attr = {v: k for k, v in self._xsuite2at_attr.items()}
-        self._xsuite2at_integrator = {v: k for k, v in self._at2xsuite_integrator.items()}
+        self._xsuite2at_integrator = {
+            v: k for k, v in self._at2xsuite_integrator.items()
+        }
         super().__init__(name)
 
     def _params_to_at(self):
@@ -136,11 +140,11 @@ class BasicElement(Element):
 
     def _integrator_to_at(self):
         integrator = self.xsuite_params.get("model", None)
-        cls = self.atparams.get["Class"]
+        cls = self.atparams["Class"]
         at_integrator = self._xsuite2at_integrator.get(integrator, None)
         if at_integrator is not None and cls in self._at_integrator_switch:
             self.xsuite_params["PassMethod"] = at_integrator
-            
+
     def get_at_element(self) -> Element:
         self._params_to_at()
         self._class_to_at()
@@ -186,11 +190,13 @@ class MultipoleElement(BasicElement):
         elif anchor == 0.5:
             reference = transformation.ReferencePoint.CENTRE
         else:
-            msg = "Anchor point for rotation different from 0 or 1, setting" \
-            "to AT default: ReferencePoint.CENTRE"
+            msg = (
+                "Anchor point for rotation different from 0 or 1, setting"
+                "to AT default: ReferencePoint.CENTRE"
+            )
             warnings.warn(AtWarning(msg))
-            reference = transformation.ReferencePoint.CENTRE              
-        
+            reference = transformation.ReferencePoint.CENTRE
+
         if np.any(np.array([shift_x, shift_y, shift_s, rot_x, rot_y, rot_s]) != 0.0):
             transforms = {
                 "dx": shift_x,
@@ -232,12 +238,10 @@ class MultipoleElement(BasicElement):
         ks += ksl
         self.atparams["PolynomB"] = self.p_to_at(list(kn))
         self.atparams["PolynomA"] = self.p_to_at(list(ks))
-        if self.xsuite_params.get('angle', 0.0) == 0.0:
-            if self.xsuite_params.get('length', 0.0) == 0.0:
-                self.atparams['PassMethod'] = 'ThinMPolePass'
-            else:
-                self.atparams['PassMethod'] = 'ExactMultipolePass'
-            if self.xsuite_params.get("edge_entry_active", 0) ==1:
+        if self.xsuite_params.get("angle", 0.0) == 0.0:
+            if self.xsuite_params.get("length", 0.0) == 0.0:
+                self.atparams["PassMethod"] = "ThinMPolePass"
+            if self.xsuite_params.get("edge_entry_active", 0) == 1:
                 self.atparams["FringeQuadEntrance"] = 1
             if self.xsuite_params.get("edge_exit_active", 0) == 1:
                 self.atparams["FringeQuadExit"] = 1
@@ -262,8 +266,8 @@ class MultipoleElement(BasicElement):
             qfrin = self.atparams.get("FringeQuadEntrance", 0)
             qfrout = self.atparams.get("FringeQuadExit", 0)
             self.xsuite_params["edge_entry_active"] = qfrin
-            self.xsuite_params["edge_exit_active"] = qfrout              
-        elif self.atparams.get('BendingAngle', 0.0) == 0.0:
+            self.xsuite_params["edge_exit_active"] = qfrout
+        elif self.atparams.get("BendingAngle", 0.0) == 0.0:
             self.xsuite_params["edge_exit_active"] = 0
             self.xsuite_params["edge_entry_active"] = 0
 
@@ -336,20 +340,24 @@ class DipoleElement(MultipoleElement):
             self.atparams.update({"FullGap": entry_hgap})
         if self.xsuite_params.get("__class__") == "RBend":
             hangle = abs(0.5 * self.xsuite_params.get("angle"))
-            self.xsuite_params["edge_entry_angle"] = self.xsuite_params.get("edge_entry_angle", 0) + hangle
-            self.xsuite_params["edge_exit_angle"] = self.xsuite_params.get("edge_exit_angle", 0) + hangle
+            self.xsuite_params["edge_entry_angle"] = (
+                self.xsuite_params.get("edge_entry_angle", 0) + hangle
+            )
+            self.xsuite_params["edge_exit_angle"] = (
+                self.xsuite_params.get("edge_exit_angle", 0) + hangle
+            )
             self.xsuite_params["length"] /= np.sinc(hangle)
 
         entry_active = self.xsuite_params.get("_edge_entry_active", 1)
         entry_model = self.xsuite_params.get("_edge_entry_model", 0)
-        if entry_model == -1 or entry_active==0:
+        if entry_model == -1 or entry_active == 0:
             self.atparams["FringeBendEntrance"] = 0
         elif entry_model == 1:
             self.atparams["FringeQuadEntrance"] = 1
- 
+
         exit_active = self.xsuite_params.get("_edge_exit_active", 1)
         exit_model = self.xsuite_params.get("_edge_exit_model", 0)
-        if exit_model == -1 or exit_active==0:
+        if exit_model == -1 or exit_active == 0:
             self.atparams["FringeBendExit"] = 0
         elif exit_model == 1:
             self.atparams["FringeQuadExit"] = 1
@@ -419,7 +427,7 @@ class CavityElement(BasicElement):
             tl = pl / om * cst.clight / 360
             self.atparams["TimeLag"] = tl
         else:
-            self.xsuite_params["__class__"] = 'Drift'
+            self.xsuite_params["__class__"] = "Drift"
 
     def _set_xs_lag(self):
         om = 2 * np.pi * self.atparams.get("Frequency")
@@ -468,7 +476,21 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
         with open(params.setdefault("in_file", fn), "rt") as jsonfile:
             data = json.load(jsonfile)
 
-        elements = data["elements"]
+        element_refs = data["elements"]
+        element_names = data["element_names"]
+        var_mng = data.get("_var_manager", None)
+        if var_mng is not None:
+            vars = data["_var_management_data"]["var_values"]
+            for vm in var_mng:
+                if vm[0].startswith("vars"):
+                    exec(vm[0]+" = "+vm[1])
+                elif vm[0].startswith("element_refs"):
+                    nm_attr = re.split(r"\.", vm[0])
+                    exec(nm_attr[0]+".update({'"+nm_attr[1]+"':"+str(eval(vm[1]))+"})")
+
+        elements_names_unique = _set_unique_names_list(copy.deepcopy(element_names))
+        element_refs={names_u: element_refs[name] for name, names_u in zip(element_names, elements_names_unique)}
+        
         try:
             particle = data["particle_ref"]
             atparticle = Particle("relativistic")
@@ -487,7 +509,7 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
 
         for k, v in beam_params.items():
             params.setdefault(k, v)
-        for k, v in elements.items():
+        for k, v in element_refs.items():
             yield at_from_xsuite(k, v)
 
     lattice = Lattice(abspath(filename), iterator=json_generator, **kwargs)
@@ -511,11 +533,11 @@ def _generate_thin(thick_multipole):
     pb = d_thick.pop("PolynomB")
     mult = ThinMultipole(
         name,
-         pa,
-         pb,
-         **d_thick,
+        pa,
+        pb,
+        **d_thick,
     )
-    if length >0.0:
+    if length > 0.0:
         dr_entrance = Drift(name + "_Entrance", length / 2)
         dr_exit = Drift(name + "_Exit", length / 2)
         mult.PolynomA *= length
@@ -523,16 +545,22 @@ def _generate_thin(thick_multipole):
         return [dr_entrance, mult, dr_exit]
     else:
         return [mult]
-
-
-def _set_unique_names(lattice):
-    names = [e.FamName for e in lattice]
+    
+    
+def _set_unique_names_list(names):
     _, idx_inv, cnt = np.unique(names, return_inverse=True, return_counts=True)
     idx_list = np.split(np.argsort(idx_inv), np.cumsum(cnt[:-1]))
     for ia in idx_list:
         if len(ia) > 1:
-            for i, ii in enumerate(ia[::-1]):
-                names[ii] += "_" + str(i)
+            for i, ii in enumerate(np.sort(ia)):
+                new_name = names[ii] + "_" + str(i)
+                names[ii] = new_name
+    return names
+
+
+def _set_unique_names(lattice):
+    names = [e.FamName for e in lattice]
+    _set_unique_names_list(names)
     for e, name in zip(lattice, names):
         e.FamName = name
 
@@ -558,8 +586,10 @@ def save_xsuite(
     lattice = _format_lattice(lattice)
     indent = None if compact else 2
     for e in lattice:
-        refpoint = transformation.ReferencePoint[getattr(e, 'ReferencePoint', 'CENTRE')]
-        offset, tilt, yaw, pitch = transformation.get_offsets_rotations(e, reference=refpoint)
+        refpoint = transformation.ReferencePoint[getattr(e, "ReferencePoint", "CENTRE")]
+        offset, tilt, yaw, pitch = transformation.get_offsets_rotations(
+            e, reference=refpoint
+        )
         if np.any(np.array([offset[0], offset[1], offset[2], tilt, pitch, yaw]) != 0.0):
             if refpoint == transformation.ReferencePoint.ENTRANCE:
                 anchor = 0
