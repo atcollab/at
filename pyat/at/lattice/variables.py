@@ -500,7 +500,7 @@ class VariableBase(abc.ABC):
         return "\n".join((self._header(), self._line()))
 
     @contextmanager
-    def restore(self, **setkw) -> Generator[None, None, None]:
+    def restore(self, initial: bool = False, **setkw) -> Generator[None, None, None]:
         # noinspection PyUnresolvedReferences
         r"""Context manager that saves and restore a variable.
 
@@ -517,7 +517,7 @@ class VariableBase(abc.ABC):
             ...     do_something(var)
         """
         # print(f"save {self.name}")
-        v0 = self.get(**setkw)
+        v0 = self.get(initial=initial, **setkw)
         try:
             yield
         finally:
@@ -758,7 +758,7 @@ class VariableList(list):
         return "\n".join((VariableBase._header(), values))
 
     @contextmanager
-    def restore(self, **setkw):
+    def restore(self, initial: bool = False, **setkw):
         r"""Context manager that saves and restore the variable list.
 
         The value of the :py:class:`VariableList` is initially saved, and then restored
@@ -769,7 +769,7 @@ class VariableList(list):
               They augment the keyword arguments given in the variable constructors.
         """
         # print("Saving variables")
-        v0 = self.get(**setkw)
+        v0 = self.get(initial=initial, **setkw)
         try:
             yield
         finally:
