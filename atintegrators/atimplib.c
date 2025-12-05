@@ -304,7 +304,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double normfact, double *vbeam_kicks, double resfreq, double qfactor,
                           double rshunt, double *vbeam_phasor, double circumference,
                           double energy, double beta, double *ave_vbeam, double *vbunch,
-                          double *vgen_arr, double *bunch_spos, int M, 
+                          double *bunch_spos, int M, 
                           double *fillpattern){ 
                           
     #ifndef _MSC_VER  
@@ -328,10 +328,10 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     
         
     for (i=0;i<nslice*nbunch;i++) {
-        ib = (int)(i/nslice);
+        ibunch = (int)(i/nslice);
         vbeam_kicks[i]=0.0;
-        vbr[ib] = 0.0;
-        vbi[ib] = 0.0;
+        vbr[ibunch] = 0.0;
+        vbi[ibunch] = 0.0;
     }
 
     /* The vbeam_complex will always be sent to the center of the next bucket */
@@ -346,31 +346,35 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
                     /* TurnhistoryZ goes from -bucket991 to bucket0 */
-                    dt = (turnhistoryZ[total_slice_counter] + circumference - bunch_spos[bunch_counter])/bc;
-                    /*printf("dz: %f", dt*bc - main_bucket);*/
-                    
+                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter])/bc;
                 }else{
                     printf("not used yet");
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
                 }
                 
+                
                 /* track the dt */
                 vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                 vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
+                
                 vbeam_complex += 2*selfkick;    
             }
+           /* printf("counter %d \n", total_slice_counter); */
             /* back to the center of the bucket */
-            dt = (bunch_spos[bunch_counter] - turnhistoryZ[total_slice_counter] - circumference)/bc;
+            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter])/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-                      
+            /*printf("dt1: %f \n", dt*1e12);*/
             bunch_counter += 1;
         }
 
         ave_vbeam[0] += cabs(vbeam_complex)/M;
         ave_vbeam[1] += carg(vbeam_complex)/M;
-                    
+        
+        vbr[ibunch] = cabs(vbeam_complex);
+        vbi[ibunch] = carg(vbeam_complex);
         /* advance the phasor to the center of the next bucket */
+       
         dt = main_bucket/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
         
@@ -380,13 +384,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     vbeam_phasor[0] = cabs(vbeam_complex);
     vbeam_phasor[1] = carg(vbeam_complex);
     
-    printf("vba %f vbp %f", ave_vbeam[0], ave_vbeam[1]);
-    for(i=0;i<nbunch;i++){
-        double vr = vbr[i];
-        double vi = vbi[i];
-        vbr[i] = sqrt(vr*vr+vi*vi); 
-        vbi[i] = atan2(vi,vr);
-    }
+
     #endif    
 };
 
@@ -407,11 +405,12 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
         
     double phis = vcav[1];   
     double ptmp = phis_meas - phis; /* this applies to thetag*/
+    printf("phismeas %f phis %f \n", phis_meas, phis);
     
     double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
 
     double dtmp = vcav[0] / vcav_meas;
-    
+    /*printf("vcav_amp_set: %f, vcav_meas: %f \n", vcav[0], vcav_meas);*/
     
     vgen[3] *= pow(dtmp,voltgain);
     vgen[2] += dttmp*phasegain; 

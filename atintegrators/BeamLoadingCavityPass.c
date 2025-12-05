@@ -154,7 +154,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
         compute_kicks_phasor(nslice, nbunch, nturnsw, turnhistory, normfact, vbeam_kicks,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
-                             beta, ave_vbeam, vbunch, vgen_arr, bunch_spos, M, fillpattern);                        
+                             beta, ave_vbeam, vbunch, bunch_spos, M, fillpattern);                        
 
                 
         /*apply kicks*/
