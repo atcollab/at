@@ -508,6 +508,8 @@ class VariableBase(abc.ABC):
         then restored when exiting the context.
 
         Keyword Args:
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
 
@@ -765,6 +767,8 @@ class VariableList(list):
         when exiting the context.
 
         Keyword Args:
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the variable constructors.
         """
