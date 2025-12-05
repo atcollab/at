@@ -702,6 +702,8 @@ class VariableList(list):
         Keyword Args:
             initial:    If :py:obj:`True`, set the Variables'
               initial value
+            check_bounds: If :py:obj:`True`, raise a ValueError any value is out
+              of bounds
             \*\*getkw:  Keyword arguments to be passed to the *getfun* function.
               They augment the keyword arguments given in the variable constructors.
 
@@ -717,6 +719,8 @@ class VariableList(list):
             values:     Iterable of values
 
         Keyword Args:
+            check_bounds: If :py:obj:`True`, raise a ValueError any value is out
+              of bounds
             \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the variable constructors.
 
