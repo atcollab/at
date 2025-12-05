@@ -5,7 +5,7 @@ import warnings
 from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
-from at.collective import add_beamloading, remove_beamloading, BLMode
+from at.collective import add_beamloading, remove_beamloading
 from at import lattice_track
 from at import lattice_pass, internal_lpass
 
@@ -119,7 +119,7 @@ def test_track_beamloading(hmba_lattice, func):
     ring = hmba_lattice.enable_6d(copy=True)
     rin0 = numpy.zeros(6)
     func(ring, rin0, refpts=[])
-    add_beamloading(ring, 44e3, 400, blmode=BLMode.WAKE)
+    add_beamloading(ring, 44e3, 400)
     rin1 = numpy.zeros(6)
     func(ring, rin1, refpts=[])
     assert_close(rin0, rin1, atol=1e-21)
@@ -151,7 +151,7 @@ def test_buffers(hmba_lattice):
     ns = nbunch*nslice
     ls = ns*ring.circumference/ring.periodicity
     add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
-                    buffersize=nturns, blmode=BLMode.WAKE)
+                    buffersize=nturns)
     ring.set_fillpattern(nbunch)
     ring.beam_current = 0.2
     rin = numpy.zeros((6, nbunch)) + 1.0e-6
