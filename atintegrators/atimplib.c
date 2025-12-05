@@ -300,253 +300,115 @@ static void wakefunc_long_resonator(double ds, double freqres, double qfactor, d
 }
 
 
-static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
-                           double *kz,double freq, double qfactor, double rshunt,
-                           double beta, double *vbeamk, double energy, double *vbunch) {
-
-    int rank=0;
-    int size=1;
-    int i,ii,ib;
-    double ds,wi,wii;
-    double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
-    double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
-    double wake[2];
-    double vba, vbp;
-    double *vbr = vbunch;
-    double *vbi = vbunch+nbunch;
-    double totalW = 0;
-    double *totalWb = atMalloc(nbunch*sizeof(double));
-    
-    for (i=0;i<nslice*nbunch;i++) {
-        ib = (int)(i/nslice);
-        kz[i]=0.0;
-        vbr[ib] = 0.0;
-        vbi[ib] = 0.0;
-        totalWb[ib] = 0.0;
-    }
-
-    vbeamk[0] = 0.0;
-    vbeamk[1] = 0.0;
-    wake[0] = 0.0;
-    wake[1] = 0.0;
-
-
-    #ifdef MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    #endif
-    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){  
-        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
-        wi = turnhistoryW[i];
-        if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
-            totalW += wi;
-            totalWb[ib] += wi;
-            for (ii=0;ii<nslice*nbunch*nturns;ii++){
-                ds = turnhistoryZ[i]-turnhistoryZ[ii];
-                if(turnhistoryW[ii]>0.0 && ds>=0){
-                    wii = turnhistoryW[ii];
-                    wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta,wake);       
-                    kz[i-nslice*nbunch*(nturns-1)] += normfact*wii*wake[0];
-                    vbeamk[0] += normfact*wii*wake[0]*energy*wi;
-                    vbeamk[1] -= normfact*wii*wake[1]*energy*wi;
-                    vbr[ib] += normfact*wii*wake[0]*energy*wi;
-                    vbi[ib] -= normfact*wii*wake[1]*energy*wi;
-                }            
-            }
-        }
-    }
-
-    #ifdef MPI
-    MPI_Allreduce(MPI_IN_PLACE,kz,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,vbeamk,2,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,vbr,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,vbi,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,&totalW,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,totalWb,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
-    #endif
-    
-    vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1])/totalW;
-    vbp = atan2(vbeamk[1],vbeamk[0]);
-    vbeamk[0] = vba;
-    vbeamk[1] = vbp;
-    
-    for(i=0;i<nbunch;i++){
-        double vr = vbr[i]/totalWb[i];
-        double vi = vbi[i]/totalWb[i];
-        vbr[i] = sqrt(vr*vr+vi*vi); 
-        vbi[i] = atan2(vi,vr);
-    }
-    atFree(totalWb);
-};
-
-
 static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
-                          double normfact, double *kz,double freq, double qfactor,
-                          double rshunt, double *vbeam, double circumference,
-                          double energy, double beta, double *vbeamk, double *vbunch,
-                          double *vgenk, double *ave_vcav, double *bunch_spos, double rffreq){ 
+                          double normfact, double *vbeam_kicks, double resfreq, double qfactor,
+                          double rshunt, double *vbeam_phasor, double circumference,
+                          double energy, double beta, double *ave_vbeam, double *vbunch,
+                          double *vgen_arr, double *bunch_spos, int M, 
+                          double *fillpattern){ 
                           
     #ifndef _MSC_VER  
     int i,ib;
     double wi;
     double selfkick;
-    int sliceperturn = nslice*nbunch;
     double dt =0.0;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
-    double omr = TWOPI*freq;
-    double complex vbeamc = vbeam[0]*cexp(_Complex_I*vbeam[1]);
-    double complex vbeamkc = 0.0;
+    double omr = TWOPI*resfreq;
+    double complex vbeam_complex = vbeam_phasor[0]*cexp(_Complex_I*vbeam_phasor[1]);
     double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
-    double totalW=0.0;
-    double *totalWb = atMalloc(nbunch*sizeof(double));
-    double dphase_slice = 0.0;
-    double final_drift=circumference - bunch_spos[nbunch-1]; /*awful, should change*/
-    
+    int ibunch, islice, total_slice_counter;
+    int bunch_counter = 0;
+    double bucket_curr = 0.0;
+    double main_bucket = circumference / M;
+
     
         
-    for (i=0;i<sliceperturn;i++) {
+    for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
-        kz[i]=0.0;
+        vbeam_kicks[i]=0.0;
         vbr[ib] = 0.0;
         vbi[ib] = 0.0;
-        totalWb[ib] = 0.0;
     }
 
-
-    for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
-        ib = (int)((i-sliceperturn*(nturns-1))/nslice);
-
-        wi = turnhistoryW[i];
-        selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/
-
+    /* The vbeam_complex will always be sent to the center of the next bucket */
+    
+    for(ibunch=0; ibunch<M; ibunch++){
+        bucket_curr = fillpattern[ibunch];
         
-        
-        
-        if(i==sliceperturn*(nturns-1)){
-
-            /*dt = (circumference + turnhistoryZ[i])/bc;*/  /*OLD FORMAT*/
-            dt = (turnhistoryZ[i] + circumference - final_drift)/bc;
-        }else{
-        
-            /* This is dt between each slice*/
-            dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
+        if(bucket_curr!=0.0){
+            for(islice=0; islice<nslice; islice++){
+                total_slice_counter = islice + nslice*bunch_counter; 
+                wi = turnhistoryW[total_slice_counter];
+                selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
+                if(islice==0){
+                    /* TurnhistoryZ goes from -bucket991 to bucket0 */
+                    dt = (turnhistoryZ[total_slice_counter] + circumference - bunch_spos[bunch_counter])/bc;
+                    /*printf("dz: %f", dt*bc - main_bucket);*/
+                    
+                }else{
+                    printf("not used yet");
+                    /* This is dt between each slice*/
+                    dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
+                }
+                
+                /* track the dt */
+                vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+                vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
+                vbeam_complex += 2*selfkick;    
+            }
+            /* back to the center of the bucket */
+            dt = (bunch_spos[bunch_counter] - turnhistoryZ[total_slice_counter] - circumference)/bc;
+            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+                      
+            bunch_counter += 1;
         }
 
-        /* - before complex_I */
-        vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+        ave_vbeam[0] += cabs(vbeam_complex)/M;
+        ave_vbeam[1] += carg(vbeam_complex)/M;
+                    
+        /* advance the phasor to the center of the next bucket */
+        dt = main_bucket/bc;
+        vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
         
-        /*vbeamkc is average kick i.e. average vbeam*/   
-        vbeamkc += (vbeamc+selfkick)*wi;
-        
-        ave_vcav[0] += creal(vbeamc+selfkick)*wi;
-        ave_vcav[0] += -vgenk[0] * sin(vgenk[1] + dphase_slice)*wi;
-        
-        ave_vcav[1] += cimag(vbeamc+selfkick)*wi;
-        ave_vcav[1] += vgenk[0] * cos(vgenk[1] + dphase_slice)*wi;
-        
-        totalW += wi;
-        totalWb[ib] += wi;
-        kz[i-sliceperturn*(nturns-1)] = creal((vbeamc + selfkick)/energy);
-        
-
-        vbr[ib] += creal((vbeamc + selfkick)*wi);
-        vbi[ib] += cimag((vbeamc + selfkick)*wi);
-        vbeamc += 2*selfkick;    
     }
-
-
-    ave_vcav[0] /= totalW;
-    ave_vcav[1] /= totalW;
     
+    /* store the phasor for the next turn */
+    vbeam_phasor[0] = cabs(vbeam_complex);
+    vbeam_phasor[1] = carg(vbeam_complex);
     
-    /*dt = (-turnhistoryZ[sliceperturn*nturns-1])/bc;*/ /* OLD FORMAT */  
-    dt = (final_drift-turnhistoryZ[sliceperturn*nturns-1])/bc;
-    vbeamc *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-    
-    vbeam[0] = cabs(vbeamc);
-    vbeam[1] = carg(vbeamc);
-    vbeamkc /= (totalW);
-    vbeamk[0] = cabs(vbeamkc);
-    vbeamk[1] = carg(vbeamkc);   
-
+    printf("vba %f vbp %f", ave_vbeam[0], ave_vbeam[1]);
     for(i=0;i<nbunch;i++){
-        double vr = vbr[i]/totalWb[i];
-        double vi = vbi[i]/totalWb[i];
+        double vr = vbr[i];
+        double vi = vbi[i];
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
-    atFree(totalWb);
     #endif    
 };
 
 
-static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle, double *ave_vcav){
+static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
 
-    double vbeamr = vbeam[0]*cos(vbeam[1]);
-    double vbeami = vbeam[0]*sin(vbeam[1]);
+    double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
+    double vbeami_meas = vbeam[0]*sin(vbeam[1]);
     
-    double vcavr = -vcav[0]*sin(vcav[1]);
-    double vcavi = vcav[0]*cos(vcav[1]);   
-
-    double vgenr = -vgen[0]*sin(vgen[1]);
-    double vgeni = vgen[0]*cos(vgen[1]);       
-
-    /*
-    double vga = sqrt(vgenr*vgenr + vgeni*vgeni);
-    double vgp = -atan2(vgeni, vgenr);
-    */
-
-    /* 
-    double vgenr = vcavr - vbeamr;
-    double vgeni = vcavi - vbeami;
-    */
+    double vgenr_meas = -vgen[0]*sin(vgen[1]);
+    double vgeni_meas = vgen[0]*cos(vgen[1]);      
     
-    double vcavr_meas_old = vgenr + vbeamr;
-    double vcavi_meas_old = vgeni + vbeami;
-    
-    double vcavr_meas_new = ave_vcav[0];
-    double vcavi_meas_new = ave_vcav[1];
+    double vcavr_meas = vgenr_meas + vbeamr_meas;
+    double vcavi_meas = vgeni_meas + vbeami_meas;   
 
-    double vcavr_meas = vcavr_meas_old;
-    double vcavi_meas = vcavi_meas_old;
-    
-    /*
-    printf("\n\nvcavr, vcavi old: %f \t %f \t \n\n", vcavr_meas_old, vcavi_meas_old);
-    printf("\n\nvcavr, vcavi new: %f \t %f \t \n\n", vcavr_meas_new, vcavi_meas_new);
-    */  
     double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
         
-    /*
-    printf("vcavr_set: %f \t vcavi_set: %f \n", vcavr, vcavi);          
-    printf("vbeamr: %f \t vbeami %f \n", vbeamr, vbeami); 
-    printf("vgenr: %f \t vgeni %f \n", vgenr, vgeni); 
-    printf("vcavr_meas: %f \t vcavi_meas %f \n", vcavr_meas, vcavi_meas);          
-    printf("\n");
-    */
-
-
     double phis = vcav[1];   
     double ptmp = phis_meas - phis; /* this applies to thetag*/
-    /*
-    printf("sync phase: %f \t %f \t %f \t %f \n", ptmp, phis_meas, phis, vcav[1]);
-    */
     
     double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
-
-    /*
-    printf("silly test: %f \n", vgen[1] - vgen[2] - phis); 
-
-    printf("dttmp: %f \n", dttmp);
-    printf("thetag: %f \n", vgen[1]);
-    printf("psi: %f \n", vgen[2]);
-    printf("vcav: %f \t %f \n\n", vcav[0], vcav_meas);
-    */
 
     double dtmp = vcav[0] / vcav_meas;
     

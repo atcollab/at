@@ -13,11 +13,6 @@ from ..lattice.elements.conversions import _array
 from ..physics import get_timelag_fromU0
 
 
-class BLMode(IntEnum):
-    WAKE = 1
-    PHASOR = 2
-
-
 class CavityMode(IntEnum):
     """
     CavityMode.ACTIVE is an active feedback loop, acting on both
@@ -67,10 +62,6 @@ def add_beamloading(
         Nturns (int):       Number of turn for the wake field. Default: 1
         ZCuts:              Limits for fixed slicing, default is adaptive
         NormFact (float):   Normalization factor
-        blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
-            (default) uses the phasor method, BLMode.WAKE uses the wake
-            function. For high Q resonator, the phasor method should be
-            used
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
         cavitymode (CavityMode):     Define PASSIVE or ACTIVE cavity
@@ -162,7 +153,6 @@ class BeamLoadingElement(RFCavity, Collective):
         NormFact=float,
         PhaseGain=float,
         VoltGain=float,
-        _blmode=int,
         _beta=float,
         _wakefact=float,
         _nslice=int,
@@ -187,7 +177,6 @@ class BeamLoadingElement(RFCavity, Collective):
         qfactor: float,
         rshunt: float,
         detune: Optional[float] = 0.0,
-        blmode: Optional[BLMode] = BLMode.PHASOR,
         cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
         fbmode: Optional[FeedbackMode] = FeedbackMode.ONETURN,
         buffersize: Optional[int] = 0,
@@ -209,10 +198,6 @@ class BeamLoadingElement(RFCavity, Collective):
             NormFact (float):   Normalization factor
             detune [Hz] (float):     Define how much to detune the cavity from
                 resonance in unints of Hz
-            blmode (BLMode):    method for beam loading calculation
-                BLMode.PHASOR (default) uses the phasor method, BLMode.WAKE
-                uses the wake function. For high Q resonator, the phasor
-                method should be used.
             cavitymode (CavityMode):  Is cavity ACTIVE (default), PASSIVE or
                 PASSIVE_SETVOLTAGE (Passive with a voltage feedback).
                 For PASSIVE_SETVOLTAGE, the voltage setpoint is specified with
@@ -250,9 +235,6 @@ class BeamLoadingElement(RFCavity, Collective):
             bl_elem (Element): beam loading element
         """
         kwargs.setdefault("PassMethod", self.default_pass[True])
-        if not isinstance(blmode, BLMode):
-            raise TypeError("blmode mode has to be an " +
-                            "instance of BLMode")
         if not isinstance(cavitymode, CavityMode):
             raise TypeError("cavitymode has to be an " +
                             "instance of CavityMode")
@@ -287,7 +269,6 @@ class BeamLoadingElement(RFCavity, Collective):
         self.NormFact = kwargs.pop("NormFact", 1.0)
         self.PhaseGain = kwargs.pop("PhaseGain", 1.0)
         self.VoltGain = kwargs.pop("VoltGain", 1.0)
-        self._blmode = int(blmode)
         self._cavitymode = int(cavitymode)
 
         if self._cavitymode == 1:
@@ -521,7 +502,6 @@ class BeamLoadingElement(RFCavity, Collective):
         ring: Sequence,
         qfactor: float,
         rshunt: float,
-        blmode: Optional[BLMode] = BLMode.PHASOR,
         cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
         buffersize: Optional[int] = 0,
         **kwargs,
@@ -540,10 +520,6 @@ class BeamLoadingElement(RFCavity, Collective):
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
             NormFact (float):   Normalization factor
-            blmode (BLMode):  method for beam loading calculation BLMode.PHASOR
-                (default) uses the phasor method, BLMode.WAKE uses the wake
-                function. For high Q resonator, the phasor method should be
-                used
             cavitymode (CavityMode):  type of beam loaded cavity ACTIVE
                 (default) for a cavity with active compensation, or
                 PASSIVE to only include the beam induced voltage
@@ -569,7 +545,6 @@ class BeamLoadingElement(RFCavity, Collective):
             ring,
             qfactor,
             rshunt,
-            blmode=blmode,
             cavitymode=cavitymode,
             buffersize=buffersize,
             **cav_attrs,
