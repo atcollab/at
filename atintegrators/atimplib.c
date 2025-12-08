@@ -326,9 +326,10 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double main_bucket = circumference / M;
 
     
+    
     for (i=0;i<nslice*nbunch;i++) {
         ibunch = (int)(i/nslice);
-        vbeam_kicks[i]=0.0;
+        vbeam_kicks[i] = 0.0;
         vbr[ibunch] = 0.0;
         vbi[ibunch] = 0.0;
     }
@@ -347,11 +348,9 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                     /* TurnhistoryZ goes from -bucket991 to bucket0 */
                     dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter])/bc;
                 }else{
-                    printf("not used yet \n");
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
                 }
-                
                 
                 /* track the dt */
                 vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
@@ -366,7 +365,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 
             vbr[bunch_counter] = cabs(vbeam_complex);
             vbi[bunch_counter] = carg(vbeam_complex);
-     
+
             bunch_counter += 1;
         }
 
