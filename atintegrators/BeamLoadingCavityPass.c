@@ -186,7 +186,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         vbeam[1] = ave_vbeam[1];
         
         atFree(buffer);
-        free(fillpattern);
     }
 }
 
