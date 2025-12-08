@@ -324,7 +324,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     int bunch_counter = 0;
     double bucket_curr = 0.0;
     double main_bucket = circumference / M;
-
+    double ave_vbeam_ri[] = {0.0, 0.0};
     
     
     for (i=0;i<nslice*nbunch;i++) {
@@ -363,15 +363,17 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter])/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
+            /*
             vbr[bunch_counter] = cabs(vbeam_complex);
             vbi[bunch_counter] = carg(vbeam_complex);
-
+            */
             bunch_counter += 1;
         }
 
-        ave_vbeam[0] += cabs(vbeam_complex)/M;
-        ave_vbeam[1] += carg(vbeam_complex)/M;
-        
+        ave_vbeam_ri[0] += creal(vbeam_complex)/M;
+        ave_vbeam_ri[1] += cimag(vbeam_complex)/M;
+
+
         /* advance the phasor to the center of the next bucket */
        
         dt = main_bucket/bc;
@@ -382,6 +384,8 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     vbeam_phasor[0] = cabs(vbeam_complex);
     vbeam_phasor[1] = carg(vbeam_complex);
     
+    ave_vbeam[0] = sqrt(ave_vbeam_ri[0]*ave_vbeam_ri[0] + ave_vbeam_ri[1]*ave_vbeam_ri[1]);
+    ave_vbeam[1] = atan2(ave_vbeam_ri[1], ave_vbeam_ri[0]);
 
     #endif    
 };
@@ -407,7 +411,7 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
     double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
 
     double dtmp = vcav[0] / vcav_meas;
-    /*printf("vcav_amp_set: %f, vcav_meas: %f \n", vcav[0], vcav_meas);*/
+
     
     vgen[3] *= pow(dtmp,voltgain);
     vgen[2] += dttmp*phasegain; 
