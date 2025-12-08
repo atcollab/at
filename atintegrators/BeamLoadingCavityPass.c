@@ -70,7 +70,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
     double harmn = Elem->HarmNumber;
-    int M = harmn/Elem->system_harmonic;
+    int M = round(harmn/Elem->system_harmonic);
     double main_bucket = circumference/M;
     
     double tlag = Elem->TimeLag;
