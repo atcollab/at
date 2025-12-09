@@ -240,7 +240,6 @@ class MultipoleElement(BasicElement):
                 "yaw": rot_y,
                 "reference": reference,
             }
-            print(transforms)
             transformation.transform_elem(elem, **transforms)
 
     def _set_xs_transforms(self, dict_elem):
@@ -492,7 +491,6 @@ class CavityElement(BasicElement):
 
 
 def at_from_xsuite(name: str, xsuite_params: dict = {}) -> BasicElement:
-    print(name, xsuite_params)
     cls = xsuite_params["__class__"]
     if cls in _dipole:
         elem = DipoleElement(name, xsuite_params=xsuite_params)
@@ -539,20 +537,24 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
             vars = data["_var_management_data"]["var_values"]
             for vm in var_mng:
                 vm[1] = vm[1].replace("f.", "np.")
-                vms = re.split("[\[\]]", vm[0])
-                vms[2] = vms[2].replace("\.", "")
+                vms = re.split(r"[\[\]]", vm[0])
+                vms[2] = vms[2].replace(".", "")
                 if vms[0] == "vars":
                     exec(vms[0] + " = " + vm[1])
-                elif vm[0] == "element_refs":
+                elif vms[0] == "element_refs":
                     if len(vms) > 4:
-                        idx = [int(vms[3])]
+                        idx = int(vms[3])
+                        if vms[2] not in element_refs[vms[1].replace("'", "")]:
+                            element_refs[vms[1].replace("'", "")][vms[2]] = list(
+                                np.zeros(idx + 1)
+                            )
                         exec(
                             vms[0]
                             + "["
                             + vms[1]
-                            + "]["
+                            + "]['"
                             + vms[2]
-                            + "]["
+                            + "']["
                             + str(idx)
                             + "] ="
                             + str(eval(vm[1]))
@@ -562,9 +564,9 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
                             vms[0]
                             + "["
                             + vms[1]
-                            + "].update({"
+                            + "].update({'"
                             + vms[2]
-                            + ":"
+                            + "':"
                             + str(eval(vm[1]))
                             + "})"
                         )
@@ -574,8 +576,6 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
             names_u: element_refs[name]
             for name, names_u in zip(element_names, elements_names_unique)
         }
-
-        print(element_refs.keys())
 
         try:
             particle = data["particle_ref"]
