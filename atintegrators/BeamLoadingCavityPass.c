@@ -54,8 +54,9 @@ void write_buffer(double *data, double *buffer, int datasize, int buffersize){
 
 void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                            double *bunch_spos, double *bunch_currents, 
+                           double *fillpattern,
                            double circumference,
-                           int nturn, double energy,
+                           int nturn, double energy, int harmonic_number,
                            struct elem *Elem) {
   
     long cavitymode = Elem->cavitymode;
@@ -70,7 +71,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
     double harmn = Elem->HarmNumber;
-    int M = round(harmn/Elem->system_harmonic);
+    int M = harmonic_number;
+    printf("MMMMM %d \n", M);
     double main_bucket = circumference/M;
     
     double tlag = Elem->TimeLag;
@@ -114,20 +116,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
-    }
-    
-    /* construct fill pattern from bunch_spos and bunch_currents */
-    double fillpattern[M];    
-    for(i=0;i<M;i++){
-        fillpattern[i] = 0.0;
-    }
-    double spos, cur;
-    int ind;
-    for(i=0;i<nbunch;i++){
-        spos = bunch_spos[i];
-        cur = bunch_currents[i];
-        ind = (int) M*spos/circumference;
-        fillpattern[ind] = cur;
     }
     
 
@@ -303,8 +291,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     atError("Beam loading Phasor mode not implemented in Windows.");
     #endif
     BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
-                          Param->bunch_currents, rl, 
-                          nturn, energy, Elem);
+                          Param->bunch_currents, Param->fillpattern, rl, 
+                          nturn, energy, Param->harmonic_number, Elem);
     return Elem;
 }
 
