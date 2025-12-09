@@ -538,18 +538,31 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
         if var_mng is not None:
             vars = data["_var_management_data"]["var_values"]
             for vm in var_mng:
-                vm[1] = vm[1].replace('f.', 'np.')
-                vms = re.split('[\[\]]', vm[0])
-                vms[2] = vms[2].replace('\.', '')
-                if vms[0] == 'vars':
+                vm[1] = vm[1].replace("f.", "np.")
+                vms = re.split("[\[\]]", vm[0])
+                vms[2] = vms[2].replace("\.", "")
+                if vms[0] == "vars":
                     exec(vms[0] + " = " + vm[1])
-                elif vm[0] == 'element_refs':    
+                elif vm[0] == "element_refs":
                     if len(vms) > 4:
                         idx = [int(vms[3])]
-                        exec(vms[0] + "["+vms[1]+"][" + vms[2] + "][" + str(idx) + "] =" + str(eval(vm[1])))
+                        exec(
+                            vms[0]
+                            + "["
+                            + vms[1]
+                            + "]["
+                            + vms[2]
+                            + "]["
+                            + str(idx)
+                            + "] ="
+                            + str(eval(vm[1]))
+                        )
                     else:
                         exec(
-                            vms[0] + "["+vms[1] + "].update({"
+                            vms[0]
+                            + "["
+                            + vms[1]
+                            + "].update({"
                             + vms[2]
                             + ":"
                             + str(eval(vm[1]))
@@ -604,7 +617,7 @@ def _set_unique_names_list(names):
         if len(ia) > 1:
             for i, ii in enumerate(np.sort(ia)):
                 new_name = names[ii] + "_" + str(i)
-                names[ii] = new_name.replace('|', '')
+                names[ii] = new_name.replace("|", "")
     return names
 
 
