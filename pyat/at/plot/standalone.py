@@ -307,7 +307,8 @@ def plot_RF_bucket_hamiltonian(
         TimeLag = rfcav.TimeLag
 
         phi_s = TimeLag * 2 * np.pi * rfcav.Frequency / ring.beta / clight
-        phi = (np.pi - phi_s) + CT * 2 * np.pi * rfcav.Frequency / ring.beta / clight
+        phi = (np.pi - phi_s) + \
+            CT * 2 * np.pi * rfcav.Frequency / ring.beta / clight
 
         # Second term of the Hamiltonian
         U = (
@@ -318,23 +319,6 @@ def plot_RF_bucket_hamiltonian(
         # Add to total Hamiltonian
         hamiltonian += U
 
-    fig, ax = plt.subplots(1)
-    lim_range = np.max((np.abs(hamiltonian).min(), np.abs(hamiltonian).max()))
-    levels = np.linspace(-lim_range, lim_range, num_levels, endpoint=True)
-    co = ax.contourf(CT, DP, hamiltonian, levels, cmap="coolwarm", alpha=0.7)
-    # additional contour for visibility
-    ax.contour(CT, DP, hamiltonian, levels, cmap="coolwarm")
-    if plot_separatrix:
-        # separatrix contour
-        ax.contour(CT, DP, hamiltonian, [0], colors="black")
-        plt.plot([], [], color="black", label="Separatrix")
-        ax.legend()
-    cb = fig.colorbar(co)
-    cb.set_label(r"$\mathcal{H}(ct,\delta)$ [a.u.]", fontsize=18)
-
-    ax.set_xlabel(r"ct [m]")
-    ax.set_ylabel(r"$\delta$")
-
     phi_s = (
         ring.get_rf_timelag()
         * 2
@@ -343,6 +327,39 @@ def plot_RF_bucket_hamiltonian(
         * ring.harmonic_number
         / (ring.beta * clight)
     )
+
+    ct_UFP = -clight * (np.pi - 2*phi_s) / (
+        2 * np.pi * ring.get_revolution_frequency() * ring.harmonic_number
+        )
+    delta_UFP = (-eta[1] + np.sqrt(eta[1]**2 - 4*eta[0]*eta[2]))/(2*eta[2])
+    separatrix = np.min(
+        (0, ring.beta**2 * ring.energy * (
+            eta[0] / 2 + eta[1] / 3 * delta_UFP + eta[2] / 4 * delta_UFP**2
+        ) * delta_UFP**2 +
+            ring.rf_voltage / (2 * np.pi * ring.harmonic_number) *
+            (-2 * np.cos(phi_s) + (np.pi - 2 * phi_s) * np.sin(phi_s)))
+    )
+
+    fig, ax = plt.subplots(1)
+    lim_range = np.max((np.abs(hamiltonian).min(), np.abs(hamiltonian).max()))
+    levels = np.linspace(-lim_range, lim_range, num_levels, endpoint=True)
+    co = ax.contourf(CT, DP, hamiltonian, levels, cmap="coolwarm", alpha=0.7)
+    # additional contour for visibility
+    ax.contour(CT, DP, hamiltonian, levels, cmap="coolwarm")
+    if plot_separatrix:
+        # separatrix contour
+        ax.contour(CT, DP, hamiltonian, [separatrix], colors="black",
+                   linestyles="solid")
+        ax.plot([], [], color="black", label="Separatrix")
+        ax.scatter(ct_UFP, 0, marker='o', label=r"$ct_{UFP}$", zorder=10)
+        ax.scatter(0, delta_UFP, marker='o', label=r"$\delta_{UFP}$",
+                   zorder=10)
+        ax.legend(ncol=3)
+    cb = fig.colorbar(co)
+    cb.set_label(r"$\mathcal{H}(ct,\delta)$ [a.u.]", fontsize=18)
+
+    ax.set_xlabel(r"ct [m]")
+    ax.set_ylabel(r"$\delta$")
 
     def ct_to_phi(ct):
         return (
@@ -377,7 +394,7 @@ def plot_RF_bucket_hamiltonian(
 
     plt.title(r"$\phi_{RF}$ " + rf"= $\pi -$ {phi_s:.2f}", fontsize=18)
 
-    return CT, DP, hamiltonian
+    return CT, DP, hamiltonian, separatrix, ct_UFP, delta_UFP
 
 
 Lattice.plot_acceptance = plot_acceptance
