@@ -402,7 +402,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       double bspos = 0.0;
       double bcurr = 0.0;
-      BeamLoadingCavityPass(r_in, num_particles, 1, &bspos, &bcurr, 1, 0, Energy, Elem);
+      double fillp = 0.0;
+      BeamLoadingCavityPass(r_in, num_particles, 1, &bspos, &bcurr, &fillp, 1, 0, Energy, 1, Elem);
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
