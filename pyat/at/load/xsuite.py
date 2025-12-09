@@ -9,8 +9,8 @@ from collections.abc import Sequence, Generator, Iterable
 import json
 from ..lattice import Particle, transformation
 from ..lattice import Lattice, RFCavity
-from ..lattice import Element, Drift, ThinMultipole
-from ..lattice import AtWarning
+from ..lattice import Element
+from ..lattice import AtWarning, AtError
 from ..lattice import constants as cst
 
 __all__ = ["save_xsuite", "load_xsuite"]
@@ -492,6 +492,7 @@ class CavityElement(BasicElement):
 
 
 def at_from_xsuite(name: str, xsuite_params: dict = {}) -> BasicElement:
+    print(name, xsuite_params)
     cls = xsuite_params["__class__"]
     if cls in _dipole:
         elem = DipoleElement(name, xsuite_params=xsuite_params)
@@ -524,27 +525,33 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
             data = json.load(jsonfile)
 
         element_refs = data["elements"]
-        element_names = data["element_names"]
+        try:
+            lines = data["lines"]
+            line = params.pop("line", None)
+            if line is None:
+                msg = f"Several lines in input file, please select in {lines.keys()}"
+                raise AtError(msg)
+            element_names = lines[line]["element_names"]
+        except KeyError:
+            element_names = data["element_names"]
         var_mng = data.get("_var_manager", None)
         if var_mng is not None:
             vars = data["_var_management_data"]["var_values"]
             for vm in var_mng:
-                if vm[0].startswith("vars"):
-                    exec(vm[0] + " = " + vm[1])
-                elif vm[0].startswith("element_refs"):
-                    nm_attr = re.split(r"\.", vm[0])
-                    if "knl" in nm_attr[1]:
-                        idx = [int(re.findall(r"\[(.*?)\]", nm_attr[1])[0])]
-                        exec(nm_attr[0] + "['knl']" + str(idx) + "=" + str(eval(vm[1])))
-                    elif "ksl" in nm_attr[1]:
-                        idx = [int(re.findall(r"\[(.*?)\]", nm_attr[1])[0])]
-                        exec(nm_attr[0] + "['ksl']" + str(idx) + "=" + str(eval(vm[1])))
+                vm[1] = vm[1].replace('f.', 'np.')
+                vms = re.split('[\[\]]', vm[0])
+                vms[2] = vms[2].replace('\.', '')
+                if vms[0] == 'vars':
+                    exec(vms[0] + " = " + vm[1])
+                elif vm[0] == 'element_refs':    
+                    if len(vms) > 4:
+                        idx = [int(vms[3])]
+                        exec(vms[0] + "["+vms[1]+"][" + vms[2] + "][" + str(idx) + "] =" + str(eval(vm[1])))
                     else:
                         exec(
-                            nm_attr[0]
-                            + ".update({'"
-                            + nm_attr[1]
-                            + "':"
+                            vms[0] + "["+vms[1] + "].update({"
+                            + vms[2]
+                            + ":"
                             + str(eval(vm[1]))
                             + "})"
                         )
@@ -554,6 +561,8 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
             names_u: element_refs[name]
             for name, names_u in zip(element_names, elements_names_unique)
         }
+
+        print(element_refs.keys())
 
         try:
             particle = data["particle_ref"]
@@ -595,7 +604,7 @@ def _set_unique_names_list(names):
         if len(ia) > 1:
             for i, ii in enumerate(np.sort(ia)):
                 new_name = names[ii] + "_" + str(i)
-                names[ii] = new_name
+                names[ii] = new_name.replace('|', '')
     return names
 
 
