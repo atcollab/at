@@ -306,7 +306,7 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
 }
 
 void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
-                             struct parameters *param){ 
+                             PyArrayObject *fillpattern, struct parameters *param){ 
     if(bcurrents != NULL){
         PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_RAVEL_AXIS,
                                             PyArray_DESCR(bcurrents)->type_num,
@@ -315,12 +315,14 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
         Py_DECREF(bcurrentsum);
         param->nbunch = PyArray_SIZE(bspos);
         param->bunch_spos = PyArray_DATA(bspos);
-        param->bunch_currents = PyArray_DATA(bcurrents); 
+        param->bunch_currents = PyArray_DATA(bcurrents);
+        param->fillpattern = PyArray_DATA(fillpattern); 
     }else{
         param->beam_current=0.0;
         param->nbunch=1;
         param->bunch_spos = (double[1]){0.0};
         param->bunch_currents = (double[1]){0.0};
+        param->fillpattern = (double[1]){0.0};
     }
 }
 
@@ -339,7 +341,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
                              "reuse","omp_num_threads","losses",
-                             "bunch_spos", "bunch_currents", "start_elem", "end_elem", NULL};
+                             "bunch_spos", "bunch_currents", "start_elem", "end_elem",
+                             "harmonic_number", "fillpattern", NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
     static PyObject *lattice_id = NULL;
@@ -361,6 +364,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     double *dxlostcoord = NULL;
     PyArrayObject *bcurrents;
     PyArrayObject *bspos;
+    PyArrayObject *fillpattern;
+    int harmonic_number;
     int num_turns;
     npy_uint32 omp_num_threads=0;
     npy_uint32 num_particles, np6;
@@ -391,13 +396,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     bspos=NULL;
     bcurrents=NULL;
     
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!ii", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!iiiO!", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
         &keep_counter, &keep_lattice, &omp_num_threads, &losses,
         &PyArray_Type, &bspos, &PyArray_Type, &bcurrents,
-        &start_elem,&end_elem)) {
+        &start_elem,&end_elem, &harmonic_number,
+        &PyArray_Type, &fillpattern)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -416,13 +422,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     param.rest_energy=0.0;
     param.charge=-1.0;
     param.num_turns=num_turns;
-    param.bdiff = NULL;    
+    param.bdiff = NULL; 
+    param.harmonic_number = harmonic_number;   
     if (keep_counter)
         param.nturn = last_turn;
     else
         param.nturn = counter;
 
-    set_current_fillpattern(bspos, bcurrents, &param);
+    set_current_fillpattern(bspos, bcurrents, fillpattern, &param);
 
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
