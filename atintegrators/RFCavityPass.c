@@ -47,6 +47,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Energy=atGetOptionalDouble(ElemData,"Energy",energy); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
+
+        /* Check energy */
+        energy = atEnergy(energy, Energy);
+        if (energy == 0){
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        };
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
@@ -56,7 +64,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->TimeLag=TimeLag;
         Elem->PhaseLag=PhaseLag;
     }
-    if (energy == 0.0) energy = Elem->Energy;
+    energy = atEnergy(energy, Elem->Energy);
 
     RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
                  Elem->PhaseLag, nturn, T0, num_particles);
@@ -92,6 +100,9 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
+
+      /* Check energy */
+      Energy = atEnergy(Energy, 0);
 
       RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, num_particles);
 
