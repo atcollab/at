@@ -21,6 +21,30 @@ _dipole = ["Bend", "RBend", "Dipole"]
 
 _cavity = ["Cavity", "RFCavity"]
 
+_INDEX_TO_MODEL_DRIFT = {0: "adaptive", 1: "expanded", 2: "exact"}
+_MODEL_TO_INDEX_DRIFT = {k: v for v, k in _INDEX_TO_MODEL_DRIFT.items()}
+
+_INDEX_TO_MODEL_CURVED = {
+    0: "adaptive",
+    1: "full",
+    2: "bend-kick-bend",
+    3: "rot-kick-rot",
+    4: "mat-kick-mat",
+    5: "drift-kick-drift-exact",
+    6: "drift-kick-drift-expanded",
+}
+_MODEL_TO_INDEX_CURVED = {k: v for v, k in _INDEX_TO_MODEL_CURVED.items()} | {
+    "expanded": 4
+}
+
+_INDEX_TO_EDGE_MODEL = {
+    -1: "suppressed",
+    0: "linear",
+    1: "full",
+    2: "dipole-only",
+}
+_EDGE_MODEL_TO_INDEX = {k: v for v, k in _INDEX_TO_EDGE_MODEL.items()}
+
 
 class BasicElement(Element):
 
@@ -32,7 +56,7 @@ class BasicElement(Element):
     _xsuite2at_class = {
         "Quadrupole": "Quadrupole",
         "Sextupole": "Sextupole",
-        "Multipole": "ThinMultipole",
+        "Multipole": "Multipole",
         "RBend": "Dipole",
         "Bend": "Dipole",
         "Octupole": "Multipole",
@@ -42,6 +66,7 @@ class BasicElement(Element):
     _at2xsuite_class = {
         "Quadrupole": "Quadrupole",
         "Sextupole": "Sextupole",
+        "Multipole": "Multipole",
         "ThinMultipole": "Multipole",
         "Dipole": "Bend",
         "Bend": "Bend",
@@ -139,8 +164,16 @@ class BasicElement(Element):
             self.xsuite_params["model"] = xs_integrator
 
     def _integrator_to_at(self):
-        integrator = self.xsuite_params.get("model", None)
         cls = self.atparams["Class"]
+        try:
+            integrator = self.xsuite_params.get("model")
+        except KeyError:
+            integrator = self.xsuite_params.get("_model", None)
+            if integrator is not None:
+                if cls == "Drift":
+                    integrator = _INDEX_TO_MODEL_DRIFT[integrator]
+                else:
+                    integrator = _INDEX_TO_MODEL_CURVED[integrator]
         at_integrator = self._xsuite2at_integrator.get(integrator, None)
         if at_integrator is not None and cls in self._at_integrator_switch:
             self.xsuite_params["PassMethod"] = at_integrator
@@ -270,6 +303,10 @@ class MultipoleElement(BasicElement):
         elif self.atparams.get("BendingAngle", 0.0) == 0.0:
             self.xsuite_params["edge_exit_active"] = 0
             self.xsuite_params["edge_entry_active"] = 0
+        if l == 0.0:
+            self.xsuite_params["_isthick"] = False
+        else:
+            self.xsuite_params["_isthick"] = True
 
     @staticmethod
     def poly_from_xsuite(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
@@ -349,14 +386,24 @@ class DipoleElement(MultipoleElement):
             self.xsuite_params["length"] /= np.sinc(hangle)
 
         entry_active = self.xsuite_params.get("_edge_entry_active", 1)
-        entry_model = self.xsuite_params.get("_edge_entry_model", 0)
+        try:
+            entry_model = self.xsuite_params.get("edge_entry_model")
+            entry_model = _EDGE_MODEL_TO_INDEX[entry_model]
+        except KeyError:
+            entry_model = self.xsuite_params.get("_edge_entry_model", 0)
         if entry_model == -1 or entry_active == 0:
             self.atparams["FringeBendEntrance"] = 0
         elif entry_model == 1:
             self.atparams["FringeQuadEntrance"] = 1
 
         exit_active = self.xsuite_params.get("_edge_exit_active", 1)
-        exit_model = self.xsuite_params.get("_edge_exit_model", 0)
+        try:
+            exit_model = self.xsuite_params.get("edge_exit_model")
+            exit_model = _EDGE_MODEL_TO_INDEX[exit_model]
+        except KeyError:
+            exit_model = self.xsuite_params.get("_edge_exit_model", 0)
+        if isinstance(entry_model, str):
+            exit_model = _EDGE_MODEL_TO_INDEX[exit_model]
         if exit_model == -1 or exit_active == 0:
             self.atparams["FringeBendExit"] = 0
         elif exit_model == 1:
@@ -483,14 +530,31 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
             vars = data["_var_management_data"]["var_values"]
             for vm in var_mng:
                 if vm[0].startswith("vars"):
-                    exec(vm[0]+" = "+vm[1])
+                    exec(vm[0] + " = " + vm[1])
                 elif vm[0].startswith("element_refs"):
                     nm_attr = re.split(r"\.", vm[0])
-                    exec(nm_attr[0]+".update({'"+nm_attr[1]+"':"+str(eval(vm[1]))+"})")
+                    if "knl" in nm_attr[1]:
+                        idx = [int(re.findall(r"\[(.*?)\]", nm_attr[1])[0])]
+                        exec(nm_attr[0] + "['knl']" + str(idx) + "=" + str(eval(vm[1])))
+                    elif "ksl" in nm_attr[1]:
+                        idx = [int(re.findall(r"\[(.*?)\]", nm_attr[1])[0])]
+                        exec(nm_attr[0] + "['ksl']" + str(idx) + "=" + str(eval(vm[1])))
+                    else:
+                        exec(
+                            nm_attr[0]
+                            + ".update({'"
+                            + nm_attr[1]
+                            + "':"
+                            + str(eval(vm[1]))
+                            + "})"
+                        )
 
         elements_names_unique = _set_unique_names_list(copy.deepcopy(element_names))
-        element_refs={names_u: element_refs[name] for name, names_u in zip(element_names, elements_names_unique)}
-        
+        element_refs = {
+            names_u: element_refs[name]
+            for name, names_u in zip(element_names, elements_names_unique)
+        }
+
         try:
             particle = data["particle_ref"]
             atparticle = Particle("relativistic")
@@ -524,29 +588,6 @@ def load_xsuite(filename: str, **kwargs) -> Lattice:
     return lattice
 
 
-def _generate_thin(thick_multipole):
-    d_thick = thick_multipole.to_dict()
-    _ = d_thick.pop("PassMethod")
-    name = d_thick.pop("FamName")
-    length = d_thick.pop("Length")
-    pa = d_thick.pop("PolynomA")
-    pb = d_thick.pop("PolynomB")
-    mult = ThinMultipole(
-        name,
-        pa,
-        pb,
-        **d_thick,
-    )
-    if length > 0.0:
-        dr_entrance = Drift(name + "_Entrance", length / 2)
-        dr_exit = Drift(name + "_Exit", length / 2)
-        mult.PolynomA *= length
-        mult.PolynomB *= length
-        return [dr_entrance, mult, dr_exit]
-    else:
-        return [mult]
-    
-    
 def _set_unique_names_list(names):
     _, idx_inv, cnt = np.unique(names, return_inverse=True, return_counts=True)
     idx_list = np.split(np.argsort(idx_inv), np.cumsum(cnt[:-1]))
@@ -566,16 +607,7 @@ def _set_unique_names(lattice):
 
 
 def _format_lattice(lattice):
-    idx_mult = [i for i, e in enumerate(lattice) if e.__class__.__name__ == "Multipole"]
-    if len(idx_mult) > 0:
-        newring = lattice[: idx_mult[0]]
-        for i, ii in enumerate(idx_mult[:-1]):
-            newring += _generate_thin(lattice[ii])
-            newring += lattice[ii + 1 : idx_mult[i + 1]]
-        newring += _generate_thin(lattice[idx_mult[-1]])
-        newring += lattice[idx_mult[-1] + 1 :]
-    else:
-        newring = lattice.deepcopy()
+    newring = lattice.deepcopy()
     _set_unique_names(newring)
     return Lattice(newring, energy=lattice.energy, periodicity=lattice.periodicity)
 
