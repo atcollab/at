@@ -354,7 +354,7 @@ def plot_RF_bucket_hamiltonian(
         ax.scatter(ct_UFP, 0, marker='o', label=r"$ct_{UFP}$", zorder=10)
         ax.scatter(0, delta_UFP, marker='o', label=r"$\delta_{UFP}$",
                    zorder=10)
-        ax.legend(ncol=3)
+        ax.legend(ncol=2)
     cb = fig.colorbar(co)
     cb.set_label(r"$\mathcal{H}(ct,\delta)$ [a.u.]", fontsize=18)
 
