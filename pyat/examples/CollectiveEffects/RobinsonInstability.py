@@ -21,7 +21,7 @@ ring.beam_current = current
 
 fring, _ = at.fast_ring(ring)
 # Switch on RF cavity but have all other radiation sources off
-fring.radiation_on(cavity_pass='RFCavityPass',
+fring.enable_6d(cavity_pass='RFCavityPass',
                    dipole_pass=None, quadrupole_pass=None)
 
 # Define the resonator parameters and current
@@ -45,7 +45,7 @@ bmon = at.BeamMoments('mon')
 fring.append(bmon)
 
 # Particle generation and tracking
-sigm = at.sigma_matrix(ring.radiation_on(copy=True))
+sigm = at.sigma_matrix(ring.enable_6d(copy=True))
 part = at.beam(Npart, sigm)
 
 fring.track(part, nturns=nturns, refpts=None, in_place=True)
