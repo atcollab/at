@@ -246,13 +246,16 @@ def plot_RF_bucket_hamiltonian(
         num_levels (int): Number of levels for contour plot. Odd number of
             levels allow to center the colorbar around 0. Default to 41.
         plot_separatrix (bool): Flag to plot the separatrix contour
-            (:math:`\mathcal{H}=0`).
+            (:math:`min(\mathcal{H}(ct_{UFP},0),\mathcal{H}(0,\delta_{UFP}))`).
 
     Returns:
         CT:   (num_points,num_points) array: ct grid
         DP:    (num_points,num_points) array: dp grid
         hamiltonian:   (num_points,num_points) array: Hamiltonian values
         along (CT,DP) grid
+        separatrix:   Hamiltonian value at the separatrix
+        ct_UFP:   Distance of arrival Unstable Fixed Point
+        delta_UFP:   Momentum deviation Unstable Fixed Point
     """
     # Momentum compaction/phase slip factors computed up to third order
     tmp_ring = ring.disable_6d(copy=True)
