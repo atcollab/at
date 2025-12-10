@@ -244,9 +244,11 @@ class MultipoleElement(BasicElement):
             warnings.warn(AtWarning(msg))
             reference = transformation.ReferencePoint.CENTRE
 
-        ismisaligned = np.any(np.array([shift_x, shift_y, shift_s, rot_x, rot_y, rot_s]) != 0.0)
+        ismisaligned = np.any(
+            np.array([shift_x, shift_y, shift_s, rot_x, rot_y, rot_s]) != 0.0
+        )
         if rot_s_frame != 0.0:
-            self.set_rots_mat(elem, rot_s_frame)   
+            self.set_rots_mat(elem, rot_s_frame)
             if ismisaligned:
                 msg = f"{elem.FamName}:alignment errors available only for H bends, ignored"
                 warnings.warn(AtWarning(msg))
@@ -261,7 +263,6 @@ class MultipoleElement(BasicElement):
                 "reference": reference,
             }
             transformation.transform_elem(elem, **transforms)
-
 
     def _set_xs_transforms(self, dict_elem):
         transforms = self.atparams.get("transforms", None)
@@ -665,12 +666,16 @@ def save_xsuite(
         offset, tilt, yaw, pitch = transformation.get_offsets_rotations(
             e, reference=refpoint
         )
-        ismisaligned = np.any(np.array([offset[0], offset[1], offset[2], tilt, pitch, yaw]) != 0.0)
+        ismisaligned = np.any(
+            np.array([offset[0], offset[1], offset[2], tilt, pitch, yaw]) != 0.0
+        )
         rots_frame = getattr(e, "rots_frame", 0.0)
         if rots_frame != 0.0:
-            e.transforms= {"rot_s_rad": rots_frame}
+            e.transforms = {"rot_s_rad": rots_frame}
             if ismisaligned:
-                msg = f"{e.FamName}:alignment errors available only for H bends, ignored"
+                msg = (
+                    f"{e.FamName}:alignment errors available only for H bends, ignored"
+                )
                 warnings.warn(AtWarning(msg))
         elif ismisaligned:
             if refpoint == transformation.ReferencePoint.ENTRANCE:
