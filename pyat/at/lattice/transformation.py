@@ -175,7 +175,6 @@ def _tilt_frame_mat(rots: float) -> None:
 # noinspection PyPep8Naming
 def transform_elem(
     elem: Element,
-    reference: ReferencePoint | None = None,
     dx: float | None = None,
     dy: float | None = None,
     dz: float | None = None,
@@ -184,6 +183,7 @@ def transform_elem(
     yaw: float | None = None,
     tilt_frame: float | None = None,
     *,
+    reference: ReferencePoint | None = None,
     relative: bool = False,
 ) -> None:
     r"""Set the translations and rotations of an :py:class:`.Element`.
@@ -215,9 +215,6 @@ def transform_elem(
 
     Parameters:
         elem:           Element to be transformed.
-        reference:      Transformation reference, either
-                        :py:obj:`ReferencePoint.CENTRE` or
-                        :py:obj:`ReferencePoint.ENTRANCE`.
                         Default: :py:obj:`ReferencePoint.CENTRE`
         dx:             Horizontal shift [m]. Default: no change.
         dy:             Vertical shift [m]. Default: no change.
@@ -228,6 +225,9 @@ def transform_elem(
         tilt_frame:     Tilt angle of the reference frame [rad]. Useful
                         to generate vertical bending magnets for example
                         Default no change
+        reference:      Transformation reference, either
+                        :py:obj:`ReferencePoint.CENTRE` or
+                        :py:obj:`ReferencePoint.ENTRANCE`.
         relative:       If :py:obj:`True`, the input values are added to the
           previous ones.
 
@@ -237,7 +237,6 @@ def transform_elem(
         :py:func:`transform_elem`, the *reference* argument must be identical for all.
         Setting the *reference* will therefore affect all transformations for this element.
     """
-    
     if reference is not None:
         elem.ReferencePoint = reference
     else:
@@ -395,11 +394,11 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False,
 
 def shift_elem(
     elem: Element,
-    reference: ReferencePoint | None = None,
     dx: float | None = None,
     dy: float | None = None,
     dz: float | None = None,
     *,
+    reference: ReferencePoint | None = None,
     relative: bool = False,
 ) -> None:
     r"""Sets the translations of an :py:class:`.Element`
@@ -409,12 +408,12 @@ def shift_elem(
 
     Parameters:
         elem:           Element to be shifted
-        reference:      Transformation reference, either
-                        :py:obj:`ReferencePoint.CENTRE` or
-                        :py:obj:`ReferencePoint.ENTRANCE`.
         dx:             Horizontal translation [m]. Default no change.
         dy:             Vertical translation [m]. Default no change.
         dz:             Longitudinal translation [m]. Default no change.
+        reference:      Transformation reference, either
+                        :py:obj:`ReferencePoint.CENTRE` or
+                        :py:obj:`ReferencePoint.ENTRANCE`.
         relative:       If :py:obj:`True`, the translation is added to the
           existing one
 
@@ -427,21 +426,18 @@ def shift_elem(
 
 def set_rotation(
     ring: Sequence[Element],
-    reference: ReferencePoint | None = None,
     tilts=None,
     pitches=None,
     yaws=None,
     *,
     refpts: Refpts = All,
+    reference: ReferencePoint | None = None,
     relative=False,
 ) -> None:
     r"""Sets the rotations of a list of elements.
 
     Parameters:
         ring:       Lattice description.
-        reference:  Transformation reference, either
-                    :py:obj:`ReferencePoint.CENTRE` or
-                    :py:obj:`ReferencePoint.ENTRANCE`.
         tilts:      Scalar or Sequence of tilt values applied to the
           selected elements. Use :py:obj:`None` to keep the current values.
         pitches:    Scalar or Sequence of pitch values applied to the
@@ -450,6 +446,9 @@ def set_rotation(
           selected elements. Use :py:obj:`None` to keep the current values.
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        reference:  Transformation reference, either
+                    :py:obj:`ReferencePoint.CENTRE` or
+                    :py:obj:`ReferencePoint.ENTRANCE`.
         relative:   If :py:obj:`True`, the rotations are added to the existing ones.
 
     .. versionadded:: 0.7.0
@@ -468,20 +467,21 @@ def set_rotation(
 
 
 def set_tilt(
-    ring: Sequence[Element], tilts, *, reference: ReferencePoint | None = None,
-    refpts: Refpts = All, relative=False
+    ring: Sequence[Element], tilts, *,
+    refpts: Refpts = All, reference: ReferencePoint | None = None,
+    relative=False
 ) -> None:
     r"""Sets the tilts of a list of elements.
 
     Parameters:
         ring:       Lattice description.
-        reference:  Transformation reference, either
-                    :py:obj:`ReferencePoint.CENTRE` or
-                    :py:obj:`ReferencePoint.ENTRANCE`.
         tilts:      Scalar or Sequence of tilt values applied to the
           selected elements. Use :py:obj:`None` to keep the current values.
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        reference:  Transformation reference, either
+                    :py:obj:`ReferencePoint.CENTRE` or
+                    :py:obj:`ReferencePoint.ENTRANCE`.
         relative:   If :py:obj:`True`, the rotation is added to the existing one.
 
     .. versionadded:: 0.7.0
@@ -498,16 +498,13 @@ def set_tilt(
 
 
 def set_shift(
-    ring: Sequence[Element], dxs, dys, dzs=None, *,     reference: ReferencePoint | None = None,
-    refpts: Refpts = All, relative=False
+    ring: Sequence[Element], dxs, dys, dzs=None, *,
+    refpts: Refpts = All, reference: ReferencePoint | None = None, relative=False
 ) -> None:
     r"""Sets the translations of a list of elements.
 
     Parameters:
         ring:       Lattice description.
-        reference:  Transformation reference, either
-                    :py:obj:`ReferencePoint.CENTRE` or
-                    :py:obj:`ReferencePoint.ENTRANCE`.
         dxs:        Scalar or Sequence of horizontal translations values applied
           to the selected elements. Use :py:obj:`None` to keep the current values [m].
         dys:        Scalar or Sequence of vertical translations values applied
@@ -516,6 +513,9 @@ def set_shift(
           to the selected elements. Use :py:obj:`None` to keep the current values [m].
         refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        reference:  Transformation reference, either
+                    :py:obj:`ReferencePoint.CENTRE` or
+                    :py:obj:`ReferencePoint.ENTRANCE`.
         relative:   If :py:obj:`True`, the translation is added to the
           existing one.
 
