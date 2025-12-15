@@ -72,8 +72,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double rffreq = Elem->Frequency;
     double harmn = Elem->HarmNumber;
     int M = harmonic_number;
-    printf("MMMMM %d \n", M);
-    double main_bucket = circumference/M;
     
     double tlag = Elem->TimeLag;
     double qfactor = Elem->Qfactor;

@@ -323,8 +323,9 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     int ibunch, islice, total_slice_counter;
     int bunch_counter = 0;
     double bucket_curr = 0.0;
-    double main_bucket = circumference / M;
+    double main_bucket = circumference / (double) M;
     double ave_vbeam_ri[] = {0.0, 0.0};
+    
     
     
     for (i=0;i<nslice*nbunch;i++) {
@@ -338,7 +339,6 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 
     for(ibunch=0; ibunch<M; ibunch++){
         bucket_curr = fillpattern[ibunch];
-        
         if(bucket_curr!=0.0){
             for(islice=0; islice<nslice; islice++){
                 total_slice_counter = islice + nslice*bunch_counter; 

@@ -2,7 +2,8 @@ import numpy
 import matplotlib.pyplot as plt
 import matplotlib.cm as cmap
 import at
-from at.collective import BeamLoadingElement, add_beamloading, BLMode
+from at.collective import BeamLoadingElement, add_beamloading
+from at.collective import FeedbackMode as FBMode
 from mpi4py import MPI
 from at.tracking.utils import get_bunches_std_mean
 from at.constants import qe
@@ -52,8 +53,19 @@ rank = comm.Get_rank()
 print(size, rank)
 
 ring = at.load_lattice('../../../machine_data/esrf.m')
-ring.enable_6d(cavity_pass='RFCavityPass')
+
+ring.enable_6d()
+ring.set_rf_voltage(8.e6)
 ring.set_rf_frequency()
+ring.set_cavity_phase()
+
+Nbunches = 32
+ring.set_fillpattern(Nbunches)
+
+current = 150e-3
+ring.set_beam_current(current)
+
+
 
 
 # In fact, the following resonator parameters are for the EBS machine
@@ -62,43 +74,41 @@ beta = 2.8
 q0 = 37500  # unloaded
 qfactor = q0 / (1 + beta)  # loaded
 rshunt = 145 * qfactor * 13  # loaded
-o6, _ = ring.find_orbit6()
 
-ring.set_rf_voltage(8.e6)
 
-Nbunches = 16
-ring.set_fillpattern(Nbunches)
-
-_, fring = at.fast_ring(ring)
+fring_norad, fring = at.fast_ring(ring)
 fring.pop(-1)  # drop diffusion element
 
-# Here we specify whether we want to use PHASOR or WAKE
-# beam loading models.
-mode = 'WAKE'
-if mode == 'WAKE':
-    blm = BLMode.WAKE
-else:
-    blm = BLMode.PHASOR
+
+
+
+
+
 
 # Npart must be at least Nbunches per core
 Npart = Nbunches
 
 # Now we give the fring and convert it
 # into a beam loaded cavity.
+
+# Be careful with the gains. A voltgain of 1.0
+# might be stable with FBMode.ONETURN, but you
+# will lose the reduction of the coherent tune
+# due to the feedback working too quickly.
+
 add_beamloading(fring, qfactor, rshunt, Nslice=1,
-                Nturns=50, blmode=blm,
-                VoltGain=0.1, PhaseGain=0.1)
+                VoltGain=0.001, PhaseGain=0.001, 
+                buffersize=1000, windowlength=1000,
+                FBMode=FBMode.WINDOW)
 
 bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
 
 # Specify some simulation parameters
-kickTurn = 500
+kickTurn = 5000
 Nturns = 2**14 + kickTurn
-current = 150e-3
-fring.beam_current = current
+
 
 part = numpy.zeros((6, Npart))
-part = (part.T + o6).T
 
 if rank == 0:
 
@@ -107,6 +117,7 @@ if rank == 0:
 
     z_all = numpy.zeros((Nturns, Nbunches))
     dp_all = numpy.zeros((Nturns, Nbunches))
+
 
 
 # Here it should be considered that there are 2 ways to run
@@ -123,7 +134,7 @@ if rank == 0:
 for i in numpy.arange(Nturns):
     # Apply a kick to ensure the coherent tune is large
     if i == kickTurn:
-        part[4, :] += 3e-3
+        part[4, :] += 1e-3
 
     fring.track(part, nturns=1, refpts=None, in_place=True)
 
@@ -139,7 +150,7 @@ for i in numpy.arange(Nturns):
             # Print the turn number and number of lost particles
             print(i, numpy.sum(numpy.isnan(allPartsg)))
 
-
+    
 # Now we compute the tune of each bunch, and compare with the analytical
 if rank == 0:
     qscoh = numpy.zeros(Nbunches)
