@@ -430,10 +430,10 @@ def test_quantdiff(hmba_lattice):
 def test_simple_ring():
     ring = physics.simple_ring(6e9, 844, 992, 0.1, 0.2, 6e6, 8.5e-5)
     assert_equal(len(ring), 5)
-    
-    assert_equal(ring[at.SimpleQuantDiff][0].PassMethod, "SimpleQuantDiffPass")
+    num_cavities = len(ring[at.RFCavity])
+    assert_equal(ring[num_cavities+1].PassMethod, "SimpleQuantDiffPass")
     ring.disable_6d()
-    assert_equal(ring[at.SimpleQuantDiff][0].PassMethod, "IdentityPass")
+    assert_equal(ring[num_cavities+1].PassMethod, "IdentityPass")
     assert_close(ring.get_tune(), [0.1, 0.2], atol=1e-10)
 
 
