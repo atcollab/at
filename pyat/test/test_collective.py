@@ -124,7 +124,7 @@ def test_track_beamloading(hmba_lattice, func):
     with pytest.raises(Exception):
         func(ring, rin, refpts=[])
     rin = numpy.zeros((6, 2))
-    if func == at.lattice_track:
+    if func == lattice_track:
         func(ring, rin, refpts=[], in_place=True)
     else:
         func(ring, rin, refpts=[])
