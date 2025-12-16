@@ -38,6 +38,7 @@ _z_axis = np.array([0.0, 0.0, 1.0])
 
 class ReferencePoint(Enum):
     """Definition of the reference point for the geometric transformations."""
+
     CENTRE = "CENTRE"  #: Origin at the centre of the element.
     ENTRANCE = "ENTRANCE"  #: Origin at the entrance of the element.
 
@@ -162,15 +163,15 @@ def _r_matrix(ld, r3d):
 
 
 def _tilt_frame_mat(rots: float) -> None:
-        cs = np.cos(rots)
-        sn = np.sin(rots)
-        rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
-        rm[0, 2] = sn
-        rm[1, 3] = sn
-        rm[2, 0] = -sn
-        rm[3, 1] = -sn
-        return rm
-        
+    cs = np.cos(rots)
+    sn = np.sin(rots)
+    rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
+    rm[0, 2] = sn
+    rm[1, 3] = sn
+    rm[2, 0] = -sn
+    rm[3, 1] = -sn
+    return rm
+
 
 # noinspection PyPep8Naming
 def transform_elem(
@@ -240,23 +241,33 @@ def transform_elem(
     if reference is not None:
         elem.ReferencePoint = reference
     else:
-        elem.ReferencePoint = getattr(elem, "ReferencePoint",
-                                      transform_options.referencepoint)
+        elem.ReferencePoint = getattr(
+            elem, "ReferencePoint", transform_options.referencepoint
+        )
 
     if relative:
+
         def _set(ini, val):
             return ini if val is None else ini + val
+
     else:
+
         def _set(ini, val):
             return ini if val is None else val
-        
+
     if transform_options.rounding is not None:
-        if dx is not None: dx = np.round(dx, transform_options.rounding)
-        if dy is not None: dy = np.round(dy, transform_options.rounding)
-        if dz is not None: dz = np.round(dz, transform_options.rounding)
-        if pitch is not None: pitch = np.round(pitch, transform_options.rounding)
-        if yaw is not None: yaw  = np.round(yaw, transform_options.rounding)
-        if tilt is not None: tilt = np.round(tilt, transform_options.rounding)
+        if dx is not None:
+            dx = np.round(dx, transform_options.rounding)
+        if dy is not None:
+            dy = np.round(dy, transform_options.rounding)
+        if dz is not None:
+            dz = np.round(dz, transform_options.rounding)
+        if pitch is not None:
+            pitch = np.round(pitch, transform_options.rounding)
+        if yaw is not None:
+            yaw = np.round(yaw, transform_options.rounding)
+        if tilt is not None:
+            tilt = np.round(tilt, transform_options.rounding)
 
     elem_length = getattr(elem, "Length", 0)
     elem_bending_angle = getattr(elem, "BendingAngle", 0)
@@ -359,11 +370,16 @@ def transform_elem(
     if tilt_frame is not None:
         tf_mat = _tilt_frame_mat(tilt_frame)
         elem.R1 = tf_mat @ elem.R1
-        elem.R2 = elem.R2 @ tf_mat.T 
+        elem.R2 = elem.R2 @ tf_mat.T
 
 
-def tilt_elem(elem: Element, rots: float, relative: bool = False,
-              reference: ReferencePoint | None = None) -> None:
+def tilt_elem(
+    elem: Element,
+    rots: float | None = None,
+    rots_frame: float | None = None,
+    relative: bool = False,
+    reference: ReferencePoint | None = None,
+) -> None:
     r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
 
     The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
@@ -379,6 +395,9 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False,
         rots:           Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
           to a corkscrew rotation of the element looking in the direction of
           the beam. Use :py:obj:`None` to keep the current value.
+        rots_frame:     Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
+          to a corkscrew rotation of the reference frame looking in the direction of
+          the beam. Use :py:obj:`None` to keep the current value.
         relative:       If :py:obj:`True`, the rotation is added to the
           existing one
         reference:      Transformation reference, either
@@ -389,7 +408,9 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False,
         :py:func:`shift_elem`
         :py:func:`.transform_elem`
     """
-    transform_elem(elem, tilt=rots, relative=relative, reference=reference)
+    transform_elem(
+        elem, tilt=rots, tilt_frame=rots_frame, relative=relative, reference=reference
+    )
 
 
 def shift_elem(
@@ -429,6 +450,7 @@ def set_rotation(
     tilts=None,
     pitches=None,
     yaws=None,
+    tilts_frame=None,
     *,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
@@ -437,19 +459,21 @@ def set_rotation(
     r"""Sets the rotations of a list of elements.
 
     Parameters:
-        ring:       Lattice description.
-        tilts:      Scalar or Sequence of tilt values applied to the
+        ring:        Lattice description.
+        tilts:       Scalar or Sequence of tilt values applied to the
           selected elements. Use :py:obj:`None` to keep the current values.
-        pitches:    Scalar or Sequence of pitch values applied to the
+        tilts_frame: Scalar or Sequence of reference frame tilt values applied to the
           selected elements. Use :py:obj:`None` to keep the current values.
-        yaws:       Scalar or Sequence of yaw values applied to the
+        pitches:     Scalar or Sequence of pitch values applied to the
           selected elements. Use :py:obj:`None` to keep the current values.
-        refpts:     Element selection key.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
-        reference:  Transformation reference, either
-                    :py:obj:`ReferencePoint.CENTRE` or
-                    :py:obj:`ReferencePoint.ENTRANCE`.
-        relative:   If :py:obj:`True`, the rotations are added to the existing ones.
+        yaws:        Scalar or Sequence of yaw values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        refpts:      Element selection key.
+          See ":ref: `Selecting elements in a lattice <refpts>`"
+        reference:   Transformation reference, either
+                     :py:obj:`ReferencePoint.CENTRE` or
+                     :py:obj:`ReferencePoint.ENTRANCE`.
+        relative:    If :py:obj:`True`, the rotations are added to the existing ones.
 
     .. versionadded:: 0.7.0
        The *refpts* argument
@@ -462,27 +486,44 @@ def set_rotation(
     tilts = np.broadcast_to(tilts, (nb,))
     pchs = np.broadcast_to(pitches, (nb,))
     yaws = np.broadcast_to(yaws, (nb,))
-    for el, tilt, pitch, yaw in zip(refpts_iterator(ring, refpts), tilts, pchs, yaws):
-        transform_elem(el, reference=reference, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
+    tilts_frame = np.broadcast_to(tilts_frame, (nb,))
+    for el, tilt, pitch, yaw, tilt_frame in zip(
+        refpts_iterator(ring, refpts), tilts, pchs, yaws, tilts_frame
+    ):
+        transform_elem(
+            el,
+            reference=reference,
+            tilt=tilt,
+            pitch=pitch,
+            yaw=yaw,
+            tilt_frame=tilt_frame,
+            relative=relative,
+        )
 
 
 def set_tilt(
-    ring: Sequence[Element], tilts, *,
-    refpts: Refpts = All, reference: ReferencePoint | None = None,
-    relative=False
+    ring: Sequence[Element],
+    tilts: float | None = None,
+    tilts_frame: float | None = None,
+    *,
+    refpts: Refpts = All,
+    reference: ReferencePoint | None = None,
+    relative=False,
 ) -> None:
     r"""Sets the tilts of a list of elements.
 
     Parameters:
-        ring:       Lattice description.
-        tilts:      Scalar or Sequence of tilt values applied to the
+        ring:        Lattice description.
+        tilts:       Scalar or Sequence of tilt values applied to the
           selected elements. Use :py:obj:`None` to keep the current values.
-        refpts:     Element selection key.
+        tilts_frame: Scalar or Sequence of reference frame tilt values applied to the
+          selected elements. Use :py:obj:`None` to keep the current values.
+        refpts:      Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
-        reference:  Transformation reference, either
-                    :py:obj:`ReferencePoint.CENTRE` or
-                    :py:obj:`ReferencePoint.ENTRANCE`.
-        relative:   If :py:obj:`True`, the rotation is added to the existing one.
+        reference:   Transformation reference, either
+          :py:obj:`ReferencePoint.CENTRE` or
+          :py:obj:`ReferencePoint.ENTRANCE`.
+        relative:    If :py:obj:`True`, the rotation is added to the existing one.
 
     .. versionadded:: 0.7.0
        The *refpts* argument
@@ -493,13 +534,22 @@ def set_tilt(
     """
     nb = _refcount(ring, refpts, endpoint=False)
     tilts = np.broadcast_to(tilts, (nb,))
-    for el, tilt in zip(refpts_iterator(ring, refpts), tilts):
-        transform_elem(el, reference=reference, tilt=tilt, relative=relative)
+    tilts_frame = np.broadcast_to(tilts_frame, (nb,))
+    for el, tilt, tilt_frame in zip(refpts_iterator(ring, refpts), tilts, tilts_frame):
+        transform_elem(
+            el, reference=reference, tilt=tilt, tilt_frame=tilt_frame, relative=relative
+        )
 
 
 def set_shift(
-    ring: Sequence[Element], dxs, dys, dzs=None, *,
-    refpts: Refpts = All, reference: ReferencePoint | None = None, relative=False
+    ring: Sequence[Element],
+    dxs,
+    dys,
+    dzs=None,
+    *,
+    refpts: Refpts = All,
+    reference: ReferencePoint | None = None,
+    relative=False,
 ) -> None:
     r"""Sets the translations of a list of elements.
 
@@ -534,12 +584,12 @@ def set_shift(
         transform_elem(el, reference=reference, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
-def _get_referencePoint(elem: Element) -> ReferencePoint: 
+def _get_referencePoint(elem: Element) -> ReferencePoint:
     "Rotation reference point"
     return getattr(elem, "_referencepoint", ReferencePoint.CENTRE)
 
 
-def _set_referencePoint(elem: Element, value: ReferencePoint) -> None: 
+def _set_referencePoint(elem: Element, value: ReferencePoint) -> None:
     setattr(elem, "_referencepoint", value)
 
 
