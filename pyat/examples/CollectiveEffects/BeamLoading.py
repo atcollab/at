@@ -13,11 +13,11 @@ from at.physics import harmonic_analysis
 def analytical_qs(ring, I):
 
     E0 = ring.energy * qe
-    alpha_c = at.get_mcf(ring.radiation_off(copy=True))
+    alpha_c = at.get_mcf(ring.disable_6d(copy=True))
     omega_rf = 2 * numpy.pi * ring.get_rf_frequency()
     Vc = ring.get_rf_voltage()
 
-    envel = at.envelope_parameters(ring.radiation_on(copy=True))
+    envel = at.envelope_parameters(ring.enable_6d(copy=True))
     U0 = envel.U0 * qe
 
     Q0 = bl_elem.Qfactor * (1 + beta)
@@ -97,16 +97,15 @@ Npart = Nbunches
 # due to the feedback working too quickly.
 
 add_beamloading(fring, qfactor, rshunt, Nslice=1,
-                VoltGain=0.001, PhaseGain=0.001, 
+                VoltGain=0.1, PhaseGain=0.001, 
                 buffersize=1000, windowlength=1000,
                 FBMode=FBMode.WINDOW)
 
 bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
 
 # Specify some simulation parameters
-kickTurn = 5000
+kickTurn = 0
 Nturns = 2**14 + kickTurn
-
 
 part = numpy.zeros((6, Npart))
 
@@ -168,25 +167,37 @@ if rank == 0:
     print('Analytical:', numpy.real(qs_theory))
     print('Simulated:', qs_mn, 'pm', qs_std)
 
+
+    fig, (ax1, ax2) = plt.subplots(2,1,figsize=(6,8))
+    
     freq = numpy.fft.rfftfreq(Nturns - kickTurn)
     for i in numpy.arange(Nbunches):
         fftdat = numpy.abs(numpy.fft.rfft(dp_all[kickTurn:, i]))
         if i == 0:
-            plt.semilogy(freq, fftdat,
+            ax2.semilogy(freq, fftdat,
                          color=cmap.jet(float(i + 1) / Nbunches),
                          label='Bunch by Bunch FFT')
         else:
-            plt.semilogy(freq, fftdat,
+            ax2.semilogy(freq, fftdat,
                          color=cmap.jet(float(i + 1) / Nbunches))
 
-    plt.xlim([0, 8e-3])
-    plt.xlabel('Tune')
-    plt.ylabel('FFT Amp [A.U.]')
-    plt.axvline(numpy.mean(qscoh), label='Coherent Tune',
+    ax1.plot(1e3*numpy.mean(z_all,axis=1), color='r')
+    ax1.set_xlabel('Turn')
+    ax1.set_ylabel('<z> [mm]')
+    ax1.set_xlim(0,1000)
+    
+    ax2.set_xlim([0, 8e-3])
+    ax2.set_xlabel('Tune')
+    ax2.set_ylabel('FFT Amp [A.U.]')
+    ax2.axvline(numpy.mean(qscoh), label='Coherent Tune',
                 linestyle='dashed', color='k')
-    plt.axvline(numpy.real(qs_theory), label='Analytical Beam Loaded Tune',
+    ax2.axvline(numpy.real(qs_theory), label='Analytical Beam Loaded Tune',
                 linestyle='dashed', color='r')
-    plt.axvline(qs_zerocurrent, label='Zero Current Tune',
+    ax2.axvline(qs_zerocurrent, label='Zero Current Tune',
                 linestyle='dashed', color='b')
-    plt.legend()
+    ax2.legend()
+    plt.suptitle('VGain=0.001, PGain=0.001')
     plt.show()
+    
+    
+    
