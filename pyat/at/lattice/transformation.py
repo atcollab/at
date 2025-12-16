@@ -38,9 +38,8 @@ _z_axis = np.array([0.0, 0.0, 1.0])
 
 class ReferencePoint(Enum):
     """Definition of the reference point for the geometric transformations."""
-
-    CENTRE = "CENTRE"  #: Origin at the centre of the element.
-    ENTRANCE = "ENTRANCE"  #: Origin at the entrance of the element.
+    CENTRE = 0  #: Origin at the centre of the element.
+    ENTRANCE = 1  #: Origin at the entrance of the element.
 
 
 class _TransFormOptions:
@@ -163,15 +162,15 @@ def _r_matrix(ld, r3d):
 
 
 def _tilt_frame_mat(rots: float) -> None:
-    cs = np.cos(rots)
-    sn = np.sin(rots)
-    rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
-    rm[0, 2] = sn
-    rm[1, 3] = sn
-    rm[2, 0] = -sn
-    rm[3, 1] = -sn
-    return rm
-
+        cs = np.cos(rots)
+        sn = np.sin(rots)
+        rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
+        rm[0, 2] = sn
+        rm[1, 3] = sn
+        rm[2, 0] = -sn
+        rm[3, 1] = -sn
+        return rm
+        
 
 # noinspection PyPep8Naming
 def transform_elem(
@@ -240,34 +239,21 @@ def transform_elem(
     """
     if reference is not None:
         elem.ReferencePoint = reference
-    else:
-        elem.ReferencePoint = getattr(
-            elem, "ReferencePoint", transform_options.referencepoint
-        )
 
     if relative:
-
         def _set(ini, val):
             return ini if val is None else ini + val
-
     else:
-
         def _set(ini, val):
             return ini if val is None else val
-
+        
     if transform_options.rounding is not None:
-        if dx is not None:
-            dx = np.round(dx, transform_options.rounding)
-        if dy is not None:
-            dy = np.round(dy, transform_options.rounding)
-        if dz is not None:
-            dz = np.round(dz, transform_options.rounding)
-        if pitch is not None:
-            pitch = np.round(pitch, transform_options.rounding)
-        if yaw is not None:
-            yaw = np.round(yaw, transform_options.rounding)
-        if tilt is not None:
-            tilt = np.round(tilt, transform_options.rounding)
+        if dx is not None: dx = np.round(dx, transform_options.rounding)
+        if dy is not None: dy = np.round(dy, transform_options.rounding)
+        if dz is not None: dz = np.round(dz, transform_options.rounding)
+        if pitch is not None: pitch = np.round(pitch, transform_options.rounding)
+        if yaw is not None: yaw  = np.round(yaw, transform_options.rounding)
+        if tilt is not None: tilt = np.round(tilt, transform_options.rounding)
 
     elem_length = getattr(elem, "Length", 0)
     elem_bending_angle = getattr(elem, "BendingAngle", 0)
@@ -370,16 +356,11 @@ def transform_elem(
     if tilt_frame is not None:
         tf_mat = _tilt_frame_mat(tilt_frame)
         elem.R1 = tf_mat @ elem.R1
-        elem.R2 = elem.R2 @ tf_mat.T
+        elem.R2 = elem.R2 @ tf_mat.T 
 
 
-def tilt_elem(
-    elem: Element,
-    rots: float | None = None,
-    rots_frame: float | None = None,
-    relative: bool = False,
-    reference: ReferencePoint | None = None,
-) -> None:
+def tilt_elem(elem: Element, rots: float | None = None, rots_frame: float | None = None,
+              relative: bool = False, reference: ReferencePoint | None = None) -> None:
     r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
 
     The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
@@ -408,9 +389,7 @@ def tilt_elem(
         :py:func:`shift_elem`
         :py:func:`.transform_elem`
     """
-    transform_elem(
-        elem, tilt=rots, tilt_frame=rots_frame, relative=relative, reference=reference
-    )
+    transform_elem(elem, tilt=rots, tilt_frame=rots_frame, relative=relative, reference=reference)
 
 
 def shift_elem(
@@ -487,28 +466,15 @@ def set_rotation(
     pchs = np.broadcast_to(pitches, (nb,))
     yaws = np.broadcast_to(yaws, (nb,))
     tilts_frame = np.broadcast_to(tilts_frame, (nb,))
-    for el, tilt, pitch, yaw, tilt_frame in zip(
-        refpts_iterator(ring, refpts), tilts, pchs, yaws, tilts_frame
-    ):
-        transform_elem(
-            el,
-            reference=reference,
-            tilt=tilt,
-            pitch=pitch,
-            yaw=yaw,
-            tilt_frame=tilt_frame,
-            relative=relative,
-        )
+    for el, tilt, pitch, yaw, tilt_frame in zip(refpts_iterator(ring, refpts), tilts, pchs, yaws, tilts_frame):
+        transform_elem(el, reference=reference, tilt=tilt, pitch=pitch, yaw=yaw,
+                       tilt_frame=tilt_frame, relative=relative)
 
 
 def set_tilt(
-    ring: Sequence[Element],
-    tilts: float | None = None,
-    tilts_frame: float | None = None,
-    *,
-    refpts: Refpts = All,
-    reference: ReferencePoint | None = None,
-    relative=False,
+    ring: Sequence[Element], tilts: float | None = None, tilts_frame: float | None = None, *,
+    refpts: Refpts = All, reference: ReferencePoint | None = None,
+    relative=False
 ) -> None:
     r"""Sets the tilts of a list of elements.
 
@@ -536,20 +502,12 @@ def set_tilt(
     tilts = np.broadcast_to(tilts, (nb,))
     tilts_frame = np.broadcast_to(tilts_frame, (nb,))
     for el, tilt, tilt_frame in zip(refpts_iterator(ring, refpts), tilts, tilts_frame):
-        transform_elem(
-            el, reference=reference, tilt=tilt, tilt_frame=tilt_frame, relative=relative
-        )
+        transform_elem(el, reference=reference, tilt=tilt, tilt_frame=tilt_frame, relative=relative)
 
 
 def set_shift(
-    ring: Sequence[Element],
-    dxs,
-    dys,
-    dzs=None,
-    *,
-    refpts: Refpts = All,
-    reference: ReferencePoint | None = None,
-    relative=False,
+    ring: Sequence[Element], dxs, dys, dzs=None, *,
+    refpts: Refpts = All, reference: ReferencePoint | None = None, relative=False
 ) -> None:
     r"""Sets the translations of a list of elements.
 
@@ -584,13 +542,14 @@ def set_shift(
         transform_elem(el, reference=reference, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
-def _get_referencePoint(elem: Element) -> ReferencePoint:
+def _get_referencePoint(elem: Element) -> ReferencePoint: 
     "Rotation reference point"
-    return getattr(elem, "_referencepoint", ReferencePoint.CENTRE)
+    idx = getattr(elem, "_referencepoint", transform_options.referencepoint.value)
+    return list(ReferencePoint)[idx]
 
 
-def _set_referencePoint(elem: Element, value: ReferencePoint) -> None:
-    setattr(elem, "_referencepoint", value)
+def _set_referencePoint(elem: Element, value: ReferencePoint) -> None: 
+    setattr(elem, "_referencepoint", value.value)
 
 
 def _get_dx(elem: Element) -> float:
