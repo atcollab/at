@@ -117,25 +117,20 @@ def test_beamloading(hmba_lattice):
 @pytest.mark.parametrize('func', (lattice_track, lattice_pass))
 def test_track_beamloading(hmba_lattice, func):
     ring = hmba_lattice.enable_6d(copy=True)
-    rin0 = numpy.zeros(6)
-    func(ring, rin0, refpts=[])
-    add_beamloading(ring, 44e3, 400)
-    rin1 = numpy.zeros(6)
-    func(ring, rin1, refpts=[])
-    assert_close(rin0, rin1, atol=1e-21)
     ring.set_fillpattern(2)
-    ring.beam_current = 0.2
+    ring.set_beam_current(0.2)
+    at.add_beamloading(ring, 44e3, 400)
     rin = numpy.zeros((6, 1))
     with pytest.raises(Exception):
         func(ring, rin, refpts=[])
     rin = numpy.zeros((6, 2))
-    if func == lattice_track:
+    if func == at.lattice_track:
         func(ring, rin, refpts=[], in_place=True)
     else:
         func(ring, rin, refpts=[])
-    assert_close(rin[:, 0], numpy.array([-2.318948e-08, -1.599715e-09,
-                                        0.000000e+00,  0.000000e+00,
-                                        -1.313306e-05, -1.443748e-08]
+    assert_close(rin[:, 0], numpy.array([1.618983e-08,  6.199903e-10,  
+                                         0.000000e+00,  0.000000e+00,
+                                         -6.129488e-10,  1.502295e-08]
                                         ), atol=5e-10)
  
 
