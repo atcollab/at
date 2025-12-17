@@ -507,7 +507,7 @@ def test_rfcavity(rin, func):
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
     if func == lattice_track:
-        func(lattice, rin, energy=6.e+9, in_place=True)
+        func(lattice, rin, in_place=True)
     else:
         func(lattice, rin, energy=6.e+9)
     expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
