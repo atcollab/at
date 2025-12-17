@@ -503,13 +503,13 @@ def test_quad(rin, func):
 @pytest.mark.parametrize('func', (lattice_track, lattice_pass, internal_lpass))
 def test_rfcavity(rin, func):
     rf = elements.RFCavity('rfcavity', 0.0, 187500, 3.5237e+8, 31, 6.e+9)
-    lattice = [rf, rf, rf, rf]
+    rflattice = [rf, rf, rf, rf]
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
     if func == lattice_track:
-        func(lattice, rin, in_place=True)
+        func(rflattice, rin, in_place=True)
     else:
-        func(lattice, rin, energy=6.e+9)
+        func(rflattice, rin)
     expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
