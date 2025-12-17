@@ -365,8 +365,8 @@ def element_from_dict(
     # Create list rather than generator to ensure that elements are removed
     # from elem_dict.
     elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
-    trs = {tr_attr: elem_dict.pop(tr_attr, None) for tr_attr in transformation.transform_attr} 
     element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
+    trs = {tr_attr: elem_dict.pop(tr_attr, None) for tr_attr in transformation.transform_attr} 
     if not np.all([v is None for v in trs.values()]):
         transformation.transform_elem(element, **trs)
     return element
