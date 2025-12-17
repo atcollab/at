@@ -352,19 +352,19 @@ class ObservableList(list):
                 rg = rg.disable_6d(copy=True)
             return rg
 
-        def select_ring(needs):
-            if Need.NEED_6D in needs:
-                return ring6
-            elif Need.NEED_4D in needs:
-                return ring4
-            else:
-                return ring
-
         def obseval(obs: Observable, **kwargs):
             """Evaluate a single observable."""
 
             def check_error(dt, refpts):
                 return dt if isinstance(dt, Exception) else dt[refpts]
+
+            def select_ring(needs):
+                if Need.NEED_6D in needs:
+                    return ring6
+                elif Need.NEED_4D in needs:
+                    return ring4
+                else:
+                    return ring
 
             obsneeds = obs.needs
             obsrefs = getattr(obs, "_boolrefs", None)

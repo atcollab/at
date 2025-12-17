@@ -374,7 +374,7 @@ class Observable:
 
     @classmethod
     def _ax_lab(cls, param, plane) -> str | None:
-        if isinstance(param, Callable):
+        if callable(param):
             return None
         else:
             _, fmt, code = cls._pinfo.get(param, cls._default)
@@ -382,7 +382,7 @@ class Observable:
 
     @classmethod
     def _pl_lab(cls, param, plane) -> str | None:
-        if isinstance(param, Callable):
+        if callable(param):
             return None
         else:
             fmt, _, code = cls._pinfo.get(param, cls._default)
@@ -668,7 +668,7 @@ class ElementObservable(Observable):
         statfun: Callable | str | None = None,
         postfun: Callable | str | None = None,
         summary: bool = False,
-        label: str = "",
+        label: str | None = None,
         **eval_kw,
     ):
         r"""Args:
@@ -1010,7 +1010,7 @@ class _GlobalOpticsObservable(Observable):
 
     def __init__(
         self,
-        param: str,
+        param: str | Callable,
         plane: AxisDef = None,
         name: str | None = None,
         label: str | None = None,
@@ -1546,7 +1546,7 @@ class EmittanceObservable(Observable):
 
     def __init__(
         self,
-        param: str,
+        param: str | Callable,
         plane: AxisDef = None,
         name: str | None = None,
         label: str | None = None,
