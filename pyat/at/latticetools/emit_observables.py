@@ -122,14 +122,16 @@ class LocalEmittanceObservable(ElementObservable):
         LocalEmittanceObservable adds the *sigma* parameter:
 
         ===========    ===================================================
-        **r66**        (6, 6) equilibrium envelope matrix R
+        **r66**        (6, 6) equilibrium envelope matrix :math:`\Sigma`
         **r44**        (4, 4) betatron emittance matrix (dp = 0)
         **m66**        (6, 6) transfer matrix from the start of the ring
         **orbit6**     (6,) closed orbit
         **emitXY**     (2,) betatron emittance projected on xxp and yyp
         **emitXYZ**    (3,) 6x6 emittance projected on xxp, yyp, ldp
-        **sigma**      (6,) standard deviation of the beam (square root of the diagonal
-                            terms of *r66*)
+        **sigma6**     (6,) standard deviation of the beam (square root
+                            of the diagonal terms of *r66*)
+        **sigma4**     (6,) standard deviation of the monochromatic beam (square root
+                            of the diagonal terms of *r44*)
         ===========    ===================================================
 
         .. _localemit_eval:
@@ -137,26 +139,24 @@ class LocalEmittanceObservable(ElementObservable):
 
         The observable value is computed as:
 
-        :pycode:`value = fun(emit, **kwargs)[plane]`
+        :pycode:`value = fun(emit, **eval_kw)`
 
         - *emit* is the output of :py:func:`.ohmi_envelope`, evaluated at the
           *refpts* of the observable,
-        - *kwargs* are the keyword arguments provided to the observable constructor,
+        - *eval_kw* are the keyword arguments provided to the observable constructor,
           to the constructor of the enclosing :py:class:`.ObservableList` and to the
           :py:meth:`~.ObservableList.evaluate` method,
         - *value* is the value of the Observable and must have one line per
           refpoint. Alternatively, it may be a single line, but then the
           *summary* keyword must be set to :py:obj:`True`,
-        - the *plane* or *axis* keyword then selects the desired values in the function
-          output.
 
         Examples:
-            >>> obs = LocalEmittanceObservable(at.Monitor, "sigma")
+            >>> obs = LocalEmittanceObservable(at.Monitor, "sigma6")
 
             Observe the beam standard deviation in all 6 axes at Monitor locations
 
             >>> obs = LocalEmittanceObservable(
-            ...     at.Quadrupole, "sigma", axis="x", statfun=np.max
+            ...     at.Quadrupole, "sigma6", axis="x", statfun=np.max
             ... )
 
             Observe the maximum horizontal beam size in Quadrupoles
