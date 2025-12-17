@@ -90,7 +90,7 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
 
     function rg=rearrange(i1,i2)
         slice=ring0(i1:i2-1);
-        cav=atgetcells(slice,'Frequency') | atgetcells(slice,'Class','RingParam');
+        cav=atgetcells(slice,'Frequency');
         rg=[slice(cav);atmarker('xbeg');slice(~cav);atmarker('xend')];
     end
     function [rg,rgrad]=rebuild(slice,o4b,o6b,o4e,o6e)
