@@ -9,7 +9,7 @@ import pytest
 from at.lattice import Lattice, End
 from at.latticetools import LocalOpticsObservable, GlobalOpticsObservable
 from at.latticetools import EmittanceObservable, ObservableList
-from at.future import RefptsVariable, VariableList, match
+from at.future import RefptsVariable, VariableList, ring_match
 
 
 @pytest.fixture()
@@ -89,7 +89,7 @@ def test_linopt_matching(mring: Lattice):
     )
 
     # Perform the fit
-    newring = match(mring, variables, obs, copy=True)
+    newring = ring_match(mring, variables, obs, copy=True)
 
     # check the residuals
     obs.evaluate(newring)
@@ -110,7 +110,7 @@ def test_envelope_matching(mring: Lattice):
 
     # Perform the fit
     ring = mring.enable_6d(copy=True)
-    newring = match(ring, variables, obs, copy=True)
+    newring = ring_match(ring, variables, obs, copy=True)
 
     # check the residuals
     obs.evaluate(newring)
@@ -123,7 +123,7 @@ def test_envelope_matching(mring: Lattice):
 
     # Perform the fit
     ring = mring.enable_6d(copy=True)
-    newring = match(ring, variables, obs, copy=True)
+    newring = ring_match(ring, variables, obs, copy=True)
 
     # check the residuals
     obs.evaluate(newring)
@@ -142,7 +142,7 @@ def test_line_matching(mline):
     obs.append(LocalOpticsObservable(End, "alpha", target=[0.0, 0.0]))
 
     # Perform the fit
-    newline = match(line, variables, obs, copy=True)
+    newline = ring_match(line, variables, obs, copy=True)
 
     # check the residuals
     obs.evaluate(newline)
