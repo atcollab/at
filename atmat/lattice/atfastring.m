@@ -27,8 +27,6 @@ function [newring,newringrad] = atfastring(ring0,varargin)
 %
 %[FASTRING,FASTRINGRAD]=ATFASTRING(RING,'Plot') plots the tune shifts with amplitude
 
-global GLOBVAL
-
 I_cav = findcells(ring0,'Frequency');
 ring_temp = ring0;
 for i = 1:length(I_cav)
@@ -54,7 +52,7 @@ ibeg=[1 iend(1:end-1)];
 
 xm=0.001;
 zm=0.0005;
-[GLOBVAL.E0,nper]=atenergy(ring0);
+[~,nper]=atenergy(ring0);
 [lindata,tunes,xsi]=atlinopt(ring0,0); %#ok<ASGLU>
 gamma=(1+lindata.alpha.*lindata.alpha)./lindata.beta;
 
