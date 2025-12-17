@@ -256,11 +256,11 @@ classdef pytests < matlab.unittest.TestCase
             checkattr(rmrad,rprad);
 
             function checkattr(rm, rp)
-                testCase.verifyEqual(rm{2}.Frequency, rp{1}.Frequency, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{2}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{3}.I2, rp{2}.I2, RelTol=1.0e-15);
-                testCase.verifyEqual(rm{3}.Length, rp{2}.Length, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{3}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
+                testCase.verifyEqual(rm{1}.Frequency, rp{1}.Frequency, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{1}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{2}.I2, rp{2}.I2, RelTol=1.0e-15);
+                testCase.verifyEqual(rm{2}.Length, rp{2}.Length, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{2}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
                 testCase.verifyEqual(rm{end}.A1, rp{3}.A1, RelTol=0.01);
                 testCase.verifyEqual(rm{end}.A2, rp{3}.A2, RelTol=0.02);
                 testCase.verifyEqual(rm{end}.A3, rp{3}.A3, RelTol=0.01);
@@ -270,7 +270,7 @@ classdef pytests < matlab.unittest.TestCase
                 testCase.verifyEqual(rm{end}.Betay, rp{3}.Betay, RelTol=1.e-10);
                 testCase.verifyEqual(rm{end}.chromx_arr, double(rp{3}.chromx_arr), RelTol=1.e-8);
                 testCase.verifyEqual(rm{end}.chromy_arr, double(rp{3}.chromy_arr), RelTol=1.e-8);
-                if length(rm) >= 5
+                if length(rm) >= 4
                     testCase.verifyEqual(rm{end-1}.Lmatp, double(rp{4}.Lmatp), AbsTol=2.e-7);
                 end
             end
