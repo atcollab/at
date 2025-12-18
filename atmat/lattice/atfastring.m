@@ -8,7 +8,7 @@ function [newring,newringrad] = atfastring(ring0,varargin)
 %
 %   [FASTRING,FASTRINGRAD]=ATFASTRING(RING)
 %
-%RING:          original AT structure.
+%RING:          original AT structure, with no RF and no radiation.
 %
 %FASTRING:      Structure containing unchanged cavities moved to the
 %               beginning, a linear 6x6 matrix and a  non-linear element
