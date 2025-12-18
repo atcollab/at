@@ -8,17 +8,17 @@ function [newring,newringrad] = atfastring(ring0,varargin)
 %
 %   [FASTRING,FASTRINGRAD]=ATFASTRING(RING)
 %
-%RING:          original AT structure, with no RF and no radiation.
+%RING:          AT ring 6D disabled (with no active RF and no radiation)
 %
-%FASTRING:      Structure containing unchanged cavities moved to the
-%               beginning, a linear 6x6 matrix and a  non-linear element
-%               simulating linear chromaticities and tune shift with
-%               amplitudes
+%FASTRING:      ring with 6D disabled containing the ring parameters,
+%               the cavities moved to the beginning, a linear 6x6 matrix,
+%               and a non-linear element simulating linear chromaticities
+%               and tune shift with amplitudes
 %
-%FASTRINGRAD:   Structure containing unchanged cavities moved to the
-%               beginning, a diffusion element, a linear 6x6 transfer
-%               matrix and a non-linear element simulating linear
-%               chromaticities and tune shift with amplitudes
+%FASTRINGRAD:   ring with 6D enabled containing the ring parameters,
+%               the cavities moved to the beginning, a linear 6x6 matrix,
+%               a diffusion element, and a non-linear element simulating
+%               linear chromaticities and tune shift with amplitudes
 %
 %   [FASTRING,FASTRINGRAD]=ATFASTRING(RING,REFPTS)
 %
@@ -26,6 +26,10 @@ function [newring,newringrad] = atfastring(ring0,varargin)
 % transformed in the same way as previously described
 %
 %[FASTRING,FASTRINGRAD]=ATFASTRING(RING,'Plot') plots the tune shifts with amplitude
+%
+% See also ATDISABLE_6D
+
+[~,ring0] = check_6d(ring0, false, 'strict', 0);
 
 I_cav = findcells(ring0,'Frequency');
 ring_temp = ring0;
@@ -59,7 +63,7 @@ gamma=(1+lindata.alpha.*lindata.alpha)./lindata.beta;
 ringv=arrayfun(@rearrange,ibeg,iend,'UniformOutput',false);
 ring=cat(1,ringv{:});
 markers=atgetcells(ring,'FamName','xbeg|xend');
-ringrad=atradon(ring);
+ringrad=atenable_6d(ring);
 
 orbit4=zeros(6,sum(markers));
 orbit4(1:5,:)=findsyncorbit(ring,0,markers,'strict',-1);
@@ -88,8 +92,10 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
 
     function rg=rearrange(i1,i2)
         slice=ring0(i1:i2-1);
-        cav=atgetcells(slice,'Frequency') | atgetcells(slice,'Class','RingParam');
-        rg=[slice(cav);atmarker('xbeg');slice(~cav);atmarker('xend')];
+        cav=atgetcells(slice,'Frequency');
+        rp=atgetcells(slice,'Class','RingParam');
+        mask = rp | cav;
+        rg=[slice(rp);slice(cav);atmarker('xbeg');slice(~mask);atmarker('xend')];
     end
     function [rg,rgrad]=rebuild(slice,o4b,o6b,o4e,o6e)
         counter=counter+1;
@@ -107,7 +113,7 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
         lin_elem=atM66(['Linear_' cc],m66norad,'T1',-o4b,'T2',o4e,'Length',s,'I2',I2);
         rg=[slice(1:i1-1);lin_elem];
         
-        [slicerad,radindex]=atradon(slice);
+        [slicerad,radindex]=atenable_6d(slice);
         diff_elem=atQuantDiff(['Diffusion_' cc],quantumDiff(slicerad,radindex,o6b));
         m66rad=findm66(slicerad(i1:end),[],o6b,'is_6d',false);
         lin_elemrad=atM66(['Linear_' cc],m66rad,'T1',-o6b,'T2',o6e,'Length',s,'I2',I2);
