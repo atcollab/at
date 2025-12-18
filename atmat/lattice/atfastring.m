@@ -88,7 +88,7 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
 
     function rg=rearrange(i1,i2)
         slice=ring0(i1:i2-1);
-        cav=atgetcells(slice,'Frequency');
+        cav=atgetcells(slice,'Frequency') | atgetcells(slice,'Class','RingParam');
         rg=[slice(cav);atmarker('xbeg');slice(~cav);atmarker('xend')];
     end
     function [rg,rgrad]=rebuild(slice,o4b,o6b,o4e,o6e)
@@ -103,13 +103,13 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
         s=diff(findspos(slice,[1 length(slice)+1]));
         I2=sum(abs(theta.*theta./lendp));
         
-        m66norad=symplectify(findm66(slice(i1:end),[],o4b));
+        m66norad=symplectify(findm66(slice(i1:end),[],o4b,'is_6d',false));
         lin_elem=atM66(['Linear_' cc],m66norad,'T1',-o4b,'T2',o4e,'Length',s,'I2',I2);
         rg=[slice(1:i1-1);lin_elem];
         
         [slicerad,radindex]=atradon(slice);
         diff_elem=atQuantDiff(['Diffusion_' cc],quantumDiff(slicerad,radindex,o6b));
-        m66rad=findm66(slicerad(i1:end),[],o6b);
+        m66rad=findm66(slicerad(i1:end),[],o6b,'is_6d',false);
         lin_elemrad=atM66(['Linear_' cc],m66rad,'T1',-o6b,'T2',o6e,'Length',s,'I2',I2);
         rgrad=[slicerad(1:i1-1);lin_elemrad;diff_elem];
     end
