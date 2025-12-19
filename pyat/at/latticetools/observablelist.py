@@ -23,12 +23,14 @@ method and the following properties:
 from __future__ import annotations
 
 __all__ = [
+    "EvaluationVariable",
     "ObservableList",
 ]
 
 from collections.abc import Iterable, Iterator
 from functools import reduce
-from typing import ClassVar
+from typing import ClassVar, Any
+import contextlib
 
 import numpy as np
 import numpy.typing as npt
@@ -37,8 +39,8 @@ import numpy.typing as npt
 from .observables import Observable, ElementObservable, Need
 from .rdt_observable import RDTObservable
 from ..lattice import AtError, frequency_control
-from ..lattice import Lattice, Refpts, All
-from ..physics import linopt6
+from ..lattice import Lattice, Refpts, All, ItemVariable
+from ..physics import linopt6, RDTType
 from ..tracking import internal_lpass
 
 
@@ -88,6 +90,7 @@ class ObservableList(list):
     appending, insertion or concatenation with the "+" operator.
     """
 
+    # class attributes
     _needs_ring: ClassVar[set[Need]] = {
         Need.RING,
         Need.ORBIT,
@@ -97,6 +100,8 @@ class ObservableList(list):
         Need.TRAJECTORY,
         Need.EMITTANCE,
         Need.GEOMETRY,
+        Need.GLOBALEMIT,
+        Need.LOCALEMIT,
     }
     _needs_orbit: ClassVar[set[Need]] = {
         Need.ORBIT,
@@ -104,14 +109,23 @@ class ObservableList(list):
         Need.GLOBALOPTICS,
         Need.LOCALOPTICS,
         Need.EMITTANCE,
+        Need.GLOBALEMIT,
+        Need.LOCALEMIT,
     }
     _needs_optics: ClassVar[set[Need]] = {Need.GLOBALOPTICS, Need.LOCALOPTICS}
+    _needs_6d: ClassVar[set[Need]] = {Need.NEED_6D, Need.GLOBALEMIT, Need.LOCALEMIT}
+    _needs_4d: ClassVar[set[Need]] = {Need.NEED_4D}
+
+    # Instance attributes
+    needs: set[Need]  #: Requirements of all the observables
+    eval_kw: dict[str, Any]  #: Evaluation keywords
+    _rdt_type: set[RDTType]
 
     def __init__(
         self,
         obsiter: Iterable[Observable] = (),
         ring: Lattice | None = None,
-        **kwargs,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""
@@ -143,7 +157,7 @@ class ObservableList(list):
               :py:class:`.RDTObservable`, Default: :py:obj:`False`
             pool_size (int | None):    Number of processes used for parallelization.
               Used for :py:class:`.RDTObservable`, Default: :py:obj:`None`
-            **kwargs:       Other keywords are passed to the evaluation functions.
+            **eval_kw:       Other keywords are passed to the evaluation functions.
 
 
         Example:
@@ -175,22 +189,25 @@ class ObservableList(list):
 
             Get a flattened array of tunes and horizontal emittance
         """
-        self.ring = ring
+        if ring is not None:
+            eval_kw["ring"] = ring
         self.orbitrefs = None
         self.opticsrefs = None
         self.passrefs = None
         self.matrixrefs = None
         self.rdtrefs = None
-        self.needs = None
-        self.rdt_type = set()
-        self.kwargs = kwargs
+        self.emitrefs = None
+        self.needs = set()
+        self._rdt_type = set()
+        self.eval_kw = eval_kw
+        self._inited = False
         super().__init__(obsiter)
 
     # noinspection PyProtectedMember
     def _setup(self, ring: Lattice | None):
         # Compute the union of all needs
-        needs = set()
-        rdt_type = set()
+        needs: set[Need] = set()
+        rdt_type: set[RDTType] = set()
         for obs in self:
             needs |= obs.needs
             if isinstance(obs, ElementObservable):
@@ -203,7 +220,8 @@ class ObservableList(list):
             raise ValueError(msg)
 
         self.needs = needs
-        self.rdt_type = rdt_type
+        self._inited = True
+        self._rdt_type = rdt_type
         if ring is None:
             # Initialise each observable
             for obs in self:
@@ -211,7 +229,7 @@ class ObservableList(list):
         else:
             # Initialise each observable and make a summary all refpoints
             noref = ring.get_bool_index(None)
-            orbitrefs = opticsrefs = passrefs = matrixrefs = rdtrefs = noref
+            orbitrefs = opticsrefs = passrefs = matrixrefs = rdtrefs = emitrefs = noref
             for obs in self:
                 obs._setup(ring)
                 obsneeds = obs.needs
@@ -229,11 +247,20 @@ class ObservableList(list):
                         passrefs |= obs._boolrefs
                     if Need.RDT in obsneeds:
                         rdtrefs |= obs._boolrefs
+                    if Need.LOCALEMIT in obsneeds:
+                        emitrefs |= obs._boolrefs
             self.orbitrefs = orbitrefs
             self.opticsrefs = opticsrefs
             self.rdtrefs = rdtrefs
             self.passrefs = passrefs
             self.matrixrefs = matrixrefs
+            self.emitrefs = emitrefs
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return type(self)(super().__getitem__(index), **self.eval_kw)
+        else:
+            return super().__getitem__(index)
 
     def __iadd__(self, other: ObservableList):
         if not isinstance(other, ObservableList):
@@ -242,8 +269,8 @@ class ObservableList(list):
         self.extend(other)
         return self
 
-    def __add__(self, other) -> ObservableList:
-        nobs = ObservableList(self)
+    def __add__(self, other: ObservableList) -> ObservableList:
+        nobs = ObservableList(self, **self.eval_kw)
         nobs += other
         return nobs
 
@@ -252,12 +279,14 @@ class ObservableList(list):
         if not isinstance(obs, Observable):
             msg = f"Cannot add a {type(obs)} to an ObservableList."
             raise TypeError(msg)
-        self.needs = None
+        self._inited = False
         super().append(obs)
 
     def extend(self, obsiter: Iterable[Observable]):
         """Extend list by appending Observables from the iterable."""
-        self.needs = None
+        self._inited = False
+        with contextlib.suppress(AttributeError):
+            self.eval_kw |= obsiter.eval_kw
         super().extend(obsiter)
 
     def insert(self, index: int, obs: Observable):
@@ -265,7 +294,7 @@ class ObservableList(list):
         if not isinstance(obs, Observable):
             msg = f"Cannot insert a {type(obs)} to an ObservableList."
             raise TypeError(msg)
-        self.needs = None
+        self._inited = False
         super().insert(index, obs)
 
     # noinspection PyProtectedMember
@@ -278,13 +307,13 @@ class ObservableList(list):
         ring: Lattice | None = None,
         *,
         initial: bool = False,
-        **kwargs,
+        **eval_kw,
     ):
         r"""Compute all the :py:class:`Observable` values.
 
         Args:
             ring:           Lattice used for evaluation
-            initial:    If :py:obj:`True`, store the values as *initial values*
+            initial:        If :py:obj:`True`, store the values as *initial values*
 
         Keyword Args:
             orbit (Orbit):  Initial orbit. Avoids looking for the closed
@@ -306,20 +335,44 @@ class ObservableList(list):
               :py:class:`.RDTObservable`, Default: :py:obj:`False`
             pool_size (int | None):    Number of processes used for parallelization.
               Used for :py:class:`.RDTObservable`, Default: :py:obj:`None`
-            **kwargs:       Other keywords are passed to the evaluation functions.
+            **eval_kw:      Evaluation keywords passed to the evaluation functions.
         """
 
-        def obseval(ring, obs):
+        def set_6d(rg: Lattice, **kwargs) -> Lattice:
+            """Return a 6d lattice if necessary."""
+            if self.needs & self._needs_6d and not rg.is_6d:
+                rg = rg.enable_6d(copy=True)
+                if kwargs:
+                    rg.set_rf_frequency(**kwargs)
+            return rg
+
+        def set_4d(rg: Lattice) -> Lattice:
+            """Return a 4d lattice if necessary."""
+            if self.needs & self._needs_4d and rg.is_6d:
+                rg = rg.disable_6d(copy=True)
+            return rg
+
+        def obseval(obs: Observable, **kwargs):
             """Evaluate a single observable."""
 
-            def check_error(data, refpts):
-                return data if isinstance(data, Exception) else data[refpts]
+            def check_error(dt, refpts):
+                return dt if isinstance(dt, Exception) else dt[refpts]
+
+            def select_ring(needs):
+                if Need.NEED_6D in needs:
+                    return ring6
+                elif Need.NEED_4D in needs:
+                    return ring4
+                else:
+                    return ring
 
             obsneeds = obs.needs
             obsrefs = getattr(obs, "_boolrefs", None)
             data = []
             if Need.RING in obsneeds:
-                data.append(ring)
+                data.append(select_ring(obsneeds))
+            elif ring is not None:
+                kwargs["ring"] = ring
             if Need.ORBIT in obsneeds:
                 data.append(check_error(orbits, obsrefs[self.orbitrefs]))
             if Need.MATRIX in obsneeds:
@@ -336,35 +389,39 @@ class ObservableList(list):
                 data.append(geodata[obsrefs])
             if Need.RDT in obsneeds:
                 data.append(check_error(rdtdata, obsrefs[self.rdtrefs]))
-            return obs.evaluate(*data, initial=initial, **kw)
+            if Need.GLOBALEMIT in obsneeds:
+                data.extend(*globemit)
+            if Need.LOCALEMIT in obsneeds:
+                data.append(locemit)
+            return obs.evaluate(*data, initial=initial, **(obs.eval_kw | kwargs))
 
         @frequency_control
-        def ringeval(ring, o0, dp=None, dct=None, df=None):
+        def ringeval(ring: Lattice, **dpdctdf):
             """Optics computations."""
             keep_lattice = False
-            trajs = orbits = rgdata = eldata = emdata = mxdata = geodata = rdtdata = (
-                None
-            )
+            trajs = orbits = rgdata = eldata = emdata = mxdata = None
+            geodata = rdtdata = locemit = None
+            globemit = (None, None)
+            twiss_in = kw.get("twiss_in")
+            o0 = kw.get("orbit", getattr(twiss_in, "closed_orbit", None))
             needs = self.needs
             needs_o0 = (needs & self._needs_orbit) and (o0 is None)
 
             if Need.TRAJECTORY in needs:
                 # Trajectory computation
+                r_in = kw.get("r_in", np.zeros(6))
                 r_out = internal_lpass(ring, r_in.copy(), 1, refpts=self.passrefs)
-                trajs = r_out[:, 0, :, 0].T
+                trajs = r_out[:, :, :, 0].T
                 keep_lattice = True
 
-            # if needs & self._needs_orbit:
             if Need.ORBIT in needs or needs_o0:
                 # Closed orbit computation
                 try:
                     o0, orbits = ring.find_orbit(
                         refpts=self.orbitrefs,
-                        dp=dp,
-                        dct=dct,
-                        df=df,
                         orbit=o0,
                         keep_lattice=keep_lattice,
+                        **dpdctdf,
                     )
                 except AtError as err:
                     orbits = mxdata = rgdata = eldata = emdata = err
@@ -377,11 +434,9 @@ class ObservableList(list):
                 # noinspection PyUnboundLocalVariable
                 _, mxdata = find_m(
                     refpts=self.matrixrefs,
-                    dp=dp,
-                    dct=dct,
-                    df=df,
                     orbit=o0,
                     keep_lattice=keep_lattice,
+                    **dpdctdf,
                 )
                 keep_lattice = True
 
@@ -390,29 +445,18 @@ class ObservableList(list):
                 try:
                     _, rgdata, eldata = ring.get_optics(
                         refpts=self.opticsrefs,
-                        dp=dp,
-                        dct=dct,
-                        df=df,
                         orbit=o0,
                         keep_lattice=keep_lattice,
                         get_chrom=Need.CHROMATICITY in needs,
                         get_w=Need.W_FUNCTIONS in needs,
                         twiss_in=twiss_in,
-                        method=method
+                        method=kw.get("method", linopt6),
+                        **dpdctdf,
                     )
                 except AtError as err:
                     rgdata = eldata = err
                 else:
                     keep_lattice = True
-
-            if Need.EMITTANCE in needs and o0 is not None:
-                # Emittance computation
-                try:
-                    emdata = ring.envelope_parameters(
-                        orbit=o0, keep_lattice=keep_lattice
-                    )
-                except Exception as err:
-                    emdata = err
 
             if Need.GEOMETRY in needs:
                 # Geometry computation
@@ -423,41 +467,82 @@ class ObservableList(list):
                 try:
                     _, _, rdtdata = ring.get_rdts(
                         refpts=self.rdtrefs,
-                        rdt_type=self.rdt_type,
+                        rdt_type=self._rdt_type,
                         second_order=Need.RDT_2ND_ORDER in needs,
-                        use_mp=use_mp,
-                        pool_size=pool_size,
+                        use_mp=kw.get("use_mp", False),
+                        pool_size=kw.get("pool_size"),
                     )
                 except Exception as err:
                     rdtdata = err
 
-            return trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata
+            if Need.EMITTANCE in needs and o0 is not None:
+                # Emittance computation
+                rpar = (
+                    ring.envelope_parameters
+                    if ring.is_6d
+                    else ring.radiation_parameters
+                )
+                try:
+                    emdata = rpar(orbit=o0, **dpdctdf)
+                except Exception as err:
+                    emdata = err
 
-        if ring is None:
-            ring = self.ring
-        kw = self.kwargs.copy()
-        kw.update(kwargs)
-        r_in = kw.pop("r_in", np.zeros(6))
-        twiss_in = kw.pop("twiss_in", None)
-        orbit = kw.pop("orbit", None)
-        if orbit is None:
-            orbit = getattr(twiss_in, "closed_orbit", None)
-        method = kw.pop("method", linopt6)
-        use_mp = kw.pop("use_mp", False)
-        pool_size = kw.pop("pool_size", None)
-        dp = kw.pop("dp", None)
-        dct = kw.pop("dct", None)
-        df = kw.pop("df", None)
+            if needs & {Need.LOCALEMIT, Need.GLOBALEMIT}:
+                # ohmi_envelope computation
+                orbit6 = o0 if ring6 is ring else None
+                try:
+                    *globemit, locemit = ring6.ohmi_envelope(
+                        refpts=self.emitrefs, orbit=orbit6
+                    )
+                except Exception as err:
+                    globemit = (err, err)
+                    locemit = err
 
-        if self.needs is None or initial:
+            return (
+                trajs,
+                orbits,
+                rgdata,
+                eldata,
+                emdata,
+                mxdata,
+                geodata,
+                rdtdata,
+                globemit,
+                locemit,
+            )
+
+        if ring is not None:
+            eval_kw["ring"] = ring
+        kw = self.eval_kw | eval_kw
+        ring = kw.pop("ring", None)
+
+        if not self._inited or initial:
             self._setup(ring)
 
         if ring is not None:
-            trajs, orbits, rgdata, eldata, emdata, mxdata, geodata, rdtdata = ringeval(
-                ring, orbit, dp=dp, dct=dct, df=df
-            )
+            momargs = {}
+            for key in ["dp", "dct", "df"]:
+                v = kw.get(key)
+                if v is not None:
+                    momargs[key] = v
+            ring6 = set_6d(ring, **momargs)
+            ring4 = set_4d(ring)
+            (
+                trajs,
+                orbits,
+                rgdata,
+                eldata,
+                emdata,
+                mxdata,
+                geodata,
+                rdtdata,
+                globemit,
+                locemit,
+            ) = ringeval(ring, **momargs)
+        else:
+            ring4 = ring6 = ring
 
-        return _ObsResults(obseval(ring, ob) for ob in self)
+        return _ObsResults(obseval(ob, **kw) for ob in self)
 
     def check(self) -> bool:
         """Check if all observables are evaluated.
@@ -470,13 +555,19 @@ class ObservableList(list):
         """
         return all(obs.check() for obs in self)
 
+    @property
+    def axis_label(self):
+        """y-axis label combining the axis_label of all observables (read only)."""
+        labs = {obs.axis_label for obs in self if obs.axis_label is not None}
+        return ", ".join(labs)
+
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
         """Set the excluded mask on the selected observable."""
         for obs in self:
             if obs.name == obsname:
                 obs._excluded = excluded
-        self.needs = None
+        self._inited = False
 
     def _lookup(self, *ids: int | str) -> list[Observable]:
         """Observable lookup function."""
@@ -698,7 +789,7 @@ class ObservableList(list):
         get_weighted_values, doc="Weighted values of all observables"
     )
     flat_weighted_values = property(
-        get_flat_weighted_values, doc="1-D array of Observable weigthed values"
+        get_flat_weighted_values, doc="1-D array of Observable weighted values"
     )
     deviations = property(get_deviations, doc="Deviations from target values")
     flat_deviations = property(
@@ -717,3 +808,68 @@ class ObservableList(list):
     sum_residuals = property(get_sum_residuals, doc="Sum of all residual values")
     targets = property(get_targets, doc="Target values of all observables")
     flat_targets = property(get_flat_targets, doc="1-D array of target values")
+
+
+class EvaluationVariable(ItemVariable):
+    r"""A reference to a parameter given to the ObservableList.evaluate method.
+
+    The variable drives the default value of a :py:meth:`.ObservableList.evaluate`
+    keyword argument.
+    """
+
+    def __init__(self, obslist: ObservableList, key, *keys):
+        # noinspection PyUnresolvedReferences
+        """
+        Args:
+            obslist:    The :py:class:`.ObservableList` to control,
+            key:        Index or attribute name of the variable.  A :py:class:`str`
+              argument is interpreted as a dictionary key. Attribute names must be
+              decorated with ``attr_(attrname)`` to distinguish them from directory
+              keys.
+            *keys:      additional sequence of indices or attribute names allowing to
+              extract elements deeper in the object structure.
+
+        Keyword Args:
+            name (str):     Name of the Variable. Default: ``''``
+            bounds (tuple[float, float]):   Lower and upper bounds of the
+              variable value. Default: (-inf, inf)
+            delta (float):  Step. Default: 1.0
+
+        Example:
+            Create a *twiss_in* input for computing optics in transfer-line mode:
+
+            >>> twiss_in = {"alpha": np.zeros(2), "beta": np.array([9.0, 2.5])}
+
+            Create the :py:class:`.ObservableList`:
+
+            >>> obs = at.ObservableList(
+            ...     [
+            ...         at.LocalOpticsObservable([0], "beta", plane="x"),
+            ...         at.LocalOpticsObservable([0], "beta", plane="y"),
+            ...     ],
+            ...     ring=ring,
+            ...     dp=0.01,
+            ...     orbit=np.zeros(6),
+            ...     twiss_in=twiss_in,
+            ... )
+
+            Create a variable controlling :math:`\\delta`:
+
+            >>> v3 = at.EvaluationVariable(obs, "dp")
+            >>> v3.value
+            0.01
+
+            Create a variable controlling :math:`p_x`:
+
+            >>> v2 = at.EvaluationVariable(obs, "orbit", 1)
+            >>> v2.value
+            np.float64(0.0)
+
+            Create a variable controlling :math:`\\beta_x`:
+
+            >>> v1 = at.EvaluationVariable(obs, "twiss_in", "beta", 0)
+            >>> v1.value
+            np.float64(9.0)
+        """
+        obslist.eval_kw.setdefault(key, 0.0)
+        super().__init__(obslist.eval_kw, key, *keys)

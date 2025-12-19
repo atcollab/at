@@ -58,11 +58,11 @@ __all__ = [
     "TrajectoryObservable",
 ]
 
-from collections.abc import Callable, Set as AbstractSet
+from collections.abc import Callable, Set as AbstractSet, Mapping
 from functools import partial
 from enum import Enum
 from itertools import repeat
-from typing import ClassVar
+from typing import ClassVar, Any
 
 import numpy as np
 import numpy.typing as npt
@@ -85,7 +85,7 @@ class _Convolve:
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self, *a, **_):
+    def __call__(self, *a, **__):
         return self.modfun(self.fun(*a), *self.args, **self.kwargs)
 
 
@@ -95,20 +95,20 @@ class _ArrayAccess:
     def __init__(self, index):
         self.index = _all_rows(index)
 
-    def __call__(self, data, **_):
+    def __call__(self, data, **__):
         index = self.index
         return data if index is None else data[self.index]
 
 
-def _record_access(param, index, data, **_):
+def _record_access(param, index, data, **__):
     """Access a selected item in a record array."""
     val = getattr(data, param)
     return val if index is None else val[index]
 
 
-def _fun_access(fun, index, data, **_):
+def _fun_access(fun, index, data, **kwargs):
     """Access a selected item in the output of a user-defined function."""
-    val = fun(data)
+    val = fun(data, **kwargs)
     return val if index is None else val[index]
 
 
@@ -159,7 +159,7 @@ def _all_rows(index: RefIndex | None):
     if index is None:
         return None
     if isinstance(index, tuple):
-        return (slice(None), *index)
+        return slice(None), *index
     else:
         return slice(None), index
 
@@ -172,15 +172,25 @@ def _get_fun(fname, fdict) -> Callable | None:
         return fdict[fname]
 
 
-class _Tune:
-    """Get integer tune from the phase advance."""
+def _subscript(plane):
+    idx = axis_(plane, key="index")
+    if isinstance(idx, tuple):
+        return "".join(str(i) for i in idx)
+    else:
+        return ""
 
-    def __init__(self, idx: RefIndex):
-        self.fun = partial(_record_access, "mu", _all_rows(idx))
 
-    def __call__(self, data, **kwargs):
-        mu = self.fun(data, **kwargs)
-        return np.squeeze(mu, axis=0) / 2.0 / np.pi
+def _mod_name(name, fun, *args):
+    if name:
+        if fun:
+            name = f"{fun.__name__}({name})"
+        if args:
+            name = _mod_name(name, *args)
+    return name
+
+
+def _tune(data, **__):
+    return data.mu[-1] / 2.0 / np.pi
 
 
 class _Ring:
@@ -190,7 +200,7 @@ class _Ring:
         self.get_val = partial(_record_access, attrname, index)
         self.refpts = refpts
 
-    def __call__(self, lattice, **_):
+    def __call__(self, lattice, **__):
         vals = [self.get_val(el) for el in lattice.select(self.refpts)]
         return np.array(vals)
 
@@ -233,28 +243,65 @@ class Need(Enum):
     RDT = 12
     #:  Associated with RDT: request 2nd order calculation
     RDT_2ND_ORDER = 13
+    #: Specify :py:func:`.ohmi_envelope` computation and provide its *beamdata* output
+    #: to the evaluation function
+    GLOBALEMIT = 14
+    #: Specify :py:func:`.ohmi_envelope` computation and provide its *emit* output
+    #: to the evaluation function
+    LOCALEMIT = 15
+    #: For observables needing a 4D lattice
+    NEED_4D = 16
+    #: For observables needing a 6D lattice
+    NEED_6D = 17
 
 
 class Observable:
     """Base class for Observables. Can be used for user-defined observables."""
 
+    # Class attributes
+    _default: ClassVar[tuple] = ("{param}[{plane}]", "{param}", lambda x: x)
+    _pinfo: ClassVar[dict] = {}
+
+    # Instance attributes
+    name: str  #: Observable name. A default name is automatically generated.
+    #: Label used in plot legends.
+    #:
+    #: It may contain LaTeX math code. Example: ``"$\beta_x$"`` will appear as
+    #: :math:`\beta_x`.
+    #:
+    #: By default the label is identical to the name of the Observable.
+    #: Labels starting with a ``_`` will not appear in the legends.
+    label: str
+    #: Line formatting used when plotting the Observable. See
+    #: :py:meth:`~matplotlib.axes.Axes.plot` for a description of line formatting.
+    #: *plot_fmt* may be a :py:class:`str` for simple formatting (ex.: ``"o-"``) or a
+    #: :py:class:`dict` for detailed formatting (ex.: :pycode:`{"linewidth": 3.0}`).
+    plot_fmt: str | Mapping
+    fun: Callable  #: Evaluation function.
+    needs: AbstractSet[Need]  #: Set of requirements.
+    target: npt.ArrayLike | None  #: Target value.
+    eval_args: tuple[Any, ...]  #: Evaluation arguments
+    eval_kw: dict[str, Any]  #: Evaluation keywords
+
     def __init__(
         self,
         fun: Callable,
-        *args,
+        *eval_args,
         name: str | None = None,
         target: npt.ArrayLike | None = None,
         weight: npt.ArrayLike = 1.0,
         bounds=(0.0, 0.0),
         needs: AbstractSet[Need] | None = None,
         postfun: Callable | str | None = None,
-        **kwargs,
+        plot_fmt: str | Mapping | None = None,
+        label: str | None = None,
+        **eval_kw,
     ):
         r"""Args:
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
             fun:            :ref:`evaluation function <base_eval>`
-            *args:          Arguments provided to the evaluation function
+            *eval_args:          Arguments provided to the evaluation function
             target:         Target value for a constraint. If :py:obj:`None`
               (default), the residual will always be zero.
             weight:         Weight factor: the residual is
@@ -267,9 +314,15 @@ class Observable:
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
               :py:class:`Need` enumeration.
+            plot_fmt:       Line formatting used when plotting the Observable. See
+              :py:meth:`~matplotlib.axes.Axes.plot` for a description of line
+              formatting. *plot_fmt* may be a :py:class:`str` for simple formatting
+              (ex.: ``"o-"``) or a :py:class:`dict` for detailed formatting (ex.:
+              :pycode:`{"linewidth": 3.0}`).
+
 
         Keyword Args:
-            **kwargs:       Keyword arguments provided to the evaluation function
+            \*\*eval_kw:    Keyword arguments provided to the evaluation function
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -279,13 +332,14 @@ class Observable:
 
         The general form is:
 
-        :pycode:`value = fun(*data, *args, **kwargs)`
+        :pycode:`value = fun(*data, *eval_args, **eval_kw)`
 
         - *data* depends on the *needs* argument, and by default is empty. If several
           needed values are specified, their order is: *ring*, *orbit*, *m44/m66*,
           *ringdata*, *elemdata*, *r_out*, *params*, *geomdata*,
-        - *args* are the positional arguments provided to the observable constructor,
-        - *kwargs* are the keyword arguments provided to the observable constructor,
+        - *eval_args* are the evaluation positional arguments provided to the observable
+           constructor,
+        - *eval_kw* are the evaluation keywords provided to the observable constructor,
           to the constructor of the enclosing :py:class:`.ObservableList` and to the
           :py:meth:`~.ObservableList.evaluate` method.
         - *value* is the value of the observable.
@@ -296,22 +350,48 @@ class Observable:
         or :py:class:`EmittanceObservable` which provide the corresponding
         *data* argument.
         """
-        name = fun.__name__ if name is None else name
+        name = name or fun.__name__
         postfun = _get_fun(postfun, _arrayproc)
         if postfun:
-            name = f"{postfun.__name__}({name})"
             fun = _Convolve(postfun, fun)
-        self.fun: Callable = fun  #: Evaluation function
-        self.needs: AbstractSet[Need] = needs or set()  #: Set of requirements
-        self.name: str = name  #: Observable name
-        self.target: npt.ArrayLike | None = target  #: Target value
+        name = _mod_name(name, postfun)
+        label = _mod_name(label, postfun)
+        self.fun = fun
+        self.needs = needs or set()
+        self.name = name
+        self.target = target
         self.w: npt.NDArray[float] = np.asarray(weight, dtype=float)
         self.lbound, self.ubound = bounds
         self.initial: npt.NDArray[float] | None = None
         self._value: npt.NDArray[float] | Exception | None = None
         self._shape: tuple[int, ...] | None = None
-        self.args = args
-        self.kwargs = kwargs
+        if plot_fmt is not None:
+            self.plot_fmt = plot_fmt
+        self.label = label or name
+        self._axis_label = eval_kw.pop("axis_label", None)
+        self.eval_args = eval_args
+        self.eval_kw = eval_kw
+
+    @classmethod
+    def _ax_lab(cls, param, plane) -> str | None:
+        if callable(param):
+            return None
+        else:
+            _, fmt, code = cls._pinfo.get(param, cls._default)
+            return fmt.format(plane=code(plane))
+
+    @classmethod
+    def _pl_lab(cls, param, plane) -> str | None:
+        if callable(param):
+            return None
+        else:
+            fmt, _, code = cls._pinfo.get(param, cls._default)
+            return fmt.format(plane=code(plane))
+
+    @property
+    def axis_label(self):
+        """Label used for the y-axes of plots (read only)."""
+        return self._axis_label
 
     def __str__(self):
         """Return the string representation of the Observable."""
@@ -389,9 +469,7 @@ class Observable:
                 self._value = err
                 return err
 
-        kw = self.kwargs.copy()
-        kw.update(evalkw)
-        val = np.asarray(self.fun(*data, *self.args, **kw))
+        val = np.asarray(self.fun(*data, *self.eval_args, **(self.eval_kw | evalkw)))
         if initial:
             self.initial = val
         self._shape = val.shape
@@ -508,12 +586,17 @@ class RingObservable(Observable):
         self,
         fun: Callable,
         name: str | None = None,
-        **kwargs,
+        needs: Need | None = None,
+        **eval_kw,
     ):
         r"""Args:
             fun:            :ref:`user-defined evaluation function <ring_eval>`
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated.
+            needs:          :py:obj:`.Need.NEED_4D` or :py:obj:`.Need.NEED_6D`. Ensure
+              that the  lattice provided to the evaluation function has the desired
+              property. If :py:obj:`None`, the lattice is the one given to
+              :py:meth:`~.ObservableList.evaluate` unmodified.
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -529,35 +612,49 @@ class RingObservable(Observable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+        * **dp** –      Momentum deviation. Defaults to :py:obj:`None`,
+        * **dct** –     Path lengthening. Defaults to :py:obj:`None`,
+        * **df** –      Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`,
+
         .. _ring_eval:
         .. rubric:: User-defined evaluation function
 
         It is called as:
 
-        :pycode:`value = fun(ring, **kwargs)`
+        :pycode:`value = fun(ring, **eval_kw)`
 
         - *ring* is the lattice description,
-        - *kwargs* are the keyword arguments provided to the observable constructor,
+        - *eval_kw* are the evaluation keywords provided to the observable constructor,
           to the constructor of the enclosing :py:class:`.ObservableList` and to the
           :py:meth:`~.ObservableList.evaluate` method.
         - *value* is the value of the Observable.
 
         Examples:
-            >>> def circumference(ring, **kwargs):
+            >>> def circumference(ring, **__):
             ...     return ring.get_s_pos(len(ring))[0]
             >>> obs = RingObservable(circumference)
 
             Defines an Observable for the ring circumference.
 
-            >>> def momentum_compaction(ring):
-            ...     return ring.get_mcf()
-            >>> obs = RingObservable(momentum_compaction)
+            >>> def momentum_compaction(ring, dp=0.0, **__):
+            ...     return ring.get_mcf(dp=dp)
+            >>> obs = RingObservable(momentum_compaction, needs=Need.NEED_4D)
 
-            Defines an Observable for the momentum compaction factor.
+            Defines an Observable for the momentum compaction factornad make sure that
+            the lattice provided to :py:meth:`~.Lattice.get_mcf` is 4D.
         """
-        needs = {Need.RING}
+        nds = {Need.RING}
+        if needs is not None:
+            nds.add(needs)
         name = self._set_name(name, fun, None)
-        super().__init__(fun, name=name, needs=needs, **kwargs)
+        super().__init__(fun, name=name, needs=nds, **eval_kw)
 
 
 class ElementObservable(Observable):
@@ -570,7 +667,9 @@ class ElementObservable(Observable):
         name: str | None = None,
         statfun: Callable | str | None = None,
         postfun: Callable | str | None = None,
-        **kwargs,
+        summary: bool = False,
+        label: str | None = None,
+        **eval_kw,
     ):
         r"""Args:
             fun:            :ref:`evaluation function <base_eval>`
@@ -600,19 +699,17 @@ class ElementObservable(Observable):
         **even if nrefs == 1**. The *target*, *weight* and *bounds* inputs must be
         broadcastable to the shape of *value*.
         """
-        name = fun.__name__ if name is None else name
+        name = name or fun.__name__
         postfun = _get_fun(postfun, _arrayproc)
         if postfun:
-            name = f"{postfun.__name__}({name})"
             fun = _Convolve(postfun, fun)
         statfun = _get_fun(statfun, _statproc)
         if statfun:
-            summary = kwargs.pop("summary", True)
-            name = f"{statfun.__name__}({name})"
             fun = _Convolve(statfun, fun, axis=0)
-        else:
-            summary = kwargs.pop("summary", False)
-        super().__init__(fun, name=name, **kwargs)
+            summary = True
+        name = _mod_name(name, postfun, statfun)
+        label = _mod_name(label, postfun, statfun)
+        super().__init__(fun, name=name, label=label, **eval_kw)
         self.summary = summary
         self.refpts = refpts
         self._boolrefs = None
@@ -672,9 +769,17 @@ class GeometryObservable(ElementObservable):
     Process the *geomdata* output of :py:func:`.get_geometry`.
     """
 
-    _field_list: ClassVar[set[str]] = {"x", "y", "angle"}
+    # Class attributes
+    _pinfo: ClassVar[dict] = {"x": "x [m]", "y": "y [m]", "angle": "angle"}
 
-    def __init__(self, refpts: Refpts, param: str, name: str | None = None, **kwargs):
+    def __init__(
+        self,
+        refpts: Refpts,
+        param: str,
+        name: str | None = None,
+        label: str | None = None,
+        **eval_kw,
+    ):
         # noinspection PyUnresolvedReferences
         r"""Args:
             refpts:         Observation points.
@@ -697,18 +802,36 @@ class GeometryObservable(ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+
         Example:
             >>> obs = GeometryObservable(at.Monitor, param="x")
 
             Observe x coordinate of monitors
         """
-        if param not in self._field_list:
-            msg = f"Expected {param!r} to be one of {self._field_list!r}"
+
+        if param not in self._pinfo:
+            msg = f"Expected {param!r} to be one of {self._pinfo.keys()!r}"
             raise ValueError(msg)
         name = self._set_name(name, "geometry", param)
         fun = partial(_record_access, param, None)
         needs = {Need.GEOMETRY}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=param,
+            axis_label=self._pinfo[param],
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 class OrbitObservable(ElementObservable):
@@ -717,8 +840,16 @@ class OrbitObservable(ElementObservable):
     Process the *orbit* output of :py:func:`.find_orbit`.
     """
 
+    # Class attributes
+    _plist: ClassVar = ["x [m]", "$p_x$", "y [m]", "$p_y$", "angle"]
+
     def __init__(
-        self, refpts: Refpts, axis: AxisDef = None, name: str | None = None, **kwargs
+        self,
+        refpts: Refpts,
+        axis: AxisDef = None,
+        name: str | None = None,
+        label: str | None = None,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -743,6 +874,17 @@ class OrbitObservable(ElementObservable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+        * **dp** –      Momentum deviation. Defaults to :py:obj:`None`,
+        * **dct** –     Path lengthening. Defaults to :py:obj:`None`,
+        * **df** –      Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`,
+
         .. rubric:: Shape of the value
 
         If *axis* is :py:obj:`None` (whole orbit vector), then *value* has shape
@@ -757,16 +899,27 @@ class OrbitObservable(ElementObservable):
 
             Observe the horizontal closed orbit at monitor locations
         """
-        name = self._set_name(name, "orbit", axis_(axis, key="code"))
-        fun = _ArrayAccess(axis_(axis, key="index"))
+        descr = axis_(axis)
+        name = self._set_name(name, "orbit", descr["code"])
+        fun = _ArrayAccess(descr["index"])
         needs = {Need.ORBIT}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=descr["label"],
+            axis_label="".join((descr["label"], descr["unit"])),
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 class MatrixObservable(ElementObservable):
-    """Observe the closed orbit at selected locations.
+    """Observe coefficients of the transfer matrix.
 
-    Processs the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
+    Process the result of calling :py:func:`.find_m44` or :py:func:`.find_m44`
     depending upon :py:meth:`~.Lattice.is_6d`.
     """
 
@@ -775,7 +928,8 @@ class MatrixObservable(ElementObservable):
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
         name: str | None = None,
-        **kwargs,
+        label: str | None = None,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -803,6 +957,19 @@ class MatrixObservable(ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+        * **dp** –      Momentum deviation. Defaults to :py:obj:`None`,
+        * **dct** –     Path lengthening. Defaults to :py:obj:`None`,
+        * **df** –      Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`,
+        * **orbit** –   Initial orbit. Avoids looking for the closed orbit if it is
+          already known,
+
         Example:
             >>> obs = MatrixObservable(at.Monitor, axis=("x", "px"))
 
@@ -812,18 +979,48 @@ class MatrixObservable(ElementObservable):
         name = self._set_name(name, "matrix", axis_(axis, key="code"))
         fun = _ArrayAccess(axis_(axis, key="index"))
         needs = {Need.MATRIX}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=f"$T_{{{_subscript(axis)}}}$",
+            axis_label="T [m]",
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 class _GlobalOpticsObservable(Observable):
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
+        "tune": (r"$\nu_{{{plane}}}$", "Tune", partial(plane_, key="label")),
+        "chromaticity": (
+            r"$\xi_{{{plane}}}$",
+            "Chromaticity",
+            partial(plane_, key="label"),
+        ),
+        "damping_time": (
+            r"$\tau_{{{plane}}}$",
+            "Damping time [s]",
+            partial(plane_, key="label"),
+        ),
+    }
+
     def __init__(
-        self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
+        self,
+        param: str | Callable,
+        plane: AxisDef = None,
+        name: str | None = None,
+        label: str | None = None,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ringdata, ring=ring. **kwargs)` and returning the
+              :pycode:`value = fun(ringdata, **eval_kw)` and returning the
               value of the Observable
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
@@ -843,17 +1040,42 @@ class _GlobalOpticsObservable(Observable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+        * **dp** –      Momentum deviation. Defaults to :py:obj:`None`,
+        * **dct** –     Path lengthening. Defaults to :py:obj:`None`,
+        * **df** –      Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`,
+        * **orbit** –   Initial orbit. Avoids looking for the closed orbit if it is
+          already known,
         """
+
         needs = {Need.GLOBALOPTICS}
         name = self._set_name(name, param, plane_(plane, key="code"))
+        index = plane_(plane, key="index")
         if callable(param):
-            fun = partial(_fun_access, param, plane_(plane, key="index"))
+            fun = partial(_fun_access, param, index)
             needs.add(Need.CHROMATICITY)
         else:
-            fun = partial(_record_access, param, plane_(plane, key="index"))
+            fun = partial(_record_access, param, index)
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
-        super().__init__(fun, needs=needs, name=name, **kwargs)
+
+        super().__init__(
+            fun,
+            needs=needs,
+            name=name,
+            label=self._pl_lab(param, plane),
+            axis_label=self._ax_lab(param, plane),
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 class LocalOpticsObservable(ElementObservable):
@@ -861,6 +1083,78 @@ class LocalOpticsObservable(ElementObservable):
 
     Process the local output of :py:func:`.get_optics`.
     """
+
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
+        "alpha": (r"$\alpha_{{{plane}}}$", "alpha", partial(plane_, key="label")),
+        "beta": (r"$\beta_{{{plane}}}$", "beta [m]", partial(plane_, key="label")),
+        "gamma": (r"$\gamma_{{{plane}}}$", "gamma", partial(plane_, key="label")),
+        "mu": (
+            r"$\mu_{{{plane}}}$",
+            "phase advance [rad]",
+            partial(plane_, key="label"),
+        ),
+        "muf": (
+            r"$\mu_{{{plane}}}$",
+            "phase advance [rad]",
+            partial(plane_, key="label"),
+        ),
+        "mu2pi": (
+            r"$\mu_{{{plane}}}/2\pi$",
+            "phase advance",
+            partial(plane_, key="label"),
+        ),
+        "mu2pif": (
+            r"$\mu_{plane}/2 \pi$",
+            "phase advance",
+            partial(plane_, key="label"),
+        ),
+        "closed_orbit": (
+            r"${{{plane}}}_{{co}}$",
+            "closed orbit",
+            partial(axis_, key="code"),
+        ),
+        "dispersion": (
+            r"$\eta_{{{plane}}}$",
+            r"dispersion [m]",
+            partial(axis_, key="code"),
+        ),
+        "s_pos": ("s", "s [m]", partial(plane_, key="label")),
+        "M": (r"$M_{{{plane}}}$", "M", _subscript),
+        "A": (r"$A_{{{plane}}}$", "A", _subscript),
+        "B": (r"$B_{{{plane}}}$", "B", _subscript),
+        "C": (r"$C_{{{plane}}}$", "C", _subscript),
+        "R": (r"$R_{{{plane}}}$", "R", _subscript),
+        "W": (r"$W_{{{plane}}}$", "W", partial(plane_, key="label")),
+        "Wp": (r"$Wp_{{{plane}}}$", "Wp", partial(plane_, key="label")),
+        "dalpha": (
+            r"$\partial \alpha_{{{plane}}}/ \partial \delta$",
+            r"$\partial \alpha / \partial \delta$",
+            partial(plane_, key="label"),
+        ),
+        "dbeta": (
+            r"$\partial \beta_{{{plane}}}/ \partial \delta$",
+            r"$\partial \beta/ \partial \delta$ [m]",
+            partial(plane_, key="label"),
+        ),
+        "dmu": (
+            r"$\partial \mu_{{{plane}}}/ \partial \delta$",
+            r"$\partial \mu/ \partial \delta$ [rad]",
+            partial(plane_, key="label"),
+        ),
+        "ddispersion": (
+            r"$\partial \eta_{{{plane}}}/ \partial \delta$",
+            r"$\partial \eta/ \partial \delta$ [m]",
+            partial(axis_, key="code"),
+        ),
+        "dR": (
+            r"$\partial R_{{{plane}}}/ \partial \delta$",
+            r"$\partial R/ \partial \delta$",
+            _subscript,
+        ),
+    }
+
+    _default = ("{param}[{plane}]", "{param}", lambda x: x)
 
     def __init__(
         self,
@@ -870,7 +1164,9 @@ class LocalOpticsObservable(ElementObservable):
         plane: AxisDef = Ellipsis,
         name: str | None = None,
         all_points: bool = False,
-        **kwargs,
+        summary: bool = False,
+        label: str | None = None,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -886,10 +1182,11 @@ class LocalOpticsObservable(ElementObservable):
               discontinuities in phase advances. This is automatically set for the
               'mu' parameter, but may need to be specified for user-defined evaluation
               functions using the phase advance.
+            summary:        Set to :py:obj:`True` if the user-defined
+             evaluation function returns a single item (see below) instead of one item
+             per refpoint.
 
         Keyword Args:
-            summary:        Set to :py:obj:`True` if the user-defined
-             evaluation function returns a single item (see below)
             postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
@@ -902,6 +1199,22 @@ class LocalOpticsObservable(ElementObservable):
             bounds:         Tuple of lower and upper bounds. The parameter
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+        * **dp** –      Momentum deviation. Defaults to :py:obj:`None`,
+        * **dct** –     Path lengthening. Defaults to :py:obj:`None`,
+        * **df** –      Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`,
+        * **orbit** –   Initial orbit. Avoids looking for the closed orbit if it is
+          already known,
+        * **twiss_in** – Initial conditions for transfer line optics.
+          See :py:func:`.get_optics`,
+        * **method** –  Method for linear optics. Default: :py:obj:`~.linear.linopt6`.
 
         .. rubric:: Shape of the value
 
@@ -957,11 +1270,11 @@ class LocalOpticsObservable(ElementObservable):
 
         The observable value is computed as:
 
-        :pycode:`value = fun(elemdata, **kwargs)[plane]`
+        :pycode:`value = fun(elemdata, **eval_kw)[plane]`
 
         - *elemdata* is the output of :py:func:`.get_optics`, evaluated at the *refpts*
           of the observable,
-        - *kwargs* are the keyword arguments provided to the observable constructor,
+        - *eval_kw* are the evaluation keywords provided to the observable constructor,
           to the constructor of the enclosing :py:class:`.ObservableList` and to the
           :py:meth:`~.ObservableList.evaluate` method,
         - *value* is the value of the Observable and must have one line per
@@ -970,35 +1283,62 @@ class LocalOpticsObservable(ElementObservable):
         - the *plane* keyword then selects the desired values in the function output.
 
         Examples:
+            Observe the beta in both planes at all :py:class:`.Monitor`
+            locations:
+
             >>> obs = LocalOpticsObservable(at.Monitor, "beta")
 
-            Observe the beta in both planes at all :py:class:`.Monitor`
-            locations
+            Observe the maximum vertical beta in Quadrupoles:
 
             >>> obs = LocalOpticsObservable(
             ...     at.Quadrupole, "beta", plane="y", statfun=np.max
             ... )
 
-            Observe the maximum vertical beta in Quadrupoles
-
-            >>> def phase_advance(elemdata, **kwargs):
-            ...     mu = elemdata.mu
-            ...     return mu[-1] - mu[0]
-            >>>
-            >>> allobs.append(
-            ...     LocalOpticsObservable(
-            ...         [33, 101],
-            ...         phase_advance,
-            ...         plane="y",
-            ...         all_points=True,
-            ...         summary=True,
-            ...     )
-            ... )
-
             The user-defined evaluation function computes the phase-advance
             between the 1st and last given reference points, here the elements
             33 and 101 of the lattice
+
+            >>> def phase_advance(elemdata, **__):
+            ...     mu = elemdata.mu
+            ...     return mu[-1] - mu[0]
+            >>>
+            >>> obs = LocalOpticsObservable(
+            ...     [33, 101],
+            ...     phase_advance,
+            ...     plane="y",
+            ...     all_points=True,
+            ...     summary=True,
+            ... )
+
+        A user-defined function may accept any evaluation keyword. Here is a function
+        which computes the beam envelope for given emittances and energy spread. We
+        define *emit* and *sigma_e* as evaluation keywords:
+
+        >>> def beam_size(elemdata, emit=None, sigma_e=None, **__):
+        ...     return np.sqrt(
+        ...         elemdata.beta*emit + (elemdata.dispersion[:, [0, 2]] * sigma_e)**2
+        ...     )
+
+        We instantiate a :py:class:`LocalOpticsObservable` using this function and
+        with default values for emittances and energy spread:
+
+        >>> obs = LocalOpticsObservable(
+        ...     0, beam_size, emit=[130.0e-12, 10.0e-12], sigma_e=0.9e-3
+        ... )
+        >>> allobs = ObservableList([obs])
+
+        We can evaluate *obs* with the default emittance values:
+
+        >>> allobs.evaluate(ring=ring)
+        array([2.9990243e-05, 5.14264471e-06])
+
+        We can then evaluate *obs* with arbitrary emittances:
+
+        >>> allobs.evaluate(ring=ring, emit=[140.0e-12, 20.0e-12])
+        array([3.11193609e-05, 7.2727979e-06])
+
         """
+
         if param in {"M", "closed_orbit", "dispersion", "A", "R"}:
             ax_ = axis_
         else:
@@ -1008,7 +1348,10 @@ class LocalOpticsObservable(ElementObservable):
         name = self._set_name(name, param, ax_(plane, key="code"))
         index = _all_rows(ax_(plane, key="index"))
         if callable(param):
-            fun = partial(_fun_access, param, ax_(plane, key="index"))
+            if summary:
+                fun = partial(_fun_access, param, ax_(plane, key="index"))
+            else:
+                fun = partial(_fun_access, param, index)
         else:
             fun = partial(_opdata.get(param, _record_access), param, index)
             if param in {"mu", "mu2pi"} or all_points:
@@ -1016,7 +1359,18 @@ class LocalOpticsObservable(ElementObservable):
             if param in {"W", "Wp", "dalpha", "dbeta", "dmu", "ddispersion", "dR"}:
                 needs.add(Need.W_FUNCTIONS)
 
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            summary=summary,
+            label=self._pl_lab(param, plane),
+            axis_label=self._ax_lab(param, plane),
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 class LatticeObservable(ElementObservable):
@@ -1028,7 +1382,8 @@ class LatticeObservable(ElementObservable):
         attrname: str,
         index: int | None = None,
         name: str | None = None,
-        **kwargs,
+        label: str | None = None,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -1047,6 +1402,13 @@ class LatticeObservable(ElementObservable):
               function or a function name in {"mean", "std", "var", "min", "max"}.
               Example: :pycode:`statfun=numpy.mean`.
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+
         Example:
             >>> obs = LatticeObservable(
             ...     at.Sextupole, "KickAngle", index=0, statfun=np.sum
@@ -1057,7 +1419,9 @@ class LatticeObservable(ElementObservable):
         fun = _Ring(attrname, index, refpts)
         needs = {Need.RING}
         name = self._set_name(name, attrname, index)
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(fun, refpts, needs=needs, name=name, **eval_kw)
+        if label:
+            self.label = label
 
 
 class TrajectoryObservable(ElementObservable):
@@ -1066,18 +1430,31 @@ class TrajectoryObservable(ElementObservable):
     Process the *r_out* output if :py:meth:`.Lattice.track`
     """
 
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
+        "x": (r"$x_{{{plane}}}$", "position [m]", lambda x: x),
+        "px": (r"$p_{{x{plane}}}$", "transverse momentum", lambda x: x),
+        "y": (r"$y_{{{plane}}}$", "position [m]", lambda x: x),
+        "py": (r"$p_{{y{plane}}}$", "transverse momentum", lambda x: x),
+        "dp": (r"$\delta_{{{plane}}}$", "off-momentum", lambda x: x),
+        "ct": (r"$\beta c \tau_{{{plane}}}$", "path lengthening [m]", lambda x: x),
+    }
+
     def __init__(
         self,
         refpts: Refpts,
         axis: AxisDef = Ellipsis,
+        npart: int = 0,
         name: str | None = None,
-        **kwargs,
+        label: str | None = None,
+        **eval_kw,
     ):
         r"""Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
-            axis:          Index in the orbit array, If :py:obj:`Ellipsis`,
+            axis:           Index in the orbit array, If :py:obj:`Ellipsis`,
               the whole array is specified
+            npart:          Particle number,
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated.
 
@@ -1097,27 +1474,89 @@ class TrajectoryObservable(ElementObservable):
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
+
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+        * **r_in** –    Initial coordinates of one or several tracked particles.
         """
-        name = self._set_name(name, "trajectory", axis_(axis, key="code"))
-        fun = _ArrayAccess(axis_(axis, key="index"))
+        descr = axis_(axis)
+        name = self._set_name(name, "trajectory", descr["code"])
+        fun = _ArrayAccess((npart, descr["index"]))
         needs = {Need.TRAJECTORY}
-        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            refpts,
+            needs=needs,
+            name=name,
+            label=self._pl_lab(descr["code"], npart),
+            axis_label=self._ax_lab(descr["code"], npart),
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 class EmittanceObservable(Observable):
     """Observe emittance-related parameters.
 
-    Process the output of :py:func:`.envelope_parameters`.
+    Output of :py:func:`.radiation_parameters` or :py:func:`.envelope_parameters`.
+
+    For 4D lattices, the data is extracted form the output of
+    :py:func:`.radiation_parameters`: emittances are computed  with the radiation
+    integrals.
+
+    For 6D lattices, the data is extracted form the output of
+    :py:func:`.envelope_parameters`: emittances are computed by
+    :py:func:`.ohmi_envelope`
     """
 
+    # Class attributes
+    _pinfo: ClassVar[dict] = {
+        "emittances": (
+            r"$\epsilon_{{{plane}}}$",
+            "Emittance [m]",
+            partial(plane_, key="label"),
+        ),
+        "J": (
+            r"$\mathrm{{J}}_{{{plane}}}$",
+            "Damping partition number",
+            partial(plane_, key="label"),
+        ),
+        "Tau": (
+            r"$\tau_{{{plane}}}$",
+            "Damping time [s]",
+            partial(plane_, key="label"),
+        ),
+        "sigma_e": (r"$\sigma_e$", "Energy spread", partial(plane_, key="label")),
+        "sigma_l": (r"$\sigma_l$", "Bunch length [m]", partial(plane_, key="label")),
+        "phi_s": (r"$\phi_s$", "Synchronous phase [rad]", partial(plane_, key="label")),
+        "f_s": (
+            r"$f_s$",
+            "Synchrotron frequency [Hz]",
+            partial(plane_, key="label"),
+        ),
+        "tunes6": (r"$\nu_{{{plane}}}$", "Tune", partial(plane_, key="label")),
+        "U0": (r"$U_0$", "Energy loss / turn [eV]", partial(plane_, key="label")),
+        "voltage": ("V", "V [V]", partial(plane_, key="label")),
+    }
+
     def __init__(
-        self, param: str, plane: AxisDef = None, name: str | None = None, **kwargs
+        self,
+        param: str | Callable,
+        plane: AxisDef = None,
+        name: str | None = None,
+        label: str | None = None,
+        **eval_kw,
     ):
         r"""Args:
             param:          Parameter name (see :py:func:`.envelope_parameters`) or
               :ref:`user-defined evaluation function <emittance_eval>`
             plane:          One out of {0, 'x', 'h', 'H'} for horizontal plane,
-             one out of {1, 'y', 'v', 'V'} for vertival plane or one out of
+             one out of {1, 'y', 'v', 'V'} for vertical plane or one out of
              {2, 'z', 'l', 'L'} for longitudinal plane
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated.
@@ -1136,16 +1575,23 @@ class EmittanceObservable(Observable):
               is constrained in the interval
               [*target*\ +\ *low_bound* *target*\ +\ *up_bound*]
 
+        .. rubric:: Evaluation keywords
+
+        These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+        method. Default values may be given at instantiation.
+
+        * **ring** –    Lattice description,
+
         .. _emittance_eval:
         .. rubric:: User-defined evaluation function
 
         It is called as:
 
-        :pycode:`value = fun(paramdata, **kwargs)`
+        :pycode:`value = fun(paramdata, **eval_kw)`
 
         - *paramdata* if the :py:class:`.RingParameters` object returned by
           :py:func:`.envelope_parameters`.
-        - *kwargs* are the keyword arguments provided to the observable constructor,
+        - *eval_kw* are the evaluation keywords provided to the observable constructor,
           to the constructor of the enclosing :py:class:`.ObservableList` and to the
           :py:meth:`~.ObservableList.evaluate` method,
         - *value* is the value of the Observable.
@@ -1155,13 +1601,23 @@ class EmittanceObservable(Observable):
 
             Observe the horizontal emittance
         """
+
         name = self._set_name(name, param, plane_(plane, key="code"))
         if callable(param):
             fun = param
         else:
             fun = partial(_record_access, param, plane_(plane, key="index"))
         needs = {Need.EMITTANCE}
-        super().__init__(fun, needs=needs, name=name, **kwargs)
+        super().__init__(
+            fun,
+            needs=needs,
+            name=name,
+            label=self._pl_lab(param, plane),
+            axis_label=self._ax_lab(param, plane),
+            **eval_kw,
+        )
+        if label:
+            self.label = label
 
 
 # noinspection PyPep8Naming
@@ -1171,7 +1627,7 @@ def GlobalOpticsObservable(
     plane: AxisDef = Ellipsis,
     name: str | None = None,
     use_integer: bool = False,
-    **kwargs,
+    **eval_kw,
 ):
     # noinspection PyUnresolvedReferences
     r"""Observe a global optics parameter.
@@ -1203,15 +1659,28 @@ def GlobalOpticsObservable(
     The *target*, *weight* and *bounds* inputs must be broadcastable to the
     shape of *value*.
 
+    .. rubric:: Evaluation keywords
+
+    These values must be provided to the :py:meth:`~.ObservableList.evaluate`
+    method. Default values may be given at instantiation.
+
+    * **ring** –    Lattice description,
+    * **dp** –      Momentum deviation. Defaults to :py:obj:`None`,
+    * **dct** –     Path lengthening. Defaults to :py:obj:`None`,
+    * **df** –      Deviation from the nominal RF frequency.
+      Defaults to :py:obj:`None`,
+    * **orbit** –   Initial orbit. Avoids looking for the closed orbit if it is
+      already known,
+
     .. _globaloptics_eval:
     .. rubric:: User-defined evaluation function
 
     It is called as:
 
-    :pycode:`value = fun(ring, ringdata, **kwargs)`
+    :pycode:`value = fun(ring, ringdata, **eval_kw)`
 
     - *ringdata* is the output of :py:func:`.get_optics`,
-    - *kwargs* are the keyword arguments provided to the observable constructor,
+    - *eval_kw* are the evaluation keywords provided to the observable constructor,
       to the constructor of the enclosing :py:class:`.ObservableList` and to the
       :py:meth:`~.ObservableList.evaluate` method.
     - *value* is the value of the Observable.
@@ -1230,11 +1699,12 @@ def GlobalOpticsObservable(
         name = ElementObservable._set_name(name, param, plane_(plane, key="code"))
         return LocalOpticsObservable(
             End,
-            _Tune(plane_(plane, key="index")),
+            _tune,
+            plane=plane,
             name=name,
             summary=True,
             all_points=True,
-            **kwargs,
+            **eval_kw,
         )
     else:
-        return _GlobalOpticsObservable(param, plane=plane, name=name, **kwargs)
+        return _GlobalOpticsObservable(param, plane=plane, name=name, **eval_kw)
