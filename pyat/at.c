@@ -528,16 +528,19 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     /* Particle energy */
+    set_energy_particle(lattice, energy, particle, &param);
     param.RingLength = lattice_length;
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
     } else {
+        /*  Only relativistic tracking is implemented: keep everything consistent
         double gamma0 = param.energy/param.rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
         param.T0 = param.RingLength/beta0/C0;
+        */
+        param.T0 = param.RingLength/C0;
     }
-    set_energy_particle(lattice, energy, particle, &param);
 
     /* Memory allocation for outputs */
     num_particles = (PyArray_SIZE(rin)/6);
