@@ -15,7 +15,7 @@ from .variables import VariableBase, Number
 _ACCEPTED = ParamDef
 
 
-class Param(ParamBase, VariableBase[Number]):
+class Param(ParamBase, VariableBase):
     """Standalone scalar parameter.
 
     See :py:class:`.VariableBase` for a description of inherited methods
