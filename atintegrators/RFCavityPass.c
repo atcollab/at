@@ -101,6 +101,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       /* Check energy */
       Energy = atEnergy(Energy, 0);
+      check_error();
 
       RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, num_particles);
 

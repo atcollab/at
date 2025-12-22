@@ -262,6 +262,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->fbmode = fbmode;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
+    check_error();
 
     if(num_particles<Param->nbunch){
         atError("Number of particles has to be greater or equal to the number of bunches."); check_error();

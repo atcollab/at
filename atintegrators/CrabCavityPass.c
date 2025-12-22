@@ -119,6 +119,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         SigVV=Elem->SigVV;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
+    check_error();
     nvx = Elem->Vx;
     nvy = Elem->Vy;
 
