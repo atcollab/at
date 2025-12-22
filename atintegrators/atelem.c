@@ -206,8 +206,6 @@ typedef PyObject atElem;
 #define atError(...) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__)
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
-#define atEnergy(ringenergy,elemenergy) (ringenergy)
-#define atGamma(ringenergy,elemenergy,rest_energy) ((rest_energy) == 0.0 ? 1.0E-9*(ringenergy)/__E0 : (ringenergy)/(rest_energy))
 
 static int array_imported = 0;
 
@@ -351,6 +349,29 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
     int msz, nsz;
     return atGetOptionalDoubleArraySz(element, name, &msz, &nsz);
 }
+
+double atEnergy(double ringenergy, double elemenergy)
+{
+    if (ringenergy!=0.0)
+        return ringenergy;
+    else
+        if (elemenergy!=0.0)
+            return elemenergy;
+        else {
+            atError("Energy not defined.");
+            return 0.0;   /* Never reached but makes the compiler happy */
+        }
+}
+
+double atGamma(double ringenergy, double elemenergy, double rest_energy)
+{
+    double energy = atEnergy(ringenergy, elemenergy);
+    if (rest_energy == 0.0)
+        return 1.0E-9 * energy / __E0;
+    else
+        return energy / rest_energy;
+}
+
 
 #endif /* defined(PYAT) */
 
