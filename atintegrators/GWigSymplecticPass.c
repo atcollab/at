@@ -144,6 +144,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
 
+        /* Check energy */
+        gamma = atGamma(Param->energy, Energy, Param->rest_energy);
+        check_error();
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Energy=Energy;
         Elem->Length=Ltot;
@@ -160,8 +164,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->R2=R2;
         Elem->T1=T1;
         Elem->T2=T2;
-    }
-    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+    }else{
+        gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+        check_error();
+    };
 
     GWigSymplecticPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
             Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
@@ -216,6 +222,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         Gamma = atGamma(Energy, Energy, rest_energy);
+        check_error();
         r_in = mxGetDoubles(plhs[0]);
 
         GWigSymplecticPass(r_in, Gamma, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm,

@@ -246,6 +246,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     irho = Elem->BendingAngle/Elem->Length;
     energy = atEnergy(Param->energy, Elem->Energy);
+    check_error();
 
     BndMPoleSymplectic4QuantPass(r_in, Elem->Length, irho, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,

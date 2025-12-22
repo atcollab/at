@@ -288,6 +288,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
     }
     gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+    check_error();
 
     GWigSymplecticRadPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
             Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
@@ -341,6 +342,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         Gamma = atGamma(Energy, Energy, rest_energy);
+        check_error();
         r_in = mxGetDoubles(plhs[0]);
 
         GWigSymplecticRadPass(r_in, Gamma, Ltot, Lw, Bmax, Nstep, Nmeth,
