@@ -24,6 +24,8 @@ struct parameters
   struct pcg_state_setseq_64 *common_rng;
   struct pcg_state_setseq_64 *thread_rng;
   double *bdiff;
+  double *fillpattern;
+  int harmonic_number;
 };
 
 #endif /*ATTYPES_H*/

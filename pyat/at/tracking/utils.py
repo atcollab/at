@@ -73,7 +73,10 @@ def initialize_lpass(lattice: Iterable[Element], nturns: int,
         lattice = list(lattice)
     unfoldbeam = kwargs.pop('unfold_beam', True)
     nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfoldbeam)
-    kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
+    harmonic_number = getattr(lattice, 'harmonic_number', 1)
+    fillpattern = getattr(lattice, 'fillpattern', numpy.zeros(harmonic_number)) 
+    kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos,
+                  harmonic_number=harmonic_number, fillpattern=fillpattern)
     no_bm = _set_beam_monitors(lattice, nbunch, nturns)
     kwargs['keep_lattice'] = kwargs.get('keep_lattice', False) and no_bm
     pool_size = kwargs.pop('pool_size', None)
