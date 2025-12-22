@@ -74,27 +74,6 @@ typedef mxArray atElem;
 #define atPrintf(...) mexPrintf(__VA_ARGS__)
 #include "ringproperties.c"
 
-double atEnergy(double ringenergy, double elemenergy)
-{
-    if (ringenergy!=0.0)
-        return ringenergy;
-    else
-        if (elemenergy!=0.0)
-            return elemenergy;
-        else {
-            atError("Energy not defined.");
-            return 0.0;   /* Never reached but makes the compiler happy */
-        }
-}
-
-double atGamma(double ringenergy, double elemenergy, double rest_energy)
-{
-    double energy = atEnergy(ringenergy, elemenergy);
-    if (rest_energy == 0.0)
-        return 1.0E-9 * energy / __E0;
-    else
-        return energy / rest_energy;
-}
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
@@ -350,6 +329,11 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
     return atGetOptionalDoubleArraySz(element, name, &msz, &nsz);
 }
 
+
+#endif /* defined(PYAT) */
+
+#if defined(PYAT) || defined(MATLAB_MEX_FILE)
+
 double atEnergy(double ringenergy, double elemenergy)
 {
     if (ringenergy!=0.0)
@@ -371,11 +355,6 @@ double atGamma(double ringenergy, double elemenergy, double rest_energy)
     else
         return energy / rest_energy;
 }
-
-
-#endif /* defined(PYAT) */
-
-#if defined(PYAT) || defined(MATLAB_MEX_FILE)
 
 #ifdef __cplusplus
 #define C_LINK extern "C"
