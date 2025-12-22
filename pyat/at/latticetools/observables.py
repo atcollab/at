@@ -106,9 +106,9 @@ def _record_access(param, index, data, **_):
     return val if index is None else val[index]
 
 
-def _fun_access(fun, index, data, **_):
+def _fun_access(fun, index, data, **kwargs):
     """Access a selected item in the output of a user-defined function."""
-    val = fun(data)
+    val = fun(data, **kwargs)
     return val if index is None else val[index]
 
 
@@ -189,15 +189,8 @@ def _mod_name(name, fun, *args):
     return name
 
 
-class _Tune:
-    """Get integer tune from the phase advance."""
-
-    def __init__(self, idx: RefIndex):
-        self.fun = partial(_record_access, "mu", _all_rows(idx))
-
-    def __call__(self, data, **kwargs):
-        mu = self.fun(data, **kwargs)
-        return np.squeeze(mu, axis=0) / 2.0 / np.pi
+def _tune(data, **_):
+    return data.mu[-1] / 2.0 / np.pi
 
 
 class _Ring:
@@ -462,9 +455,7 @@ class Observable:
                 self._value = err
                 return err
 
-        kw = self.kwargs.copy()
-        kw.update(evalkw)
-        val = np.asarray(self.fun(*data, *self.args, **kw))
+        val = np.asarray(self.fun(*data, *self.args, **(self.kwargs | evalkw)))
         if initial:
             self.initial = val
         self._shape = val.shape
@@ -629,7 +620,7 @@ class RingObservable(Observable):
 
             Defines an Observable for the ring circumference.
 
-            >>> def momentum_compaction(ring):
+            >>> def momentum_compaction(ring, **kwargs):
             ...     return ring.get_mcf()
             >>> obs = RingObservable(momentum_compaction)
 
@@ -650,6 +641,7 @@ class ElementObservable(Observable):
         name: str | None = None,
         statfun: Callable | str | None = None,
         postfun: Callable | str | None = None,
+        summary: bool = False,
         label: str = "",
         **kwargs,
     ):
@@ -687,10 +679,8 @@ class ElementObservable(Observable):
             fun = _Convolve(postfun, fun)
         statfun = _get_fun(statfun, _statproc)
         if statfun:
-            summary = kwargs.pop("summary", True)
             fun = _Convolve(statfun, fun, axis=0)
-        else:
-            summary = kwargs.pop("summary", False)
+            summary = True
         name = _mod_name(name, postfun, statfun)
         label = _mod_name(label, postfun, statfun)
         super().__init__(fun, name=name, label=label, **kwargs)
@@ -1027,11 +1017,12 @@ class _GlobalOpticsObservable(Observable):
 
         needs = {Need.GLOBALOPTICS}
         name = self._set_name(name, param, plane_(plane, key="code"))
+        index = plane_(plane, key="index")
         if callable(param):
-            fun = partial(_fun_access, param, plane_(plane, key="index"))
+            fun = partial(_fun_access, param, index)
             needs.add(Need.CHROMATICITY)
         else:
-            fun = partial(_record_access, param, plane_(plane, key="index"))
+            fun = partial(_record_access, param, index)
             if param == "chromaticity":
                 needs.add(Need.CHROMATICITY)
 
@@ -1133,6 +1124,7 @@ class LocalOpticsObservable(ElementObservable):
         plane: AxisDef = Ellipsis,
         name: str | None = None,
         all_points: bool = False,
+        summary: bool = False,
         label: str | None = None,
         **kwargs,
     ):
@@ -1150,10 +1142,11 @@ class LocalOpticsObservable(ElementObservable):
               discontinuities in phase advances. This is automatically set for the
               'mu' parameter, but may need to be specified for user-defined evaluation
               functions using the phase advance.
+            summary:        Set to :py:obj:`True` if the user-defined
+             evaluation function returns a single item (see below) instead of one item
+             per refpoint.
 
         Keyword Args:
-            summary:        Set to :py:obj:`True` if the user-defined
-             evaluation function returns a single item (see below)
             postfun:        Post-processing function. It can be any numpy ufunc or a
               function name in {"real", "imag", "abs", "angle", "log", "exp", "sqrt"}.
             statfun:        Statistics post-processing function. it can be a numpy
@@ -1289,7 +1282,10 @@ class LocalOpticsObservable(ElementObservable):
         name = self._set_name(name, param, ax_(plane, key="code"))
         index = _all_rows(ax_(plane, key="index"))
         if callable(param):
-            fun = partial(_fun_access, param, ax_(plane, key="index"))
+            if summary:
+                fun = partial(_fun_access, param, ax_(plane, key="index"))
+            else:
+                fun = partial(_fun_access, param, index)
         else:
             fun = partial(_opdata.get(param, _record_access), param, index)
             if param in {"mu", "mu2pi"} or all_points:
@@ -1302,6 +1298,7 @@ class LocalOpticsObservable(ElementObservable):
             refpts,
             needs=needs,
             name=name,
+            summary=summary,
             label=self._pl_lab(param, plane),
             axis_label=self._ax_lab(param, plane),
             **kwargs,
@@ -1614,7 +1611,8 @@ def GlobalOpticsObservable(
         name = ElementObservable._set_name(name, param, plane_(plane, key="code"))
         return LocalOpticsObservable(
             End,
-            _Tune(plane_(plane, key="index")),
+            _tune,
+            plane=plane,
             name=name,
             summary=True,
             all_points=True,

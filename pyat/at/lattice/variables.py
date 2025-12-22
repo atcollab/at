@@ -346,15 +346,13 @@ class VariableBase(abc.ABC):
             raise
 
     def set(self, value: Number, **setkw) -> None:
-        """Set the variable value.
+        r"""Set the variable value.
 
         Args:
             value:      New value to be applied on the variable
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the *setfun* function.
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
         self.check_bounds(value)
@@ -366,7 +364,7 @@ class VariableBase(abc.ABC):
     def get(
         self, *, initial: bool = False, check_bounds: bool = False, **getkw
     ) -> Number:
-        """Get the actual variable value.
+        r"""Get the actual variable value.
 
         Args:
             initial:    If :py:obj:`True`, clear the history and set the variable
@@ -375,9 +373,7 @@ class VariableBase(abc.ABC):
               of bounds
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **getkw:    Other keyword arguments to be passed to the *getfun* function.
+            \*\*getkw:  Keyword arguments to be passed to the *getfun* function.
               They augment the keyword arguments given in the constructor.
 
         Returns:
@@ -401,12 +397,10 @@ class VariableBase(abc.ABC):
             return np.nan
 
     def set_previous(self, **setkw) -> None:
-        """Reset to the value before the last one.
+        r"""Reset to the value before the last one.
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
 
         Raises:
@@ -421,12 +415,10 @@ class VariableBase(abc.ABC):
             raise IndexError(msg)
 
     def reset(self, **setkw) -> None:
-        """Reset to the initial value and clear the history buffer.
+        r"""Reset to the initial value and clear the history buffer.
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
 
         Raises:
@@ -441,15 +433,13 @@ class VariableBase(abc.ABC):
             raise IndexError(msg)
 
     def increment(self, incr: Number, **setkw) -> None:
-        """Increment the variable value.
+        r"""Increment the variable value.
 
         Args:
             incr:   Increment value
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
         try:
@@ -473,23 +463,19 @@ class VariableBase(abc.ABC):
         self.set(initial_value + step, **setkw)
 
     def step_up(self, **setkw) -> None:
-        """Set to initial_value + delta.
+        r"""Set to initial_value + delta.
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
         self._step(self.delta, **setkw)
 
     def step_down(self, **setkw) -> None:
-        """Set to initial_value - delta.
+        r"""Set to initial_value - delta.
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
         """
         self._step(-self.delta, **setkw)
@@ -514,17 +500,17 @@ class VariableBase(abc.ABC):
         return "\n".join((self._header(), self._line()))
 
     @contextmanager
-    def restore(self, **setkw) -> Generator[None, None, None]:
+    def restore(self, initial: bool = False, **setkw) -> Generator[None, None, None]:
         # noinspection PyUnresolvedReferences
-        """Context manager that saves and restore a variable.
+        r"""Context manager that saves and restore a variable.
 
         The value of the :py:class:`Variable <VariableBase>` is initially saved, and
         then restored when exiting the context.
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
-            **setkw:    Other keyword arguments to be passed to the setfun function.
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
               They augment the keyword arguments given in the constructor.
 
         Example:
@@ -533,7 +519,7 @@ class VariableBase(abc.ABC):
             ...     do_something(var)
         """
         # print(f"save {self.name}")
-        v0 = self.get(**setkw)
+        v0 = self.get(initial=initial, **setkw)
         try:
             yield
         finally:
@@ -593,10 +579,10 @@ class ItemVariable(VariableBase):
         """
         super().__init__(membergetter(key, *args).accessor(obj), **kwargs)
 
-    def _setfun(self, value, obj):
+    def _setfun(self, value, obj, **_):
         obj.set(value)
 
-    def _getfun(self, obj):
+    def _getfun(self, obj, **_):
         return obj.get()
 
 
@@ -630,10 +616,10 @@ class AttributeVariable(VariableBase):
         args = (attr_(attrname),) if index is None else (attr_(attrname), index)
         super().__init__(membergetter(*args).accessor(obj), **kwargs)
 
-    def _setfun(self, value, obj):
+    def _setfun(self, value, obj, **_):
         obj.set(value)
 
-    def _getfun(self, obj):
+    def _getfun(self, obj, **_):
         return obj.get()
 
 
@@ -712,55 +698,60 @@ class VariableList(list):
         else:
             return super().__getitem__(index)
 
-    def get(self, ring=None, **kwargs) -> Sequence[float]:
+    def get(self, **getkw) -> Sequence[float]:
         r"""Get the current values of Variables.
-
-        Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
 
         Keyword Args:
             initial:    If :py:obj:`True`, set the Variables'
               initial value
-            check_bounds: If :py:obj:`True`, raise a ValueError if the value is out
+            check_bounds: If :py:obj:`True`, raise a ValueError any value is out
               of bounds
+            \*\*getkw:  Keyword arguments to be passed to the *getfun* function.
+              They augment the keyword arguments given in the variable constructors.
 
         Returns:
             values:     1D array of values of all variables
         """
-        return np.array([var.get(ring=ring, **kwargs) for var in self])
+        return np.array([var.get(**getkw) for var in self])
 
-    def set(self, values: Iterable[float], ring=None) -> None:
+    def set(self, values: Iterable[float], **setkw) -> None:
         r"""Set the values of Variables.
 
         Args:
             values:     Iterable of values
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
+
+        Keyword Args:
+            check_bounds: If :py:obj:`True`, raise a ValueError any value is out
+              of bounds
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
+              They augment the keyword arguments given in the variable constructors.
+
         """
         for var, val in zip(self, values, strict=False):
-            var.set(val, ring=ring)
+            var.set(val, **setkw)
 
-    def increment(self, increment: Iterable[float], ring=None) -> None:
+    def increment(self, increment: Iterable[float], **setkw) -> None:
         r"""Increment the values of Variables.
 
         Args:
             increment:  Iterable of values
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to increment the variable.
+
+        Keyword Args:
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
+              They augment the keyword arguments given in the variable constructors.
         """
         for var, incr in zip(self, increment, strict=False):
-            var.increment(incr, ring=ring)
+            var.increment(incr, **setkw)
 
-    def reset(self, ring=None) -> None:
-        """Reset to all variables their initial value and clear their history buffer.
+    def reset(self, **setkw) -> None:
+        r"""Reset to all variables their initial value and clear their history buffer.
 
-        Args:
-            ring:   Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to reset the variable.
+        Keyword Args:
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
+              They augment the keyword arguments given in the variable constructors.
         """
         for var in self:
-            var.reset(ring=ring)
+            var.reset(**setkw)
 
     # noinspection PyProtectedMember
     def status(self, **kwargs) -> str:
@@ -769,23 +760,25 @@ class VariableList(list):
         return "\n".join((VariableBase._header(), values))
 
     @contextmanager
-    def restore(self, **kwargs):
-        """Context manager that saves and restore the variable list.
+    def restore(self, initial: bool = False, **setkw):
+        r"""Context manager that saves and restore the variable list.
 
         The value of the :py:class:`VariableList` is initially saved, and then restored
         when exiting the context.
 
         Keyword Args:
-            ring:       Depending on the variable type, a :py:class:`.Lattice` argument
-              may be necessary to set the variable.
+            initial:    If :py:obj:`True`, clear the history and set the variable
+              initial value
+            \*\*setkw:  Keyword arguments to be passed to the *setfun* function.
+              They augment the keyword arguments given in the variable constructors.
         """
         # print("Saving variables")
-        v0 = self.get(**kwargs)
+        v0 = self.get(initial=initial, **setkw)
         try:
             yield
         finally:
             # print("Restoring variables")
-            self.set(v0, **kwargs)
+            self.set(v0, **setkw)
 
     def __str__(self) -> str:
         return self.status()

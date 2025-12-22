@@ -342,7 +342,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                              "bunch_spos", "bunch_currents", "start_elem", "end_elem", NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
-    static int valid = 0;
+    static PyObject *lattice_id = NULL;
 
     PyObject *lattice;
     PyObject *particle;
@@ -434,11 +434,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
     #endif /*_OPENMP*/
 
-    if (!(keep_lattice && valid)) {
+    if (!(keep_lattice && lattice_id == lattice)) {
         PyObject **element;
         double *elem_length;
         track_function *integrator;
         PyObject **pyintegrator;
+
         /* Release the stored elements */
         for (elem_index=0; elem_index < num_elements; elem_index++) {
             free(elemdata_list[elem_index]);
@@ -499,7 +500,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             *elem_length++ = length;
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
         }
-        valid = 0;
+        lattice_id = NULL;
     }
 
     /* Check for partial turn tracking */
@@ -641,7 +642,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         param.nturn++;
         start_elem = 0;
     }
-    valid = 1;      /* Tracking successful: the lattice can be reused */
+    lattice_id = lattice;     /* Tracking successful: the lattice can be reused */
     last_turn = param.nturn;  /* Store turn number in a static variable */
 
     #ifdef _OPENMP
