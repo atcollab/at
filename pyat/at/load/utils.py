@@ -31,7 +31,7 @@ from at import integrators
 from at.lattice import AtWarning
 from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
-from at.lattice import idtable_element
+from at.lattice import idtable_element, transformation
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
@@ -357,6 +357,7 @@ def element_from_dict(
                     )
                     _warn(index, message, elem_dict)
 
+
     cls = find_class(elem_dict, quiet=quiet, index=index)
     if check:
         sanitise_class(index, cls, elem_dict)
@@ -365,6 +366,9 @@ def element_from_dict(
     # from elem_dict.
     elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
     element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
+    trs = {tr_attr: elem_dict.pop(tr_attr, None) for tr_attr in transformation.transform_attr} 
+    if not np.all([v is None for v in trs.values()]):
+        transformation.transform_elem(element, **trs)
     return element
 
 
@@ -378,7 +382,7 @@ def element_to_dict(elem: Element, encoder: Callable[[Any], Any] = _no_encoder) 
     Returns:
         dct (dict):     Dictionary of :py:class:`.Element` attributes
     """
-    dct = {k: encoder(v) for k, v in elem.items()}
+    dct = {elem._convert_attr.get(k, k): encoder(v) for k, v in elem.items() if k not in elem._drop_attr}
     class_name = elem.__class__.__name__
     dct["Class"] = _mat_class.get(class_name, class_name)
     return dct
