@@ -145,7 +145,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
         check_error();
     }
 
-
     Elem = (struct elem *)atMalloc(sizeof(struct elem));
     Elem->Length = Length;
     Elem->PolynomA = PolynomA;
