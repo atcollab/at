@@ -511,17 +511,16 @@ def test_quad(rin, func):
     assert q.PolynomB[1] == 0.1
 
 
-@pytest.mark.parametrize("func", [lattice_track, lattice_pass, internal_lpass])
+@pytest.mark.parametrize("func", [element_track, element_pass, internal_epass])
 def test_rfcavity(rin: np.ndarray, func: any) -> None:
-    rf0 = elements.RFCavity("rfcavity", 0.0, 187500, 3.5237e8, 31, 6.0e9)
-    rflattice = [rf0, rf0, rf0, rf0]
+    rfc = elements.RFCavity("rfcavity", 0.0, 187500, 3.5237e8, 31, 6.0e9)
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
-    if func == lattice_track:
-        func(rflattice, rin, in_place=True)
+    if func == element_track:
+        func(rfc, rin, in_place=True, energy=+6.0e9)
     else:
-        func(rflattice, rin)
-    result = np.array([0.0, 0.0, 0.0, 0.0, 9.990769e-7, 1.0e-6]).reshape(6, 1)
+        func(rfc, rin, energy=+6.0e9)
+    result = np.array([0.0, 0.0, 0.0, 0.0, 9.99769215e-07, 1.0e-6]).reshape(6, 1)
     np.testing.assert_allclose(rin, result, atol=1e-12)
 
 
