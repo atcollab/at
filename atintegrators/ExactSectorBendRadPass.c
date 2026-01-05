@@ -160,6 +160,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             atError("NumIntSteps == 0 not allowed with radiation"); check_error();
         }
 
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -187,7 +194,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }
     irho = Elem->BendingAngle/Elem->Length;
     gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
-    check_error();
 
     ExactSectorBendRad(r_in, Elem->Length, irho,
             Elem->PolynomA, Elem->PolynomB,
@@ -251,7 +257,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         irho = BendingAngle/Length;
         Gamma = atGamma(Energy, Energy, rest_energy);
-        check_error();
         r_in = mxGetDoubles(plhs[0]);
 
         ExactSectorBendRad(r_in, Length, irho, PolynomA, PolynomB,
