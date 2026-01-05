@@ -83,6 +83,7 @@ double atEnergy(double ringenergy, double elemenergy)
             return elemenergy;
         else {
             atError("Energy not defined.");
+            check_error();
             return 0.0;   /* Never reached but makes the compiler happy */
         }
 }
