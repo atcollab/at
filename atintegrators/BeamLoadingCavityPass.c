@@ -267,7 +267,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vbunch_buffer = vbunch_buffer;
         Elem->feedback_angle_offset = feedback_angle_offset;
         Elem->fbmode = fbmode;
-    };
+    }
     energy = atEnergy(Param->energy, Elem->Energy);
 
     if(num_particles<Param->nbunch){
