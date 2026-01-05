@@ -258,8 +258,7 @@ class _MadElement(ElementDescr):
         """Return the entry and exit positions of the element."""
         half_length = 0.5 * self.length
         offset = offset + refer * half_length + self.at
-        frm = getattr(self, "from")
-        if frm is not None:
+        if (frm := getattr(self, "from")) is not None:
             offset += parser[frm].at
         return offset - half_length, offset + half_length
 
@@ -655,8 +654,7 @@ class _Sequence(SequenceDescr):
             if orig is None:
                 msg = f"REFPOS {refpos!r} is not in the sequence {self.name!r}"
                 raise NameError(msg)
-        frm = getattr(self, "from")
-        if frm is not None:
+        if (frm := getattr(self, "from")) is not None:
             orig += parser[frm].at
         return orig
 
