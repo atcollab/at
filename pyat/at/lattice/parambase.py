@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-__all__ = ["Operand", "ParamBase", "ParamDef"]
+__all__ = ["Operand", "Number", "ParamBase", "ParamDef"]
 
 import abc
 from operator import add, sub, mul, truediv, neg
 from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeAlias
 
 # Define a type variable for numeric types
-Number = TypeVar("Number", int, float)
+Number: TypeAlias = int | float
 
 
 def _nop(value: Any) -> Any:
@@ -19,47 +19,11 @@ def _nop(value: Any) -> Any:
     return value
 
 
-class _Evaluator(abc.ABC, Generic[Number]):
+class _Evaluator(abc.ABC):
     """Abstract base class for evaluators.
 
     An evaluator is a callable object that returns a scalar value.
     """
-
-    @abc.abstractmethod
-    def __call__(self) -> Number:
-        """Evaluate and return the value.
-
-        Returns:
-            The evaluated value
-        """
-        ...
-
-
-class _Constant(_Evaluator[Number]):
-    """An evaluator that always returns a constant value."""
-
-    __slots__ = ["value"]
-
-    def __init__(self, value: Number):
-        """Initialize a constant evaluator.
-
-        Args:
-            value: The constant value to return
-
-        Raises:
-            TypeError: If the value is not a scalar (int or float)
-        """
-        if not isinstance(value, (int, float)):
-            msg = "The parameter value must be a scalar"
-            raise TypeError(msg)
-        self.value: Number = value
-
-    def __call__(self) -> Number:
-        return self.value
-
-
-class _BinaryOperator(_Evaluator[Number]):
-    __slots__ = ["left_operand", "operator", "right_operand"]
 
     @staticmethod
     def _convert_to_evaluator(value):
@@ -71,8 +35,44 @@ class _BinaryOperator(_Evaluator[Number]):
         msg = f"Parameter operation not defined for type {type(value)}"
         raise TypeError(msg)
 
+    @abc.abstractmethod
+    def __call__(self) -> Number:
+        """Evaluate and return the value.
+
+        Returns:
+            The evaluated value
+        """
+        ...
+
+
+class _Constant(_Evaluator):
+    """An evaluator that always returns a constant value."""
+
+    __slots__ = ["value"]
+
+    def __init__(self, value: Number):
+        """Initialise a constant evaluator.
+
+        Args:
+            value: The constant value to return
+
+        Raises:
+            TypeError: If the value is not a scalar (int or float)
+        """
+        if not isinstance(value, Number):
+            msg = "The parameter value must be a scalar"
+            raise TypeError(msg)
+        self.value: Number = value
+
+    def __call__(self) -> Number:
+        return self.value
+
+
+class _BinaryOperator(_Evaluator):
+    __slots__ = ["left_operand", "operator", "right_operand"]
+
     def __init__(self, operator, left, right) -> None:
-        """Initialize a binary operator.
+        """Initialise a binary operator.
 
         Args:
             operator: The operator function to apply
@@ -87,18 +87,18 @@ class _BinaryOperator(_Evaluator[Number]):
         return self.operator(self.left_operand.value, self.right_operand.value)
 
 
-class _UnaryOperator(_Evaluator[Number]):
+class _UnaryOperator(_Evaluator):
     __slots__ = ["operand", "operator"]
 
     def __init__(self, operator, operand) -> None:
-        """Initialize a unary operator.
+        """Initialise a unary operator.
 
         Args:
             operator: The operator function to apply
             operand: The operand to apply the operator to
         """
         self.operator = operator
-        self.operand = operand
+        self.operand = self._convert_to_evaluator(operand)
 
     def __call__(self) -> Number:
         return self.operator(self.operand.value)
