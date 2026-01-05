@@ -30,7 +30,6 @@ from at import integrators
 from at.lattice import AtWarning
 from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
-from at.lattice import idtable_element
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
@@ -127,7 +126,7 @@ _PASS_MAP = {
     "ThinMPolePass": elt.ThinMultipole,
     "Matrix66Pass": elt.M66,
     "AperturePass": elt.Aperture,
-    "IdTablePass": idtable_element.InsertionDeviceKickMap,
+    "IdTablePass": elt.InsertionDeviceKickMap,
     "GWigSymplecticPass": elt.Wiggler,
 }
 
@@ -139,7 +138,7 @@ _mat_class = {
 }
 
 # Lattice attributes which must be dropped when writing a file
-_drop_attrs = {
+_drop_attrs: dict[str, str | None] = {
     "in_file": None,
     "use": None,
     "mat_key": None,

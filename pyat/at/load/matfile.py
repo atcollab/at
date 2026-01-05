@@ -57,7 +57,7 @@ _m2p = {
     "Beam_Current": None,
     "Nbunch": None,
 }
-_p2m = {v: k for k, v in _m2p.items() if v is not None}
+_p2m: dict[str, str | None] = {v: k for k, v in _m2p.items() if v is not None}
 # Attribute to drop when writing a file
 _p2m.update(_drop_attrs)
 
@@ -220,7 +220,7 @@ def ringparam_filter(
         )
 
 
-def load_mat(filename: str, **kwargs) -> Lattice:
+def load_mat(filename: str | Path, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Matlab mat-file.
 
     Parameters:
@@ -252,7 +252,7 @@ def load_mat(filename: str, **kwargs) -> Lattice:
     See Also:
         :py:func:`.load_lattice` for a generic lattice-loading function.
     """
-    filename = Path(filename)
+    filepath = Path(filename)
     if "key" in kwargs:  # process the deprecated 'key' keyword
         kwargs.setdefault("use", kwargs.pop("key"))
     if "mat_key" in kwargs:  # process the deprecated 'mat_key' keyword
@@ -260,7 +260,7 @@ def load_mat(filename: str, **kwargs) -> Lattice:
     return Lattice(
         ringparam_filter,
         _matfile_generator,
-        filename.resolve(),
+        filepath.resolve(),
         iterator=params_filter,
         **kwargs,
     )
@@ -335,7 +335,7 @@ def _element_from_m(line: str) -> Element:
     return cls(*args, **kwargs)
 
 
-def load_m(filename: str, **kwargs) -> Lattice:
+def load_m(filename: str | Path, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Matlab m-file.
 
     Parameters:
@@ -380,11 +380,11 @@ def load_m(filename: str, **kwargs) -> Lattice:
                 else:
                     yield elem
 
-    filename = Path(filename)
+    filepath = Path(filename)
     return Lattice(
         ringparam_filter,
         mfile_generator,
-        filename.resolve(),
+        filepath.resolve(),
         iterator=params_filter,
         **kwargs,
     )

@@ -48,8 +48,9 @@ def load_lattice(filepath: str | Path, **kwargs) -> Lattice:
     ext = filepath.suffix
     try:
         load_func = _load_extension[ext.lower()]
-    except KeyError:
-        print(f"File load failed: unknow extension {ext}.")
+    except KeyError as exc:
+        exc.args = (f"File load failed: unknow extension {ext}.",)
+        raise
     else:
         return load_func(filepath, **kwargs)
 
