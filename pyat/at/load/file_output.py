@@ -5,7 +5,7 @@ __all__ = ["Exporter"]
 import sys
 from collections.abc import Sequence, Generator
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from .file_input import ElementDescr
 from ..lattice import Lattice, elements as elt
