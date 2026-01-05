@@ -8,7 +8,7 @@ import re
 from collections.abc import Generator
 from contextlib import suppress
 from copy import copy, deepcopy
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -20,8 +20,8 @@ from ..parameters import _ACCEPTED, Param, ParamArray
 class Element:
     """Base class for AT elements."""
 
-    _BUILD_ATTRIBUTES = ["FamName"]
-    _conversions = {
+    _BUILD_ATTRIBUTES: ClassVar[list[str]] = ["FamName"]
+    _conversions: ClassVar[dict] = {
         "FamName": str,
         "PassMethod": str,
         "Length": _float,
