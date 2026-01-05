@@ -67,21 +67,18 @@ class CommentHandler:
             in_comment = len(rest) <= 0
             self.in_comment = in_comment
             return "" if in_comment else line
+        elif line := self.line_handler(line):
+            contents, *rest = line.split(sep=self.begcomment, maxsplit=1)
+            buffer.append(contents)
+            in_comment = len(rest) > 0
+            self.in_comment = in_comment
+            return rest[0] if in_comment else ""
         else:
-            line = self.line_handler(line)
-            if line:
-                contents, *rest = line.split(sep=self.begcomment, maxsplit=1)
-                buffer.append(contents)
-                in_comment = len(rest) > 0
-                self.in_comment = in_comment
-                return rest[0] if in_comment else ""
-            else:
-                # Special case to avoid that empty lines break the continuation
-                return None
+            # Special case to avoid that empty lines break the continuation
+            return None
 
     def noblock_handler(self, buffer, line):
-        line = self.line_handler(line)
-        if line:
+        if line := self.line_handler(line):
             buffer.append(line)
             return ""
         else:
@@ -241,11 +238,11 @@ class DictNoDot(dict):
 class AnyDescr:
     """Base class for source object descriptors."""
 
-    str_attr = ()
+    str_attr: ClassVar[set[str]] = set()
     "list of names of str attributes"
-    bool_attr = ()
+    bool_attr: ClassVar[set[str]] = set()
     "list of names of bool attributes"
-    pos_args = ()
+    pos_args: ClassVar[set[str]] = set()
     "list of names of positional arguments"
 
     @classmethod
@@ -315,8 +312,7 @@ class ElementDescr(AnyDescr, dict):
         try:
             return self[item]
         except KeyError as exc:
-            name = self.__class__.__name__
-            msg = f"{name!r} object has no {item!r} attribute"
+            msg = f"{self.__class__.__name__!r} object has no {item!r} attribute"
             raise AttributeError(msg) from exc
 
     def __rmul__(self, other):
@@ -382,8 +378,9 @@ class ElementDescr(AnyDescr, dict):
         return self.get("l", 0.0)
 
     @staticmethod
-    def meval(params: dict):
+    def meval(params: dict[str, Any]) -> dict[str, Any]:
         """Evaluation of superfluous parameters."""
+        # Ignore superfluous parameters
         # return params
         return {}
 
@@ -412,12 +409,17 @@ class BaseParser(DictNoDot, StrParser):
     The parser builds a database of all the defined objects
     """
 
-    _delimiter: str | None = None
-    _continuation: str = "\\"
-    _linecomment: str | tuple[str] | None = "#"
-    _blockcomment: tuple[str, str] | None = None
-    _endfile: str | None = None
-    _undef_key: str = "missing"
+    # Class attributes
+    _delimiter: ClassVar[str | None] = None
+    _continuation: ClassVar[str | None] = "\\"
+    _linecomment: ClassVar[str | tuple[str, ...] | None] = "#"
+    _blockcomment: ClassVar[tuple[str, str] | None] = None
+    _endfile: ClassVar[str | None] = None
+    _undef_key: ClassVar[str] = "missing"
+
+    # Instance attributes
+    postponed: list[tuple]
+    in_file: list[str]
 
     def __init__(
         self,
@@ -556,9 +558,9 @@ class BaseParser(DictNoDot, StrParser):
         argcount: int,
         argstr: str,
         *,
-        bool_attr: tuple[str] = (),
-        str_attr: tuple[str] = (),
-        pos_args: tuple[str] = (),
+        bool_attr: tuple[str, ...] = (),
+        str_attr: tuple[str, ...] = (),
+        pos_args: tuple[str, ...] = (),
     ):
         """Evaluate the value of a command argument and return the pair (key, value)."""
 
@@ -586,7 +588,7 @@ class BaseParser(DictNoDot, StrParser):
                     return None
                 return key, arg_value(key, argstr)
 
-    def _assign(self, label: str, key: str, value: str):
+    def _assign(self, label: str | None, key: str, value: str):
         """Variable assignment."""
         return key, self.evaluate(value)
 
@@ -615,8 +617,8 @@ class BaseParser(DictNoDot, StrParser):
         # Execute the command
         return cmd(**kwargs)
 
-    def _command(self, *args: str, **kwargs):
-        return self._raw_command(*args, **kwargs)
+    def _command(self, label: str | None, cmdname: str, *args: str, **kwargs):
+        return self._raw_command(label, cmdname, *args, **kwargs)
 
     def _decode(self, label: str | None, cmdname: str, *args: str) -> None:
         """Execute the split statement."""
@@ -725,7 +727,7 @@ class BaseParser(DictNoDot, StrParser):
 
     missing = property(_missing, doc="Set of missing definitions")
 
-    def _analyse(self, key: str) -> None:
+    def _analyse(self, key: str | None) -> None:
         """Print the chain of failing commands."""
         if isinstance(key, str):
             reason = self._gen_key(key)
@@ -810,7 +812,7 @@ class BaseParser(DictNoDot, StrParser):
             **kwargs:   Initial variable definitions
         """
         self.update(**kwargs)
-        buffer = []
+        buffer: list[str] = []
         ok: bool = True
         for line_number, line in enumerate(lines):
             # Handle comments
