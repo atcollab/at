@@ -513,14 +513,22 @@ def test_quad(rin, func):
 
 @pytest.mark.parametrize("func", [element_track, element_pass, internal_epass])
 def test_rfcavity(rin: np.ndarray, func: any) -> None:
+    """Test rf cavity tracking.
+
+    Arguments:
+        func: element track method
+        rin: np.array of dims (6,1)
+    """
     rfc = elements.RFCavity("rfcavity", 0.0, 187500, 3.5237e8, 31, 6.0e9)
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
-    if func == element_track:
+    if func is element_track:
         func(rfc, rin, in_place=True, energy=+6.0e9)
     else:
         func(rfc, rin, energy=+6.0e9)
+
     result = np.array([0.0, 0.0, 0.0, 0.0, 9.99769215e-07, 1.0e-6]).reshape(6, 1)
+
     np.testing.assert_allclose(rin, result, atol=1e-12)
 
 
