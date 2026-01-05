@@ -109,10 +109,7 @@ from operator import itemgetter, attrgetter
 import numpy as np
 import numpy.typing as npt
 
-from .parambase import Operand
-
-# Define a type variable for numeric types
-Number = int | float
+from .parambase import Number, Operand
 
 
 class attr_(str):
