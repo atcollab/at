@@ -5,18 +5,25 @@ __all__ = ["Exporter"]
 import sys
 from collections.abc import Sequence, Generator
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from .file_input import ElementDescr
 from ..lattice import Lattice, elements as elt
 
 
 class Exporter:
+
+    # Class attributes
     delimiter: ClassVar[str] = ";"
     continuation: ClassVar[str] = ""
     label_fmt: ClassVar = str.maketrans("*/+-", "..__")  # Not allowed in output format
     bool_fmt: ClassVar[dict[bool, str]] = {False: "False", True: "True"}
     use_line: ClassVar[bool] = True
+
+    # Instance attributes
+    store: dict[type[elt.Element], dict[str, ElementDescr] | None]
+    anystore: dict[str, ElementDescr]
+    all_stores: list[dict[str, ElementDescr]]
 
     def __init__(self, ring: Lattice, **kwargs):
         def store_elem(store, elem: ElementDescr):
@@ -57,7 +64,7 @@ class Exporter:
                 elemdict = atelem.to_dict(freeze=True)
                 elms = self.generate_madelems(attyp, elemdict)
                 if isinstance(elms, ElementDescr):
-                    elms = (elms,)
+                    elms = [elms]
                 for elem in elms:
                     store = self.store.get(attyp, self.anystore)
                     length = elem.get("L", 0.0)
@@ -92,7 +99,7 @@ class Exporter:
     def generate_madelems(
         self, eltype: type[elt.Element], elemdict: dict
     ) -> ElementDescr | list[ElementDescr]:
-        pass
+        return []
 
     def print_beam(self, file):
         pass
@@ -124,7 +131,7 @@ class Exporter:
             )
         print(f"  {elnames(self.seq[10 * nl :])}){self.delimiter}\n", file=file)
 
-    def export(self, filename: str | None = None) -> None:
+    def export(self, filename: str | Path | None = None) -> None:
         def do_export(file):
             print(
                 f"! Converted by PyAT from in_file={self.in_file},"

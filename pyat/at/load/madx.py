@@ -263,7 +263,8 @@ class _MadElement(ElementDescr):
             offset += parser[frm].at
         return offset - half_length, offset + half_length
 
-    def meval(self, params: dict):
+    @staticmethod
+    def meval(params: dict[str, Any]) -> dict[str, Any]:
         """Evaluation of superfluous parameters."""
 
         def mpeval(v):
@@ -276,6 +277,7 @@ class _MadElement(ElementDescr):
             else:
                 return v
 
+        # Ignore superfluous parameters
         # return {k: mpeval(v) for k, v in params.items()}
         return {}
 
@@ -676,7 +678,7 @@ class _Sequence(SequenceDescr):
             elif isinstance(elem, _MadElement):
                 yield elem.limits(parser, offset, self.refer), elem
 
-    def expand(self, parser: MadxParser) -> Generator[elt.Element, None, None]:
+    def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
             fdl = float(dl)  # Expand parameters
@@ -707,7 +709,7 @@ class _Beam(ElementDescr):
     def to_at(name, *args, **params):
         return []
 
-    def expand(self, parser: MadxParser) -> dict:
+    def resolve(self) -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             atparticle = Particle(
@@ -887,6 +889,9 @@ class _MadParser(LowerCaseParser, UnorderedParser):
     _endfile = "return"
     _undef_key = "none"
 
+    # Instance attributes
+    current_sequence: _Sequence | None
+
     def __init__(self, env: dict, *filenames: str, **kwargs):
         """Common behaviour for MAD-X and MAD8.
 
@@ -935,7 +940,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         else:
             return super()._argparser(argcount, argstr, **kwargs)
 
-    def _assign(self, label: str, key: str, val: str):
+    def _assign(self, label: str | None, key: str, val: str):
         # Special treatment of "line=(...)" assignments
         if key == "line":
             val = val.replace(")", ",)")  # For tuples with a single item
@@ -972,7 +977,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
                 self.current_sequence.append((label, *argnames))
         return res
 
-    def _decode(self, label: str, cmdname: str, *argnames: str) -> None:
+    def _decode(self, label: str | None, cmdname: str, *argnames: str) -> None:
         left, *right = cmdname.split(":=")
         if right:
             self[left] = self._assign_deferred(right[0])
@@ -1003,12 +1008,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
                 return sqrt(1.0 - 1.0 / gamma / gamma)
 
         # generate the Lattice attributes from the BEAM object
-        beam = self._get_beam(params["use"]).expand(self)
+        beam = self._get_beam(params["use"]).resolve()
         for key, val in beam.items():
             params.setdefault(key, val)
 
         cavities = []
-        cell_length = 0
+        cell_length = 0.0
 
         for elem in super()._generator(params):
             if isinstance(elem, elt.RFCavity):
@@ -1179,7 +1184,7 @@ def load_madx(
 
 class _MadExporter(Exporter):
     use_line: ClassVar[bool] = False
-    AT2MAD: ClassVar[dict[type[elt.Element], _MadElement]] = {}
+    AT2MAD: ClassVar[dict[type[elt.Element], type[_MadElement]]] = {}
 
     def generate_madelems(
         self, eltype: type[elt.Element], elemdict: dict
@@ -1205,7 +1210,7 @@ class _MadxExporter(_MadExporter):
     continuation: ClassVar[str] = ""
     bool_fmt: ClassVar[dict[bool, str]] = {False: "FALSE", True: "TRUE"}
 
-    AT2MAD: ClassVar[dict[type[elt.Element], _MadElement]] = {
+    AT2MAD: ClassVar[dict[type[elt.Element], type[_MadElement]]] = {
         elt.Quadrupole: quadrupole,
         elt.Sextupole: sextupole,
         elt.Octupole: octupole,
