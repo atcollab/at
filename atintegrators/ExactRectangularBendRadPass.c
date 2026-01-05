@@ -175,6 +175,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             atError("NumIntSteps must be positive"); check_error();
         }
 
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -203,7 +210,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->KickAngle=KickAngle;
     }
     gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
-    check_error();
 
     ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
@@ -266,7 +272,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         Gamma = atGamma(Energy, Energy, rest_energy);
-        check_error();
         r_in = mxGetDoubles(plhs[0]);
 
         ExactRectangularBendRad(r_in, Length, BendingAngle, PolynomA, PolynomB,
