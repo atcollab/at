@@ -167,7 +167,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->R2=R2;
         Elem->T1=T1;
         Elem->T2=T2;
-    };
+    }
     gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
 
     GWigSymplecticPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
