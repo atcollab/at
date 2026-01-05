@@ -224,6 +224,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         feedback_angle_offset=atGetOptionalDouble(ElemData,"feedback_angle_offset", 0.0); check_error();
         
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
+
         int dimsth[] = {Param->nbunch*nslice*nturns, 4};
         atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
         int dimsvb[] = {Param->nbunch, 2};
@@ -260,9 +267,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vbunch_buffer = vbunch_buffer;
         Elem->feedback_angle_offset = feedback_angle_offset;
         Elem->fbmode = fbmode;
-    }
-    energy = atEnergy(Param->energy, Elem->Energy);
-    check_error();
+    }else{
+        energy = atEnergy(Param->energy, Elem->Energy);
+    };
 
     if(num_particles<Param->nbunch){
         atError("Number of particles has to be greater or equal to the number of bunches."); check_error();
