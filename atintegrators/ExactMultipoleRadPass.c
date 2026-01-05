@@ -138,6 +138,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
         atError("NumIntSteps must be positive"); check_error();
     }
 
+    /* Check energy */
+    Energy = atEnergy(Param->energy, Energy);
+    if (Energy == 0) {
+        atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+        check_error();
+    }
+
+
     Elem = (struct elem *)atMalloc(sizeof(struct elem));
     Elem->Length = Length;
     Elem->PolynomA = PolynomA;
@@ -158,7 +166,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->KickAngle = KickAngle;
   }
   gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
-  check_error();
 
   multipole_pass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                  Elem->MaxOrder, Elem->NumIntSteps,
