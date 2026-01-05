@@ -483,7 +483,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
         super().__init__(_elegant_env, **kwargs)
         self.rpn = Rpn()
 
-    def _assign(self, label: str, key: str, val: str):
+    def _assign(self, label: str | None, key: str, val: str):
         # Special treatment of "line=(...)" commands
         if key == "LINE":
             val = val.replace(")", ",)")  # For tuples with a single item
@@ -513,9 +513,9 @@ class ElegantParser(UpperCaseParser, BaseParser):
         argcount: int,
         argstr: str,
         *,
-        bool_attr: tuple[str] = (),
-        str_attr: tuple[str] = (),
-        pos_args: tuple[str] = (),
+        bool_attr: tuple[str, ...] = (),
+        str_attr: tuple[str, ...] = (),
+        pos_args: tuple[str, ...] = (),
     ):
         """Evaluate a command argument and return a pair (key, value)."""
 
@@ -549,7 +549,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
                 return sqrt(1.0 - 1.0 / gamma / gamma)
 
         cavities = []
-        cell_length = 0
+        cell_length = 0.0
 
         for elem in super()._generator(params):
             if isinstance(elem, elt.RFCavity):
