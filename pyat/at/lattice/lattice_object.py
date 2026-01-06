@@ -224,11 +224,9 @@ class Lattice(list):
         periodicity = kwargs.setdefault("periodicity", 1)
         kwargs.setdefault("particle", kwargs.pop("_particle", Particle()))
         kwargs.setdefault("beam_current", kwargs.pop("_beam_current", 0.0))
-        # dummy initialization in case the harmonic number is not there
-        kwargs.setdefault("_fillpattern", np.ones(1))
         # Remove temporary keywords
-        frequency: float | None = kwargs.pop("_frequency", None)
-        cell_length: float | None = kwargs.pop("_length", None)
+        frequency: float = kwargs.pop("_frequency", 0.0)
+        cell_length: float = kwargs.pop("_length", 0.0)
         cell_h = kwargs.pop("cell_harmnumber", kwargs.pop("_cell_harmnumber", math.nan))
         ring_h = kwargs.pop("harmonic_number", cell_h * periodicity)
 
@@ -240,16 +238,14 @@ class Lattice(list):
         self.update(kwargs)
 
         # Setting the harmonic number is delayed to have self.beta available
-        if not (frequency is None or frequency == 0.0):
-            rev = self.beta * clight / cell_length
-            self._cell_harmnumber = int(round(frequency / rev))
-            try:
-                fp = kwargs.pop("_fillpattern", np.ones(1))
-                self.set_fillpattern(bunches=fp)
-            except AssertionError:
-                self.set_fillpattern()
-        elif not ((ring_h is None) or math.isnan(ring_h)):
+        if (cell_h := int(round(frequency * cell_length / (self.beta * clight)))) > 0:
+            self._cell_harmnumber = cell_h
+        elif not math.isnan(ring_h):
             self._cell_harmnumber = ring_h / periodicity
+        try:
+            self.set_fillpattern(getattr(self, "_fillpattern", 1))
+        except ValueError:
+            self.set_fillpattern()
 
     def __getitem__(self, key):
         try:  # Integer
@@ -717,9 +713,8 @@ class Lattice(list):
         try:
             return self._cell_harmnumber
         except AttributeError as exc:
-            raise AttributeError(
-                "harmonic_number undefined: No cavity found in the lattice"
-            ) from exc
+            exc.args = ("harmonic_number undefined: No cavity found in the lattice",)
+            raise
 
     @property
     def circumference(self) -> float:
@@ -782,25 +777,24 @@ class Lattice(list):
                      ``len(bunches)==ring.harmonic_number`` is required.
                      (default=1, single bunch configuration).
         """
+        h = getattr(self, "harmonic_number", 0)
         if isinstance(bunches, int):
-            if self.harmonic_number % bunches == 0:
-                fp = np.zeros(self.harmonic_number)
-                fp[:: int(self.harmonic_number / bunches)] = 1
+            fp = np.zeros(h, dtype=float)
+            if bunches == 0 or h == 0:
+                pass
+            elif h % bunches == 0:
+                fp[:: h // bunches] = 1.0
             else:
-                raise AtError(
-                    "Harmonic number has to be a multiple of the scalar input bunches"
-                )
-        elif np.isscalar(bunches):
-            raise AtError("Scalar input for bunches must be an integer")
+                msg = "Harmonic number has to be a multiple of the scalar input bunches"
+                raise AtError(msg)
         else:
-            bunches = bunches.astype(dtype=float, casting="safe", copy=False)
-            assert (
-                len(bunches) == self.harmonic_number
-            ), f"bunches array input has to be of shape ({self.harmonic_number},)"
-            assert np.all(
-                bunches >= 0.0
-            ), "bunches array can contain only positive numbers"
-            fp = bunches
+            fp = np.asarray(bunches, dtype=float)
+            if fp.shape != (h,):
+                msg = f"The shape of the bunches array input must be ({h},)"
+                raise ValueError(msg)
+            if np.any(fp < 0.0):
+                msg = "bunches array can contain only positive numbers"
+                raise ValueError(msg)
         self._fillpattern = fp / np.sum(fp)
         self.set_wake_turnhistory()
 
@@ -867,9 +861,8 @@ class Lattice(list):
         try:
             return int(self.periodicity * self._cell_harmnumber)
         except AttributeError as exc:
-            raise AttributeError(
-                "harmonic_number undefined: " "No cavity found in the lattice"
-            ) from exc
+            exc.args = ("harmonic_number undefined: No cavity found in the lattice",)
+            raise
 
     @harmonic_number.setter
     def harmonic_number(self, value):
