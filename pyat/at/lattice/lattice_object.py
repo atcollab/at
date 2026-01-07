@@ -1557,8 +1557,7 @@ def params_filter(
     if cavities:
         cavities.sort(key=lambda el: el.Frequency)
         c0 = cavities[0]
-        params.setdefault("harmonic_number", getattr(c0, "HarmNumber", math.nan))
-        # params['_harmnumber'] = getattr(c0, 'HarmNumber', math.nan)
+        params.setdefault("harmonic_number", getattr(c0, "HarmNumber", 0))
         params["_frequency"] = getattr(c0, "Frequency", None)
 
     if "energy" not in params:
