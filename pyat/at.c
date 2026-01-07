@@ -537,7 +537,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         double gamma0 = param.energy/param.rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
-        param.T0 = param.RingLength/beta0/C0;
+        param.T0 = param.RingLength/(beta0*C0);
         */
         param.T0 = param.RingLength/C0;
     }
