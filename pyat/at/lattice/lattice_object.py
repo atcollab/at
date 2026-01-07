@@ -254,7 +254,6 @@ class Lattice(list):
         try:
             self.set_fillpattern(getattr(self, "_fillpattern", 1))
         except ValueError:
-            print("reset fillpattern to default")
             self.set_fillpattern()
 
     def __getitem__(self, key):
