@@ -27,7 +27,7 @@ import sys
 import copy
 import math
 
-from typing import SupportsIndex
+from typing import Any, SupportsIndex
 from collections.abc import Callable, Iterable, Generator
 import warnings
 import contextlib
@@ -97,6 +97,7 @@ class Lattice(list):
     as a numpy :py:obj:`~numpy.ndarray`.
     """
 
+    # Class attributes
     # Attributes displayed:
     _disp_attributes = (
         "name",
@@ -121,10 +122,21 @@ class Lattice(list):
         "_fillpattern",
     )
 
+    # Instance attributes
+    name: str  #: Lattice name
+    periodicity: int  #: Lattice periodicity
+    _energy: float
+    _radiation: bool
+    _particle: Particle
+    _beam_current: float
+    _cell_harmnumber: float
+
     # noinspection PyUnusedLocal
-    def __init__(self, *args, iterator: Filter = None, scan: bool = False, **kwargs):
+    def __init__(
+        self, *args, iterator: Filter | None = None, scan: bool = False, **kwargs
+    ):
         # noinspection PyUnresolvedReferences
-        """
+        r"""
         Lattice(elements: Iterable[Element], **params)
         Lattice(filter, [filter, ...,] iterator=iter, **params)
 
@@ -223,8 +235,8 @@ class Lattice(list):
         # Remove temporary keywords
         frequency: float = kwargs.pop("_frequency", 0.0)
         cell_length: float = kwargs.pop("_length", 0.0)
-        cell_h = kwargs.pop("cell_harmnumber", kwargs.pop("_cell_harmnumber", math.nan))
-        ring_h = kwargs.pop("harmonic_number", cell_h * periodicity)
+        cell_h = kwargs.pop("cell_harmnumber", kwargs.pop("_cell_harmnumber", 0.0))
+        ring_h = round(kwargs.pop("harmonic_number", cell_h * periodicity))
 
         energy = kwargs.setdefault("energy", kwargs.pop("_energy", None))
         if energy is None:
@@ -237,11 +249,12 @@ class Lattice(list):
         # Setting the harmonic number is delayed to have self.beta available
         if (cell_h := round(frequency * cell_length / (self.beta * clight))) > 0:
             self._cell_harmnumber = cell_h
-        elif not math.isnan(ring_h):
+        elif ring_h > 0:
             self._cell_harmnumber = ring_h / periodicity
         try:
             self.set_fillpattern(getattr(self, "_fillpattern", 1))
         except ValueError:
+            print("reset fillpattern to default")
             self.set_fillpattern()
 
     def __getitem__(self, key):
@@ -296,7 +309,7 @@ class Lattice(list):
     def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
         length = 0.0
-        params = {}
+        params: dict[str, Any] = {}
 
         for elem in type_filter(params, elems):
             if isinstance(elem, elt.RFCavity):
@@ -426,7 +439,7 @@ class Lattice(list):
                 periodicity = 1
         hdict = {"periodicity": periodicity}
         with contextlib.suppress(AttributeError):
-            hdict.update(harmonic_number=self.cell_harmnumber * n * periodicity)
+            hdict["harmonic_number"] = round(self.cell_harmnumber * n * periodicity)
         elems = (copy_fun(el, copy_elements) for _ in range(n) for el in self)
         return Lattice(elem_generator, elems, iterator=self.attrs_filter, **hdict)
 
@@ -527,10 +540,10 @@ class Lattice(list):
         return self[n:] + self[:n]
 
     def update(self, *args, **kwargs) -> None:
-        """
+        r"""
         update(**kwargs)
         update(mapping, **kwargs)
-        update(iterable, **kwargs).
+        update(iterable, \*\*kwargs).
 
         Update the lattice attributes with the given values
         """
@@ -658,7 +671,7 @@ class Lattice(list):
 
     @property
     def energy(self) -> float:
-        """Lattice energy."""
+        """Lattice energy [eV]."""
         return self._energy
 
     @energy.setter
@@ -810,10 +823,11 @@ class Lattice(list):
         """Indices of filled bunches."""
         return np.flatnonzero(self._fillpattern)
 
-    def get_beam_current(self):
+    def get_beam_current(self) -> float:
+        """Total beam current [A]."""
         return self._beam_current
 
-    def set_beam_current(self, value, clear_history=True):
+    def set_beam_current(self, value: float, clear_history=True):
         self._beam_current = value
         if clear_history:
             self.set_wake_turnhistory()
@@ -864,7 +878,7 @@ class Lattice(list):
             msg = f"harmonic number ({value}) must be integer"
             raise AtError(msg)
         # check on cell
-        #if cell_h - round(cell_h) != 0:
+        # if cell_h - round(cell_h) != 0:
         #    msg = f"harmonic number ({value}) must be a multiple of {self.periodicity}"
         #    raise AtError(msg)
         self._cell_harmnumber = cell_h
@@ -1432,7 +1446,7 @@ class Lattice(list):
             return radiate
 
 
-def lattice_filter(params, lattice):
+def lattice_filter(params: dict[str, Any], lattice) -> Iterable[Element]:
     """Copy lattice parameters and run through all lattice elements.
 
     Parameters:
@@ -1446,7 +1460,9 @@ def lattice_filter(params, lattice):
 
 
 # noinspection PyUnusedLocal
-def elem_generator(params, elems: Iterable[Element]) -> Iterable[Element]:
+def elem_generator(
+    params: dict[str, Any], elems: Iterable[Element]
+) -> Iterable[Element]:
     """Run through all elements without any check.
 
     Parameters:
@@ -1462,7 +1478,9 @@ def elem_generator(params, elems: Iterable[Element]) -> Iterable[Element]:
 no_filter: Filter = elem_generator  # provided for backward compatibility
 
 
-def type_filter(params, elems: Iterable[Element]) -> Generator[Element, None, None]:
+def type_filter(
+    params: dict[str, Any], elems: Iterable[Element]
+) -> Generator[Element, None, None]:
     """Run through all elements and check element validity.
     Analyse elements for radiation state.
 
@@ -1487,7 +1505,9 @@ def type_filter(params, elems: Iterable[Element]) -> Generator[Element, None, No
     params["_radiation"] = radiate
 
 
-def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None, None]:
+def params_filter(
+    params: dict[str, Any], elem_filter: Filter, *args
+) -> Generator[Element, None, None]:
     """Run through all elements, looking for energy and periodicity.
     Remove the Energy attribute of non-radiating elements.
 
@@ -1519,7 +1539,7 @@ def params_filter(params, elem_filter: Filter, *args) -> Generator[Element, None
     el_energies = []
     thetas = []
     cavities = []
-    cell_length = 0
+    cell_length = 0.0
 
     for elem in elem_filter(params, *args):
         if isinstance(elem, elt.RFCavity):
