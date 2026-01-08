@@ -286,7 +286,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 
     #ifdef _MSC_VER
-    atError("Beam loading Phasor mode not implemented in Windows.");
+    atError("Beam loading module not implemented in Windows.");
     #endif
     BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
                           Param->bunch_currents, Param->fillpattern, rl, 

@@ -8,7 +8,7 @@ from at.collective import WakeComponent, ResWallElement
 from at.collective import add_beamloading, remove_beamloading
 from at import lattice_track
 from at import lattice_pass, internal_lpass
-
+from sys import platform
 
 _issorted = lambda a: numpy.all(a[:-1] <= a[1:])
 
@@ -93,25 +93,31 @@ def test_resistive_wall_element(hmba_lattice):
     
 def test_beamloading(hmba_lattice):
     ring = hmba_lattice.enable_6d(copy=True)
-    with pytest.raises(Exception):
-        add_beamloading(ring, 44e3, 400, cavpts=range(len(ring)))
-    add_beamloading(ring, 44e3, 400)
-    cavs = ring.get_elements(at.RFCavity)  
-    for cav in cavs:
-        assert cav.PassMethod == 'BeamLoadingCavityPass'
-        assert hasattr(cav, 'Vbeam') 
-        assert hasattr(cav, 'Vgen')
-        assert hasattr(cav, 'Vcav') 
-    ring.disable_6d(at.RFCavity)
-    for cav in cavs:
-        assert cav.PassMethod == 'IdentityPass'  
-    ring.enable_6d(at.RFCavity)
-    for cav in cavs:
-        assert cav.PassMethod == 'BeamLoadingCavityPass'          
-    remove_beamloading(ring)
-    cavs = ring.get_elements(at.RFCavity)  
-    for cav in cavs:
-        assert cav.PassMethod == 'RFCavityPass' 
+    
+    # test should fail on windows
+    if 'win' in platform:
+        with pytest.raises(Exception):
+            add_beamloading(ring, 44e3, 400)
+    else:
+        with pytest.raises(Exception):
+            add_beamloading(ring, 44e3, 400, cavpts=range(len(ring)))
+        add_beamloading(ring, 44e3, 400)
+        cavs = ring.get_elements(at.RFCavity)  
+        for cav in cavs:
+            assert cav.PassMethod == 'BeamLoadingCavityPass'
+            assert hasattr(cav, 'Vbeam') 
+            assert hasattr(cav, 'Vgen')
+            assert hasattr(cav, 'Vcav') 
+        ring.disable_6d(at.RFCavity)
+        for cav in cavs:
+            assert cav.PassMethod == 'IdentityPass'  
+        ring.enable_6d(at.RFCavity)
+        for cav in cavs:
+            assert cav.PassMethod == 'BeamLoadingCavityPass'          
+        remove_beamloading(ring)
+        cavs = ring.get_elements(at.RFCavity)  
+        for cav in cavs:
+            assert cav.PassMethod == 'RFCavityPass' 
     
 
 @pytest.mark.parametrize('func', (lattice_track, lattice_pass))
