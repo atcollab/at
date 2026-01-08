@@ -93,32 +93,26 @@ def test_resistive_wall_element(hmba_lattice):
     
 def test_beamloading(hmba_lattice):
     ring = hmba_lattice.enable_6d(copy=True)
-    
-    # test should fail on windows
-    if 'win' in platform:
-        with pytest.raises(Exception):
-            add_beamloading(ring, 44e3, 400)
-    else:
-        with pytest.raises(Exception):
-            add_beamloading(ring, 44e3, 400, cavpts=range(len(ring)))
-        add_beamloading(ring, 44e3, 400)
-        cavs = ring.get_elements(at.RFCavity)  
-        for cav in cavs:
-            assert cav.PassMethod == 'BeamLoadingCavityPass'
-            assert hasattr(cav, 'Vbeam') 
-            assert hasattr(cav, 'Vgen')
-            assert hasattr(cav, 'Vcav') 
-        ring.disable_6d(at.RFCavity)
-        for cav in cavs:
-            assert cav.PassMethod == 'IdentityPass'  
-        ring.enable_6d(at.RFCavity)
-        for cav in cavs:
-            assert cav.PassMethod == 'BeamLoadingCavityPass'          
-        remove_beamloading(ring)
-        cavs = ring.get_elements(at.RFCavity)  
-        for cav in cavs:
-            assert cav.PassMethod == 'RFCavityPass' 
-    
+    with pytest.raises(Exception):
+        add_beamloading(ring, 44e3, 400, cavpts=range(len(ring)))
+    add_beamloading(ring, 44e3, 400)
+    cavs = ring.get_elements(at.RFCavity)  
+    for cav in cavs:
+        assert cav.PassMethod == 'BeamLoadingCavityPass'
+        assert hasattr(cav, 'Vbeam') 
+        assert hasattr(cav, 'Vgen')
+        assert hasattr(cav, 'Vcav') 
+    ring.disable_6d(at.RFCavity)
+    for cav in cavs:
+        assert cav.PassMethod == 'IdentityPass'  
+    ring.enable_6d(at.RFCavity)
+    for cav in cavs:
+        assert cav.PassMethod == 'BeamLoadingCavityPass'          
+    remove_beamloading(ring)
+    cavs = ring.get_elements(at.RFCavity)  
+    for cav in cavs:
+        assert cav.PassMethod == 'RFCavityPass' 
+
 
 @pytest.mark.parametrize('func', (lattice_track, lattice_pass))
 def test_track_beamloading(hmba_lattice, func):
@@ -127,17 +121,21 @@ def test_track_beamloading(hmba_lattice, func):
     ring.set_beam_current(0.2)
     at.add_beamloading(ring, 44e3, 400)
     rin = numpy.zeros((6, 1))
-    with pytest.raises(Exception):
-        func(ring, rin, refpts=[])
-    rin = numpy.zeros((6, 2))
-    if func == lattice_track:
-        func(ring, rin, refpts=[], in_place=True)
+    if 'win' in platform:
+        with pytest.raises(Exception):
+            func(ring, rin, refpts=[], in_place=True)
     else:
-        func(ring, rin, refpts=[])
-    assert_close(rin[:, 0], numpy.array([1.618983e-08,  6.199903e-10,  
-                                         0.000000e+00,  0.000000e+00,
-                                         -6.129488e-10,  1.502295e-08]
-                                        ), atol=5e-10)
+        with pytest.raises(Exception):
+            func(ring, rin, refpts=[])
+        rin = numpy.zeros((6, 2))
+        if func == lattice_track:
+            func(ring, rin, refpts=[], in_place=True)
+        else:
+            func(ring, rin, refpts=[])
+        assert_close(rin[:, 0], numpy.array([1.618983e-08,  6.199903e-10,  
+                                             0.000000e+00,  0.000000e+00,
+                                             -6.129488e-10,  1.502295e-08]
+                                            ), atol=5e-10)
  
 
 def test_buffers(hmba_lattice):
