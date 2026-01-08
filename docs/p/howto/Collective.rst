@@ -336,13 +336,13 @@ An important thing to consider for the functions found in the **BeamLoadingCavit
 
 The phasor model is updated with each slice. At the end of each bucket (filled or empty) the beam induced voltage is back tracked to the center of the bucket (:math:`t=0` for that bucket). The final value of :math:`V_{b}` at the end of the turn is the mean of all the beam induced voltage from all buckets, measured at :math:`t=0` after the bunch has been tracked. The :math:`V_{b}` used for the compuation of the :math:`V_{g}` can either be taken from the most recent turn, or it can be the mean of a buffer of a specified length.
 
-There are 4 main parameters stored in the beam loading element under the **BeamLoadingElement.Vgen**. These parameters are :math:`[V_{gen}, \theta_{g}, \psi, V_{gr}]`, where :math:`V_{gen}` is the amplitude of the generator voltage, :math:`\theta_{g}` is the total generator phase and is equal to :math:`\theta_{g}=\phi_{s}+\psi`, :math:`\psi' is the cavity detuning, and :math:`V_{gr}=V_{gen}/cos(\psi)` is the generator voltage on resonance. 
+There are 4 main parameters stored in the beam loading element under the **BeamLoadingElement.Vgen**. These parameters are :math:`[V_{gen}, \theta_{g}, \psi, V_{gr}]`, where :math:`V_{gen}` is the amplitude of the generator voltage, :math:`\theta_{g}` is the total generator phase and is typically equal to :math:`\theta_{g}=\phi_{s}+\psi`, :math:`\psi` is the cavity detuning, and :math:`V_{gr}=V_{gen}/cos(\psi)` is the generator voltage on resonance. 
 
 The computation of the new :math:`V_{gen}` is very straight forward. First, the total cavity voltage is computed from the real part of :math:`V_{b}` as :math:`V_{c,meas}=V_{gen}+V_{b}`. Then the correction is computed with :math:`V_{gr}*={\frac{V_{c,set}}{V_{c,meas}}}^{VoltGain}`. Rather than applying the modification to :math:`V_{gen}`, it is preferable to apply it by modfying the :math:`V_{gr}` as it is independant of the cavity phase.
 
 The phase is slightly more complicated and requires two steps. First to compute to the new detuning, the contribution of the detuning to the total phase shift is extracted with :math:`\psi += (\theta_{g} - \psi - \phi_{s,set})*PhaseGain`. 
 
-This detuning change induces a phase shift which must also be compensated. So the new synchronous phase is computed with the measured real and imaginary cavity voltages :math:`\theta_{g}-=(-arctan2(V_{c,real}/V_{c,imag}))*PhaseGain`. 
+This detuning change induces a phase shift which must also be compensated. So the new synchronous phase is computed with the measured real and imaginary cavity voltages :math:`\theta_{g} -= (-arctan2(V_{c,real}/V_{c,imag}))*PhaseGain`. 
 
 Then finally :math:`V_{gen}` is updated by :math:`V_{gen}=V_{gr}cos(\psi)`. 
 
