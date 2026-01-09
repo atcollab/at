@@ -280,10 +280,12 @@ def transform_elem(
     tilt0 = elem.tilt
     yaw0 = elem.yaw
     pitch0 = elem.pitch
+    tilt_frame0 = elem.tilt_frame
 
     # Apply new offsets and rotations (XYZ intrinsic order)
     offsets = np.array([_set(v0, v) for v0, v in zip(offsets0, [dx, dy, dz])])
     rotations = [_set(pitch0, pitch), _set(yaw0, yaw), _set(tilt0, tilt)]
+    tilt_frame = _set(tilt_frame0, tilt_frame)
 
     setattr(elem, "_dx", offsets[0])
     setattr(elem, "_dy", offsets[1])
@@ -291,6 +293,7 @@ def transform_elem(
     setattr(elem, "_pitch", rotations[0])
     setattr(elem, "_yaw", rotations[1])
     setattr(elem, "_tilt", rotations[2])
+    setattr(elem, "_tilt_frame", tilt_frame)
 
     if elem.ReferencePoint is ReferencePoint.CENTRE:
         # Compute entrance rotation matrix in the rotated frame
