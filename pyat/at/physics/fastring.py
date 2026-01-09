@@ -149,11 +149,11 @@ def simple_ring(
     A simple ring consists of:
 
     * an RF cavity,
-    * a 6x6 linear transfer map with no radiation damping,
-    * a detuning and chromaticity element,
     * a simple radiation damping element
     * a simplified quantum diffusion element which contains equilibrium emittance
-
+    * a detuning and chromaticity element,
+    * a 6x6 linear transfer map with no radiation damping
+    
     Parameters:
         energy: [eV]
         circumference: [m]
@@ -318,7 +318,7 @@ def simple_ring(
 
     # Assemble all elements into the lattice object
     ring = Lattice(
-        all_cavities + [lin_elem, nonlin_elem, simplerad, quantdiff],
+        all_cavities + [simplerad, quantdiff, lin_elem, nonlin_elem],
         name=name,
         energy=energy,
         particle=particle,

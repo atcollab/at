@@ -47,6 +47,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Energy=atGetOptionalDouble(ElemData,"Energy",energy); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
+
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
@@ -56,7 +64,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->TimeLag=TimeLag;
         Elem->PhaseLag=PhaseLag;
     }
-    if (energy == 0.0) energy = Elem->Energy;
+    energy = atEnergy(energy, Elem->Energy);
 
     RFCavityPass(r_in, Elem->Length, Elem->Voltage/energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
                  Elem->PhaseLag, nturn, T0, num_particles);
