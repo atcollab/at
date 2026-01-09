@@ -148,6 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser, ignore_class
 from .file_output import Exporter
 from .parser import StrParameter
+from .parser import MadParameter
 from ..lattice import Lattice, elements as elt, Particle, AtWarning
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
@@ -267,7 +268,7 @@ class _MadElement(ElementDescr):
         """Evaluation of superfluous parameters."""
 
         def mpeval(v):
-            if isinstance(v, StrParameter):
+            if isinstance(v, MadParameter):
                 return v.value
             elif isinstance(v, str):
                 return v
@@ -922,12 +923,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                StrParameter.parameter(self, v)
+                MadParameter.parameter(self, v)
                 for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
-            return StrParameter.parameter(self, value)
+            return MadParameter.parameter(self, value)
 
     def _argparser(self, argcount, argstr: str, **kwargs):
         key, *value = split_ignoring_parentheses(
