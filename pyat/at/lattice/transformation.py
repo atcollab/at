@@ -29,7 +29,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from .elements import Element
-from .utils import Refpts, All, refpts_iterator, _refcount
+from .utils import Refpts, All, refpts_iterator, _refcount, AtError
 
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
@@ -231,7 +231,9 @@ def transform_elem(
         reference:      Transformation reference, either
                         :py:obj:`ReferencePoint.CENTRE` or
                         :py:obj:`ReferencePoint.ENTRANCE`.
-                        Default: :py:obj:`ReferencePoint.CENTRE`
+                        Default: :py:obj:`ReferencePoint.CENTRE` if the reference
+                        point was not previously set, otherwise to set reference
+                        point
         relative:       If :py:obj:`True`, the input values are added to the
                         previous ones.
 
@@ -241,18 +243,21 @@ def transform_elem(
         :py:func:`transform_elem`, the *reference* argument must be identical for all.
         Setting the *reference* will therefore affect all transformations for this element.
     """
+
     if reference is not None:
         elem.ReferencePoint = reference
+    else:
+        reference = elem.ReferencePoint
 
     if relative:
-
         def _set(ini, val):
             return ini if val is None else ini + val
-
+        if reference != elem.ReferencePoint:
+            msg = "Reference point changed not allowed for relative transformations"
+            raise AtError()
     else:
-
         def _set(ini, val):
-            return ini if val is None else val
+            return ini if val is None else val  
 
     if transform_options.rounding is not None:
         if dx is not None:
@@ -403,9 +408,11 @@ def tilt_elem(
         relative:       If :py:obj:`True`, the rotation is added to the
           existing one
         reference:      Transformation reference, either
-          :py:obj:`ReferencePoint.CENTRE` or
-          :py:obj:`ReferencePoint.ENTRANCE`.
-          Default: :py:obj:`ReferencePoint.CENTRE`
+                        :py:obj:`ReferencePoint.CENTRE` or
+                        :py:obj:`ReferencePoint.ENTRANCE`.
+                        Default: :py:obj:`ReferencePoint.CENTRE` if the reference
+                        point was not previously set, otherwise to set reference
+                        point
 
     See Also:
         :py:func:`shift_elem`
@@ -438,7 +445,9 @@ def shift_elem(
         reference:      Transformation reference, either
                         :py:obj:`ReferencePoint.CENTRE` or
                         :py:obj:`ReferencePoint.ENTRANCE`.
-                        Default: :py:obj:`ReferencePoint.CENTRE`
+                        Default: :py:obj:`ReferencePoint.CENTRE` if the reference
+                        point was not previously set, otherwise to set reference
+                        point
         relative:       If :py:obj:`True`, the translation is added to the
           existing one
 
@@ -477,7 +486,9 @@ def set_rotation(
         reference:   Transformation reference, either
                      :py:obj:`ReferencePoint.CENTRE` or
                      :py:obj:`ReferencePoint.ENTRANCE`.
-                     Default: :py:obj:`ReferencePoint.CENTRE`
+                     Default: :py:obj:`ReferencePoint.CENTRE` if the reference
+                     point was not previously set, otherwise to set reference
+                     point
         relative:    If :py:obj:`True`, the rotations are added to the existing ones.
 
     .. versionadded:: 0.7.0
@@ -528,7 +539,9 @@ def set_tilt(
         reference:   Transformation reference, either
           :py:obj:`ReferencePoint.CENTRE` or
           :py:obj:`ReferencePoint.ENTRANCE`.
-          Default: :py:obj:`ReferencePoint.CENTRE`
+          Default: :py:obj:`ReferencePoint.CENTRE` if the reference
+          point was not previously set, otherwise to set reference
+          point
         relative:    If :py:obj:`True`, the rotation is added to the existing one.
 
     .. versionadded:: 0.7.0
@@ -572,7 +585,9 @@ def set_shift(
         reference:  Transformation reference, either
                     :py:obj:`ReferencePoint.CENTRE` or
                     :py:obj:`ReferencePoint.ENTRANCE`.
-                    Default: :py:obj:`ReferencePoint.CENTRE`
+                    Default: :py:obj:`ReferencePoint.CENTRE` if the reference
+                    point was not previously set, otherwise to set reference
+                    point
         relative:   If :py:obj:`True`, the translation is added to the
           existing one.
 
