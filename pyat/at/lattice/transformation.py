@@ -250,14 +250,17 @@ def transform_elem(
         reference = elem.ReferencePoint
 
     if relative:
+
         def _set(ini, val):
             return ini if val is None else ini + val
+
         if reference != elem.ReferencePoint:
             msg = "Reference point changed not allowed for relative transformations"
             raise AtError(msg)
     else:
+
         def _set(ini, val):
-            return ini if val is None else val  
+            return ini if val is None else val
 
     if transform_options.rounding is not None:
         if dx is not None:
