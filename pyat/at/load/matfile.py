@@ -96,33 +96,31 @@ def _matfile_generator(
     def mclean(data: Any) -> Any:
         if data.dtype.type is np.str_:
             # Convert strings in arrays back to strings.
-            dataout = str(data[0]) if data.size > 0 else ""
+            return str(data[0]) if data.size > 0 else ""
         elif data.size == 1:
             vdata = data[0, 0]
             if issubclass(vdata.dtype.type, np.void):
                 # Object => Return a dict
-                dataout = {f: mclean(vdata[f]) for f in vdata.dtype.fields}
+                return {f: mclean(vdata[f]) for f in vdata.dtype.fields}
             else:
                 # Return a scalar
-                dataout = vdata
+                return vdata
         else:
             # Remove any surplus dimensions in arrays.
-            dataout = np.squeeze(data)
-        return dataout
+            return np.squeeze(data)
 
     def mcleanhdf5(data: Any) -> Any:
         matlab_class = data.attrs["MATLAB_class"]
         if matlab_class == b"struct":
             # Return a dict from recursion
-            dataout = {f: mcleanhdf5(data[f]) for f in data}
+            return {f: mcleanhdf5(data[f]) for f in data}
         elif matlab_class == b"char":
             # Convert to string
-            dataout = "".join(chr(i) for i in np.asarray(data).flatten())
+            return "".join(chr(i) for i in np.asarray(data).flatten())
         else:
             # e.g. matlab_class == b"double":
             # Remove any surplus dimensions in arrays.
-            dataout = np.squeeze(np.asarray(data))
-        return dataout
+            return np.squeeze(np.asarray(data))
 
     def define_default_key(
         params: dict[str, Any], mat_input: Mapping, ignore_chars: str = ""
