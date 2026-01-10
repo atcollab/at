@@ -1,4 +1,4 @@
-from math import sqrt  # noqa: F401
+from math import sqrt
 
 import numpy as np
 import pytest
@@ -176,7 +176,7 @@ RING.1: LINE=(CELL.1, DR1, SOL1, DR4, MULT1, &
 
 
 class _Command1:
-    "Test command checking its arguments versus the database"
+    "Test command checking its arguments versus the database."
 
     @staticmethod
     def argparser(parser, argcount, argstr):
