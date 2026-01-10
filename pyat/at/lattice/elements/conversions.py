@@ -5,7 +5,7 @@ from __future__ import annotations
 __all__ = ["_array", "_array66", "_float", "_int"]
 
 # noinspection PyPep8Naming
-from ..parameters import AttributeArray as _array
+from ..parameters import ParamArray as _array
 
 
 def _array66(value):

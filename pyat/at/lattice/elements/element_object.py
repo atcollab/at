@@ -6,7 +6,6 @@ __all__ = ["Element"]
 
 import re
 from collections.abc import Generator
-from contextlib import suppress
 from copy import copy, deepcopy
 from typing import Any, ClassVar
 
@@ -43,13 +42,6 @@ class Element:
     _entrance_fields = ["T1", "R1"]
     _exit_fields = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
-    __slots__ = ["__dict__", "_parameters"]
-
-    def __new__(cls, *args, **kwargs):
-        obj = super().__new__(cls)
-        # _parameters must be created before any other attribute is set
-        obj._parameters = {}
-        return obj
 
     def __init__(self, family_name: str, **kwargs):
         """
@@ -78,7 +70,7 @@ class Element:
             if isinstance(value, _ACCEPTED):
                 value.set_conversion(conversion)
             # Otherwise, apply the conversion to the value
-            elif not isinstance(value, ParamArray):
+            else:
                 value = conversion(value)
         except Exception as exc:
             # Conversion failed
@@ -86,45 +78,28 @@ class Element:
             raise
         else:
             # Conversion succeeded
-            if isinstance(value, (ParamDef, ParamArray)):
-                # Store the parameter and remove the attribute
-                self._parameters[attrname] = value
-                with suppress(AttributeError):
-                    # Don't care if the attribute does not exist
-                    object.__delattr__(self, attrname)
-            else:
-                # Store the attribute and remove the parameter
-                object.__setattr__(self, attrname, value)
-                with suppress(KeyError):
-                    # Don't care if the parameter does not exist
-                    del self._parameters[attrname]
+            object.__setattr__(self, attrname, value)
 
-    def __getattr__(self, attrname: str) -> Any:
-        """Override __getattr__ to handle parameter values.
+    def __getattribute__(self, attrname: str) -> Any:
+        """Override __getattribute__ to handle parameter values.
 
         This method returns the value of parameters instead of the parameter objects
         themselves when accessing attributes.
         """
         try:
-            return self._parameters[attrname].fast_value()
-        except KeyError as exc:
+            attr = object.__getattribute__(self, attrname)
+        except AttributeError as exc:
             cl = self.__class__.__name__
             el = object.__getattribute__(self, "FamName")
-            msg = f"{cl}({el!r}) has no attribute {attrname!r}"
-            raise AttributeError(msg) from exc
+            exc.args = (f"{cl}({el!r}) has no attribute {attrname!r}",)
+            raise
 
-    def __delattr__(self, attrname: str) -> None:
-        """Override __delattr__ to handle parameter deletions."""
-        try:
-            object.__delattr__(self, attrname)
-        except AttributeError:
-            try:
-                del self._parameters[attrname]
-            except KeyError as exc:
-                cl = self.__class__.__name__
-                el = object.__getattribute__(self, "FamName")
-                msg = f"{cl}({el!r}) has no attribute {attrname!r}"
-                raise AttributeError(msg) from exc
+        # If it's a parameter or parameter array, return its value
+        if isinstance(attr, (ParamDef, ParamArray)):
+            return attr.value
+
+        # Otherwise return the attribute itself
+        return attr
 
     def __str__(self):
         return "\n".join(
@@ -138,10 +113,6 @@ class Element:
         keywords += [f"{k}={v!r}" for k, v in kwargs.items()]
         args = re.sub(r"\n\s*", " ", ", ".join(keywords))
         return f"{clsname}({args})"
-
-    def __getstate__(self):
-        # For pickling Elements: make a copy of parameters
-        return self.__dict__, {"_parameters": self._parameters.copy()}
 
     def _ident(self, attrname: str | None = None, index: int | None = None):
         """Return an element's identifier for error messages."""
@@ -163,19 +134,15 @@ class Element:
         yield cls
 
     def keys(self):
-        """Return a set of all attribute names."""
-        v = set(vars(self).keys())
-        v.update(self._parameters.keys())
-        return v
+        """Return a set of all attribute names"""
+        return set(vars(self).keys())
 
     def to_dict(self, freeze: bool = True):
         """Return a copy of the element parameters."""
         if freeze:
             return {k: getattr(self, k) for k in self.keys()}
         else:
-            v = vars(self).copy()
-            v.update(self._parameters)
-            return v
+            return vars(self).copy()
 
     def get_parameter(self, attrname: str, index: int | None = None) -> Any:
         """Extract a parameter of an element.
@@ -195,11 +162,8 @@ class Element:
         try:
             attr = self.__dict__[attrname]
         except KeyError:
-            try:
-                attr = self._parameters[attrname]
-            except KeyError:
-                msg = f"{self._ident()} has no attribute {attrname!r}"
-                raise AttributeError(msg) from None
+            msg = f"{self._ident()} has no attribute {attrname!r}"
+            raise AttributeError(msg) from None
         if index is not None:
             try:
                 attr = attr[index]
@@ -367,13 +331,7 @@ class Element:
         # Set a specific index in an array attribute
         else:
             array = self.get_parameter(attrname)
-            if not isinstance(array, ParamArray) and isinstance(value, ParamDef):
-                # Convert the array to a ParamArray if it's not already one
-                array = ParamArray(array, shape=array.shape, dtype=array.dtype)
-                set_array_item(array, index, value)
-                setattr(self, attrname, array)
-            else:
-                set_array_item(array, index, value)
+            set_array_item(array, index, value)
 
     def is_parameterised(
         self, attrname: str | None = None, index: int | None = None
@@ -392,14 +350,21 @@ class Element:
         # Check if any attribute is parameterised
         # Works for AT and MADX parameters
         if attrname is None:
-            if len(self._parameters) > 0:
-                return True
-            # Check for MADX parameters
             return any(self.is_parameterised(attribute) for attribute in self.__dict__)
 
         # Get the attribute or specific index
         attribute = self.get_parameter(attrname, index=index)
-        return isinstance(attribute, (ParamDef, ParamArray))
+
+        # Check if the attribute itself is a parameter
+        if isinstance(attribute, ParamDef):
+            return True
+
+        # Check if any element in the array is a parameter
+        if isinstance(attribute, np.ndarray):
+            return any(isinstance(item, ParamDef) for item in attribute.flat)
+
+        # Not parameterised
+        return False
 
     def parameterise(
         self, attrname: str, index: int | None = None, name: str = ""
@@ -459,25 +424,29 @@ class Element:
 
         Attributes which are not parameters are silently ignored.
         """
-        # Worls for AT and MADX parameters
+
+        def _freeze_attribute(attrname: str, attr: Any) -> None:
+            """Helper function to freeze a parameterised attribute."""
+            # Accepts AT or MADX parameters
+            if isinstance(attr, ParamDef):
+                setattr(self, attrname, attr.value)
+            elif isinstance(attr, np.ndarray):
+                for i, item in enumerate(attr.flat):
+                    if isinstance(item, ParamDef):
+                        ij = np.unravel_index(i, attr.shape)
+                        attr[ij] = item.value
+
         if attrname is None:
             # freeze all the attributes
-            # make a copy of the parameters dict to avoid modifications during iteration
-            for name, attr in list(self._parameters.items()):
-                setattr(self, name, attr.value)
+            for name, attr in self.__dict__.items():
+                _freeze_attribute(name, attr)
         else:
             attr = self.get_parameter(attrname)
-            if not isinstance(attr, (ParamDef, ParamArray)):
-                # silently ignore non-parameter attributes
-                return
             if index is None:
                 # freeze a scalar attribute
-                setattr(self, attrname, attr.value)
+                _freeze_attribute(attrname, attr)
             else:
                 # freeze an item in an array attribute
                 item = attr[index]
                 if isinstance(item, ParamDef):
                     attr[index] = item.value
-                if not any(isinstance(item, ParamDef) for item in attr.flat):
-                    # freeze the whole array attribute if no parameter left
-                    setattr(self, attrname, attr.value)
