@@ -41,6 +41,7 @@ struct elem
   double *vbeam_buffer;
   double *vbunch_buffer;
   int system_harmonic;
+  double ts;
 }; 
 
 
@@ -79,7 +80,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double beta = Elem->Beta;
     double phasegain = Elem->phasegain;
     double voltgain = Elem->voltgain;
-
+    double ts = Elem->ts;
     
     double *turnhistory = Elem->turnhistory;
     double *vgen_buffer = Elem->vgen_buffer;
@@ -116,11 +117,17 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         tot_current += bunch_currents[i];
     }
     
-
-
-    /*Track RF cavity is always done. */
+    double tot_lag_phase = (tlag+ts)*rffreq*TWOPI/C0;
+    double ts_phase = ts*rffreq*TWOPI/C0;
     
-    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0, -gen_phase, nturn, circumference/C0, num_particles);
+    //printf("ts %.3f \n", ts_phase);
+    //printf("tot_lag_phase %.3f \n", tot_lag_phase);
+    
+    double phis = Elem->phis;
+    
+    /*Track RF cavity is always done. */
+    trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
+    /*trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0, -gen_phase, nturn, circumference/C0, num_particles);/*
     
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
@@ -138,7 +145,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                     bunch_currents, turnhistory, pslice, z_cuts);
         compute_kicks_phasor(nslice, nbunch, nturnsw, turnhistory, normfact, vbeam_kicks,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
-                             beta, ave_vbeam, vbunch, bunch_spos, M, fillpattern);                        
+                             beta, ave_vbeam, vbunch, bunch_spos, M, fillpattern, ts);                        
 
                 
         /*apply kicks*/
@@ -162,7 +169,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                              buffersize, windowlength);
         
         if(cavitymode==1){
-            update_vgen(vbeam_set, vcav_set, vgen_arr, voltgain, phasegain, feedback_angle_offset); 
+            update_vgen(vbeam_set, vcav_set, vgen_arr, voltgain, phasegain, feedback_angle_offset, ts_phase); 
 
         }else if(cavitymode==3){     
             update_passive_frequency(vbeam_set, vcav_set, vgen_arr, phasegain);
@@ -200,6 +207,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *vgen;
         double *vcav;
         double phis;
+        double ts;
 
         /*attributes for RF cavity*/
         Length=atGetDouble(ElemData,"Length"); check_error();
@@ -230,6 +238,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
         phis=atGetDouble(ElemData,"_phis"); check_error();
         system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
+        ts=atGetDouble(ElemData,"_ts"); check_error();
         /*optional attributes*/
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
@@ -278,6 +287,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->feedback_angle_offset = feedback_angle_offset;
         Elem->fbmode = fbmode;
         Elem->phis = phis;
+        Elem->ts = ts;
         Elem->system_harmonic = system_harmonic;
     }
     energy = atEnergy(Param->energy, Elem->Energy);
@@ -318,7 +328,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       struct elem El, *Elem=&El;
       
       long nslice, nturns, cavitymode, fbmode, buffersize, windowlength, system_harmonic;
-      double wakefact, phis;
+      double wakefact, phis, ts;
       double normfact, phasegain, voltgain;
       double *turnhistory;
       double *z_cuts;
@@ -361,6 +371,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
       phis=atGetDouble(ElemData,"_phis"); check_error();
       system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
+      ts=atGetDouble(ElemData,"_ts"); check_error();
       
       /*optional attributes*/
       Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
@@ -396,6 +407,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vbunch_buffer = vbunch_buffer;
       Elem->feedback_angle_offset = feedback_angle_offset;
       Elem->phis = phis;
+      Elem->ts = ts;
       Elem->system_harmonic = system_harmonic;
       
       Elem->fbmode = fbmode;
@@ -413,7 +425,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(27,1);
+      plhs[0] = mxCreateCellMatrix(28,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -440,7 +452,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],23,mxCreateString("_buffersize"));
       mxSetCell(plhs[0],24,mxCreateString("_windowlength"));
       mxSetCell(plhs[0],25,mxCreateString("_phis"));
-      mxSetCell(plhs[0],26,mxCreateString("system_harmonic"));      
+      mxSetCell(plhs[0],26,mxCreateString("system_harmonic")); 
+      mxSetCell(plhs[0],27,mxCreateString("_ts"));     
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(3,1);

@@ -305,7 +305,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double rshunt, double *vbeam_phasor, double circumference,
                           double energy, double beta, double *ave_vbeam, double *vbunch,
                           double *bunch_spos, int M, 
-                          double *fillpattern){ 
+                          double *fillpattern, double ts_central_z){ 
                           
     #ifndef _MSC_VER  
     int i,ib;
@@ -363,15 +363,21 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter])/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             
+            /* move to ts_central time */
+            dt = -ts_central_z/bc;
+            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+            
             vbr[bunch_counter] = cabs(vbeam_complex);
             vbi[bunch_counter] = carg(vbeam_complex);
-            
+                        
             bunch_counter += 1;
         }
 
         ave_vbeam_ri[0] += creal(vbeam_complex)/M;
         ave_vbeam_ri[1] += cimag(vbeam_complex)/M;
 
+        dt = ts_central_z/bc;
+        vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
         /* advance the phasor to the center of the next bucket */
        
@@ -390,7 +396,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 };
 
 
-static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
+static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle, double ts_phase){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
     double vbeami_meas = vbeam[0]*sin(vbeam[1]);
@@ -403,11 +409,15 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
 
     double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
-        
+
     double phis = vcav[1];   
     double ptmp = phis_meas - phis; /* this applies to thetag*/
+
+    // printf("%.8f \t %.8f \n", phis_meas, phis);
     
     double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
+
+    printf("%.8f \t %.8f \t %.8f \t %.8f \t %.8f \n", dttmp, ptmp, phis_meas, phis, ts_phase);
 
     double dtmp = vcav[0] / vcav_meas;
 
