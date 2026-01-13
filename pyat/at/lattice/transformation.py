@@ -44,7 +44,6 @@ class ReferencePoint(Enum):
 
 
 class _TransFormOptions:
-    rounding = None
     referencepoint = ReferencePoint.CENTRE
 
 
@@ -259,20 +258,7 @@ def transform_elem(
 
         def _set(ini, val):
             return ini if val is None else val
-
-    if transform_options.rounding is not None:
-        if dx is not None:
-            dx = np.round(dx, transform_options.rounding)
-        if dy is not None:
-            dy = np.round(dy, transform_options.rounding)
-        if dz is not None:
-            dz = np.round(dz, transform_options.rounding)
-        if pitch is not None:
-            pitch = np.round(pitch, transform_options.rounding)
-        if yaw is not None:
-            yaw = np.round(yaw, transform_options.rounding)
-        if tilt is not None:
-            tilt = np.round(tilt, transform_options.rounding)
+        
 
     elem_length = getattr(elem, "Length", 0)
     elem_bending_angle = getattr(elem, "BendingAngle", 0)
