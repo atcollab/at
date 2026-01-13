@@ -369,8 +369,8 @@ def transform_elem(
 
 def tilt_elem(
     elem: Element,
-    rots: float | None = None,
-    rots_frame: float | None = None,
+    rots: Sequence[float] | float | None = None,
+    rots_frame: Sequence[float] | float | None = None,
     relative: bool = False,
     reference: ReferencePoint | None = None,
 ) -> None:
@@ -447,11 +447,11 @@ def shift_elem(
 
 def set_rotation(
     ring: Sequence[Element],
-    tilts=None,
-    pitches=None,
-    yaws=None,
+    tilts: Sequence[float] | float | None = None,
+    pitches: Sequence[float] | float | None = None,
+    yaws: Sequence[float] | float | None = None,
     *,
-    tilts_frame=None,
+    tilts_frame: Sequence[float] | float | None = None,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
     relative=False,
@@ -506,9 +506,9 @@ def set_rotation(
 
 def set_tilt(
     ring: Sequence[Element],
-    tilts: float | None = None,
+    tilts: Sequence[float] | float | None = None,
     *,
-    tilts_frame: float | None = None,
+    tilts_frame: Sequence[float] | float | None = None,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
     relative=False,
