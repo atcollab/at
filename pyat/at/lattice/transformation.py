@@ -245,9 +245,7 @@ def transform_elem(
     """
 
     if reference is not None:
-        elem.ReferencePoint = reference
-    else:
-        reference = elem.ReferencePoint
+        elem.ReferencePoint = transform_options.referencepoint.value
 
     if relative:
 
