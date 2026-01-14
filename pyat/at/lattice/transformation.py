@@ -243,22 +243,27 @@ def transform_elem(
         Setting the *reference* will therefore affect all transformations for this element.
     """
 
-    if reference is not None:
-        elem.ReferencePoint = transform_options.referencepoint
+    if reference is None:
+        reference = transform_options.referencepoint
 
     if relative:
 
         def _set(ini, val):
             return ini if val is None else ini + val
 
-        if reference != elem.ReferencePoint:
-            msg = "Reference point changed not allowed for relative transformations"
+        print(reference, elem.ReferencePoint)
+        if hasattr(elem, "_referencepoint") and reference != elem.ReferencePoint:
+            msg = (
+                f"Element {elem.FamName}: Reference point changed not allowed for"
+                + "relative transformations"
+            )
             raise AtError(msg)
     else:
 
         def _set(ini, val):
             return ini if val is None else val
-        
+
+    elem.ReferencePoint = reference
 
     elem_length = getattr(elem, "Length", 0)
     elem_bending_angle = getattr(elem, "BendingAngle", 0)
