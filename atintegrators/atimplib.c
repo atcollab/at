@@ -376,6 +376,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         ave_vbeam_ri[0] += creal(vbeam_complex)/M;
         ave_vbeam_ri[1] += cimag(vbeam_complex)/M;
 
+        /* move back to center of this bucket */
         dt = ts_central_z/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
@@ -396,7 +397,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 };
 
 
-static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle, double ts_phase){
+static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
     double vbeami_meas = vbeam[0]*sin(vbeam[1]);
@@ -411,16 +412,13 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
 
     double phis = vcav[1];   
-    double ptmp = phis_meas - phis; /* this applies to thetag*/
-
-    // printf("%.8f \t %.8f \n", phis_meas, phis);
+    /* This computes the delta theta g*/
+    double ptmp = phis_meas - phis; 
     
+    /* This computes the delta psi */
     double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
 
-    printf("%.8f \t %.8f \t %.8f \t %.8f \t %.8f \n", dttmp, ptmp, phis_meas, phis, ts_phase);
-
     double dtmp = vcav[0] / vcav_meas;
-
     
     vgen[3] *= pow(dtmp,voltgain);
     vgen[2] += dttmp*phasegain; 

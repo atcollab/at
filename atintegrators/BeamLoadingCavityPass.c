@@ -73,7 +73,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double rffreq = Elem->Frequency;
     double harmn = Elem->HarmNumber;
     int M = harmonic_number;
-    
     double tlag = Elem->TimeLag;
     double qfactor = Elem->Qfactor;
     double rshunt = Elem->Rshunt;
@@ -112,23 +111,15 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double delta = pow(rffreq * tan(vgen_arr[2]) / qfactor, 2) + 4 * pow(rffreq,2);
     double freqres = (rffreq * tan(vgen_arr[2]) / qfactor + sqrt(delta)) / 2;
 
+    double tot_lag_phase = (tlag+ts)*rffreq*TWOPI/C0;
     
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
-    
-    double tot_lag_phase = (tlag+ts)*rffreq*TWOPI/C0;
-    double ts_phase = ts*rffreq*TWOPI/C0;
-    
-    //printf("ts %.3f \n", ts_phase);
-    //printf("tot_lag_phase %.3f \n", tot_lag_phase);
-    
-    double phis = Elem->phis;
-    
+        
+        
     /*Track RF cavity is always done. */
     trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
-    /*trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, 0, -gen_phase, nturn, circumference/C0, num_particles);/*
-    
     /*Only allocate memory if current is > 0*/
     if(tot_current>0){
         void *buffer = atMalloc(sz);
@@ -153,10 +144,10 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             double *r6 = r_in+c*6;
             int islice=pslice[c];
             if (!atIsNaN(r6[0])) {         
-                r6[4] += vbeam_kicks[islice]; 
+                r6[4] += vbeam_kicks[islice];                 
             }
         }
-
+        
         // First write the values to the buffer
         if(buffersize>0){
             write_buffer(vbeam, vbeam_buffer, 2, buffersize);
@@ -164,12 +155,11 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
         }   
 
-
         update_vbeam_set(fbmode, vbeam_set, ave_vbeam, vbeam_buffer,
                              buffersize, windowlength);
         
         if(cavitymode==1){
-            update_vgen(vbeam_set, vcav_set, vgen_arr, voltgain, phasegain, feedback_angle_offset, ts_phase); 
+            update_vgen(vbeam_set, vcav_set, vgen_arr, voltgain, phasegain, feedback_angle_offset); 
 
         }else if(cavitymode==3){     
             update_passive_frequency(vbeam_set, vcav_set, vgen_arr, phasegain);
@@ -177,7 +167,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
         vbeam[0] = ave_vbeam[0];
         vbeam[1] = ave_vbeam[1];
-        
         atFree(buffer);
     }
 }

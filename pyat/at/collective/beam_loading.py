@@ -307,26 +307,25 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vgen_buffer = numpy.zeros(1)
         self._vbeam_buffer = numpy.zeros(1)
         self._vbunch_buffer = numpy.zeros(1)
+        
         if zcuts is not None:
             self.ZCuts = zcuts
+            
         super(BeamLoadingElement, self).__init__(
             family_name, length, voltage, frequency, harmonic_number,
             energy, **kwargs)
-        if ts is None:
-            _, ts = get_timelag_fromU0(ring)
             
+        if ts is None:
+            _, ts = get_timelag_fromU0(ring)            
         self._ts = ts
         
         self._phis = (2 * numpy.pi * self.Frequency *
                       (-self._ts - self.TimeLag) / clight)
                       
-        # this is needed because atan2 returns phases between -pi and pi
+        # The below is needed because atan2 returns phases between -pi and pi
         # this prevents a setpoint being provided that is impossible
         # to achieve
-        
-        
         while self._phis < -numpy.pi:
-            print('Hello:', self._phis)
             self._phis += 2 * numpy.pi
             
         while self._phis > numpy.pi:
@@ -341,8 +340,6 @@ class BeamLoadingElement(RFCavity, Collective):
             cavity_voltage = self._passive_vset
 
         self._vcav = numpy.array([cavity_voltage, self._phis])
-        # the pi/2 in the phase means that _vcav[0] * cos(_vcav[1]) = U0
-        # ie. the real part of the phasor at t=0 gives U0.
         self.clear_history(ring=ring)
 
     def is_compatible(self, other):
