@@ -1498,7 +1498,7 @@ def get_tune(
         if remove_dc:
             p1 -= np.mean(p1, axis=1, keepdims=True)
         p2 = solve(ld.A, p1[:nv, :])
-        return np.conjugate(p2.T.view(dtype=complex).T)
+        return np.conjugate(np.asarray(p2, order="F").T.view(dtype=complex).T)
 
     get_integer = kwargs.pop("get_integer", False)
     if get_integer:
