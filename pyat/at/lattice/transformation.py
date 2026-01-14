@@ -279,13 +279,13 @@ def transform_elem(
     rotations = [_set(pitch0, pitch), _set(yaw0, yaw), _set(tilt0, tilt)]
     tilt_frame = _set(tilt_frame0, tilt_frame)
 
-    setattr(elem, "_dx", offsets[0])
-    setattr(elem, "_dy", offsets[1])
-    setattr(elem, "_dz", offsets[2])
-    setattr(elem, "_pitch", rotations[0])
-    setattr(elem, "_yaw", rotations[1])
-    setattr(elem, "_tilt", rotations[2])
-    setattr(elem, "_tilt_frame", tilt_frame)
+    elem._dx = offsets[0]
+    elem._dy = offsets[1]
+    elem._dz = offsets[2]
+    elem._pitch = rotations[0]
+    elem._yaw = rotations[1]
+    elem._tilt = rotations[2]
+    elem._tilt_frame = tilt_frame
 
     if elem.ReferencePoint is ReferencePoint.CENTRE:
         # Compute entrance rotation matrix in the rotated frame
