@@ -28,6 +28,8 @@ void SimpleRadiationRadPass(double *r_in,
     
     if(!atIsNaN(r6[0])) {
 
+      r6[4] -= EnergyLossFactor;      
+      
       dpp = r6[4];
       x = r6[0] - dispx*dpp;
       xp = r6[1] - dispxp*dpp;
@@ -68,7 +70,6 @@ void SimpleRadiationRadPass(double *r_in,
       r6[2] = y + dispy*dpp;
       r6[3] = yp + dispyp*dpp;      
       
-      r6[4] -= EnergyLossFactor;      
     }
   }
 }
