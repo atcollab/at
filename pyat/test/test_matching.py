@@ -45,7 +45,7 @@ def test_linopt_matching(mring: Lattice):
     """Test linear optics matching."""
 
     # noinspection PyUnusedLocal
-    def phase_advance(elemdata):
+    def phase_advance(elemdata, **__):
         # Evaluation function for the phase advance (both planes)
         mu = elemdata.mu
         return (mu[-1] - mu[0]) / 2.0 / np.pi
