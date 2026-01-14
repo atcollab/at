@@ -44,6 +44,18 @@ class Element:
     _exit_fields = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
     __slots__ = ["__dict__", "_parameters"]
+    # For the moment keep empty for Matlab compatibility
+    # _drop_attr = ["T1", "T2", "R1", "R2"]
+    _drop_attr = []
+    _convert_attr = {
+        "_dx": "dx",
+        "_dy": "dy",
+        "_dz": "dz",
+        "_pitch": "pitch",
+        "_yaw": "yaw",
+        "_tilt": "tilt",
+        "_tilt_frame": "tilt_frame",
+    }
 
     def __new__(cls, *args, **kwargs):
         obj = super().__new__(cls)
