@@ -26,7 +26,7 @@ void SimpleRadiationRadPass(double *r_in,
   for (c = 0; c<num_particles; c++) { /*Loop over particles  */
     r6 = r_in+c*6;
     
-    
+   
     if(!atIsNaN(r6[0])) {
 
       r6[4] -= EnergyLossFactor;      
@@ -71,7 +71,6 @@ void SimpleRadiationRadPass(double *r_in,
       r6[2] = y + dispy*dpp;
       r6[3] = yp + dispyp*dpp;      
       
-
     }
   }
 }
