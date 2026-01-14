@@ -83,11 +83,12 @@ def get_energy_loss(
         particle = ring.particle
         delta = 0.0
         for e in ring:
-            if e.PassMethod == 'SimpleRadiationRadPass':
-                delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
-            elif e.PassMethod.endswith("RadPass"):
-                ot = e.track(np.zeros(6), energy=energy, particle=particle)
-                delta += ot[4]
+            if e.PassMethod.endswith("RadPass"):
+                if e.PassMethod == 'SimpleRadiationRadPass':
+                    delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
+                else:
+                    ot = e.track(np.zeros(6), energy=energy, particle=particle)
+                    delta += ot[4]
         return -delta * energy
 
     if isinstance(method, str):
