@@ -8,7 +8,7 @@ import itertools
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 
-from ..lattice import Lattice, All
+from ..lattice import Lattice, Refpts, All
 from ..latticetools import ElementObservable, ObservableList
 from .synopt import plot_synopt
 
@@ -44,26 +44,34 @@ def plot_observables(
     axes: Axes | None = None,
     xlabel: str = "",
     ylabel: str = "",
+    title: str = "",
     slices: int = _SLICES,
+    dipole: dict | None = {},  # noqa: B006
+    quadrupole: dict | None = {},  # noqa: B006
+    sextupole: dict | None = {},  # noqa: B006
+    multipole: dict | None = {},  # noqa: B006
+    monitor: dict | None = {},  # noqa: B006
+    labels: Refpts = None,
     **kwargs,
 ) -> tuple[Axes]:
     # noinspection PyUnresolvedReferences
     r"""Plot element observables along a lattice.
 
     Args:
-        ring:   Lattice description
-        obsleft: List of :py:class:`.ElementObservable` plotted against the left axis.
-          if refpts is :py:obj:`.All`, a line is drawn. Otherwise, markers are drawn.
-          It is recommended to use Observables with scalar values. Otherwise, all the
-          values are plotted but share the same line properties and legend,
-        obsright: Optional list of :py:class:`.ElementObservable` plotted against the
+        ring:       Lattice description
+        obsleft:    List of :py:class:`.ElementObservable` plotted against the left
+          axis. if refpts is :py:obj:`.All`, a line is drawn. Otherwise, markers are
+          drawn. It is recommended to use Observables with scalar values. Otherwise,
+          all the values are plotted but share the same line properties and legend,
+        obsright:   Optional list of :py:class:`.ElementObservable` plotted against the
           right axis,
-        axes: :py:class:`~.matplotlib.axes.Axes` in which the observables are plotted.
-          if :py:obj:`None`, a new figure is created,
-        s_range:            Lattice range of interest, default: whole lattice,
-        slices: Number of lattice slices for getting smooth curves. Default: 400.
-        xlabel:         x-axis label. Default: ``s [m]``.
-        ylabel:         y-axis label. Default: :py:attr:`.ObservableList.axis_label`.
+        axes:       :py:class:`~.matplotlib.axes.Axes` in which the observables are
+          plotted. if :py:obj:`None`, a new figure is created,
+        s_range:    Lattice range of interest, default: whole lattice,
+        slices:     Number of lattice slices for getting smooth curves. Default: 400.
+        xlabel:     x-axis label. Default: ``s [m]``.
+        ylabel:     y-axis label. Default: :py:attr:`.ObservableList.axis_label`.
+        title:      Plot title,
 
     The following keywords are transmitted to the :py:func:`.plot_synopt` function.They
     apply to the main (left) axis and are ignored when plotting in exising axes:
@@ -79,16 +87,6 @@ def plot_observables(
         sextupole (dict):   Same definition as for dipole,
         multipole (dict):   Same definition as for dipole,
         monitor (dict):     Same definition as for dipole.
-
-    The following keyword arguments are transmitted to the
-    :py:class:`~matplotlib.axes.Axes` creation function.They apply to the main (left)
-    axis and are ignored when plotting in exising axes:
-
-    Keyword Args:
-        title (str):    Plot title,
-        ylim (tuple):     Y-axis limits,
-        *: for other keywords see
-          :py:obj:`~.matplotlib.figure.Figure.add_subplot`
 
     Returns:
         axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
@@ -177,8 +175,8 @@ def plot_observables(
 
     def evaluate(obs: ObservableList) -> None:
         """Evaluates one observable."""
-        curves = ObservableList(**obs.kwargs)
-        dots = ObservableList(**obs.kwargs)
+        curves = ObservableList(**obs.eval_kw)
+        dots = ObservableList(**obs.eval_kw)
 
         for ob in obs:
             if not isinstance(ob, ElementObservable):
@@ -191,16 +189,25 @@ def plot_observables(
 
         if curves:
             # Evaluate curve data
-            curves.evaluate(ring=splitter.ring)
+            curves.evaluate(ring=splitter.ring, **kwargs)
 
         if dots:
             # Evaluate marker data
-            dots.evaluate(ring=ring)
+            dots.evaluate(ring=ring, **kwargs)
 
     splitter = _RingSplitter(ring, s_range, slices)
 
     if axes is None:
-        _, axleft = plot_synopt(ring, **kwargs)
+        _, axleft = plot_synopt(
+            ring,
+            title=title,
+            dipole=dipole,
+            quadrupole=quadrupole,
+            sextupole=sextupole,
+            multipole=multipole,
+            monitor=monitor,
+            labels=labels,
+        )
     elif isinstance(axes, Axes):
         axleft = axes
     else:

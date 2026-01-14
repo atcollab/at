@@ -18,11 +18,11 @@ from at import (
 
 def test_observables(hmba_lattice):
     # noinspection PyUnusedLocal
-    def phase_advance(elemdata):
+    def phase_advance(elemdata, **__):
         mu = elemdata.mu
         return mu[-1] - mu[0]
 
-    def circumference(ring):
+    def circumference(ring, **__):
         return ring.cell_length
 
     ring = hmba_lattice.enable_6d(copy=True)
