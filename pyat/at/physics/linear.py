@@ -1,5 +1,5 @@
 """
-Coupled or non-coupled 4x4 linear motion
+Coupled or non-coupled 4x4 linear motion.
 """
 
 from __future__ import annotations
@@ -23,14 +23,14 @@ from ..lattice import frequency_control, set_value_refpts, get_value_refpts
 from ..tracking import internal_lpass
 
 __all__ = [
+    "avlinopt",
+    "get_chrom",
+    "get_optics",
+    "get_tune",
     "linopt",
     "linopt2",
     "linopt4",
     "linopt6",
-    "avlinopt",
-    "get_optics",
-    "get_tune",
-    "get_chrom",
 ]
 
 _S = jmat(1)
@@ -106,7 +106,7 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 def _twiss22(t12, alpha0, beta0):
-    """Propagate Twiss parameters"""
+    """Propagate Twiss parameters."""
     bbb = t12[:, 0, 1]
     aaa = t12[:, 0, 0] * beta0 - bbb * alpha0
     beta = (aaa * aaa + bbb * bbb) / beta0
@@ -154,7 +154,7 @@ def _tunes(ring, **kwargs):
 
 
 def _analyze2(mt, ms):
-    """Analysis of a 2D 1-turn transfer matrix"""
+    """Analysis of a 2D 1-turn transfer matrix."""
     A = mt[:2, :2]
     B = mt[2:, 2:]
     alp0_a, bet0_a, vp_a = _closure(A)
@@ -172,7 +172,7 @@ def _analyze2(mt, ms):
 
 
 def _analyze4(mt, ms):
-    """Analysis of a 4D 1-turn transfer matrix according to Sagan, Rubin"""
+    """Analysis of a 4D 1-turn transfer matrix according to Sagan, Rubin."""
 
     def propagate(t12):
         M = t12[:2, :2]
@@ -240,14 +240,14 @@ def _analyze4(mt, ms):
 
 def _analyze6(mt, ms):
     """Analysis of a 2D, 4D, 6D 1-turn transfer matrix
-    according to Wolski"""
+    according to Wolski."""
 
     def get_phase(a22):
-        """Return the phase for A standardization"""
+        """Return the phase for A standardisation."""
         return atan2(a22[0, 1], a22[0, 0])
 
     def standardize(aa, slcs):
-        """Apply rotation to put A in std form"""
+        """Apply rotation to put A in std form."""
 
         def rot2(slc):
             rot = -get_phase(aa[slc, slc])
@@ -341,7 +341,7 @@ def _linopt(
     """"""
 
     def build_sigma(orbit, dp=None):
-        """Build the initial distribution at entrance of the transfer line"""
+        """Build the initial distribution at entrance of the transfer line."""
         try:
             d0 = twiss_in["dispersion"]
         except (ValueError, KeyError):  # record arrays throw ValueError !
@@ -411,7 +411,7 @@ def _linopt(
         return orbit, sigm, dorbit
 
     def chrom_w(ringup, ringdn, orbitup, orbitdn, refpts=None, **kwargs):
-        """Compute the chromaticity and W-functions"""
+        """Compute the chromaticity and W-functions."""
 
         # noinspection PyShadowingNames
         def off_momentum(rng, orb0, dp=None, **kwargs):
@@ -430,7 +430,7 @@ def _linopt(
                 o0dn = orbit - dorbit * 0.5 * dp_step
                 dpup = None
                 dpdn = None
-            vps, _, el0, els, wtype = analyze(mxx, ms)
+            _vps, _, el0, els, wtype = analyze(mxx, ms)
             tunes = _tunes(rng, orbit=orb0)
             o0up, oup = get_orbit(
                 ring, refpts=refpts, guess=orb0, dp=dpup, orbit=o0up, **kwargs
@@ -443,7 +443,7 @@ def _linopt(
             return tunes, el0, els, d0, ds, wtype
 
         def wget(ddp, elup, eldn, has_r):
-            """Compute the chromatic amplitude function"""
+            """Compute the chromatic amplitude function."""
             (*data_up,) = elup  # Extract alpha and beta
             (*data_dn,) = eldn
             alpha_up, beta_up, mu_up = data_up[:3]
@@ -476,12 +476,12 @@ def _linopt(
         dds = np.array(dsup - dsdn) / deltap
         data0 = wget(deltap, el0up, el0dn, has_r)
         datas = wget(deltap, elsup, elsdn, has_r)
-        data0 = data0 + (dd0,)
-        datas = datas + (dds,)
+        data0 = (*data0, dd0)
+        datas = (*datas, dds)
         return chrom, data0, datas
 
     def unwrap(mu):
-        """Remove the phase jumps"""
+        """Remove the phase jumps."""
         dmu = np.diff(np.concatenate((np.zeros((1, dms)), mu)), axis=0)
         jumps = dmu < -1.0e-3
         mu += np.cumsum(jumps, axis=0) * 2.0 * np.pi
@@ -543,7 +543,8 @@ def _linopt(
     nrefs = orbs.shape[0]
     dms = vps.size
     if dms >= 3:  # 6D processing
-        dtype = dtype + [
+        dtype = [
+            *dtype,
             ("closed_orbit", np.float64, (6,)),
             ("M", np.float64, (2 * dms, 2 * dms)),
             ("s_pos", np.float64),
@@ -565,7 +566,8 @@ def _linopt(
         )
         d0 = (o0up - o0dn)[:4] / dp_step
         ds = np.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
-        dtype = dtype + [
+        dtype = [
+            *dtype,
             ("dispersion", np.float64, (4,)),
             ("closed_orbit", np.float64, (6,)),
             (mname, np.float64, (2 * dms, 2 * dms)),
@@ -609,7 +611,7 @@ def _linopt(
 
 @check_6d(False)
 def linopt2(ring: Lattice, *args, **kwargs):
-    r"""Linear analysis of an uncoupled lattice
+    r"""Linear analysis of an uncoupled lattice.
 
     :py:func:`linopt2` computes the linear optics parameters on a single cell
     (*periodicity* is not taken into account).
@@ -724,7 +726,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
 
 @check_6d(False)
 def linopt4(ring: Lattice, *args, **kwargs):
-    r"""Linear analysis of a H/V coupled lattice
+    r"""Linear analysis of a H/V coupled lattice.
 
     4D-analysis of coupled motion following Sagan/Rubin [7]_
 
@@ -843,7 +845,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
 
 @frequency_control
 def linopt6(ring: Lattice, *args, **kwargs):
-    r"""Linear analysis of a fully coupled lattice using normal modes
+    r"""Linear analysis of a fully coupled lattice using normal modes.
 
     For circular machines, :py:func:`linopt6` analyses
 
@@ -974,7 +976,7 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
     This is a convenience function to automatically switch to the faster
     :py:func:`linopt2` in case the *coupled* keyword argument is
     :py:obj:`False` **and** ring.is_6d is :py:obj:`False`.
-    Otherwise, the default :py:func:`linopt6` is used
+    Otherwise, the default :py:func:`linopt6` is used.
 
     Parameters: Same as :py:func:`.linopt2` or :py:func:`.linopt6`
 
@@ -1003,11 +1005,11 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
 def get_optics(
     ring: Lattice,
     refpts: Refpts = None,
-    dp: float = None,
+    dp: float | None = None,
     method: Callable = linopt6,
     **kwargs,
 ):
-    """Linear analysis of a fully coupled lattice
+    """Linear analysis of a fully coupled lattice.
 
     :py:func:`get_optics` computes the linear optics parameters on a single cell
     (*periodicity* is not taken into account).
@@ -1103,7 +1105,7 @@ def linopt(
     get_chrom: bool = False,
     **kwargs,
 ):
-    """Linear analysis of a H/V coupled lattice (deprecated)
+    """Linear analysis of a H/V coupled lattice (deprecated).
 
     Parameters:
         ring:           lattice description.
@@ -1199,7 +1201,7 @@ def linopt(
 
 # noinspection PyPep8Naming
 def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
-    r"""Linear analysis of a lattice with average values
+    r"""Linear analysis of a lattice with average values.
 
     :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
     elements.
@@ -1441,13 +1443,13 @@ def get_tune(
     ring: Lattice,
     *,
     method: str = "linopt",
-    dp: float = None,
-    dct: float = None,
-    df: float = None,
-    orbit: Orbit = None,
+    dp: float | None = None,
+    dct: float | None = None,
+    df: float | None = None,
+    orbit: Orbit | None = None,
     **kwargs,
 ):
-    r"""Computes the tunes using several available methods
+    r"""Computes the tunes using several available methods.
 
     :py:func:`get_tune` may use several methods depending on a *method* keyword.
 
@@ -1528,13 +1530,13 @@ def get_chrom(
     ring: Lattice,
     *,
     method: str = "linopt",
-    dp: float = None,
-    dct: float = None,
-    df: float = None,
+    dp: float | None = None,
+    dct: float | None = None,
+    df: float | None = None,
     cavpts: Refpts = None,
     **kwargs,
 ):
-    r"""Computes the chromaticities using several available methods
+    r"""Computes the chromaticities using several available methods.
 
     :py:func:`get_tune` may use several methods depending on a *method* keyword.
 
