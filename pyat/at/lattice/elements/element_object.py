@@ -5,7 +5,7 @@ from __future__ import annotations
 __all__ = ["Element"]
 
 import re
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import suppress
 from copy import copy, deepcopy
 from typing import Any, ClassVar
@@ -15,6 +15,11 @@ import numpy as np
 from .conversions import _array, _array66, _int, _float
 from ..parambase import ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
+
+
+def _no_encoder(v):
+    """type encoding for .mat files."""
+    return v
 
 
 class Element:
@@ -39,15 +44,16 @@ class Element:
         "NumIntSteps": lambda v: _int(v, vmin=0),
         "Energy": _float,
     }
+    _file_classname: ClassVar[str]
 
-    _entrance_fields = ["T1", "R1"]
-    _exit_fields = ["T2", "R2"]
+    _entrance_fields: ClassVar[list[str]] = ["T1", "R1"]
+    _exit_fields: ClassVar[list[str]] = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
     __slots__ = ["__dict__", "_parameters"]
     # For the moment keep empty for Matlab compatibility
     # _drop_attr = ["T1", "T2", "R1", "R2"]
-    _drop_attr = []
-    _convert_attr = {
+    _drop_attr: ClassVar[list[str]] = []
+    _convert_attr: ClassVar[dict] = {
         "_dx": "dx",
         "_dy": "dy",
         "_dz": "dz",
@@ -55,6 +61,7 @@ class Element:
         "_yaw": "yaw",
         "_tilt": "tilt",
         "_tilt_frame": "tilt_frame",
+        "_referencepoint": "reference"
     }
 
     def __new__(cls, *args, **kwargs):
@@ -335,6 +342,23 @@ class Element:
     # noinspection PyMethodMayBeStatic
     def _get_collective(self):
         return False
+
+    def to_file(self, encoder: Callable[[Any], Any] = _no_encoder) -> dict:
+        """Convert a :py:class:`.Element` to a :py:class:`dict`.
+
+        Parameters:
+            encoder:        data converter
+
+        Returns:
+            dct (dict):     Dictionary of :py:class:`.Element` attributes
+        """
+        dct = {
+            self._convert_attr.get(k, k): encoder(v)
+            for k, v in self.items()
+            if k not in self._drop_attr
+        }
+        dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
+        return dct
 
     @property
     def longt_motion(self) -> bool:
