@@ -21,6 +21,7 @@ __all__ = [
     "set_tilt",
     "set_rotation",
     "transform_options",
+    "transform_attr",
 ]
 
 from enum import Enum
@@ -50,7 +51,7 @@ class _TransFormOptions:
 transform_options = _TransFormOptions()
 
 
-transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt"]
+transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt", "reference"]
 
 
 # noinspection PyPep8Naming
@@ -600,7 +601,7 @@ def set_shift(
 def _get_referencePoint(elem: Element) -> ReferencePoint:
     "Rotation reference point"
     idx = getattr(elem, "_referencepoint", transform_options.referencepoint.value)
-    return list(ReferencePoint)[idx]
+    return ReferencePoint(idx)
 
 
 def _set_referencePoint(elem: Element, value: ReferencePoint) -> None:
