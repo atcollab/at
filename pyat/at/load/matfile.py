@@ -525,10 +525,11 @@ def _element_to_m(elem: Element) -> str:
     argstrs = [convert(arg) for arg in args]
     if "PassMethod" in kwds:
         argstrs.append(convert(kwds.pop("PassMethod")))
-    argstrs += [
+    argstrs.extend(
         ", ".join((repr(elem._convert_attr.get(k, k)), convert(v)))
         for k, v in kwds.items()
-    ]
+        if k not in elem._drop_attr
+    )
     return "{:>15}({});...".format(m_name(elem.__class__), ", ".join(argstrs))
 
 
