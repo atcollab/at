@@ -125,7 +125,7 @@ class Element:
             yield from subclass.subclasses()
         yield cls
 
-    def to_dict(self, freeze: bool = True):
+    def to_dict(self):
         return vars(self).copy()
 
     def equals(self, other) -> bool:
