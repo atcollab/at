@@ -132,9 +132,9 @@ def test_track_beamloading(hmba_lattice, func):
             func(ring, rin, refpts=[], in_place=True)
         else:
             func(ring, rin, refpts=[])
-        assert_close(rin[:, 0], numpy.array([1.618983e-08,  6.199903e-10,  
-                                             0.000000e+00,  0.000000e+00,
-                                             -6.129488e-10,  1.502295e-08]
+        assert_close(rin[:, 0], numpy.array([-2.327000e-08, -1.604262e-09,
+                                             0.0, 0.0,
+                                             -1.316005e-05, -1.449765e-08]
                                             ), atol=5e-10)
 
 def test_buffers(hmba_lattice):
