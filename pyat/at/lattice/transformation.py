@@ -14,14 +14,14 @@ from __future__ import annotations
 
 __all__ = [
     "ReferencePoint",
-    "transform_elem",
-    "shift_elem",
-    "tilt_elem",
+    "set_rotation",
     "set_shift",
     "set_tilt",
-    "set_rotation",
-    "transform_options",
+    "shift_elem",
+    "tilt_elem",
     "transform_attr",
+    "transform_elem",
+    "transform_options",
 ]
 
 from enum import Enum
@@ -241,7 +241,8 @@ def transform_elem(
 
         When combining several transformations by using multiple calls to
         :py:func:`transform_elem`, the *reference* argument must be identical for all.
-        Setting the *reference* will therefore affect all transformations for this element.
+        Setting the *reference* will therefore affect all transformations for this
+        element.
     """
 
     if reference is None:
@@ -255,7 +256,7 @@ def transform_elem(
         if reference != getattr(elem, "_referencepoint", reference):
             msg = (
                 f"Element {elem.FamName}: Reference point changed not allowed for"
-                + "relative transformations"
+                "relative transformations"
             )
             raise AtError(msg)
     else:
@@ -313,11 +314,11 @@ def transform_elem(
         r3d_entrance = _rotation(rotations)  # Eq. (3)
         OP = offsets  # Eq. (2)
     else:
-        raise ValueError(
+        msg = (
             "Unsupported reference, please choose either "
-            "ReferencePoint.CENTRE or "
-            "ReferencePoint.ENTRANCE."
+            "ReferencePoint.CENTRE or ReferencePoint.ENTRANCE."
         )
+        raise ValueError(msg)
 
     # R1, T1
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
@@ -605,7 +606,7 @@ def _get_referencePoint(elem: Element) -> ReferencePoint:
 
 
 def _set_referencePoint(elem: Element, value: ReferencePoint) -> None:
-    setattr(elem, "_referencepoint", value.value)
+    elem._referencepoint = value.value
 
 
 def _get_dx(elem: Element) -> float:
