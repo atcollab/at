@@ -198,7 +198,7 @@ def ringparam_filter(
             radiate = True
         if isinstance(elem, RingParam):
             ringparams.append(elem)
-            for k, v in elem.items():
+            for k, v in vars(elem).items():
                 k2 = _m2p.get(k, k)
                 if k2 is not None and (k2 != "cell_harmnumber" or isfinite(v)):
                     params.setdefault(k2, v)
