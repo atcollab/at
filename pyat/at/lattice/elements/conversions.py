@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__all__ = ["_array", "_array66", "_int", "_float"]
+__all__ = ["_array", "_array66", "_float", "_int"]
 
 import numpy as np
 
@@ -25,7 +25,9 @@ def _float(value) -> float:
 def _int(value, vmin: int | None = None, vmax: int | None = None) -> int:
     intv = int(value)
     if vmin is not None and intv < vmin:
-        raise ValueError(f"Value must be greater of equal to {vmin}")
+        msg = f"Value must be greater of equal to {vmin}"
+        raise ValueError(msg)
     if vmax is not None and intv > vmax:
-        raise ValueError(f"Value must be smaller of equal to {vmax}")
+        msg = f"Value must be smaller of equal to {vmax}"
+        raise ValueError(msg)
     return intv
