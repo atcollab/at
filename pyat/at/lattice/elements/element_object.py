@@ -304,7 +304,7 @@ class Element:
     @property
     def definition(self) -> tuple[str, tuple, dict]:
         """tuple (class_name, args, kwargs) defining the element."""
-        attrs = {k: getattr(self, k) for k, v in self.items()}
+        attrs = dict(self.items())
         arguments = tuple(
             attrs.pop(k, getattr(self, k)) for k in self._BUILD_ATTRIBUTES
         )
