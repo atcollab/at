@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 
 from .allfiles import register_format
-from .utils import keep_elements, keep_attributes
+from .utils import keep_elements, keep_attributes, element_from_dict
 from ..lattice import Element, Lattice, Particle
 
 
@@ -103,7 +103,7 @@ def load_json(filename: str | Path, **kwargs) -> Lattice:
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
-            yield Element.from_file(elem_dict, index=idx, check=False)
+            yield element_from_dict(elem_dict, index=idx, check=False)
 
     filename = Path(filename)
     return Lattice(filename.resolve(), iterator=json_generator, **kwargs)

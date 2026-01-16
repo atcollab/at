@@ -9,6 +9,7 @@ __all__ = [
     "find_class",
     "keep_attributes",
     "keep_elements",
+    "element_from_dict",
     "protect",
     "restore",
     "split_ignoring_parentheses",
@@ -331,19 +332,7 @@ def element_from_dict(
     cls = find_class(elem_dict, quiet=quiet, index=index)
     if check:
         sanitise_class(index, cls, elem_dict)
-    # Remove mandatory attributes from the keyword arguments.
-    # Create list rather than generator to ensure that elements are removed
-    # from elem_dict.
-    elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
-    trs = {
-        tr_attr: elem_dict.pop(tr_attr, None)
-        for tr_attr in transform_attr
-    }
-    element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
-    if not np.all([v is None for v in trs.values()]):
-        refval = trs.pop("reference", transform_options.referencepoint.value)
-        element.transform(reference=ReferencePoint(refval), **trs)
-    return element
+    return cls.from_file(elem_dict)
 
 
 def split_ignoring_parentheses(
@@ -388,6 +377,3 @@ def restore(replmatch, *parts):
     assert not matches
 
     return replaced_parts
-
-
-Element.from_file = staticmethod(element_from_dict)

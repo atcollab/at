@@ -13,45 +13,25 @@
 from __future__ import annotations
 
 __all__ = [
-    "ReferencePoint",
     "set_rotation",
     "set_shift",
     "set_tilt",
     "shift_elem",
     "tilt_elem",
-    "transform_attr",
-    "transform_elem",
-    "transform_options",
 ]
 
-from enum import Enum
 from collections.abc import Sequence
 
 import numpy as np
 
-from .elements import Element
-from .utils import Refpts, All, refpts_iterator, _refcount, AtError
+from .elements import Element, ReferencePoint, transform_options
+from .lattice_object import Lattice
+from .utils import Refpts, All
+from .exceptions import AtError
 
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
 _z_axis = np.array([0.0, 0.0, 1.0])
-
-
-class ReferencePoint(Enum):
-    """Definition of the reference point for the geometric transformations."""
-
-    CENTRE = 0  #: Origin at the centre of the element.
-    ENTRANCE = 1  #: Origin at the entrance of the element.
-
-
-class _TransFormOptions:
-    referencepoint = ReferencePoint.CENTRE
-
-
-transform_options = _TransFormOptions()
-
-
-transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt", "reference"]
 
 
 # noinspection PyPep8Naming
@@ -165,7 +145,7 @@ def _r_matrix(ld, r3d):
     )
 
 
-def _tilt_frame_mat(rots: float) -> None:
+def _tilt_frame_mat(rots: float) -> np.ndarray:
     cs = np.cos(rots)
     sn = np.sin(rots)
     rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
@@ -375,8 +355,8 @@ def transform_elem(
 
 def tilt_elem(
     elem: Element,
-    rots: Sequence[float] | float | None = None,
-    rots_frame: Sequence[float] | float | None = None,
+    rots: float | None = None,
+    rots_frame: float | None = None,
     relative: bool = False,
     reference: ReferencePoint | None = None,
 ) -> None:
@@ -491,13 +471,13 @@ def set_rotation(
         :py:func:`set_tilt`
         :py:func:`set_shift`
     """
-    nb = _refcount(ring, refpts, endpoint=False)
+    nb = ring.refcount(refpts, endpoint=False)
     tilts = np.broadcast_to(tilts, (nb,))
     pchs = np.broadcast_to(pitches, (nb,))
     yaws = np.broadcast_to(yaws, (nb,))
     tilts_frame = np.broadcast_to(tilts_frame, (nb,))
     for el, tilt, pitch, yaw, tilt_frame in zip(
-        refpts_iterator(ring, refpts), tilts, pchs, yaws, tilts_frame
+        ring.select(refpts), tilts, pchs, yaws, tilts_frame
     ):
         transform_elem(
             el,
@@ -511,13 +491,13 @@ def set_rotation(
 
 
 def set_tilt(
-    ring: Sequence[Element],
+    ring: Lattice,
     tilts: Sequence[float] | float | None = None,
     *,
     tilts_frame: Sequence[float] | float | None = None,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
-    relative=False,
+    relative: bool = False,
 ) -> None:
     r"""Sets the tilts of a list of elements.
 
@@ -544,24 +524,24 @@ def set_tilt(
         :py:func:`set_rotation`
         :py:func:`set_shift`
     """
-    nb = _refcount(ring, refpts, endpoint=False)
+    nb = ring.refcount(refpts, endpoint=False)
     tilts = np.broadcast_to(tilts, (nb,))
     tilts_frame = np.broadcast_to(tilts_frame, (nb,))
-    for el, tilt, tilt_frame in zip(refpts_iterator(ring, refpts), tilts, tilts_frame):
+    for el, tilt, tilt_frame in zip(ring.select(refpts), tilts, tilts_frame):
         transform_elem(
             el, reference=reference, tilt=tilt, tilt_frame=tilt_frame, relative=relative
         )
 
 
 def set_shift(
-    ring: Sequence[Element],
+    ring: Lattice,
     dxs,
     dys,
     dzs=None,
     *,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
-    relative=False,
+    relative: bool = False,
 ) -> None:
     r"""Sets the translations of a list of elements.
 
@@ -591,16 +571,16 @@ def set_shift(
         :py:func:`set_rotation`
         :py:func:`set_tilt`
     """
-    nb = _refcount(ring, refpts, endpoint=False)
+    nb = ring.refcount(refpts, endpoint=False)
     dxs = np.broadcast_to(dxs, (nb,))
     dys = np.broadcast_to(dys, (nb,))
     dzs = np.broadcast_to(dzs, (nb,))
-    for el, dx, dy, dz in zip(refpts_iterator(ring, refpts), dxs, dys, dzs):
+    for el, dx, dy, dz in zip(ring.select(refpts), dxs, dys, dzs):
         transform_elem(el, reference=reference, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
 def _get_referencePoint(elem: Element) -> ReferencePoint:
-    "Rotation reference point"
+    """Rotation reference point"""
     idx = getattr(elem, "_referencepoint", transform_options.referencepoint.value)
     return ReferencePoint(idx)
 
@@ -681,3 +661,6 @@ Element.tilt = property(_get_tilt, _set_tilt)
 Element.pitch = property(_get_pitch, _set_pitch)
 Element.yaw = property(_get_yaw, _set_yaw)
 Element.tilt_frame = property(_get_tilt_frame, _set_tilt_frame)
+Lattice.set_shift = set_shift
+Lattice.set_tilt = set_tilt
+Lattice.set_rotation = set_rotation

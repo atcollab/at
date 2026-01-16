@@ -39,6 +39,7 @@ from .utils import (
     _drop_attrs,
     keep_elements,
     split_ignoring_parentheses,
+    element_from_dict,
 )
 
 # Translation of RingParam attributes
@@ -148,7 +149,7 @@ def _matfile_generator(
         for index, mat_elem in enumerate(cell_array):
             elem = mat_elem[0, 0]
             kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
-            yield Element.from_file(kwargs, index=index, check=check, quiet=quiet)
+            yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
     else:
         mat_input = h5py.File(mat_file)
         params, key = define_default_key(params, mat_input, ignore_chars="#")
@@ -156,7 +157,7 @@ def _matfile_generator(
         for index, ref_elem in enumerate(cell_array):
             elem = mat_input[ref_elem]
             kwargs = {f: mcleanhdf5(elem[f]) for f in elem}
-            yield Element.from_file(kwargs, index=index, check=check, quiet=quiet)
+            yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
 def ringparam_filter(
@@ -264,7 +265,7 @@ def load_mat(filename: str | Path, **kwargs) -> Lattice:
     )
 
 
-def _element_from_m(line: str) -> Element:
+def _element_from_m(line: str, index: int | None = None) -> Element:
     """Builds an :py:class:`.Element` from a line in an m-file.
 
     Parameters:
@@ -329,7 +330,7 @@ def _element_from_m(line: str) -> Element:
         halfangle = 0.5 * args[2]
         kwargs.setdefault("EntranceAngle", halfangle)
         kwargs.setdefault("ExitAngle", halfangle)
-    return Element.from_file(kwargs)
+    return element_from_dict(kwargs, index=index)
 
 
 def load_m(filename: str | Path, **kwargs) -> Lattice:
@@ -367,7 +368,7 @@ def load_m(filename: str | Path, **kwargs) -> Lattice:
                 if line.startswith("};"):
                     break
                 try:
-                    elem = _element_from_m(line)
+                    elem = _element_from_m(line, index=lineno)
                 except ValueError:
                     warn(AtWarning(f"Invalid line {lineno} skipped."), stacklevel=2)
                     continue
@@ -411,8 +412,8 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
-        for elem in latt:
-            yield Element.from_file(elem)
+        for index, elem in latt:
+            yield element_from_dict(elem, index=index)
 
     return Lattice(
         ringparam_filter, var_generator, matlat, iterator=params_filter, **kwargs
