@@ -412,7 +412,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
-        for index, elem in latt:
+        for index, elem in enumerate(latt):
             yield element_from_dict(elem, index=index)
 
     return Lattice(
