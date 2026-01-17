@@ -29,7 +29,6 @@ from at import integrators
 from at.lattice import AtWarning
 from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
-from at.lattice import ReferencePoint, transform_options, transform_attr
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
