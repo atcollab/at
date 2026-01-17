@@ -212,33 +212,33 @@ def test_shift_elem():
     numpy.testing.assert_equal(elem.T2, -2 * a)
 
 
-def test_set_tilt(simple_lattice):
-    set_tilt(simple_lattice, [(numpy.pi / 4), 0, 0, 0, (numpy.pi / 4), 0])
+def test_set_tilt(simple_ring):
+    set_tilt(simple_ring, [(numpy.pi / 4), 0, 0, 0, (numpy.pi / 4), 0])
     v = 1 / 2**0.5
     a = numpy.diag([v, v, v, v, 1.0, 1.0])
     a[0, 2], a[1, 3], a[2, 0], a[3, 1] = v, v, -v, -v
-    numpy.testing.assert_allclose(simple_lattice[0].R1, a)
-    numpy.testing.assert_allclose(simple_lattice[0].R2, a.T)
-    numpy.testing.assert_allclose(simple_lattice[0].R1, a)
-    numpy.testing.assert_allclose(simple_lattice[0].R2, a.T)
-    simple_lattice[0].tilt = 0.0
-    numpy.testing.assert_allclose(simple_lattice[0].R1, numpy.eye(6))
-    numpy.testing.assert_allclose(simple_lattice[0].R2, numpy.eye(6))
+    numpy.testing.assert_allclose(simple_ring[0].R1, a)
+    numpy.testing.assert_allclose(simple_ring[0].R2, a.T)
+    numpy.testing.assert_allclose(simple_ring[0].R1, a)
+    numpy.testing.assert_allclose(simple_ring[0].R2, a.T)
+    simple_ring[0].tilt = 0.0
+    numpy.testing.assert_allclose(simple_ring[0].R1, numpy.eye(6))
+    numpy.testing.assert_allclose(simple_ring[0].R2, numpy.eye(6))
 
 
-def test_set_shift(simple_lattice):
+def test_set_shift(simple_ring):
     set_shift(
-        simple_lattice,
+        simple_ring,
         numpy.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.5]),
         numpy.array([0.0, 0.0, 0.0, 2.0, 0.0, 1.0]),
     )
     a = numpy.array([0.5, 0.0, 1.0, 0.0, 0.0, 0.0])
-    numpy.testing.assert_equal(simple_lattice[3].T1, -a * 2)
-    numpy.testing.assert_equal(simple_lattice[3].T2, a * 2)
-    numpy.testing.assert_equal(simple_lattice[5].T1, -a)
-    numpy.testing.assert_equal(simple_lattice[5].T2, a)
-    simple_lattice[3].dx = 3
-    simple_lattice[3].dy = 5
+    numpy.testing.assert_equal(simple_ring[3].T1, -a * 2)
+    numpy.testing.assert_equal(simple_ring[3].T2, a * 2)
+    numpy.testing.assert_equal(simple_ring[5].T1, -a)
+    numpy.testing.assert_equal(simple_ring[5].T2, a)
+    simple_ring[3].dx = 3
+    simple_ring[3].dy = 5
     a = numpy.array([3.0, 0.0, 5.0, 0.0, 0.0, 0.0])
-    numpy.testing.assert_equal(simple_lattice[3].T1, -a)
-    numpy.testing.assert_equal(simple_lattice[3].T2, a)
+    numpy.testing.assert_equal(simple_ring[3].T1, -a)
+    numpy.testing.assert_equal(simple_ring[3].T2, a)

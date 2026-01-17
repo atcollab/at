@@ -18,6 +18,7 @@ __all__ = [
     "set_tilt",
     "shift_elem",
     "tilt_elem",
+    "transform_elem",
 ]
 
 from collections.abc import Sequence
@@ -25,8 +26,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from .elements import Element, ReferencePoint, transform_options
-from .lattice_object import Lattice
-from .utils import Refpts, All
+from .utils import Refpts, All, refpts_iterator, _refcount
 from .exceptions import AtError
 
 _x_axis = np.array([1.0, 0.0, 0.0])
@@ -471,13 +471,13 @@ def set_rotation(
         :py:func:`set_tilt`
         :py:func:`set_shift`
     """
-    nb = ring.refcount(refpts, endpoint=False)
+    nb = _refcount(ring, refpts, endpoint=False)
     tilts = np.broadcast_to(tilts, (nb,))
     pchs = np.broadcast_to(pitches, (nb,))
     yaws = np.broadcast_to(yaws, (nb,))
     tilts_frame = np.broadcast_to(tilts_frame, (nb,))
     for el, tilt, pitch, yaw, tilt_frame in zip(
-        ring.select(refpts), tilts, pchs, yaws, tilts_frame
+        refpts_iterator(ring, refpts), tilts, pchs, yaws, tilts_frame
     ):
         transform_elem(
             el,
@@ -491,7 +491,7 @@ def set_rotation(
 
 
 def set_tilt(
-    ring: Lattice,
+    ring: Sequence[Element],
     tilts: Sequence[float] | float | None = None,
     *,
     tilts_frame: Sequence[float] | float | None = None,
@@ -524,17 +524,17 @@ def set_tilt(
         :py:func:`set_rotation`
         :py:func:`set_shift`
     """
-    nb = ring.refcount(refpts, endpoint=False)
+    nb = _refcount(ring, refpts, endpoint=False)
     tilts = np.broadcast_to(tilts, (nb,))
     tilts_frame = np.broadcast_to(tilts_frame, (nb,))
-    for el, tilt, tilt_frame in zip(ring.select(refpts), tilts, tilts_frame):
+    for el, tilt, tilt_frame in zip(refpts_iterator(ring, refpts), tilts, tilts_frame):
         transform_elem(
             el, reference=reference, tilt=tilt, tilt_frame=tilt_frame, relative=relative
         )
 
 
 def set_shift(
-    ring: Lattice,
+    ring: Sequence[Element],
     dxs,
     dys,
     dzs=None,
@@ -571,11 +571,11 @@ def set_shift(
         :py:func:`set_rotation`
         :py:func:`set_tilt`
     """
-    nb = ring.refcount(refpts, endpoint=False)
+    nb = _refcount(ring, refpts, endpoint=False)
     dxs = np.broadcast_to(dxs, (nb,))
     dys = np.broadcast_to(dys, (nb,))
     dzs = np.broadcast_to(dzs, (nb,))
-    for el, dx, dy, dz in zip(ring.select(refpts), dxs, dys, dzs):
+    for el, dx, dy, dz in zip(refpts_iterator(ring, refpts), dxs, dys, dzs):
         transform_elem(el, reference=reference, dx=dx, dy=dy, dz=dz, relative=relative)
 
 
@@ -661,6 +661,3 @@ Element.tilt = property(_get_tilt, _set_tilt)
 Element.pitch = property(_get_pitch, _set_pitch)
 Element.yaw = property(_get_yaw, _set_yaw)
 Element.tilt_frame = property(_get_tilt_frame, _set_tilt_frame)
-Lattice.set_shift = set_shift
-Lattice.set_tilt = set_tilt
-Lattice.set_rotation = set_rotation
