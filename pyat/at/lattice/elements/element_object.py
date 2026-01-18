@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-__all__ = ["Element"]
+__all__ = ["Element", "ReferencePoint", "transform_attr", "transform_options"]
 
 import re
 from collections.abc import Callable, Generator
 from contextlib import suppress
+from enum import Enum
 from copy import copy, deepcopy
 from typing import Any, ClassVar
 
@@ -15,6 +16,21 @@ import numpy as np
 from .conversions import _array, _array66, _int, _float
 from ..parambase import ParamDef, _nop
 from ..parameters import _ACCEPTED, Param, ParamArray
+
+
+class ReferencePoint(Enum):
+    """Definition of the reference point for the geometric transformations."""
+
+    CENTRE = 0  #: Origin at the centre of the element.
+    ENTRANCE = 1  #: Origin at the entrance of the element.
+
+
+class _TransFormOptions:
+    referencepoint = ReferencePoint.CENTRE
+
+
+transform_options = _TransFormOptions()
+transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt", "reference"]
 
 
 def _no_encoder(v):
@@ -359,6 +375,28 @@ class Element:
         }
         dct["Class"] = getattr(self, "_file_classname", self.__class__.__name__)
         return dct
+
+    @classmethod
+    def from_file(cls, elem_dict: dict[str, Any]) -> Element:
+        """Generate an Element from a dictionary of attributes.
+
+        Parameters:
+            elem_dict:  Dictionary of :py:class:`.Element` attributes
+
+        Returns:
+            elem(Element):       :py:class:`.Element`
+        """
+        # Separate the positional arguments
+        elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
+        # Remove the transformation attributes
+        trs = {attr: elem_dict.pop(attr, None) for attr in transform_attr}
+        # Create the element
+        element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
+        # Transform the element if necessary
+        if not all(v is None for v in trs.values()):
+            refval = trs.pop("reference", transform_options.referencepoint.value)
+            element.transform(reference=ReferencePoint(refval), **trs)
+        return element
 
     @property
     def longt_motion(self) -> bool:
