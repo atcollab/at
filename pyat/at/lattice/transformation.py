@@ -13,44 +13,25 @@
 from __future__ import annotations
 
 __all__ = [
-    "ReferencePoint",
-    "transform_elem",
-    "shift_elem",
-    "tilt_elem",
+    "set_rotation",
     "set_shift",
     "set_tilt",
-    "set_rotation",
-    "transform_options",
+    "shift_elem",
+    "tilt_elem",
+    "transform_elem",
 ]
 
-from enum import Enum
 from collections.abc import Sequence
 
 import numpy as np
 
-from .elements import Element
-from .utils import Refpts, All, refpts_iterator, _refcount, AtError
+from .elements import Element, ReferencePoint, transform_options
+from .utils import Refpts, All, refpts_iterator, _refcount
+from .exceptions import AtError
 
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
 _z_axis = np.array([0.0, 0.0, 1.0])
-
-
-class ReferencePoint(Enum):
-    """Definition of the reference point for the geometric transformations."""
-
-    CENTRE = 0  #: Origin at the centre of the element.
-    ENTRANCE = 1  #: Origin at the entrance of the element.
-
-
-class _TransFormOptions:
-    referencepoint = ReferencePoint.CENTRE
-
-
-transform_options = _TransFormOptions()
-
-
-transform_attr = ["dx", "dy", "dz", "pitch", "yaw", "tilt"]
 
 
 # noinspection PyPep8Naming
@@ -164,7 +145,7 @@ def _r_matrix(ld, r3d):
     )
 
 
-def _tilt_frame_mat(rots: float) -> None:
+def _tilt_frame_mat(rots: float) -> np.ndarray:
     cs = np.cos(rots)
     sn = np.sin(rots)
     rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
@@ -240,7 +221,8 @@ def transform_elem(
 
         When combining several transformations by using multiple calls to
         :py:func:`transform_elem`, the *reference* argument must be identical for all.
-        Setting the *reference* will therefore affect all transformations for this element.
+        Setting the *reference* will therefore affect all transformations for this
+        element.
     """
 
     if reference is None:
@@ -254,7 +236,7 @@ def transform_elem(
         if reference != getattr(elem, "_referencepoint", reference):
             msg = (
                 f"Element {elem.FamName}: Reference point changed not allowed for"
-                + "relative transformations"
+                "relative transformations"
             )
             raise AtError(msg)
     else:
@@ -312,11 +294,11 @@ def transform_elem(
         r3d_entrance = _rotation(rotations)  # Eq. (3)
         OP = offsets  # Eq. (2)
     else:
-        raise ValueError(
+        msg = (
             "Unsupported reference, please choose either "
-            "ReferencePoint.CENTRE or "
-            "ReferencePoint.ENTRANCE."
+            "ReferencePoint.CENTRE or ReferencePoint.ENTRANCE."
         )
+        raise ValueError(msg)
 
     # R1, T1
     # XYZ - axes unit - vectors expressed in the xyz coordinate system
@@ -373,8 +355,8 @@ def transform_elem(
 
 def tilt_elem(
     elem: Element,
-    rots: Sequence[float] | float | None = None,
-    rots_frame: Sequence[float] | float | None = None,
+    rots: float | None = None,
+    rots_frame: float | None = None,
     relative: bool = False,
     reference: ReferencePoint | None = None,
 ) -> None:
@@ -515,7 +497,7 @@ def set_tilt(
     tilts_frame: Sequence[float] | float | None = None,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
-    relative=False,
+    relative: bool = False,
 ) -> None:
     r"""Sets the tilts of a list of elements.
 
@@ -559,7 +541,7 @@ def set_shift(
     *,
     refpts: Refpts = All,
     reference: ReferencePoint | None = None,
-    relative=False,
+    relative: bool = False,
 ) -> None:
     r"""Sets the translations of a list of elements.
 
@@ -598,13 +580,13 @@ def set_shift(
 
 
 def _get_referencePoint(elem: Element) -> ReferencePoint:
-    "Rotation reference point"
+    """Rotation reference point"""
     idx = getattr(elem, "_referencepoint", transform_options.referencepoint.value)
-    return list(ReferencePoint)[idx]
+    return ReferencePoint(idx)
 
 
 def _set_referencePoint(elem: Element, value: ReferencePoint) -> None:
-    setattr(elem, "_referencepoint", value.value)
+    elem._referencepoint = value.value
 
 
 def _get_dx(elem: Element) -> float:
