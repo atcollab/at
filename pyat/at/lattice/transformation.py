@@ -34,13 +34,6 @@ _y_axis = np.array([0.0, 1.0, 0.0])
 _z_axis = np.array([0.0, 0.0, 1.0])
 
 
-class _TransFormOptions:
-    rounding = None
-
-
-transform_options = _TransFormOptions()
-
-
 # noinspection PyPep8Naming
 def _rotation(rotations):
     """
@@ -152,107 +145,15 @@ def _r_matrix(ld, r3d):
     )
 
 
-def _ld_and_r3d_from_r_matrix(r_matrix):
-    """
-    Extracts the longitudinal displacement (ld) and 3D rotation matrix (r3d)
-    from the R1 rotation matrix operator.
-    r_matrix: 6x6 rotation matrix operator (R1).
-    """
-    r3d = np.eye(3)
-    r3d[0, 0] = r_matrix[1, 1]
-    r3d[1, 0] = r_matrix[1, 3]
-    r3d[2, 0] = r_matrix[1, 4]
-    r3d[0, 1] = r_matrix[3, 1]
-    r3d[1, 1] = r_matrix[3, 3]
-    r3d[2, 1] = r_matrix[3, 4]
-    r3d[0, 2] = -r_matrix[5, 0] * r_matrix[1, 1] / r_matrix[2, 2]
-    r3d[1, 2] = -r_matrix[5, 2] * r_matrix[1, 1] / r_matrix[2, 2]
-    r3d[2, 2] = r_matrix[1, 1] / r_matrix[2, 2]
-    ld = r_matrix[0, 1] * r_matrix[3, 3] / r_matrix[0, 0]
-    return ld, r3d
-
-
-class ReferencePoint(Enum):
-    """Definition of the reference point for the geometric transformations."""
-
-    CENTRE = "CENTRE"  #: Origin at the centre of the element.
-    ENTRANCE = "ENTRANCE"  #: Origin at the entrance of the element.
-
-
-# noinspection PyPep8Naming
-def get_offsets_rotations(
-    elem: Element,
-    reference: ReferencePoint = ReferencePoint.CENTRE,
-    *,
-    RB_half: np.ndarray = None,
-):
-    r"""Return the offsets and rotations of a given element.
-
-    This function returns the offsets [dx, dy, dz] and angular rotations (tilt, yaw,
-    pitch) of the element.
-
-    Args:
-        elem: The beamline element.
-        reference:  Transformation reference, either
-                    :py:obj:`ReferencePoint.CENTRE` or
-                    :py:obj:`ReferencePoint.ENTRANCE`. This must be identical to
-                    the value used when the element was transformed.
-
-    Returns:
-        offsets (np.ndarray): [dx, dy, dz] array.
-        tilt (float): Tilt angle (rotation about the Z-axis) in radians.
-        yaw (float): Yaw angle (rotation about the Y-axis) in radians.
-        pitch (float): Pitch angle (rotation about the X-axis) in radians.
-
-    Raises:
-        ValueError: If the `reference` argument is neither `ReferencePoint.CENTRE` nor
-            `ReferencePoint.ENTRANCE`.
-
-    .. Attention::
-
-        The *reference* argument must be identical to the one used when displacing the
-        element. Otherwise, the result is unpredictable.
-    """
-    if RB_half is None:
-        elem_bending_angle = getattr(elem, "BendingAngle", 0.0)
-        RB_half = _rotation([0.0, -elem_bending_angle / 2.0, 0.0])  # Eq. (12)
-
-    try:
-        T1 = elem.T1
-    except AttributeError:
-        T1 = np.zeros(6)
-    try:
-        R1 = elem.R1
-    except AttributeError:
-        R1 = np.eye(6)
-
-    ld, r3d_tmp = _ld_and_r3d_from_r_matrix(R1)
-    if reference is ReferencePoint.CENTRE:
-        r3d = RB_half.T @ r3d_tmp @ RB_half
-
-        X_axis = RB_half.T @ _x_axis
-        Y_axis = RB_half.T @ _y_axis
-        Z_axis = RB_half.T @ _z_axis
-
-    elif reference is ReferencePoint.ENTRANCE:
-        r3d = r3d_tmp
-
-        X_axis = r3d @ _x_axis
-        Y_axis = r3d @ _y_axis
-        Z_axis = r3d @ _z_axis
-
-    else:
-        raise ValueError(
-            "Unsupported reference, please choose either "
-            "ReferencePoint.CENTRE or "
-            "ReferencePoint.ENTRANCE."
-        )
-
-    offsets = _offsets_from_translation_vector(T1, ld, r3d, X_axis, Y_axis, Z_axis)
-    tilt = np.arctan2(-r3d[0, 1], r3d[0, 0])
-    yaw = np.arcsin(r3d[0, 2])
-    pitch = np.arctan2(-r3d[1, 2], r3d[2, 2])
-    return offsets, tilt, yaw, pitch
+def _tilt_frame_mat(rots: float) -> np.ndarray:
+    cs = np.cos(rots)
+    sn = np.sin(rots)
+    rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
+    rm[0, 2] = sn
+    rm[1, 3] = sn
+    rm[2, 0] = -sn
+    rm[3, 1] = -sn
+    return rm
 
 
 # noinspection PyPep8Naming
@@ -320,11 +221,13 @@ def transform_elem(
 
         When combining several transformations by using multiple calls to
         :py:func:`transform_elem`, the *reference* argument must be identical for all.
-        Otherwise, the result is unpredictable.
-
-    See Also:
-        :py:func:`get_offsets_rotations`
+        Setting the *reference* will therefore affect all transformations for this
+        element.
     """
+
+    if reference is None:
+        reference = transform_options.referencepoint
+
     if relative:
 
         def _set(ini, val):
@@ -340,14 +243,6 @@ def transform_elem(
 
         def _set(ini, val):
             return ini if val is None else val
-        
-    if transform_options.rounding is not None:
-        if dx is not None: dx = np.round(dx, transform_options.rounding)
-        if dy is not None: dy = np.round(dy, transform_options.rounding)
-        if dz is not None: dz = np.round(dz, transform_options.rounding)
-        if pitch is not None: pitch = np.round(pitch, transform_options.rounding)
-        if yaw is not None: yaw  = np.round(yaw, transform_options.rounding)
-        if tilt is not None: tilt = np.round(tilt, transform_options.rounding)
 
     elem.ReferencePoint = reference
 
