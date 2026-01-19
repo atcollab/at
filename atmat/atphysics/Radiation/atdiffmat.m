@@ -56,7 +56,7 @@ Batbeg=[zr;cellfun(@cumulb,ring,orbit,'UniformOutput',false)];
         end
         % Calculate 6-by-6 linear transfer matrix in each element
         % near the equilibrium orbit
-        m=findelemm66(elem,passm,orbit);
+        m=findelemm66(elem,passm,orbit,'Energy',energy);
         % Cumulative diffusion matrix of the entire ring
         BCUM = m*BCUM*m' + bdiff;
         btx=BCUM;

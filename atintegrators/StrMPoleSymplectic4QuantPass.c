@@ -184,6 +184,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
 
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;

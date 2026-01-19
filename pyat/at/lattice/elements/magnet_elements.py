@@ -471,6 +471,7 @@ class Dipole(Radiative, Multipole):
         FringeBendEntrance=int,
         FringeBendExit=int,
     )
+    _file_classname = "Bend"
     _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = [
@@ -489,6 +490,11 @@ class Dipole(Radiative, Multipole):
     ]
 
     DefaultOrder = 0
+
+    # Instance attributes
+    BendingAngle: float
+    EntranceAngle: float
+    ExitAngle: float
 
     def __init__(
         self,
@@ -727,6 +733,17 @@ class Wiggler(Radiative, LongElement):
         NVharm=int,
     )
 
+    # Instance attributes
+    Lw: float
+    Bmax: float
+    Energy: float
+    Bx: np.ndarray
+    By: np.ndarray
+    Nstep: int
+    Nmeth: int
+    NHharm: int
+    NVharm: int
+
     # noinspection PyPep8Naming
     def __init__(
         self,
@@ -736,8 +753,8 @@ class Wiggler(Radiative, LongElement):
         b_max: float,
         energy: float = 0.0,
         *,
-        Nstep: int | None = 5,
-        Nmeth: int | None = 4,
+        Nstep: int = 5,
+        Nmeth: int = 4,
         By=(1, 1, 0, 1, 1, 0),
         Bx=(),
         **kwargs,

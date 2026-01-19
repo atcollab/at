@@ -413,10 +413,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         param.T0 = param.RingLength/C0;
     }
     else {
+        /*  Only relativistic tracking is implemented: keep everything consistent
         double gamma0 = param.energy/param.rest_energy;
         double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
         double beta0 = betagamma0/gamma0;
         param.T0 = param.RingLength/beta0/C0;
+        */
+        param.T0 = param.RingLength/C0;
     }
 
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */

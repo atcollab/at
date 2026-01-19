@@ -1,28 +1,28 @@
 """
-Handling of JSON files
+Handling of JSON files.
 """
 
 from __future__ import annotations
 
-__all__ = ["save_json", "load_json"]
+__all__ = ["load_json", "save_json"]
 
-from os.path import abspath
+from pathlib import Path
 import json
-from typing import Optional, Any
+from typing import Any
 
 import numpy as np
 
 from .allfiles import register_format
-from .utils import keep_elements, keep_attributes
+from .utils import keep_elements, keep_attributes, element_from_dict
 from ..lattice import Element, Lattice, Particle
 
 
 class _AtEncoder(json.JSONEncoder):
-    """JSON encoder for specific AT types"""
+    """JSON encoder for specific AT types."""
 
     def default(self, obj):
         if isinstance(obj, Element):
-            return obj.to_dict()
+            return obj.to_file()
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, Particle):
@@ -30,15 +30,15 @@ class _AtEncoder(json.JSONEncoder):
         elif isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
-            return float(obj)       
+            return float(obj)
         else:
             return super().default(obj)
 
 
 def save_json(
-    ring: Lattice, filename: Optional[str] = None, compact: bool = False
+    ring: Lattice, filename: str | Path | None = None, compact: bool = False
 ) -> None:
-    """Save a :py:class:`.Lattice` as a JSON file
+    """Save a :py:class:`.Lattice` as a JSON file.
 
     Parameters:
         ring:           Lattice description
@@ -52,18 +52,21 @@ def save_json(
         :py:meth:`.Lattice.save` for a generic lattice-saving method.
     """
     indent = None if compact else 2
-    data = dict(
-        atjson=1, elements=list(keep_elements(ring)), properties=keep_attributes(ring)
-    )
+    data = {
+        "atjson": 1,
+        "elements": list(keep_elements(ring)),
+        "properties": keep_attributes(ring),
+    }
     if filename is None:
         print(json.dumps(data, cls=_AtEncoder, indent=indent))
     else:
-        with open(filename, "wt") as jsonfile:
+        filename = Path(filename)
+        with filename.open("w") as jsonfile:
             json.dump(data, jsonfile, cls=_AtEncoder, indent=indent)
 
 
-def load_json(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a JSON file
+def load_json(filename: str | Path, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a JSON file.
 
     Parameters:
         filename:           Name of a JSON file
@@ -78,15 +81,15 @@ def load_json(filename: str, **kwargs) -> Lattice:
         :py:meth:`.Lattice.load` for a generic lattice-loading method.
     """
 
-    def json_generator(params: dict[str, Any], fn):
-
-        with open(params.setdefault("in_file", fn), "rt") as jsonfile:
+    def json_generator(params: dict[str, Any], fn: Path):
+        params.setdefault("in_file", str(fn))
+        with fn.open() as jsonfile:
             data = json.load(jsonfile)
         # Check the file signature - For later use
         try:
-            atjson = data["atjson"]  # noqa F841
+            atjson = data["atjson"]
         except KeyError:
-            atjson = 1  # noqa F841
+            atjson = 1  # noqa: F841
         # Get elements
         elements = data["elements"]
         # Get lattice properties
@@ -100,9 +103,10 @@ def load_json(filename: str, **kwargs) -> Lattice:
         for k, v in properties.items():
             params.setdefault(k, v)
         for idx, elem_dict in enumerate(elements):
-            yield Element.from_dict(elem_dict, index=idx, check=False)
+            yield element_from_dict(elem_dict, index=idx, check=False)
 
-    return Lattice(abspath(filename), iterator=json_generator, **kwargs)
+    filename = Path(filename)
+    return Lattice(filename.resolve(), iterator=json_generator, **kwargs)
 
 
 register_format(

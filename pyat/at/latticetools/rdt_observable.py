@@ -64,7 +64,7 @@ class RDTObservable(ElementObservable):
         name: str | None = None,
         label: str | None = None,
         second_order: bool = False,
-        **kwargs,
+        **eval_kw,
     ):
         # noinspection PyUnresolvedReferences
         r"""Args:
@@ -166,7 +166,7 @@ class RDTObservable(ElementObservable):
         fun = partial(_rdt_access, param)
 
         super().__init__(
-            fun, refpts, needs=needs, name=name, axis_label="RDT", **kwargs
+            fun, refpts, needs=needs, name=name, axis_label="RDT", **eval_kw
         )
         self._rdt_type = RDT_code[param]
         if label:

@@ -223,7 +223,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         feedback_angle_offset=atGetOptionalDouble(ElemData,"feedback_angle_offset", 0.0); check_error();
-        
+
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
+
         int dimsth[] = {Param->nbunch*nslice*nturns, 4};
         atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
         int dimsvb[] = {Param->nbunch, 2};
@@ -264,20 +271,20 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     energy = atEnergy(Param->energy, Elem->Energy);
 
     if(num_particles<Param->nbunch){
-        atError("Number of particles has to be greater or equal to the number of bunches.");
+        atError("Number of particles has to be greater or equal to the number of bunches."); check_error();
     }else if (num_particles%Param->nbunch!=0){
-        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
+        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load."); check_error();
     }
     if(Elem->cavitymode==0 || Elem->cavitymode>=4){
-        atError("Unknown cavitymode provided.");    
+        atError("Unknown cavitymode provided."); check_error();
     } 
     if(Elem->blmode==0 || Elem->blmode>=3){
-        atError("Unknown blmode provided.");    
+        atError("Unknown blmode provided."); check_error();
     } 
 
     #ifdef _MSC_VER
     if(Elem->blmode==2){
-        atError("Beam loading Phasor mode not implemented in Windows.");
+        atError("Beam loading Phasor mode not implemented in Windows."); check_error();
     }
     #endif
     BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
