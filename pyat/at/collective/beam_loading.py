@@ -87,13 +87,11 @@ def add_beamloading(
             raise TypeError(
                 "Beam loading can only be assigned" + "to an RFCavity element"
             )
-        new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf,
-                                                           rs, **kwargs))
+        new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf, rs, **kwargs))
     return apply(ring, cavpts, new_elems)
 
 
-def remove_beamloading(ring, cavpts: Refpts = None,
-                       copy: Optional[bool] = False):
+def remove_beamloading(ring, cavpts: Refpts = None, copy: Optional[bool] = False):
     """Function to remove beam loading from a cavity element, the beam
     loading element is changed to a beam loading element that
     combines the energy kick from both the cavity and the resonator
@@ -121,8 +119,7 @@ def remove_beamloading(ring, cavpts: Refpts = None,
     for ref in cavpts:
         bl = ring[ref]
         if not isinstance(bl, BeamLoadingElement):
-            raise TypeError("Cannot remove beam loading: " +
-                            "not a BeamLoadingElement")
+            raise TypeError("Cannot remove beam loading: " + "not a BeamLoadingElement")
         family_name = bl.FamName.replace("_BL", "")
         harm = numpy.round(bl.Frequency * ring.circumference / clight)
         new_elems.append(
@@ -236,8 +233,7 @@ class BeamLoadingElement(RFCavity, Collective):
         """
         kwargs.setdefault("PassMethod", self.default_pass[True])
         if not isinstance(cavitymode, CavityMode):
-            raise TypeError("cavitymode has to be an " +
-                            "instance of CavityMode")
+            raise TypeError("cavitymode has to be an " + "instance of CavityMode")
 
         zcuts = kwargs.pop("ZCuts", None)
         ts = kwargs.pop("ts", None)
@@ -246,19 +242,20 @@ class BeamLoadingElement(RFCavity, Collective):
         )
         self.detune = detune
 
-        check_frequency = numpy.abs(frequency -
-                                    self.system_harmonic * ring.rf_frequency)
+        check_frequency = numpy.abs(
+            frequency - self.system_harmonic * ring.rf_frequency
+        )
 
         if check_frequency > 1.0:  # 1 Hz is the limit for the float check
 
             error_string = (
-                "Cavity must be an integer of rf_frequency, otherwise" +
-                "the phi_s computation will be wrong. Please use the detune" +
-                "argument when adding beamloading to a cavity that is an" +
-                "integer harmonic."
+                "Cavity must be an integer of rf_frequency, otherwise"
+                + "the phi_s computation will be wrong. Please use the detune"
+                + "argument when adding beamloading to a cavity that is an"
+                + "integer harmonic."
             )
             raise AtError(error_string)
-            
+
         self.circumference = ring.circumference
         self.bunch_spos = ring.bunch_spos
         energy = ring.energy
@@ -274,8 +271,8 @@ class BeamLoadingElement(RFCavity, Collective):
         if self._cavitymode == 1:
             if not isinstance(fbmode, FeedbackMode):
                 raise TypeError(
-                    "For an active cavity, fbmode has to be defined and an " +
-                    "instance of FeedbackMode"
+                    "For an active cavity, fbmode has to be defined and an "
+                    + "instance of FeedbackMode"
                 )
             self._fbmode = int(fbmode)
         else:
@@ -283,16 +280,15 @@ class BeamLoadingElement(RFCavity, Collective):
 
         if self.detune == 0 and self._cavitymode == 3:
             raise AtError(
-                "Cannot start passive cavity feedback from zero detuning." +
-                "You must decide at the beginning which polarity you want." +
-                "This problem arises because the loop does not know which " +
-                "polarity to take!"
+                "Cannot start passive cavity feedback from zero detuning."
+                + "You must decide at the beginning which polarity you want."
+                + "This problem arises because the loop does not know which "
+                + "polarity to take!"
             )
 
         self._passive_vset = kwargs.pop("passive_voltage", 0.0)
         self._beta = ring.beta
-        self._wakefact = (-ring.circumference /
-                          (clight * ring.energy * ring.beta**3))
+        self._wakefact = -ring.circumference / (clight * ring.energy * ring.beta**3)
         self._nslice = kwargs.pop("Nslice", 101)
         self._nturns = kwargs.pop("Nturns", 1)
         self._nbunch = ring.nbunch
@@ -302,35 +298,33 @@ class BeamLoadingElement(RFCavity, Collective):
         self._windowlength = kwargs.pop("windowlength", 0)
 
         if self._windowlength > self._buffersize:
-            raise ValueError("The windowlength must be smaller" +
-                             "than the buffersize")
+            raise ValueError("The windowlength must be smaller" + "than the buffersize")
         self._vgen_buffer = numpy.zeros(1)
         self._vbeam_buffer = numpy.zeros(1)
         self._vbunch_buffer = numpy.zeros(1)
-        
+
         if zcuts is not None:
             self.ZCuts = zcuts
-            
+
         super(BeamLoadingElement, self).__init__(
-            family_name, length, voltage, frequency, harmonic_number,
-            energy, **kwargs)
-            
+            family_name, length, voltage, frequency, harmonic_number, energy, **kwargs
+        )
+
         if ts is None:
-            _, ts = get_timelag_fromU0(ring)            
+            _, ts = get_timelag_fromU0(ring)
         self._ts = ts
-        
-        self._phis = (2 * numpy.pi * self.Frequency *
-                      (-self._ts - self.TimeLag) / clight)
-                      
+
+        self._phis = 2 * numpy.pi * self.Frequency * (-self._ts - self.TimeLag) / clight
+
         # The below is needed because atan2 returns phases between -pi and pi
         # this prevents a setpoint being provided that is impossible
         # to achieve
         while self._phis < -numpy.pi:
             self._phis += 2 * numpy.pi
-            
+
         while self._phis > numpy.pi:
             self._phis -= 2 * numpy.pi
-            
+
         self._vbeam_phasor = numpy.zeros(2)
         self._vbeam = numpy.zeros(2)
         self._vgen = numpy.zeros(4)
@@ -365,24 +359,24 @@ class BeamLoadingElement(RFCavity, Collective):
         if (self._cavitymode == 1) and (current > 0.0):
             vb = 2 * current * self.Rshunt
             a = self.Voltage
-            b = - vb * numpy.cos(self._phis)
+            b = -vb * numpy.cos(self._phis)
             psi = numpy.arcsin(b / numpy.sqrt(a**2 + b**2))
             if numpy.isnan(psi):
                 psi = 0.0
                 warning_string = (
-                    "Unusual cavity configuration found." +
-                    "Setting initial psi to 0 to avoid NaNs"
+                    "Unusual cavity configuration found."
+                    + "Setting initial psi to 0 to avoid NaNs"
                 )
                 warnings.warn(AtWarning(warning_string))
             psi += self.feedback_angle_offset
-            vgen = (self.Voltage * numpy.cos(psi) -
-                    vb * numpy.cos(psi) * numpy.sin(self._phis))
+            vgen = self.Voltage * numpy.cos(psi) - vb * numpy.cos(psi) * numpy.sin(
+                self._phis
+            )
 
         elif self._cavitymode == 2 or self._cavitymode == 3:
             vgen = 0
             psi = numpy.arctan(
-                2 * self.Qfactor *
-                (1 - self.Frequency / (self.Frequency + self.detune))
+                2 * self.Qfactor * (1 - self.Frequency / (self.Frequency + self.detune))
             )
         else:
             vgen = self.Voltage
@@ -392,22 +386,21 @@ class BeamLoadingElement(RFCavity, Collective):
             [2 * current * self.Rshunt * numpy.cos(psi), numpy.pi + psi]
         )
 
-        self._vgen = numpy.array([vgen, psi + self._phis, psi, vgen/numpy.cos(psi)])
+        self._vgen = numpy.array([vgen, psi + self._phis, psi, vgen / numpy.cos(psi)])
 
         omr = self.ResFrequency * 2 * numpy.pi
         vbp_amp = 2 * current * self.Rshunt * numpy.cos(psi)
         vbp_phase = numpy.pi + psi
-        vbp_complex = vbp_amp*numpy.cos(vbp_phase) + 1j*vbp_amp*numpy.sin(vbp_phase)
-        
-        #dt = (self.circumference - self.bunch_spos[0])/clight    
-        #vbp_complex *= numpy.exp((1j*omr-omr/(2*self.Qfactor))*dt)
-    
-    
+        vbp_complex = vbp_amp * numpy.cos(vbp_phase) + 1j * vbp_amp * numpy.sin(
+            vbp_phase
+        )
+
+        # dt = (self.circumference - self.bunch_spos[0])/clight
+        # vbp_complex *= numpy.exp((1j*omr-omr/(2*self.Qfactor))*dt)
+
         self._vbeam_phasor = numpy.array(
             [numpy.abs(vbp_complex), numpy.angle(vbp_complex)]
         )
-                
-
 
     @property
     def Buffersize(self):
@@ -461,16 +454,19 @@ class BeamLoadingElement(RFCavity, Collective):
     @property
     def ResFrequency(self):
         """Resonator frequency"""
-        delta = (self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor)**2 + 4 * self.Frequency**2
-        freqres = (self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor + numpy.sqrt(delta)) / 2
-        
+        delta = (
+            self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor
+        ) ** 2 + 4 * self.Frequency**2
+        freqres = (
+            self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor + numpy.sqrt(delta)
+        ) / 2
+
         return freqres
 
     @property
     def Vbeam(self):
         """Beam phasor (amplitude, phase)"""
         return self._vbeam
-
 
     @property
     def Vbunch(self):
@@ -490,8 +486,6 @@ class BeamLoadingElement(RFCavity, Collective):
     @Vgen.setter
     def Vgen(self, value):
         self._vgen = value
-        
-
 
     @staticmethod
     def build_from_cav(
