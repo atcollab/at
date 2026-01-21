@@ -210,19 +210,6 @@ class MultipoleElement(BasicElement):
     def __init__(self, name: str, xsuite_params: dict = {}, atparams: dict = {}):
         super().__init__(name, xsuite_params, atparams)
 
-    @staticmethod
-    def set_rots_mat(elem: Element, rots: float) -> None:
-        cs = np.cos(rots)
-        sn = np.sin(rots)
-        rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
-        rm[0, 2] = sn
-        rm[1, 3] = sn
-        rm[2, 0] = -sn
-        rm[3, 1] = -sn
-        elem.R1 = rm
-        elem.R2 = rm.T
-        elem.rots_frame = rots
-
     def _set_at_transforms(self, elem):
         shift_x = self.xsuite_params.pop("shift_x", 0.0)
         shift_y = self.xsuite_params.pop("shift_y", 0.0)
@@ -248,7 +235,7 @@ class MultipoleElement(BasicElement):
             np.array([shift_x, shift_y, shift_s, rot_x, rot_y, rot_s]) != 0.0
         )
         if rot_s_frame != 0.0:
-            self.set_rots_mat(elem, rot_s_frame)
+            transformation.transform_elem(elem, tilt_frame=rot_s_frame)
             if ismisaligned:
                 msg = f"{elem.FamName}:alignment errors available only for H bends, ignored"
                 warnings.warn(AtWarning(msg))
@@ -662,14 +649,17 @@ def save_xsuite(
     lattice = _format_lattice(lattice)
     indent = None if compact else 2
     for e in lattice:
-        refpoint = transformation.ReferencePoint[getattr(e, "ReferencePoint", "CENTRE")]
-        offset, tilt, yaw, pitch = transformation.get_offsets_rotations(
-            e, reference=refpoint
-        )
+        refpoint = e.ReferencePoint
+        dx = e.dx
+        dy = e.dy
+        dz = e.dz
+        tilt = e.tilt
+        pitch = e.pitch
+        yaw = e.yaw
+        rots_frame = e.tilt_frame
         ismisaligned = np.any(
-            np.array([offset[0], offset[1], offset[2], tilt, pitch, yaw]) != 0.0
+            np.array([dx, dy, dz, tilt, pitch, yaw]) != 0.0
         )
-        rots_frame = getattr(e, "rots_frame", 0.0)
         if rots_frame != 0.0:
             e.transforms = {"rot_s_rad": rots_frame}
             if ismisaligned:
@@ -681,17 +671,17 @@ def save_xsuite(
             if refpoint == transformation.ReferencePoint.ENTRANCE:
                 anchor = 0
             else:
-                anchor = 0.5
+                anchor = e.Length/2
             e.transforms = {
-                "shift_x": offset[0],
-                "shift_y": offset[1],
-                "shift_s": offset[2],
+                "shift_x": dx,
+                "shift_y": dy,
+                "shift_s": dz,
                 "rot_s_rad_no_frame": tilt,
                 "rot_x_rad": -pitch,
                 "rot_y_rad": yaw,
                 "rot_shift_anchor": anchor,
             }
-    elements = {e.FamName: at_to_xsuite(e.FamName, e.to_dict()) for e in lattice}
+    elements = {e.FamName: at_to_xsuite(e.FamName, e.to_file()) for e in lattice}
     element_names = [e.FamName for e in lattice]
     with open(filename, "wt") as jsonfile:
         json.dump(
