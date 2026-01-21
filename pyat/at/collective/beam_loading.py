@@ -397,15 +397,11 @@ class BeamLoadingElement(RFCavity, Collective):
 
         self._vgen = np.array([vgen, psi + self._phis, psi, vgen / np.cos(psi)])
 
-        omr = self.ResFrequency * 2 * np.pi
         vbp_amp = 2 * current * self.Rshunt * np.cos(psi)
         vbp_phase = np.pi + psi
         vbp_complex = vbp_amp * np.cos(vbp_phase) + 1j * vbp_amp * np.sin(
             vbp_phase
         )
-
-        # dt = (self.circumference - self.bunch_spos[0])/clight
-        # vbp_complex *= np.exp((1j*omr-omr/(2*self.Qfactor))*dt)
 
         self._vbeam_phasor = np.array(
             [np.abs(vbp_complex), np.angle(vbp_complex)]
