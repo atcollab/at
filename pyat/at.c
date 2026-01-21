@@ -322,7 +322,7 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
         param->nbunch=1;
         param->bunch_spos = (double[1]){0.0};
         param->bunch_currents = (double[1]){0.0};
-        param->fillpattern = (double[1]){0.0};
+        param->fillpattern = (double[1]){1.0};
     }
 }
 
