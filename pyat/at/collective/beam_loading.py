@@ -33,6 +33,15 @@ class CavityMode(IntEnum):
 
 
 class FeedbackMode(IntEnum):
+    """
+    FeedbackMode.ONETURN means the feedback is only using the most recent
+    turn, and the delta is applied each turn multiplied by VoltGain or
+    PhaseGain.
+    
+    FeedbackMode.WINDOW means the beam voltage passed to the feedback is
+    the average of the WINDOW. For this method, buffersize and windowlength
+    must also be provided.
+    """
     ONETURN = 1
     WINDOW = 2
 
