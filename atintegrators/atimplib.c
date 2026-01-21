@@ -335,8 +335,9 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         vbi[ibunch] = 0.0;
     }
 
+    
     /* The vbeam_complex will always be sent to the center of the next bucket */
-
+    
     for(ibunch=0; ibunch<M; ibunch++){
         bucket_curr = fillpattern[ibunch];
         if(bucket_curr!=0.0){
@@ -346,7 +347,8 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
                     /* TurnhistoryZ goes from -bucket991 to bucket0 */
-                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter])/bc;
+                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter] - bunch_spos[0])/bc;
+                    
                 }else{
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
@@ -360,7 +362,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                
             }
             /* back to the center of the bucket */
-            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter])/bc;
+            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter] - bunch_spos[0])/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             
             /* move to ts_central time */
@@ -371,6 +373,10 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             vbi[bunch_counter] = carg(vbeam_complex);
                         
             bunch_counter += 1;
+        }else{
+            /* move to ts_central time */
+            dt = -ts_central_z/bc;
+            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);     
         }
 
         ave_vbeam_ri[0] += creal(vbeam_complex)/M;
