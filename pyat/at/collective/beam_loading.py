@@ -4,7 +4,7 @@ import warnings
 from enum import IntEnum
 from typing import Sequence, Optional, Union
 
-import numpy
+import numpy as np
 
 from ..constants import clight
 from ..lattice import Lattice, AtWarning, AtError, RFCavity, Collective
@@ -87,8 +87,8 @@ def add_beamloading(
         cavpts = ring.get_refpts(RFCavity)
     else:
         cavpts = uint32_refpts(cavpts, len(ring))
-    qfactor = numpy.broadcast_to(qfactor, (len(cavpts),))
-    rshunt = numpy.broadcast_to(rshunt, (len(cavpts),))
+    qfactor = np.broadcast_to(qfactor, (len(cavpts),))
+    rshunt = np.broadcast_to(rshunt, (len(cavpts),))
     new_elems = []
     for ref, qf, rs in zip(cavpts, qfactor, rshunt):
         cav = ring[ref]
@@ -130,7 +130,7 @@ def remove_beamloading(ring, cavpts: Refpts = None, copy: Optional[bool] = False
         if not isinstance(bl, BeamLoadingElement):
             raise TypeError("Cannot remove beam loading: " + "not a BeamLoadingElement")
         family_name = bl.FamName.replace("_BL", "")
-        harm = numpy.round(bl.Frequency * ring.circumference / clight)
+        harm = np.round(bl.Frequency * ring.circumference / clight)
         new_elems.append(
             RFCavity(
                 family_name,
@@ -247,11 +247,11 @@ class BeamLoadingElement(RFCavity, Collective):
         zcuts = kwargs.pop("ZCuts", None)
         ts = kwargs.pop("ts", None)
         self.system_harmonic = kwargs.pop(
-            "system_harmonic", int(numpy.round(frequency / ring.rf_frequency))
+            "system_harmonic", int(np.round(frequency / ring.rf_frequency))
         )
         self.detune = detune
 
-        check_frequency = numpy.abs(
+        check_frequency = np.abs(
             frequency - self.system_harmonic * ring.rf_frequency
         )
 
@@ -308,9 +308,9 @@ class BeamLoadingElement(RFCavity, Collective):
 
         if self._windowlength > self._buffersize:
             raise ValueError("The windowlength must be smaller" + "than the buffersize")
-        self._vgen_buffer = numpy.zeros(1)
-        self._vbeam_buffer = numpy.zeros(1)
-        self._vbunch_buffer = numpy.zeros(1)
+        self._vgen_buffer = np.zeros(1)
+        self._vbeam_buffer = np.zeros(1)
+        self._vbunch_buffer = np.zeros(1)
 
         if zcuts is not None:
             self.ZCuts = zcuts
@@ -323,26 +323,26 @@ class BeamLoadingElement(RFCavity, Collective):
             _, ts = get_timelag_fromU0(ring)
         self._ts = ts
 
-        self._phis = 2 * numpy.pi * self.Frequency * (-self._ts - self.TimeLag) / clight
+        self._phis = 2 * np.pi * self.Frequency * (-self._ts - self.TimeLag) / clight
 
         # The below is needed because atan2 returns phases between -pi and pi
         # this prevents a setpoint being provided that is impossible
         # to achieve
-        while self._phis < -numpy.pi:
-            self._phis += 2 * numpy.pi
+        while self._phis < -np.pi:
+            self._phis += 2 * np.pi
 
-        while self._phis > numpy.pi:
-            self._phis -= 2 * numpy.pi
+        while self._phis > np.pi:
+            self._phis -= 2 * np.pi
 
-        self._vbeam_phasor = numpy.zeros(2)
-        self._vbeam = numpy.zeros(2)
-        self._vgen = numpy.zeros(4)
+        self._vbeam_phasor = np.zeros(2)
+        self._vbeam = np.zeros(2)
+        self._vgen = np.zeros(4)
 
         cavity_voltage = self.Voltage
         if self._cavitymode == 3:
             cavity_voltage = self._passive_vset
 
-        self._vcav = numpy.array([cavity_voltage, self._phis])
+        self._vcav = np.array([cavity_voltage, self._phis])
         self.clear_history(ring=ring)
 
     def is_compatible(self, other):
@@ -353,14 +353,14 @@ class BeamLoadingElement(RFCavity, Collective):
             self._nbunch = ring.nbunch
             current = ring.beam_current
             nbunch = ring.nbunch
-            self._vbunch = numpy.zeros((nbunch, 2), order="F")
+            self._vbunch = np.zeros((nbunch, 2), order="F")
             self._init_bl_params(current)
         tl = self._nturns * self._nslice * self._nbunch
-        self._turnhistory = numpy.zeros((tl, 4), order="F")
+        self._turnhistory = np.zeros((tl, 4), order="F")
         if self._buffersize > 0:
-            self._vgen_buffer = numpy.zeros((4, self._buffersize), order="F")
-            self._vbeam_buffer = numpy.zeros((2, self._buffersize), order="F")
-            self._vbunch_buffer = numpy.zeros(
+            self._vgen_buffer = np.zeros((4, self._buffersize), order="F")
+            self._vbeam_buffer = np.zeros((2, self._buffersize), order="F")
+            self._vbunch_buffer = np.zeros(
                 (self._nbunch, 2, self._buffersize), order="F"
             )
 
@@ -368,9 +368,9 @@ class BeamLoadingElement(RFCavity, Collective):
         if (self._cavitymode == 1) and (current > 0.0):
             vb = 2 * current * self.Rshunt
             a = self.Voltage
-            b = -vb * numpy.cos(self._phis)
-            psi = numpy.arcsin(b / numpy.sqrt(a**2 + b**2))
-            if numpy.isnan(psi):
+            b = -vb * np.cos(self._phis)
+            psi = np.arcsin(b / np.sqrt(a**2 + b**2))
+            if np.isnan(psi):
                 psi = 0.0
                 warning_string = (
                     "Unusual cavity configuration found."
@@ -378,37 +378,37 @@ class BeamLoadingElement(RFCavity, Collective):
                 )
                 warnings.warn(AtWarning(warning_string))
             psi += self.feedback_angle_offset
-            vgen = self.Voltage * numpy.cos(psi) - vb * numpy.cos(psi) * numpy.sin(
+            vgen = self.Voltage * np.cos(psi) - vb * np.cos(psi) * np.sin(
                 self._phis
             )
 
         elif self._cavitymode == 2 or self._cavitymode == 3:
             vgen = 0
-            psi = numpy.arctan(
+            psi = np.arctan(
                 2 * self.Qfactor * (1 - self.Frequency / (self.Frequency + self.detune))
             )
         else:
             vgen = self.Voltage
             psi = 0
 
-        self._vbeam = numpy.array(
-            [2 * current * self.Rshunt * numpy.cos(psi), numpy.pi + psi]
+        self._vbeam = np.array(
+            [2 * current * self.Rshunt * np.cos(psi), np.pi + psi]
         )
 
-        self._vgen = numpy.array([vgen, psi + self._phis, psi, vgen / numpy.cos(psi)])
+        self._vgen = np.array([vgen, psi + self._phis, psi, vgen / np.cos(psi)])
 
-        omr = self.ResFrequency * 2 * numpy.pi
-        vbp_amp = 2 * current * self.Rshunt * numpy.cos(psi)
-        vbp_phase = numpy.pi + psi
-        vbp_complex = vbp_amp * numpy.cos(vbp_phase) + 1j * vbp_amp * numpy.sin(
+        omr = self.ResFrequency * 2 * np.pi
+        vbp_amp = 2 * current * self.Rshunt * np.cos(psi)
+        vbp_phase = np.pi + psi
+        vbp_complex = vbp_amp * np.cos(vbp_phase) + 1j * vbp_amp * np.sin(
             vbp_phase
         )
 
         # dt = (self.circumference - self.bunch_spos[0])/clight
-        # vbp_complex *= numpy.exp((1j*omr-omr/(2*self.Qfactor))*dt)
+        # vbp_complex *= np.exp((1j*omr-omr/(2*self.Qfactor))*dt)
 
-        self._vbeam_phasor = numpy.array(
-            [numpy.abs(vbp_complex), numpy.angle(vbp_complex)]
+        self._vbeam_phasor = np.array(
+            [np.abs(vbp_complex), np.angle(vbp_complex)]
         )
 
     @property
@@ -433,7 +433,7 @@ class BeamLoadingElement(RFCavity, Collective):
     @property
     def Vbunch_buffer(self):
         """Stored bunch induced voltage data"""
-        return numpy.moveaxis(self._vbunch_buffer, 0, -1)
+        return np.moveaxis(self._vbunch_buffer, 0, -1)
 
     @property
     def Nslice(self):
@@ -464,10 +464,10 @@ class BeamLoadingElement(RFCavity, Collective):
     def ResFrequency(self):
         """Resonator frequency"""
         delta = (
-            self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor
+            self.Frequency * np.tan(self.Vgen[2]) / self.Qfactor
         ) ** 2 + 4 * self.Frequency**2
         freqres = (
-            self.Frequency * numpy.tan(self.Vgen[2]) / self.Qfactor + numpy.sqrt(delta)
+            self.Frequency * np.tan(self.Vgen[2]) / self.Qfactor + np.sqrt(delta)
         ) / 2
 
         return freqres
