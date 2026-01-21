@@ -72,7 +72,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
     double harmn = Elem->HarmNumber;
-    int M = harmonic_number;
+    int ring_harmn = harmonic_number;
     double tlag = Elem->TimeLag;
     double qfactor = Elem->Qfactor;
     double rshunt = Elem->Rshunt;
@@ -136,7 +136,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                     bunch_currents, turnhistory, pslice, z_cuts);
         compute_kicks_phasor(nslice, nbunch, nturnsw, turnhistory, normfact, vbeam_kicks,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
-                             beta, ave_vbeam, vbunch, bunch_spos, M, fillpattern, ts);                        
+                             beta, ave_vbeam, vbunch, bunch_spos, ring_harmn, fillpattern, ts);                        
 
                 
         /*apply kicks*/

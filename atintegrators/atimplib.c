@@ -304,7 +304,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double normfact, double *vbeam_kicks, double resfreq, double qfactor,
                           double rshunt, double *vbeam_phasor, double circumference,
                           double energy, double beta, double *ave_vbeam, double *vbunch,
-                          double *bunch_spos, int M, 
+                          double *bunch_spos, int ring_harmn, 
                           double *fillpattern, double ts_central_z){ 
                           
     #ifndef _MSC_VER  
@@ -323,7 +323,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     int ibunch, islice, total_slice_counter;
     int bunch_counter = 0;
     double bucket_curr = 0.0;
-    double main_bucket = circumference / (double) M;
+    double main_bucket = circumference / (double) ring_harmn;
     double ave_vbeam_ri[] = {0.0, 0.0};
     
     
@@ -338,7 +338,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     
     /* The vbeam_complex will always be sent to the center of the next bucket */
     
-    for(ibunch=0; ibunch<M; ibunch++){
+    for(ibunch=0; ibunch<ring_harmn; ibunch++){
         bucket_curr = fillpattern[ibunch];
         if(bucket_curr!=0.0){
             for(islice=0; islice<nslice; islice++){
@@ -379,8 +379,8 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);     
         }
 
-        ave_vbeam_ri[0] += creal(vbeam_complex)/M;
-        ave_vbeam_ri[1] += cimag(vbeam_complex)/M;
+        ave_vbeam_ri[0] += creal(vbeam_complex)/ring_harmn;
+        ave_vbeam_ri[1] += cimag(vbeam_complex)/ring_harmn;
 
         /* move back to center of this bucket */
         dt = ts_central_z/bc;
