@@ -334,7 +334,7 @@ An important thing to consider for the functions found in the **BeamLoadingCavit
 .. math:: V_{b,real}=-|\tilde{V}_{b}|sin(\theta_{b})
 .. math:: V_{b,imag}=|\tilde{V}_{b}|cos(\theta_{b})
 
-When the beam loading element is first initialise, the expected beam location is computed using the function **get_timelag_fromU0**. This function returns the parameter **ts**, which is the expected equalibrium **z** coordinate of the beam. If you set your timelag correctly, ts is equal to 0. Considering this parameter allows the usual behaviour of the TimeLag of the main cavity to be retained i.e. a shift in TimeLag of the main cavity is simply a shift in the reference of the full system.
+When the beam loading element is first initialised, the expected beam location is computed using the function **get_timelag_fromU0**. This function returns the parameter **ts**, which is the expected equilibrium **z** coordinate of the beam. If you set the TimeLag to the nominal value assuming a fixed **U0**, (for example using **set_cavity_phase** in a single harmonic system, ts is equal to 0, which means the final beam equilibrium position will converge on 0. Likewise, if you set the **TimeLag** to some other value, then the value of **ts** reflects the expected final position of the beam.  Considering this **ts** parameter allows the usual behaviour of the TimeLag of the main cavity to be retained i.e. a shift in TimeLag of the main cavity is simply a shift in the reference of the full system. Manually providing the **ts** has the effect of modifying the synchronous phase of the beam loading system. 
 
 The phasor model is updated with each slice. At the end of each bucket (filled or empty) the beam induced voltage is back tracked to the expected beam location in the bucket (:math:`t=ts/clight` for that bucket). This is why the ts is important, as it allows the feedback to ensure the cavity setpoints are fulfilled at the expected beam position. The final value of :math:`V_{b}` at the end of the turn is the mean of all the beam induced voltage from all buckets, measured at :math:`t=0` after the bunch has been tracked. The :math:`V_{b}` used for the compuation of the :math:`V_{g}` can either be taken from the most recent turn, or it can be the mean of a buffer of a specified length.
 
@@ -366,7 +366,7 @@ An additional keyword argument **cavpts** can be given to specifically transfer 
 
 The dynamics of the simulation are very sensitive to the VoltGain and PhaseGain parameters. Too strong gains can drive oscillations, too weak gains may appear stable but the setpoint criteria are not fulfilled. Be sure to understand the effect of these parameters on your dynamical system!
 
-
+Several example files can be found in **at/pyat/examples/CollectiveEffects** that can get any user started quickly.
 
 
 
