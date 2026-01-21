@@ -12,6 +12,7 @@ from ..lattice import Lattice, RFCavity
 from ..lattice import Element
 from ..lattice import AtWarning, AtError
 from ..lattice import constants as cst
+from .utils import element_from_dict
 
 __all__ = ["save_xsuite", "load_xsuite"]
 
@@ -182,7 +183,7 @@ class BasicElement(Element):
         self._params_to_at()
         self._class_to_at()
         self._integrator_to_at()
-        return super().from_dict(self.atparams)
+        return element_from_dict(self.atparams)
 
     def get_xsuite_dict(self) -> dict:
         self._params_to_xsuite()
