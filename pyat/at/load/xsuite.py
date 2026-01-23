@@ -479,7 +479,7 @@ class CavityElement(BasicElement):
         freq = self.xsuite_params.get("frequency", 0)
         if freq > 0:
             om = 2 * np.pi * self.xsuite_params.get("frequency")
-            pl = self.xsuite_params.pop("lag", 0.0)
+            pl = self.xsuite_params.pop("lag", 0.0) - 180
             tl = pl / om * cst.clight / 360
             self.atparams["TimeLag"] = tl
         else:
@@ -488,7 +488,7 @@ class CavityElement(BasicElement):
     def _set_xs_lag(self):
         om = 2 * np.pi * self.atparams.get("Frequency")
         tl = self.atparams.pop("TimeLag", 0.0)
-        pl = tl * om / cst.clight * 360
+        pl = tl * om / cst.clight * 360 + 180
         self.xsuite_params["lag"] = pl
 
     def get_at_element(self) -> Element:
