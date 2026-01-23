@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from enum import IntEnum
-from typing import Sequence, Optional, Union
+from typing import Sequence, Optional
 
 import numpy as np
 
@@ -37,7 +37,7 @@ class FeedbackMode(IntEnum):
     FeedbackMode.ONETURN means the feedback is only using the most recent
     turn, and the delta is applied each turn multiplied by VoltGain or
     PhaseGain.
-    
+
     FeedbackMode.WINDOW means the beam voltage passed to the feedback is
     the average of the WINDOW. For this method, buffersize and windowlength
     must also be provided.
@@ -48,15 +48,15 @@ class FeedbackMode(IntEnum):
 
 def add_beamloading(
     ring: Lattice,
-    qfactor: Union[float, Sequence[float]],
-    rshunt: Union[float, Sequence[float]],
+    qfactor: float | Sequence[float],
+    rshunt: float | Sequence[float],
     cavpts: Refpts = None,
-    copy: Optional[bool] = False,
+    copy: bool | None = False,
     **kwargs,
 ):
     r"""Function to add beam loading to a cavity element, the cavity
     element is changed to a beam loading element that combines the energy
-    kick from both the cavity and the resonator
+    kick from both the cavity and the resonator.
 
     Parameters:
         ring:           Lattice object
@@ -80,7 +80,7 @@ def add_beamloading(
 
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
-        for ref, elem in zip(cavpts, newelems):
+        for ref, elem in zip(cavpts, newelems, strict=True):
             ring[ref] = elem
 
     if cavpts is None:
@@ -90,7 +90,7 @@ def add_beamloading(
     qfactor = np.broadcast_to(qfactor, (len(cavpts),))
     rshunt = np.broadcast_to(rshunt, (len(cavpts),))
     new_elems = []
-    for ref, qf, rs in zip(cavpts, qfactor, rshunt):
+    for ref, qf, rs in zip(cavpts, qfactor, rshunt, strict=True):
         cav = ring[ref]
         if not isinstance(cav, RFCavity):
             raise TypeError(
@@ -100,10 +100,10 @@ def add_beamloading(
     return apply(ring, cavpts, new_elems)
 
 
-def remove_beamloading(ring, cavpts: Refpts = None, copy: Optional[bool] = False):
+def remove_beamloading(ring, cavpts: Refpts = None, copy: bool | None = False):
     """Function to remove beam loading from a cavity element, the beam
     loading element is changed to a beam loading element that
-    combines the energy kick from both the cavity and the resonator
+    combines the energy kick from both the cavity and the resonator.
 
     Parameters:
         ring:           Lattice object
@@ -117,7 +117,7 @@ def remove_beamloading(ring, cavpts: Refpts = None, copy: Optional[bool] = False
 
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
-        for ref, elem in zip(cavpts, newelems):
+        for ref, elem in zip(cavpts, newelems, strict=True):
             ring[ref] = elem
 
     if cavpts is None:
@@ -148,7 +148,7 @@ def remove_beamloading(ring, cavpts: Refpts = None, copy: Optional[bool] = False
 
 class BeamLoadingElement(RFCavity, Collective):
     """Class to generate a beamloading element, inherits from Element
-    additional argument are ring, cavity, qfactor, rshunt
+    additional argument are ring, cavity, qfactor, rshunt.
     """
 
     default_pass = {False: "DriftPass", True: "BeamLoadingCavityPass"}
@@ -182,10 +182,10 @@ class BeamLoadingElement(RFCavity, Collective):
         ring: Lattice,
         qfactor: float,
         rshunt: float,
-        detune: Optional[float] = 0.0,
-        cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
-        fbmode: Optional[FeedbackMode] = FeedbackMode.ONETURN,
-        buffersize: Optional[int] = 0,
+        detune: float | None = 0.0,
+        cavitymode: CavityMode | None = CavityMode.ACTIVE,
+        fbmode: FeedbackMode | None = FeedbackMode.ONETURN,
+        buffersize: int | None = 0,
         **kwargs,
     ):
         r"""
@@ -195,7 +195,7 @@ class BeamLoadingElement(RFCavity, Collective):
             voltage:         Cavity voltage [V]
             frequency:       Cavity frequency [Hz]
             qfactor:         Q factor
-            rshunt:          Shunt impedance, [:math:`\Omega`]
+            rshunt:          Shunt impedance, [:math:`\Omega`].
 
         Keyword Arguments:
             Nslice (int):       Number of slices per bunch. Default: 101
@@ -259,9 +259,9 @@ class BeamLoadingElement(RFCavity, Collective):
 
             error_string = (
                 "Cavity must be an integer of rf_frequency, otherwise"
-                + "the phi_s computation will be wrong. Please use the detune"
-                + "argument when adding beamloading to a cavity that is an"
-                + "integer harmonic."
+                "the phi_s computation will be wrong. Please use the detune"
+                "argument when adding beamloading to a cavity that is an"
+                "integer harmonic."
             )
             raise AtError(error_string)
 
@@ -281,7 +281,7 @@ class BeamLoadingElement(RFCavity, Collective):
             if not isinstance(fbmode, FeedbackMode):
                 raise TypeError(
                     "For an active cavity, fbmode has to be defined and an "
-                    + "instance of FeedbackMode"
+                    "instance of FeedbackMode"
                 )
             self._fbmode = int(fbmode)
         else:
@@ -290,9 +290,9 @@ class BeamLoadingElement(RFCavity, Collective):
         if self.detune == 0 and self._cavitymode == 3:
             raise AtError(
                 "Cannot start passive cavity feedback from zero detuning."
-                + "You must decide at the beginning which polarity you want."
-                + "This problem arises because the loop does not know which "
-                + "polarity to take!"
+                "You must decide at the beginning which polarity you want."
+                "This problem arises because the loop does not know which "
+                "polarity to take!"
             )
 
         self._passive_vset = kwargs.pop("passive_voltage", 0.0)
@@ -307,7 +307,8 @@ class BeamLoadingElement(RFCavity, Collective):
         self._windowlength = kwargs.pop("windowlength", 0)
 
         if self._windowlength > self._buffersize:
-            raise ValueError("The windowlength must be smaller" + "than the buffersize")
+            raise ValueError("The windowlength must be smaller"
+                             "than the buffersize")
         self._vgen_buffer = np.zeros(1)
         self._vbeam_buffer = np.zeros(1)
         self._vbunch_buffer = np.zeros(1)
@@ -382,7 +383,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 self._phis
             )
 
-        elif self._cavitymode == 2 or self._cavitymode == 3:
+        elif self._cavitymode in {2, 3}:
             vgen = 0
             psi = np.arctan(
                 2 * self.Qfactor * (1 - self.Frequency / (self.Frequency + self.detune))
@@ -418,22 +419,22 @@ class BeamLoadingElement(RFCavity, Collective):
 
     @property
     def Vgen_buffer(self):
-        """Stored generator voltage data"""
+        """Stored generator voltage data."""
         return self._vgen_buffer
 
     @property
     def Vbeam_buffer(self):
-        """Stored beam induced voltage data"""
+        """Stored beam induced voltage data."""
         return self._vbeam_buffer
 
     @property
     def Vbunch_buffer(self):
-        """Stored bunch induced voltage data"""
+        """Stored bunch induced voltage data."""
         return np.moveaxis(self._vbunch_buffer, 0, -1)
 
     @property
     def Nslice(self):
-        """Number of slices per bunch"""
+        """Number of slices per bunch."""
         return self._nslice
 
     @Nslice.setter
@@ -443,7 +444,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
     @property
     def Nturns(self):
-        """Number of turn for the wake field"""
+        """Number of turn for the wake field."""
         return self._nturns
 
     @Nturns.setter
@@ -453,12 +454,12 @@ class BeamLoadingElement(RFCavity, Collective):
 
     @property
     def TurnHistory(self):
-        """Turn history of the slices center of mass"""
+        """Turn history of the slices center of mass."""
         return self._turnhistory
 
     @property
     def ResFrequency(self):
-        """Resonator frequency"""
+        """Resonator frequency."""
         delta = (
             self.Frequency * np.tan(self.Vgen[2]) / self.Qfactor
         ) ** 2 + 4 * self.Frequency**2
@@ -470,22 +471,22 @@ class BeamLoadingElement(RFCavity, Collective):
 
     @property
     def Vbeam(self):
-        """Beam phasor (amplitude, phase)"""
+        """Beam phasor (amplitude, phase)."""
         return self._vbeam
 
     @property
     def Vbunch(self):
-        """Bunch phasor (amplitude, phase)"""
+        """Bunch phasor (amplitude, phase)."""
         return self._vbunch
 
     @property
     def Vcav(self):
-        """Cavity phasor (amplitude, phase)"""
+        """Cavity phasor (amplitude, phase)."""
         return self._vcav
 
     @property
     def Vgen(self):
-        """Generator phasor (amplitude, phase)"""
+        """Generator phasor (amplitude, phase)."""
         return self._vgen
 
     @Vgen.setter
@@ -498,13 +499,13 @@ class BeamLoadingElement(RFCavity, Collective):
         ring: Sequence,
         qfactor: float,
         rshunt: float,
-        cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
-        buffersize: Optional[int] = 0,
+        cavitymode: CavityMode | None = CavityMode.ACTIVE,
+        buffersize: int | None = 0,
         **kwargs,
     ):
         r"""Function to build the BeamLoadingElement from a cavity
         the FamName, Length, Voltage, Frequency and HarmNumber are
-        taken from the cavity element
+        taken from the cavity element.
 
         Parameters:
             ring:            Lattice object
@@ -549,7 +550,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def __repr__(self):
         """Simplified __repr__ to avoid errors due to arguments
-        not defined as attributes
+        not defined as attributes.
         """
         att = dict((k, v) for (k, v) in self.items() if not k.startswith("_"))
         return "{0}({1})".format(self.__class__.__name__, att)
