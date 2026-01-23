@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from enum import IntEnum
-from typing import Sequence, Optional
+from typing import Sequence
 
 import numpy as np
 
