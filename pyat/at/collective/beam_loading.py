@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from enum import IntEnum
-from typing import Sequence
+from collections.abs import Sequence
 
 import numpy as np
 
@@ -42,6 +42,7 @@ class FeedbackMode(IntEnum):
     the average of the WINDOW. For this method, buffersize and windowlength
     must also be provided.
     """
+
     ONETURN = 1
     WINDOW = 2
 
@@ -251,9 +252,7 @@ class BeamLoadingElement(RFCavity, Collective):
         )
         self.detune = detune
 
-        check_frequency = np.abs(
-            frequency - self.system_harmonic * ring.rf_frequency
-        )
+        check_frequency = np.abs(frequency - self.system_harmonic * ring.rf_frequency)
 
         if check_frequency > 1.0:  # 1 Hz is the limit for the float check
 
@@ -279,21 +278,23 @@ class BeamLoadingElement(RFCavity, Collective):
 
         if self._cavitymode == 1:
             if not isinstance(fbmode, FeedbackMode):
-                raise TypeError(
+                err_string = (
                     "For an active cavity, fbmode has to be defined and an "
                     "instance of FeedbackMode"
                 )
+                raise TypeError(err_string)
             self._fbmode = int(fbmode)
         else:
             self._fbmode = 0
 
         if self.detune == 0 and self._cavitymode == 3:
-            raise AtError(
+            err_string = (
                 "Cannot start passive cavity feedback from zero detuning."
                 "You must decide at the beginning which polarity you want."
                 "This problem arises because the loop does not know which "
                 "polarity to take!"
             )
+            raise AtError(err_string)
 
         self._passive_vset = kwargs.pop("passive_voltage", 0.0)
         self._beta = ring.beta
@@ -307,8 +308,8 @@ class BeamLoadingElement(RFCavity, Collective):
         self._windowlength = kwargs.pop("windowlength", 0)
 
         if self._windowlength > self._buffersize:
-            raise ValueError("The windowlength must be smaller"
-                             "than the buffersize")
+            err_string = "The windowlength must be smaller than the buffersize"
+            raise ValueError(err_string)
         self._vgen_buffer = np.zeros(1)
         self._vbeam_buffer = np.zeros(1)
         self._vbunch_buffer = np.zeros(1)
@@ -316,7 +317,7 @@ class BeamLoadingElement(RFCavity, Collective):
         if zcuts is not None:
             self.ZCuts = zcuts
 
-        super(BeamLoadingElement, self).__init__(
+        super().__init__(
             family_name, length, voltage, frequency, harmonic_number, energy, **kwargs
         )
 
@@ -375,13 +376,11 @@ class BeamLoadingElement(RFCavity, Collective):
                 psi = 0.0
                 warning_string = (
                     "Unusual cavity configuration found."
-                    + "Setting initial psi to 0 to avoid NaNs"
+                    "Setting initial psi to 0 to avoid NaNs"
                 )
-                warnings.warn(AtWarning(warning_string))
+                warnings.warn(AtWarning(warning_string), stacklevel=2)
             psi += self.feedback_angle_offset
-            vgen = self.Voltage * np.cos(psi) - vb * np.cos(psi) * np.sin(
-                self._phis
-            )
+            vgen = self.Voltage * np.cos(psi) - vb * np.cos(psi) * np.sin(self._phis)
 
         elif self._cavitymode in {2, 3}:
             vgen = 0
@@ -392,21 +391,15 @@ class BeamLoadingElement(RFCavity, Collective):
             vgen = self.Voltage
             psi = 0
 
-        self._vbeam = np.array(
-            [2 * current * self.Rshunt * np.cos(psi), np.pi + psi]
-        )
+        self._vbeam = np.array([2 * current * self.Rshunt * np.cos(psi), np.pi + psi])
 
         self._vgen = np.array([vgen, psi + self._phis, psi, vgen / np.cos(psi)])
 
         vbp_amp = 2 * current * self.Rshunt * np.cos(psi)
         vbp_phase = np.pi + psi
-        vbp_complex = vbp_amp * np.cos(vbp_phase) + 1j * vbp_amp * np.sin(
-            vbp_phase
-        )
+        vbp_complex = vbp_amp * np.cos(vbp_phase) + 1j * vbp_amp * np.sin(vbp_phase)
 
-        self._vbeam_phasor = np.array(
-            [np.abs(vbp_complex), np.angle(vbp_complex)]
-        )
+        self._vbeam_phasor = np.array([np.abs(vbp_complex), np.angle(vbp_complex)])
 
     @property
     def Buffersize(self):
@@ -534,7 +527,7 @@ class BeamLoadingElement(RFCavity, Collective):
         cav_args = [cav_attrs.pop(k, getattr(cav, k)) for k in _CAV_ATTRIBUTES]
         if cavitymode == CavityMode.PASSIVE:
             if cav_args[1] != 0.0:
-                warnings.warn(AtWarning("Setting Cavity Voltage to 0"))
+                warnings.warn(AtWarning("Setting Cavity Voltage to 0"), stacklevel=2)
             cav_args[1] = 0.0
         return BeamLoadingElement(
             family_name,
@@ -552,5 +545,5 @@ class BeamLoadingElement(RFCavity, Collective):
         """Simplified __repr__ to avoid errors due to arguments
         not defined as attributes.
         """
-        att = dict((k, v) for (k, v) in self.items() if not k.startswith("_"))
-        return "{0}({1})".format(self.__class__.__name__, att)
+        att = {k: v for (k, v) in self.items() if not k.startswith("_")}
+        return f"{self.__class__.__name__}({att})"
