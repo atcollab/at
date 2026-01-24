@@ -223,9 +223,10 @@ class Mad8Parser(_MadParser):
 
     def _format_command(self, expr: str) -> str:
         """Evaluate an expression using *self* as local namespace."""
+        expr = super()._format_command(expr)
         expr = _attr.sub(r".\1", expr)  # Attribute access: VAR[ATTR]
         expr = expr.replace("^", "**")  # Exponentiation
-        return super()._format_command(expr)
+        return expr
 
 
 def load_mad8(
