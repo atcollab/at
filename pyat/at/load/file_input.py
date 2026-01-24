@@ -482,27 +482,6 @@ class BaseParser(DictNoDot, StrParser):
         Overload this method for specific languages"""
         return self._gen_expr(expr)  # Fix identifiers
 
-    def _check_constant(self, expr: str) -> Any:
-        """Check if an expression is constant.
-
-        This method attempts to evaluate the expression in a context where no variables
-        are defined. If the evaluation succeeds, the expression is considered constant
-        and the evaluated value is returned. If the evaluation fails with a NameError,
-        the expression is considered non-constant (i.e. it depends on variables).
-
-        Args:
-            expr: The string expression to evaluate
-
-        Returns:
-            The result of evaluating the expression if it's constant
-
-        Raises:
-            NameError: If the expression contains variables
-        """
-        expr = self._format_command(expr)
-        # Try to evaluate with only built-ins, not parser variables
-        return eval(expr, self.env, {})
-
     def evaluate(self, expr: str):
         """Evaluate the right side of an expression.
 
