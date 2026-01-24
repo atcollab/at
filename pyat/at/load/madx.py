@@ -918,16 +918,23 @@ class _MadParser(LowerCaseParser, UnorderedParser):
 
     def _assign_deferred(self, value: str):
         """Deferred assignment."""
+
+        def _try_constant(expr):
+            try:
+                return eval(expr, self.env)
+            except Exception:
+                return StrParameter(self, expr)
+
         if value[0] == "(" and value[-1] == ")":
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
             return tuple(
-                StrParameter.parameter(self, v)
+                _try_constant(v)
                 for v in restore(matches, *value.split(","))
             )
         else:
             # Scalar variable
-            return StrParameter.parameter(self, value)
+            return _try_constant(value)
 
     def _argparser(self, argcount, argstr: str, **kwargs):
         key, *value = split_ignoring_parentheses(
@@ -1126,9 +1133,10 @@ class MadxParser(_MadParser):
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation."""
+        expr = super()._format_command(expr)
         expr = expr.replace("->", ".")  # Attribute access: VAR->ATTR
         expr = expr.replace("^", "**")  # Exponentiation
-        return super()._format_command(expr)
+        return expr
 
 
 def load_madx(
