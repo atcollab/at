@@ -27,26 +27,6 @@ class StrParser(abc.ABC):
         """
         ...
 
-    @abc.abstractmethod
-    def _check_constant(self, expr: str) -> Any:
-        """Check if an expression is constant.
-
-        This method attempts to evaluate the expression in a context where no variables
-        are defined. If the evaluation succeeds, the expression is considered constant
-        and the evaluated value is returned. If the evaluation fails with a NameError,
-        the expression is considered non-constant (i.e., it depends on variables).
-
-        Args:
-            expr: The string expression to evaluate
-
-        Returns:
-            The result of evaluating the expression if it's constant
-
-        Raises:
-            NameError: If the expression contains variables
-        """
-        ...
-
 
 class StrParameter(ParamDef):
     """String expression parameter.
@@ -150,15 +130,6 @@ class StrParameter(ParamDef):
 
     def __le__(self, other):
         return self.value <= other
-
-    @classmethod
-    def parameter(cls, parser, expr: str):
-        try:
-            val = parser._check_constant(expr)
-        except NameError:
-            return cls(parser, expr)
-        else:
-            return val
 
     def fast_value(self) -> Any:
         return self._conversion(self.parser.evaluate(self.expr))
