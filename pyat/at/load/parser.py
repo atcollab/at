@@ -25,32 +25,13 @@ class StrParser(abc.ABC):
         """
         ...
 
-    @abc.abstractmethod
-    def _check_constant(self, expr: str) -> Any:
-        """Check if an expression is constant.
-
-        This method attempts to evaluate the expression in a context where no variables
-        are defined. If the evaluation succeeds, the expression is considered constant
-        and the evaluated value is returned. If the evaluation fails with a NameError,
-        the expression is considered non-constant (i.e., it depends on variables).
-
-        Args:
-            expr: The string expression to evaluate
-
-        Returns:
-            The result of evaluating the expression if it's constant
-
-        Raises:
-            NameError: If the expression contains variables
-        """
-        ...
-
 
 class StrParameter:
-    """MAD parameter.
+    """String expression parameter.
 
-    A MAD parameter is an expression which can be evaluated n the context
-    of a MAD parser
+    A StrParameter represents an expression which can be evaluated in the context
+    of a StrParser. This is typically used for MAD-X style parameters where
+    expressions can reference other parameters.
     """
 
     def __init__(self, parser: StrParser, expr: str):
@@ -65,15 +46,6 @@ class StrParameter:
         """
         self.expr = expr
         self.parser = parser
-
-    @classmethod
-    def parameter(cls, parser, expr: str):
-        try:
-            val = parser._check_constant(expr)
-        except NameError:
-            return cls(parser, expr)
-        else:
-            return val
 
     @property
     def value(self) -> Any:
