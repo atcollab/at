@@ -372,10 +372,10 @@ class RFCavity(LongtMotion, LongElement):
 
     # Instance attributes
     Voltage: float
-    Frequency = float
-    HarmNumber = int
-    TimeLag = float
-    Energy = float
+    Frequency: float
+    HarmNumber: int
+    TimeLag: float
+    Energy: float
 
     def __init__(
         self,
