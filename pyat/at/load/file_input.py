@@ -20,7 +20,7 @@ import re
 from itertools import repeat, count
 from functools import wraps
 from typing import Any, ClassVar
-from collections.abc import Callable, Iterable, Generator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Generator, Mapping, Sequence, Container
 
 import numpy as np
 
@@ -242,14 +242,18 @@ class AnyDescr:
     "list of names of str attributes"
     bool_attr: ClassVar[set[str]] = set()
     "list of names of bool attributes"
-    pos_args: ClassVar[set[str]] = set()
+    pos_args: ClassVar[tuple[str, ...]] = ()
     "list of names of positional arguments"
 
     @classmethod
     def argparser(cls, parser, argcount, argstr):
         """Specialised argument parser."""
         return parser._argparser(
-            argcount, argstr, bool_attr=cls.bool_attr, str_attr=cls.str_attr
+            argcount,
+            argstr,
+            bool_attr=cls.bool_attr,
+            str_attr=cls.str_attr,
+            pos_args=cls.pos_args,
         )
 
     def __init__(self, *args, **kwargs):
@@ -537,9 +541,9 @@ class BaseParser(DictNoDot, StrParser):
         argcount: int,
         argstr: str,
         *,
-        bool_attr: tuple[str, ...] = (),
-        str_attr: tuple[str, ...] = (),
-        pos_args: tuple[str, ...] = (),
+        bool_attr: Container[str] = (),
+        str_attr: Container[str] = (),
+        pos_args: Sequence[str] = (),
     ):
         """Evaluate the value of a command argument and return the pair (key, value)."""
 
@@ -547,6 +551,8 @@ class BaseParser(DictNoDot, StrParser):
             if k in str_attr:
                 return v[1:-1] if v[0] in {'"', "'"} else v
             else:
+                if v.startswith("("):
+                    v = v[:-1] + ",)"  # for 1-element tuples
                 return self.evaluate(v)
 
         key, *value = split_ignoring_parentheses(
