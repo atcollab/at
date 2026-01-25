@@ -672,7 +672,7 @@ class BaseParser(DictNoDot, StrParser):
     def _finalise(self, final: bool = True) -> None:
         """Called at the end of processing."""
         if final:
-            undefined = self._missing(verbose=self.verbose)
+            undefined = self._missing()
             self._print(f"{len(undefined)} missing definitions.")
 
     @property
@@ -694,13 +694,13 @@ class BaseParser(DictNoDot, StrParser):
                 return reason, label, *args
         return None
 
-    def _missing(self, verbose=False):
+    def _missing(self):
         """Return the set of missing definitions."""
         miss = set()
         for cmd in self.postponed:
             reason = cmd[0]
             if reason == self._gen_key(cmd[2]):
-                if verbose:
+                if self.verbose:
                     cmdstr = self._command_str(*cmd[1:])
                     self._print(f"Command {cmdstr!r} ignored")
                 continue
@@ -927,7 +927,7 @@ class UnorderedParser(BaseParser):
         # After the last file: initialise the remaining undefined variables
         if final:
             default_value = self.get(self._undef_key)
-            undefined = self._missing(verbose=self.verbose)
+            undefined = self._missing()
             self._print(f"{len(undefined)} missing definitions.")
             if undefined and default_value is not None:
                 for var in undefined:
