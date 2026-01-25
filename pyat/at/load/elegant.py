@@ -59,7 +59,7 @@ __all__ = ["ElegantParser", "_ElegantExporter", "load_elegant", "save_elegant"]
 
 import functools
 from math import sqrt, factorial
-from collections.abc import Iterable
+from collections.abc import Iterable, Container, Sequence
 from pathlib import Path
 from typing import ClassVar
 import warnings
@@ -424,6 +424,7 @@ _elegant_env = {
     "HMONITOR": HMON,
     "VMON": VMON,
     "VMONITOR": VMON,
+    "LINE": _Line,
     "__builtins__": {},
 }
 
@@ -515,9 +516,9 @@ class ElegantParser(UpperCaseParser, BaseParser):
         argcount: int,
         argstr: str,
         *,
-        bool_attr: tuple[str, ...] = (),
-        str_attr: tuple[str, ...] = (),
-        pos_args: tuple[str, ...] = (),
+        bool_attr: Container[str] = (),
+        str_attr: Container[str] = (),
+        pos_args: Sequence[str] = (),
     ):
         """Evaluate a command argument and return a pair (key, value)."""
 
