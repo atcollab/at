@@ -12,7 +12,6 @@ from ..lattice import Lattice, elements as elt
 
 
 class Exporter:
-
     # Class attributes
     delimiter: ClassVar[str] = ";"
     continuation: ClassVar[str] = ""
