@@ -245,7 +245,7 @@ def p_list(a: Iterable[float], factor: float = 1.0):
 class _MadElement(ElementDescr):
     """Description of MADX elements."""
 
-    str_attr: ClassVar[set[str]] = {"apertype", "from"}
+    str_attr = {"apertype", "from"}
 
     def __init__(self, *args, at: float = 0.0, **kwargs):
         self.at = at
@@ -572,6 +572,11 @@ class _Value:
 class _Line(SequenceDescr):
     """Descriptor for the MADX LINE."""
 
+    pos_args = ("line",)
+
+    def __init__(self, line, name=""):
+        super().__init__(line)
+
     def __add__(self, other):
         return type(self)(chain(self, other))
 
@@ -606,7 +611,7 @@ class _Line(SequenceDescr):
 class _Sequence(SequenceDescr):
     """Descriptor for the MADX SEQUENCE."""
 
-    str_attr: ClassVar[set[str]] = {"refer", "refpos"}
+    str_attr = {"refer", "refpos"}
     _offset: ClassVar[dict[str, float]] = {"entry": 1.0, "centre": 0.0, "exit": -1.0}
 
     def __init__(
@@ -861,6 +866,7 @@ _madx_env = {
     "vmonitor": vmonitor,
     "instrument": instrument,
     "sequence": _Sequence,
+    "line": _Line,
     # Commands
     "value": _Value(),
     "__builtins__": {},
@@ -928,10 +934,7 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         if value[0] == "(" and value[-1] == ")":
             # Array variable: convert to tuple
             value, matches = protect(value[1:-1], fence=(r"\(", r"\)"))
-            return tuple(
-                _try_constant(v)
-                for v in restore(matches, *value.split(","))
-            )
+            return tuple(_try_constant(v) for v in restore(matches, *value.split(",")))
         else:
             # Scalar variable
             return _try_constant(value)
@@ -944,14 +947,6 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             return key, self._assign_deferred(value[0])
         else:
             return super()._argparser(argcount, argstr, **kwargs)
-
-    def _assign(self, label: str | None, key: str, val: str):
-        # Special treatment of "line=(...)" assignments
-        if key == "line":
-            val = val.replace(")", ",)")  # For tuples with a single item
-            return label, _Line(self.evaluate(val), name=label)
-        else:
-            return super()._assign(label, key, val)
 
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         # Special treatment of SEQUENCE definitions
@@ -991,9 +986,11 @@ class _MadParser(LowerCaseParser, UnorderedParser):
 
     def _format_statement(self, line: str) -> str:
         line = _separator.sub(",", line)  # Replace space separators with commas
-        # turn curly braces into parentheses. Must be done before splitting arguments
+        line = super()._format_statement(line)
+        # turn curly braces into parentheses.
         line = line.replace("{", "(").replace("}", ")")
-        return super()._format_statement(line)
+        # Special case for the LINE command. Must be done after stripping whitespace
+        return line.replace("line=", "line,")
 
     def _get_beam(self, key: str):
         """Get the beam object for a given sequence."""
