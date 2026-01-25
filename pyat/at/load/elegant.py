@@ -486,13 +486,9 @@ class ElegantParser(UpperCaseParser, BaseParser):
         super().__init__(_elegant_env, **kwargs)
         self.rpn = Rpn()
 
-    def _assign(self, label: str | None, key: str, val: str):
-        # Special treatment of "line=(...)" commands
-        if key == "LINE":
-            val = val.replace(")", ",)")  # For tuples with a single item
-            return label, _Line(self.evaluate(val), name=label)
-        else:
-            return super()._assign(label, key, val)
+    def _format_statement(self, line: str) -> str:
+        line = super()._format_statement(line)
+        return line.replace("LINE=", "LINE,")
 
     def _command(self, label, cmdname, *args: str, **kwargs):
         # Special treatment of label #INCLUDE
