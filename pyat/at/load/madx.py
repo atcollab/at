@@ -148,7 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser, ignore_class
 from .file_output import Exporter
 from .parser import StrParameter
-from ..lattice import Lattice, elements as elt, Particle, AtWarning
+from ..lattice import Lattice, elements as elt, Particle, AtWarning, Param
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -947,6 +947,15 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             return key, self._assign_deferred(value[0])
         else:
             return super()._argparser(argcount, argstr, **kwargs)
+
+    def _assign(self, label: str | None, key: str, val: str):
+        """Variable assignment."""
+        try:  # if val is a constant
+            val = eval(val)
+        except NameError:
+            return key, self.evaluate(val)
+        else:
+            return key, Param(val, name=label)
 
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         # Special treatment of SEQUENCE definitions
