@@ -148,6 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser, ignore_class
 from .file_output import Exporter
 from .parser import StrParameter
+from .. import ParamDef
 from ..lattice import Lattice, elements as elt, Particle, AtWarning, Param
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
@@ -591,6 +592,8 @@ class _Line(SequenceDescr):
         return self.__mul__(other)
 
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
+        sav = parser._current_element
+        parser._current_element = self.name
         if self.inverse:
             for elem in reversed(self):
                 if isinstance(elem, AnyDescr):  # Element or List
@@ -605,6 +608,7 @@ class _Line(SequenceDescr):
                 elif isinstance(elem, Sequence):  # Other sequence (tuple, list)
                     for el in elem:
                         yield from el.expand(parser)
+        parser._current_element = sav
 
 
 # noinspection PyPep8Naming
@@ -693,16 +697,20 @@ class _Sequence(SequenceDescr):
                     wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-fdl} m")
                     warnings.warn(wrn, stacklevel=3)
 
+        sav = parser._current_element
+        parser._current_element = self.name
         drcounter = 0
         end = 0.0
         elem = self
         self.at = 0.0
         for (entry, ext), elem in self.flatten(parser):
+            parser._current_element = ".".join((self.name, elem.name))
             yield from insert_drift(entry - end, elem)
             end = ext
             yield from elem.expand(parser)
 
         yield from insert_drift(self.length - end, elem)  # Final drift
+        parser._current_element = sav
 
 
 class _Beam(ElementDescr):
@@ -948,14 +956,14 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         else:
             return super()._argparser(argcount, argstr, **kwargs)
 
-    # def _assign(self, label: str | None, key: str, val: str):
-    #     """Variable assignment."""
-    #     try:  # if val is a constant
-    #         val = eval(val)
-    #     except NameError:
-    #         return key, self.evaluate(val)
-    #     else:
-    #         return key, Param(val, name=label)
+    def _assign(self, label: str | None, key: str, val: str):
+        """Variable assignment."""
+        try:  # if val is a constant
+            val = eval(val)
+        except NameError:
+            return key, self.evaluate(val)
+        else:
+            return key, Param(val, name=key)
 
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         # Special treatment of SEQUENCE definitions
@@ -1073,6 +1081,14 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         if not parameterised:
             lat.unparameterise()
         return lat
+
+    def parameterise(self, key:str):
+        val = self[key]
+        if isinstance(val, ParamDef):
+            return val
+        else:
+            return Param(val, name=key)
+
 
 
 class MadxParser(_MadParser):
