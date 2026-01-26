@@ -166,7 +166,7 @@ class Operand(abc.ABC):
 
     def __rsub__(self, other):
         try:
-            op = _BinaryOperator(sub, self, other)
+            op = _BinaryOperator(sub, other, self)
         except TypeError:
             return NotImplemented
         else:
@@ -195,12 +195,24 @@ class Operand(abc.ABC):
 
     def __rtruediv__(self, other):
         try:
-            op = _BinaryOperator(truediv, self, other)
+            op = _BinaryOperator(truediv, other, self)
         except TypeError:
             return NotImplemented
         else:
             name = "/".join((self._nm(other, 20), self._nm(self, 20)))
             return ParamBase(evaluator=op, name=name, priority=20)
+
+    def __gt__(self, other):
+        return float(self.value) > other
+
+    def __lt__(self, other):
+        return float(self.value) < other
+
+    def __ge__(self, other):
+        return float(self.value) >= other
+
+    def __le__(self, other):
+        return float(self.value) <= other
 
     def __float__(self):
         return float(self.value)

@@ -19,6 +19,7 @@ v2 = 2*(sqrt(4) + 2**2) ;    // Test expression
 
 label : command1, flag1,     ! Test continuation
 -FLAG2, title="test parser", ! Test disabled flag
+arg0=(v1, v2),               ! Test array
 arg1=v1, ARG2=v2, ARG3=V3 ;  ! Test postponed definition
 
 V3 = True ; V4 = False ;     ! Test several commands
@@ -36,6 +37,7 @@ V2 = 2*(sqrt(4) + 2**2)       # Test expression
 
 label : command1, flag1, \    # Test continuation
 -FLAG2, title="test parser",\ # Test disabled flag
+arg0=(V1, V2),\               # Test array
 arg1=V1, ARG2=V2, ARG3=V3     # Test postponed definition
 
 V3 = True ; V4 = False        # Test several commands
@@ -176,7 +178,7 @@ RING.1: LINE=(CELL.1, DR1, SOL1, DR4, MULT1, &
 
 
 class _Command1:
-    "Test command checking its arguments versus the database."
+    """Test command checking its arguments versus the database."""
 
     @staticmethod
     def argparser(parser, argcount, argstr):
@@ -189,6 +191,7 @@ class _Command1:
         assert kwargs["title"] == "test parser"
         assert kwargs["flag1"] is True
         assert kwargs["FLAG2"] is False
+        assert kwargs["arg0"] == (42.0, 12.0)
         assert kwargs["arg1"] == 42.0
         assert kwargs["ARG2"] == 12.0
         assert kwargs["ARG3"] is True
