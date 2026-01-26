@@ -364,11 +364,15 @@ class ElementDescr(AnyDescr, dict):
     # noinspection PyUnusedLocal
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         """Iterator on the generated AT elements."""
+        sav = parser._current_element
+        parser._current_element = self.name
         try:
             elems = self.to_at(**self)
         except Exception as exc:
             exc.args += (f"{self}",)
             raise
+        finally:
+            parser._current_element = sav
 
         if self.inverse:
             for elem in reversed(elems):
@@ -454,6 +458,7 @@ class BaseParser(DictNoDot, StrParser):
             self[self._undef_key] = 0
         self.postponed = []
         self.in_file = []
+        self._current_element = None
 
     # Defined externally because python >= 38 does not allow static methods
     # as decorators
@@ -497,14 +502,14 @@ class BaseParser(DictNoDot, StrParser):
         """
         expr = self._format_command(expr)
         default_value = self.get(self._undef_key)
-        print(f"default: {type(default_value)}, {default_value!r}")
         if self._use_default and default_value is not None:
             for _loop in range(5):
                 try:
                     return eval(expr, self.env, self)
                 except NameError as exc:  # noqa: PERF203
+                    elem = self._current_element
                     var = self._reason(exc)
-                    self._print(f"Set {var!r} to {default_value} ({_loop})")
+                    self._print(f"In {elem}, set {var!r} to {default_value} ({_loop})")
                     self[var] = default_value
         return eval(expr, self.env, self)
 
@@ -928,7 +933,6 @@ class UnorderedParser(BaseParser):
         # After the last file: initialise the remaining undefined variables
         if final:
             default_value = self.get(self._undef_key)
-            print("default:", type(default_value), default_value)
             undefined = self._missing()
             self._print(f"{len(undefined)} missing definitions.")
             if undefined and default_value is not None:
