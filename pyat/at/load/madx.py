@@ -948,14 +948,14 @@ class _MadParser(LowerCaseParser, UnorderedParser):
         else:
             return super()._argparser(argcount, argstr, **kwargs)
 
-    def _assign(self, label: str | None, key: str, val: str):
-        """Variable assignment."""
-        try:  # if val is a constant
-            val = eval(val)
-        except NameError:
-            return key, self.evaluate(val)
-        else:
-            return key, Param(val, name=label)
+    # def _assign(self, label: str | None, key: str, val: str):
+    #     """Variable assignment."""
+    #     try:  # if val is a constant
+    #         val = eval(val)
+    #     except NameError:
+    #         return key, self.evaluate(val)
+    #     else:
+    #         return key, Param(val, name=label)
 
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         # Special treatment of SEQUENCE definitions
