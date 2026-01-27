@@ -1,19 +1,22 @@
-"""AT generic plotting function"""
+"""AT generic plotting function."""
 from __future__ import annotations
+
+__all__ = ["baseplot"]
+
+from collections.abc import Callable
 from itertools import chain, repeat
+
 # noinspection PyPackageRequirements
 import matplotlib.pyplot as plt
-from typing import Callable
+
 from .synopt import plot_synopt
 from ..lattice import Lattice
 
 SLICES = 400
 
-__all__ = ['baseplot']
-
 
 def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
-    """Generic lattice plot
+    """Generic lattice plot.
 
     :py:func:`baseplot` divides the region of interest of ring into small
     elements, calls the specified function to get the plot data and calls
@@ -76,7 +79,7 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
 
     def plot1(ax, yaxis_label, x, y, labels=()):
         lines = []
-        for y1, prop, label in zip(y, props, chain(labels, repeat(None))):
+        for y1, prop, label in zip(y, props, chain(labels, repeat(None)), strict=False):
             ll = ax.plot(x, y1, **prop)
             if label is not None:
                 ll[0].set_label(label)
@@ -85,24 +88,24 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
         return lines
 
     def labeled(line):
-        return not line.properties()['label'].startswith('_')
+        return not line.properties()["label"].startswith("_")
 
     # extract baseplot arguments
-    slices = kwargs.pop('slices', SLICES)
-    axes = kwargs.pop('axes', None)
-    legend = kwargs.pop('legend', True)
-    block = kwargs.pop('block', False)
-    if 's_range' in kwargs:
-        ring.s_range = kwargs.pop('s_range')
+    slices = kwargs.pop("slices", SLICES)
+    axes = kwargs.pop("axes", None)
+    legend = kwargs.pop("legend", True)
+    block = kwargs.pop("block", False)
+    if "s_range" in kwargs:
+        ring.s_range = kwargs.pop("s_range")
 
     # extract synopt arguments
-    synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole',
-               'monitor', 'labels']
+    synkeys = ["dipole", "quadrupole", "sextupole", "multipole",
+               "monitor", "labels"]
     kwkeys = list(kwargs.keys())
-    synargs = dict((k, kwargs.pop(k)) for k in kwkeys if k in synkeys)
+    synargs = {k: kwargs.pop(k) for k in kwkeys if k in synkeys}
 
     # get color cycle
-    cycle_props = plt.rcParams['axes.prop_cycle']
+    cycle_props = plt.rcParams["axes.prop_cycle"]
 
     # slice the ring
     rg = ring.slice(slices=slices)
@@ -116,14 +119,10 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
     if axes is None:
         # Create new axes
         nplots = len(plots)
-        fig = plt.figure()
-        axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]',
-                                 facecolor=[1.0, 1.0, 1.0, 0.0],
-                                 title=title)
+        axsyn, axleft = plot_synopt(ring, **synargs)
+        axleft.set_title(title)
+        axleft.set_xlabel("s [m]")
         axright = axleft.twinx() if (nplots >= 2) else None
-        axleft.set_title(ring.name, fontdict={'fontsize': 'medium'},
-                         loc='left')
-        axsyn = plot_synopt(ring, axes=axleft, **synargs)
     else:
         # Use existing axes
         axleft, axright = axes

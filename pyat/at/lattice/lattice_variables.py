@@ -1,4 +1,6 @@
-"""Variables are **references** to scalar attributes of lattice elements. There are 2
+"""Definition of variables.
+
+Variables are **references** to scalar attributes of lattice elements. There are 2
 kinds of element variables:
 
 - an :py:class:`ElementVariable` is associated to an element object, and acts on all
@@ -12,17 +14,17 @@ kinds of element variables:
 
 from __future__ import annotations
 
-__all__ = ["RefptsVariable", "ElementVariable"]
+__all__ = ["ElementVariable", "RefptsVariable"]
 
-from collections.abc import Sequence
-from typing import Union, Optional
+from collections.abc import Sequence, Callable
+from typing import Any
 
 import numpy as np
 
 from .elements import Element
 from .lattice_object import Lattice
 from .utils import Refpts, getval, setval
-from .variables import VariableBase
+from .variables import VariableBase, Number
 
 
 class RefptsVariable(VariableBase):
@@ -42,38 +44,49 @@ class RefptsVariable(VariableBase):
     supplied for getting or setting the variable.
     """
 
+    _getf: Callable[[Element], Number]
+    _setf: Callable[[Element, Number], None]
+    refpts: Refpts
+
     def __init__(
-        self, refpts: Refpts, attrname: str, index: Optional[int] = None, **kwargs
+        self, refpts: Refpts, attrname: str, index: int | None = None, **kwargs
     ):
         r"""
         Parameters:
             refpts:     Location of variable :py:class:`.Element`\ s
             attrname:   Attribute name
             index:      Index in the attribute array. Use :py:obj:`None` for
-              scalar attributes
+              scalar attributes.
 
         Keyword Args:
             name (str):     Name of the Variable. Default: ``''``
             bounds (tuple[float, float]):   Lower and upper bounds of the
               variable value. Default: (-inf, inf)
             delta (float):  Step. Default: 1.0
-            ring (Lattice): If specified, it is used to get and store the initial
-              value of the variable. Otherwise, the initial value is set to None
+            ring (Lattice): Default lattice. It will be used if *ring* is not provided
+              to the :py:meth:`~.VariableBase.get` or :py:meth:`~.VariableBase.set`
+              methods. Note that if *ring* is fixed, you should consider using a
+              :py:class:`.ElementVariable` instead.
         """
         self._getf = getval(attrname, index=index)
         self._setf = setval(attrname, index=index)
         self.refpts = refpts
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, ring: Lattice = None):
+    def _setfun(self, value: Number, ring: Lattice | None = None, **_) -> None:
         if ring is None:
-            raise ValueError("Can't set values if ring is None")
+            msg = (
+                "Can't set values if ring is None.\n"
+                "Try to use an ElementVariable if possible"
+            )
+            raise ValueError(msg)
         for elem in ring.select(self.refpts):
             self._setf(elem, value)
 
-    def _getfun(self, ring: Lattice = None) -> float:
+    def _getfun(self, ring: Lattice | None = None, **_) -> Number:
         if ring is None:
-            raise ValueError("Can't get values if ring is None")
+            msg = "Can't get values if ring is None"
+            raise ValueError(msg)
         values = np.array([self._getf(elem) for elem in ring.select(self.refpts)])
         return np.average(values)
 
@@ -93,11 +106,15 @@ class ElementVariable(VariableBase):
     deep, of the original object.
     """
 
+    _getf: Callable[[Element], Any]
+    _setf: Callable[[Element, Any], None]
+    _elements: set[Element]
+
     def __init__(
         self,
-        elements: Union[Element, Sequence[Element]],
+        elements: Element | Sequence[Element],
         attrname: str,
-        index: Optional[int] = None,
+        index: int | None = None,
         **kwargs,
     ):
         r"""
@@ -106,7 +123,7 @@ class ElementVariable(VariableBase):
               attribute is varied
             attrname:   Attribute name
             index:      Index in the attribute array. Use :py:obj:`None` for
-              scalar attributes
+              scalar attributes.
 
         Keyword Args:
             name (str):     Name of the Variable. Default: ``''``
@@ -123,15 +140,15 @@ class ElementVariable(VariableBase):
         self._setf = setval(attrname, index=index)
         super().__init__(**kwargs)
 
-    def _setfun(self, value: float, **kwargs):
+    def _setfun(self, value: Number, **_) -> None:
         for elem in self._elements:
             self._setf(elem, value)
 
-    def _getfun(self, **kwargs) -> float:
+    def _getfun(self, **_) -> Number:
         values = np.array([self._getf(elem) for elem in self._elements])
         return np.average(values)
 
     @property
-    def elements(self):
-        """Return the set of elements acted upon by the variable"""
+    def elements(self) -> set[Element]:
+        """Return the set of elements acted upon by the variable."""
         return self._elements

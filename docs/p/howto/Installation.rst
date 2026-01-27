@@ -9,7 +9,7 @@ methods are used by higher-level functions to provide physics results.
 Requirements
 ------------
 
-pyAT supports Python 3.7 to 3.12.
+pyAT supports Python 3.10 to 3.14.
 
 Installation
 ------------
@@ -19,7 +19,7 @@ From PyPI
 
 PyPI maintains PyAT versions for Linux, MacOS and Windows, and python versions:
 
-- CPython 3.7, 3.8, 3.9, 3.10, 3.11, 3.12
+- CPython 3.10, 3.11, 3.12, 3.13, 3,14
 - PyPI does not support PyPy, because of the missing numpy and scipy libraries
 
 *Installation with minimal dependencies:*
@@ -64,8 +64,7 @@ From conda-forge
 
 conda-forge maintains PyAT versions for Linux, MacOS and Windows, and python versions:
 
-- CPython 3.8, 3.9, 3.10, 3.11, 3.12
-- PyPy 3.9
+- CPython 3.10, 3.11, 3.12, 3.13, 3.14
 
 PyAT can be installed in a conda environment with::
 

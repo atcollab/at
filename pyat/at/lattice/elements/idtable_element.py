@@ -1,4 +1,4 @@
-"""ID table :py:clas:`.Element`."""
+"""ID table :py:class:`.Element`."""
 
 
 from __future__ import annotations

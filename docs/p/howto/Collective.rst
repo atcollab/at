@@ -323,24 +323,50 @@ A final note of importants, when parallelising, Nslice refers to the number of s
 Beam Loading
 ------------
 
-An IPAC paper that covers the theory used for the beam loading module can be found in [5]_. Only the main functionalities will be mentioned here.
+An IPAC paper that covers the theory used for the beam loading module can be found in [5]_.
 
-To consider beam loading in an rf cavity, a loaded shunt impedance :math:`R_{s}` and a loaded quality factor :math:`Q_{L}` must be defined. There are two different wake methods available, either the phasor model or the wake model (**BLMode.PHASOR** or **BLMode.WAKE**). The phasor model considers only the present turn, and keeps track of a running voltage and phase. The wake model saves a turn history of length **Nturns** and recomputes the full kick in the same way as the **LongResonator** element. A total and bunch by bunch beam induced voltage and phase is also computed and made available. The phasor model is more appropriate for high-Q resonators, as the wake model would require many turns to be accurate and increases computation time. 
+In order to compensate for the beam induced voltage (which is an additional voltage in the RF cavity arising from the cavity impedance), the cavity voltage (generator voltage :math:`V_{g}`) and the cavity frequency (called detuning :math:`\psi`) are modified in order to fulfill the cavity setpoints i.e. :math:`\tilde{V}_{c}=\tilde{V}_{g}+\tilde{V}_{b}`.
+
+To consider beam loading in an rf cavity, a loaded shunt impedance :math:`R_{s}` and a loaded quality factor :math:`Q_{L}` must be provided. The phasor model is used to compute the amplitude and phase of the beam induced voltage :math:`V_{b}`. The amplitude and phase are first initialised by computing the optimum detuning :math:`\psi` according to the formula found in [5]_. From this detuning, the :math:`V_{g}` can be easily computed. This is done in the function **_init_bl_params** found in **beam_loading.py**. 
+
+An important thing to consider for the functions found in the **BeamLoadingCavityPass.c** and all related functions is the slightly different definition compared to other codes like **mbtrack**. In PyAT, the RF cavity definition is :math:`V_{rf}=-sin(k*(z-z_{lag}))` as opposed to :math:`V_{rf}=cos(k*(z-z_{lag}))`. This means that when computing the real and imaginary parts of the beam induced voltage from the amplitude and phase of :math:`V_{b}`, the following conversion must be used: 
+
+.. math:: V_{b,real}=-|\tilde{V}_{b}|sin(\theta_{b})
+.. math:: V_{b,imag}=|\tilde{V}_{b}|cos(\theta_{b})
+
+By default, for a single RF system, the cavity will restore the energy loss per :math:`U_{0}` at :math:`\phi_{s}=-arcsin(U_{0}/V_{rf})` and the beam will oscillate around **ts** (the **ct** coordinate associated to :math:`\phi_{s}`). It is possible to change the reference of the time coordinate using the attribute **TimeLag** from the cavity. For example setting this **TimeLag** to ts will shift the origin back to zero. In the beamloading element the equilibrium **ct** coordinate is automatically calculated and the feedback loops will adjust the voltage and phase of the RF wave such that the energy loss due to synchrotron radiation is restored at the equilibrium **ct** coordinate calculated with the function **get_timelag_fromU0**.
+
+The phasor model is updated with each slice. At the end of each bucket (filled or empty) the beam induced voltage is back tracked to the expected beam location in the bucket (:math:`t=ts/clight` for that bucket). This is why the ts is important, as it allows the feedback to ensure the cavity setpoints are fulfilled at the expected beam position. The final value of :math:`V_{b}` at the end of the turn is the mean of all the beam induced voltage from all buckets, measured at :math:`t=0` after the bunch has been tracked. The :math:`V_{b}` used for the compuation of the :math:`V_{g}` can either be taken from the most recent turn, or it can be the mean of a buffer of a specified length.
+
+There are 4 main parameters stored in the beam loading element under the **BeamLoadingElement.Vgen**. These parameters are :math:`[V_{gen}, \theta_{g}, \psi, V_{gr}]`, where :math:`V_{gen}` is the amplitude of the generator voltage, :math:`\theta_{g}` is the total generator phase and is typically equal to :math:`\theta_{g}=\phi_{s}+\psi`, :math:`\psi` is the cavity detuning, and :math:`V_{gr}=V_{gen}/cos(\psi)` is the generator voltage on resonance. 
+
+The computation of the new :math:`V_{gen}` is very straight forward. First, the total cavity voltage is computed from the real part of :math:`V_{b}` as :math:`V_{c,meas}=V_{gen}+V_{b}`. Then the correction is computed with :math:`V_{gr}*={\frac{V_{c,set}}{V_{c,meas}}}^{VoltGain}`. Rather than applying the modification to :math:`V_{gen}`, it is preferable to apply it by modfying the :math:`V_{gr}` as it is independant of the cavity phase.
+
+The phase is slightly more complicated and requires two steps. First to compute to the new detuning, the contribution of the detuning to the total phase shift is extracted with :math:`\psi += (\theta_{g} - \psi - \phi_{s,set})*PhaseGain`. 
+
+This detuning change induces a phase shift which must also be compensated. So the new synchronous phase is computed with the measured real and imaginary cavity voltages :math:`\theta_{g} -= (-arctan2(V_{c,real}/V_{c,imag}))*PhaseGain`. 
+
+Then finally :math:`V_{gen}` is updated by :math:`V_{gen}=V_{gr}cos(\psi)`. 
+
+
+.. math:: V_{gr}=-|\tilde{V}_{b}|sin(\theta_{b})
+ 
 
 To intialise the beam loading element, the function **add_beamloading** must be applied to a lattice object. This will convert the specified Cavity Element to a **BeamLoadingElement**. This can be done as follows
 
 .. code:: python
 
-    from at.collective import BeamLoadingElement, add_beamloading, BLMode
+    from at.collective import add_beamloading
     
-    mode = BLMode.PHASOR
-    add_beamloading(fring, qfactor, rshunt,
-                    mode=mode, Nslice=1,
+    add_beamloading(ring, qfactor, rshunt,
+                    cavpts=[0], Nslice=1,
                     VoltGain=0.01, PhaseGain=0.01)
     
-An additional keyword argument **cavpts** can be given to specifically transfer one cavity element to a beam loading element. The **VoltGain** and **PhaseGain** are parameters to be tuned for the feedback. In summary, there is a cavity phase and amplitude set point, and a computed beam voltage and phase. The generator voltage and phase is calculated in order to ensure that the cavity set points are reached. The gain values specified here dictate what percentage of the difference is applied. If this number is too large, stability issues may arise. 
+An additional keyword argument **cavpts** can be given to specifically transfer one cavity element to a beam loading element. The **VoltGain** and **PhaseGain** are parameters to be tuned for the feedback. 
 
+The dynamics of the simulation are very sensitive to the VoltGain and PhaseGain parameters. Too strong gains can drive oscillations, too weak gains may appear stable but the setpoint criteria are not fulfilled. Be sure to understand the effect of these parameters on your dynamical system!
 
+Several example files can be found in **at/pyat/examples/CollectiveEffects** that can get any user started quickly.
 
 
 

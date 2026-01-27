@@ -102,7 +102,7 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
         plt.plot(*boundary, label="Acceptance")
         plt.title(f"2D {pl0['label']}-{pl1['label']} acceptance")
         plt.xlabel(f"{pl0['label']}{pl0['unit']}")
-        plt.xlabel(f"{pl1['label']}{pl1['unit']}")
+        plt.ylabel(f"{pl1['label']}{pl1['unit']}")
     plt.legend()
     plt.show(block=block)
     return boundary, survived, grid
@@ -111,45 +111,71 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
 def plot_geometry(
     ring: Lattice,
     start_coordinates: tuple[float, float, float] = (0, 0, 0),
-    centered: bool = False,
+    centred: bool = False,
+    h_angle: float = 0,
+    v_angle: float = 0,
     ax: Axes = None,
+    plot3d: bool = False,
     **kwargs,
 ):
-    """Compute and plot the 2D ring geometry in cartesian coordinates.
+    """Compute and plot the 2D or 3D ring geometry in cartesian coordinates.
 
     Parameters:
-        ring: Lattice description
+        ring:           Lattice description
         start_coordinates: x,y,angle at starting point
-        centered: it True the coordinates origin is the center of the ring
+        centred:        it True the coordinates origin is the center of the ring
+        h_angle:        initial horizontal angle.
+        v_angle:        initial vertical angle.
         ax: axes for the plot. If not given, new axes are created
+        plot3d:         Draw a 3d line plot
 
     Keyword arguments are forwarded to the underlying
     :py:func:`~matplotlib.pyplot.plot` function
 
     Returns:
-        geomdata: recarray containing, x, y, angle
+        geomdata: :py:class:`~numpy.recarray` containing the fields *x*, *y*,
+          *z*, *angle*, *v_angle*.
         radius: machine radius
         ax: plot axis
 
     Example:
         >>> ring.plot_geometry()
     """
-    if not ax:
-        fig, ax = plt.subplots()
+    # Accept the US wording "centered" for compatibility
+    centred = kwargs.pop("centered", centred)
     geom, radius = ring.get_geometry(
-        start_coordinates=start_coordinates, centered=centered
+        start_coordinates=start_coordinates,
+        h_angle=h_angle,
+        v_angle=v_angle,
+        centred=centred,
     )
-    ax.plot(
-        geom["x"],
-        geom["y"],
-        "o:",
-        linewidth=kwargs.pop("linewidth", 0.5),
-        markersize=kwargs.pop("markersize", 2),
-        **kwargs,
-    )
+    if plot3d:
+        if not ax:
+            fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+        ax.plot(
+            geom["x"],
+            geom["y"],
+            geom["z"],
+            "o:",
+            linewidth=kwargs.pop("linewidth", 0.5),
+            markersize=kwargs.pop("markersize", 2),
+            **kwargs,
+        )
+        ax.set_zlabel("z [m]")
+    else:
+        if not ax:
+            fig, ax = plt.subplots()
+        ax.plot(
+            geom["x"],
+            geom["y"],
+            "o:",
+            linewidth=kwargs.pop("linewidth", 0.5),
+            markersize=kwargs.pop("markersize", 2),
+            **kwargs,
+        )
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
-    ax.set_aspect("equal", "box")
+    ax.set_aspect("equalxy", "box")
     return geom, radius, ax
 
 
@@ -220,13 +246,16 @@ def plot_RF_bucket_hamiltonian(
         num_levels (int): Number of levels for contour plot. Odd number of
             levels allow to center the colorbar around 0. Default to 41.
         plot_separatrix (bool): Flag to plot the separatrix contour
-            (:math:`\mathcal{H}=0`).
+            (:math:`min(\mathcal{H}(ct_{UFP},0),\mathcal{H}(0,\delta_{UFP}))`).
 
     Returns:
         CT:   (num_points,num_points) array: ct grid
         DP:    (num_points,num_points) array: dp grid
         hamiltonian:   (num_points,num_points) array: Hamiltonian values
         along (CT,DP) grid
+        separatrix:   Hamiltonian value at the separatrix
+        ct_UFP:   Distance of arrival Unstable Fixed Point
+        delta_UFP:   Momentum deviation Unstable Fixed Point
     """
     # Momentum compaction/phase slip factors computed up to third order
     tmp_ring = ring.disable_6d(copy=True)
@@ -281,7 +310,8 @@ def plot_RF_bucket_hamiltonian(
         TimeLag = rfcav.TimeLag
 
         phi_s = TimeLag * 2 * np.pi * rfcav.Frequency / ring.beta / clight
-        phi = (np.pi - phi_s) + CT * 2 * np.pi * rfcav.Frequency / ring.beta / clight
+        phi = (np.pi - phi_s) + \
+            CT * 2 * np.pi * rfcav.Frequency / ring.beta / clight
 
         # Second term of the Hamiltonian
         U = (
@@ -292,23 +322,6 @@ def plot_RF_bucket_hamiltonian(
         # Add to total Hamiltonian
         hamiltonian += U
 
-    fig, ax = plt.subplots(1)
-    lim_range = np.max((np.abs(hamiltonian).min(), np.abs(hamiltonian).max()))
-    levels = np.linspace(-lim_range, lim_range, num_levels, endpoint=True)
-    co = ax.contourf(CT, DP, hamiltonian, levels, cmap="coolwarm", alpha=0.7)
-    # additional contour for visibility
-    ax.contour(CT, DP, hamiltonian, levels, cmap="coolwarm")
-    if plot_separatrix:
-        # separatrix contour
-        ax.contour(CT, DP, hamiltonian, [0], colors="black")
-        plt.plot([], [], color="black", label="Separatrix")
-        ax.legend()
-    cb = fig.colorbar(co)
-    cb.set_label(r"$\mathcal{H}(ct,\delta)$ [a.u.]", fontsize=18)
-
-    ax.set_xlabel(r"ct [m]")
-    ax.set_ylabel(r"$\delta$")
-
     phi_s = (
         ring.get_rf_timelag()
         * 2
@@ -317,6 +330,39 @@ def plot_RF_bucket_hamiltonian(
         * ring.harmonic_number
         / (ring.beta * clight)
     )
+
+    ct_UFP = -clight * (np.pi - 2*phi_s) / (
+        2 * np.pi * ring.get_revolution_frequency() * ring.harmonic_number
+        )
+    delta_UFP = (-eta[1] + np.sqrt(eta[1]**2 - 4*eta[0]*eta[2]))/(2*eta[2])
+    separatrix = np.min(
+        (0, ring.beta**2 * ring.energy * (
+            eta[0] / 2 + eta[1] / 3 * delta_UFP + eta[2] / 4 * delta_UFP**2
+        ) * delta_UFP**2 +
+            ring.rf_voltage / (2 * np.pi * ring.harmonic_number) *
+            (-2 * np.cos(phi_s) + (np.pi - 2 * phi_s) * np.sin(phi_s)))
+    )
+
+    fig, ax = plt.subplots(1)
+    lim_range = np.max((np.abs(hamiltonian).min(), np.abs(hamiltonian).max()))
+    levels = np.linspace(-lim_range, lim_range, num_levels, endpoint=True)
+    co = ax.contourf(CT, DP, hamiltonian, levels, cmap="coolwarm", alpha=0.7)
+    # additional contour for visibility
+    ax.contour(CT, DP, hamiltonian, levels, cmap="coolwarm")
+    if plot_separatrix:
+        # separatrix contour
+        ax.contour(CT, DP, hamiltonian, [separatrix], colors="black",
+                   linestyles="solid")
+        ax.plot([], [], color="black", label="Separatrix")
+        ax.scatter(ct_UFP, 0, marker='o', label=r"$ct_{UFP}$", zorder=10)
+        ax.scatter(0, delta_UFP, marker='o', label=r"$\delta_{UFP}$",
+                   zorder=10)
+        ax.legend(ncol=2)
+    cb = fig.colorbar(co)
+    cb.set_label(r"$\mathcal{H}(ct,\delta)$ [a.u.]", fontsize=18)
+
+    ax.set_xlabel(r"ct [m]")
+    ax.set_ylabel(r"$\delta$")
 
     def ct_to_phi(ct):
         return (
@@ -351,7 +397,7 @@ def plot_RF_bucket_hamiltonian(
 
     plt.title(r"$\phi_{RF}$ " + rf"= $\pi -$ {phi_s:.2f}", fontsize=18)
 
-    return CT, DP, hamiltonian
+    return CT, DP, hamiltonian, separatrix, ct_UFP, delta_UFP
 
 
 Lattice.plot_acceptance = plot_acceptance

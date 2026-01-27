@@ -2,6 +2,9 @@
  *----------------------------------------------------------------------------
  * Modification Log:
  * -----------------
+ * .05  205-11-07       O. Blanco, ALBA
+ *                      Define Wig->Nw without cast to int.
+ *
  * .07  2024-05-09      J. Arenillas, ALBA, jarenillas@axt.email
  *                      New expression for the comptation of radiation kicks.
  *						Adding new functions for the computation of wiggler diffusion matrix.
@@ -417,7 +420,7 @@ static void GWigInit2(struct gwigR *Wig,double design_energy, double Ltot, doubl
     Wig->Po = Wig->E0/XMC2;
     Wig->Pmethod = Nmeth;
     Wig->PN = Nstep;
-    Wig->Nw = (int)(Ltot / Lw);
+    Wig->Nw = round(Ltot / Lw);
     Wig->NHharm = NHharm;
     Wig->NVharm = NVharm;
     Wig->PB0 = Bmax;

@@ -148,7 +148,7 @@ from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
 from .file_input import LowerCaseParser, UnorderedParser
 from .file_input import set_argparser, ignore_names
 from .file_output import Exporter
-from ..lattice import Lattice, Particle, elements as elt, tilt_elem
+from ..lattice import Lattice, Particle, elements as elt
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -247,9 +247,19 @@ def sinc(x: float) -> float:
 #  Utility functions
 # -------------------
 
-
 def mad_element(func):
     """Decorator for AT elements"""
+
+    def tilt_elem(elem: elt.Element, rots: float) -> None:
+        cs = np.cos(rots)
+        sn = np.sin(rots)
+        rm = np.asfortranarray(np.diag([cs, cs, cs, cs, 1.0, 1.0]))
+        rm[0, 2] = sn
+        rm[1, 3] = sn
+        rm[2, 0] = -sn
+        rm[3, 1] = -sn
+        elem.R1 = rm
+        elem.R2 = rm.T
 
     @functools.wraps(func)
     def wrapper(self, *args, tilt=0.0, ktap=0.0, **kwargs):
@@ -604,6 +614,35 @@ class vmonitor(monitor):
 # noinspection PyPep8Naming
 class instrument(monitor):
     pass
+
+
+# noinspection PyPep8Naming
+class longmultipole(_MadElement):
+
+    @classmethod
+    def from_at(cls, kwargs):
+        length = kwargs.get("Length", 0.0)
+        if length == 0.0:
+            return multipole.from_at(kwargs)
+        else:
+            drname = kwargs["FamName"] + ".1"
+            dr1 = drift.from_at({"FamName": drname, "Length": 0.5 * length})
+            dr2 = drift.from_at({"FamName": drname, "Length": 0.5 * length})
+            return [dr1, multipole.from_at(kwargs, factor=length), dr2]
+
+
+# noinspection PyPep8Naming
+class ignore(_MadElement):
+
+    @classmethod
+    def from_at(cls, kwargs):
+        length = kwargs.get("Length", 0.0)
+        if length == 0.0:
+            print(f"{kwargs['name']} is replaced by a marker")
+            return marker.from_at(kwargs)
+        else:
+            print(f"{kwargs['name']} is replaced by a drift")
+            return drift.from_at(kwargs)
 
 
 ignore_names(
@@ -1156,49 +1195,14 @@ def load_madx(
     return parser.lattice(use=use, **params)
 
 
-def longmultipole(kwargs):
-    length = kwargs.get("Length", 0.0)
-    if length == 0.0:
-        return multipole.from_at(kwargs)
-    else:
-        drname = kwargs["FamName"] + ".1"
-        dr1 = drift.from_at({"FamName": drname, "Length": 0.5 * length})
-        dr2 = drift.from_at({"FamName": drname, "Length": 0.5 * length})
-        return [dr1, multipole.from_at(kwargs, factor=length), dr2]
-
-
-def ignore(kwargs):
-    length = kwargs.get("Length", 0.0)
-    if length == 0.0:
-        print(f"{kwargs['name']} is replaced by a marker")
-        return marker.from_at(kwargs)
-    else:
-        print(f"{kwargs['name']} is replaced by a drift")
-        return drift.from_at(kwargs)
-
-
-_AT2MAD = {
-    elt.Quadrupole: quadrupole.from_at,
-    elt.Sextupole: sextupole.from_at,
-    elt.Octupole: octupole.from_at,
-    elt.ThinMultipole: multipole.from_at,
-    elt.Multipole: longmultipole,
-    elt.RFCavity: rfcavity.from_at,
-    elt.Drift: drift.from_at,
-    elt.Bend: sbend.from_at,
-    elt.Marker: marker.from_at,
-    elt.Monitor: monitor.from_at,
-    elt.Corrector: kicker.from_at,
-}
-
-
 class _MadExporter(Exporter):
     use_line = False
+    AT2MAD = {}
 
     def generate_madelems(
         self, eltype: type[elt.Element], elemdict: dict
     ) -> ElementDescr | list[ElementDescr]:
-        return _AT2MAD.get(eltype, ignore)(elemdict)
+        return self.AT2MAD.get(eltype, ignore).from_at(elemdict)
 
     def print_beam(self, file):
         part = str(self.particle)
@@ -1218,6 +1222,20 @@ class _MadxExporter(_MadExporter):
     delimiter = ";"
     continuation = ""
     bool_fmt = {False: "FALSE", True: "TRUE"}
+
+    AT2MAD = {
+        elt.Quadrupole: quadrupole,
+        elt.Sextupole: sextupole,
+        elt.Octupole: octupole,
+        elt.ThinMultipole: multipole,
+        elt.Multipole: longmultipole,
+        elt.RFCavity: rfcavity,
+        elt.Drift: drift,
+        elt.Bend: sbend,
+        elt.Marker: marker,
+        elt.Monitor: monitor,
+        elt.Corrector: kicker,
+    }
 
 
 def save_madx(ring: Lattice, filename: str | None = None, **kwargs):

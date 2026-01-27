@@ -50,7 +50,7 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %
 % [...] = ATLINOPT4(...,'dp',DPP)
 %   Analyses the off-momentum lattice by specifying the central
-%   off-momentum value
+%   off-momentum value. It is ignored when using the option 'orbit'.
 %
 % [...] = ATLINOPT4(...,'ct',DCT)
 %   Analyses the off-momentum lattice by specifying the path lengthening
@@ -59,7 +59,8 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %
 % [...] = ATLINOPT4(...,'df',DF)
 %   Analyses the off-momentum lattice by specifying the RF frequency shift.
-%   The resulting deltap/p is returned in the 5th component of the ClosedOrbit field.
+%   The resulting deltap/p is returned in the 5th component of the
+%   ClosedOrbit field.
 %
 % [...] = ATLINOPT4(...,'orbit',ORBITIN)
 %   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
@@ -67,16 +68,16 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %   The sixth component is ignored.
 %   This syntax is useful to specify the entrance orbit if RING is not a
 %   ring or to avoid recomputing the closed orbit if is already known.
+%   DP sets the energy offset, and the option 'dp' is ignored.
 %
 % [...] = ATLINOPT4(...,'twiss_in',TWISSIN)
 %   Computes the optics for a transfer line.
 %
 % TWISSIN is a scalar structure with fields:
-%   ClosedOrbit - 4x1 initial closed orbit. Default: zeros(4,1)
-%   Dispersion  - 4x1 initial dispersion.   Default: zeros(4,1)
-%   mu          - [ mux, muy] horizontal and vertical betatron phase
 %   beta        - [betax0, betay0] vector
 %   alpha       - [alphax0, alphay0] vector
+%   mu          - [mux, muy] hor. and vert. betatron phase. Default [0,0]
+%   Dispersion  - 4x1 initial dispersion. Default: zeros(4,1)
 %
 %  REFERENCES
 %	[1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
@@ -99,7 +100,7 @@ NE = length(ring);
 [get_w,varargs]=getflag(varargs,'get_w');
 [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
 [dp,varargs]=getoption(varargs,'dp',0.0);
-[dpargs,varargs]=getoption(varargs,{'orbit','dct','df'});
+[dpargs,varargs]=getoption(varargs,{'dct','df'});
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
 [coupled,varargs]=getoption(varargs,'coupled',true);
 [mkey,varargs]=getoption(varargs,'mkey','M');
@@ -120,16 +121,25 @@ else
 end
 
 if isempty(twiss_in)        % Circular machine
-    [orbit,orbitin]=findorbit4(ring,dp,refpts,dpargs{:},'XYStep',XYStep, 'strict', -1);
+    [orbit,orbitin] = findorbit4(ring,dp,refpts, ...
+                                'orbit',orbitin, dpargs{:}, ...
+                                'XYStep', XYStep,'strict', -1);
     dp=orbitin(5);
-    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,orbitin,'XYStep',XYStep, 'strict', -1);
-    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,orbitin,'XYStep',XYStep, 'strict', -1);
+    [orbitP,o1P] = findorbit4(ring,dp+0.5*DPStep,refpts, ...
+                              'orbit',orbitin,'XYStep',XYStep,'strict',-1);
+    [orbitM,o1M] = findorbit4(ring,dp-0.5*DPStep,refpts, ...
+                              'orbit',orbitin,'XYStep',XYStep,'strict',-1);
 else                        % Transfer line
-    if ~isempty(orbitin), orbitin=zeros(6,1); end
+    if isempty(orbitin)
+        orbitin = zeros(6,1);
+        orbitin(5) = dp;
+    else
+        dp = orbitin(5);
+    end
     orbit=linepass(ring,orbitin,refpts);
-    try
+    if isfield(twiss_in,'Dispersion')
         disp0=twiss_in.Dispersion;
-    catch
+    else
         disp0=zeros(4,1);
     end
     dorbit=0.5*[DPStep*disp0;DPStep;0];
@@ -191,6 +201,10 @@ end
 [BY,AY,MY]=lop(reshape(MSB,2,2,[]),beta0_b,alpha0_b);
 
 %tunes = [MX(end),MY(end)]/2/pi;
+if isfield(twiss_in,'mu')
+    MX = MX + twiss_in.mu(1);
+    MY = MY + twiss_in.mu(2);
+end
 
 ringdata=struct('tune',{[tune_a tune_b]});
 
