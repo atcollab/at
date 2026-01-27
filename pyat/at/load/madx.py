@@ -144,12 +144,13 @@ from scipy.constants import physical_constants as _cst
 
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
-from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
-from .file_input import LowerCaseParser, UnorderedParser, ignore_class
+from .file_input import AnyDescr, ElementDescr, SequenceDescr
+from .file_input import BaseParser, LowerCaseParser, UnorderedParser
+from .file_input import ignore_class, set_current_element
 from .file_output import Exporter
 from .parser import StrParameter
-from .. import ParamDef
-from ..lattice import Lattice, elements as elt, Particle, AtWarning, Param
+from ..lattice import Lattice, elements as elt, Particle, AtWarning
+from ..lattice import ParamDef, Param
 
 _separator = re.compile(r"(?<=[\w.)])\s+(?=[\w.(])")
 
@@ -575,8 +576,9 @@ class _Line(SequenceDescr):
 
     pos_args = ("line",)
 
-    def __init__(self, line, name=""):
-        super().__init__(line)
+    def __init__(self, line, *args, **kwargs):
+        # Extract 'line' from keywords
+        super().__init__(line, *args, **kwargs)
 
     def __add__(self, other):
         return type(self)(chain(self, other))
@@ -591,9 +593,9 @@ class _Line(SequenceDescr):
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
-        sav = parser._current_element
-        parser._current_element = self.name
+        # print("line.expand:", parser._current_element)
         if self.inverse:
             for elem in reversed(self):
                 if isinstance(elem, AnyDescr):  # Element or List
@@ -608,7 +610,6 @@ class _Line(SequenceDescr):
                 elif isinstance(elem, Sequence):  # Other sequence (tuple, list)
                     for el in elem:
                         yield from el.expand(parser)
-        parser._current_element = sav
 
 
 # noinspection PyPep8Naming
@@ -685,6 +686,7 @@ class _Sequence(SequenceDescr):
             elif isinstance(elem, _MadElement):
                 yield elem.limits(parser, offset, self.refer), elem
 
+    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
@@ -697,20 +699,17 @@ class _Sequence(SequenceDescr):
                     wrn = AtWarning(f"{eltype}({el.name!r}) is overlapping by {-fdl} m")
                     warnings.warn(wrn, stacklevel=3)
 
-        sav = parser._current_element
-        parser._current_element = self.name
         drcounter = 0
         end = 0.0
-        elem = self
+        elem = self  # In case of empty sequence
         self.at = 0.0
+        # print("sequence.expand:", parser._current_element)
         for (entry, ext), elem in self.flatten(parser):
-            parser._current_element = ".".join((self.name, elem.name))
             yield from insert_drift(entry - end, elem)
             end = ext
             yield from elem.expand(parser)
 
         yield from insert_drift(self.length - end, elem)  # Final drift
-        parser._current_element = sav
 
 
 class _Beam(ElementDescr):
@@ -959,11 +958,11 @@ class _MadParser(LowerCaseParser, UnorderedParser):
     def _assign(self, label: str | None, key: str, val: str):
         """Variable assignment."""
         try:  # if val is a constant
-            val = eval(val)
+            constval: int | float = eval(val)
         except NameError:
             return key, self.evaluate(val)
         else:
-            return key, Param(val, name=key)
+            return key, Param(constval, name=key)
 
     def _command(self, label: str | None, cmdname: str, *argnames: str, **kwargs):
         # Special treatment of SEQUENCE definitions
@@ -1082,13 +1081,12 @@ class _MadParser(LowerCaseParser, UnorderedParser):
             lat.unparameterise()
         return lat
 
-    def parameterise(self, key:str):
+    def parameterise(self, key: str):
         val = self[key]
         if isinstance(val, ParamDef):
             return val
         else:
             return Param(val, name=key)
-
 
 
 class MadxParser(_MadParser):
