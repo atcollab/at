@@ -202,6 +202,24 @@ class Operand(abc.ABC):
             name = "/".join((self._nm(other, 20), self._nm(self, 20)))
             return ParamBase(evaluator=op, name=name, priority=20)
 
+    def __pow__(self, other):
+        try:
+            op = _BinaryOperator(pow, self, other)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "**".join((self._nm(self, 20), self._nm(other, 20)))
+            return ParamBase(evaluator=op, name=name, priority=20)
+
+    def __rpow__(self, other):
+        try:
+            op = _BinaryOperator(pow, other, self)
+        except TypeError:
+            return NotImplemented
+        else:
+            name = "**".join((self._nm(other, 20), self._nm(self, 20)))
+            return ParamBase(evaluator=op, name=name, priority=20)
+
     def __gt__(self, other):
         return float(self.value) > other
 
