@@ -49,6 +49,7 @@ from .madx import (
     monitor,
     hmonitor,
     vmonitor,
+    _Line,
     _Sequence,
     _Value,
 )
@@ -152,6 +153,7 @@ _mad8_env = {
     "hmonitor": hmonitor,
     "vmonitor": vmonitor,
     "sequence": _Sequence,
+    "line": _Line,
     # Commands
     "value": _Value(),
     "__builtins__": {},
