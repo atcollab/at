@@ -120,22 +120,6 @@ def _no_default(func):
     return wrapper
 
 
-def set_current_element(func):
-    """Decorator for AnyDescr methods setting the element name."""
-
-    @wraps(func)
-    def wrapper(self, parser, *args, **kwargs):
-        sav = parser._current_element
-        parser._current_element = (*parser._current_element, self.name)
-        # print(f"decorator: {sav!r} {parser._current_element}")
-        try:
-            return func(self, parser, *args, **kwargs)
-        finally:
-            parser._current_element = sav
-
-    return wrapper
-
-
 def skip_class(
     classname: str,
     baseclass: type[ElementDescr],
@@ -378,10 +362,8 @@ class ElementDescr(AnyDescr, dict):
         return []
 
     # noinspection PyUnusedLocal
-    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         """Iterator on the generated AT elements."""
-        # print("test", self.name, ".".join(parser._current_element))
         try:
             elems = self.to_at(**self)
         except Exception as exc:
@@ -472,7 +454,6 @@ class BaseParser(DictNoDot, StrParser):
             self[self._undef_key] = 0
         self.postponed = []
         self.in_file = []
-        self._current_element = ()
 
     # Defined externally because python >= 38 does not allow static methods
     # as decorators
@@ -498,7 +479,6 @@ class BaseParser(DictNoDot, StrParser):
             self[self._undef_key] = 0
         self.postponed = []
         self.in_file = []
-        self._current_element = ()
 
     def _format_command(self, expr: str) -> str:
         """Format a command for evaluation.
@@ -522,9 +502,8 @@ class BaseParser(DictNoDot, StrParser):
                 try:
                     return eval(expr, self.env, self)
                 except NameError as exc:  # noqa: PERF203
-                    elem = ".".join((*self._current_element, expr))
                     var = self._reason(exc)
-                    self._print(f"In {elem}, set {var!r} to {default} ({_loop})")
+                    self._print(f"In {expr}, set {var!r} to {default} ({_loop})")
                     self[var] = default
         return eval(expr, self.env, self)
 
