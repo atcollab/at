@@ -144,8 +144,9 @@ from scipy.constants import physical_constants as _cst
 
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
-from .file_input import AnyDescr, ElementDescr, SequenceDescr, BaseParser
-from .file_input import LowerCaseParser, UnorderedParser, ignore_class
+from .file_input import AnyDescr, ElementDescr, SequenceDescr
+from .file_input import BaseParser, LowerCaseParser, UnorderedParser
+from .file_input import ignore_class, set_current_element
 from .file_output import Exporter
 from .parser import StrParameter
 from ..lattice import Lattice, elements as elt, Particle, AtWarning
@@ -574,8 +575,9 @@ class _Line(SequenceDescr):
 
     pos_args = ("line",)
 
-    def __init__(self, line, name=""):
-        super().__init__(line)
+    def __init__(self, line, *args, **kwargs):
+        # Extract 'line' from keywords
+        super().__init__(line, *args, **kwargs)
 
     def __add__(self, other):
         return type(self)(chain(self, other))
@@ -590,7 +592,9 @@ class _Line(SequenceDescr):
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
+        # print("line.expand:", parser._current_element)
         if self.inverse:
             for elem in reversed(self):
                 if isinstance(elem, AnyDescr):  # Element or List
@@ -681,6 +685,7 @@ class _Sequence(SequenceDescr):
             elif isinstance(elem, _MadElement):
                 yield elem.limits(parser, offset, self.refer), elem
 
+    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
@@ -695,8 +700,9 @@ class _Sequence(SequenceDescr):
 
         drcounter = 0
         end = 0.0
-        elem = self
+        elem = self  # In case of empty sequence
         self.at = 0.0
+        # print("sequence.expand:", parser._current_element)
         for (entry, ext), elem in self.flatten(parser):
             yield from insert_drift(entry - end, elem)
             end = ext

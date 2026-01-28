@@ -65,37 +65,52 @@ class StrParameter:
         return int(self.value)
 
     def __add__(self, other):
-        return float(self) + float(other)
+        return self.value + other
 
     def __radd__(self, other):
-        return float(other) + float(self)
+        return other + self.value
 
     def __mul__(self, other):
-        return float(self) * float(other)
+        return self.value * other
 
     def __rmul__(self, other):
-        return float(other) * float(self)
+        return other * self.value
 
     def __sub__(self, other):
-        return float(self) - float(other)
+        return self.value - other
 
     def __rsub__(self, other):
-        return float(other) - float(self)
+        return other - self.value
 
     def __truediv__(self, other):
-        return float(self) / float(other)
+        return self.value / other
 
     def __rtruediv__(self, other):
-        return float(other) / float(self)
+        return other / self.value
 
     def __pow__(self, other):
-        return pow(float(self), other)
+        return pow(self.value, other)
 
     def __rpow__(self, other):
-        return pow(float(other), float(self))
+        return pow(other, self.value)
 
     def __neg__(self):
-        return -float(self)
+        return -self.value
 
     def __pos__(self):
-        return +float(self)
+        return +self.value
+
+    def __abs__(self):
+        return abs(self.value)
+
+    def __gt__(self, other):
+        return self.value > other
+
+    def __ge__(self, other):
+        return self.value >= other
+
+    def __lt__(self, other):
+        return self.value < other
+
+    def __le__(self, other):
+        return self.value <= other
