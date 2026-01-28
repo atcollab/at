@@ -85,6 +85,10 @@ class StrParameter(ParamDef):
         return self.__class__(self.parser, f"({self.expr})-({other})")
 
     def __rsub__(self, other):
+        if str(other) == "0.0":
+            return self.__class__(self.parser, f"-({self.expr})")
+        if self.expr == "0.0":
+            return other
         return self.__class__(self.parser, f"({other})-({self.expr})")
 
     def __mul__(self, other):
