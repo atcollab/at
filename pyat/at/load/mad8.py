@@ -1,4 +1,4 @@
-r"""Using `MAD8`_ files with PyAT
+r"""Using `MAD8`_ files with PyAT.
 =================================
 
 Using MAD8 files is similar to using MAD-X files: see
@@ -11,18 +11,21 @@ from __future__ import annotations
 
 __all__ = ["Mad8Parser", "load_mad8", "save_mad8"]
 
+from pathlib import Path
+from typing import ClassVar
+
 # functions known by MAD-8
-from math import pi, e, sqrt, exp, log, sin, cos, tan  # noqa: F401
-from math import asin, atan2  # noqa: F401
+from math import pi, e, sqrt, exp, log, sin, cos, tan
+from math import asin, atan2
 import re
 
 # constants known by MAD-8
-from scipy.constants import c as clight, e as qelect  # noqa: F401
+from scipy.constants import c as clight, e as qelect
 from scipy.constants import physical_constants as _cst
 
 from ..lattice import Lattice, elements as elt
 
-from .file_input import ignore_names
+from .file_input import ignore_class
 
 # noinspection PyProtectedMember
 from .madx import _MadElement, _MadParser, _MadExporter
@@ -30,7 +33,7 @@ from .madx import mad_element, p_to_at, poly_to_mad
 
 # Commands known by MAD8
 # noinspection PyProtectedMember
-from .madx import (  # noqa: F401
+from .madx import (
     drift,
     marker,
     quadrupole,
@@ -46,18 +49,11 @@ from .madx import (  # noqa: F401
     monitor,
     hmonitor,
     vmonitor,
-    value,
+    _Line,
+    _Sequence,
+    _Value,
 )
 
-# Constants known by MAD-8
-_true_ = True
-_yes_ = True
-_t_ = True
-_on_ = True
-_false_ = False
-_no_ = False
-_f_ = False
-_off_ = False
 twopi = 2 * pi
 degrad = 180.0 / pi
 raddeg = pi / 180.0
@@ -66,28 +62,22 @@ pmass = 1.0e-03 * _cst["proton mass energy equivalent in MeV"][0]  # [GeV]
 
 _attr = re.compile(r"\[([a-zA-Z_][\w.:]*)]")  # Identifier enclosed in square brackets
 
-ignore_names(
-    globals(),
-    _MadElement,
-    ["solenoid", "rfmultipole", "crabcavity", "elseparator", "collimator", "tkicker"],
-)
-
 
 # noinspection PyPep8Naming
 class multipole(_MadElement):
-    at2mad = {}
-    klist = ["k0l", "k1l", "k2l", "k3l", "k4l", "k5l", "k6l", "k7l", "k8l", "k9l"]
-    tlist = ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9"]
+    at2mad: ClassVar[dict[str, str]] = {}
+    klist = ("k0l", "k1l", "k2l", "k3l", "k4l", "k5l", "k6l", "k7l", "k8l", "k9l")
+    tlist = ("t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9")
 
     @mad_element
     def to_at(self, **params):
-        polya = [0.0]*10
-        polyb = [0.0]*10
+        polya = [0.0] * 10
+        polyb = [0.0] * 10
         params.pop("l", None)
         for k in list(params.keys()):
             try:
                 order = self.klist.index(k)
-            except ValueError:
+            except ValueError:  # noqa: PERF203
                 pass
             else:
                 strength = params.pop(k)
@@ -104,9 +94,9 @@ class multipole(_MadElement):
     def from_at(cls, kwargs, factor=1.0):
         el = super().from_at(kwargs)
         maxorder = kwargs.pop("MaxOrder", -1) + 1
-        nlist = poly_to_mad(kwargs.pop("PolynomB", ())[:maxorder+1], factor=factor)
-        slist = poly_to_mad(kwargs.pop("PolynomA", ())[:maxorder+1], factor=factor)
-        for order, (va, vb) in enumerate(zip(slist, nlist)):
+        nlist = poly_to_mad(kwargs.pop("PolynomB", ())[: maxorder + 1], factor=factor)
+        slist = poly_to_mad(kwargs.pop("PolynomA", ())[: maxorder + 1], factor=factor)
+        for order, (va, vb) in enumerate(zip(slist, nlist, strict=True)):
             if va != 0.0 or vb != 0.0:
                 el[multipole.klist[order]] = sqrt(va * va + vb * vb)
                 tilt = -atan2(va, vb) / (order + 1)
@@ -115,9 +105,78 @@ class multipole(_MadElement):
         return el
 
 
+_mad8_env = {
+    # Constants
+    "_true_": True,
+    "_yes_": True,
+    "_t_": True,
+    "_on_": True,
+    "_false_": False,
+    "_no_": False,
+    "_f_": False,
+    "_off_": False,
+    "pi": pi,
+    "e": e,
+    "abs": abs,
+    "sqrt": sqrt,
+    "exp": exp,
+    "log": log,
+    "sin": sin,
+    "cos": cos,
+    "tan": tan,
+    "asin": asin,
+    "twopi": 2 * pi,
+    "degrad": 180.0 / pi,
+    "raddeg": pi / 180.0,
+    "emass": emass,  # [GeV]
+    "pmass": pmass,  # [GeV]
+    "clight": clight,
+    "qelect": qelect,
+    "centre": "centre",
+    "entry": "entry",
+    "exit": "exit",
+    # Elements
+    "drift": drift,
+    "marker": marker,
+    "quadrupole": quadrupole,
+    "sextupole": sextupole,
+    "octupole": octupole,
+    "multipole": multipole,
+    "longmultipole": longmultipole,
+    "sbend": sbend,
+    "rbend": rbend,
+    "kicker": kicker,
+    "hkicker": hkicker,
+    "vkicker": vkicker,
+    "rfcavity": rfcavity,
+    "monitor": monitor,
+    "hmonitor": hmonitor,
+    "vmonitor": vmonitor,
+    "sequence": _Sequence,
+    "line": _Line,
+    # Commands
+    "value": _Value(),
+    "__builtins__": {},
+}
+
+
+_ignore_names = [
+    "solenoid",
+    "rfmultipole",
+    "crabcavity",
+    "elseparator",
+    "collimator",
+    "tkicker",
+]
+
+_mad8_env.update(
+    (name, ignore_class(name, _MadElement, module=__name__)) for name in _ignore_names
+)
+
+
 class Mad8Parser(_MadParser):
     # noinspection PyUnresolvedReferences
-    r"""MAD-X specific parser
+    r"""MAD-X specific parser.
 
     The parser is a subclass of :py:class:`dict` and is database containing all the
     MAD-X variables.
@@ -154,30 +213,33 @@ class Mad8Parser(_MadParser):
     _continuation = "&"
     _blockcomment = ("comment", "endcomment")
 
-    def __init__(self, **kwargs):
+    def __init__(self, *filenames: str, **kwargs):
         """
         Args:
+            *filenames: files to be read at initialisation
             strict:     If :py:obj:`False`, assign 0 to undefined variables
             verbose:    If :py:obj:`True`, print details on the processing
-            **kwargs:   Initial variable definitions
+            **kwargs:   Initial variable definitions.
         """
-        super().__init__(globals(), **kwargs)
+        super().__init__(_mad8_env, *filenames, **kwargs)
 
     def _format_command(self, expr: str) -> str:
-        """Evaluate an expression using *self* as local namespace"""
+        """Evaluate an expression using *self* as local namespace."""
+        expr = super()._format_command(expr)
         expr = _attr.sub(r".\1", expr)  # Attribute access: VAR[ATTR]
         expr = expr.replace("^", "**")  # Exponentiation
-        return super()._format_command(expr)
+        return expr
 
 
 def load_mad8(
-    *files: str,
+    *files: str | Path,
     use: str = "ring",
     strict: bool = True,
     verbose: bool = False,
+    parameterised: bool = False,
     **kwargs,
 ) -> Lattice:
-    """Create a :py:class:`.Lattice` from MAD8 files
+    """Create a :py:class:`.Lattice` from MAD8 files.
 
     - The *energy* and *particle* of the generated lattice are taken from the MAD8
       ``BEAM`` object, using the MAD8 default parameters: positrons at 1 Gev.
@@ -212,15 +274,15 @@ def load_mad8(
         if key in kwargs
     }
     parser.parse_files(*files, **kwargs)
-    return parser.lattice(use=use, **params)
+    return parser.lattice(use=use, parameterised=parameterised, **params)
 
 
 class _Mad8Exporter(_MadExporter):
-    delimiter = ""
-    continuation = "&"
-    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+    delimiter: ClassVar[str] = ""
+    continuation: ClassVar[str] = "&"
+    bool_fmt: ClassVar[dict[bool, str]] = {False: ".FALSE.", True: ".TRUE."}
 
-    AT2MAD = {
+    AT2MAD: ClassVar[dict] = {
         elt.Quadrupole: quadrupole,
         elt.Sextupole: sextupole,
         elt.Octupole: octupole,
@@ -235,8 +297,8 @@ class _Mad8Exporter(_MadExporter):
     }
 
 
-def save_mad8(ring: Lattice, filename: str | None = None, **kwargs):
-    """Save a :py:class:`.Lattice` as a MAD8 file
+def save_mad8(ring: Lattice, filename: str | Path | None = None, **kwargs):
+    """Save a :py:class:`.Lattice` as a MAD8 file.
 
     Args:
         ring:   lattice
