@@ -144,9 +144,8 @@ from scipy.constants import physical_constants as _cst
 
 from .allfiles import register_format
 from .utils import split_ignoring_parentheses, protect, restore
-from .file_input import AnyDescr, ElementDescr, SequenceDescr
+from .file_input import AnyDescr, ElementDescr, SequenceDescr, ignore_class
 from .file_input import BaseParser, LowerCaseParser, UnorderedParser
-from .file_input import ignore_class, set_current_element
 from .file_output import Exporter
 from .parser import StrParameter
 from ..lattice import Lattice, elements as elt, Particle, AtWarning
@@ -592,9 +591,7 @@ class _Line(SequenceDescr):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
-        # print("line.expand:", parser._current_element)
         if self.inverse:
             for elem in reversed(self):
                 if isinstance(elem, AnyDescr):  # Element or List
@@ -685,7 +682,6 @@ class _Sequence(SequenceDescr):
             elif isinstance(elem, _MadElement):
                 yield elem.limits(parser, offset, self.refer), elem
 
-    @set_current_element
     def expand(self, parser: BaseParser) -> Generator[elt.Element, None, None]:
         def insert_drift(dl, el):
             nonlocal drcounter
@@ -702,7 +698,6 @@ class _Sequence(SequenceDescr):
         end = 0.0
         elem = self  # In case of empty sequence
         self.at = 0.0
-        # print("sequence.expand:", parser._current_element)
         for (entry, ext), elem in self.flatten(parser):
             yield from insert_drift(entry - end, elem)
             end = ext
