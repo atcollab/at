@@ -163,10 +163,18 @@ class ThinMultipole(Element):
         Default PassMethod: ``ThinMPolePass``
         """
 
+        def lengthen(poly, dl):
+            if dl > 0:
+                return np.concatenate((poly, np.zeros(dl)))
+            else:
+                return poly
+
         def make_same_length(arr1, arr2):
             lmax = max(len(arr1), len(arr2))
-            arr1 = np.pad(arr1, (0, lmax - len(arr1)), "constant")
-            arr2 = np.pad(arr2, (0, lmax - len(arr2)), "constant")
+            # arr1 = np.pad(arr1, (0, lmax - len(arr1)), "constant")
+            # arr2 = np.pad(arr2, (0, lmax - len(arr2)), "constant")
+            arr1 = lengthen(arr1, lmax - len(arr1))
+            arr2 = lengthen(arr2, lmax - len(arr2))
             return arr1, arr2
 
         def seterr(name, kname, kval, aname, aval):
@@ -249,8 +257,10 @@ class ThinMultipole(Element):
         super().__setattr__("MaxOrder", maxorder)
         # Adjust polynom lengths and set them
         len_ab = max(maxorder, deforder) + 1
-        self.PolynomA = np.pad(prmpola, (0, len_ab - len_a))
-        self.PolynomB = np.pad(prmpolb, (0, len_ab - len_b))
+        # self.PolynomA = np.pad(prmpola, (0, len_ab - len_a))
+        # self.PolynomB = np.pad(prmpolb, (0, len_ab - len_b))
+        self.PolynomA = lengthen(prmpola, len_ab - len_a)
+        self.PolynomB = lengthen(prmpolb, len_ab - len_b)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB."""
