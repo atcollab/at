@@ -2,11 +2,12 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atquantlib.c"
-#include "driftkick.c"  /* fastdrift.c, strthinkick.c */
+#include "driftkick.c" /* fastdrift.c, strthinkick.c */
 #include "exactdrift.c"
 #include "exactmultipolefringe.c"
 
-struct elem {
+struct elem
+{
   double Length;
   double *PolynomA;
   double *PolynomB;
@@ -27,10 +28,10 @@ struct elem {
 };
 
 static void multipole_pass(
-  double *r, double le, double *A, double *B, int max_order, int num_int_steps,
-  int FringeQuadEntrance, int FringeQuadExit, /* 0 (no fringe), else  */
-  double *T1, double *T2, double *R1, double *R2, double *RApertures,
-  double *EApertures, double *KickAngle, double scaling, double E0, pcg32_random_t* rng, int num_particles)
+    double *r, double le, double *A, double *B, int max_order, int num_int_steps,
+    int FringeQuadEntrance, int FringeQuadExit, /* 0 (no fringe), else  */
+    double *T1, double *T2, double *R1, double *R2, double *RApertures,
+    double *EApertures, double *KickAngle, double scaling, double E0, pcg32_random_t *rng, int num_particles)
 {
   double SL = le / num_int_steps;
   double L1 = SL * DRIFT1;
@@ -47,7 +48,8 @@ static void multipole_pass(
   double B0 = B[0];
   double A0 = A[0];
 
-  if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+  if (KickAngle)
+  { /* Convert corrector component to polynomial coefficients */
     B[0] -= sin(KickAngle[0]) / le;
     A[0] += sin(KickAngle[1]) / le;
   }
@@ -59,27 +61,36 @@ static void multipole_pass(
                        FringeQuadEntrance, FringeQuadExit, \
                        num_int_steps, scaling, le)
   */
-  for (int c = 0; c < num_particles; c++) { /*Loop over particles  */
+  for (int c = 0; c < num_particles; c++)
+  { /*Loop over particles  */
     double *r6 = r + c * 6;
-    if (!atIsNaN(r6[0])) {
+    if (!atIsNaN(r6[0]))
+    {
       int m;
 
       /* Check for change of reference momentum */
-      if (scaling != 1.0) ATChangePRef(r6, scaling);
+      if (scaling != 1.0)
+        ATChangePRef(r6, scaling);
 
       /*  misalignment at entrance  */
-      if (T1) ATaddvv(r6, T1);
-      if (R1) ATmultmv(r6, R1);
+      if (T1)
+        ATaddvv(r6, T1);
+      if (R1)
+        ATmultmv(r6, R1);
 
       /* Check physical apertures at the entrance of the magnet */
-      if (RApertures) checkiflostRectangularAp(r6, RApertures);
-      if (EApertures) checkiflostEllipticalAp(r6, EApertures);
+      if (RApertures)
+        checkiflostRectangularAp(r6, RApertures);
+      if (EApertures)
+        checkiflostEllipticalAp(r6, EApertures);
 
       /* Fringe field effect */
-      if (FringeQuadEntrance) multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
+      if (FringeQuadEntrance)
+        multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
 
       /*  integrator  */
-      for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
+      for (m = 0; m < num_int_steps; m++)
+      { /*  Loop over slices */
         int i;
         double ng, ec, de, energy, gamma, cstec, cstng;
         double ds, rho, dxp, dyp;
@@ -110,16 +121,17 @@ static void multipole_pass(
         dyp = r6[3] * p_norm - yp0;
         ds = r6[5] - s0;
 
-        rho = (SL + ds) / sqrt(dxp * dxp + dyp * dyp);
+        rho = (ds) / sqrt(dxp * dxp + dyp * dyp);
 
-        ng = cstng / rho * (SL + ds);
+        ng = cstng / rho * (ds);
         ec = cstec / rho;
 
         nph = atrandp_r(rng, ng);
 
         de = 0.0;
-        for (i = 0; i < nph; i++) {
-            de = de + getEnergy(rng, ec);
+        for (i = 0; i < nph; i++)
+        {
+          de = de + getEnergy(rng, ec);
         };
         r6[4] = r6[4] - de / E0;
         r6[1] = r6[1] * p_norm * (1 + r6[4]);
@@ -130,18 +142,24 @@ static void multipole_pass(
       r6[5] -= le;
 
       /* Fringe field effect */
-      if (FringeQuadExit) multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
+      if (FringeQuadExit)
+        multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
 
       /* Check physical apertures at the exit of the magnet */
-      if (RApertures) checkiflostRectangularAp(r6, RApertures);
-      if (EApertures) checkiflostEllipticalAp(r6, EApertures);
+      if (RApertures)
+        checkiflostRectangularAp(r6, RApertures);
+      if (EApertures)
+        checkiflostEllipticalAp(r6, EApertures);
 
       /* Misalignment at exit */
-      if (R2) ATmultmv(r6, R2);
-      if (T2) ATaddvv(r6, T2);
+      if (R2)
+        ATmultmv(r6, R2);
+      if (T2)
+        ATaddvv(r6, T2);
 
       /* Check for change of reference momentum */
-      if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
+      if (scaling != 1.0)
+        ATChangePRef(r6, 1.0 / scaling);
     }
   }
   /* Remove corrector component in polynomial coefficients */
@@ -151,30 +169,49 @@ static void multipole_pass(
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
-                                      double *r_in, int num_particles,
-                                      struct parameters *Param) {
+                                      double *r_in, int num_particles, struct parameters *Param)
+{
   double energy;
-  if (!Elem) {
-    double Length = atGetDouble(ElemData, "Length"); check_error();
-    double *PolynomA = atGetDoubleArray(ElemData, "PolynomA"); check_error();
-    double *PolynomB = atGetDoubleArray(ElemData, "PolynomB"); check_error();
-    int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
-    int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
+  if (!Elem)
+  {
+    double Length = atGetDouble(ElemData, "Length");
+    check_error();
+    double *PolynomA = atGetDoubleArray(ElemData, "PolynomA");
+    check_error();
+    double *PolynomB = atGetDoubleArray(ElemData, "PolynomB");
+    check_error();
+    int MaxOrder = atGetLong(ElemData, "MaxOrder");
+    check_error();
+    int NumIntSteps = atGetLong(ElemData, "NumIntSteps");
+    check_error();
     /*optional fields*/
-    double Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
-    double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
-    int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
-    int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
-    double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
-    double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
-    double *T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
-    double *T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
-    double *EApertures = atGetOptionalDoubleArray(ElemData, "EApertures"); check_error();
-    double *RApertures = atGetOptionalDoubleArray(ElemData, "RApertures"); check_error();
-    double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle"); check_error();
+    double Energy = atGetOptionalDouble(ElemData, "Energy", Param->energy);
+    check_error();
+    double Scaling = atGetOptionalDouble(ElemData, "FieldScaling", 1.0);
+    check_error();
+    int FringeQuadEntrance = atGetOptionalLong(ElemData, "FringeQuadEntrance", 0);
+    check_error();
+    int FringeQuadExit = atGetOptionalLong(ElemData, "FringeQuadExit", 0);
+    check_error();
+    double *R1 = atGetOptionalDoubleArray(ElemData, "R1");
+    check_error();
+    double *R2 = atGetOptionalDoubleArray(ElemData, "R2");
+    check_error();
+    double *T1 = atGetOptionalDoubleArray(ElemData, "T1");
+    check_error();
+    double *T2 = atGetOptionalDoubleArray(ElemData, "T2");
+    check_error();
+    double *EApertures = atGetOptionalDoubleArray(ElemData, "EApertures");
+    check_error();
+    double *RApertures = atGetOptionalDoubleArray(ElemData, "RApertures");
+    check_error();
+    double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle");
+    check_error();
 
-    if (NumIntSteps <= 0) {
-        atError("NumIntSteps must be positive"); check_error();
+    if (NumIntSteps <= 0)
+    {
+      atError("NumIntSteps must be positive");
+      check_error();
     }
 
     Elem = (struct elem *)atMalloc(sizeof(struct elem));
@@ -184,10 +221,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
     /*optional fields*/
-    Elem->Energy=Energy;
-    Elem->Scaling=Scaling;
-    Elem->FringeQuadEntrance=FringeQuadEntrance;
-    Elem->FringeQuadExit=FringeQuadExit;
+    Elem->Energy = Energy;
+    Elem->Scaling = Scaling;
+    Elem->FringeQuadEntrance = FringeQuadEntrance;
+    Elem->FringeQuadExit = FringeQuadExit;
     Elem->R1 = R1;
     Elem->R2 = R2;
     Elem->T1 = T1;
@@ -212,35 +249,56 @@ MODULE_DEF(ExactMultipoleQuantPass) /* Dummy module initialisation */
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  if (nrhs >= 2) {
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+  if (nrhs >= 2)
+  {
     double rest_energy = 0.0;
     double charge = -1.0;
     double *r_in;
     const mxArray *ElemData = prhs[0];
     int num_particles = mxGetN(prhs[1]);
 
-    double Length = atGetDouble(ElemData, "Length"); check_error();
-    double *PolynomA = atGetDoubleArray(ElemData, "PolynomA"); check_error();
-    double *PolynomB = atGetDoubleArray(ElemData, "PolynomB"); check_error();
-    int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
-    int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
+    double Length = atGetDouble(ElemData, "Length");
+    check_error();
+    double *PolynomA = atGetDoubleArray(ElemData, "PolynomA");
+    check_error();
+    double *PolynomB = atGetDoubleArray(ElemData, "PolynomB");
+    check_error();
+    int MaxOrder = atGetLong(ElemData, "MaxOrder");
+    check_error();
+    int NumIntSteps = atGetLong(ElemData, "NumIntSteps");
+    check_error();
     /*optional fields*/
-    double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
-    double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
-    int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
-    int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
-    double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
-    double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
-    double *T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
-    double *T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
-    double *EApertures = atGetOptionalDoubleArray(ElemData, "EApertures"); check_error();
-    double *RApertures = atGetOptionalDoubleArray(ElemData, "RApertures"); check_error();
-    double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle"); check_error();
-    if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
+    double Energy = atGetOptionalDouble(ElemData, "Energy", 0.0);
+    check_error();
+    double Scaling = atGetOptionalDouble(ElemData, "FieldScaling", 1.0);
+    check_error();
+    int FringeQuadEntrance = atGetOptionalLong(ElemData, "FringeQuadEntrance", 0);
+    check_error();
+    int FringeQuadExit = atGetOptionalLong(ElemData, "FringeQuadExit", 0);
+    check_error();
+    double *R1 = atGetOptionalDoubleArray(ElemData, "R1");
+    check_error();
+    double *R2 = atGetOptionalDoubleArray(ElemData, "R2");
+    check_error();
+    double *T1 = atGetOptionalDoubleArray(ElemData, "T1");
+    check_error();
+    double *T2 = atGetOptionalDoubleArray(ElemData, "T2");
+    check_error();
+    double *EApertures = atGetOptionalDoubleArray(ElemData, "EApertures");
+    check_error();
+    double *RApertures = atGetOptionalDoubleArray(ElemData, "RApertures");
+    check_error();
+    double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle");
+    check_error();
+    if (nrhs > 2)
+      atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
-    if (NumIntSteps <= 0) {
-        atError("NumIntSteps must be positive"); check_error();
+    if (NumIntSteps <= 0)
+    {
+      atError("NumIntSteps must be positive");
+      check_error();
     }
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
@@ -251,7 +309,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                    T1, T2, R1, R2,
                    RApertures, EApertures,
                    KickAngle, Scaling, Energy, &pcg32_global, num_particles);
-  } else if (nrhs == 0) {
+  }
+  else if (nrhs == 0)
+  {
     /* list of required fields */
     int i0 = 0;
     plhs[0] = mxCreateCellMatrix(5, 1);
@@ -261,7 +321,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mxSetCell(plhs[0], i0++, mxCreateString("MaxOrder"));
     mxSetCell(plhs[0], i0++, mxCreateString("NumIntSteps"));
 
-    if (nlhs > 1) {
+    if (nlhs > 1)
+    {
       /* list of optional fields */
       int i1 = 0;
       plhs[1] = mxCreateCellMatrix(11, 1);
@@ -277,7 +338,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       mxSetCell(plhs[1], i1++, mxCreateString("EApertures"));
       mxSetCell(plhs[1], i1++, mxCreateString("KickAngle"));
     }
-  } else {
+  }
+  else
+  {
     mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
   }
 }
