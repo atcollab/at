@@ -11,6 +11,7 @@ from at import (
     lattice,
     lattice_pass,
     lattice_track,
+    AtWarning,
 )
 from at.lattice.elements.conversions import _array, _array66
 
@@ -60,7 +61,7 @@ def test_argument_checks():
 
 def test_dipole():
     d = elements.Dipole("dipole", 1.0, 0.01)
-    assert d.MaxOrder == 0
+    assert d.MaxOrder == 1
     assert len(d.PolynomA) == 2
     assert d.K == 0.0
     d = elements.Dipole("dipole", 1.0, 0.01, -0.5)
@@ -68,14 +69,15 @@ def test_dipole():
     assert len(d.PolynomA) == 2
     assert d.K == -0.5
     d = elements.Dipole("dipole", 1.0, 0.01, PolynomB=[0.0, 0.1, 0.0])
-    assert d.MaxOrder == 1
+    assert d.MaxOrder == 2
     assert len(d.PolynomA) == 3
     assert d.K == 0.1
     d = elements.Dipole("dipole", 1.0, 0.01, PolynomB=[0.0, 0.0, 0.005])
     assert d.MaxOrder == 2
     assert len(d.PolynomA) == 3
     assert d.K == 0.0
-    d = elements.Dipole("dipole", 1.0, 0.01, PolynomB=[0.0, 0.0, 0.005], MaxOrder=0)
+    with pytest.warns(AtWarning):
+        d = elements.Dipole("dipole", 1.0, 0.01, PolynomB=[0.0, 0.0, 0.005], MaxOrder=0)
     assert d.MaxOrder == 0
     assert len(d.PolynomA) == 3
     assert d.K == 0.0
@@ -94,7 +96,8 @@ def test_quadrupole():
     assert q.MaxOrder == 2
     assert len(q.PolynomA) == 3
     assert q.K == 0.0
-    q = elements.Quadrupole("quadrupole", 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1)
+    with pytest.warns(AtWarning):
+        q = elements.Quadrupole("quadrupole", 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1)
     assert q.MaxOrder == 1
     assert len(q.PolynomA) == 3
     assert q.K == 0.5
@@ -110,16 +113,17 @@ def test_sextupole():
     assert len(s.PolynomA) == 3
     assert s.H == -0.5
     s = elements.Sextupole("sextupole", 1.0, PolynomB=[0.0, 0.0, 0.005, 0.0])
-    assert s.MaxOrder == 2
+    assert s.MaxOrder == 3
     assert len(s.PolynomA) == 4
     assert s.H == 0.005
     s = elements.Sextupole("sextupole", 1.0, PolynomB=[0.0, 0.0, 0.005, 0.001])
     assert s.MaxOrder == 3
     assert len(s.PolynomA) == 4
     assert s.H == 0.005
-    s = elements.Sextupole(
-        "sextupole", 1.0, PolynomB=[0.0, 0.5, 0.005, 0.001], MaxOrder=2
-    )
+    with pytest.warns(AtWarning):
+        s = elements.Sextupole(
+            "sextupole", 1.0, PolynomB=[0.0, 0.5, 0.005, 0.001], MaxOrder=2
+        )
     assert s.MaxOrder == 2
     assert len(s.PolynomA) == 4
     assert s.H == 0.005
@@ -133,17 +137,17 @@ def test_octupole():
 
 def test_thinmultipole():
     m = elements.ThinMultipole("thin", [], [0.0, 0.0, 0.0, 0.0])
-    assert m.MaxOrder == 0
+    assert m.MaxOrder == 3
     assert len(m.PolynomA) == 4
     m = elements.ThinMultipole("thin", [], [0.0, 0.0, 1.0, 0.0])
-    assert m.MaxOrder == 2
+    assert m.MaxOrder == 3
     assert len(m.PolynomA) == 4
 
 
 def test_multipole():
     m = elements.Multipole("multi", 1.0, [], [0.0, 0.0, 0.0, 0.0])
     assert m.Length == 1.0
-    assert m.MaxOrder == 0
+    assert m.MaxOrder == 3
     assert m.NumIntSteps == 10
     assert m.PassMethod == "StrMPoleSymplectic4Pass"
 
