@@ -11,4 +11,4 @@ from .file_input import *
 from .file_output import *
 from .madx import *
 from .mad8 import *
-from xsuite import *
+from .xsuite import *
