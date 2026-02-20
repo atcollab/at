@@ -379,7 +379,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         check_error();
         double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle");
         check_error();
-        double irho = BendingAngle / Length;
+
         if (nrhs > 2)
             atProperties(prhs[2], &Energy, &rest_energy, &charge);
 
@@ -391,6 +391,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        irho = BendingAngle / Length;
         r_in = mxGetDoubles(plhs[0]);
         ExactRectangularBendQuant(r_in, Length, BendingAngle, PolynomA, PolynomB,
                                   MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
