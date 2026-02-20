@@ -36,18 +36,18 @@ struct elem
     double *KickAngle;
 };
 
-static void ExactRectangularBendQuant(double *r, double le, double bending_angle,
-                                      double *A, double *B,
-                                      int max_order, int num_int_steps,
-                                      double entrance_angle, double exit_angle,
-                                      int FringeBendEntrance, int FringeBendExit,
-                                      int FringeQuadEntrance, int FringeQuadExit,
-                                      double gK, double x0ref, double refdz,
-                                      double *T1, double *T2,
-                                      double *R1, double *R2,
-                                      double *RApertures, double *EApertures,
-                                      double *KickAngle, double scaling, double E0,
-                                      pcg32_random_t *rng, int num_particles)
+static void ExactRectangularBendQuant(
+    double *r, double le, double bending_angle,
+    double *A, double *B,
+    int max_order, int num_int_steps,
+    double entrance_angle, double exit_angle,
+    int FringeBendEntrance, int FringeBendExit,
+    int FringeQuadEntrance, int FringeQuadExit,
+    double gK, double x0ref, double refdz,
+    double *T1, double *T2, double *R1, double *R2,
+    double *RApertures, double *EApertures,
+    double *KickAngle, double scaling, double E0,
+    pcg32_random_t *rng, int num_particles)
 {
     double irho = bending_angle / le;
     double phi2 = 0.5 * bending_angle;
@@ -146,9 +146,9 @@ static void ExactRectangularBendQuant(double *r, double le, double bending_angle
                 dyp = r6[3] * p_norm - yp0;
                 ds = r6[5] - s0;
 
-                rho = (SL + ds) / sqrt(dxp * dxp + dyp * dyp);
+                rho = (ds + SL) / sqrt(dxp * dxp + dyp * dyp);
 
-                ng = cstng / rho * (SL + ds);
+                ng = cstng / rho * (ds);
                 ec = cstec / rho;
 
                 nph = atrandp_r(rng, ng);
@@ -165,7 +165,7 @@ static void ExactRectangularBendQuant(double *r, double le, double bending_angle
             r6[0] -= x0ref;
 
             /* Convert absolute path length to path lengthening */
-            r6[5] -= LR; /*(le + refdz);*/
+            r6[5] -= (le + refdz);
 
             /* edge focus */
             bend_edge(r6, irho, phi2 - exit_angle);
@@ -323,7 +323,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         double rest_energy = 0.0;
         double charge = -1.0;
-        double irho, Energy;
+        double irho;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
