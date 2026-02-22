@@ -25,7 +25,7 @@ from .madx import p_to_at
 
 try:
     from xtrack import Line
-except AttributeError:
+except ImportError:
     # noinspection PyUnusedLocal
     def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
         """Create a Xsuite :py:class:`.Line` from an AT lattice.
