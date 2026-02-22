@@ -1,14 +1,20 @@
 from __future__ import annotations
 
-__all__ = ["XsElement", "XsEnvironment", "load_xsuite", "save_xsuite"]
+__all__ = [
+    "XsElement",
+    "XsLine",
+    "lattice_from_line",
+    "line_from_lattice",
+    "load_xsuite",
+    "save_xsuite",
+]
 
 import json
 import warnings
-from collections import ChainMap
 from collections.abc import Generator, Iterable
 from math import pi, sqrt
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 import contextlib
 
 import numpy as np
@@ -17,12 +23,45 @@ from ..lattice import AtWarning, ReferencePoint, constants as cst
 from ..lattice import Lattice, Particle, elements as elt
 from .madx import p_to_at
 
+try:
+    from xtrack import Line
+except AttributeError:
+    # noinspection PyUnusedLocal
+    def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
+        """Create a Xsuite :py:class:`.Line` from an AT lattice.
+
+        Args:
+            ring:           AT lattice
+            match_model:    if :py:obj:`True`, set the Xsuite model and integrator
+              matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+        """
+        msg = "xtrack is not installed."
+        raise ImportError(msg)
+else:
+
+    def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
+        """Create a Xsuite Line from an AT lattice.
+
+        Args:
+            ring:           AT lattice
+            match_model:    if :py:obj:`True`, set the Xsuite model and integrator
+              matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+        """
+        return Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())
+
+
 # Default particle: electrons at 1 GeV
 _default_energy = 1.0e9
 _default_mass = cst.e_mass
 _default_charge = -1
 _default_gamma = _default_energy / _default_mass
 _default_beta = sqrt(1.0 - 1.0 / _default_gamma / _default_gamma)
+_default_particle: dict[str, float | list[float]] = {
+    "mass0": _default_mass,
+    "gamma0": [_default_gamma],
+    "beta0": [_default_beta],
+    "q0": _default_charge,
+}
 
 _INDEX_TO_EDGE_MODEL = {
     -1: "suppressed",
@@ -31,6 +70,13 @@ _INDEX_TO_EDGE_MODEL = {
     2: "dipole-only",
 }
 _EDGE_MODEL_TO_INDEX = {k: v for v, k in _INDEX_TO_EDGE_MODEL.items()}
+
+
+class _XtLine(Protocol):
+    """Defines an object having a to_dict method."""
+
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]: ...
 
 
 class _AtEncoder(json.JSONEncoder):
@@ -59,7 +105,7 @@ class XsElement(dict):
         v: k for k, v in _xsuite2at_attr.items()
     }
     _at2xsuite_model: ClassVar[dict[str | None, str]] = {}
-    _xsuite2at_model: ClassVar[dict[str, str]] = {}
+    _xsuite2at_model: ClassVar[dict[str, str | None]] = {}
     _at_integrator: ClassVar[str | None] = None
     _index_to_model: ClassVar[dict[int, str]] = {
         0: "adaptive",
@@ -70,6 +116,10 @@ class XsElement(dict):
         5: "drift-kick-drift-exact",
         6: "drift-kick-drift-expanded",
     }
+
+    # Instance attributes
+    name: str
+    origin: str
 
     def __init__(self, name: str, *args, origin: str = "Unknown", **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,10 +152,14 @@ class XsElement(dict):
         """Get the AT element class."""
         return self._atClass
 
-    def _model_to_at(self) -> dict[str, Any]:
+    def _model_to_at(self) -> dict[str, str]:
         """Get the AT passmethod."""
         passmethod = self._xsuite2at_model.get(self._get_model(), None)
         return {} if passmethod is None else {"PassMethod": passmethod}
+
+    def to_dict(self) -> dict[str, Any]:
+        """Build a dictionary representation of the XsElement."""
+        return self
 
     def to_at(self) -> elt.Element:
         """Generate the AT element."""
@@ -114,45 +168,67 @@ class XsElement(dict):
         return cls.from_file(atparams)
 
     @classmethod
-    def from_dict(
-        cls, xsparams: dict[str, Any], name: str = "?", origin: str = "Unknown"
-    ) -> XsElement:
-        return cls(name, origin=origin, **xsparams)
+    def from_dict(cls, elem_dict: dict[str, Any], name: str = "?") -> XsElement:
+        """Build a XsElement from its dictionary representation.
+
+        Args:
+            elem_dict:  dictionary representation of the XsElement
+            name:       Optional name of the element
+        """
+        return cls(name, origin=cls.__name__, **elem_dict)
 
     @classmethod
-    def from_at(cls, FamName, match_model: bool = False, **atparams):
-        """Build a Xsuite element from an AT element.
+    def from_at(cls, FamName: str, match_model: bool = False, **atparams) -> XsElement:
+        """Build a XsElement element from an AT element.
 
         Args:
             FamName:        Name of the element
-            match_model:    If :py:obj:`True`, set the Xsuite model matching at best
-              the AT PassMethod
+            match_model:    If :py:obj:`True`, set the Xsuite model and integrator
+              matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
         """
-        xsparams = {}
-        for k, v in atparams.items():
-            xsk = cls._at2xsuite_attr.get(k, None)
-            if xsk is not None:
-                xsparams[xsk] = v
-        passmethod = atparams.get("PassMethod")
-        xs_model = cls._at2xsuite_model.get(passmethod, None)
+        # Conversion of similar attributes
+        xsparams = {
+            xsk: v
+            for k, v in atparams.items()
+            if (xsk := cls._at2xsuite_attr.get(k, None)) is not None
+        }
+        # Handling of model and integrator
+        xs_model = cls._at2xsuite_model.get(atparams["PassMethod"], None)
         if match_model:
             if xs_model is None:
                 xs_model = cls._at2xsuite_model.get(None, None)
             if (integrator := cls._at_integrator) is not None:
                 xsparams["integrator"] = integrator
+        else:
+            xsparams.pop("num_multipole_kicks", None)
         if xs_model is not None:
             xsparams["model"] = xs_model
+        # Set the Xsuite class
         xsparams["__class__"] = cls.__name__
         return cls(FamName, **xsparams)
 
     @staticmethod
     def static_from_dict(elem_dict: dict[str, Any], name: str = "?") -> XsElement:
+        """Build a XsElement from its dictonary representation.
+
+        Args:
+            elem_dict:  dictionary representation of the XsElement
+            name:       Optional name of the element
+        """
         class_name = elem_dict.get("__class__", "Unknown")
-        xsclass = _xsclass.get(class_name, Unknown)
-        return xsclass.from_dict(elem_dict, name=name, origin=class_name)
+        xsclass: type[XsElement] = _xsclass.get(class_name, Unknown)
+        return xsclass.from_dict(elem_dict, name=name)
 
     @staticmethod
     def static_from_at(atelem: elt.Element, match_model: bool = False) -> XsElement:
+        """Build a XsElement from an AT element.
+
+        Args:
+            atelem:         AT :py:class:`.Element`
+            match_model:    If :py:obj:`True`, set the Xsuite model and integrator
+              matching at best the AT PassMethod. By default, the Xsuite default model
+              and integrator will be used.
+        """
         xsclass = _at2xsclass.get(type(atelem), XsElement)
         return xsclass.from_at(match_model=match_model, **atelem.to_file())
 
@@ -168,7 +244,7 @@ class Drift(XsElement):
     """Xsuite Drift element."""
 
     # Class variables
-    _atClass: ClassVar[type[elt.Element]] = elt.Drift
+    _atClass = elt.Drift
     _at2xsuite_model = {"ExactDriftPass": "exact", None: "expanded"}
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
     _index_to_model = {0: "adaptive", 1: "expanded", 2: "exact"}
@@ -178,23 +254,19 @@ class Multipole(XsElement):
     """Base class for Xsuite magnetic elements."""
 
     # Class variables
-    _atClass: ClassVar[type[elt.Element]] = elt.Multipole
+    _atClass = elt.Multipole
     _at2xsuite_model = {
+        "ExactMultipoleRadPass": "drift-kick-drift-exact",
         "ExactMultipolePass": "drift-kick-drift-exact",
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
     _at_integrator = "yoshida4"
-    _xsuite2at_attr = XsElement._xsuite2at_attr
-    _xsuite2at_attr.update(
-        {
-            "order": "MaxOrder",
-            "num_multipole_kicks": "NumIntSteps",
-        }
-    )
-    _at2xsuite_attr: ClassVar[dict[str, str]] = {
-        v: k for k, v in _xsuite2at_attr.items()
+    _xsuite2at_attr = XsElement._xsuite2at_attr | {
+        "order": "MaxOrder",
+        "num_multipole_kicks": "NumIntSteps",
     }
+    _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
 
     def _set_at_transforms(self) -> dict:
         """Generate AT element displacements."""
@@ -236,24 +308,31 @@ class Multipole(XsElement):
     def _set_at_poly(self) -> dict[str, Any]:
         """Generate the AT field expansion."""
 
-        def xspoly(kmain: list[str], kerr: str) -> np.ndarray:
+        def xspoly(kmain: list[str], kerr: str) -> tuple[int, np.ndarray]:
             # Get main components
             pmain = np.array([self.get(k, 0.0) for k in kmain])
             # Get errors
             perr = np.array(self.get(kerr, np.zeros(4)))
-            # Pad to the same length
-            lpoly = max(4, len(perr))
-            perr = np.pad(perr, (0, lpoly - len(perr)))
-            pmain = np.pad(pmain, (1, lpoly - 4))
             if length != 0.0:
                 perr /= length
-            # Convert to Xsuite
-            return p_to_at(list(pmain + perr))
+            # Pad to the same length
+            lpoly = max(4, len(perr))
+            poly = np.pad(pmain, (0, lpoly - 4)) + np.pad(perr, (0, lpoly - len(perr)))
+            # Use the AT default order if possible
+            porder = atorder if np.all(poly[atorder + 1 :] == 0.0) else xsorder
+            # Convert to AT
+            return porder, p_to_at(list(poly))
 
         length = self.get("length", 0.0)
+        xsorder = self["order"]
+        atorder = getattr(self._atClass, "DefaultOrder", xsorder)
+        aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
+        border, polyb = xspoly(["k0", "k1", "k2", "k3"], "knl")
+        aborder = max(aorder, border)
         return {
-            "PolynomB": xspoly(["k1", "k2", "k3"], "knl"),
-            "PolynomA": xspoly(["k1s", "k2s", "k3s"], "ksl"),
+            "MaxOrder": aborder,
+            "PolynomB": polyb[: aborder + 1],
+            "PolynomA": polya[: aborder + 1],
         }
 
     def _set_at_fringe(self):
@@ -391,23 +470,19 @@ class Bend(Multipole):
     # Class variables
     _atClass = elt.Bend
     _at2xsuite_model = {
+        "ExactSectorBendRadPass": "bend-kick-bend",
         "ExactSectorBendPass": "bend-kick-bend",
         None: "drift-kick-drift-expanded",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _xsuite2at_attr = Multipole._xsuite2at_attr
-    _xsuite2at_attr.update(
-        {
-            "angle": "BendingAngle",
-            "edge_entry_fint": "FringeInt1",
-            "edge_exit_fint": "FringeInt2",
-            "edge_entry_angle": "EntranceAngle",
-            "edge_exit_angle": "ExitAngle",
-        }
-    )
-    _at2xsuite_attr: ClassVar[dict[str, str]] = {
-        v: k for k, v in _xsuite2at_attr.items()
+    _xsuite2at_attr = Multipole._xsuite2at_attr | {
+        "angle": "BendingAngle",
+        "edge_entry_fint": "FringeInt1",
+        "edge_exit_fint": "FringeInt2",
+        "edge_entry_angle": "EntranceAngle",
+        "edge_exit_angle": "ExitAngle",
     }
+    _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
 
     def _set_at_fringe(self) -> dict[str, Any]:
 
@@ -469,6 +544,7 @@ class RBend(Bend):
     """Xsuite RBend element."""
 
     _at2xsuite_model = {
+        "ExactRectangularBendRadPass": "straight-body",
         "ExactRectangularBendPass": "straight-body",
         None: "curved-body",
     }
@@ -525,9 +601,7 @@ class Cavity(XsElement):
         "frequency": "Frequency",
         "harmonic": "HarmNumber",
     }
-    _at2xsuite_attr: ClassVar[dict[str, str]] = {
-        v: k for k, v in _xsuite2at_attr.items()
-    }
+    _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
 
     def _set_xs_lag(self, atparams: dict):
         om = 2.0 * np.pi * atparams.get("Frequency")
@@ -560,6 +634,18 @@ class Unknown:
         return newcls.from_dict(xsp, name=name, origin=origin)
 
 
+class Dipole:
+    @classmethod
+    def from_at(cls, **atparams) -> XsElement:
+        if atparams["PassMethod"] in {
+            "ExactRectangularBendPass",
+            "ExactRectangularBendRadPass",
+        }:
+            return RBend.from_at(**atparams)
+        else:
+            return Bend.from_at(**atparams)
+
+
 _xsclass = {
     "Marker": Marker,
     "Drift": Drift,
@@ -572,18 +658,6 @@ _xsclass = {
     "RBend": RBend,
     "Unknown": Unknown,
 }
-
-
-class Dipole:
-    @classmethod
-    def from_at(cls, **atparams):
-        if atparams["PassMethod"] in {
-            "ExactRectangularBendPass",
-            "ExactRectangularBendRadPass",
-        }:
-            return RBend.from_at(**atparams)
-        else:
-            return Bend.from_at(**atparams)
 
 
 _at2xsclass: dict[type[elt.Element], type[XsElement]] = {
@@ -599,112 +673,43 @@ _at2xsclass: dict[type[elt.Element], type[XsElement]] = {
 }
 
 
-class XsEnvironment(ChainMap):
-    """Simulate an Xsuite Environment."""
+class XsLine:
+    """Line object simulation a Xsuite Line."""
 
     # Class attributes
-    _env_keys: ClassVar[set[str]] = {"lines", "element_names", "particle_ref"}
-    _line_keys: ClassVar[set[str]] = {"element_names", "particle_ref"}
-    _default_particle: ClassVar[dict[str, float | list[float]]] = {
-        "mass0": _default_mass,
-        "gamma0": [_default_gamma],
-        "beta0": [_default_beta],
-        "q0": _default_charge,
+    _line_keys: ClassVar[set[str]] = {
+        "name",
+        "element_names",
+        "particle_ref",
+        "in_file",
     }
 
-    def __init__(self, elements=None, vars=None, lines=None, **kwargs):
-        """
-        Args:
-            elements:   Dictionary of elements
-            vars:       Dictionary of variables
-            lines:      Dictionary of lines
-            *:          All other arguments are set as attributes.
-        """
-        super().__init__(vars or {}, elements or {}, lines or {})
-        self.vars = self.maps[0]
-        self.elements = self.maps[1]
-        self.lines = self.maps[2]
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    # Instance attributes
+    name: str = "test"
+    element_names: list[str] = []
+    particle_ref: dict[str, Any] = _default_particle
+    in_file: str = ""
 
-    @classmethod
-    def from_dict(cls, root, **kwargs):
-        """Create an Xsuite Environment from a dictionary.
-
-        Args:
-            root:       Dictionary representation of the environment.
-
-        """
-        defclass = "Environment" if "lines" in root else "Line"
-        if root.pop("__class__", defclass) == "Line":
-            newline = {
-                k: v for k in cls._line_keys if (v := root.pop(k, None)) is not None
-            }
-            root["lines"] = {"ring": newline}
-        element_refs = root.pop("elements", {})
-        elems = {
-            k: XsElement.static_from_dict(el, name=k) for k, el in element_refs.items()
+    def __init__(self, elements, **root):
+        self.elements = {
+            k: XsElement.static_from_dict(el, name=k) for k, el in elements.items()
         }
-        items = {k: v for k in cls._env_keys if (v := root.pop(k, None)) is not None}
-        vars = root.pop("_var_management_data", {}).pop("var_values", {})
-        return cls(elements=elems, vars=vars, **items, **kwargs)
+        for k in self._line_keys:
+            if (value := root.get(k)) is not None:
+                setattr(self, k, value)
 
-    @classmethod
-    def from_json(cls, filename: str | Path):
-        """Create an Xsuite Environment from a JSON file.
+    def to_dict(self) -> dict[str, Any]:
+        """Create a Xsuite-compatible dictionary representation of the XsLine."""
+        return dict(
+            ((k, v) for k in self._line_keys if (v := getattr(self, k)) is not None),
+            elements={nm: self.elements[nm].to_dict() for nm in self.element_names},
+            __class__="Line",
+        )
 
-        Args:
-            filename:   Name or path of the JSON file.
-        """
-        filename = Path(filename)
-        with filename.open() as f:
-            return cls.from_dict(json.load(f), in_file=str(filename.resolve()))
-
-    @classmethod
-    def from_at(cls, ring: Lattice, match_model: bool = False, **kwargs):
-        """Create an Xsuite environment from an AT lattice.
-
-        Args:
-            ring:           AT lattice
-            match_model:    If :py:obj:`True`, set the Xsuite model matching at best
-              the AT PassMethod. By default, the Xsuite default model will be used.
-        """
-
-        def name_gen(name: str, nmax: int = 10000) -> Generator[str, None, None]:
-            """Generate a list of tentative names."""
-            yield name
-            for i in range(1, nmax):
-                yield ".".join((name, str(i)))
-
-        def check(name: str, elem: XsElement) -> tuple[bool, bool]:
-            """Check if the element is already in the elements dictionary."""
-            if name in elements:
-                return elem == elements[name], False
-            return True, True
-
-        def store_elem(elem: elt.Element):
-            """Store the element in the dictionary with a unique name."""
-            xselem = XsElement.static_from_at(elem, match_model=match_model)
-            for nm in name_gen(elem.FamName):
-                valid, new = check(nm, xselem)
-                if valid:
-                    if new:
-                        elements[nm] = xselem
-                    return nm
-            msg = f"Cannot store {elem.FamName}"
-            raise NameError(msg)
-
-        elements: dict[str, XsElement] = {}
-        line = [store_elem(el) for el in ring]
-        lines = {ring.name or "ring": {"element_names": line}}
-        return cls(elements=elements, vars={}, lines=lines, **kwargs)
-
-    def lattice(self, **kwargs):
-        """Create a lattice from the selected line of an Xsuite environment.
+    def to_at(self, **kwargs) -> Lattice:
+        """Create an AT lattice from the XsLine.
 
         Keyword Args:
-            use (str):          Name of the sequence or line containing the desired
-              lattice. Default: ``ring``
             name (str):         Name of the lattice. Default: Xsuite line name.
             particle(Particle): Circulating particle. Default: Xsuite reference
               particle
@@ -715,24 +720,9 @@ class XsEnvironment(ChainMap):
         """
 
         def json_generator(params: dict[str, Any]):
-            use = params.get("use")
-            if use is None:
-                lkeys = list(self.lines.keys())
-                use = lkeys[0] if lkeys else "ring"
-            params.setdefault("name", use)
-            params.setdefault("energy", 1.0e9)
-            params.setdefault("periodicity", 1)
-            try:
-                line = self.lines[use]
-            except KeyError as exc:
-                exc.args = (f"Unknown line: choose in {set(self.lines.keys())}",)
-                raise
 
-            element_names = line["element_names"]
-
-            particle = line.get(
-                "particle_ref", self.get("particle_ref", self._default_particle)
-            )
+            element_names = self.element_names
+            particle = self.particle_ref
             mass0 = float(particle["mass0"])
             gamma0 = float(particle["gamma0"][0])
             beta0 = float(particle["beta0"][0])
@@ -742,6 +732,7 @@ class XsEnvironment(ChainMap):
                 "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
                 "energy": energy,  # [eV]
                 "periodicity": 1,
+                "name": self.name,
             }
 
             for k, v in beam_params.items():
@@ -773,11 +764,15 @@ class XsEnvironment(ChainMap):
                 tl = pl / om * cst.clight / 360.0
                 cav.Timelag = tl
 
-        in_file = getattr(self, "in_file", None)
-        return Lattice(iterator=json_generator, in_file=in_file, **kwargs)
+        if in_file := getattr(self, "in_file", ""):
+            kwargs["in_file"] = in_file
+        return Lattice(iterator=json_generator, **kwargs)
+
+    # "lattice" is an alias for "to_at"
+    lattice = to_at
 
     def to_json(self, filename: str | Path | None = None, compact: bool = False):
-        """Save an Xsuite environment into a JSON file.
+        """Save the XsLine into a JSON file.
 
         Parameters:
             filename:   Name of the JSON file. Default: outputs on
@@ -786,12 +781,7 @@ class XsEnvironment(ChainMap):
           with line feeds and indentation. Otherwise, the output is a single line.
         """
         indent = None if compact else 2
-        root = {
-            "elements": self.elements,
-            "vars": self.vars,
-            "lines": self.lines,
-            "__class__": "Environment",
-        }
+        root = self.to_dict()
         if filename is None:
             print(json.dumps(root, cls=_AtEncoder, indent=indent))
         else:
@@ -799,24 +789,129 @@ class XsEnvironment(ChainMap):
             with filename.open("w") as jsonfile:
                 json.dump(root, jsonfile, cls=_AtEncoder, indent=indent)
 
-    to_at = lattice
+    @classmethod
+    def from_dict(
+        cls, root: dict[str, Any], use: str | None = None, **kwargs
+    ) -> XsLine:
+        """Create an XsLine from a dictionary.
+
+        Args:
+            root:       Dictionary representation of the line or environment,
+            use:        For environment, name of the sequence or line containing the
+              desired lattice. Default: ``ring``.
+        """
+        defclass = "Environment" if "lines" in root else "Line"
+        if root.get("__class__", defclass) == "Line":
+            return cls(**root)
+        else:
+            if use is None:
+                lkeys = list(root["lines"].keys())
+                use = lkeys[0] if len(lkeys) == 1 else "ring"
+            line = root["lines"][use]
+            return cls(name=use, elements=root["elements"], **line, **kwargs)
+
+    @classmethod
+    def from_json(cls, filename: str | Path, use: str | None = None, **kwargs):
+        """Create an XsLine from a JSON file.
+
+        Args:
+            filename:   Name or path of the JSON file.
+            use:        For environment, name of the sequence or line containing the
+              desired lattice. Default: ``ring``
+        """
+        filename = Path(filename)
+        with filename.open() as f:
+            return cls.from_dict(
+                json.load(f), in_file=str(filename.resolve()), use=use, **kwargs
+            )
+
+    @classmethod
+    def from_xsuite(cls, line, use: str | None = None):
+        """Create an XsLine from a Xsuite Line or Environment.
+
+        Args:
+            line:       Xsuite Line or Environment
+            use:        For environment, name of the sequence or line containing the
+              desired lattice. Default: ``ring``
+        """
+        return cls.from_dict(line.to_dict(), use=use)
+
+    @classmethod
+    def from_at(cls, ring: Lattice, match_model: bool = False, **kwargs):
+        """Create an XsLine from an AT lattice.
+
+        Args:
+            ring:           AT lattice
+            match_model:    If :py:obj:`True`, set the Xsuite model and integrator
+              matching at best the AT PassMethod. By default, the Xsuite default model
+              and integrator will be used.
+        """
+
+        def refpart(rng):
+            prt = rng.particle
+            if prt.name == "relativistic":
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=UserWarning)
+                    prt = Particle("electron")
+            gamma0 = rng.energy / prt.rest_energy
+            return {"mass0": prt.rest_energy, "q0": prt.charge, "gamma0": [gamma0]}
+
+        def name_gen(name: str, nmax: int = 10000) -> Generator[str, None, None]:
+            """Generate a list of tentative names."""
+            yield name
+            for i in range(1, nmax):
+                yield ".".join((name, str(i)))
+
+        def check(name: str, elem: XsElement) -> tuple[bool, bool]:
+            """Check if the element is already in the elements dictionary."""
+            if name in elements:
+                return elem == elements[name], False
+            return True, True
+
+        def store_elem(elem: elt.Element):
+            """Store the element in the dictionary with a unique name."""
+            xselem = XsElement.static_from_at(elem, match_model=match_model)
+            for nm in name_gen(elem.FamName):
+                valid, new = check(nm, xselem)
+                if valid:
+                    if new:
+                        elements[nm] = xselem
+                    return nm
+            msg = f"Cannot store {elem.FamName}"
+            raise NameError(msg)
+
+        elements: dict[str, XsElement] = {}
+        line = [store_elem(el) for el in ring]
+        return cls(
+            elements=elements,
+            element_names=line,
+            particle_ref=refpart(ring),
+            name=ring.name,
+            **kwargs,
+        )
 
 
-def load_xsuite(filename: str | Path, **kwargs) -> Lattice:
+def load_xsuite(filename: str | Path, use: str | None = None, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Xsuite JSON file.
 
     Parameters:
         filename:           Name or path of the JSON file
-
-    Keyword Args:
         use:                Name of the Xsuite line containing the desired lattice.
           Default: ``ring``
-        *:                  All other keywords update the lattice properties
+
+    Keyword Args:
+        name (str):         Name of the lattice. Default: Xsuite line name.
+        particle(Particle): Circulating particle. Default: Xsuite reference
+          particle
+        energy (float):     Energy of the lattice [eV]. Default: from Xsuite
+          reference particle
+        periodicity(int):   Number of periods. Default: 1
+        *:                  All other keywords will be set as Lattice attributes
 
     Returns:
         lattice (Lattice):          New :py:class:`.Lattice` object
     """
-    return XsEnvironment.from_json(filename).to_at(**kwargs)
+    return XsLine.from_json(filename, use=use).to_at(**kwargs)
 
 
 def save_xsuite(
@@ -836,6 +931,27 @@ def save_xsuite(
         compact:        If :py:obj:`False` (default), the JSON file is pretty-printed
           with line feeds and indentation. Otherwise, the output is a single line.
     """
-    XsEnvironment.from_at(lattice, match_model=match_model).to_json(
-        filename, compact=compact
-    )
+    XsLine.from_at(lattice, match_model=match_model).to_json(filename, compact=compact)
+
+
+def lattice_from_line(line: _XtLine, use: str | None = None, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice` object from a Xsuite Line or Environment.
+
+    Args:
+        line: Xsuite line or environment
+        use (str):  Name of the line containing the desired lattice.
+          Default: ``ring``.
+
+    Keyword Args:
+        name (str):         Name of the lattice. Default: Xsuite line name.
+        particle(Particle): Circulating particle. Default: Xsuite reference
+          particle
+        energy (float):     Energy of the lattice [eV]. Default: from Xsuite
+          reference particle
+        periodicity(int):   Number of periods. Default: 1
+        *:                  All other keywords will be set as Lattice attributes
+
+    Returns:
+        lattice:    New :py:class:`.Lattice` object.
+    """
+    return XsLine.from_xsuite(line, use=use).to_at(**kwargs)
