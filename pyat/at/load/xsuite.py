@@ -28,24 +28,30 @@ try:
 except ImportError:
     # noinspection PyUnusedLocal
     def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
-        """Create a Xsuite :py:class:`.Line` from an AT lattice.
+        """Create a Xsuite :py:class:`.Line` from an AT :py:class:`.Lattice`.
 
         Args:
             ring:           AT lattice
             match_model:    if :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+
+        Returns:
+            line:           new :py:class:`.Line` object.
         """
         msg = "xtrack is not installed."
         raise ImportError(msg)
 else:
 
     def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
-        """Create a Xsuite Line from an AT lattice.
+        """Create a Xsuite :py:class:`.Line` from an AT lattice.
 
         Args:
             ring:           AT lattice
             match_model:    if :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+
+        Returns:
+            line:           new :py:class:`.Line` object.
         """
         return Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())
 
@@ -118,8 +124,8 @@ class XsElement(dict):
     }
 
     # Instance attributes
-    name: str
-    origin: str
+    name: str  #: Element name
+    origin: str  #: Xsuite class of the source element
 
     def __init__(self, name: str, *args, origin: str = "Unknown", **kwargs):
         super().__init__(*args, **kwargs)
@@ -139,16 +145,17 @@ class XsElement(dict):
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
+        atparams = {
+            atk: v
+            for (k, v) in self.items()
+            if (atk := self._xsuite2at_attr.get(k, None)) is not None
+        }
         atparams["FamName"] = self.name
         atparams["origin"] = self.origin
-        for k, v in self.items():
-            atk = self._xsuite2at_attr.get(k, None)
-            if atk is not None:
-                atparams[atk] = v
         atparams.update(self._model_to_at())
         return atparams
 
-    def _class_to_at(self) -> type[elt.Element]:
+    def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
         """Get the AT element class."""
         return self._atClass
 
@@ -158,13 +165,21 @@ class XsElement(dict):
         return {} if passmethod is None else {"PassMethod": passmethod}
 
     def to_dict(self) -> dict[str, Any]:
-        """Build a dictionary representation of the XsElement."""
+        """Build a dictionary representation of the XsElement.
+
+        Returns:
+            elem_dict:  dictionary representation of the :py:class:`XsElement`
+        """
         return self
 
     def to_at(self) -> elt.Element:
-        """Generate the AT element."""
+        """Generate the AT element.
+
+        Returns:
+            elem:   new :py:class:`.Element` object
+        """
         atparams = self._params_to_at()
-        cls = self._class_to_at()
+        cls = self._class_to_at(atparams)
         return cls.from_file(atparams)
 
     @classmethod
@@ -174,6 +189,9 @@ class XsElement(dict):
         Args:
             elem_dict:  dictionary representation of the XsElement
             name:       Optional name of the element
+
+        Returns:
+            xselement:  new :py:class:`XsElement` object
         """
         return cls(name, origin=cls.__name__, **elem_dict)
 
@@ -185,6 +203,9 @@ class XsElement(dict):
             FamName:        Name of the element
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+
+        Returns:
+            xselement:  new :py:class:`XsElement` object
         """
         # Conversion of similar attributes
         xsparams = {
@@ -214,6 +235,9 @@ class XsElement(dict):
         Args:
             elem_dict:  dictionary representation of the XsElement
             name:       Optional name of the element
+
+        Returns:
+            xselement:  new :py:class:`XsElement` object
         """
         class_name = elem_dict.get("__class__", "Unknown")
         xsclass: type[XsElement] = _xsclass.get(class_name, Unknown)
@@ -228,6 +252,9 @@ class XsElement(dict):
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. By default, the Xsuite default model
               and integrator will be used.
+
+        Returns:
+            xselement:  new :py:class:`XsElement` object
         """
         xsclass = _at2xsclass.get(type(atelem), XsElement)
         return xsclass.from_at(match_model=match_model, **atelem.to_file())
@@ -414,11 +441,11 @@ class Multipole(XsElement):
 
         return np.fromiter(to_xsuite(a), dtype=float)
 
-    def _class_to_at(self) -> type[elt.Element]:
-        if self.get("length", 0.0) == 0.0:
+    def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
+        if atparams.get("Length", 0.0) == 0.0:
             return elt.ThinMultipole
         else:
-            return super()._class_to_at()
+            return super()._class_to_at(atparams)
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(**atparams)
@@ -544,31 +571,25 @@ class RBend(Bend):
     """Xsuite RBend element."""
 
     _at2xsuite_model = {
-        "ExactRectangularBendRadPass": "straight-body",
-        "ExactRectangularBendPass": "straight-body",
-        None: "curved-body",
+        "ExactRectangularBendRadPass": "drift-kick-drift-exact",
+        "ExactRectangularBendPass": "drift-kick-drift-exact",
     }
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _index_to_model = {
-        0: "adaptive",
-        1: "curved-body",
-        2: "straight-body",
-    }
 
-    def _get_model(self) -> str:
-        try:
-            # String model
-            model = self.get("rbend_model")
-        except KeyError:
-            # Numeric model
-            n_model = self.get("_rbend_model", -1)
-            model = self._index_to_model.get(n_model, "unknown")
-        return model
+    def _model_to_at(self) -> dict[str, str]:
+        """Get the AT passmethod."""
+        straight = self.get("rbend_model", "adaptive") == "straight-body"
+        if straight:
+            passmethod = self._xsuite2at_model.get(self._get_model(), None)
+        else:
+            passmethod = Bend._xsuite2at_model.get(self._get_model(), None)
+        return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(**atparams)
+        straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
-        if not exact and not (
+        if straight and not exact and not (
             np.all(atparams["PolynomA"] == 0.0) and np.all(atparams["PolynomB"] == 0.0)
         ):
             msg = (
@@ -578,6 +599,7 @@ class RBend(Bend):
             warnings.warn(AtWarning(msg), stacklevel=3)
             atparams["PassMethod"] = "ExactRectangularBendPass"
         hangle = abs(0.5 * self.get("angle"))
+        atparams["Length"] = self.get("length_straight", 0.0) / np.sinc(hangle / np.pi)
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
         return atparams
@@ -585,6 +607,7 @@ class RBend(Bend):
     @classmethod
     def from_at(cls, **atparams):
         elem = super().from_at(**atparams)
+        elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
         elem["edge_entry_angle"] -= hangle
         elem["edge_exit_angle"] -= hangle
@@ -699,7 +722,11 @@ class XsLine:
                 setattr(self, k, value)
 
     def to_dict(self) -> dict[str, Any]:
-        """Create a Xsuite-compatible dictionary representation of the XsLine."""
+        """Create a Xsuite-compatible dictionary representation of the XsLine.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of the XsLine.
+        """
         return dict(
             ((k, v) for k in self._line_keys if (v := getattr(self, k)) is not None),
             elements={nm: self.elements[nm].to_dict() for nm in self.element_names},
@@ -717,6 +744,9 @@ class XsLine:
               reference particle
             periodicity(int):   Number of periods. Default: 1
             *:                  All other keywords will be set as Lattice attributes
+
+        Returns:
+            lattice:            New :py:class:`.Lattice`.
         """
 
         def json_generator(params: dict[str, Any]):
@@ -771,14 +801,16 @@ class XsLine:
     # "lattice" is an alias for "to_at"
     lattice = to_at
 
-    def to_json(self, filename: str | Path | None = None, compact: bool = False):
+    def to_json(
+        self, filename: str | Path | None = None, compact: bool = False
+    ) -> None:
         """Save the XsLine into a JSON file.
 
         Parameters:
             filename:   Name of the JSON file. Default: outputs on
               :py:obj:`sys.stdout`
             compact:    If :py:obj:`False` (default), the JSON file is pretty-printed
-          with line feeds and indentation. Otherwise, the output is a single line.
+              with line feeds and indentation. Otherwise, the output is a single line.
         """
         indent = None if compact else 2
         root = self.to_dict()
@@ -799,6 +831,9 @@ class XsLine:
             root:       Dictionary representation of the line or environment,
             use:        For environment, name of the sequence or line containing the
               desired lattice. Default: ``ring``.
+
+        Returns:
+            xsline:     New :py:class:`XsLine`
         """
         defclass = "Environment" if "lines" in root else "Line"
         if root.get("__class__", defclass) == "Line":
@@ -811,13 +846,18 @@ class XsLine:
             return cls(name=use, elements=root["elements"], **line, **kwargs)
 
     @classmethod
-    def from_json(cls, filename: str | Path, use: str | None = None, **kwargs):
-        """Create an XsLine from a JSON file.
+    def from_json(
+        cls, filename: str | Path, use: str | None = None, **kwargs
+    ) -> XsLine:
+        """Create a XsLine from a JSON file.
 
         Args:
             filename:   Name or path of the JSON file.
             use:        For environment, name of the sequence or line containing the
               desired lattice. Default: ``ring``
+
+        Returns:
+            xsline:     New :py:class:`XsLine`
         """
         filename = Path(filename)
         with filename.open() as f:
@@ -826,25 +866,31 @@ class XsLine:
             )
 
     @classmethod
-    def from_xsuite(cls, line, use: str | None = None):
-        """Create an XsLine from a Xsuite Line or Environment.
+    def from_xsuite(cls, line, use: str | None = None) -> XsLine:
+        """Create a XsLine from a Xsuite :py:class:`.Line` or :py:class:`.Environment`.
 
         Args:
             line:       Xsuite Line or Environment
             use:        For environment, name of the sequence or line containing the
               desired lattice. Default: ``ring``
+
+        Returns:
+            xsline:     New :py:class:`XsLine`
         """
         return cls.from_dict(line.to_dict(), use=use)
 
     @classmethod
-    def from_at(cls, ring: Lattice, match_model: bool = False, **kwargs):
-        """Create an XsLine from an AT lattice.
+    def from_at(cls, ring: Lattice, match_model: bool = False, **kwargs) -> XsLine:
+        """Create a XsLine from an AT :py:class:`.Lattice`.
 
         Args:
             ring:           AT lattice
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. By default, the Xsuite default model
               and integrator will be used.
+
+        Returns:
+            xsline:     New :py:class:`XsLine`
         """
 
         def refpart(rng):
@@ -935,7 +981,8 @@ def save_xsuite(
 
 
 def lattice_from_line(line: _XtLine, use: str | None = None, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice` object from a Xsuite Line or Environment.
+    """Create a :py:class:`.Lattice` object from a Xsuite :py:class:`.Line` or
+    :py:class:`.Environment`.
 
     Args:
         line: Xsuite line or environment
