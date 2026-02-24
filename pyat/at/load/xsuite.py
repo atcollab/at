@@ -61,11 +61,10 @@ _default_energy = 1.0e9
 _default_mass = cst.e_mass
 _default_charge = -1
 _default_gamma = _default_energy / _default_mass
-_default_beta = sqrt(1.0 - 1.0 / _default_gamma / _default_gamma)
 _default_particle: dict[str, float | list[float]] = {
     "mass0": _default_mass,
     "gamma0": [_default_gamma],
-    "beta0": [_default_beta],
+    "beta0": [sqrt(1.0 - 1.0 / _default_gamma / _default_gamma)],
     "q0": _default_charge,
 }
 
@@ -127,7 +126,7 @@ class XsElement(dict):
     name: str  #: Element name
     origin: str  #: Xsuite class of the source element
 
-    def __init__(self, name: str, *args, origin: str = "Unknown", **kwargs):
+    def __init__(self, name: str, *args, origin: str = "", **kwargs):
         super().__init__(*args, **kwargs)
         self.setdefault("length", 0.0)
         self.name = name
@@ -145,13 +144,13 @@ class XsElement(dict):
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
-        atparams = {
-            atk: v
-            for (k, v) in self.items()
-            if (atk := self._xsuite2at_attr.get(k, None)) is not None
-        }
+        for k, v in self.items():
+            atk = self._xsuite2at_attr.get(k, None)
+            if atk is not None:
+                atparams[atk] = v
         atparams["FamName"] = self.name
-        atparams["origin"] = self.origin
+        if self.origin:
+            atparams["origin"] = self.origin
         atparams.update(self._model_to_at())
         return atparams
 
@@ -183,17 +182,20 @@ class XsElement(dict):
         return cls.from_file(atparams)
 
     @classmethod
-    def from_dict(cls, elem_dict: dict[str, Any], name: str = "?") -> XsElement:
+    def from_dict(
+        cls, xsparams: dict[str, Any], name: str = "?", origin: str = ""
+    ) -> XsElement:
         """Build a XsElement from its dictionary representation.
 
         Args:
-            elem_dict:  dictionary representation of the XsElement
+            xsparams:   dictionary representation of the XsElement
             name:       Optional name of the element
+            origin:     Xsuite class of the source element
 
         Returns:
             xselement:  new :py:class:`XsElement` object
         """
-        return cls(name, origin=cls.__name__, **elem_dict)
+        return cls(name, origin=origin, **xsparams)
 
     @classmethod
     def from_at(cls, FamName: str, match_model: bool = False, **atparams) -> XsElement:
@@ -202,7 +204,8 @@ class XsElement(dict):
         Args:
             FamName:        Name of the element
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+              matching at best the AT PassMethod. Otherwise, use Xsuite defaults,
+            atparams:       dictionary representation of the AT element.
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -230,7 +233,7 @@ class XsElement(dict):
 
     @staticmethod
     def static_from_dict(elem_dict: dict[str, Any], name: str = "?") -> XsElement:
-        """Build a XsElement from its dictonary representation.
+        """Build a XsElement from its dictionary representation.
 
         Args:
             elem_dict:  dictionary representation of the XsElement
@@ -241,7 +244,7 @@ class XsElement(dict):
         """
         class_name = elem_dict.get("__class__", "Unknown")
         xsclass: type[XsElement] = _xsclass.get(class_name, Unknown)
-        return xsclass.from_dict(elem_dict, name=name)
+        return xsclass.from_dict(elem_dict, name=name, origin=class_name)
 
     @staticmethod
     def static_from_at(atelem: elt.Element, match_model: bool = False) -> XsElement:
@@ -589,8 +592,13 @@ class RBend(Bend):
         atparams = super()._params_to_at(**atparams)
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         exact = atparams.get("PassMethod", "").startswith("Exact")
-        if straight and not exact and not (
-            np.all(atparams["PolynomA"] == 0.0) and np.all(atparams["PolynomB"] == 0.0)
+        if (
+            straight
+            and not exact
+            and not (
+                np.all(atparams["PolynomA"] == 0.0)
+                and np.all(atparams["PolynomB"] == 0.0)
+            )
         ):
             msg = (
                 "Multipole are present in the rectangular bend: "
@@ -636,6 +644,8 @@ class Cavity(XsElement):
         atparams = super()._params_to_at(
             Voltage=0.0, Frequency=np.nan, HarmNumber=0, Energy=0.0, **atparams
         )
+        length = atparams.get("Length", 0.0)
+        atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
         if (phaselag := self.get("lag")) is not None:
             atparams["_phaselag"] = phaselag
         return atparams
@@ -649,15 +659,18 @@ class Cavity(XsElement):
 
 
 class Unknown:
+    """Class for Xsuite elements without AT equivalent."""
     @classmethod
-    def from_dict(cls, xsp: dict[str, Any], name: str = "?", origin: str = "Unknown"):
-        newcls = Marker if xsp.get("length", 0.0) == 0.0 else Drift
+    def from_dict(cls, xsparams: dict[str, Any], name: str = "?"):
+        origin = xsparams["__class__"]
+        newcls = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
         msg = f"Element {name!r}: unknown class {origin} replaced by {newcls.__name__}"
         warnings.warn(AtWarning(msg), stacklevel=2)
-        return newcls.from_dict(xsp, name=name, origin=origin)
+        return newcls.from_dict(xsparams, name=name, origin=origin)
 
 
 class Dipole:
+    """Class for handling AT dipoles."""
     @classmethod
     def from_at(cls, **atparams) -> XsElement:
         if atparams["PassMethod"] in {
@@ -900,7 +913,13 @@ class XsLine:
                     warnings.simplefilter("ignore", category=UserWarning)
                     prt = Particle("electron")
             gamma0 = rng.energy / prt.rest_energy
-            return {"mass0": prt.rest_energy, "q0": prt.charge, "gamma0": [gamma0]}
+            beta0 = sqrt(1.0 - 1.0 / gamma0 / gamma0)
+            return {
+                "mass0": prt.rest_energy,
+                "q0": prt.charge,
+                "gamma0": [gamma0],
+                "beta0": [beta0],
+            }
 
         def name_gen(name: str, nmax: int = 10000) -> Generator[str, None, None]:
             """Generate a list of tentative names."""
