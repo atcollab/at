@@ -747,10 +747,15 @@ class Lattice(list):
 
     @particle.setter
     def particle(self, particle: str | Particle):
-        if isinstance(particle, Particle):
-            self._particle = particle
-        else:
-            self._particle = Particle(particle)
+        if isinstance(particle, str):
+            particle = Particle(particle)
+        if particle.name != "relativistic":
+            msg = (
+                "AT tracking still assumes beta==1\n"
+                "Make sure your particle is ultra-relativistic"
+            )
+            warnings.warn(AtWarning(msg), stacklevel=2)
+        self._particle = particle
 
     def set_wake_turnhistory(self):
         """Function to reset the shape of the turn history
