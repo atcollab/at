@@ -3,25 +3,22 @@
 from __future__ import annotations
 
 import os
-import sys
+from importlib.resources import files
+from typing import Any
 from pathlib import Path
 from tempfile import mkstemp
 
-import machine_data
 import pytest
+from numpy.testing import assert_allclose, assert_equal
+
+import machine_data
 from at.lattice import Lattice
 from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
-from numpy.testing import assert_allclose, assert_equal
-
-if sys.version_info < (3, 9):
-    from importlib_resources import files
-else:
-    from importlib.resources import files
 
 
 @pytest.fixture()
-def simple_hmba(hmba_lattice: Lattice) -> None:
+def simple_hmba(hmba_lattice: Lattice) -> Lattice:
     """Modify hmba_lattice to make it compatible with MAD-X and Elegant.
 
     Arguments:
@@ -48,7 +45,7 @@ def simple_hmba(hmba_lattice: Lattice) -> None:
     return ring
 
 
-@pytest.mark.parametrize(("lattice"), ["dba_lattice", "simple_hmba"])
+@pytest.mark.parametrize("lattice", ["dba_lattice", "simple_hmba"])
 @pytest.mark.parametrize(
     ("suffix", "options"),
     [
@@ -57,13 +54,11 @@ def simple_hmba(hmba_lattice: Lattice) -> None:
         (".mat", {"use": "abcd"}),
         (".mat", {"mat_key": "efgh"}),
         (".json", {}),
-        (".seq", {"use": "ring"}),
+        (".seq", {"use": "ring", "particle": "relativistic"}),
         (".lte", {"use": "ring"}),
     ],
 )
-def test_m(
-    request: any, lattice: Lattice, suffix: str, options: dict[any, any]
-) -> None:
+def test_m(request, lattice: Lattice, suffix: str, options: dict[str, Any]) -> None:
     """Test m.
 
     Arguments:
