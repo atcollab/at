@@ -55,7 +55,7 @@ def simple_hmba(hmba_lattice: Lattice) -> Lattice:
         (".mat", {"use": "abcd"}),
         (".mat", {"mat_key": "efgh"}),
         (".json", {}),
-        (".seq", {"use": "ring"}),
+        (".seq", {"use": "ring", "particle": "relativistic"}),
         (".lte", {"use": "ring"}),
     ],
 )

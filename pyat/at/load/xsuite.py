@@ -752,7 +752,7 @@ class XsLine:
             energy = gamma0 * mass0
 
             beam_params = {
-                # "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
+                "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
                 "energy": energy,  # [eV]
                 "periodicity": 1,
                 "name": self.name,
@@ -760,10 +760,6 @@ class XsLine:
 
             for k, v in beam_params.items():
                 params.setdefault(k, v)
-            if "particle" not in params:
-                params["particle"] = Particle(
-                    "", rest_energy=mass0, charge=particle["q0"]
-                )
 
             cavities = []
             cell_length = 0.0
