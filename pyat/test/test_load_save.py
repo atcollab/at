@@ -116,7 +116,11 @@ def test_long_arrays_in_m_file() -> None:
 
 @pytest.mark.parametrize("lattice", ["dba_lattice", "simple_hmba"])
 def test_xsuite_json(request, lattice: Lattice) -> None:
-    """Test xsuite json saving in .json file."""
+    """Test xsuite json saving in .json file.
+
+    This checks that the Xsuite json output can be written and read without loosing
+    information, but does not check that Xsuite can interpret it.
+    """
     ring0 = request.getfixturevalue(lattice)
     fhandle, fname = mkstemp(suffix=".json")
     os.close(fhandle)

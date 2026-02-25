@@ -14,7 +14,7 @@ import warnings
 from collections.abc import Generator, Iterable
 from math import pi, sqrt
 from pathlib import Path
-from typing import Any, ClassVar, Protocol
+from typing import Any, ClassVar
 import contextlib
 
 import numpy as np
@@ -26,34 +26,20 @@ from .madx import p_to_at
 try:
     from xtrack import Line
 except ImportError:
-    # noinspection PyUnusedLocal
-    def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
-        """Create a Xsuite :py:class:`.Line` from an AT :py:class:`.Lattice`.
 
-        Args:
-            ring:           AT lattice
-            match_model:    if :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+    class Line:
+        """Dummy class replacing xtrack.Line."""
 
-        Returns:
-            line:           new :py:class:`.Line` object.
-        """
-        msg = "xtrack is not installed."
-        raise ImportError(msg)
-else:
+        # noinspection PyUnusedLocal
+        @classmethod
+        def from_dict(cls, root: dict[str, Any]) -> Line:
+            msg = "xtrack is not installed."
+            raise ImportError(msg)
 
-    def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
-        """Create a Xsuite :py:class:`.Line` from an AT lattice.
-
-        Args:
-            ring:           AT lattice
-            match_model:    if :py:obj:`True`, set the Xsuite model and integrator
-              matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
-
-        Returns:
-            line:           new :py:class:`.Line` object.
-        """
-        return Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())
+        # noinspection PyMethodMayBeStatic
+        def to_dict(self) -> dict[str, Any]:
+            msg = "xtrack is not installed."
+            raise ImportError(msg)
 
 
 # Default particle: electrons at 1 GeV
@@ -75,13 +61,6 @@ _INDEX_TO_EDGE_MODEL = {
     2: "dipole-only",
 }
 _EDGE_MODEL_TO_INDEX = {k: v for v, k in _INDEX_TO_EDGE_MODEL.items()}
-
-
-class _XtLine(Protocol):
-    """Defines an object having a to_dict method."""
-
-    @classmethod
-    def to_dict(cls) -> dict[str, Any]: ...
 
 
 class _AtEncoder(json.JSONEncoder):
@@ -284,7 +263,7 @@ class Multipole(XsElement):
     """Base class for Xsuite magnetic elements."""
 
     # Class variables
-    _atClass = elt.Multipole
+    _atClass: ClassVar[type[elt.Element]] = elt.Multipole
     _at2xsuite_model = {
         "ExactMultipoleRadPass": "drift-kick-drift-exact",
         "ExactMultipolePass": "drift-kick-drift-exact",
@@ -660,9 +639,9 @@ class Cavity(XsElement):
 
 class Unknown:
     """Class for Xsuite elements without AT equivalent."""
+
     @classmethod
-    def from_dict(cls, xsparams: dict[str, Any], name: str = "?"):
-        origin = xsparams["__class__"]
+    def from_dict(cls, xsparams: dict[str, Any], name: str = "?", origin: str = "") -> XsElement:
         newcls = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
         msg = f"Element {name!r}: unknown class {origin} replaced by {newcls.__name__}"
         warnings.warn(AtWarning(msg), stacklevel=2)
@@ -671,6 +650,7 @@ class Unknown:
 
 class Dipole:
     """Class for handling AT dipoles."""
+
     @classmethod
     def from_at(cls, **atparams) -> XsElement:
         if atparams["PassMethod"] in {
@@ -772,7 +752,7 @@ class XsLine:
             energy = gamma0 * mass0
 
             beam_params = {
-                "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
+                # "particle": Particle("", rest_energy=mass0, charge=particle["q0"]),
                 "energy": energy,  # [eV]
                 "periodicity": 1,
                 "name": self.name,
@@ -780,6 +760,10 @@ class XsLine:
 
             for k, v in beam_params.items():
                 params.setdefault(k, v)
+            if "particle" not in params:
+                params["particle"] = Particle(
+                    "", rest_energy=mass0, charge=particle["q0"]
+                )
 
             cavities = []
             cell_length = 0.0
@@ -999,7 +983,7 @@ def save_xsuite(
     XsLine.from_at(lattice, match_model=match_model).to_json(filename, compact=compact)
 
 
-def lattice_from_line(line: _XtLine, use: str | None = None, **kwargs) -> Lattice:
+def lattice_from_line(line: Line, use: str | None = None, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice` object from a Xsuite :py:class:`.Line` or
     :py:class:`.Environment`.
 
@@ -1021,3 +1005,17 @@ def lattice_from_line(line: _XtLine, use: str | None = None, **kwargs) -> Lattic
         lattice:    New :py:class:`.Lattice` object.
     """
     return XsLine.from_xsuite(line, use=use).to_at(**kwargs)
+
+
+def line_from_lattice(ring: Lattice, match_model: bool = False) -> Line:
+    """Create a Xsuite :py:class:`.Line` from an AT lattice.
+
+    Args:
+        ring:           AT lattice
+        match_model:    if :py:obj:`True`, set the Xsuite model and integrator
+          matching at best the AT PassMethod. Otherwise, use Xsuite defaults.
+
+    Returns:
+        line:           new :py:class:`.Line` object.
+    """
+    return Line.from_dict(XsLine.from_at(ring, match_model=match_model).to_dict())
