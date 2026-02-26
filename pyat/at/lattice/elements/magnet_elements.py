@@ -3,7 +3,7 @@ r""":py:class:`.Element` classes for magnets.
 .. _at-field-expansion:
 
 Expansion of the magnetic field in AT
-----------------------------------
+-------------------------------------
 
 The multipole magnets are expressed according to the following expression for the
 multipole expansion of the magnetic field:
