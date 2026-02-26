@@ -1,3 +1,139 @@
+r"""Using `Xsuite`_ .json files with PyAT.
+==========================================
+
+PyAT can read and write lattice descriptions in Xsuite .json files. If both PyAT and
+Xsuite are installed, in-memory direct conversion is also possible in both directions.
+
+However, because of intrinsic differences between PyAT and Xsuite, some
+incompatibilities must be taken into account.
+
+1. Differences between PyAT and Xsuite
+-------------------------------------------
+
+Magnet models
+^^^^^^^^^^^^^
+
+Xsuite separates the definition of the magnet modelling method (``model``) and the
+definition of the integrator (``integrator``). It offers a large choice for both.
+PyAT combines both in the ``PassMethod`` associated with the element. The conversion in
+both directions is described below.
+
+Magnet transformations
+^^^^^^^^^^^^^^^^^^^^^^
+
+PyAT uses a coherent definition of rotations: the positive sign corresponds to a
+cork-screw rotation, or in other words an anti-clockwise rotation when facing the axis.
+Xsuite has a special definition for the x-axis rotation, opposite to the standard. As a
+consequence, the signs of the ``pitch`` in AT and ``rot-x-rad`` in Xsuite are
+opposite. The conversion takes care of that.
+
+Rectangular bending magnets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A Xsuite :py:class:`.RBend` magnet corresponds to a standard :py:class:`.Dipole` if its
+``rbend_model`` is set to ``curved-body``. When converted to AT, its ``PassMethod``
+will then be set to ``BndMPoleSymplectic4Pass`` or ``ExactSectorBendPass`` depending
+on its ``model``.
+
+It corresponds to a real rectangular magnet if its ``rbend_model`` is set to
+``straight-body``. When converted to AT, its ``PassMethod`` will then be set to
+``ExactRectangularBendPass``, the only one for rectangular bends.
+
+2. Reading Xsuite files
+-----------------------
+
+PyAT can read both :py:class:`.Environment` and :py:class:`.Line` file descriptions.
+For :py:class:`.Environment` files, a ``use`` keyword selects the desired
+:py:class:`.Line`.
+
+Xsuite elements converted to PyAT have an additional ``origin`` string attribute giving
+the class of the original Xsuite element. Xsuite element without equivalent in PyAT are
+converted to :py:class:`.Marker` or :py:class:`.Drift` depending on their length.
+
+Model and integrator
+^^^^^^^^^^^^^^^^^^^^
+
+Xsuite models equivalent to PyAT "exact" methods are converted to the equivalent
+``PassMethod``:
+
++------------------------------+--------------------------+----------------------------+
+| Xsuite element               | Xsuite model             | AT PassMethod              |
++==============================+==========================+============================+
+| Drift                        | "exact"                  | "ExactDriftPass"           |
++------------------------------+--------------------------+----------------------------+
+| Straight magnets             | "drift-kick-drift-exact" | "ExactMultipolePass"       |
++------------------------------+--------------------------+----------------------------+
+| Bend,                        | "bend-kick-bend"         | "ExactSectorBendPass"      |
+| Rbend in "curved-body"       |                          |                            |
++------------------------------+--------------------------+----------------------------+
+| Rbend in "straight-body"     | "drift-kick-drift-exact" | "ExactRectangularBendPass" |
++------------------------------+--------------------------+----------------------------+
+
+All other models are converted to the default element ``PassMethod``.
+
+3. Writing Xsuite files
+-----------------------
+
+Rectangular bending magnets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An AT :py:class:`.Dipole` will be converted to a :py:class:`.RBend` with ``rbend_model``
+set to ``straight-body`` if its ``PassMethod`` is ``ExactRectangularBendPass``. In all
+other cases, it will be converted to a :py:class:`.Bend`.
+
+Model and integrator
+^^^^^^^^^^^^^^^^^^^^
+PyAT exact passmethods are converted to the equivalent Xsuite ``model``. Other methods
+are converting according to a ``match_model`` keyword:
+
+- ``match_model`` is False (the default): ``model``, ``integrator``,
+  ``num_multipole_kicks`` are set to their default value. This way, the default
+  behaviour in AT is turned into the default behaviour in Xsuite,
+- ``match_model`` is True: a model matching at best the AT model is selected, the
+  integrator is set to ``yoshida4``, ``num_multipole_kicks`` is set equal to
+  ``NumIntSteps``.
+
+This is summarised in this table:
+
+.. table::
+   :align: center
+
+   +-----------------+------------------------+--------------------------------------------+
+   |                 |                        |Xsuite model, match_model=                  |
+   |AT element       |AT PassMethod           +----------------+---------------------------+
+   |                 |                        | False          | True                      |
+   +=================+========================+================+===========================+
+   |                 |ExactDriftPass          |"exact"                                     |
+   |Drift            +------------------------+----------------+---------------------------+
+   |                 |*default*               |*default*       |"expanded"                 |
+   +-----------------+------------------------+----------------+---------------------------+
+   |                 |ExactMultipolePass      |"drift-kick-drift-exact"                    |
+   |Straight magnet  +------------------------+----------------+---------------------------+
+   |                 |*default*               |*default*       |"drift-kick-drift-expanded"|
+   +-----------------+------------------------+----------------+---------------------------+
+   |                 |ExactSectorBendPass     |"bend-kick-bend"|                           |
+   |                 +------------------------+----------------+---------------------------+
+   |Dipole           |ExactRectangularBendPass|"drift-kick-drift-exact"                    |
+   |                 +------------------------+----------------+---------------------------+
+   |                 |*default*               |*default*       |"rot-kick-rot"             |
+   +-----------------+------------------------+----------------+---------------------------+
+
+Ignored attributes
+^^^^^^^^^^^^^^^^^^
+
+The following AT attributes are ignored in writing Xsuite .json files:
+
+- ``FieldScaling``
+- ``RApertures``
+- ``EApertures``
+- ``X0ref``. This parameter defines the distance between the magnetic axis of a
+  rectangular bend and the reference trajectory. It only matters for rectangular bends
+  with focusing or higher order multipoles. Xsuite has a similar attribute
+  ``rbend_shift`` but there is no analytical conversion possible between both.
+- ``RefDZ``. This defines the correction of path lengthening for rectangular bends.
+
+
+.. _xsuite: https://xsuite.readthedocs.io
+"""
 from __future__ import annotations
 
 __all__ = [
@@ -11,7 +147,7 @@ __all__ = [
 
 import json
 import warnings
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from math import pi, sqrt
 from pathlib import Path
 from typing import Any, ClassVar
@@ -21,7 +157,7 @@ import numpy as np
 
 from ..lattice import AtWarning, ReferencePoint, constants as cst
 from ..lattice import Lattice, Particle, elements as elt
-from .madx import p_to_at
+from .madx import poly_from_mad, poly_to_mad
 
 try:
     from xtrack import Line
@@ -91,15 +227,6 @@ class XsElement(dict):
     _at2xsuite_model: ClassVar[dict[str | None, str]] = {}
     _xsuite2at_model: ClassVar[dict[str, str | None]] = {}
     _at_integrator: ClassVar[str | None] = None
-    _index_to_model: ClassVar[dict[int, str]] = {
-        0: "adaptive",
-        1: "full",
-        2: "bend-kick-bend",
-        3: "rot-kick-rot",
-        4: "mat-kick-mat",
-        5: "drift-kick-drift-exact",
-        6: "drift-kick-drift-expanded",
-    }
 
     # Instance attributes
     name: str  #: Element name
@@ -110,16 +237,6 @@ class XsElement(dict):
         self.setdefault("length", 0.0)
         self.name = name
         self.origin = origin
-
-    def _get_model(self) -> str:
-        try:
-            # String model
-            model = self.get("model")
-        except KeyError:
-            # Numeric model
-            n_model = self.get("_model", -1)
-            model = self._index_to_model.get(n_model, "unknown")
-        return model
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
@@ -139,7 +256,7 @@ class XsElement(dict):
 
     def _model_to_at(self) -> dict[str, str]:
         """Get the AT passmethod."""
-        passmethod = self._xsuite2at_model.get(self._get_model(), None)
+        passmethod = self._xsuite2at_model.get(self.get("model"), None)
         return {} if passmethod is None else {"PassMethod": passmethod}
 
     def to_dict(self) -> dict[str, Any]:
@@ -222,7 +339,7 @@ class XsElement(dict):
             xselement:  new :py:class:`XsElement` object
         """
         class_name = elem_dict.get("__class__", "Unknown")
-        xsclass: type[XsElement] = _xsclass.get(class_name, Unknown)
+        xsclass = _xsclass.get(class_name, Unknown)
         return xsclass.from_dict(elem_dict, name=name, origin=class_name)
 
     @staticmethod
@@ -256,7 +373,6 @@ class Drift(XsElement):
     _atClass = elt.Drift
     _at2xsuite_model = {"ExactDriftPass": "exact", None: "expanded"}
     _xsuite2at_model = {v: k for k, v in _at2xsuite_model.items()}
-    _index_to_model = {0: "adaptive", 1: "expanded", 2: "exact"}
 
 
 class Multipole(XsElement):
@@ -330,18 +446,18 @@ class Multipole(XsElement):
             # Use the AT default order if possible
             porder = atorder if np.all(poly[atorder + 1 :] == 0.0) else xsorder
             # Convert to AT
-            return porder, p_to_at(list(poly))
+            return porder, np.fromiter(poly_from_mad(poly), dtype=float, count=lpoly)
 
         length = self.get("length", 0.0)
         xsorder = self["order"]
         atorder = getattr(self._atClass, "DefaultOrder", xsorder)
         aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
         border, polyb = xspoly(["k0", "k1", "k2", "k3"], "knl")
-        aborder = max(aorder, border)
+        maxorder = max(aorder, border)
         return {
-            "MaxOrder": aborder,
-            "PolynomB": polyb[: aborder + 1],
-            "PolynomA": polya[: aborder + 1],
+            "MaxOrder": maxorder,
+            "PolynomB": polyb[: maxorder + 1],
+            "PolynomA": polya[: maxorder + 1],
         }
 
     def _set_at_fringe(self):
@@ -364,7 +480,7 @@ class Multipole(XsElement):
             "rot_y_rad": atparams.pop("yaw", 0.0),
         }
         misalign = {k: v for k, v in tr.items() if v != 0.0}
-        refpoint = atparams.pop("reference", ReferencePoint.ENTRANCE)
+        refpoint = atparams.pop("reference", ReferencePoint.CENTRE)
         rots_frame = atparams.pop("tilt_frame", 0.0)
         ismisaligned = len(misalign) > 0
 
@@ -385,8 +501,10 @@ class Multipole(XsElement):
 
     def _set_xs_poly(self, atparams: dict) -> None:
         """Generate the AT field expansion."""
-        pola = self.p_to_xsuite(atparams.get("PolynomA", np.zeros(4)))
-        polb = self.p_to_xsuite(atparams.get("PolynomB", np.zeros(4)))
+        pata = atparams.get("PolynomA", np.zeros(4))
+        pola = np.fromiter(poly_to_mad(pata), dtype=float, count=pata.size)
+        patb = atparams.get("PolynomB", np.zeros(4))
+        polb = np.fromiter(poly_to_mad(patb), dtype=float, count=patb.size)
         length = atparams.get("Length")
         korder = getattr(self, "_mag_order", None)
         if korder is not None:
@@ -410,18 +528,6 @@ class Multipole(XsElement):
 
     def _set_xs_fringe(self, atparams: dict):
         """generate the Xsuite fringe field description."""
-
-    @staticmethod
-    def p_to_xsuite(a: Iterable[float]) -> np.ndarray:
-        """Convert polynomials from XSUITE to AT."""
-
-        def to_xsuite(x: Iterable[float], factor: float = 1.0) -> Generator[float]:
-            f = 1.0
-            for n, vx in enumerate(x):
-                yield factor * float(vx * f)
-                f *= n + 1
-
-        return np.fromiter(to_xsuite(a), dtype=float)
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
         if atparams.get("Length", 0.0) == 0.0:
@@ -562,9 +668,9 @@ class RBend(Bend):
         """Get the AT passmethod."""
         straight = self.get("rbend_model", "adaptive") == "straight-body"
         if straight:
-            passmethod = self._xsuite2at_model.get(self._get_model(), None)
+            passmethod = self._xsuite2at_model.get(self.get("model"), None)
         else:
-            passmethod = Bend._xsuite2at_model.get(self._get_model(), None)
+            passmethod = Bend._xsuite2at_model.get(self.get("model"), None)
         return {} if passmethod is None else {"PassMethod": passmethod}
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
@@ -641,7 +747,9 @@ class Unknown:
     """Class for Xsuite elements without AT equivalent."""
 
     @classmethod
-    def from_dict(cls, xsparams: dict[str, Any], name: str = "?", origin: str = "") -> XsElement:
+    def from_dict(
+        cls, xsparams: dict[str, Any], name: str = "?", origin: str = ""
+    ) -> XsElement:
         newcls = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
         msg = f"Element {name!r}: unknown class {origin} replaced by {newcls.__name__}"
         warnings.warn(AtWarning(msg), stacklevel=2)
@@ -662,7 +770,7 @@ class Dipole:
             return Bend.from_at(**atparams)
 
 
-_xsclass = {
+_xsclass: dict[str, type[XsElement]] = {
     "Marker": Marker,
     "Drift": Drift,
     "Cavity": Cavity,
