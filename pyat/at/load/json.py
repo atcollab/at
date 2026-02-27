@@ -116,7 +116,10 @@ def load_json(
     from_xsuite: bool = False,
     **kwargs,
 ) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a JSON file.
+    """Create a :py:class:`.Lattice`  from a AT or Xsuite JSON file.
+
+    The kind of file is derived from its contents. In case of ambiguity, the file
+    kind can be explicitly selected with the *from_at* or *from_xsuite* keywords.
 
     Parameters:
         filename:           Name of a JSON file

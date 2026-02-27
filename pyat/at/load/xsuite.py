@@ -1063,6 +1063,13 @@ def load_xsuite(filename: str | Path, use: str | None = None, **kwargs) -> Latti
 
     Returns:
         lattice (Lattice):          New :py:class:`.Lattice` object
+
+    See Also:
+        :py:func:`.load_json`, which reads both AT and Xsuite .json files,
+
+        :py:func:`.load_lattice` for a generic lattice-loading function,
+
+        :py:meth:`.Lattice.load` for a generic lattice factory method.
     """
     return XsLine.from_json(filename, use=use).to_at(**kwargs)
 
