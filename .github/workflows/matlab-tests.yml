@@ -47,7 +47,7 @@ jobs:
     - name: check matlab
       uses: matlab-actions/run-command@v2
       with:
-        command: py.help(py.at); py.help(py.at)
+        command: py.at.version
 #
     - name: Run tests
       uses: matlab-actions/run-command@v2
