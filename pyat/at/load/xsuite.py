@@ -38,6 +38,11 @@ It corresponds to a real rectangular magnet if its ``rbend_model`` is set to
 ``straight-body``. When converted to AT, its ``PassMethod`` will then be set to
 ``ExactRectangularBendPass``, the only one for rectangular bends.
 
+Longitudinal motion
+^^^^^^^^^^^^^^^^^^^
+The generated AT lattice has longitudinal motion turned off: RF cavities are inactive
+and synchrotron radiation is turned off.
+
 2. Reading Xsuite files
 -----------------------
 
@@ -89,7 +94,7 @@ are converting according to a ``match_model`` keyword:
   ``num_multipole_kicks`` are set to their default value. This way, the default
   behaviour in AT is turned into the default behaviour in Xsuite,
 - ``match_model`` is True: a model matching at best the AT model is selected, the
-  integrator is set to ``yoshida4``, ``num_multipole_kicks`` is set equal to
+  integrator is set to ``yoshida4`` and ``num_multipole_kicks`` is set equal to
   ``NumIntSteps``.
 
 This is summarised in this table:
@@ -104,18 +109,23 @@ This is summarised in this table:
    +=================+========================+================+===========================+
    |                 |ExactDriftPass          |"exact"                                     |
    |Drift            +------------------------+----------------+---------------------------+
-   |                 |*default*               |*default*       |"expanded"                 |
+   |                 |*default*               |"adaptive"      |"expanded"                 |
    +-----------------+------------------------+----------------+---------------------------+
    |                 |ExactMultipolePass      |"drift-kick-drift-exact"                    |
    |Straight magnet  +------------------------+----------------+---------------------------+
-   |                 |*default*               |*default*       |"drift-kick-drift-expanded"|
+   |                 |*default*               |"adaptive"      |"drift-kick-drift-expanded"|
    +-----------------+------------------------+----------------+---------------------------+
    |                 |ExactSectorBendPass     |"bend-kick-bend"|                           |
    |                 +------------------------+----------------+---------------------------+
    |Dipole           |ExactRectangularBendPass|"drift-kick-drift-exact"                    |
    |                 +------------------------+----------------+---------------------------+
-   |                 |*default*               |*default*       |"rot-kick-rot"             |
+   |                 |*default*               |"adaptive"      |"rot-kick-rot"             |
    +-----------------+------------------------+----------------+---------------------------+
+
+Longitudinal motion
+^^^^^^^^^^^^^^^^^^^^
+Whatever the 6D status of the AT lattice, the Xsuite lattice will have synchrotron
+radiation turned off and active RF cavities.
 
 Ignored attributes
 ^^^^^^^^^^^^^^^^^^
@@ -133,7 +143,8 @@ The following AT attributes are ignored in writing Xsuite .json files:
 
 
 .. _xsuite: https://xsuite.readthedocs.io
-"""
+"""  # fmt: skip
+
 from __future__ import annotations
 
 __all__ = [
@@ -148,7 +159,7 @@ __all__ = [
 import json
 import warnings
 from collections.abc import Generator
-from math import pi, sqrt
+from math import pi, sqrt, fmod
 from pathlib import Path
 from typing import Any, ClassVar
 import contextlib
@@ -232,11 +243,11 @@ class XsElement(dict):
     name: str  #: Element name
     origin: str  #: Xsuite class of the source element
 
-    def __init__(self, name: str, *args, origin: str = "", **kwargs):
+    def __init__(self, name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setdefault("length", 0.0)
         self.name = name
-        self.origin = origin
+        self.origin = kwargs.get("__class__", "")
 
     def _params_to_at(self, **atparams) -> dict:
         """Translate Xsuite parameters to AT parameters."""
@@ -267,7 +278,7 @@ class XsElement(dict):
         """
         return self
 
-    def to_at(self) -> elt.Element:
+    def to_at(self) -> list[elt.Element]:
         """Generate the AT element.
 
         Returns:
@@ -275,30 +286,26 @@ class XsElement(dict):
         """
         atparams = self._params_to_at()
         cls = self._class_to_at(atparams)
-        return cls.from_file(atparams)
+        return [cls.from_file(atparams)]
 
     @classmethod
-    def from_dict(
-        cls, xsparams: dict[str, Any], name: str = "?", origin: str = ""
-    ) -> XsElement:
+    def from_dict(cls, xsparams: dict[str, Any], name: str = "?") -> XsElement:
         """Build a XsElement from its dictionary representation.
 
         Args:
             xsparams:   dictionary representation of the XsElement
             name:       Optional name of the element
-            origin:     Xsuite class of the source element
 
         Returns:
             xselement:  new :py:class:`XsElement` object
         """
-        return cls(name, origin=origin, **xsparams)
+        return cls(name=name, **xsparams)
 
     @classmethod
-    def from_at(cls, FamName: str, match_model: bool = False, **atparams) -> XsElement:
+    def from_at(cls, match_model: bool = False, **atparams) -> XsElement:
         """Build a XsElement element from an AT element.
 
         Args:
-            FamName:        Name of the element
             match_model:    If :py:obj:`True`, set the Xsuite model and integrator
               matching at best the AT PassMethod. Otherwise, use Xsuite defaults,
             atparams:       dictionary representation of the AT element.
@@ -325,7 +332,7 @@ class XsElement(dict):
             xsparams["model"] = xs_model
         # Set the Xsuite class
         xsparams["__class__"] = cls.__name__
-        return cls(FamName, **xsparams)
+        return cls(name=atparams["FamName"], **xsparams)
 
     @staticmethod
     def static_from_dict(elem_dict: dict[str, Any], name: str = "?") -> XsElement:
@@ -338,9 +345,8 @@ class XsElement(dict):
         Returns:
             xselement:  new :py:class:`XsElement` object
         """
-        class_name = elem_dict.get("__class__", "Unknown")
-        xsclass = _xsclass.get(class_name, Unknown)
-        return xsclass.from_dict(elem_dict, name=name, origin=class_name)
+        xsclass = _xsclass.get(elem_dict.get("__class__", "Unknown"), Unknown)
+        return xsclass.from_dict(elem_dict, name=name)
 
     @staticmethod
     def static_from_at(atelem: elt.Element, match_model: bool = False) -> XsElement:
@@ -715,29 +721,28 @@ class Cavity(XsElement):
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "voltage": "Voltage",
         "frequency": "Frequency",
-        "harmonic": "HarmNumber",
     }
     _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
 
     def _set_xs_lag(self, atparams: dict):
         om = 2.0 * np.pi * atparams.get("Frequency")
         tl = atparams.get("TimeLag", 0.0)
-        pl = tl * om / cst.clight * 360.0 + 180.0
+        pl = fmod(tl * om / cst.clight * 360.0 + 180.0, 360.0)
         self["lag"] = pl
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(
-            Voltage=0.0, Frequency=np.nan, HarmNumber=0, Energy=0.0, **atparams
+            Voltage=0.0, Frequency=np.nan, Energy=0.0, **atparams
         )
         length = atparams.get("Length", 0.0)
         atparams["PassMethod"] = "IdentityPass" if length == 0.0 else "DriftPass"
+        atparams["HarmNumber"] = self.get("harmonic", 0)
         if (phaselag := self.get("lag")) is not None:
             atparams["_phaselag"] = phaselag
         return atparams
 
     @classmethod
-    def from_at(cls, HarmNumber=0, **atparams):
-        # Discard HarmNumber
+    def from_at(cls, **atparams):
         elem = super().from_at(**atparams)
         elem._set_xs_lag(atparams)
         return elem
@@ -747,13 +752,12 @@ class Unknown:
     """Class for Xsuite elements without AT equivalent."""
 
     @classmethod
-    def from_dict(
-        cls, xsparams: dict[str, Any], name: str = "?", origin: str = ""
-    ) -> XsElement:
+    def from_dict(cls, xsparams: dict[str, Any], name: str = "?") -> XsElement:
+        origin = xsparams.get("__class__", "Unknown")
         newcls = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
         msg = f"Element {name!r}: unknown class {origin} replaced by {newcls.__name__}"
         warnings.warn(AtWarning(msg), stacklevel=2)
-        return newcls.from_dict(xsparams, name=name, origin=origin)
+        return newcls.from_dict(xsparams, name=name)
 
 
 class Dipole:
@@ -873,11 +877,11 @@ class XsLine:
             cell_length = 0.0
 
             for nm in element_names:
-                elem = self.elements[nm].to_at()
-                if isinstance(elem, elt.RFCavity):
-                    cavities.append(elem)
-                cell_length += getattr(elem, "Length", 0.0)
-                yield elem
+                for elem in self.elements[nm].to_at():
+                    if isinstance(elem, elt.RFCavity):
+                        cavities.append(elem)
+                    cell_length += getattr(elem, "Length", 0.0)
+                    yield elem
 
             rev = beta0 * cst.clight / cell_length
 
@@ -891,7 +895,7 @@ class XsLine:
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
                 om = 2.0 * pi * cav.Frequency
-                pl = lag - 180.0
+                pl = fmod(lag + 180.0, 360.0)
                 tl = pl / om * cst.clight / 360.0
                 cav.Timelag = tl
 
