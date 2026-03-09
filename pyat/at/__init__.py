@@ -1,6 +1,6 @@
 """Python port of the Accelerator Toolbox"""
 
-from ._version import __version__, __version_tuple__
+from ._version import __version__, __version_tuple__, version
 
 # Make all functions visible in the at namespace:
 from .lattice import *
