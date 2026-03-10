@@ -345,7 +345,7 @@ class XsElement(dict):
         Returns:
             xselement:  new :py:class:`XsElement` object
         """
-        xsclass = _xsclass.get(elem_dict.get("__class__", "Unknown"), Unknown)
+        xsclass = _xsclass.get(elem_dict.get("__class__", "Unknown"), NotInAT)
         return xsclass.from_dict(elem_dict, name=name)
 
     @staticmethod
@@ -361,7 +361,7 @@ class XsElement(dict):
         Returns:
             xselement:  new :py:class:`XsElement` object
         """
-        xsclass = _at2xsclass.get(type(atelem), XsElement)
+        xsclass = _at2xsclass.get(type(atelem), NotInXsuite)
         return xsclass.from_at(match_model=match_model, **atelem.to_file())
 
 
@@ -754,16 +754,28 @@ class Cavity(XsElement):
         return elem
 
 
-class Unknown:
+class NotInAT:
     """Class for Xsuite elements without AT equivalent."""
 
     @classmethod
     def from_dict(cls, xsparams: dict[str, Any], name: str = "?") -> XsElement:
         origin = xsparams.get("__class__", "Unknown")
-        newcls = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
-        msg = f"Element {name!r}: unknown class {origin} replaced by {newcls.__name__}"
+        xsclass = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
+        msg = f"Element {name!r}: unknown class {origin} replaced by {xsclass.__name__}"
         warnings.warn(AtWarning(msg), stacklevel=2)
-        return newcls.from_dict(xsparams, name=name)
+        return xsclass.from_dict(xsparams, name=name)
+
+
+class NotInXsuite:
+    """Class for AT elements without Xsuite equivalent."""
+
+    @classmethod
+    def from_at(cls, **atparams) -> XsElement:
+        name = atparams["FamName"]
+        xsclass = Marker if atparams["Length"] == 0.0 else Drift
+        msg = f"Element {name!r} is replaced by a {xsclass.__name__}"
+        warnings.warn(AtWarning(msg), stacklevel=2)
+        return xsclass.from_at(**atparams)
 
 
 class Dipole:
@@ -790,7 +802,6 @@ _xsclass: dict[str, type[XsElement]] = {
     "Multipole": Multipole,
     "Bend": Bend,
     "RBend": RBend,
-    "Unknown": Unknown,
 }
 
 
@@ -839,7 +850,11 @@ class XsLine:
             dict[str, Any]: Dictionary representation of the XsLine.
         """
         return dict(
-            ((k, v) for k in self._line_keys if (v := getattr(self, k)) is not None),
+            (
+                (k, v)
+                for k in ["element_names", "particle_ref"]
+                if (v := getattr(self, k)) is not None
+            ),
             elements={nm: self.elements[nm].to_dict() for nm in self.element_names},
             __class__="Line",
         )
