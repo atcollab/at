@@ -749,7 +749,7 @@ class Lattice(list):
     def particle(self, particle: str | Particle):
         if isinstance(particle, str):
             particle = Particle(particle)
-        if particle.name != "relativistic":
+        if particle.rest_energy != 0.0:
             msg = (
                 "AT tracking still assumes beta==1\n"
                 "Make sure your particle is ultra-relativistic"

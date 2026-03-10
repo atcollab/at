@@ -38,11 +38,6 @@ It corresponds to a real rectangular magnet if its ``rbend_model`` is set to
 ``straight-body``. When converted to AT, its ``PassMethod`` will then be set to
 ``ExactRectangularBendPass``, the only one for rectangular bends.
 
-Longitudinal motion
-^^^^^^^^^^^^^^^^^^^
-The generated AT lattice has longitudinal motion turned off: RF cavities are inactive
-and synchrotron radiation is turned off.
-
 2. Reading Xsuite files
 -----------------------
 
@@ -74,6 +69,11 @@ Xsuite models equivalent to PyAT "exact" methods are converted to the equivalent
 +------------------------------+--------------------------+----------------------------+
 
 All other models are converted to the default element ``PassMethod``.
+
+Longitudinal motion
+^^^^^^^^^^^^^^^^^^^
+The generated AT lattice has longitudinal motion turned off: RF cavities are inactive
+and synchrotron radiation is turned off.
 
 3. Writing Xsuite files
 -----------------------
@@ -143,7 +143,7 @@ The following AT attributes are ignored in writing Xsuite .json files:
 
 
 .. _xsuite: https://xsuite.readthedocs.io
-"""  # fmt: skip
+"""  # fmt: skip # noqa: E501
 
 from __future__ import annotations
 
