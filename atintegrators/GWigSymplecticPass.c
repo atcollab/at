@@ -25,6 +25,7 @@
 #include "atlalib.c"
 #include "gwig.c"
 
+
 struct elem {
     double Energy;
     double Length;
@@ -142,6 +143,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
         T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
+
+        /* Check energy */
+        Energy = atEnergy(Param->energy, Energy);
+        if (Energy == 0) {
+            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
+            check_error();
+        }
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Energy=Energy;

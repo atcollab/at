@@ -1,4 +1,4 @@
-"""Plot :py:class:`.Observable` value as a function of
+"""Plot :py:class:`.Observable` values as a function of a
 :py:class:`Variable <.VariableBase>`.
 """
 
@@ -6,9 +6,9 @@ from __future__ import annotations
 
 __all__ = ["plot_response"]
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Iterable
+import itertools
 
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
@@ -18,46 +18,70 @@ from ..latticetools import ObservableList
 
 def plot_response(
     var: VariableBase,
-    obs: ObservableList,
     rng: Iterable[float],
-    ax: Axes | None = None,
+    obsleft: ObservableList,
+    *obsright: ObservableList,
+    axes: Axes | None = None,
     xlabel: str = "",
     ylabel: str = "",
-    title: str = "",
-    color_offset: int = 0,
-    **kwargs
-) -> Axes:
+    **kwargs,
+) -> tuple[Axes]:
     # noinspection PyUnresolvedReferences
-    r"""Plot *obs* values as a function of *var*.
+    r"""Plot :py:class:`.Observable` values as a function of a
+    :py:class:`Variable <.VariableBase>`.
 
     Args:
-        var:            Variable object.
-        obs:            list of Observables.
-        rng:            range of variation for the variable.
-        ax:             :py:class:`~matplotlib.axes.Axes` object. If :py:obj:`None`,
-          a new figure will be created.
-        xlabel:         x-axis label. If empty, the variable name will be used.
-        ylabel:         y-axis label.
-        title:          plot title.
-        color_offset:   offset in the matplotlib line color cycle.
-        **kwargs:       Additional keyword arguments are transmitted to the
-          :py:class:`~matplotlib.axes.Axes` creation function.
+        var:        Variable object,
+        rng:        range of variation for the variable,
+        obsleft:    List of Observables plotted on the left axis. It is recommended to
+          use Observables with scalar values. Otherwise, all the values are plotted but
+          share the same line properties and legend,
+        obsright:   Optional list of Observables plotted on the right axis.
+        axes:           :py:class:`~matplotlib.axes.Axes` object in which the figure
+          is plotted. If :py:obj:`None`, a new figure is created.
+        xlabel:         x-axis label. Default: variable name.
+        ylabel:         y-axis label. Default: :py:attr:`.ObservableList.axis_label`.
+
+    Additional keyword arguments are transmitted to the
+    :py:class:`~matplotlib.axes.Axes` creation function.They apply to the main (left)
+    axis and are ignored when plotting in exising axes:
+
+    Keyword Args:
+        title (str):    Plot title,
+        ylim (tuple):     Y-axis limits,
+        *: for other keywords see
+          :py:obj:`~.matplotlib.figure.Figure.add_subplot`
+
 
     Returns:
-        ax:             the :py:class:`~matplotlib.axes.Axes` object.
+        axes: tuple of :py:class:`~.matplotlib.axes.Axes`. Contains 2 elements if there
+          is a plot on the right y-axis, 1 element otherwise.
+
+    .. note::
+
+        The legend of the plot is controlled by the :py:attr:`.Observable.label`
+        attributes. Default values are provided, but labels may explicitly set.
+
+        Labels may contain LaTeX math code. Example: ``"$\beta_x$"`` will appear as
+        ":math:`\beta_x`".
+
+        Labels starting with an underscore do not appear in the legend.
 
     Example:
         Minimal example using only default values:
 
-        >>> obs = at.ObservableList(
-        ...     [
-        ...         at.EmittanceObservable("emittances", plane="x"),
-        ...         at.EmittanceObservable("emittances", plane="y"),
-        ...     ],
+        >>> obsl = at.ObservableList(
+        ...     [at.EmittanceObservable("emittances", plane="x")],
+        ...     ring=ring,
+        ... )
+        >>> obsr = at.ObservableList(
+        ...     [at.EmittanceObservable("sigma_e")],
         ...     ring=ring,
         ... )
         >>> var = at.AttributeVariable(ring, "energy", name="energy [eV]")
-        >>> plot_response(var, obs, np.arange(3.0e9, 6.01e9, 0.5e9))
+        >>> ax1, ax2 = at.plot_response(
+        ...     var, np.arange(3.0e9, 6.01e9, 0.5e9), obsl, obsr
+        ... )
         >>>
 
         .. image:: /images/emittance_response.*
@@ -66,101 +90,112 @@ def plot_response(
         Example showing the formatting possibilities by:
 
         - using the :py:attr:`.Observable.plot_fmt` attribute for line formatting,
-        - using  the :py:attr:`.Observable.name` attribute for curve labels,
-        - using dual y-axis by calling :py:func:`plot_response` twice,
-        - avoiding duplicate line colors with the *color_offset* parameter,
-        - using the *ylabel* and *title* parameters.
+        - using dual y-axis,
+        - using the *ylim* and *title* parameters.
 
-        >>> obsleft =at.ObservableList(
+        >>> obsleft = at.ObservableList(
         ...     [
         ...         at.LocalOpticsObservable(
         ...             [0], "beta", plane="x",
-        ...             name=r"$\beta_x$",
         ...             plot_fmt={"linewidth": 3.0, "marker": "o"}
         ...         ),
-        ...         at.LocalOpticsObservable(
-        ...             [0], "beta", plane="y", name=r"$\beta_z$", plot_fmt="--"
-        ...         )
+        ...         at.LocalOpticsObservable([0], "beta", plane="y", plot_fmt="--"),
         ...     ],
-        ...     ring=ring
+        ...     ring=ring,
         ... )
         >>>
-        >>> obsright =at.ObservableList(
+        >>> obsright = at.ObservableList(
         ...     [
-        ...         at.GlobalOpticsObservable("tune", plane="x", name=r"$\nu_x$"),
-        ...         at.GlobalOpticsObservable("tune", plane="y", name=r"$\nu_x$"),
+        ...         at.GlobalOpticsObservable("tune", plane="x"),
+        ...         at.GlobalOpticsObservable("tune", plane="y"),
         ...     ],
-        ...     ring=ring
+        ...     ring=ring,
         ... )
-        >>> # On the left y-axis
+        >>>
+        >>> var = RefptsVariable(
+        ...     "QF1[AE]", "Kn1L", name="QF1 integrated strength", ring=ring
+        ... )
         >>> ax = at.plot_response(
         ...     var,
+        ...     np.arange(0.732, 0.852, 0.01),
         ...     obsleft,
-        ...     np.arange(2.4, 2.7, 0.02),
-        ...     ylabel="beta [m]",
-        ...     title="Example of plot_response"
-        ... )
-        >>> # On the right y-axis
-        >>> ax2 = at.plot_response(
-        ...     var,
         ...     obsright,
-        ...     np.arange(2.4, 2.7, 0.02),
-        ...     ylabel="tune",
-        ...     ax=ax.twinx(),
-        ...     color_offset=2
+        ...     ylim=[0.0, 10.0],
+        ...     title="Example of plot_response",
         ... )
-        >>> ax.set_ylim(0.0, 10.0)
-        >>> ax2.set_ylim(0.0, 1.2)
-        >>> ax2.grid(False)
 
         .. image:: /images/beta_response.*
            :alt: beta response
 
         Example varying an evaluation parameter:
 
-        >>> obs =at.ObservableList(
+        >>> obs = at.ObservableList(
         ...     [
-        ...         at.LocalOpticsObservable([0], "beta", plane="x", name=r"$\beta_x$"),
-        ...         at.LocalOpticsObservable([0], "beta", plane="y", name=r"$\beta_z$")
+        ...         at.LocalOpticsObservable([0], "beta", plane="x"),
+        ...         at.LocalOpticsObservable([0], "beta", plane="y"),
         ...     ],
         ...     ring=ring,
-        ...     dp = 0.0
+        ...     dp=0.0,
         ... )
-        >>> var = at.EvaluationVariable(obs, "dp", name=r"$\delta$")
-        >>> ax=at.plot_response(
-        ... var, obs, np.arange(-0.03, 0.0301,0.001), ylabel=r"$\beta\;[m]$"
-        ... )
+        >>> var = at.EvaluationVariable(obsleft, "dp", name=r"$\delta$")
+        >>> ax = at.plot_response(var, np.arange(-0.03, 0.0301, 0.001), obsleft)
 
         .. image:: /images/delta_response.*
            :alt: delta response
     """
 
-    def compute(v):
+    def compute(v, obs):
         """Evaluate the observables for 1 variable value."""
         var.value = v
-        obs.evaluate()
-        return obs.values
+        for ob in obs:
+            yield from ob.evaluate()
 
-    def plot1(x, y, obs, ncurve):
-        """Plot 1 curve."""
-        fmt = getattr(obs, "plot_fmt", f"C{ncurve}")
-        if isinstance(fmt, Mapping):
-            return ax.plot(x, y, label=obs.name, **fmt)
-        else:
-            return ax.plot(x, y, fmt, label=obs.name)
+    def axes1(axes: Axes, obs: ObservableList):
+        """Plot all observables on a given axis."""
 
-    if ax is None:
-        _, ax = plt.subplots(subplot_kw=kwargs)
+        def plot1(obs, ncurve):
+            """Plot 1 curve."""
+            fmt = getattr(obs, "plot_fmt", f"C{ncurve}")
+            if isinstance(fmt, Mapping):
+                return axes.plot(xx, next(values), label=obs.label, **fmt)
+            else:
+                return axes.plot(xx, next(values), fmt, label=obs.label)
+
+        axes.set_ylabel(obs.axis_label)
+        for ob in obs:
+            yield from plot1(ob, next(line_counter))
+
+    if isinstance(rng, ObservableList):
+        # swap arguments for the old argument order
+        rng, obsleft = obsleft, rng
+
+    if axes is None:
+        _, axleft = plt.subplots(subplot_kw=kwargs)
+    elif isinstance(axes, Axes):
+        axleft = axes
+    else:
+        msg = "The 'axes' argument must be an Axes object."
+        raise ValueError(msg)
+
+    allaxes = (axleft, axleft.twinx()) if obsright else (axleft,)
+    allobs = (obsleft, *obsright)
+
+    # Compute all the observable values
     with var.restore():
-        vals = [(v, *compute(v)) for v in rng]
-        xx, *yy = zip(*vals, strict=True)
-        lines = [  # noqa: F841
-            plot1(xx, np.array(y), ob, n + color_offset)
-            for n, (y, ob) in enumerate(zip(yy, obs, strict=True))
-        ]
-        ax.set_xlabel(xlabel or var.name)
-        ax.set_ylabel(ylabel)
-        ax.set_title(title)
-        ax.legend()
-        ax.grid(True)
-        return ax
+        vals = [(v, *compute(v, allobs)) for v in rng]
+
+    xx, *yy = zip(*vals, strict=True)
+    values = iter(yy)
+    line_counter = itertools.count()
+
+    lines = []
+    for ax, obs in zip(allaxes, allobs, strict=True):
+        lines.extend(axes1(ax, obs))
+
+    axleft.set_xlabel(xlabel or var.name)
+    if ylabel:
+        axleft.set_ylabel(ylabel)
+    axleft.legend(handles=lines)
+    axleft.grid(True)
+
+    return allaxes

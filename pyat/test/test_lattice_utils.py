@@ -129,15 +129,15 @@ def test_get_elements(hmba_lattice):
     # test FamName direct match
     assert get_elements(hmba_lattice, "BPM_06") == [hmba_lattice[65]]
     # test FamName wildcard matching
-    assert get_elements(hmba_lattice, "QD2?") == list(hmba_lattice[9, 113])
-    assert get_elements(hmba_lattice, "QD3*") == list(hmba_lattice[19, 105])
-    assert get_elements(hmba_lattice, "S*H2B") == list([hmba_lattice[55]])
-    assert get_elements(hmba_lattice, "*C_1") == list(hmba_lattice[59, 60])
-    assert get_elements(hmba_lattice, "DR_2[1-3]") == list(hmba_lattice[54, 56, 58])
-    assert get_elements(hmba_lattice, "DR_2[!1-7]") == list(hmba_lattice[52, 78, 80])
+    assert get_elements(hmba_lattice, "QD2?") == hmba_lattice[9, 113]
+    assert get_elements(hmba_lattice, "QD3*") == hmba_lattice[19, 105]
+    assert get_elements(hmba_lattice, "S*H2B") == [hmba_lattice[55]]
+    assert get_elements(hmba_lattice, "*C_1") == hmba_lattice[59, 60]
+    assert get_elements(hmba_lattice, "DR_2[1-3]") == hmba_lattice[54, 56, 58]
+    assert get_elements(hmba_lattice, "DR_2[!1-7]") == hmba_lattice[52, 78, 80]
     # test element instance
     marker = elements.Marker("M1")
-    assert get_elements(hmba_lattice, marker) == list(hmba_lattice[1, 12, 61, 67, 73])
+    assert get_elements(hmba_lattice, marker) == hmba_lattice[1, 12, 61, 67, 73]
     # test element type
     assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError
@@ -221,10 +221,9 @@ def test_set_tilt(simple_ring):
     numpy.testing.assert_allclose(simple_ring[0].R2, a.T)
     numpy.testing.assert_allclose(simple_ring[0].R1, a)
     numpy.testing.assert_allclose(simple_ring[0].R2, a.T)
-    ring = [simple_ring[0]]
-    set_tilt(ring, 0)
-    numpy.testing.assert_allclose(ring[0].R1, numpy.eye(6))
-    numpy.testing.assert_allclose(ring[0].R2, numpy.eye(6))
+    simple_ring[0].tilt = 0.0
+    numpy.testing.assert_allclose(simple_ring[0].R1, numpy.eye(6))
+    numpy.testing.assert_allclose(simple_ring[0].R2, numpy.eye(6))
 
 
 def test_set_shift(simple_ring):
@@ -238,8 +237,8 @@ def test_set_shift(simple_ring):
     numpy.testing.assert_equal(simple_ring[3].T2, a * 2)
     numpy.testing.assert_equal(simple_ring[5].T1, -a)
     numpy.testing.assert_equal(simple_ring[5].T2, a)
-    ring = [simple_ring[3]]
-    set_shift(ring, 3, 5)
+    simple_ring[3].dx = 3
+    simple_ring[3].dy = 5
     a = numpy.array([3.0, 0.0, 5.0, 0.0, 0.0, 0.0])
     numpy.testing.assert_equal(simple_ring[3].T1, -a)
     numpy.testing.assert_equal(simple_ring[3].T2, a)

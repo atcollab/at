@@ -1,4 +1,4 @@
-"""Using `Elegant`_ files with PyAT
+"""Using `Elegant`_ files with PyAT.
 ==================================
 
 PyAT can read lattice descriptions in Elegant format (.lte files), and can export
@@ -16,7 +16,7 @@ Multipoles
 Elegant thick multipoles are limited to a single multipole order. For AT
 :py:class:`.Multipole` elements combining several orders, the lowest order is converted
 and higher orders are discarded. AT :py:class:`.ThinMultipole` elements are expanded
-to a series of thin ``MULT`` elements with 0 length.
+to a series of thin ``MULT`` elements with length 0.
 
 Elegant elements absent from AT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -39,7 +39,7 @@ When reading an Elegant file:
 - `TILT` is interpreted and converted to `R1` and `R2` attributes,
 - `DX`, `DZ` are converted to `T1`and `T2` attributes,
 - `N_SLICES`, if specified, is converted to `NumIntSteps`. If not, `NumIntSteps` is
-  left to is default value (10).
+  left to its default value (10).
 
 2. Usage
 --------
@@ -59,7 +59,9 @@ __all__ = ["ElegantParser", "_ElegantExporter", "load_elegant", "save_elegant"]
 
 import functools
 from math import sqrt, factorial
-from collections.abc import Iterable
+from collections.abc import Iterable, Container, Sequence
+from pathlib import Path
+from typing import ClassVar
 import warnings
 
 import numpy as np
@@ -67,7 +69,7 @@ from scipy.constants import c as clight
 
 from .allfiles import register_format
 from .file_input import ElementDescr, BaseParser, UpperCaseParser
-from .file_input import skip_names, ignore_names, ignore_class
+from .file_input import skip_class, ignore_class
 from .file_output import Exporter
 from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 
@@ -75,14 +77,13 @@ from ..lattice import Particle, Lattice, elements as elt, tilt_elem, shift_elem
 from .madx import sinc, _Line, p_dict, p_list
 from . import Rpn
 
-
 # -------------------
 #  Utility functions
 # -------------------
 
 
 def elegant_element(func):
-    """Decorator which tilts and shifts the decorated AT element"""
+    """Decorator which tilts and shifts the decorated AT element."""
 
     @functools.wraps(func)
     def wrapper(
@@ -104,7 +105,7 @@ def elegant_element(func):
             if tilt != 0.0:
                 tilt_elem(el, tilt)
             if not (dx == 0.0 and dy == 0.0):
-                shift_elem(el, deltax=dx, deltaz=dy)
+                shift_elem(el, dx=dx, dy=dy)
             el.origin = self.origin
         return elems
 
@@ -117,9 +118,9 @@ def elegant_element(func):
 
 
 class _ElegantElement(ElementDescr):
-    """Description of MADX elements"""
+    """Description of MADX elements."""
 
-    str_attr = {"filename", "group", "mode", "insert_from"}
+    str_attr: ClassVar[set[str]] = {"filename", "group", "mode", "insert_from"}
 
 
 # ------------------------------
@@ -136,7 +137,7 @@ class DRIF(_ElegantElement):
 
 # noinspection PyPep8Naming
 class MARK(_ElegantElement):
-    at2mad = {}
+    at2mad: ClassVar[dict[str, str]] = {}
 
     @elegant_element
     def to_at(self, **params):
@@ -193,7 +194,7 @@ class KOCT(_ElegantElement):
 
 
 class MULT(_ElegantElement):
-    at2mad = {"Length": "L", "Order": "ORDER", "Value": "KNL"}
+    at2mad: ClassVar[dict[str, str]] = {"Length": "L", "Order": "ORDER", "Value": "KNL"}
 
     @elegant_element
     def to_at(self, l=0, knl=0.0, order=1, **params):  # noqa: E741
@@ -209,7 +210,7 @@ class MULT(_ElegantElement):
 
 # noinspection PyPep8Naming
 class CSBEND(_ElegantElement):
-    at2mad = {
+    at2mad: ClassVar[dict[str, str]] = {
         "Length": "L",
         "BendingAngle": "ANGLE",
         "EntranceAngle": "E1",
@@ -264,7 +265,7 @@ class RBEN(CSBEND):
 
     @property
     def length(self):
-        """Element length"""
+        """Element length."""
         hangle = 0.5 * self["angle"]
         return self["l"] / sinc(hangle)
 
@@ -301,7 +302,11 @@ class VKICK(KICKER):
 
 # noinspection PyPep8Naming
 class RFCA(_ElegantElement):
-    at2mad = {"Length": "L", "Voltage": "VOLT", "Frequency": "FREQ"}
+    at2mad: ClassVar[dict[str, str]] = {
+        "Length": "L",
+        "Voltage": "VOLT",
+        "Frequency": "FREQ",
+    }
 
     @elegant_element
     def to_at(
@@ -350,7 +355,7 @@ class VMON(MONI):
 
 
 def multipole(kwargs):
-    """AT ThinMultipole or Multipole converted to Elegant MULT"""
+    """AT ThinMultipole or Multipole converted to Elegant MULT."""
 
     def singlemul(nm, o, v):
         if nm is None:
@@ -370,7 +375,7 @@ def multipole(kwargs):
 
 
 def ignore(kwargs):
-    """AT element ignored in Elegant: convert to marker or drift"""
+    """AT element ignored in Elegant: convert to marker or drift."""
     length = kwargs.get("Length", 0.0)
     if length == 0.0:
         print(f"{kwargs['name']} is replaced by a marker")
@@ -380,47 +385,74 @@ def ignore(kwargs):
         return DRIF.from_at(kwargs)
 
 
-SOLENOID = ignore_class("SOLENOID", _ElegantElement)
+_elegant_env = {
+    "DRIF": DRIF,
+    "DRIFT": DRIF,
+    "EDRIFT": DRIF,
+    "MARK": MARK,
+    "KQUAD": KQUAD,
+    "QUAD": KQUAD,
+    "QUADRUPOLE": KQUAD,
+    "KSEXT": KSEXT,
+    "SEXT": KSEXT,
+    "SEXTUPOLE": KSEXT,
+    "KQUSE": KQUSE,
+    "KOCT": KOCT,
+    "OCTUPOLE": KOCT,
+    "OCTU": KOCT,
+    "MULT": MULT,
+    "MULTIPOLE": MULT,
+    "CSBEND": CSBEND,
+    "SBEND": CSBEND,
+    "SBEN": CSBEND,
+    "CSBEN": CSBEND,
+    "CSRCSBEN": CSBEND,
+    "RBEN": RBEN,
+    "RBEND": RBEN,
+    "CRBEND": RBEN,
+    "CRBEN": RBEN,
+    "KICKER": KICKER,
+    "HKICK": HKICK,
+    "HKICKER": HKICK,
+    "VKICK": VKICK,
+    "VKICKER": VKICK,
+    "RFCA": RFCA,
+    "RFCW": RFCA,
+    "MONI": MONI,
+    "MONITOR": MONI,
+    "HMON": HMON,
+    "HMONITOR": HMON,
+    "VMON": VMON,
+    "VMONITOR": VMON,
+    "LINE": _Line,
+    "__builtins__": {},
+}
 
-skip_names(
-    globals(),
-    _ElegantElement,
-    [
-        "MAXAMP",
-        "CHARGE",
-        "RECIRC",
-        "MALIGN",
-        "SREFFECTS",
-        "PFILTER",
-        "ENERGY",
-        "SCATTER",
-        "WATCH",
-        "WAKE",
-    ],
+_ignore_names = ["SOLENOID", "SCRAPER", "ECOL", "RCOL", "CSRDRIF"]
+
+_elegant_env.update(
+    (name, ignore_class(name, _ElegantElement)) for name in _ignore_names
 )
 
+_skip_names = [
+    "MAXAMP",
+    "CHARGE",
+    "RECIRC",
+    "MALIGN",
+    "SREFFECTS",
+    "PFILTER",
+    "ENERGY",
+    "SCATTER",
+    "WATCH",
+    "WAKE",
+]
 
-ignore_names(globals(), _ElegantElement, ["SCRAPER", "ECOL", "RCOL", "CSRDRIF"])
-
-EDRIFT = DRIFT = DRIF
-QUAD = QUADRUPOLE = KQUAD
-CSRCSBEN = CSBEN = SBEN = SBEND = CSBEND
-CRBEN = CRBEND = RBEND = RBEN
-SEXT = SEXTUPOLE = KSEXT
-OCTU = OCTUPOLE = KOCT
-HKICKER = HKICK
-VKICKER = VKICK
-MONITOR = MONI
-HMONITOR = HMON
-VMONITOR = VMON
-RFCW = RFCA
-SOLE = SOLENOID
-MULTIPOLE = MULT
+_elegant_env.update((name, skip_class(name, _ElegantElement)) for name in _skip_names)
 
 
 class ElegantParser(UpperCaseParser, BaseParser):
     # noinspection PyUnresolvedReferences
-    """Elegant parser
+    """Elegant parser.
 
     The parser is a subclass of :py:class:`dict` and is a database containing all the
     Elegant objects.
@@ -449,24 +481,21 @@ class ElegantParser(UpperCaseParser, BaseParser):
         """
         Args:
             verbose:    If :py:obj:`True`, print details on the processing
-            **kwargs:   Initial variable definitions
+            **kwargs:   Initial variable definitions.
         """
-        super().__init__(globals(), **kwargs)
+        super().__init__(_elegant_env, **kwargs)
         self.rpn = Rpn()
 
-    def _assign(self, label: str, key: str, val: str):
-        # Special treatment of "line=(...)" commands
-        if key == "LINE":
-            val = val.replace(")", ",)")  # For tuples with a single item
-            return label, _Line(self.evaluate(val), name=label)
-        else:
-            return super()._assign(label, key, val)
+    def _format_statement(self, line: str) -> str:
+        line = super()._format_statement(line)
+        return line.replace("LINE=", "LINE,")
 
     def _command(self, label, cmdname, *args: str, **kwargs):
         # Special treatment of label #INCLUDE
         if label == "#INCLUDE":
             file = cmdname[1:-1] if cmdname[0] == '"' else cmdname
             self.parse_files(file, final=False)
+            return None
         else:
             return super()._command(label, cmdname, *args, **kwargs)
 
@@ -483,11 +512,11 @@ class ElegantParser(UpperCaseParser, BaseParser):
         argcount: int,
         argstr: str,
         *,
-        bool_attr: tuple[str] = (),
-        str_attr: tuple[str] = (),
-        pos_args: tuple[str] = (),
+        bool_attr: Container[str] = (),
+        str_attr: Container[str] = (),
+        pos_args: Sequence[str] = (),
     ):
-        """Evaluate a command argument and return a pair (key, value)"""
+        """Evaluate a command argument and return a pair (key, value)."""
 
         def arg_value(k, v):
             if k in str_attr:
@@ -519,7 +548,7 @@ class ElegantParser(UpperCaseParser, BaseParser):
                 return sqrt(1.0 - 1.0 / gamma / gamma)
 
         cavities = []
-        cell_length = 0
+        cell_length = 0.0
 
         for elem in super()._generator(params):
             if isinstance(elem, elt.RFCavity):
@@ -542,9 +571,9 @@ class ElegantParser(UpperCaseParser, BaseParser):
 
 
 def load_elegant(
-    *files: str, use: str = "RING", verbose: bool = False, **kwargs
+    *files: str | Path, use: str = "RING", verbose: bool = False, **kwargs
 ) -> Lattice:
-    """Create a :py:class:`.Lattice` from Elegant lattice files
+    """Create a :py:class:`.Lattice` from Elegant lattice files.
 
     - Elegant lattice files do not specify the beam energy. :py:class:`ElegantParser`
       sets it by default to 1.0 GeV. Use the *energy* keyword to set it to the
@@ -584,7 +613,7 @@ _AT2EL = {
     elt.Multipole: multipole,
     elt.RFCavity: RFCA.from_at,
     elt.Drift: DRIF.from_at,
-    elt.Bend: SBEN.from_at,
+    elt.Bend: CSBEND.from_at,
     elt.Marker: MARK.from_at,
     elt.Monitor: MONI.from_at,
     elt.Corrector: KICKER.from_at,
@@ -594,7 +623,7 @@ _AT2EL = {
 class _ElegantExporter(Exporter):
     delimiter = ""
     continuation = "&"
-    bool_fmt = {False: ".FALSE.", True: ".TRUE."}
+    bool_fmt: ClassVar[dict[bool, str]] = {False: ".FALSE.", True: ".TRUE."}
     use_line = True
 
     def generate_madelems(
@@ -609,10 +638,10 @@ def at2elegant(attype):
 
 def save_elegant(
     ring: Lattice,
-    filename: str | None = None,
+    filename: str | Path | None = None,
     **kwargs,
 ):
-    """Save a :py:class:`.Lattice` as an Elegant file
+    """Save a :py:class:`.Lattice` as an Elegant file.
 
     Args:
         ring:   lattice

@@ -3,7 +3,7 @@ r""":py:class:`.Element` classes for magnets.
 .. _at-field-expansion:
 
 Expansion of the magnetic field in AT
-----------------------------------
+-------------------------------------
 
 The multipole magnets are expressed according to the following expression for the
 multipole expansion of the magnetic field:
@@ -46,6 +46,7 @@ import warnings
 from collections.abc import Generator, Callable
 from typing import Any
 import contextlib
+from warnings import warn
 from math import tan, atan
 
 import numpy as np
@@ -162,22 +163,10 @@ class ThinMultipole(Element):
         Default PassMethod: ``ThinMPolePass``
         """
 
-        def getpol(poly):
-            nonzero = np.flatnonzero(poly != 0.0)
-            return len(poly), nonzero[-1] if len(nonzero) > 0 else -1
-
-        def lengthen(poly, dl):
-            if dl > 0:
-                return np.concatenate((poly, np.zeros(dl)))
-            else:
-                return poly
-
         def make_same_length(arr1, arr2):
-            diff = len(arr1) - len(arr2)
-            if diff > 0:
-                arr2 = lengthen(arr2, diff)
-            elif diff < 0:
-                arr1 = lengthen(arr1, -diff)
+            lmax = max(len(arr1), len(arr2))
+            arr1 = np.pad(arr1, (0, lmax - len(arr1)), "constant")
+            arr2 = np.pad(arr2, (0, lmax - len(arr2)), "constant")
             return arr1, arr2
 
         def seterr(name, kname, kval, aname, aval):
@@ -249,34 +238,50 @@ class ThinMultipole(Element):
         check_strength("K", 1)
         check_strength("H", 2)
         # Determine the length and order of PolynomA and PolynomB
-        len_a, ord_a = getpol(prmpola)
-        len_b, ord_b = getpol(prmpolb)
-        deforder = max(getattr(self, "DefaultOrder", 0), ord_a, ord_b)
+        len_a = len(prmpola)
+        len_b = len(prmpolb)
+        deforder = max(getattr(self, "DefaultOrder", 0), len_a - 1, len_b - 1)
         # Remove MaxOrder
-        maxorder = kwargs.pop("MaxOrder", deforder)
+        maxorder = int(kwargs.pop("MaxOrder", deforder))
         kwargs.setdefault("PassMethod", "ThinMPolePass")
         super().__init__(family_name, **kwargs)
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
         # Adjust polynom lengths and set them
-        len_ab = max(self.MaxOrder + 1, len_a, len_b)
-        self.PolynomA = lengthen(prmpola, len_ab - len_a)
-        self.PolynomB = lengthen(prmpolb, len_ab - len_b)
+        len_ab = max(maxorder, deforder) + 1
+        self.PolynomA = np.pad(prmpola, (0, len_ab - len_a))
+        self.PolynomB = np.pad(prmpolb, (0, len_ab - len_b))
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB."""
+
+        def maxord(poly):
+            nonzero = np.flatnonzero(poly != 0.0)
+            return len(poly), nonzero[-1] if len(nonzero) > 0 else -1
+
+        def ck(attrname):
+            poly = getattr(self, attrname)
+            return maxord(poly)
+
         polys = ("PolynomA", "PolynomB")
         if key in polys:
             lmin = self.MaxOrder
-            if not len(value) > lmin:
+            lenp, ordp = maxord(np.asarray(value))
+            if not lenp > lmin:
                 msg = f"Length of {key} must be larger than {lmin}"
                 raise ValueError(msg)
+            if ordp > lmin:
+                msg = f"Some values of {key} are truncated by MaxOrder={lmin}"
+                warn(AtWarning(msg), stacklevel=2)
         elif key == "MaxOrder":
             intval = int(value)
-            lmax = min(len(getattr(self, k)) for k in polys)
-            if not intval < lmax:
-                msg = f"MaxOrder must be smaller than {lmax}"
+            lens, ords = zip(*(ck(k) for k in polys), strict=True)
+            if intval >= (lmin := min(lens)):
+                msg = f"MaxOrder must be smaller than {lmin}"
                 raise ValueError(msg)
+            if intval < max(ords):
+                msg = f"Some values are truncated by MaxOrder={intval}"
+                warn(AtWarning(msg), stacklevel=2)
         super().__setattr__(key, value)
 
     # noinspection PyPep8Naming
@@ -471,6 +476,7 @@ class Dipole(Radiative, Multipole):
         FringeBendEntrance=int,
         FringeBendExit=int,
     )
+    _file_classname = "Bend"
     _stacklevel = 7  # Stacklevel for warnings
 
     _entrance_fields = [
@@ -488,7 +494,17 @@ class Dipole(Radiative, Multipole):
         "FringeQuadExit",
     ]
 
-    DefaultOrder = 0
+    DefaultOrder = 1
+
+    # Instance attributes
+    BendingAngle: float
+    EntranceAngle: float
+    ExitAngle: float
+    FringeBendEntrance: int
+    FringeBendExit: int
+    FringeQuadEntrance: int
+    FringeQuadExit: int
+    FullGap: float
 
     def __init__(
         self,
@@ -591,12 +607,16 @@ class Quadrupole(Radiative, Multipole):
 
     DefaultOrder = 1
 
+    # Instance attributes
+    FringeQuadEntrance: int
+    FringeQuadExit: int
+
     def __init__(self, family_name: str, length: float, k: float = 0.0, **kwargs):
         """
         Args:
             family_name:    Name of the element
             length:         Element length [m]
-            k:              Focusing strength [m^-2]
+            k:              Focusing strength [m^-2].
 
         Keyword Arguments:
             PolynomB:           normal multipoles
@@ -690,7 +710,8 @@ class Corrector(LongElement):
 
     @property
     def Kn0L(self) -> float:
-        r"""Opposite of the horizontal momentum kick - :math:`\Delta p_x = -\mathrm{Kn0L}`."""
+        r"""Opposite of the horizontal momentum kick -
+        :math:`\Delta p_x = -\mathrm{Kn0L}`."""
         return -tan(self.KickAngle[0])
 
     @Kn0L.setter
@@ -727,6 +748,17 @@ class Wiggler(Radiative, LongElement):
         NVharm=int,
     )
 
+    # Instance attributes
+    Lw: float
+    Bmax: float
+    Energy: float
+    Bx: np.ndarray
+    By: np.ndarray
+    Nstep: int
+    Nmeth: int
+    NHharm: int
+    NVharm: int
+
     # noinspection PyPep8Naming
     def __init__(
         self,
@@ -736,8 +768,8 @@ class Wiggler(Radiative, LongElement):
         b_max: float,
         energy: float = 0.0,
         *,
-        Nstep: int | None = 5,
-        Nmeth: int | None = 4,
+        Nstep: int = 5,
+        Nmeth: int = 4,
         By=(1, 1, 0, 1, 1, 0),
         Bx=(),
         **kwargs,
@@ -771,7 +803,7 @@ class Wiggler(Radiative, LongElement):
                     f"Wiggler: positional argument energy={energy} has been ignored as "
                     "lattice.Energy is always used instead."
                 ),
-                stacklevel=2
+                stacklevel=2,
             )
         super().__init__(
             family_name,

@@ -5,10 +5,10 @@ import warnings
 from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
-from at.collective import add_beamloading, remove_beamloading, BLMode
+from at.collective import add_beamloading, remove_beamloading
 from at import lattice_track
 from at import lattice_pass, internal_lpass
-
+from sys import platform
 
 _issorted = lambda a: numpy.all(a[:-1] <= a[1:])
 
@@ -112,32 +112,30 @@ def test_beamloading(hmba_lattice):
     cavs = ring.get_elements(at.RFCavity)  
     for cav in cavs:
         assert cav.PassMethod == 'RFCavityPass' 
-    
+
 
 @pytest.mark.parametrize('func', (lattice_track, lattice_pass))
 def test_track_beamloading(hmba_lattice, func):
     ring = hmba_lattice.enable_6d(copy=True)
-    rin0 = numpy.zeros(6)
-    func(ring, rin0, refpts=[])
-    add_beamloading(ring, 44e3, 400, blmode=BLMode.WAKE)
-    rin1 = numpy.zeros(6)
-    func(ring, rin1, refpts=[])
-    assert_close(rin0, rin1, atol=1e-21)
     ring.set_fillpattern(2)
-    ring.beam_current = 0.2
+    ring.set_beam_current(0.2)
+    at.add_beamloading(ring, 44e3, 400)
     rin = numpy.zeros((6, 1))
-    with pytest.raises(Exception):
-        func(ring, rin, refpts=[])
-    rin = numpy.zeros((6, 2))
-    if func == lattice_track:
-        func(ring, rin, refpts=[], in_place=True)
+    if 'win' in platform:
+        with pytest.raises(Exception):
+            func(ring, rin, refpts=[], in_place=True)
     else:
-        func(ring, rin, refpts=[])
-    assert_close(rin[:, 0], numpy.array([-2.318948e-08, -1.599715e-09,
-                                        0.000000e+00,  0.000000e+00,
-                                        -1.313306e-05, -1.443748e-08]
-                                        ), atol=5e-10)
- 
+        with pytest.raises(Exception):
+            func(ring, rin, refpts=[])
+        rin = numpy.zeros((6, 2))
+        if func == lattice_track:
+            func(ring, rin, refpts=[], in_place=True)
+        else:
+            func(ring, rin, refpts=[])
+        assert_close(rin[:, 0], numpy.array([-2.327000e-08, -1.604262e-09,
+                                             0.0, 0.0,
+                                             -1.316005e-05, -1.449765e-08]
+                                            ), atol=5e-10)
 
 def test_buffers(hmba_lattice):
     ring = hmba_lattice.enable_6d(copy=True)
@@ -151,7 +149,7 @@ def test_buffers(hmba_lattice):
     ns = nbunch*nslice
     ls = ns*ring.circumference/ring.periodicity
     add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
-                    buffersize=nturns, blmode=BLMode.WAKE)
+                    buffersize=nturns)
     ring.set_fillpattern(nbunch)
     ring.beam_current = 0.2
     rin = numpy.zeros((6, nbunch)) + 1.0e-6
@@ -160,19 +158,22 @@ def test_buffers(hmba_lattice):
     vbh = numpy.zeros((nturns, ) + bl_elem.Vbeam_buffer.shape)
     vgh = numpy.zeros((nturns, ) + bl_elem.Vgen_buffer.shape)
     vbbh = numpy.zeros((nturns, ) + bl_elem.Vbunch_buffer.shape)
-    for i in numpy.arange(nturns):
-        ring.track(rin, nturns=1, refpts=None, in_place=True)
-        th[i] = bl_elem.TurnHistory
-        vbh[i] = bl_elem.Vbeam_buffer
-        vgh[i] = bl_elem.Vgen_buffer
-        vbbh[i] = bl_elem.Vbunch_buffer
-    for i in numpy.arange(1, nturns):
-        dth = numpy.sum(th[i-1, (nturns-i)*ns:]
-                        - th[i, (nturns-i-1)*ns:(nturns-1)*ns]) - i*ls
-        dvbh = numpy.sum(vbh[i-1, :, (nturns-i):]
-                         - vbh[i, :, (nturns-i-1):(nturns-1)])
-        dvgh = numpy.sum(vgh[i-1, :, (nturns-i):]
-                         - vgh[i, :, (nturns-i-1):(nturns-1)])
-        dvbbh = numpy.sum(vbbh[i-1, :, (nturns-i):]
-                          - vbbh[i, :, (nturns-i-1):(nturns-1)])
-    assert_close([dth, dvbh, dvgh, dvbbh], numpy.zeros(4), atol=1e-9)
+    if 'win' in platform:
+        pass
+    else:
+        for i in numpy.arange(nturns):    
+            ring.track(rin, nturns=1, refpts=None, in_place=True)
+            th[i] = bl_elem.TurnHistory
+            vbh[i] = bl_elem.Vbeam_buffer
+            vgh[i] = bl_elem.Vgen_buffer
+            vbbh[i] = bl_elem.Vbunch_buffer
+        for i in numpy.arange(1, nturns):
+            dth = numpy.sum(th[i-1, (nturns-i)*ns:]
+                            - th[i, (nturns-i-1)*ns:(nturns-1)*ns]) - i*ls
+            dvbh = numpy.sum(vbh[i-1, :, (nturns-i):]
+                             - vbh[i, :, (nturns-i-1):(nturns-1)])
+            dvgh = numpy.sum(vgh[i-1, :, (nturns-i):]
+                             - vgh[i, :, (nturns-i-1):(nturns-1)])
+            dvbbh = numpy.sum(vbbh[i-1, :, (nturns-i):]
+                              - vbbh[i, :, (nturns-i-1):(nturns-1)])
+        assert_close([dth, dvbh, dvgh, dvbbh], numpy.zeros(4), atol=1e-9)

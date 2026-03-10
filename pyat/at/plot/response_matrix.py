@@ -69,7 +69,7 @@ def plot_obs_analysis(
         resp.solve()
     obs = resp.observables
     # noinspection PyProtectedMember
-    obs.evaluate(lattice, **resp._eval_args)
+    obs.evaluate(lattice, **resp.eval_kw)
     corr = resp._uh @ obs.flat_deviations
     if ax is None:
         fig, ax = plt.subplots()

@@ -417,22 +417,25 @@ class ResponseMatrix(_SvdSolver):
     produce combined responses.
     """
 
+    # Instance attributes
     ring: Lattice | None
     variables: VariableList  #: List of matrix :py:class:`Variable <.VariableBase>`\ s
     observables: ObservableList  #: List of matrix :py:class:`.Observable`\s
-    _eval_args: dict[str, Any] = {}
+    eval_kw: dict[str, Any]  #: Evaluation keywords
 
     def __init__(
         self,
         variables: VariableList,
         observables: ObservableList,
         ring: Lattice | None = None,
+        **eval_kw,
     ):
         r"""
         Args:
             variables:      List of :py:class:`Variable <.VariableBase>`\ s
             observables:    List of :py:class:`.Observable`\s
             ring:           Design lattice.
+            **eval_kw:      Evaluation keywords.
         """
 
         def limits(obslist):
@@ -450,8 +453,9 @@ class ResponseMatrix(_SvdSolver):
         self.ring = ring
         self.variables = variables
         self.observables = observables
+        self.eval_kw = eval_kw
         # Get the shape of observables
-        observables.evaluate(ring=ring, initial=True)
+        observables.evaluate(ring=ring, initial=True, **self.eval_kw)
         super().__init__(len(observables.flat_values), len(variables))
         self._ob = [self._obsmask[beg:end] for beg, end in limits(self.observables)]
 
@@ -463,6 +467,7 @@ class ResponseMatrix(_SvdSolver):
             VariableList(self.variables + other.variables),
             self.observables + other.observables,
             ring=self.ring,
+            eval_kw=self.eval_kw,
         )
 
     def __str__(self):
@@ -522,7 +527,7 @@ class ResponseMatrix(_SvdSolver):
         sumcorr = np.array([0.0])
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,)), strict=True):
             print(f"step {it + 1}, nvals = {nv}")
-            obs.evaluate(ring, **self._eval_args)
+            obs.evaluate(ring, **self.eval_kw)
             deviation = obs.flat_deviations
             if np.any(np.isnan(deviation)):
                 msg = f"Step {it + 1}: Invalid observables, cannot compute correction."
@@ -568,7 +573,7 @@ class ResponseMatrix(_SvdSolver):
         Returns:
             response:       Response matrix
         """
-        self._eval_args = kwargs
+        self.eval_kw.update(kwargs)
 
         if use_mp:
             global _globring
@@ -582,7 +587,7 @@ class ResponseMatrix(_SvdSolver):
                 self.ring,
                 self.observables,
                 checkfun=_PicklableFunction(checkfun),
-                **kwargs,
+                **self.eval_kw,
             )
             with (
                 concurrent.futures.ProcessPoolExecutor(
@@ -601,14 +606,14 @@ class ResponseMatrix(_SvdSolver):
                     self.observables,
                     self.variables,
                     checkfun=checkfun,
-                    **kwargs,
+                    **self.eval_kw,
                 )
 
         resp = np.stack(results, axis=-1)
         self.response = resp
         return resp
 
-    def build_analytical(self) -> FloatArray:
+    def build_analytical(self, **kwargs) -> FloatArray:
         """Build the response matrix."""
         msg = f"build_analytical not implemented for {self.__class__.__name__}."
         raise NotImplementedError(msg)
@@ -1024,9 +1029,10 @@ class OrbitResponseMatrix(ResponseMatrix):
                 tau += 2.0 * pi_tune
             return tau - pi_tune
 
+        self.eval_kw.update(kwargs)
         ring = self.ring
         pl = self.plane
-        _, ringdata, elemdata = ring.linopt6(All, **kwargs)
+        _, ringdata, elemdata = ring.linopt6(All, **self.eval_kw)
         pi_tune = math.pi * ringdata.tune[pl]
         dataw = elemdata[self.steerrefs]
         dataj = elemdata[self.bpmrefs]
@@ -1188,10 +1194,11 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         Returns:
             response:       Response matrix
         """
+        self.eval_kw.update(kwargs)
+        self.eval_kw.setdefault("twiss_in", self._default_twiss_in)
         ring = self.ring
         pl = self.plane
-        twiss_in = self._eval_args.get("twiss_in", self._default_twiss_in)
-        _, _, elemdata = ring.linopt6(All, twiss_in=twiss_in, **kwargs)
+        _, _, elemdata = ring.linopt6(All, **self.eval_kw)
         dataj = elemdata[self.bpmrefs]
         dataw = elemdata[self.steerrefs]
         lw = np.array([elem.Length for elem in ring.select(self.steerrefs)])
