@@ -455,16 +455,19 @@ class Multipole(XsElement):
             return porder, np.fromiter(poly_from_mad(poly), dtype=float, count=lpoly)
 
         length = self.get("length", 0.0)
-        xsorder = self["order"]
+        xsorder = self.get("order", 0)
         atorder = getattr(self._atClass, "DefaultOrder", xsorder)
         aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
         border, polyb = xspoly(["k0", "k1", "k2", "k3"], "knl")
         maxorder = max(aorder, border)
-        return {
+        atparams = {
             "MaxOrder": maxorder,
             "PolynomB": polyb[: maxorder + 1],
             "PolynomA": polya[: maxorder + 1],
         }
+        if (taper := self.get("delta_taper")) is not None:
+            atparams["FieldScaling"] = 1.0 + taper
+        return atparams
 
     def _set_at_fringe(self):
         """generate the AT fringe field description."""
@@ -524,6 +527,8 @@ class Multipole(XsElement):
         if np.any(pola) or np.any(polb):
             self["knl"] = list(polb)
             self["ksl"] = list(pola)
+        if (scaling := atparams.get("FieldScaling")) is not None:
+            self["delta_taper"] = scaling - 1.0
         if korder == 1:
             self["edge_entry_active"] = atparams.get("FringeQuadEntrance", 0)
             self["edge_exit_active"] = atparams.get("FringeQuadExit", 0)
@@ -604,6 +609,7 @@ class Bend(Multipole):
         "edge_exit_angle": "ExitAngle",
     }
     _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
+    _mag_order = 1
 
     def _set_at_fringe(self) -> dict[str, Any]:
 
@@ -877,11 +883,15 @@ class XsLine:
             cell_length = 0.0
 
             for nm in element_names:
-                for elem in self.elements[nm].to_at():
-                    if isinstance(elem, elt.RFCavity):
-                        cavities.append(elem)
-                    cell_length += getattr(elem, "Length", 0.0)
-                    yield elem
+                try:
+                    for elem in self.elements[nm].to_at():
+                        if isinstance(elem, elt.RFCavity):
+                            cavities.append(elem)
+                        cell_length += getattr(elem, "Length", 0.0)
+                        yield elem
+                except Exception as exc:
+                    exc.args = (f"In element {nm!r}: {exc.args[0]}",)
+                    raise
 
             rev = beta0 * cst.clight / cell_length
 
