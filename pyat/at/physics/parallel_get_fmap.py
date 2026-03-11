@@ -455,9 +455,11 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
     .. note::
 
        * ``use_mp=True`` or at.MPMode.CPUs are the only options available.
-       * Diffussion is calculated in a moving window, as in [1]
+       * Diffussion is calculated in a moving window, as in ref. [2]
 
-       [1] D. Shatilov, E. Levichev, E. Simonov, M.. Zobov. Application of frequency map
+       [1] J. Laskar, in Proceedings of the 20th Particle Accelerator Conference,
+       Portland, OR, 2003 (IEEE, New York, 2003), p. 378.
+       [2] D. Shatilov, E. Levichev, E. Simonov, M.. Zobov. Application of frequency map
        analysis to beam-beam effects study in crab waist collision scheme.
        Phys. Rev. ST Accel. Beams 14, 014001, 2011.
     """
