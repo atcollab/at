@@ -529,12 +529,6 @@ class Multipole(XsElement):
             self["ksl"] = list(pola)
         if (scaling := atparams.get("FieldScaling")) is not None:
             self["delta_taper"] = scaling - 1.0
-        if korder == 1:
-            self["edge_entry_active"] = atparams.get("FringeQuadEntrance", 0)
-            self["edge_exit_active"] = atparams.get("FringeQuadExit", 0)
-        elif atparams.get("BendingAngle", 0.0) == 0.0:
-            self["edge_exit_active"] = 0
-            self["edge_entry_active"] = 0
         self["_isthick"] = length != 0.0
 
     def _set_xs_fringe(self, atparams: dict):
