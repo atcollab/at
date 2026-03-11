@@ -1,76 +1,119 @@
 """This script calculates the frequency and diffussion maps."""
 
-# oblanco 2026jan06
+# oblanco ALBA CELLS 2026jan06 use custom parallelization
 
 from __future__ import annotations
+
 from collections import defaultdict
+from multiprocessing import Manager, Process, Queue, Value, cpu_count, current_process
+from time import sleep
 
 import numpy as np
 
+# psutil is not a requirement but could be useful
 try:
     # noinspection PyPackageRequirements
     import psutil
-    psutil_found = True
+
+    PSUTIL_FOUND = True
 except (ImportError, RuntimeError):
-    msg = 'psutil is unavailable => memory management is disabled.\n' + \
-          'To enable memory management, run "pip install psutil"'
-    print(msg)
-    psutil_found = False
-import os
+    MSG = (
+        "psutil is unavailable => memory management is disabled.\n"
+        + 'To enable memory management, run "pip install psutil"'
+    )
+    print(MSG)
+    PSUTIL_FOUND = False
+
 import at
-from time import sleep
-from at.lattice import Lattice, Refpts
+from at.lattice import AtError, Lattice
 from at.tracking import MPMode, gpu_core_count
-from multiprocessing import Manager, Process, Queue, cpu_count, current_process, Value
+
+# Jaime Coello de Portugal (JCdP) frequency analysis implementation
+from .harmonic_analysis import get_tunes_harmonic
 
 __all__ = ["get_fmap"]
 
-_coord_index = np.array([("x",0), ("px", 1), ("y", 2), ("py", 3), ("dp", 4), ("ct", 5)])
+# reference system coordinate names and indexes
+_coord_index = np.array(
+    [("x", 0), ("px", 1), ("y", 2), ("py", 3), ("dp", 4), ("ct", 5)]
+)
+
 
 def get_mem_info(pid: int) -> dict[str, int]:
-  res = defaultdict(int)
-  mmap = psutil.Process(pid).memory_full_info()
-  res['pss'] = mmap.pss
-  return res
+    """Get memory info.
+
+    Args:
+        pid: process ID
+
+    Returns:
+        A dictionary with the pss memory from psutil.
+    """
+    res = defaultdict(int)
+    mmap = psutil.Process(pid).memory_full_info()
+    res["pss"] = mmap.pss
+    return res
 
 
-def get_ram_info():
+def get_ram_info() -> tuple:
+    """Get ram memory info.
+
+    Returns:
+        Tuple of total ram, available ram, used ram, free ram,
+        and percentage used obtained from psutil
+    """
     ram = psutil.virtual_memory()
-    total_ram = ram.total # total installed RAM
-    available_ram = ram.available # RAM available for processes
-    used_ram = ram.used # RAM used by processes
-    free_ram = ram.free # RAM not being used
-    percent_used = ram.percent # percentage of RAM used
+    total_ram = ram.total  # total installed RAM
+    available_ram = ram.available  # RAM available for processes
+    used_ram = ram.used  # RAM used by processes
+    free_ram = ram.free  # RAM not being used
+    percent_used = ram.percent  # percentage of RAM used
     return total_ram, available_ram, used_ram, free_ram, percent_used
 
-def get_swap_info():
+
+def get_swap_info() -> tuple:
+    """Get swap memory info.
+
+    Returns:
+        Tuple of total swap, used swap, free swap and percentage
+        used obtained from psutil
+    """
     swap = psutil.swap_memory()
-    total_swap = swap.total # total installed RAM
-    used_swap = swap.used # RAM used by processes
-    free_swap = swap.free # RAM not being used
-    percent_used = swap.percent # percentage of RAM used
+    total_swap = swap.total  # total installed RAM
+    used_swap = swap.used  # RAM used by processes
+    free_swap = swap.free  # RAM not being used
+    percent_used = swap.percent  # percentage of RAM used
 
     return total_swap, used_swap, free_swap, percent_used
 
-def estimate_memory_resources(**kwargs):
+
+def estimate_memory_resources(**kwargs: dict[str:any]) -> tuple:
+    """Estimate the memory resources.
+
+    Arguments:
+        kwargs:
+            verbose: default False
+            mem_marging: minimum memory to keep free. Default np.nan.
+
+    Returns:
+        A tuple with the estimated free memory and the safe margin
+    """
     # estimate memory resources
     verbose = kwargs.pop("verbose", False)
-    mem_margin = kwargs.pop("mem_margin", np.nan)*1024*1024
-    ramtot,_,_,ramfree,_ = get_ram_info()
-    swaptot,_,swapfree,_ = get_swap_info()
-    onehundredmegabytes = 100*1024*1024
-    safe_margin = min(onehundredmegabytes,1/32*ramtot,1/4*swaptot)
+    mem_margin = kwargs.pop("mem_margin", np.nan) * 1024 * 1024
+    ramtot, _, _, ramfree, _ = get_ram_info()
+    swaptot, _, swapfree, _ = get_swap_info()
+    onehundredmegabytes = 100 * 1024 * 1024
+    safe_margin = min(onehundredmegabytes, 1 / 32 * ramtot, 1 / 4 * swaptot)
     if not np.isnan(mem_margin):
         safe_margin = mem_margin
     estimated_freemem = ramfree + swapfree
     if verbose:
-        msg = f'Estimated free memory : {estimated_freemem/1024/1024:.3f} MB, ' + \
-              f'Memory safe margin : {safe_margin/1024/1024:.3f} MB'
+        msg = (
+            f"Estimated free memory : {estimated_freemem/1024/1024:.3f} MB, "
+            + f"Memory safe margin : {safe_margin/1024/1024:.3f} MB"
+        )
         print(msg)
     return estimated_freemem, safe_margin
-
-def grid_configuration(planes,axes,window,shift_zero=1.0e-6):
-    pass
 
 
 def track_queue(
@@ -82,7 +125,6 @@ def track_queue(
     task_to_accomplish: list,
     nuaxes: tuple,
     worker_id: list,
-    needed_mem: float,
     mem_limit: float,
     used_mem: list,
     mem_margin: float,
@@ -98,89 +140,128 @@ def track_queue(
 ) -> None:
     """Track particles with index inside queue.
 
-    Parameters:
-        ring: pyat ring
-        zin: particles coordinates (6,nparticles)
-        nturns: number of tracking turns
-        task_to_accomplish: list with indexes of particles to track
+    Arguments:
+        ring: an pyat ring
+        zin: input particles
+        nparticles: number of particles
+        nturns: number of turns.
+        n_moving_slices: moving slices for frequency analysis
+        task_to_accomplish: list of particles not yet tracked
+        nuaxes: axes for frequency analysis
+        worker_id: cpu ID processing a particle
+        mem_limit: max memory allowed
+        used_mem: estimation of the memor used
+        mem_margin: minimun free memory at any time
+        turns_per_particle: number of turns before the particle is lost
+        elem_particle_lost: element where the particle is lost
+        x1freq: tune on axis1
+        x2freq: tune on axis2
+        x1diff: tune std on axis1
+        x2diff: tune std on axis2
+        nudiff: 0.5*log10(dnuaxis1**2 + dnuaxis2**2)
+        verbose: print info
+        kwargs: keywords to pass to the tracking function
     """
     while not task_to_accomplish.empty():
-
         estimated_freemem = np.inf
         safe_margin = 0
-        if psutil_found:
-            estimated_freemem, safe_margin = estimate_memory_resources(verbose=verbose,mem_margin=mem_margin)
+        if PSUTIL_FOUND:
+            estimated_freemem, safe_margin = estimate_memory_resources(
+                verbose=verbose, mem_margin=mem_margin
+            )
             if not np.isnan(mem_margin):
                 safe_margin = mem_margin
         while estimated_freemem < safe_margin:
             if verbose:
-                print('waiting for free memory ...')
+                print("waiting for free memory ...")
             sleep(5)
         while used_mem.value > mem_limit:
             if verbose:
-                print('using too much memory, waiting ...')
+                print("using too much memory, waiting ...")
             sleep(5)
         task_id = task_to_accomplish.get(block=True, timeout=10)
         current = current_process()
         worker_id[task_id] = current.pid
         # we track twice the number of nturns in order to get two frequencies
-        zout, _, loss_info = ring.track(zin[:, task_id], 2*nturns, losses=True, **kwargs)
-        msg_mem_info = ''
-        if psutil_found:
-            monitor_data = get_mem_info(current.pid)['pss']
+        zout, _, loss_info = ring.track(
+            zin[:, task_id], 2 * nturns, losses=True, **kwargs
+        )
+        msg_mem_info = ""
+        if PSUTIL_FOUND:
+            monitor_data = get_mem_info(current.pid)["pss"]
             with used_mem.get_lock():
                 used_mem.value = used_mem.value + monitor_data
-                msg_mem_info = f'Used mem: {used_mem.value/1024/1024:.3f} MB, '
+                msg_mem_info = f"Used mem: {used_mem.value/1024/1024:.3f} MB, "
         if verbose:
-           msg = msg_mem_info + f'cpu id {current.pid}, ' + \
-                 f'running particle id {task_id} of {nparticles}'
-           print(msg)
+            msg = (
+                msg_mem_info
+                + f"cpu id {current.pid}, "
+                + f"running particle id {task_id} of {nparticles}"
+            )
+            print(msg)
         # if the particle is lost
-        if loss_info['loss_map']['islost'][0]:
-            print('particle is lost')
-            turns_per_particle[task_id] = loss_info['loss_map']['turn'][0]
-            elem_particle_lost[task_id] = loss_info['loss_map']['elem'][0]
+        if loss_info["loss_map"]["islost"][0]:
+            turns_per_particle[task_id] = loss_info["loss_map"]["turn"][0]
+            elem_particle_lost[task_id] = loss_info["loss_map"]["elem"][0]
         else:
-        # get the tunes
+            # get the tunes
             zout = zout.squeeze()
-            tune_per_window = np.empty((2,n_moving_slices))
+            tune_per_window = np.empty((2, n_moving_slices))
             tune_per_window[:] = np.nan
-            shift_n = np.floor_divide(2*nturns,n_moving_slices)
+            shift_n = np.floor_divide(2 * nturns, n_moving_slices)
             for i in range(n_moving_slices):
-                lim_inf = i*shift_n
-                lim_sup = (i+1)*shift_n
-                z1 = zout[nuaxes[0],lim_inf:lim_sup]
-                z2 = zout[nuaxes[1],lim_inf:lim_sup]
-                z1 = z1 - z1.mean()
-                z2 = z2 - z2.mean()
-                tune1 = at.harmonic_analysis.get_tunes_harmonic(z1)
-                tune2 = at.harmonic_analysis.get_tunes_harmonic(z2)
+                lim_inf = i * shift_n
+                lim_sup = (i + 1) * shift_n
+                z_1 = zout[nuaxes[0], lim_inf:lim_sup]
+                z_2 = zout[nuaxes[1], lim_inf:lim_sup]
+                z_1 = z_1 - z_1.mean()
+                z_2 = z_2 - z_2.mean()
+                tune1 = get_tunes_harmonic(z_1)
+                tune2 = get_tunes_harmonic(z_2)
                 if len(tune1) == 0 or len(tune2) == 0:
                     continue
-                tune_per_window[0,i] = tune1[0]
-                tune_per_window[1,i] = tune2[0]
+                tune_per_window[0, i] = tune1[0]
+                tune_per_window[1, i] = tune2[0]
             # metric
-            dnu1,dnu2 = np.nanstd(tune_per_window,axis=1)
-            dnu_norm = 0.5*np.log10(dnu1*dnu1 + dnu2*dnu2)
+            dnu1, dnu2 = np.nanstd(tune_per_window, axis=1)
+            dnu_norm = 0.5 * np.log10(dnu1 * dnu1 + dnu2 * dnu2)
             # min max diff
             if dnu_norm > -2:
                 dnu_norm = -2
             if dnu_norm < -10:
                 dnu_norm = -10
-            #update
-            turns_per_particle[task_id] = 2*nturns
-            x1freq[task_id] = np.nanmean(tune_per_window[0,:])
-            x2freq[task_id] = np.nanmean(tune_per_window[1,:])
-            x2freq[task_id] = tune2
+            # update
+            turns_per_particle[task_id] = 2 * nturns
+            x1freq[task_id] = np.nanmean(tune_per_window[0, :])
+            x2freq[task_id] = np.nanmean(tune_per_window[1, :])
             x1diff[task_id] = dnu1
             x2diff[task_id] = dnu2
             nudiff[task_id] = dnu_norm
-        if psutil_found:
+        if PSUTIL_FOUND:
             with used_mem.get_lock():
                 used_mem.value = used_mem.value - monitor_data
 
 
-def check_parallel_resources(use_mp,pool_size,gpu_pool,kwargs,verbose):
+def check_parallel_resources(
+    use_mp: bool | at.MPMode,
+    pool_size: int,
+    gpu_pool: list,
+    kwargs: dict[str, any],
+    verbose: bool,
+) -> tuple:
+    """Check parallel resources.
+
+    Arguments:
+        use_mp: Choose parallelization mode. True (CPU), at.MPMode.CPU, at.MPMode.GPU
+        pool_size: integer number of workers to use
+        gpu_pool: list with integer number of GPU to use
+        kwargs: dictionary to include the gpu_pool parameters
+        verbose: print info
+
+    Returns:
+        A tuple with the number of workers to upse and a dictionary with
+        parallelization parameters
+    """
     # For backward compatibility (use_mp can be a boolean)
     if use_mp is True:
         use_mp = MPMode.CPU
@@ -191,20 +272,20 @@ def check_parallel_resources(use_mp,pool_size,gpu_pool,kwargs,verbose):
         else:
             nprocu = pool_size
         if verbose:
-            msg = f"{nprocu} of {nproc} cpu used frequency map calculation\n" + \
-                   "Multi-process acceptance calculation selected..."
+            msg = (
+                f"{nprocu} of {nproc} cpu used frequency map calculation\n"
+                + "Multi-process acceptance calculation selected..."
+            )
             print(msg)
-        if nproc == 1:
-            if verbose:
-                print("Consider use_mp=False for single core computations")
+        if nproc == 1 and verbose:
+            print("Consider use_mp=False for single core computations")
     elif use_mp is MPMode.GPU:
-        print(type(gpu_pool))
-        print(gpu_pool)
         nprocu = gpu_core_count(gpu_pool)
         kwargs["gpu_pool"] = gpu_pool if gpu_pool is not None else [0]
         if verbose:
-            msg = f"\n{nprocu} GPU cores found" + \
-                  "GPU acceptance calculation selected..."
+            msg = (
+                f"\n{nprocu} GPU cores found" + "GPU acceptance calculation selected..."
+            )
             print(msg)
     else:
         nprocu = 1
@@ -213,13 +294,34 @@ def check_parallel_resources(use_mp,pool_size,gpu_pool,kwargs,verbose):
         if nproc > 1 and verbose:
             print("Consider use_mp=True for parallelized computations")
 
-    return nprocu,kwargs
+    return nprocu, kwargs
 
 
-def generate_grid(grid_size,window,offset,shift_zero,axes):
+def generate_grid(
+    grid_size: list | tuple,
+    window: list | tuple,
+    offset: np.ndarray,
+    shift_zero: float,
+    axes: np.ndarray,
+) -> tuple:
+    """Generate a particle 2D grid.
 
+    Arguments:
+        grid_size: the number of points per axis
+        window: [min_axis1,max_axis1,min_axis2,max_axis2]
+        offset: 6D offset for the particle tracking
+        shift_zero: small displacement to the 2D particles
+        axes: defines the planes for the grid
+
+    Returns:
+        A tuple with the number of particles, the number of dimension,
+        the 2D points, and an array of 6D particles
+
+    Raises:
+        AtError if the window is not well defined
+    """
     if window[0] == window[1] or window[2] == window[3]:
-        verboseprint("Window is too narrow")
+        raise AtError("Window is too narrow")
 
     n_x1, n_x2 = grid_size
     min_x1 = min(window[0:2])
@@ -230,132 +332,169 @@ def generate_grid(grid_size,window,offset,shift_zero,axes):
     x2vals = np.linspace(min_x2, max_x2, n_x2)
 
     nparticles = n_x1 * n_x2
-    points = np.zeros((nparticles,2))
+    points = np.zeros((nparticles, 2))
 
-    for i,x1val in enumerate(x1vals):
-        for j,x2val in enumerate(x2vals):
-            points[i*n_x2+j,0] = x1vals[i]
-            points[i*n_x2+j,1] = x2vals[j]
+    for _i in range(n_x1):
+        for _j in range(n_x2):
+            points[_i * n_x2 + _j, 0] = x1vals[_i]
+            points[_i * n_x2 + _j, 1] = x2vals[_j]
 
     ndims = 6
-    particles = np.zeros((ndims,nparticles))
-    particles = particles + offset.reshape((6,1))
+    particles = np.zeros((ndims, nparticles))
+    particles = particles + offset.reshape((6, 1))
     particles[axes[0], :] = particles[axes[0], :] + points[:, 0] + shift_zero
     particles[axes[1], :] = particles[axes[1], :] + points[:, 1] + shift_zero
 
-    return nparticles,ndims,points,particles
+    return nparticles, ndims, points, particles
 
-def adapt_particles(user_particles,axes):
+
+def adapt_particles(user_particles: np.ndarray, axes: np.ndarray) -> tuple:
+    """Adapt the particles given by the user.
+
+    Arguments:
+        user_particles: (6,n) particle array
+        axes: planes to consider for the grid
+
+    Returns:
+        Tuple with number of particles, the number of dimensions, the points
+        of reference, and the particles provided by the user
+    """
     ndims, nparticles = user_particles.shape
-    points = user_particles[axes,:]
-    return nparticles,ndims,points,user_particles
+    points = user_particles[axes, :]
+    return nparticles, ndims, points, user_particles
 
-def coord_to_indexes(useraxes):
-    user_prefers_indexes = np.all([isinstance(i,int) for i in useraxes])
+
+def coord_to_indexes(useraxes: list | tuple) -> np.ndarray:
+    """Transform user coordinate names to pyat indexes.
+
+    Arguments:
+        useraxes: user axes
+
+    Returns:
+        Numpy array with indexes corresponding to the user coordinate names
+    """
+    user_prefers_indexes = np.all([isinstance(i, int) for i in useraxes])
     if not user_prefers_indexes:
-        axes = np.zeros((len(useraxes)),dtype=int)
-        for i,ax in enumerate(useraxes):
-            mask = _coord_index[:,0] == ax
-            axes[i] = int(np.squeeze(_coord_index[mask,1][0]))
+        axes = np.zeros((len(useraxes)), dtype=int)
+        for _i, _ax in enumerate(useraxes):
+            mask = _coord_index[:, 0] == _ax
+            axes[_i] = int(np.squeeze(_coord_index[mask, 1][0]))
     else:
         axes = np.array(useraxes)
     return axes
 
-def get_fmap(
-        ring: Lattice,
-        **kwargs):
-    r"""Compute the frequency and diffussion maps of a ring.
 
-    Parameters:
-        ring:           Lattice definition
-        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
-          ``'yp'``, ``'dp'``, ``'ct'``
-        npoints:        (len(planes),) array: number of points in each
-          dimension
-        amplitudes:     (len(planes),) array: set the search range:
-        nturns:         Number of turns for the tracking
-        refpts:         Observation points. Default: start of the machine
-        dp:             static momentum offset
-        offset:         initial orbit. Default: closed orbit
-        use_mp:         Flag to activate CPU or GPU multiprocessing
-          (default: False)
-        gpu_pool:       List of GPU id to use when use_mp is
-          :py:attr:`at.tracking.MPMode.GPU`. If None specified, if gets
-          first GPU.
-        verbose:        Print out some information
-        shift_zero: Epsilon offset applied on all 6 coordinates
-        start_method:   Python multiprocessing start method. The default
-          ``None`` uses the python default that is considered safe.
-          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for macOS and
-          Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
-          the calculation or to solve runtime errors, however it is
-          considered unsafe.
+def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
+    """Compute the frequency and diffussion maps of a ring.
 
-    _pdict = {"x": 0, "xp": 1, "y": 2, "yp": 3, "dp": 4, "ct": 5}
+    Arguments:
+        ring: Lattice definition
+        kwargs: any of the following.
+            nturns: Number of turns for the tracking
+            axes: a list or tuple of coordinates.
+            Allowed values are: ``'x'``, ``'px'``, ``'y'``,
+            ``'py'``, ``'dp'``, ``'ct'`` or numbers from 0 to 5
+            nuaxes: index of axes to extract the tunes. Default (0,2)
+            n_moving_slices: tune is extracted n times from a moving window
+            over two times nturns. Default 2. See [2].
+            particles: (6,n) particle array to track. If not given a rectangular
+            grid of particles is created using 'window' and 'grid_size'
+            window: list or tuple with (axis1_min,axis1_max,axis2_min,axis2_max)
+            grid_size: (n_axis1,n_axis2) number of points per plane
+            offset: 6D offset for all particles. Default np.zeros((6))
+            shift_zero: small offset applied only on the axes. Default 10e-5
+            verbose: print additional info
+            use_mp: Default True. Only CPU parallelization is implemente, not GPU.
+            pool_size: number of CPUs to use, otherwise it uses all available
+            max_mem: memory usage limit in MB. If given, memory_margin is ignored.
+            otherwise, all the memory available is estimated and used as max.
+            Requires psutil
+            memory_margin: minimum memory to keep free in MB. If max_mem is not given
+            it estimates the available and sets a margin of 100 MB.
+            Requires psutil
+
     Returns:
-        boundary:   (2,n) array: 2D acceptance
-        survived:   (2,n) array: Coordinates of surviving particles
-        tracked:    (2,n) array: Coordinates of tracked particles
-
-    In case of multiple refpts, return values are lists of arrays, with one
-    array per ref. point.
+        A dictionary containing
+            name_of_axis1:, and the starting point on axis1 for all tracked particles
+            name_of_axis2:, and the starting point on axis2 for all tracked particles
+            "axes_indexes": array with the indexes of axis1 and axis2
+            "axes_names": array with the axis1 and axis2 names
+            "nu_axes_indexes": array with the axes indexes used for frequency analysis
+            "nu_axes_names": array with the names of the axis for frequency analysis
+            "nturns": number of turns. Note that the algorithm required 2*nturns.
+            "nu_+name_of_axis1": tune on the axis1 per particles
+            "nu_+name_of_axis2": tune on the axis2 per particle
+            "dnu_+name_of_axis1": std of the tune on axis1
+            "dnu_+name_of_axis2": std of the tune on axis2
+            "dnulog10": log10 of the sqrt of the quadratic sum of dnu
+            "turns_per_particle": number of turns before the particles was lost
+            "elem_particle_lost": element where the particle was lost
+            "worker_id": cpu ID who tracked the particle
 
     Examples:
 
-        >>> bf, sf, gf = ring.get_acceptance(planes, npoints, amplitudes)
-        >>> plt.plot(*gf, ".")
-        >>> plt.plot(*sf, ".")
-        >>> plt.plot(*bf)
-        >>> plt.show()
+        >>> fmapdata = get_fmap(
+                ring,
+                window=(-10e-3,10e-3,-10e-3,10e-3),
+                offset=np.array([0,0,0,0,eoffset,0]),
+                grid_size=(100,100),
+                axes=('x','y'),
+                n_moving_slices=10,
+                shift_zero=1e-9,
+                verbose=False,
+                use_mp=at.MPMode.CPU,
+                pool_size=pool_size,
+                nturns=1024,
+                max_mem=2048,
+                mem_margin=0,
+                )
+
+        >>> # filter only the surving particles
+        >>> mask = ~np.isnan(fmapdata['dnulog10'])
 
     .. note::
 
-       * When``use_mp=True`` all the available CPUs will be used.
-         This behavior can be changed by setting
-         ``at.DConstant.patpass_poolsize`` to the desired value
-       * When multiple ``refpts`` are provided particles are first
-         projected to the beginning of the ring with tracking. Then,
-         all particles are tracked up to ``nturns``. This allows to
-         do most of the work in a single function call and allows for
-         full parallelization.
+       * ``use_mp=True`` or at.MPMode.CPUs are the only options available.
+       * Diffussion is calculated in a moving window, as in [1]
+
+       [1] D. Shatilov, E. Levichev, E. Simonov, M.. Zobov. Application of frequency map
+       analysis to beam-beam effects study in crab waist collision scheme.
+       Phys. Rev. ST Accel. Beams 14, 014001, 2011.
     """
-    #if start_method is not None:
-    #    kwargs["start_method"] = start_method
-
-
     # initialize variables
     nturns = kwargs.pop("nturns", 1000)
-    useraxes = kwargs.pop("axes", ('x','px'))
+    useraxes = kwargs.pop("axes", ("x", "px"))
     usernuaxes = kwargs.pop("nuaxes", (0, 2))
-    n_moving_slices = kwargs.pop('n_moving_slices',2)
+    n_moving_slices = kwargs.pop("n_moving_slices", 2)
     user_particles = kwargs.pop("particles", np.nan)
     window = kwargs.pop("window", (-10e-3, 10e-3, -10e-3, 10e-3))
     grid_size = kwargs.pop("grid_size", (10, 10))
     offset = kwargs.pop("offset", np.zeros((6)))
-    shift_zero = kwargs.pop("shift_zero",1e-5)
+    shift_zero = kwargs.pop("shift_zero", 1e-5)
     verbose = kwargs.pop("verbose", False)
-    use_mp = kwargs.pop("use_mp", False)
+    use_mp = kwargs.pop("use_mp", True)
     pool_size = kwargs.pop("pool_size", np.nan)
-    gpu_pool = kwargs.pop('gpu_pool',[0])
+    gpu_pool = kwargs.pop("gpu_pool", [0])
     max_mem = kwargs.pop("max_mem", np.nan)
-    mem_margin = kwargs.pop("mem_margin", np.nan*1024*1024)
+    mem_margin = kwargs.pop("mem_margin", np.nan * 1024 * 1024)
 
     verboseprint = print if verbose else lambda *a, **k: None
 
-    nprocu,kwargs = check_parallel_resources(use_mp,pool_size,gpu_pool,kwargs,verbose)
+    nprocu, kwargs = check_parallel_resources(
+        use_mp, pool_size, gpu_pool, kwargs, verbose
+    )
 
     axes = coord_to_indexes(useraxes)
-    verboseprint(f'Using axes {_coord_index[axes,0]}')
+    verboseprint(f"Using axes {_coord_index[axes,0]}")
     nuaxes = coord_to_indexes(usernuaxes)
-    verboseprint(f'Using tune axes {_coord_index[nuaxes,0]}')
+    verboseprint(f"Using tune axes {_coord_index[nuaxes,0]}")
 
     if not np.any(np.isnan(user_particles)):
-        nparticles,ndims,points,particles = adapt_particles(user_particles,axes)
+        nparticles, ndims, points, particles = adapt_particles(user_particles, axes)
     else:
-        nparticles,ndims,points,particles = generate_grid(grid_size,window,offset,shift_zero,axes)
-
+        nparticles, ndims, points, particles = generate_grid(
+            grid_size, window, offset, shift_zero, axes
+        )
 
     verboseprint(f"Number of grid points: {nparticles}")
 
@@ -367,22 +506,27 @@ def get_fmap(
 
     estimated_freemem = np.inf
     safe_margin = 0
-    max_mem = estimated_freemem
-    if psutil_found:
-        estimated_freemem, safe_margin = estimate_memory_resources(verbose=verbose,mem_margin=mem_margin)
+    if PSUTIL_FOUND:
+        estimated_freemem, safe_margin = estimate_memory_resources(
+            verbose=verbose, mem_margin=mem_margin
+        )
         if np.isnan(max_mem):
             if not np.isnan(mem_margin):
-                print('User memory margin {mem_margin/1024/1024} MB')
+                print("User memory margin {mem_margin/1024/1024} MB")
                 safe_margin = mem_margin
             max_mem = estimated_freemem - safe_margin
-    mem_limit = max_mem*1024*1024
-    verboseprint(f'Memory usage limit set to {mem_limit/1024/1024} MB')
+    mem_limit = max_mem * 1024 * 1024
+    verboseprint(f"Memory usage limit set to {mem_limit/1024/1024} MB")
 
     # estimate memory usage
-    floatsize = 8 # bytes in python
-    n_in_parallel = min(nparticles,nprocu)
-    needed_mem = floatsize*ndims*n_in_parallel*nturns*2 # we track twice the nturns
-    verboseprint(f"Estimated max. memory necessary for tracking: {needed_mem/1024/1024:.3} MB")
+    floatsize = 8  # bytes in python
+    n_in_parallel = min(nparticles, nprocu)
+    needed_mem = (
+        floatsize * ndims * n_in_parallel * nturns * 2
+    )  # we track twice the nturns
+    verboseprint(
+        f"Estimated max. memory necessary for tracking: {needed_mem/1024/1024:.3} MB"
+    )
 
     verboseprint("Tracking...")
 
@@ -395,7 +539,7 @@ def get_fmap(
     x1diff = manager.list(nparticles * [np.nan])
     x2diff = manager.list(nparticles * [np.nan])
     nudiff = manager.list(nparticles * [np.nan])
-    used_memory = Value('i',0)
+    used_memory = Value("i", 0)
     for _worker in range(nprocu):
         prc = Process(
             target=track_queue,
@@ -432,20 +576,20 @@ def get_fmap(
 
     verboseprint("done")
 
-    return {_coord_index[axes[0],0]: points[:,0],
-            _coord_index[axes[1],0]: points[:,1],
-            'axes_indexes': np.array(axes),
-            'axes_names': np.array(_coord_index[axes,0]),
-            'nu_axes_indexes': np.array(nuaxes),
-            'nu_axes_names': np.array(_coord_index[axes,0]),
-            'nturns': np.array(nturns),
-            'nu_'+_coord_index[axes[0],0]: np.array(x1freq),
-            'nu_'+_coord_index[axes[1],0]: np.array(x2freq),
-            'dnu_'+_coord_index[axes[0],0]: np.array(x1diff),
-            'dnu_'+_coord_index[axes[1],0]: np.array(x2diff),
-            'dnulog10': np.array(nudiff),
-            'turns_per_particle': np.array(turns_per_particle),
-            'elem_particle_lost': np.array(elem_particle_lost),
-            'worker_id': np.array(worker_id),
-            }
-
+    return {
+        _coord_index[axes[0], 0]: points[:, 0],
+        _coord_index[axes[1], 0]: points[:, 1],
+        "axes_indexes": np.array(axes),
+        "axes_names": np.array(_coord_index[axes, 0]),
+        "nu_axes_indexes": np.array(nuaxes),
+        "nu_axes_names": np.array(_coord_index[axes, 0]),
+        "nturns": np.array(nturns),
+        "nu_" + _coord_index[axes[0], 0]: np.array(x1freq),
+        "nu_" + _coord_index[axes[1], 0]: np.array(x2freq),
+        "dnu_" + _coord_index[axes[0], 0]: np.array(x1diff),
+        "dnu_" + _coord_index[axes[1], 0]: np.array(x2diff),
+        "dnulog10": np.array(nudiff),
+        "turns_per_particle": np.array(turns_per_particle),
+        "elem_particle_lost": np.array(elem_particle_lost),
+        "worker_id": np.array(worker_id),
+    }
