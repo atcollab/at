@@ -554,7 +554,6 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
                 task_to_accomplish,
                 nuaxes,
                 worker_id,
-                needed_mem,
                 mem_limit,
                 used_memory,
                 mem_margin,
