@@ -390,39 +390,43 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
     Arguments:
         ring: Lattice definition
         kwargs: any of the following.
-            nturns: Number of turns for the tracking
+            nturns: Number of turns for the tracking. See notes.
             axes: a list or tuple of coordinates.
             Allowed values are: ``'x'``, ``'px'``, ``'y'``,
             ``'py'``, ``'dp'``, ``'ct'`` or numbers from 0 to 5
             nuaxes: index of axes to extract the tunes. Default (0,2)
-            n_moving_slices: tune is extracted n times from a moving window
-            over two times nturns. Default 2. See [2].
+            n_moving_slices: number of moving windows to extract the tune.
+            Default 2. See notes and ref. [2].
             particles: (6,n) particle array to track. If not given a rectangular
             grid of particles is created using 'window' and 'grid_size'
             window: list or tuple with (axis1_min,axis1_max,axis2_min,axis2_max)
+            Note that window is only used if particles are not given.
             grid_size: (n_axis1,n_axis2) number of points per plane
+            Note that grid_size is only used if particles are not given.
             offset: 6D offset for all particles. Default np.zeros((6))
+            Note that offset is only used if particles are not given.
             shift_zero: small offset applied only on the axes. Default 10e-5
-            verbose: print additional info
+            Note that shift_zero is not used if particles are not given.
+            verbose: print additional info, e.g. the cpu ID, the particle counter.
             use_mp: Default True. Only CPU parallelization is implemente, not GPU.
             pool_size: number of CPUs to use, otherwise it uses all available
-            max_mem: memory usage limit in MB. If given, memory_margin is ignored.
+            max_mem: memory usage limit in MB. If given, memory_margin is ignoredr,.
             otherwise, all the memory available is estimated and used as max.
             Requires psutil
             memory_margin: minimum memory to keep free in MB. If max_mem is not given
-            it estimates the available and sets a margin of 100 MB.
+            it estimates the available and sets a margin. See notes.
             Requires psutil
 
     Returns:
         A dictionary containing
-            name_of_axis1:, and the starting point on axis1 for all tracked particles
-            name_of_axis2:, and the starting point on axis2 for all tracked particles
+            name_of_axis1: the starting point on axis1 for all tracked particles
+            name_of_axis2: the starting point on axis2 for all tracked particles
             "axes_indexes": array with the indexes of axis1 and axis2
             "axes_names": array with the axis1 and axis2 names
             "nu_axes_indexes": array with the axes indexes used for frequency analysis
             "nu_axes_names": array with the names of the axis for frequency analysis
-            "nturns": number of turns. Note that the algorithm required 2*nturns.
-            "nu_+name_of_axis1": tune on the axis1 per particles
+            "nturns": number of tracked turns. Note that the algorithm required 2*nturns.
+            "nu_+name_of_axis1": tune on the axis1 per particle
             "nu_+name_of_axis2": tune on the axis2 per particle
             "dnu_+name_of_axis1": std of the tune on axis1
             "dnu_+name_of_axis2": std of the tune on axis2
@@ -449,19 +453,34 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
                 mem_margin=0,
                 )
 
-        >>> # filter only the surving particles
+        >>> # mask to filter only the surving particles
         >>> mask = ~np.isnan(fmapdata['dnulog10'])
 
     .. note::
 
+       * The algorithm requires to track twice the number of turns to create
+         at least two shifted windows where to evaluate the tune, and calculate
+         the std.
+       * The total number of turns tracked is 2*nturns. While the tune is extracted
+         ``n_moving_slices`` times using a moving window. The tune variation is calculated
+         as the standard deviation per plane. The variation per plane is added quadratically
+         , then, log10(sqrt(dnu1**2+dnu2**2)) is returned as dnulog10
+         More details on the moving window are in ref. [2]
        * ``use_mp=True`` or at.MPMode.CPUs are the only options available.
-       * Diffussion is calculated in a moving window, as in ref. [2]
+       * Memory arguments require psutil to have an effect
+       * mem_margin is set as the minimum between 100 MB, 1/32 of total ram, and 1/4
+         of swap memory
+       * This routing also returns the number of turns the particle did in case it was lost.
+         This is complementary information to the frequency map as shown in ref [3].
 
        [1] J. Laskar, in Proceedings of the 20th Particle Accelerator Conference,
        Portland, OR, 2003 (IEEE, New York, 2003), p. 378.
        [2] D. Shatilov, E. Levichev, E. Simonov, M.. Zobov. Application of frequency map
        analysis to beam-beam effects study in crab waist collision scheme.
        Phys. Rev. ST Accel. Beams 14, 014001, 2011.
+       [3] E. Serra-Carbonell, O Blanco, T. Guentzel. Application of fast algorithms to
+       calculate dynamic and momentum aperture to the design of ALBA II. IPAC25, Taipei,
+       Taiwan. MOPB065.
     """
     # initialize variables
     nturns = kwargs.pop("nturns", 1000)
