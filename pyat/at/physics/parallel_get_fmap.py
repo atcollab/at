@@ -261,6 +261,9 @@ def check_parallel_resources(
     Returns:
         A tuple with the number of workers to upse and a dictionary with
         parallelization parameters
+
+    Raises:
+        AtError when MPMode.GPU is chosen
     """
     # For backward compatibility (use_mp can be a boolean)
     if use_mp is True:
@@ -280,13 +283,10 @@ def check_parallel_resources(
         if nproc == 1 and verbose:
             print("Consider use_mp=False for single core computations")
     elif use_mp is MPMode.GPU:
+        msg = f"\nGPU acceptance calculation selected, but not yet implemented."
+        raise AtError(msg)
         nprocu = gpu_core_count(gpu_pool)
         kwargs["gpu_pool"] = gpu_pool if gpu_pool is not None else [0]
-        if verbose:
-            msg = (
-                f"\n{nprocu} GPU cores found" + "GPU acceptance calculation selected..."
-            )
-            print(msg)
     else:
         nprocu = 1
         if verbose:
