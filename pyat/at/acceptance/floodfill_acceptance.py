@@ -67,7 +67,7 @@ def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
 
     Parameters:
         ring: pyat lattice.
-        **kwargs: see below.
+        kwargs: see below.
 
     kwargs:
         nturns: Number of turns for the tracking. Default: 1000
