@@ -26,7 +26,7 @@ except (ImportError, RuntimeError):
 
 import at
 from at.lattice import AtError, Lattice
-from at.tracking import MPMode, gpu_core_count
+from at.tracking import MPMode
 
 # Jaime Coello de Portugal (JCdP) frequency analysis implementation
 from .harmonic_analysis import get_tunes_harmonic
@@ -245,7 +245,6 @@ def track_queue(
 def check_parallel_resources(
     use_mp: bool | at.MPMode,
     pool_size: int,
-    gpu_pool: list,
     kwargs: dict[str, any],
     verbose: bool,
 ) -> tuple:
@@ -254,7 +253,6 @@ def check_parallel_resources(
     Arguments:
         use_mp: Choose parallelization mode. True (CPU), at.MPMode.CPU, at.MPMode.GPU
         pool_size: integer number of workers to use
-        gpu_pool: list with integer number of GPU to use
         kwargs: dictionary to include the gpu_pool parameters
         verbose: print info
 
@@ -283,10 +281,8 @@ def check_parallel_resources(
         if nproc == 1 and verbose:
             print("Consider use_mp=False for single core computations")
     elif use_mp is MPMode.GPU:
-        msg = f"\nGPU acceptance calculation selected, but not yet implemented."
+        msg = "\nGPU acceptance calculation selected, but not yet implemented."
         raise AtError(msg)
-        nprocu = gpu_core_count(gpu_pool)
-        kwargs["gpu_pool"] = gpu_pool if gpu_pool is not None else [0]
     else:
         nprocu = 1
         if verbose:
@@ -391,9 +387,9 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
         ring: Lattice definition
         kwargs: any of the following.
             nturns: Number of turns for the tracking. See notes.
-            axes: a list or tuple of coordinates.
-            Allowed values are: ``'x'``, ``'px'``, ``'y'``,
-            ``'py'``, ``'dp'``, ``'ct'`` or numbers from 0 to 5
+            axes: a list or tuple of coordinates; allowed values are:
+            ``'x'``, ``'px'``, ``'y'``, ``'py'``, ``'dp'``, ``'ct'``
+            or numbers from 0 to 5
             nuaxes: index of axes to extract the tunes. Default (0,2)
             n_moving_slices: number of moving windows to extract the tune.
             Default 2. See notes and ref. [2].
@@ -423,9 +419,9 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
             name_of_axis2: the starting point on axis2 for all tracked particles
             "axes_indexes": array with the indexes of axis1 and axis2
             "axes_names": array with the axis1 and axis2 names
-            "nu_axes_indexes": array with the axes indexes used for frequency analysis
-            "nu_axes_names": array with the names of the axis for frequency analysis
-            "nturns": number of tracked turns. Note that the algorithm required 2*nturns.
+            "nu_axes_indexes": axes indexes used for frequency analysis
+            "nu_axes_names": names of the axis for frequency analysis
+            "nturns": number of tracked turns. The algorithm required 2*nturns.
             "nu_+name_of_axis1": tune on the axis1 per particle
             "nu_+name_of_axis2": tune on the axis2 per particle
             "dnu_+name_of_axis1": std of the tune on axis1
@@ -436,7 +432,6 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
             "worker_id": cpu ID who tracked the particle
 
     Examples:
-
         >>> fmapdata = get_fmap(
                 ring,
                 window=(-10e-3,10e-3,-10e-3,10e-3),
@@ -457,21 +452,21 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
         >>> mask = ~np.isnan(fmapdata['dnulog10'])
 
     .. note::
-
        * The algorithm requires to track twice the number of turns to create
          at least two shifted windows where to evaluate the tune, and calculate
          the std.
        * The total number of turns tracked is 2*nturns. While the tune is extracted
-         ``n_moving_slices`` times using a moving window. The tune variation is calculated
-         as the standard deviation per plane. The variation per plane is added quadratically
-         , then, log10(sqrt(dnu1**2+dnu2**2)) is returned as dnulog10
-         More details on the moving window are in ref. [2]
+         ``n_moving_slices`` times using a moving window. The tune variation is
+         calculated as the standard deviation per plane. The variation per plane
+         is added quadratically, then, log10(sqrt(dnu1**2+dnu2**2)) is returned
+         as dnulog10.  More details on the moving window are in ref. [2]
        * ``use_mp=True`` or at.MPMode.CPUs are the only options available.
        * Memory arguments require psutil to have an effect
        * mem_margin is set as the minimum between 100 MB, 1/32 of total ram, and 1/4
          of swap memory
-       * This routing also returns the number of turns the particle did in case it was lost.
-         This is complementary information to the frequency map as shown in ref [3].
+       * This routing also returns the number of turns the particle did in case
+         it was lost.  This is complementary information to the frequency map as
+         shown in ref [3].
 
        [1] J. Laskar, in Proceedings of the 20th Particle Accelerator Conference,
        Portland, OR, 2003 (IEEE, New York, 2003), p. 378.
@@ -495,15 +490,12 @@ def get_fmap(ring: Lattice, **kwargs: dict[str, any]) -> dict[str, any]:
     verbose = kwargs.pop("verbose", False)
     use_mp = kwargs.pop("use_mp", True)
     pool_size = kwargs.pop("pool_size", np.nan)
-    gpu_pool = kwargs.pop("gpu_pool", [0])
     max_mem = kwargs.pop("max_mem", np.nan)
     mem_margin = kwargs.pop("mem_margin", np.nan * 1024 * 1024)
 
     verboseprint = print if verbose else lambda *a, **k: None
 
-    nprocu, kwargs = check_parallel_resources(
-        use_mp, pool_size, gpu_pool, kwargs, verbose
-    )
+    nprocu, kwargs = check_parallel_resources(use_mp, pool_size, kwargs, verbose)
 
     axes = coord_to_indexes(useraxes)
     verboseprint(f"Using axes {_coord_index[axes,0]}")
