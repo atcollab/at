@@ -469,14 +469,9 @@ class Multipole(XsElement):
             atparams["FieldScaling"] = 1.0 + taper
         return atparams
 
-    def _set_at_fringe(self):
+    def _set_at_fringe(self) -> dict[str, Any]:
         """generate the AT fringe field description."""
-        atparams = {}
-        if self.get("edge_entry_active", 0) == 1:
-            atparams["FringeQuadEntrance"] = 1
-        if self.get("edge_exit_active", 0) == 1:
-            atparams["FringeQuadExit"] = 1
-        return atparams
+        return {}
 
     def _set_xs_transforms(self, atparams: dict) -> None:
         """Generate Xsuite element displacements."""
@@ -531,7 +526,7 @@ class Multipole(XsElement):
             self["delta_taper"] = scaling - 1.0
         self["_isthick"] = length != 0.0
 
-    def _set_xs_fringe(self, atparams: dict):
+    def _set_xs_fringe(self, atparams: dict) -> None:
         """generate the Xsuite fringe field description."""
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
@@ -562,6 +557,15 @@ class Quadrupole(Multipole):
     # Class variables
     _atClass = elt.Quadrupole
     _mag_order: ClassVar[int] = 1
+
+    def _set_at_fringe(self):
+        """generate the AT fringe field description."""
+        atparams = {}
+        if self.get("edge_entry_active", 0):
+            atparams["FringeQuadEntrance"] = 1
+        if self.get("edge_exit_active", 0):
+            atparams["FringeQuadExit"] = 1
+        return atparams
 
     def _set_xs_fringe(self, atparams: dict):
         self["edge_entry_active"] = atparams.get("FringeQuadEntrance", 0)
@@ -604,23 +608,12 @@ class Bend(Multipole):
     }
     _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
     _mag_order = 1
+    _edge_to_xs: ClassVar[dict[bool, dict[bool, str]]] = {
+        True: {True: "full", False: "dipole-only"},
+        False: {True: "linear", False: "linear"},
+    }
 
     def _set_at_fringe(self) -> dict[str, Any]:
-
-        def fringe(xs_inout, at_inout):
-            prms = {}
-            active = self.get("".join(("edge_", xs_inout, "_active")), 1)
-            try:
-                fringe_model = self.get("".join(("edge_", xs_inout, "_model")))
-                fringe_model = _EDGE_MODEL_TO_INDEX[fringe_model]
-            except KeyError:
-                fringe_model = self.get("".join(("_edge_", xs_inout, "_model")), 0)
-            if fringe_model == -1 or active == 0:
-                prms["".join(("FringeBend", at_inout))] = 0
-            elif fringe_model == 1:
-                prms["".join(("FringeQuad", at_inout))] = 1
-            return prms
-
         atparams = {}
         entry_hgap = self.get("edge_entry_hgap")
         exit_hgap = self.get("edge_exit_hgap")
@@ -630,25 +623,21 @@ class Bend(Multipole):
         if entry_hgap is not None:
             atparams["FullGap"] = entry_hgap
 
-        atparams.update(fringe("entry", "Entrance"))
-        atparams.update(fringe("exit", "Exit"))
+        if self.get("edge_entry_model", "linear") in ["linear", "full"]:
+            atparams["FringeQuadEntrance"] = 1
+        if self.get("edge_exit_model", "linear") in ["linear", "full"]:
+            atparams["FringeQuadExit"] = 1
         return atparams
 
     def _set_xs_fringe(self, atparams: dict):
-
-        def fringe(atbend: str, atquad: str) -> str:
-            if atparams.get(atbend, 1) == 0:
-                return "suppressed"
-            elif atparams.get(atquad, 0) == 0:
-                return "linear"
-            else:
-                return "full"
-
         if (gap := atparams.get("FullGap")) is not None:
             self["edge_entry_gap"] = gap
             self["edge_exit_gap"] = gap
-        self["edge_entry_model"] = fringe("FringeBendEntrance", "FringeQuadEntrance")
-        self["edge_exit_model"] = fringe("FringeBendExit", "FringeQuadExit")
+        exact = atparams.get("PassMethod", "").startswith("Exact")
+        qentry = atparams.get("FringeQuadEntrance", 0)
+        qexit = atparams.get("FringeQuadExit", 0)
+        self["edge_entry_model"] = self._edge_to_xs[exact][qentry > 0]
+        self["edge_exit_model"] = self._edge_to_xs[exact][qexit > 0]
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(EntranceAngle=0.0, ExitAngle=0.0, **atparams)
