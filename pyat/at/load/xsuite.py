@@ -796,6 +796,7 @@ _at2xsclass: dict[type[elt.Element], type[XsElement]] = {
     elt.Sextupole: Sextupole,
     elt.Octupole: Octupole,
     elt.Multipole: Multipole,
+    elt.ThinMultipole: Multipole,
     elt.Dipole: Dipole,
 }
 
