@@ -132,7 +132,6 @@ Ignored attributes
 
 The following AT attributes are ignored in writing Xsuite .json files:
 
-- ``FieldScaling``
 - ``RApertures``
 - ``EApertures``
 - ``X0ref``. This parameter defines the distance between the magnetic axis of a
