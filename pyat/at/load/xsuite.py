@@ -157,7 +157,6 @@ __all__ = [
 
 import json
 import warnings
-from collections.abc import Generator
 from math import pi, sqrt, fmod
 from pathlib import Path
 from typing import Any, ClassVar
@@ -1021,35 +1020,23 @@ class XsLine:
                 "beta0": [beta0],
             }
 
-        def name_gen(name: str, nmax: int = 10000) -> Generator[str, None, None]:
-            """Generate a list of tentative names."""
-            yield name
-            for i in range(1, nmax):
-                yield ".".join((name, str(i)))
+        def unique_names(names):
+            """Generate unique names."""
+            _, idx_inv, cnt = np.unique(names, return_inverse=True, return_counts=True)
+            idx_list = np.split(np.argsort(idx_inv), np.cumsum(cnt[:-1]))
+            for ia in idx_list:
+                if len(ia) > 1:
+                    for i, ii in enumerate(np.sort(ia)):
+                        names[ii] = ".".join((names[ii], str(i + 1)))
+            return names
 
-        def check(name: str, elem: XsElement) -> tuple[bool, bool]:
-            """Check if the element is already in the elements dictionary."""
-            if name in elements:
-                return elem == elements[name], False
-            return True, True
-
-        def store_elem(elem: elt.Element):
-            """Store the element in the dictionary with a unique name."""
-            xselem = XsElement.static_from_at(elem, match_model=match_model)
-            for nm in name_gen(elem.FamName):
-                valid, new = check(nm, xselem)
-                if valid:
-                    if new:
-                        elements[nm] = xselem
-                    return nm
-            msg = f"Cannot store {elem.FamName}"
-            raise NameError(msg)
-
-        elements: dict[str, XsElement] = {}
-        line = [store_elem(el) for el in ring]
+        element_names = unique_names([el.FamName for el in ring])
         return cls(
-            elements=elements,
-            element_names=line,
+            elements={
+                nm: XsElement.static_from_at(el, match_model=match_model)
+                for nm, el in zip(element_names, ring, strict=True)
+            },
+            element_names=element_names,
             particle_ref=refpart(ring),
             name=ring.name,
             **kwargs,
