@@ -886,7 +886,7 @@ class XsLine:
                             cavities.append(elem)
                         cell_length += getattr(elem, "Length", 0.0)
                         yield elem
-                except Exception as exc:
+                except Exception as exc:  # noqa: PERF203
                     exc.args = (f"In element {nm!r}: {exc.args[0]}",)
                     raise
 
