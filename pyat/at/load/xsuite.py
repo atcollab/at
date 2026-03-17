@@ -159,6 +159,7 @@ import json
 import warnings
 from math import pi, sqrt, fmod
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any, ClassVar
 import contextlib
 
@@ -230,9 +231,6 @@ class XsElement(dict):
     # Class attributes
     _atClass: ClassVar[type[elt.Element]] = elt.Marker
     _xsuite2at_attr: ClassVar[dict[str, str]] = {"length": "Length"}
-    _at2xsuite_attr: ClassVar[dict[str, str]] = {
-        v: k for k, v in _xsuite2at_attr.items()
-    }
     _at2xsuite_model: ClassVar[dict[str | None, str]] = {}
     _xsuite2at_model: ClassVar[dict[str, str | None]] = {}
     _at_integrator: ClassVar[str | None] = None
@@ -287,12 +285,18 @@ class XsElement(dict):
         return [cls.from_file(atparams)]
 
     @classmethod
-    def from_dict(cls, xsparams: dict[str, Any], name: str = "?") -> XsElement:
+    def from_dict(
+        cls,
+        xsparams: dict[str, Any],
+        name: str = "?",
+        warn: Callable[[str], bool] = lambda clname: True,
+    ) -> XsElement:
         """Build a XsElement from its dictionary representation.
 
         Args:
             xsparams:   dictionary representation of the XsElement
             name:       Optional name of the element
+            warn:       warning trigger function
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -313,9 +317,9 @@ class XsElement(dict):
         """
         # Conversion of similar attributes
         xsparams = {
-            xsk: v
-            for k, v in atparams.items()
-            if (xsk := cls._at2xsuite_attr.get(k, None)) is not None
+            kxs: v
+            for kxs, kat in cls._xsuite2at_attr.items()
+            if (v := atparams.get(kat)) is not None
         }
         # Handling of model and integrator
         xs_model = cls._at2xsuite_model.get(atparams["PassMethod"], None)
@@ -333,7 +337,11 @@ class XsElement(dict):
         return cls(name=atparams["FamName"], **xsparams)
 
     @staticmethod
-    def static_from_dict(elem_dict: dict[str, Any], name: str = "?") -> XsElement:
+    def static_from_dict(
+        elem_dict: dict[str, Any],
+        name: str = "?",
+        warn: Callable[[str], bool] = lambda clname: True,
+    ) -> XsElement:
         """Build a XsElement from its dictionary representation.
 
         Args:
@@ -344,7 +352,7 @@ class XsElement(dict):
             xselement:  new :py:class:`XsElement` object
         """
         xsclass = _xsclass.get(elem_dict.get("__class__", "Unknown"), NotInAT)
-        return xsclass.from_dict(elem_dict, name=name)
+        return xsclass.from_dict(elem_dict, name=name, warn=warn)
 
     @staticmethod
     def static_from_at(atelem: elt.Element, match_model: bool = False) -> XsElement:
@@ -361,6 +369,10 @@ class XsElement(dict):
         """
         xsclass = _at2xsclass.get(type(atelem), NotInXsuite)
         return xsclass.from_at(match_model=match_model, **atelem.to_file())
+
+    @property
+    def _l_anchor(self) -> float:
+        return self.get("length", 0.0)
 
 
 class Marker(XsElement):
@@ -395,7 +407,6 @@ class Multipole(XsElement):
         "order": "MaxOrder",
         "num_multipole_kicks": "NumIntSteps",
     }
-    _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
 
     def _set_at_transforms(self) -> dict:
         """Generate AT element displacements."""
@@ -419,19 +430,21 @@ class Multipole(XsElement):
                 warnings.warn(AtWarning(msg), stacklevel=2)
             transforms = {"tilt_frame": rot_s_frame}
         elif ismisaligned:
-            anchor = self.pop("rot_shift_anchor", 0.0)
+            length = self._l_anchor
+            rot_shift_anchor = self.get("rot_shift_anchor", 0.0)
+            anchor = 0.5 if length == 0.0 else rot_shift_anchor / length
             if anchor == 0.0:
                 reference = ReferencePoint.ENTRANCE
-            elif anchor == 0.5:
+            elif abs(anchor - 0.5) < 1.0e-6:
                 reference = ReferencePoint.CENTRE
             else:
                 msg = (
-                    "Anchor point for rotation different from 0 or 1, setting"
-                    "to AT default: ReferencePoint.CENTRE"
+                    f"Anchor point for rotation different from 0 or {length / 2.0},\n"
+                    "setting reference to AT default: ReferencePoint.CENTRE"
                 )
                 warnings.warn(AtWarning(msg), stacklevel=2)
                 reference = ReferencePoint.CENTRE
-            transforms["Reference"] = reference
+            transforms["reference"] = reference.value
         return transforms
 
     def _set_at_poly(self) -> dict[str, Any]:
@@ -604,7 +617,6 @@ class Bend(Multipole):
         "edge_entry_angle": "EntranceAngle",
         "edge_exit_angle": "ExitAngle",
     }
-    _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
     _mag_order = 1
     _edge_to_xs: ClassVar[dict[bool, dict[bool, str]]] = {
         True: {True: "full", False: "dipole-only"},
@@ -700,6 +712,10 @@ class RBend(Bend):
         elem["length_straight"] = elem.pop("length") * np.sinc(hangle / np.pi)
         return elem
 
+    @property
+    def _l_anchor(self) -> float:
+        return self.get("length_straight", 0.0)
+
 
 class Cavity(XsElement):
     # Class variables
@@ -709,12 +725,11 @@ class Cavity(XsElement):
         "voltage": "Voltage",
         "frequency": "Frequency",
     }
-    _at2xsuite_attr = {v: k for k, v in _xsuite2at_attr.items()}
 
     def _set_xs_lag(self, atparams: dict):
-        om = 2.0 * np.pi * atparams.get("Frequency")
+        freq = atparams["Frequency"]
         tl = atparams.get("TimeLag", 0.0)
-        pl = fmod(tl * om / cst.clight * 360.0 + 180.0, 360.0)
+        pl = 180.0 - 360.0 * tl * freq / cst.clight
         self["lag"] = pl
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
@@ -739,12 +754,19 @@ class NotInAT:
     """Class for Xsuite elements without AT equivalent."""
 
     @classmethod
-    def from_dict(cls, xsparams: dict[str, Any], name: str = "?") -> XsElement:
+    def from_dict(
+        cls,
+        xsparams: dict[str, Any],
+        name: str = "?",
+        warn: Callable[[str], bool] = lambda clname: True,
+    ) -> XsElement:
         origin = xsparams.get("__class__", "Unknown")
         xsclass = Marker if xsparams.get("length", 0.0) == 0.0 else Drift
-        msg = f"Element {name!r}: unknown class {origin} replaced by {xsclass.__name__}"
-        warnings.warn(AtWarning(msg), stacklevel=2)
-        return xsclass.from_dict(xsparams, name=name)
+        if warn(origin):
+            repl = xsclass.__name__
+            msg = f"Element {name!r}: unknown class {origin} replaced by {repl}"
+            warnings.warn(AtWarning(msg), stacklevel=3)
+        return xsclass.from_dict(xsparams, name=name, warn=warn)
 
 
 class NotInXsuite:
@@ -818,12 +840,28 @@ class XsLine:
     in_file: str = ""
 
     def __init__(self, elements, **root):
+
+        def warn(clname):
+            # Warn only for the 1st element of each class
+            nb = unknown.setdefault(clname, 0)
+            unknown[clname] += 1
+            return nb == 0
+
+        unknown: dict[str, int] = {}  # counter of unknown classes
+
         self.elements = {
-            k: XsElement.static_from_dict(el, name=k) for k, el in elements.items()
+            k: XsElement.static_from_dict(el, name=k, warn=warn)
+            for k, el in elements.items()
         }
+
         for k in self._line_keys:
             if (value := root.get(k)) is not None:
                 setattr(self, k, value)
+
+        if unknown:
+            print("Unknown classes:")
+            for cl, nb in unknown.items():
+                print(f"    {cl}: {nb}")
 
     def to_dict(self) -> dict[str, Any]:
         """Create a Xsuite-compatible dictionary representation of the XsLine.
@@ -901,9 +939,7 @@ class XsLine:
                 lag = getattr(cav, "_phaselag", 0.0)
                 with contextlib.suppress(AttributeError):
                     delattr(cav, "_phaselag")
-                om = 2.0 * pi * cav.Frequency
-                pl = fmod(lag + 180.0, 360.0)
-                tl = pl / om * cst.clight / 360.0
+                tl = (180.0 - lag) * cst.clight / 360.0 / cav.Frequency
                 cav.Timelag = tl
 
         if in_file := getattr(self, "in_file", ""):

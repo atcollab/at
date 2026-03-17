@@ -83,7 +83,6 @@ _DEFAULT_PASS = {
 
 # Don't warn on floating-point errors
 np.seterr(divide="ignore", invalid="ignore")
-warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 # noinspection PyAttributeOutsideInit
@@ -264,10 +263,12 @@ class Lattice(list):
                 rg = range(*key.indices(len(self)))
             else:  # Array of integers or boolean
                 rg = get_uint32_index(self, key, endpoint=False)
-            return Lattice(
-                elem_generator,
-                (super(Lattice, self).__getitem__(i) for i in rg),
-                iterator=self.attrs_filter,
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=AtWarning)
+                return Lattice(
+                    elem_generator,
+                    (super(Lattice, self).__getitem__(i) for i in rg),
+                    iterator=self.attrs_filter,
             )
 
     def __setitem__(self, key, values):
