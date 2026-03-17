@@ -211,7 +211,7 @@ class Lattice(list):
             ``params_filter(params, ringparam_filter, *args)``
                 runs through ``ringparam_filter(params, *args)``, looks for
                 energy and periodicity if not yet defined.
-        """
+        """  # noqa: D415
         if iterator is None:
             (arg1,) = args or [[]]  # accept 0 or 1 argument
             if isinstance(arg1, Lattice):
@@ -269,7 +269,7 @@ class Lattice(list):
                     elem_generator,
                     (super(Lattice, self).__getitem__(i) for i in rg),
                     iterator=self.attrs_filter,
-            )
+                )
 
     def __setitem__(self, key, values):
         try:  # Integer or slice
@@ -1177,7 +1177,7 @@ class Lattice(list):
         See Also:
 
             :py:meth:`disable_6d`, :py:attr:`is_6d`.
-        """
+        """  # noqa: D415
         return self._set_6d(True, *args, **kwargs)
 
     # noinspection PyShadowingNames,PyIncorrectDocstring
@@ -1279,7 +1279,7 @@ class Lattice(list):
         See Also:
 
             :py:meth:`enable_6d`, :py:attr:`is_6d`.
-        """
+        """  # noqa: D415
         return self._set_6d(False, *args, **kwargs)
 
     def sbreak(self, break_s, break_elems=None, **kwargs):

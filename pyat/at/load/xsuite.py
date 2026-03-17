@@ -157,7 +157,7 @@ __all__ = [
 
 import json
 import warnings
-from math import pi, sqrt, fmod
+from math import sqrt
 from pathlib import Path
 from collections.abc import Callable
 from typing import Any, ClassVar
@@ -284,6 +284,7 @@ class XsElement(dict):
         cls = self._class_to_at(atparams)
         return [cls.from_file(atparams)]
 
+    # noinspection PyUnusedLocal
     @classmethod
     def from_dict(
         cls,
@@ -347,6 +348,7 @@ class XsElement(dict):
         Args:
             elem_dict:  dictionary representation of the XsElement
             name:       Optional name of the element
+            warn:       warning trigger function
 
         Returns:
             xselement:  new :py:class:`XsElement` object
@@ -696,7 +698,7 @@ class RBend(Bend):
             )
             warnings.warn(AtWarning(msg), stacklevel=3)
             atparams["PassMethod"] = "ExactRectangularBendPass"
-        hangle = abs(0.5 * self.get("angle"))
+        hangle = abs(0.5 * self["angle"])
         atparams["Length"] = self.get("length_straight", 0.0) / np.sinc(hangle / np.pi)
         atparams["EntranceAngle"] = self.get("edge_entry_angle", 0.0) + hangle
         atparams["ExitAngle"] = self.get("edge_exit_angle", 0.0) + hangle
@@ -839,13 +841,13 @@ class XsLine:
     particle_ref: dict[str, Any] = _default_particle
     in_file: str = ""
 
-    def __init__(self, elements, **root):
+    def __init__(self, elements: dict[str, dict], **root):
 
         def warn(clname):
             # Warn only for the 1st element of each class
-            nb = unknown.setdefault(clname, 0)
+            nbu = unknown.setdefault(clname, 0)
             unknown[clname] += 1
-            return nb == 0
+            return nbu == 0
 
         unknown: dict[str, int] = {}  # counter of unknown classes
 
