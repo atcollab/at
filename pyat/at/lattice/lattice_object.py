@@ -83,7 +83,6 @@ _DEFAULT_PASS = {
 
 # Don't warn on floating-point errors
 np.seterr(divide="ignore", invalid="ignore")
-warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 
 # noinspection PyAttributeOutsideInit
@@ -212,7 +211,7 @@ class Lattice(list):
             ``params_filter(params, ringparam_filter, *args)``
                 runs through ``ringparam_filter(params, *args)``, looks for
                 energy and periodicity if not yet defined.
-        """
+        """  # noqa: D415
         if iterator is None:
             (arg1,) = args or [[]]  # accept 0 or 1 argument
             if isinstance(arg1, Lattice):
@@ -264,11 +263,13 @@ class Lattice(list):
                 rg = range(*key.indices(len(self)))
             else:  # Array of integers or boolean
                 rg = get_uint32_index(self, key, endpoint=False)
-            return Lattice(
-                elem_generator,
-                (super(Lattice, self).__getitem__(i) for i in rg),
-                iterator=self.attrs_filter,
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=AtWarning)
+                return Lattice(
+                    elem_generator,
+                    (super(Lattice, self).__getitem__(i) for i in rg),
+                    iterator=self.attrs_filter,
+                )
 
     def __setitem__(self, key, values):
         try:  # Integer or slice
@@ -749,7 +750,7 @@ class Lattice(list):
     def particle(self, particle: str | Particle):
         if isinstance(particle, str):
             particle = Particle(particle)
-        if particle.name != "relativistic":
+        if particle.rest_energy != 0.0:
             msg = (
                 "AT tracking still assumes beta==1\n"
                 "Make sure your particle is ultra-relativistic"
@@ -1176,7 +1177,7 @@ class Lattice(list):
         See Also:
 
             :py:meth:`disable_6d`, :py:attr:`is_6d`.
-        """
+        """  # noqa: D415
         return self._set_6d(True, *args, **kwargs)
 
     # noinspection PyShadowingNames,PyIncorrectDocstring
@@ -1278,7 +1279,7 @@ class Lattice(list):
         See Also:
 
             :py:meth:`enable_6d`, :py:attr:`is_6d`.
-        """
+        """  # noqa: D415
         return self._set_6d(False, *args, **kwargs)
 
     def sbreak(self, break_s, break_elems=None, **kwargs):
