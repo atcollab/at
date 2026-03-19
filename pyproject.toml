@@ -64,8 +64,9 @@ machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
 build = ["*"]
-# Remove free-threaded builds
-skip = ["cp3{8,9}-*", "cp314t-*"]
+# Keep free-threaded builds
+# skip = ["cp3{8,9}-*", "cp314t-*"]
+skip = ["cp3{8,9}-*"]
 archs = ["auto64"]
 build-verbosity = "1"
 
