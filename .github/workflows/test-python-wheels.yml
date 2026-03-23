@@ -4,8 +4,8 @@ name: Test build and publish
 
 on:
   push:
-    tags:
-      - pyat-[0-9]*
+#    tags:
+#      - pyat-[0-9]*
   workflow_dispatch:
 
 jobs:
