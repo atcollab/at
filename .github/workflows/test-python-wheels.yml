@@ -3,10 +3,10 @@
 name: Test build and publish
 
 on:
+  workflow_dispatch:
   push:
 #    tags:
 #      - pyat-[0-9]*
-  workflow_dispatch:
 
 jobs:
   build_wheels:
@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
 #        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
-        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
+        os: [macos-latest]
 
     steps:
       - uses: actions/checkout@v6
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Download all packages
-        uses: action/download-artifacts@v8
+        uses: action/download-artifact@v8
         with:
           path: dist/
           merge-multiple: true
