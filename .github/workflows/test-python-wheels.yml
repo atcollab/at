@@ -1,8 +1,11 @@
 # See the Python documentation: https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 # and cibuildwheel: https://cibuildwheel.readthedocs.io/en/stable/
-name: Build and upload wheels and sdist
+name: Test build and publish
 
 on:
+  push:
+    tags:
+      - pyat-[0-9]*
   workflow_dispatch:
 
 jobs:
