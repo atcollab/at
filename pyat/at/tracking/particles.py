@@ -1,16 +1,18 @@
 """
 Functions relating to particle generation
 """
+
 import numpy as np
 from numpy.linalg import cholesky, LinAlgError, det
 from scipy.linalg import block_diag, eig
 from warnings import warn
 from ..lattice import AtError, AtWarning, Lattice, Orbit, random
-#from ..physics.amat import jmat
 
-__all__ = ['beam', 'sigma_matrix', 'emittances_from_beam']
+# from ..physics.amat import jmat
 
-_j2 = np.array([[0., 1.], [-1., 0.]])
+__all__ = ["beam", "sigma_matrix", "emittances_from_beam"]
+
+_j2 = np.array([[0.0, 1.0], [-1.0, 0.0]])
 _jmat = block_diag(_j2, _j2, _j2)
 
 
@@ -56,24 +58,25 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
     If *espread* and *blength* are not specified, the results is a
     monochromatic beam.
     """
+
     def require(mess, *keys):
         miss = [key for key in keys if key not in kwargs]
         if len(miss) == 0:
             return [kwargs.pop(key) for key in keys]
         else:
-            raise AtError('{0}: missing {1}'.format(mess, ', '.join(miss)))
+            raise AtError("{0}: missing {1}".format(mess, ", ".join(miss)))
 
     def ignore(mess):
         ok = kwargs.keys()
         if any(ok):
-            warn(AtWarning('{0}: {1} ignored'.format(mess, ', '.join(ok))))
+            warn(AtWarning("{0}: {1} ignored".format(mess, ", ".join(ok))))
 
     def r_s():
         rs = np.zeros((2, 2))
-        if any(('espread' in kwargs, 'blength' in kwargs)):
+        if any(("espread" in kwargs, "blength" in kwargs)):
             blength, espread = require(
-                'Both "blength" and "espread" are required',
-                'blength', 'espread')
+                'Both "blength" and "espread" are required', "blength", "espread"
+            )
             ems = blength * espread
             if ems > 0.0:
                 rs = np.array([[espread / blength, 0], [0, blength / espread]])
@@ -83,8 +86,8 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
 
     def r_4d(ax, ay, bx, by, rs):
         r6 = np.zeros((3, 6, 6))
-        r6[0, :2, :2] = np.array([[bx, -ax], [-ax, (1+ax**2)/bx]])
-        r6[1, 2:4, 2:4] = np.array([[by, -ay], [-ay, (1+ay**2)/by]])
+        r6[0, :2, :2] = np.array([[bx, -ax], [-ax, (1 + ax**2) / bx]])
+        r6[1, 2:4, 2:4] = np.array([[by, -ay], [-ay, (1 + ay**2) / by]])
         r6[2, 4:, 4:] = rs
         return r6
 
@@ -100,52 +103,57 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
     def sigma_from_rmat(rmat, emit, embl):
 
         if emit is None:
-            emx, emy = require('Emittances must be provided', 'emitx', 'emity')
+            emx, emy = require("Emittances must be provided", "emitx", "emity")
             ems = embl
         else:
-            emx = kwargs.pop('emitx', emit[0])
-            emy = kwargs.pop('emity', emit[1])
+            emx = kwargs.pop("emitx", emit[0])
+            emy = kwargs.pop("emity", emit[1])
             ems = emit[2] if embl is None else embl
 
         sigm = emx * rmat[0, :, :] + emy * rmat[1, :, :]
         if ems is None:
-            warn(AtWarning('Monochromatic beam: no energy spread'))
+            warn(AtWarning("Monochromatic beam: no energy spread"))
         else:
             sigm += ems * rmat[2, :, :]
         return sigm
 
     if ring is not None:
-        kwargs['ring'] = ring
+        kwargs["ring"] = ring
 
-    if 'beam' in kwargs:
+    if "beam" in kwargs:
         message = "'beam' is provided"
-        beam = kwargs.pop('beam')
-        orbit = kwargs.pop('orbit', None)
+        beam = kwargs.pop("beam")
+        orbit = kwargs.pop("orbit", None)
         if orbit is None:
             orbit = np.mean(beam, axis=1)
         beam -= orbit.reshape((6, 1))
         sigmat = (beam @ beam.T) / beam.shape[1]
 
-    elif 'twiss_in' in kwargs:
-        twin = kwargs.pop('twiss_in')
+    elif "twiss_in" in kwargs:
+        twin = kwargs.pop("twiss_in")
         message = "'twiss_in' is provided"
         em56, r56 = r_s()
         try:
-            Rin = twin['R']
+            Rin = twin["R"]
         except (ValueError, KeyError):  # record arrays throw ValueError !
-            Rm = r_4d(twin['alpha'][0], twin['alpha'][1],
-                      twin['beta'][0], twin['beta'][1], r56)
+            Rm = r_4d(
+                twin["alpha"][0],
+                twin["alpha"][1],
+                twin["beta"][0],
+                twin["beta"][1],
+                r56,
+            )
         else:
             Rm = r_expand(Rin, r56)
         sigmat = sigma_from_rmat(Rm, None, em56)
 
-    elif 'ring' in kwargs:
-        ring = kwargs.pop('ring')
+    elif "ring" in kwargs:
+        ring = kwargs.pop("ring")
         message = "'ring' is provided"
         em56, r56 = r_s()
-        el0, _, _ = ring.linopt6(orbit=kwargs.pop('orbit', None))
+        el0, _, _ = ring.linopt6(orbit=kwargs.pop("orbit", None))
         orbit = el0.closed_orbit
-        Rm = r_expand(el0['R'], r56)
+        Rm = r_expand(el0["R"], r56)
         if ring.is_6d:
             _, beam0, _ = ring.ohmi_envelope(orbit=orbit)
             sigmat = sigma_from_rmat(Rm, beam0.mode_emittances, em56)
@@ -156,7 +164,11 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         message = "Uncoupled beam"
         alphax, alphay, betax, betay = require(
             'Neither "twiss_in" nor "ring" is provided',
-            'alphax', 'alphay', 'betax', 'betay')
+            "alphax",
+            "alphay",
+            "betax",
+            "betay",
+        )
         # orbit = kwargs.pop('orbit', np.zeros(6))
         em56, r56 = r_s()
         Rm = r_4d(alphax, alphay, betax, betay, r56)
@@ -181,6 +193,7 @@ def beam(nparts: int, sigma, orbit: Orbit = None):
     Returns:
         particle_dist:  a (6, *nparts*) matrix of coordinates
     """
+
     def _get_single_plane(slc):
         try:
             return cholesky(sigma[slc, slc])
@@ -236,7 +249,7 @@ def emittances_from_beam(beam=None, sigma_mat=None):
 
     Returns:
         eig_emittances:  a (3,) array of eigen emitances
-        proj_emittances:  a (3,) array of projected emitances       
+        proj_emittances:  a (3,) array of projected emitances
     """
     if beam is None:
         if sigma_mat is None:
@@ -249,9 +262,9 @@ def emittances_from_beam(beam=None, sigma_mat=None):
         sigma_mat = sigma_matrix(beam=beam.copy())
     eig_emittances, _ = eig(sigma_mat @ _jmat)
     eig_emittances = np.unique(abs(eig_emittances))
-    submat = [slice(0,2), slice(2,4), slice(6, 3, -1)]
-    proj_emittances = np.sqrt([det(sigma_mat[s,s]) for s in submat])
+    submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
+    proj_emittances = np.sqrt([det(sigma_mat[s, s]) for s in submat])
     #  Trick to reorder eigen-emittances
-    idx = [np.argmin(abs(proj_emittances-em)) for em in eig_emittances]
+    idx = [np.argmin(abs(proj_emittances - em)) for em in eig_emittances]
     eig_emittances = eig_emittances[idx]
     return eig_emittances, proj_emittances
