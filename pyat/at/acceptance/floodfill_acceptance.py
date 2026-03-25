@@ -23,7 +23,7 @@ def floodfill(
     window: list | tuple = (-10e-3, 10e-3, -5e-3, 5e-3),
     grid_size: list | tuple = (10, 10),
     axes: list | tuple = (0, 2),
-    offset: np.ndarray = np.zeros((6)),
+    offset: list | np.ndarray | None = None,
     verbose: bool = False,
     pool_size: int = 10,
     use_mp: bool = True,
@@ -36,16 +36,13 @@ def floodfill(
     The not lost particles are returned in pnotlost.
 
     Parameters:
-        ring: pyat lattice.
-        kwargs: see below.
-
-    kwargs:
+        ring: pyat lattice
         nturns: Number of turns for the tracking. Default: 1000
         window: Min and max coordinate range, [Axis1min,Axis1max,
         Axis2min,Axis2max]. Default [-10e-3,10e-3,-10e-3,10e-3].
         Axis1 and Axis2 are defined by 'axes'.
-        grid_size: Number of steps per axis. Default [10,10].
-        axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y.
+        grid_size: Number of steps per axis. Default [10,10]
+        axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y
         offset: Offset to be added. Default np.zeros((6)).
         This is useful to study off-axis acceptance on any plane,
         or off-momentum acceptance by adding dp to the 5th coord.,
@@ -57,7 +54,7 @@ def floodfill(
         pool_size:  Number of cpus.
 
     Returns:
-        Tuple with (pnotlost, plost).
+        Two arrays (pnotlost, plost).
         pnotlost: array of size (2,n_not_lost) containing the 2D offsets of
         n_not_lost tracked particles that survived.
         plost: array of size (3,n_lost) containing the 2D offsets of
@@ -121,6 +118,11 @@ def floodfill(
                     if not registered_for_tracking[i]:
                         registered_for_tracking[i] = True
                         task_to_accomplish.put(i)
+
+    # Initialize variables
+    if offset is None:
+        offset = 6 * [0]
+    offset = np.array(offset)
 
     # Initialize output in case we return earlier
     points_not_lost = np.zeros((2, 0))
