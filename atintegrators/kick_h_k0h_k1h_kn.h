@@ -1,4 +1,4 @@
-static void kick(double* r, double A0, double B0, double* A, double* B, double L, double irho, int max_order)
+static void kick(double* r6, double A0, double B0, double* A, double* B, double L, double irho, int max_order)
 /*****************************************************************************
 Calculate multipole kick in a curved elemrnt (bending magnet)
 The reference coordinate system  has the curvature given by the inverse
@@ -24,8 +24,8 @@ theta  = --- B
    double ReSum = B[max_order];
    double ImSum = A[max_order];
    double ReSumTemp;
-   double x = r[0];
-   double y = r[2];
+   double x = r6[0];
+   double y = r6[2];
 
    /* recursively calculate the local transverse magnetic field */
    for (int i=max_order-1; i>=0; i--) {
@@ -36,7 +36,7 @@ theta  = --- B
    ReSum += B0;
    ImSum += A0;
 
-   r[1] -= L * (ReSum - (r[4]-x*irho)*irho + irho*B[1]*x*y);
-   r[3] += L * (ImSum- irho*B[1]*(x*x-y*y/2.0));
-   r[5] += L * irho*x; /* pathlength */
+   r6[1] -= L * (ReSum - (r6[4]-x*irho)*irho + irho*B[1]*x*y);
+   r6[3] += L * (ImSum- irho*B[1]*(x*x-y*y/2.0));
+   r6[5] += L * irho*x; /* pathlength */
 }

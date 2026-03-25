@@ -53,7 +53,7 @@ static double B2perp(double bx, double by, double irho, double x, double xpr, do
 }
 
 //static void ex_bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
-static void kick(double* r, double A0, double B0, double* A, double* B, int max_order,
+static void kick(double* r6, double A0, double B0, double* A, double* B, int max_order,
                               double L, double irho, double rad_const, double diff_const, double *bdiff)
 
 /*****************************************************************************
@@ -107,14 +107,14 @@ the polynomial terms in PolynomB.
   B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
 
   /* Momentum loss */
-  r[4] -= rad_const * SQR(1+r[4]) * B2P * (1.0+x*irho) * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
+  r6[4] -= rad_const * SQR(1+r6[4]) * B2P * (1.0+x*irho) * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
 
   /* recalculate momentums from angles after losing energy for radiation 	*/
-  p_norm = 1/(1+r[4]);
-  r[1] = xpr/p_norm;
-  r[3] = ypr/p_norm;
+  p_norm = 1/(1+r6[4]);
+  r6[1] = xpr/p_norm;
+  r6[3] = ypr/p_norm;
 
   /* Multipole kick */
-  r[1] -= L * (ReSum + irho*B[1]*x*y);
-  r[3] += L * (ImSum - irho*B[1]*(x*x-y*y/2.0));
+  r6[1] -= L * (ReSum + irho*B[1]*x*y);
+  r6[3] += L * (ImSum - irho*B[1]*(x*x-y*y/2.0));
 }
