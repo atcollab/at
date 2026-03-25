@@ -31,7 +31,7 @@ static void atProperties(const mxArray *opts, double *energy, double *rest_energ
         if (ener > 0.0) {
             *energy = ener;
         }else{
-            mexErrMsgIdAndTxt("Energy must be positive. Check lattice or passmethod parameters.");
+            mexErrMsgIdAndTxt("Atpass:WrongParameter", "Energy must be positive. Check lattice or passmethod parameters.");
         }
         atParticle(opts, rest_energy, charge);
     }
