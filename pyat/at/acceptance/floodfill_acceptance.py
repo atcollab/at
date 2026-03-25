@@ -14,6 +14,8 @@ import numpy as np
 #                                    JACoW-IPAC25-MOPB065
 # Edited : O. Blanco, ALBA,          2025 pyat parallel version
 
+__all__ = ["floodfill"]
+
 
 def track_queue(
     ring: at.Lattice,
