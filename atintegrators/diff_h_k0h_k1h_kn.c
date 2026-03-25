@@ -115,8 +115,8 @@ static void diff_kick(double *r6, double A0, double B0, double *A, double *B, in
 
   /* recursively calculate the local transverse magnetic field */
   for (int i = max_order - 1; i >= 0; i--) {
-    ReSumTemp = ReSum * x - ImSum * y + B[i];
-    ImSum = ImSum * x + ReSum * y + A[i];
+    ReSumTemp = ReSum*x - ImSum*y + B[i];
+    ImSum = ImSum*x + ReSum*y + A[i];
     ReSum = ReSumTemp;
   }
   ReSum += B0;
