@@ -36,7 +36,7 @@ theta  = --- B
    ReSum += B0;
    ImSum += A0;
 
-   r[1] -=  L*(ReSum - (r[4]-x*irho)*irho + irho*B[1]*x*y);
-   r[3] +=  L*(ImSum - irho*B[1]*(x*x-y*y/2.0));
+   r[1] -=  L*(ReSum - (r[4]-x*irho)*irho);
+   r[3] +=  L*ImSum;
    r[5] +=  L*irho*x; /* pathlength */
 }
