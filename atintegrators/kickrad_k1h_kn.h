@@ -110,7 +110,7 @@ the polynomial terms in PolynomB.
   r6[4] -= rad_const * SQR(1+r6[4]) * B2P * (1.0+x*irho) * L / sqrt(1.0 - xpr*xpr - ypr*ypr);
 
   /* recalculate momentums from angles after losing energy for radiation 	*/
-  p_norm = 1/(1+r6[4]);
+  p_norm = 1.0 / (1.0+r6[4]);
   r6[1] = xpr/p_norm;
   r6[3] = ypr/p_norm;
 
