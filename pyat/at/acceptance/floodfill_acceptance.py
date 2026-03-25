@@ -172,10 +172,7 @@ def floodfill(
     particles[:, axes[1]] = particles[:, axes[1]] + points[1, :]
 
     # parallel parameters
-    if use_mp:
-        nproc = pool_size
-    else:
-        nproc = 1
+    nproc = pool_size if use_mp else 1
     verboseprint(f"Number of processors: {nproc}")
     task_to_accomplish = Queue()
     processes = []
