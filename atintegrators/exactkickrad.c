@@ -35,6 +35,24 @@
 
 #define SQR(X) ((X)*(X))
 
+static double StrB2perp(double bx, double by,
+                            double x, double xpr, double y, double ypr)
+/* Calculates sqr(|B x e|) , where e is a unit vector in the direction of velocity  */
+
+{
+    /* components of the normalized velocity vector
+	   double ex, ey, ez;
+	   ex = xpr;
+	   ey = ypr;
+	   ez = sqrt(1 - xpr^2 - ypr^2);
+
+	   sqr(|B x e|) = sqr(|B|) * sqr(|e|) - sqr(B.e)
+	*/
+
+  	return SQR(bx) + SQR(by) - SQR(bx*xpr + by*ypr);
+}
+
+
 static double B2perp(double bx, double by, double irho,
         double x, double xpr, double y, double ypr)
         /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
