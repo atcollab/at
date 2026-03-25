@@ -26,7 +26,7 @@ def floodfill(
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
     pool_size: int = 10,
-    use_mp: bool = True,
+    use_mp: bool | at.MPMode = True,
 ):
     """Find the 2D acceptance of the ring using Flood Fill.
 
@@ -50,7 +50,8 @@ def floodfill(
         a small deviation to the tracked coordinates,
         e.g. [10e-5 10e-5] in the transverse planes.
         verbose:    Print extra info. Default 0.
-        use_mp:     Parallel tracking with queue. Only CPU, not GPU.
+        use_mp:     Parallel tracking, default True. It uses at.MPMode.CPU,
+        not at.MPMode.GPU.
         pool_size:  Number of cpus.
 
     Returns:
