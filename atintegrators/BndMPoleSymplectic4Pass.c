@@ -2,7 +2,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atphyslib.c"
-#include "driftkick.c"		/* fastdrift and bndthinkick */
+#include "b_drift_kick_drift_expanded.c"  /* kick */
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 struct elem
@@ -55,12 +55,12 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     double K2 = SL*KICK2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
-    double B0 = B[0];
-    double A0 = A[0];
+    double B0 = 0.0;
+    double A0 = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le;
-        A[0] += sin(KickAngle[1])/le;
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 = -sin(KickAngle[0]) / le;
+        A0 = sin(KickAngle[1]) / le;
     }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -95,13 +95,13 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             }
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
-                fastdrift(r6, NormL1);
-                bndthinkick(r6, A, B, K1, irho, max_order);
-                fastdrift(r6, NormL2);
-                bndthinkick(r6, A, B, K2, irho, max_order);
-                fastdrift(r6, NormL2);
-                bndthinkick(r6, A, B, K1, irho, max_order);
-                fastdrift(r6, NormL1);
+                drift(r6, NormL1);
+                kick(r6, A0, B0, A, B, K1, irho, max_order);
+                drift(r6, NormL2);
+                kick(r6, A0, B0, A, B, K2, irho, max_order);
+                drift(r6, NormL2);
+                kick(r6, A0, B0, A, B, K1, irho, max_order);
+                drift(r6, NormL1);
             }
             /* quadrupole gradient fringe */
             if (FringeQuadExit && B[1]!=0) {
@@ -121,10 +121,6 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
-    }
-    if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
-        B[0] = B0;
-        A[0] = A0;
     }
 }
 
