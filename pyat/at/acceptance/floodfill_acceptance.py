@@ -17,48 +17,6 @@ import numpy as np
 __all__ = ["floodfill"]
 
 
-def track_queue(
-    ring: at.Lattice,
-    zin: np.ndarray,
-    nturns: int,
-    n_x: int,
-    n_y: int,
-    task_to_accomplish: list,
-    islost: list,
-    final_turn: list,
-    registered_for_tracking: list,
-) -> None:
-    """Track particles with index inside queue.
-
-    Parameters:
-        ring: pyat ring
-        zin: particles coordinates (6,nparticles)
-        nturns: number of tracking turns
-        n_x: horizontal grid size
-        n_y: vertical grid size
-        task_to_accomplish: list with indexes of particles to track
-        islost: list with particle loss result from tracking
-        final_turn: turn when the particle is lost
-        registered_for_tracking: particle tracked or to be tracked
-    """
-    while not task_to_accomplish.empty():
-        task_id = task_to_accomplish.get(block=True, timeout=10)
-        registered_for_tracking[task_id] = True
-        *_, losses_data = ring.track(zin[:, task_id], nturns, losses=True)
-        islost[task_id] = losses_data["loss_map"]["islost"][0]
-        final_turn[task_id] = losses_data["loss_map"]["turn"][0]
-        if islost[task_id]:
-            # next particles
-            id_move = np.array([task_id + 1, task_id - 1, task_id + n_y, task_id - n_y])
-            # use only valid index
-            mask = np.logical_and(id_move >= 0, id_move < (n_x * n_y))
-            newid = id_move[mask]
-            for i in newid:
-                if not registered_for_tracking[i]:
-                    registered_for_tracking[i] = True
-                    task_to_accomplish.put(i)
-
-
 def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
     """Find the 2D acceptance of the ring using Flood Fill.
 
@@ -110,6 +68,50 @@ def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
       Beams, vol. 27, no. 9, p. 094 002, 2024.
       doi:10.1103/PhysRevAccelBeams.27.094002
     """
+
+    def track_queue(
+        ring: at.Lattice,
+        zin: np.ndarray,
+        nturns: int,
+        n_x: int,
+        n_y: int,
+        task_to_accomplish: list,
+        islost: list,
+        final_turn: list,
+        registered_for_tracking: list,
+    ) -> None:
+        """Track particles with index inside queue.
+
+        Parameters:
+            ring: pyat ring
+            zin: particles coordinates (6,nparticles)
+            nturns: number of tracking turns
+            n_x: horizontal grid size
+            n_y: vertical grid size
+            task_to_accomplish: list with indexes of particles to track
+            islost: list with particle loss result from tracking
+            final_turn: turn when the particle is lost
+            registered_for_tracking: particle tracked or to be tracked
+        """
+        while not task_to_accomplish.empty():
+            task_id = task_to_accomplish.get(block=True, timeout=10)
+            registered_for_tracking[task_id] = True
+            *_, losses_data = ring.track(zin[:, task_id], nturns, losses=True)
+            islost[task_id] = losses_data["loss_map"]["islost"][0]
+            final_turn[task_id] = losses_data["loss_map"]["turn"][0]
+            if islost[task_id]:
+                # next particles
+                id_move = np.array(
+                    [task_id + 1, task_id - 1, task_id + n_y, task_id - n_y]
+                )
+                # use only valid index
+                mask = np.logical_and(id_move >= 0, id_move < (n_x * n_y))
+                newid = id_move[mask]
+                for i in newid:
+                    if not registered_for_tracking[i]:
+                        registered_for_tracking[i] = True
+                        task_to_accomplish.put(i)
+
     # initialize variables
     nturns = kwargs.pop("nturns", 1000)
     window = kwargs.pop("window", (-10e-3, 10e-3, -5e-3, 5e-3))
