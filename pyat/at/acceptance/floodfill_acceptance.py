@@ -17,7 +17,17 @@ import numpy as np
 __all__ = ["floodfill"]
 
 
-def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
+def floodfill(
+    ring: at.Lattice,
+    nturns: int = 1000,
+    window: list | tuple = (-10e-3, 10e-3, -5e-3, 5e-3),
+    grid_size: list | tuple = (10, 10),
+    axes: list | tuple = (0, 2),
+    offset: np.ndarray = np.zeros((6)),
+    verbose: bool = False,
+    pool_size: int = 10,
+    use_mp: bool = True,
+):
     """Find the 2D acceptance of the ring using Flood Fill.
 
     Flood fill tracks particles from the exterior to the border of the
@@ -36,7 +46,7 @@ def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
         Axis1 and Axis2 are defined by 'axes'.
         grid_size: Number of steps per axis. Default [10,10].
         axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y.
-        six_doffset: Offset to be added. Default np.zeros((6,1)).
+        offset: Offset to be added. Default np.zeros((6)).
         This is useful to study off-axis acceptance on any plane,
         or off-momentum acceptance by adding dp to the 5th coord.,
         to track particles on the closed orbit, or to add
@@ -112,16 +122,6 @@ def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
                         registered_for_tracking[i] = True
                         task_to_accomplish.put(i)
 
-    # initialize variables
-    nturns = kwargs.pop("nturns", 1000)
-    window = kwargs.pop("window", (-10e-3, 10e-3, -5e-3, 5e-3))
-    grid_size = kwargs.pop("grid_size", (10, 10))
-    axes = kwargs.pop("axes", (0, 2))
-    sixd_offset = kwargs.pop("sixd_offset", np.zeros((6)))
-    verbose = kwargs.pop("verbose", False)
-    pool_size = kwargs.pop("pool_size", 10)
-    use_mp = kwargs.pop("use_mp", True)
-
     # Initialize output in case we return earlier
     points_not_lost = np.zeros((2, 0))
     points_lost_turns = np.zeros((3, 0))
@@ -164,7 +164,7 @@ def floodfill(ring: at.Lattice, **kwargs: dict[str, any]) -> tuple:
 
     ndims = 6
     particles = np.zeros((nparticles, ndims))
-    particles = particles + sixd_offset
+    particles = particles + offset
     particles[:, axes[0]] = particles[:, axes[0]] + points[0, :]
     particles[:, axes[1]] = particles[:, axes[1]] + points[1, :]
 
