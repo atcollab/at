@@ -1,8 +1,7 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "a_strthinkick.c"  /* kick */
-#include "exactbend.c"
+#include "b_bend_kick_bend.c"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -85,17 +84,17 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             bend_edge(r6, irho, -entrance_angle);
 
             if (num_int_steps == 0) {
-                exact_bend(r6, irho, le);
+                drift(r6, le, irho);
             }
             else {
                 for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                    exact_bend(r6, irho, L1);
-                    kick(r6, A0, B0, A, B, K1, max_order);
-                    exact_bend(r6, irho, L2);
-                    kick(r6, A0, B0, A, B, K2, max_order);
-                    exact_bend(r6, irho, L2);
-                    kick(r6, A0, B0, A, B, K1, max_order);
-                    exact_bend(r6, irho, L1);
+                    drift(r6, L1, irho);
+                    kick(r6, A0, B0, A, B, max_order, K1, irho);
+                    drift(r6, L2, irho);
+                    kick(r6, A0, B0, A, B, max_order, K2, irho);
+                    drift(r6, L2, irho);
+                    kick(r6, A0, B0, A, B, max_order, K1, irho);
+                    drift(r6, L1, irho);
                 }
             }
 

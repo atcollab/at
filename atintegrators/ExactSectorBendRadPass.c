@@ -1,8 +1,7 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactbndkickrad.c"
-#include "exactbend.c"
+#include "brad_bend_kick_bend.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -88,13 +87,13 @@ static void ExactSectorBendRad(double *r, double le, double irho,
             bend_edge(r6, irho, -entrance_angle);
 
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_bend(r6, irho, L1);
+                drift(r6, L1, irho);
                 kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L2);
+                drift(r6, L2, irho);
                 kick(r6, A0, B0, A, B, max_order, K2, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L2);
+                drift(r6, L2, irho);
                 kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L1);
+                drift(r6, L1, irho);
             }
 
             /* Convert absolute path length to path lengthening */
