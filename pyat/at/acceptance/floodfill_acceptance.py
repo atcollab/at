@@ -20,7 +20,7 @@ __all__ = ["floodfill"]
 def floodfill(
     ring: at.Lattice,
     nturns: int = 1000,
-    window: list | tuple = (-10e-3, 10e-3, -5e-3, 5e-3),
+    window: list | tuple = (-10e-3, 10e-3, -10e-3, 10e-3),
     grid_size: list | tuple = (10, 10),
     axes: list | tuple = (0, 2),
     offset: list | np.ndarray | None = None,
