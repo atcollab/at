@@ -28,7 +28,11 @@ static void atProperties(const mxArray *opts, double *energy, double *rest_energ
     field = mxGetField(opts, 0, "Energy");
     if (field) {
         double ener = mxGetScalar(field);
-        if (ener != 0.0) *energy = ener;
+        if (ener > 0.0) {
+            *energy = ener;
+        }else{
+            mexErrMsgIdAndTxt("Energy must be positive. Check lattice or passmethod parameters.");
+        }
         atParticle(opts, rest_energy, charge);
     }
 }
