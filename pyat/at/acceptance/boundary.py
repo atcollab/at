@@ -12,6 +12,7 @@ from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
 import warnings
+from .floodfill_acceptance import floodfill
 
 __all__ = ["GridMode"]
 
@@ -342,6 +343,42 @@ def grid_boundary_search(
     grids = []
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
+
+    if 'floodfill' in kwargs and kwargs['floodfill']:
+        b_ffallrefpts = []
+        s_ffallrefpts = []
+        g_ffallrefpts = []
+        for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
+            # set ring and offsets
+            obs = 0 if obs is None else obs
+            dpp = 0.0 if dp is None else dp
+            orbit, ringrot = set_ring_orbit(ring, dpp, obs, orbit)
+            offset = orbit + np.array([0,0,0,0,dpp,0])
+            # flood fill
+            window = np.ravel((np.array(config.bounds).T*config.amplitudes).T)
+            data_ff = floodfill(ringrot,
+                                nturns = nturns,
+                                window = window,
+                                grid_size = config.shape,
+                                axes = config.planesi,
+                                offset = offset,
+                                verbose = False,
+                                use_mp = use_mp,
+                                pool_size = kwargs['pool_size'],
+                                )
+            mask_alive = data_ff[2,:] == 0
+            b_ffallrefpts.append(0)
+            s_ffallrefpts.append(data_ff[0:2,mask_alive])
+            g_ffallrefpts.append(data_ff[0:2,:])
+        if len(obspt) == 1:
+            b_ff = b_ffallrefpts[0]
+            s_ff = s_ffallrefpts[0]
+            g_ff = g_ffallrefpts[0]
+        else:
+            b_ff = b_ffallrefpts
+            s_ff = s_ffallrefpts
+            g_ff = g_ffallrefpts
+        return b_ff, s_ff, g_ff
 
     for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
         orbit, _ = set_ring_orbit(ring, dp, obs, orbit)
