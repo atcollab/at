@@ -219,7 +219,7 @@ def floodfill(
     ft_ = np.array(final_turn)
     mask_tracked = ft_ != -1
     mask_islost = np.array(islost)
-    turns_per_point = np.zeros((sum(mask_tracked)))
+    turns_per_point = np.zeros(sum(mask_tracked))
 
     points_tracked = points[:, mask_tracked]
     lost_after_track = mask_islost[mask_tracked]
