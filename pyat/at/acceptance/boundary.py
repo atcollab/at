@@ -347,24 +347,24 @@ def grid_boundary_search(
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
 
-    if "floodfill" in kwargs and kwargs["floodfill"]:
+    if kwargs.get("floodfill"):
         s_ffallrefpts = []
         g_ffallrefpts = []
-        for obs, orbit in zip(obspt, offset):
+        for obs, orbit in zip(obspt, offset, strict=True):
             # set ring and offsets
-            obs = 0 if obs is None else obs
-            dpp = 0.0 if dp is None else dp
-            orbit, ringrot = set_ring_orbit(ring, dpp, obs, orbit)
-            offset = orbit + np.array([0, 0, 0, 0, dpp, 0])
+            _obs = 0 if obs is None else obs
+            _dpp = 0.0 if dp is None else dp
+            _orbit, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
+            _offset = _orbit + np.array([0, 0, 0, 0, _dpp, 0])
             # flood fill
             window = np.ravel((np.array(config.bounds).T * config.amplitudes).T)
             data_ff = floodfill(
-                ringrot,
+                _ringrot,
                 nturns=nturns,
                 window=window,
                 grid_size=config.shape,
                 axes=config.planesi,
-                offset=offset,
+                offset=_offset,
                 verbose=False,
                 use_mp=use_mp,
                 pool_size=kwargs["pool_size"],
