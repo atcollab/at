@@ -15,13 +15,13 @@ from typing import Sequence
 
 import numpy as np
 
-from .boundary import GridMode
+from at.lattice import AtError
+
+from ..lattice import Lattice, Refpts, frequency_control
 from ..tracking import MPMode, gpu_core_count
 
 # noinspection PyProtectedMember
-from .boundary import boundary_search
-from ..lattice import Lattice, Refpts, frequency_control
-from at.lattice import AtError
+from .boundary import GridMode, boundary_search
 
 
 @frequency_control
@@ -43,7 +43,7 @@ def get_acceptance(
     shift_zero: float = 1.0e-6,
     start_method: str | None = None,
     floodfill: bool = False,
-    **kwargs
+    **kwargs,
 ):
     # noinspection PyUnresolvedReferences
     r"""Computes the acceptance at ``repfts`` observation points
@@ -129,14 +129,14 @@ def get_acceptance(
     if use_mp is True:
         use_mp = MPMode.CPU
 
-    if floodfill and ( grid_mode is not GridMode.CARTESIAN ):
-        raise AtError('floodfill requires GridMode.CARTESIAN')
-    if floodfill and  ( use_mp is MPMode.GPU ):
-        raise AtError('floodfill is not implemented for GPU tracking')
+    if floodfill and (grid_mode is not GridMode.CARTESIAN):
+        raise AtError("floodfill requires GridMode.CARTESIAN")
+    if floodfill and (use_mp is MPMode.GPU):
+        raise AtError("floodfill is not implemented for GPU tracking")
     if floodfill:
-        kwargs['floodfill'] = True
-        if 'pool_size' not in kwargs:
-            kwargs['pool_size'] = multiprocessing.cpu_count()
+        kwargs["floodfill"] = True
+        if "pool_size" not in kwargs:
+            kwargs["pool_size"] = multiprocessing.cpu_count()
 
     if verbose:
         nproc = multiprocessing.cpu_count()
@@ -212,7 +212,7 @@ def get_1d_acceptance(
     divider: int | None = 2,
     shift_zero: float | None = 1.0e-6,
     start_method: str | None = None,
-    **kwargs
+    **kwargs,
 ):
     r"""Computes the 1D acceptance at ``refpts`` observation points
 
@@ -285,9 +285,9 @@ def get_1d_acceptance(
     assert np.isscalar(amplitude), "1D acceptance: scalar args required"
     npoint = np.ceil(amplitude / resolution)
     if grid_mode is not GridMode.RECURSIVE:
-        assert npoint > 1, (
-            "Grid has only one point: increase amplitude or reduce resolution"
-        )
+        assert (
+            npoint > 1
+        ), "Grid has only one point: increase amplitude or reduce resolution"
     b, s, g = get_acceptance(
         ring,
         plane,
@@ -304,7 +304,7 @@ def get_1d_acceptance(
         divider=divider,
         shift_zero=shift_zero,
         offset=offset,
-        **kwargs
+        **kwargs,
     )
     return np.squeeze(b), s, g
 
