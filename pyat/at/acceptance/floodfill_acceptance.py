@@ -63,7 +63,8 @@ def floodfill(
           Number of turns the n particle did during tracking
 
     Example:
-        >>> track_data = floodfill(ring, nturns=500)
+        >>> ff_data = floodfill(ring, nturns=500)
+        >>> alive_mask = ff_data[2,:] == 0
 
     Notes:
     This method is recomended for single or low number of CPUs, and,
