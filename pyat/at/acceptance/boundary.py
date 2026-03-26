@@ -4,14 +4,17 @@ calculate the loss boundary for different
 grid definitions
 """
 
-from at.lattice import Lattice, AtError, AtWarning, Refpts
-from typing import Optional, Sequence
-from enum import Enum
-import numpy as np
-from scipy.ndimage import binary_dilation, binary_opening
-from collections import namedtuple
 import time
 import warnings
+from collections import namedtuple
+from enum import Enum
+from typing import Optional, Sequence
+
+import numpy as np
+from scipy.ndimage import binary_dilation, binary_opening
+
+from at.lattice import AtError, AtWarning, Lattice, Refpts
+
 from .floodfill_acceptance import floodfill
 
 __all__ = ["GridMode"]
@@ -344,7 +347,7 @@ def grid_boundary_search(
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
 
-    if 'floodfill' in kwargs and kwargs['floodfill']:
+    if "floodfill" in kwargs and kwargs["floodfill"]:
         s_ffallrefpts = []
         g_ffallrefpts = []
         for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
@@ -352,22 +355,23 @@ def grid_boundary_search(
             obs = 0 if obs is None else obs
             dpp = 0.0 if dp is None else dp
             orbit, ringrot = set_ring_orbit(ring, dpp, obs, orbit)
-            offset = orbit + np.array([0,0,0,0,dpp,0])
+            offset = orbit + np.array([0, 0, 0, 0, dpp, 0])
             # flood fill
-            window = np.ravel((np.array(config.bounds).T*config.amplitudes).T)
-            data_ff = floodfill(ringrot,
-                                nturns = nturns,
-                                window = window,
-                                grid_size = config.shape,
-                                axes = config.planesi,
-                                offset = offset,
-                                verbose = False,
-                                use_mp = use_mp,
-                                pool_size = kwargs['pool_size'],
-                                )
-            mask_alive = data_ff[2,:] == 0
-            s_ffallrefpts.append(data_ff[0:2,mask_alive])
-            g_ffallrefpts.append(data_ff[0:2,:])
+            window = np.ravel((np.array(config.bounds).T * config.amplitudes).T)
+            data_ff = floodfill(
+                ringrot,
+                nturns=nturns,
+                window=window,
+                grid_size=config.shape,
+                axes=config.planesi,
+                offset=offset,
+                verbose=False,
+                use_mp=use_mp,
+                pool_size=kwargs["pool_size"],
+            )
+            mask_alive = data_ff[2, :] == 0
+            s_ffallrefpts.append(data_ff[0:2, mask_alive])
+            g_ffallrefpts.append(data_ff[0:2, :])
         if len(obspt) == 1:
             s_ff = s_ffallrefpts[0]
             g_ff = g_ffallrefpts[0]
@@ -376,9 +380,9 @@ def grid_boundary_search(
             g_ff = g_ffallrefpts
         # floodfill boundary and survived are the same,
         # but they need to be sorted
-        ia = np.argsort(np.arctan2(s_ff[1,:],s_ff[0,:]))
+        ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
         # return boundary, survived, tracked
-        b_ff = s_ff[:,ia]
+        b_ff = s_ff[:, ia]
         return b_ff, s_ff, g_ff
 
     for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
