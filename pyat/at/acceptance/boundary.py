@@ -350,7 +350,7 @@ def grid_boundary_search(
     if "floodfill" in kwargs and kwargs["floodfill"]:
         s_ffallrefpts = []
         g_ffallrefpts = []
-        for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
+        for obs, orbit in zip(obspt, offset):
             # set ring and offsets
             obs = 0 if obs is None else obs
             dpp = 0.0 if dp is None else dp
@@ -380,9 +380,9 @@ def grid_boundary_search(
             g_ff = g_ffallrefpts
         # floodfill boundary and survived are the same,
         # but they need to be sorted
-        ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
-        # return boundary, survived, tracked
-        b_ff = s_ff[:, ia]
+        _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
+        b_ff = s_ff[:, _ia]
+        # we return boundary, survived, tracked
         return b_ff, s_ff, g_ff
 
     for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
