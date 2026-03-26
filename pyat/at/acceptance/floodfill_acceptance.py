@@ -2,8 +2,9 @@
 
 from multiprocessing import Manager, Process, Queue
 
-import at
 import numpy as np
+
+import at
 
 # Author : E. Serra,  UAB and ALBA,  2025 original version in python
 #                                    See. IPAC2025, MOPB065.
@@ -25,9 +26,9 @@ def floodfill(
     axes: list | tuple = (0, 2),
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
-    pool_size: int = 10,
     use_mp: bool | at.MPMode = True,
-):
+    pool_size: int = 10,
+) -> np.ndarray:
     """Find the 2D acceptance of the ring using Flood Fill.
 
     Flood fill tracks particles from the exterior to the border of the
@@ -39,31 +40,30 @@ def floodfill(
         ring: pyat lattice
         nturns: Number of turns for the tracking. Default: 1000
         window: Min and max coordinate range, [Axis1min,Axis1max,
-        Axis2min,Axis2max]. Default [-10e-3,10e-3,-10e-3,10e-3].
-        Axis1 and Axis2 are defined by 'axes'.
-        grid_size: Number of steps per axis. Default [10,10]
+          Axis2min,Axis2max]. Default [-10e-3,10e-3,-10e-3,10e-3].
+          Axis1 and Axis2 are defined by 'axes'.
+          grid_size: Number of steps per axis. Default [10,10].
         axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y
         offset: Offset to be added. Default np.zeros((6)).
-        This is useful to study off-axis acceptance on any plane,
-        or off-momentum acceptance by adding dp to the 5th coord.,
-        to track particles on the closed orbit, or to add
-        a small deviation to the tracked coordinates,
-        e.g. [10e-5 10e-5] in the transverse planes.
+          This is useful to study off-axis acceptance on any plane,
+          or off-momentum acceptance by adding dp to the 5th coord.,
+          to track particles on the closed orbit, or to add
+          a small deviation to the tracked coordinates,
+          e.g. [10e-5 10e-5] in the transverse planes.
         verbose:    Print extra info. Default 0.
         use_mp:     Parallel tracking, default True. It uses at.MPMode.CPU,
-        not at.MPMode.GPU.
+          not at.MPMode.GPU.
         pool_size:  Number of cpus.
 
     Returns:
-        Two arrays (pnotlost, plost).
-        pnotlost: array of size (2,n_not_lost) containing the 2D offsets of
-        n_not_lost tracked particles that survived.
-        plost: array of size (3,n_lost) containing the 2D offsets of
-        n_lost trackedp articles that did not survive; and
-        in the third row the turn on which each particle is lost.
+        A (4,n) array with the following rows:
+          Position on axis 1 of the n tracked particles
+          Position on axis 2 of the n tracked particles
+          Flag set to 1 if the nth particle is lost, otherwise 0
+          Number of turns the n particle did during tracking
 
     Example:
-        >>> pnl, pl = floodfill(ring, nturns=500)
+        >>> track_data = floodfill(ring, nturns=500)
 
     Notes:
     This method is recomended for single or low number of CPUs, and,
@@ -126,8 +126,7 @@ def floodfill(
     offset = np.array(offset)
 
     # Initialize output in case we return earlier
-    points_not_lost = np.zeros((2, 0))
-    points_lost_turns = np.zeros((3, 0))
+    data_tracked = np.zeros((4, 0))
 
     verboseprint = print if verbose else lambda *a, **k: None
 
@@ -136,13 +135,13 @@ def floodfill(
 
     if window[0] == window[1] or window[2] == window[3]:
         verboseprint("Window is too narrow")
-        return points_not_lost, points_lost_turns
+        return data_tracked
 
     # set the grid
 
     if np.any(np.asarray(grid_size) < 1):
         print("Horizontal and vertical grid size should be more than 1")
-        return points_not_lost, points_lost_turns
+        return data_tracked
 
     n_x, n_y = grid_size
     min_x = min(window[0:2])
@@ -216,12 +215,13 @@ def floodfill(
         prc.join()
 
     verboseprint("done")
-    mask_tracked = np.array(final_turn) != -1
-    mask_islost = np.array(islost)
-
-    points_not_lost = points[:, np.logical_and(~mask_islost, mask_tracked)]
-    points_lost = points[:, np.logical_and(mask_islost, mask_tracked)]
     ft_ = np.array(final_turn)
-    turns_lost = ft_[np.logical_and(mask_islost, mask_tracked)]
-    points_lost_turns = np.vstack((points_lost, turns_lost))
-    return points_not_lost, points_lost_turns
+    mask_tracked = ft_ != -1
+    mask_islost = np.array(islost)
+    turns_per_point = np.zeros((sum(mask_tracked)))
+
+    points_tracked = points[:, mask_tracked]
+    lost_after_track = mask_islost[mask_tracked]
+    turns_per_point[lost_after_track] = ft_[mask_islost]
+    turns_per_point[~lost_after_track] = nturns
+    return np.vstack((points_tracked, lost_after_track, turns_per_point))
