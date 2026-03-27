@@ -74,6 +74,19 @@ typedef mxArray atElem;
 #define atPrintf(...) mexPrintf(__VA_ARGS__)
 #include "ringproperties.c"
 
+double atEnergy(double ringenergy, double elemenergy)
+{
+    if (ringenergy > 0.0)
+        return ringenergy;
+    else
+        if (elemenergy > 0.0)
+            return elemenergy;
+        else {
+            atError("Energy must be positive. Check lattice or passmethod parameters.");
+            return 0.0;   /* Never reached but makes the compiler happy */
+        }
+}
+
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
    mxArray *field;
@@ -186,6 +199,16 @@ typedef PyObject atElem;
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
 
 static int array_imported = 0;
+
+double atEnergy(double ringenergy, double elemenergy)
+{
+    if (ringenergy > 0.0)
+        return ringenergy;
+    else {
+        atError("Energy must be positive. Check lattice or set the track() keyword argument.");
+        return 0.0;   /* Never reached but makes the compiler happy */
+    }       
+}
 
 static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void)
 {
@@ -337,19 +360,6 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 #else
 #define C_LINK
 #endif
-
-double atEnergy(double ringenergy, double elemenergy)
-{
-    if (ringenergy > 0.0)
-        return ringenergy;
-    else
-        if (elemenergy > 0.0)
-            return elemenergy;
-        else {
-            atError("Energy must be positive. Check lattice or passmethod parameters.");
-            return 0.0;   /* Never reached but makes the compiler happy */
-        }
-}
 
 double atGamma(double ringenergy, double elemenergy, double rest_energy)
 {
