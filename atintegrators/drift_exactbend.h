@@ -8,7 +8,7 @@ static double pxyz(double dp1, double px, double py)
 }
 #endif /*PXYZ*/
 
-static void drift(double *r6, double irho, double L)
+static void drift(double *r6, double L, double irho)
 {
     /* Forest 12.18, bend-kick split, map W(L,irho) */
 
