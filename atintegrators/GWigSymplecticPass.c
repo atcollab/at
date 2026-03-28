@@ -145,11 +145,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
 
         /* Check energy */
-        Energy = atEnergy(Param->energy, Energy);
-        if (Energy == 0) {
-            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
-            check_error();
-        }
+        Energy = atEnergy(Param->energy, Energy); check_error();
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Energy=Energy;
@@ -168,7 +164,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
 
     GWigSymplecticPass(r_in, gamma, Elem->Length, Elem->Lw, Elem->Bmax,
             Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
