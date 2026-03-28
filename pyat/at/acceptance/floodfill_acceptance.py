@@ -42,7 +42,7 @@ def floodfill(
         window: Min and max coordinate range, [Axis1min,Axis1max,
           Axis2min,Axis2max]. Default [-10e-3,10e-3,-10e-3,10e-3].
           Axis1 and Axis2 are defined by 'axes'.
-          grid_size: Number of steps per axis. Default [10,10].
+        grid_size: Number of steps per axis. Default [10,10].
         axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y
         offset: Offset to be added. Default np.zeros((6)).
           This is useful to study off-axis acceptance on any plane,
