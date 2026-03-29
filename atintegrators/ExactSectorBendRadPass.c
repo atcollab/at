@@ -185,7 +185,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->KickAngle=KickAngle;
     }
     irho = Elem->BendingAngle/Elem->Length;
-    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);; check_error();
 
     ExactSectorBendRad(r_in, Elem->Length, irho,
             Elem->PolynomA, Elem->PolynomB,
