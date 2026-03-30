@@ -3,7 +3,6 @@
 name: Test build and publish
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
