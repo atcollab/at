@@ -126,7 +126,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         orbit = kwargs.pop("orbit", None)
         if orbit is None:
             orbit = np.mean(beam, axis=1)
-        beam -= orbit.reshape((6, 1))
+        beam = beam - orbit.reshape((6, 1))
         sigmat = (beam @ beam.T) / beam.shape[1]
 
     elif "twiss_in" in kwargs:
@@ -259,7 +259,7 @@ def emittances_from_beam(beam=None, sigma_mat=None):
         if sigma_mat is not None:
             msg = "beam provided, sigma_matrix ignored in emittance calculation"
             warn(AtWarning(msg))
-        sigma_mat = sigma_matrix(beam=beam.copy())
+        sigma_mat = sigma_matrix(beam=beam)
     eig_emittances, _ = eig(sigma_mat @ _jmat)
     eig_emittances = np.unique(abs(eig_emittances))
     submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
