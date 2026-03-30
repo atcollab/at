@@ -99,4 +99,4 @@ jobs:
         with:
           verbose: true
           skip-existing: true
-          repository-url: https://test.pypi.org/legacy
+          repository-url: https://test.pypi.org/legacy/
