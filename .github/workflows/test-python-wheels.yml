@@ -29,8 +29,6 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4
-        with:
-          CIBW_ENVIRONMENT_PASS_LINUX: SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX
 
       - name: Upload wheels
         id: wheel-upload
