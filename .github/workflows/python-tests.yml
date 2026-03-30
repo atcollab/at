@@ -5,8 +5,7 @@
 name: Build Python extension and run tests
 
 on:
-  # push:
-  workflow_dispatch:
+  push:
 
 jobs:
   build_and_run_tests:
