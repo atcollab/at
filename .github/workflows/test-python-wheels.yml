@@ -8,6 +8,9 @@ on:
 #      - pyat-[0-9]*
   workflow_dispatch:
 
+env:
+  SETUPTOOLS_SCM_PRETEND_VERSION: 0.8.1
+
 jobs:
   build_wheels:
     runs-on: ${{ matrix.os }}
