@@ -91,7 +91,7 @@ jobs:
       - name: Show structure
         run: ls -R dist/
 
-#      - name: Publish to PyPi
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          repository-url: https://test.pypi.org/legacy
+      - name: Publish to TestPyPi
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy
