@@ -29,9 +29,9 @@ def floodfill(
     use_mp: bool | at.MPMode = True,
     pool_size: int = 10,
 ) -> np.ndarray:
-    """Find the 2D acceptance of the ring using Flood Fill.
+    """Find the 2D acceptance of the ring using Flood Fill [1]_.
 
-    Flood fill tracks particles from the exterior to the border of the
+    Flood fill [1]_ tracks particles from the exterior to the border of the
     acceptance.
     The lost particles are returned in plost.
     The not lost particles are returned in pnotlost.
@@ -42,7 +42,7 @@ def floodfill(
         window: Min and max coordinate range, [Axis1min,Axis1max,
           Axis2min,Axis2max]. Default [-10e-3,10e-3,-10e-3,10e-3].
           Axis1 and Axis2 are defined by 'axes'.
-          grid_size: Number of steps per axis. Default [10,10].
+        grid_size: Number of steps per axis. Default [10,10].
         axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y
         offset: Offset to be added. Default np.zeros((6)).
           This is useful to study off-axis acceptance on any plane,
@@ -66,16 +66,18 @@ def floodfill(
         >>> ff_data = floodfill(ring, nturns=500)
         >>> alive_mask = ff_data[2,:] == 0
 
-    Notes:
-    This method is recomended for single or low number of CPUs, and,
-    it does not scale well for parallel computing.
+    .. Note::
 
-    Based on the article,
-      B. Riemann, M. Aiba, J. Kallestrup, and A. Streun, "Efficient
-      algorithms for dynamic aperture and momentum acceptance
-      calculation in synchrotron light sources", Phys. Rev. Accel.
-      Beams, vol. 27, no. 9, p. 094 002, 2024.
-      doi:10.1103/PhysRevAccelBeams.27.094002
+       This method is recommended for single or low number of CPUs, and does not scale
+       well for parallel computing.
+
+    References:
+      .. [1] B. Riemann, M. Aiba, J. Kallestrup, and A. Streun, "Efficient
+         algorithms for dynamic aperture and momentum acceptance
+         calculation in synchrotron light sources",
+         Phys. Rev. Accel. Beams, vol. 27, no. 9, p. 094 002, 2024.
+         doi:10.1103/PhysRevAccelBeams.27.094002
+
     """
 
     def track_queue(
