@@ -3,10 +3,10 @@
 name: Test build and publish
 
 on:
-  workflow_dispatch:
   push:
 #    tags:
 #      - pyat-[0-9]*
+  workflow_dispatch:
 
 jobs:
   build_wheels:
@@ -94,4 +94,5 @@ jobs:
       - name: Publish to TestPyPi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          verbose: true
           repository-url: https://test.pypi.org/legacy
