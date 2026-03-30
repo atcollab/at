@@ -205,7 +205,6 @@ def beam(nparts: int, sigma, orbit: Orbit = None):
     try:
         # Try full 6x6 matrix
         lmat = cholesky(sigma)
-        print("h, v, delta")
     except LinAlgError:
         lmat = np.zeros((6, 6))
         try:
@@ -214,7 +213,6 @@ def beam(nparts: int, sigma, orbit: Orbit = None):
             idx = np.ix_(sel, sel)
             lmat[idx] = cholesky(sigma[idx])
             lmat[4:, 4:] = _get_single_plane(slice(4, 6))
-            print("h, v")
         except LinAlgError:
             try:
                 # Try x-delta 4x4 matrix
@@ -222,13 +220,11 @@ def beam(nparts: int, sigma, orbit: Orbit = None):
                 idx = np.ix_(sel, sel)
                 lmat[idx] = cholesky(sigma[idx])
                 lmat[2:4, 2:4] = _get_single_plane(slice(2, 4))
-                print("h, delta")
             except LinAlgError:
                 # Uncoupled
                 lmat[:2, :2] = _get_single_plane(slice(2))
                 lmat[2:4, 2:4] = _get_single_plane(slice(2, 4))
                 lmat[4:, 4:] = _get_single_plane(slice(4, 6))
-                print("uncoupled")
 
     particle_dist = np.asfortranarray(lmat @ v)
 
