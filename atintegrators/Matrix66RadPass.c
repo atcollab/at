@@ -40,8 +40,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*optional fields*/
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2Rad"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->M66=M66;
         /*optional fields*/
@@ -69,8 +69,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /*optional fields*/
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2Rad"); check_error();
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -84,8 +84,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(4,1);
-            mxSetCell(plhs[1], 0,mxCreateString("T1"));
-            mxSetCell(plhs[1], 1,mxCreateString("T2"));
+            mxSetCell(plhs[1], 0,mxCreateString("T1Rad"));
+            mxSetCell(plhs[1], 1,mxCreateString("T2Rad"));
             mxSetCell(plhs[1], 2,mxCreateString("R1"));
             mxSetCell(plhs[1], 3,mxCreateString("R2"));
         }
