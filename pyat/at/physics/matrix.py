@@ -205,32 +205,46 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     return m66
 
 
-def gen_m66_elem(ring: Lattice,
-                 o4b: Orbit,
-                 o4e: Orbit) -> M66:
-    """Converts a ring to a linear 6x6 matrix
+def gen_m66_elem(ring: Lattice, 
+                 ringrad: Lattice = None,
+                 o6b: Orbit = None,
+                 o6e: Orbit = None,
+                 o6brad: Orbit = None,
+                 o6erad: Orbit = None,
+                 **kwargs) -> M66:
+    """Converts a ring to a linear 6x6 matrix. This element handles 2 passmethods
+    ``Matrix66Pass`` and ``Matrix66RadPass``, that can be activated within a lattice
+    using :py:func:`enable_6()` or :py:func:`disable_6d`.
+    This provides flexibility to turn ON and OFF the 6D motion or simply the radiation
+    damping, depending on the configuration of the rings provided as input.
 
     Parameters:
-        ring:       Lattice description
-        o4b:
-        o4e:
+        ring:       Lattice description. Is used by ``Matrix66Pass``
+        ringrad:    Optional lattice with radiations. Is used by ``Matrix66RadPass``
+        o6b:        entrace orbit without radiations, use by ``Matrix66Pass``
+        o6e:        exit orbit without radiations, use by ``Matrix66Pass``
+        o6b:        entrace orbit with radiations, use by ``Matrix66RadPass``
+        o6e:        exit orbit with radiations, use by ``Matrix66RadPass``
 
     Returns:
-        m66:        6x6 transfer matrix
+        m66:        :py:obj:`M66` object
     """
-
-    dipoles = ring[Dipole]
-    theta = numpy.array([elem.BendingAngle for elem in dipoles])
-    lendp = numpy.array([elem.Length for elem in dipoles])
-    s_pos = ring.get_s_pos()
-    s = numpy.diff(numpy.array([s_pos[0], s_pos[-1]]))[0]
-    i2 = numpy.sum(numpy.abs(theta * theta / lendp))
-    m66_mat, _ = find_m66(ring, [], orbit=o4b)
-    if ring.radiation is False:
-        m66_mat = symplectify(m66_mat)  # remove for damping
-    lin_elem = M66('Linear', m66_mat, T1=-o4b, T2=o4e, Length=s, I2=i2)
+    length = ring.circumference
+    kwargs.update({"Length": length})
+    m66_mat, _ = find_m66(ring, [], orbit=o6b)
+    m66_mat_rad, _ = find_m66(ringrad, [], orbit=o6brad)
+    kwargs.update({"M66Rad": m66_mat_rad})
+    if o6b is not None:
+        kwargs.update({"T1": -o6b})
+    if o6e is not None:
+        kwargs.update({"T2": o6e})
+    if o6brad is not None:
+        kwargs.update({"T1rad": -o6brad})
+    if o6erad is not None:
+        kwargs.update({"T2rad": o6erad})  
+    lin_elem = M66('Linear', m66_mat, **kwargs)
     return lin_elem
-
+       
 
 Lattice.find_m44 = find_m44
 Lattice.find_m66 = find_m66
