@@ -109,10 +109,6 @@ def find_m66(ring: Lattice, refpts: Refpts = None,
     :py:func:`find_m66` finds the 6x6 transfer matrix of an accelerator
     lattice by differentiation of trajectories near the closed orbit.
 
-    :py:func:`find_m66` uses :py:func:`.find_orbit6` to search for the closed
-    orbit in 6-D. In order for this to work the ring **MUST** have a ``Cavity``
-    element
-
     Parameters:
         ring:           Lattice description
         refpts:         Observation points

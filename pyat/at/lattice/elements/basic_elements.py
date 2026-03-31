@@ -443,25 +443,30 @@ class RFCavity(LongtMotion, LongElement):
         return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
 
 
-class M66(Element):
+class M66(Radiative, Element):
     """Linear (6, 6) transfer matrix."""
 
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "M66"]
     _conversions = dict(Element._conversions, M66=_array66)
     _file_classname = "Matrix66"
 
-    def __init__(self, family_name: str, m66=None, **kwargs):
+    def __init__(self, family_name: str, m66=None, m66rad=None, **kwargs):
         """
         Args:
             family_name:    Name of the element
             m66:            Transfer matrix. Default: Identity matrix.
+            m66rad:         Transfer matrix including radiation. Default: Identity matrix.
+
 
         Default PassMethod: ``Matrix66Pass``
         """
         if m66 is None:
             m66 = np.identity(6)
+        if m66rad is None:
+            m66rad = np.identity(6)       
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
+        kwargs.setdefault("M66Rad", m66rad)
         super().__init__(family_name, **kwargs)
 
 
