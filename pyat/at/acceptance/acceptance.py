@@ -1,17 +1,17 @@
-"""Acceptance computation"""
+"""Acceptance computation."""
 
 from __future__ import annotations
 
 __all__ = [
-    "get_acceptance",
     "get_1d_acceptance",
+    "get_acceptance",
     "get_horizontal_acceptance",
-    "get_vertical_acceptance",
     "get_momentum_acceptance",
+    "get_vertical_acceptance",
 ]
 
 import multiprocessing
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -42,11 +42,10 @@ def get_acceptance(
     divider: int = 2,
     shift_zero: float = 1.0e-6,
     start_method: str | None = None,
-    floodfill: bool = False,
     **kwargs,
 ):
     # noinspection PyUnresolvedReferences
-    r"""Computes the acceptance at ``repfts`` observation points
+    r"""Compute the acceptance at ``repfts`` observation points.
 
     Parameters:
         ring:           Lattice definition
@@ -75,6 +74,8 @@ def get_acceptance(
           * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+          * :py:attr:`.GridMode.FLOODFILL`: cartesian search from exterior
+             region to stable boundary. Only wiht at.MPMode.CPU tracking
         use_mp:         Flag to activate CPU or GPU multiprocessing
           (default: False)
         gpu_pool:       List of GPU id to use when use_mp is
@@ -91,9 +92,7 @@ def get_acceptance(
           Windows is ``'spawn'``. ``'fork'`` may be used on macOS to speed up
           the calculation or to solve runtime errors, however it is
           considered unsafe.
-        floodfill: scan from unstable to stable. Only in `GridMode.CARTESIAN`,
-          and CPU tracking. GPU not implemented.
-        pool_size: number of CPUs. Only has effect with floodfill
+        pool_size: number of CPUs. Only has effect with at.GridMode.FLOODFILL
 
     Returns:
         boundary:   (2,n) array: 2D acceptance
@@ -129,11 +128,10 @@ def get_acceptance(
     if use_mp is True:
         use_mp = MPMode.CPU
 
-    if floodfill and (grid_mode is not GridMode.CARTESIAN):
-        raise AtError("floodfill requires GridMode.CARTESIAN")
-    if floodfill and (use_mp is MPMode.GPU):
-        raise AtError("floodfill is not implemented for GPU tracking")
-    if floodfill:
+    if (grid_mode is GridMode.FLOODFILL) and (use_mp is MPMode.GPU):
+        msg = "floodfill is not implemented for GPU tracking"
+        raise AtError(msg) from None
+    if grid_mode is GridMode.FLOODFILL:
         kwargs["floodfill"] = True
         if "pool_size" not in kwargs:
             kwargs["pool_size"] = multiprocessing.cpu_count()
@@ -214,7 +212,7 @@ def get_1d_acceptance(
     start_method: str | None = None,
     **kwargs,
 ):
-    r"""Computes the 1D acceptance at ``refpts`` observation points
+    r"""Compute the 1D acceptance at ``refpts`` observation points.
 
     See :py:func:`get_acceptance`
 
@@ -312,7 +310,7 @@ def get_1d_acceptance(
 def get_horizontal_acceptance(
     ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
 ):
-    r"""Computes the 1D horizontal acceptance at ``refpts`` observation points
+    r"""Compute the 1D horizontal acceptance at ``refpts`` observation points.
 
     See :py:func:`get_acceptance`
 
@@ -379,7 +377,7 @@ def get_horizontal_acceptance(
 def get_vertical_acceptance(
     ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
 ):
-    r"""Computes the 1D vertical acceptance at refpts observation points
+    r"""Compute the 1D vertical acceptance at refpts observation points.
 
     See :py:func:`get_acceptance`
 
@@ -446,7 +444,7 @@ def get_vertical_acceptance(
 def get_momentum_acceptance(
     ring: Lattice, resolution: float, amplitude: float, *args, **kwargs
 ):
-    r"""Computes the 1D momentum acceptance at refpts observation points
+    r"""Compute the 1D momentum acceptance at refpts observation points.
 
     See :py:func:`get_acceptance`
 
