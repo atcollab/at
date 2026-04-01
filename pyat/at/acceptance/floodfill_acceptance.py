@@ -5,7 +5,7 @@ from multiprocessing import Manager, Process, Queue
 import numpy as np
 
 import at
-from .grid_definitions import _pdict, get_plane_index
+from .grid_definitions import get_plane_index
 
 # Author : E. Serra,  UAB and ALBA,  2025 original version in python
 #                                    See. IPAC2025, MOPB065.
@@ -19,14 +19,12 @@ from .grid_definitions import _pdict, get_plane_index
 __all__ = ["floodfill"]
 
 
-
-
 def floodfill(
     ring: at.Lattice,
     nturns: int = 1024,
-    planes: list | tuple = ('x', 'y'),
-    amplitudes: list | tuple = (10e-3,10e-3),
-    bounds: list | tuple = (-1,1,-1,1),
+    planes: list | tuple = ("x", "y"),
+    amplitudes: list | tuple = (10e-3, 10e-3),
+    bounds: list | tuple = ((-1, 1), (0, 1)),
     npoints: list | tuple = (10, 10),
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
@@ -48,8 +46,8 @@ def floodfill(
           ``'yp'``, ``'dp'``, ``'ct'``
         amplitudes: (2,) array, set the search range per plane.
           Default [10e-3,10e-3]
-        bounds: (2,) array, defines the tracked range: range=bounds*amplitude
-            Default (-1,1,-1,1)
+        bounds: (2,2) array, defines the tracked range: range=bounds*amplitude
+            Default ((-1,1),(0,1))
         npoints: Number of steps per axis. Default (10,10).
         offset: Offset to be added. Default np.zeros((6)).
           This is useful to study off-axis acceptance on any plane,
@@ -75,8 +73,8 @@ def floodfill(
 
     .. Note::
 
-       This method is recommended for single or low number of CPUs, and does not scale
-       well for parallel computing.
+       This method is recommended for single or low number of CPUs, and does
+       not scale well for parallel computing.
 
     References:
       .. [1] B. Riemann, M. Aiba, J. Kallestrup, and A. Streun, "Efficient
@@ -144,7 +142,7 @@ def floodfill(
     verboseprint("Flood fill starts.")
     verboseprint(f"Maximum number of turns: {nturns}")
 
-    window = np.ravel((np.array(bounds).reshape((2,2)).T * np.array(amplitudes)).T)
+    window = np.ravel((np.array(bounds).reshape((2, 2)).T * np.array(amplitudes)).T)
     if window[0] == window[1] or window[2] == window[3]:
         verboseprint("Window is too narrow")
         return data_tracked
