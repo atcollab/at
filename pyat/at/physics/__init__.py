@@ -20,3 +20,4 @@ from .fastring import *
 from .frequency_maps import fmap_parallel_track
 from .rdt import *
 from .magnet_tools import *
+from .parallel_get_fmap import get_fmap
