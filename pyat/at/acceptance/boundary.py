@@ -16,10 +16,9 @@ from scipy.ndimage import binary_dilation, binary_opening
 from at.lattice import AtError, AtWarning, Lattice, Refpts
 
 from .floodfill_acceptance import floodfill
+from .grid_definitions import _pdict, get_plane_index
 
 __all__ = ["GridMode"]
-
-_pdict = {"x": 0, "xp": 1, "y": 2, "yp": 3, "dp": 4, "ct": 5}
 
 
 class GridMode(Enum):
@@ -57,22 +56,6 @@ def grid(grid, offset):
     """
     d = {"grid": np.atleast_2d(grid), "offset": np.atleast_1d(offset)}
     return namedtuple("grid", d.keys())(**d)
-
-
-def get_plane_index(planes):
-    """
-    Converts plane to particle coordinate index
-    """
-    planesi = np.array([], dtype=np.int32)
-    for i, p in enumerate(np.atleast_1d(planes)):
-        if isinstance(p, str):
-            try:
-                planesi = np.append(planesi, _pdict[p])
-            except KeyError:
-                raise AtError("Allowed values for plane are x,xp,y,yp,dp,ct")
-        else:
-            raise AtError("Allowed values for plane are x,xp,y,yp,dp,ct")
-    return planesi
 
 
 def set_ring_orbit(ring, dp, obspt, orbit):
