@@ -137,7 +137,7 @@ static void diff_kick(double *r6, double A0, double B0, double *A, double *B, in
   r6[1] = xpr / p_norm;
   r6[3] = ypr / p_norm;
 
-  r6[1] -= L * (ReSum - (dp_0-x*irho)*irho + irho*B[1]*x*y);
-  r6[3] += L * (ImSum - irho*B[1]*(x*x-y*y/2.0));
+  r6[1] -= L * (ReSum - (dp_0-x*irho)*irho + irho*B[1]*(x*x-0.5*y*y));
+  r6[3] += L * (ImSum + irho*B[1]*x*y);
   r6[5] += L * irho * r6[0]; /* pathlength */
 }

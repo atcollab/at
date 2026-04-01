@@ -115,6 +115,6 @@ the polynomial terms in PolynomB.
   r6[3] = ypr/p_norm;
 
   /* Multipole kick */
-  r6[1] -= L * (ReSum + irho*B[1]*x*y);
-  r6[3] += L * (ImSum - irho*B[1]*(x*x-y*y/2.0));
+  r6[1] -= L * (ReSum + irho*B[1]*(x*x-0.5*y*y));
+  r6[3] += L * (ImSum + irho*B[1]*x*y);
 }

@@ -15,6 +15,6 @@ static void kick(double* r6, double A0, double B0, const double* A, const double
    ReSum += B0;
    ImSum += A0;
 
-   r6[1] -= L * (ReSum + irho*B[1]*x*y);
-   r6[3] += L * (ImSum - irho*B[1]*(x*x-y*y/2.0));
+   r6[1] -= L * (ReSum + irho*B[1]*(x*x-0.5*y*y));
+   r6[3] += L * (ImSum + irho*B[1]*x*y);
 }
