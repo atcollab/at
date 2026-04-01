@@ -28,7 +28,7 @@ class GridMode(Enum):
     RADIAL = 0  #: full [:math:`\:r, \theta\:`] grid
     CARTESIAN = 1  #: full [:math:`\:x, y\:`] grid
     RECURSIVE = 2  #: radial recursive search
-    FLOODFILL = 3  #: from unstable to stable
+    FLOODFILL = 3  #: from exterior to stable boundary
 
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
