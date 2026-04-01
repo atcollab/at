@@ -338,8 +338,10 @@ def generate_grid(
     ndims = 6
     particles = np.zeros((ndims, nparticles))
     particles = particles + offset.reshape((6, 1))
-    particles[axes[0], :] = particles[axes[0], :] + points[:, 0] + shift_zero
-    particles[axes[1], :] = particles[axes[1], :] + points[:, 1] + shift_zero
+    particles[axes[0], :] = particles[axes[0], :] + points[:, 0]
+    particles[axes[1], :] = particles[axes[1], :] + points[:, 1]
+    particles[0, :] = particles[0, :] + shift_zero
+    particles[2, :] = particles[2, :] + shift_zero
 
     return nparticles, ndims, points, particles
 
