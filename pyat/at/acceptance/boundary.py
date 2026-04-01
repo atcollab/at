@@ -99,7 +99,7 @@ def grid_configuration(
         if bounds is None:
             bounds = np.array([[0, 1], [np.pi, 0]])
         bounds[0][bounds[0] == 0] = 1.0e-6
-    elif grid_mode is GridMode.CARTESIAN:
+    elif (grid_mode is GridMode.CARTESIAN) or (grid_mode is GridMode.FLOODFILL):
         if bounds is None:
             bounds = np.array([[p - 1, 1] for p in range(ndims)])
     else:
@@ -340,13 +340,13 @@ def grid_boundary_search(
             _orbit, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
             _offset = _orbit + np.array([0, 0, 0, 0, _dpp, 0])
             # flood fill
-            window = np.ravel((np.array(config.bounds).T * config.amplitudes).T)
             data_ff = floodfill(
                 _ringrot,
                 nturns=nturns,
-                window=window,
-                grid_size=config.shape,
-                axes=config.planesi,
+                planes=config.planes,
+                amplitudes=config.amplitudes,
+                bounds=config.bounds,
+                npoints=config.shape,
                 offset=_offset,
                 verbose=False,
                 use_mp=use_mp,
