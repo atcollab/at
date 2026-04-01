@@ -69,7 +69,7 @@ def floodfill(
 
     Example:
         >>> ff_data = floodfill(ring, nturns=500)
-        >>> alive_mask = ff_data[2,:] == 0
+        >>> alive_mask = ff_data[3,:] == 0
 
     .. Note::
 
