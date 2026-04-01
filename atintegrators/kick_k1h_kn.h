@@ -1,4 +1,4 @@
-static void kick(double* r6, double A0, double B0, const double* A, const double* B, int max_order, double L,double irho)
+static void kick(double* r6, double A0, double B0, const double* A, const double* B, int max_order, double L, double irho)
 {
    double ReSum = B[max_order];
    double ImSum = A[max_order];

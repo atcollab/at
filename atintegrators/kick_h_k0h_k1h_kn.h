@@ -1,4 +1,4 @@
-static void kick(double* r6, double A0, double B0, double* A, double* B, double L, double irho, int max_order)
+static void kick(double* r6, double A0, double B0, const double* A, const double* B, int max_order, double L, double irho)
 /*****************************************************************************
 Calculate multipole kick in a curved elemrnt (bending magnet)
 The reference coordinate system  has the curvature given by the inverse

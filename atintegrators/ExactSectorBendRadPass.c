@@ -1,7 +1,8 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "brad_bend_kick_bend.h"
+#include "drift_exactbend.h"
+#include "kickrad_k1h_kn.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 

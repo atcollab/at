@@ -2,7 +2,8 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atphyslib.c"
-#include "b_drift_kick_drift_expanded.c"  /* kick */
+#include "drift_fast.h"
+#include "kick_h_k0h_k1h_kn.h"
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 struct elem
@@ -96,11 +97,11 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
                 drift(r6, NormL1);
-                kick(r6, A0, B0, A, B, K1, irho, max_order);
+                kick(r6, A0, B0, A, B, max_order, K1, irho);
                 drift(r6, NormL2);
-                kick(r6, A0, B0, A, B, K2, irho, max_order);
+                kick(r6, A0, B0, A, B, max_order, K2, irho);
                 drift(r6, NormL2);
-                kick(r6, A0, B0, A, B, K1, irho, max_order);
+                kick(r6, A0, B0, A, B, max_order, K1, irho);
                 drift(r6, NormL1);
             }
             /* quadrupole gradient fringe */

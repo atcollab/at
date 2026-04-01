@@ -1,7 +1,8 @@
 #include "atelem.c"
 #include "atlalib.c"
+#include "diff_drift.c"
+#include "diff_h_k0h_k1h_kn.c"
 #include "diff_bend_fringe.c"
-#include "diff_drift_kick_drift_expanded.c"
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 struct elem

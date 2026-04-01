@@ -1,7 +1,8 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "b_bend_kick_bend.c"
+#include "drift_exactbend.h"
+#include "kick_k1h_kn.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -80,7 +81,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (FringeBendEntrance)
                 bend_fringe(r6, irho, gK);
             if (FringeQuadEntrance)
-                multipole_fringe(r6, le, A, B, max_order+1, 1.0, 1);
+                multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             bend_edge(r6, irho, -entrance_angle);
 
             if (num_int_steps == 0) {
@@ -104,7 +105,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             /* edge focus */
             bend_edge(r6, irho, -exit_angle);
             if (FringeQuadExit)
-                multipole_fringe(r6, le, A, B, max_order+1, -1.0, 1);
+                multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
                 bend_fringe(r6, -irho, gK);
             Yrot(r6, exit_angle);
