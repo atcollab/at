@@ -369,7 +369,7 @@ def grid_boundary_search(
                 use_mp=use_mp,
                 pool_size=kwargs["pool_size"],
             )
-            mask_alive = data_ff[2, :] == 0
+            mask_alive = data_ff[3, :] == 0
             s_ffallrefpts.append(data_ff[0:2, mask_alive])
             g_ffallrefpts.append(data_ff[0:2, :])
         if len(obspt) == 1:
