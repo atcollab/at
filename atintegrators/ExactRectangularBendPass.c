@@ -90,7 +90,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             if (FringeBendEntrance)
                 bend_fringe(r6, irho, gK);
             if (FringeQuadEntrance)
-                multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
+                multipole_fringe(r6, le, A, B, max_order+1, 1.0, 1);
             bend_edge(r6, irho, phi2-entrance_angle);
 
             /* integrator */
@@ -112,7 +112,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             /* edge focus */
             bend_edge(r6, irho, phi2-exit_angle);
             if (FringeQuadExit)
-                multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
+                multipole_fringe(r6, le, A, B, max_order+1, -1.0, 1);
             if (FringeBendExit)
                 bend_fringe(r6, -irho, gK);
 
