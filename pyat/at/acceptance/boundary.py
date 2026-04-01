@@ -1,14 +1,13 @@
 """
-Functions used to
-calculate the loss boundary for different
-grid definitions
+Functions used to calculate the loss boundary for different grid definitions.
 """
 
 import time
 import warnings
 from collections import namedtuple
 from enum import Enum
-from typing import Optional, Sequence
+from typing import Optional
+from collections.abc import Sequence
 
 import numpy as np
 from scipy.ndimage import binary_dilation, binary_opening
@@ -16,19 +15,20 @@ from scipy.ndimage import binary_dilation, binary_opening
 from at.lattice import AtError, AtWarning, Lattice, Refpts
 
 from .floodfill_acceptance import floodfill
-from .grid_definitions import _pdict, get_plane_index
+from .grid_definitions import get_plane_index
 
 __all__ = ["GridMode"]
 
 
 class GridMode(Enum):
     """
-    Grid definition for 2D acceptance boundary search
+    Grid definition for 2D acceptance boundary search.
     """
 
     RADIAL = 0  #: full [:math:`\:r, \theta\:`] grid
     CARTESIAN = 1  #: full [:math:`\:x, y\:`] grid
     RECURSIVE = 2  #: radial recursive search
+    FLOODFILL = 3  #: from unstable to stable
 
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
