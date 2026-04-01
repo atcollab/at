@@ -13,7 +13,7 @@ def get_plane_index(planes) -> np.array:
 
     Args:
         planes: an iterable tuple or list containing the plane names.
-          'x'. 'xp', 'y', 'yp', 'delta', 'ct'.
+          'x'. 'xp', 'y', 'yp', 'dp', 'ct'.
 
     Returns:
         AT index of the plane.
