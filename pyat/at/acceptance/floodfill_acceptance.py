@@ -5,6 +5,7 @@ from multiprocessing import Manager, Process, Queue
 import numpy as np
 
 import at
+from .grid_definitions import _pdict, get_plane_index
 
 # Author : E. Serra,  UAB and ALBA,  2025 original version in python
 #                                    See. IPAC2025, MOPB065.
@@ -18,12 +19,15 @@ import at
 __all__ = ["floodfill"]
 
 
+
+
 def floodfill(
     ring: at.Lattice,
-    nturns: int = 1000,
-    window: list | tuple = (-10e-3, 10e-3, -10e-3, 10e-3),
-    grid_size: list | tuple = (10, 10),
-    axes: list | tuple = (0, 2),
+    nturns: int = 1024,
+    planes: list | tuple = ('x', 'y'),
+    amplitudes: list | tuple = (10e-3,10e-3),
+    bounds: list | tuple = (-1,1,-1,1),
+    npoints: list | tuple = (10, 10),
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
     use_mp: bool | at.MPMode = True,
@@ -38,12 +42,15 @@ def floodfill(
 
     Parameters:
         ring: pyat lattice
-        nturns: Number of turns for the tracking. Default: 1000
-        window: Min and max coordinate range, [Axis1min,Axis1max,
-          Axis2min,Axis2max]. Default [-10e-3,10e-3,-10e-3,10e-3].
-          Axis1 and Axis2 are defined by 'axes'.
-        grid_size: Number of steps per axis. Default [10,10].
-        axes: Indexes of axes to be scanned. Default is [0,2], i.e. x-y
+        nturns: Number of turns for the tracking. Default: 1024
+        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
+          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
+          ``'yp'``, ``'dp'``, ``'ct'``
+        amplitudes: (2,) array, set the search range per plane.
+          Default [10e-3,10e-3]
+        bounds: (2,) array, defines the tracked range: range=bounds*amplitude
+            Default (-1,1,-1,1)
+        npoints: Number of steps per axis. Default (10,10).
         offset: Offset to be added. Default np.zeros((6)).
           This is useful to study off-axis acceptance on any plane,
           or off-momentum acceptance by adding dp to the 5th coord.,
@@ -59,8 +66,8 @@ def floodfill(
         A (4,n) array with the following rows:
           Position on axis 1 of the n tracked particles
           Position on axis 2 of the n tracked particles
-          Flag set to 1 if the nth particle is lost, otherwise 0
           Number of turns the n particle did during tracking
+          Flag set to 1 if the nth particle is lost, otherwise 0
 
     Example:
         >>> ff_data = floodfill(ring, nturns=500)
@@ -127,6 +134,7 @@ def floodfill(
     if offset is None:
         offset = 6 * [0]
     offset = np.array(offset)
+    axes = get_plane_index(planes)
 
     # Initialize output in case we return earlier
     data_tracked = np.zeros((4, 0))
@@ -136,17 +144,18 @@ def floodfill(
     verboseprint("Flood fill starts.")
     verboseprint(f"Maximum number of turns: {nturns}")
 
+    window = np.ravel((np.array(bounds).reshape((2,2)).T * np.array(amplitudes)).T)
     if window[0] == window[1] or window[2] == window[3]:
         verboseprint("Window is too narrow")
         return data_tracked
 
     # set the grid
 
-    if np.any(np.asarray(grid_size) < 1):
+    if np.any(np.asarray(npoints) < 1):
         print("Horizontal and vertical grid size should be more than 1")
         return data_tracked
 
-    n_x, n_y = grid_size
+    n_x, n_y = npoints
     min_x = min(window[0:2])
     max_x = max(window[0:2])
     min_y = min(window[2:4])
@@ -227,4 +236,4 @@ def floodfill(
     lost_after_track = mask_islost[mask_tracked]
     turns_per_point[lost_after_track] = ft_[mask_islost]
     turns_per_point[~lost_after_track] = nturns
-    return np.vstack((points_tracked, lost_after_track, turns_per_point))
+    return np.vstack((points_tracked, turns_per_point, lost_after_track))
