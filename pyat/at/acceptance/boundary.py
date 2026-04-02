@@ -361,13 +361,10 @@ def grid_boundary_search(
         else:
             s_ff = s_ffallrefpts
             g_ff = g_ffallrefpts
-        if s_ff.size == 0:
-            b_ff = np.zeros((0))
-        else:
-            # floodfill boundary and survived are the same,
-            # but they need to be sorted
-            _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
-            b_ff = s_ff[:, _ia]
+        # floodfill boundary and survived are the same,
+        # but they need to be sorted
+        _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
+        b_ff = s_ff[:, _ia]
         # we return boundary, survived, tracked
         return b_ff, s_ff, g_ff
 
