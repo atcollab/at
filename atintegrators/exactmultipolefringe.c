@@ -51,8 +51,7 @@ static void multipole_fringe(double *r6, double L,
       DU = B * DRX - A * DIX;
       DV = B * DIX + A * DRX;
     }
-//    double f1 = -edge / 4.0 / (j + 1);
-    double f1 = edge / 4.0 / (j + 1);
+    double f1 = -edge / 4.0 / (j + 1);
 
     U = U * f1;
     V = V * f1;

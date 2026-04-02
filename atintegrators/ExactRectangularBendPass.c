@@ -34,6 +34,33 @@ struct elem
     double *KickAngle;
 };
 
+static void kick(double* r, const double* A, const double* B, double L, int max_order, double irho)
+/*****************************************************************************
+ Calculate and apply a multipole kick to a 6-dimentional
+ phase space vector in a straight element (quadrupole)
+
+ IMPORTANT !!!
+ The reference coordinate system is straight but the field expansion may still
+ contain dipole terms: PolynomA(1), PolynomB(1) - in MATLAB notation,
+ A[0], B[0] - C,C++ notation
+
+ ******************************************************************************/
+{
+   int i;
+   double ReSum = B[max_order];
+   double ImSum = A[max_order];
+   double ReSumTemp;
+   double x = r[0];
+   double y = r[2];
+   for (i=max_order-1; i>=0; i--) {
+      ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
+      ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
+      ReSum = ReSumTemp;
+   }
+   r[1] -= L * (ReSum + irho*B[1]*(x*x-0.5*y*y));
+   r[3] += L * (ImSum + irho*B[1]*x*y);
+}
+
 static void ExactRectangularBend(double *r, double le, double bending_angle,
         double *A, double *B,
         int max_order, int num_int_steps,
@@ -97,11 +124,11 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             r6[0] += x0ref;
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
                 exact_drift(r6, L1);
-                strthinkick(r6, A, B, K1, max_order);
+                kick(r6, A, B, K1, max_order, irho);
                 exact_drift(r6, L2);
-                strthinkick(r6, A, B, K2, max_order);
+                kick(r6, A, B, K2, max_order, irho);
                 exact_drift(r6, L2);
-                strthinkick(r6, A, B, K1, max_order);
+                kick(r6, A, B, K1, max_order, irho);
                 exact_drift(r6, L1);
             }
             r6[0] -= x0ref;
