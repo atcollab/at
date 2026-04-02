@@ -115,11 +115,11 @@ This is summarised in this table:
    |Straight magnet  +------------------------+----------------+---------------------------+
    |                 |*default*               |"adaptive"      |"drift-kick-drift-expanded"|
    +-----------------+------------------------+----------------+---------------------------+
-   |                 |ExactSectorBendPass     |"bend-kick-bend"|                           |
+   |                 |ExactSectorBendPass     |"bend-kick-bend"                            |
    |                 +------------------------+----------------+---------------------------+
    |Dipole           |ExactRectangularBendPass|"drift-kick-drift-exact"                    |
    |                 +------------------------+----------------+---------------------------+
-   |                 |*default*               |"adaptive"      |"rot-kick-rot"             |
+   |                 |*default*               |"adaptive"      |"drift-kick-drift-expanded"|
    +-----------------+------------------------+----------------+---------------------------+
 
 Longitudinal motion
@@ -484,7 +484,12 @@ class Multipole(XsElement):
 
     def _set_at_fringe(self) -> dict[str, Any]:
         """generate the AT fringe field description."""
-        return {}
+        atparams = {}
+        if self.get("edge_entry_active", False):
+            atparams["FringeQuadEntrance"] = 1
+        if self.get("edge_exit_active", False):
+            atparams["FringeQuadExit"] = 1
+        return atparams
 
     def _set_xs_transforms(self, atparams: dict) -> None:
         """Generate Xsuite element displacements."""
@@ -540,7 +545,8 @@ class Multipole(XsElement):
         self["_isthick"] = length != 0.0
 
     def _set_xs_fringe(self, atparams: dict) -> None:
-        """generate the Xsuite fringe field description."""
+        self["edge_entry_active"] = bool(atparams.get("FringeQuadEntrance", 0))
+        self["edge_exit_active"] = bool(atparams.get("FringeQuadExit", 0))
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
         if atparams.get("Length", 0.0) == 0.0:
@@ -570,19 +576,6 @@ class Quadrupole(Multipole):
     # Class variables
     _atClass = elt.Quadrupole
     _mag_order: ClassVar[int] = 1
-
-    def _set_at_fringe(self):
-        """generate the AT fringe field description."""
-        atparams = {}
-        if self.get("edge_entry_active", 0):
-            atparams["FringeQuadEntrance"] = 1
-        if self.get("edge_exit_active", 0):
-            atparams["FringeQuadExit"] = 1
-        return atparams
-
-    def _set_xs_fringe(self, atparams: dict):
-        self["edge_entry_active"] = atparams.get("FringeQuadEntrance", 0)
-        self["edge_exit_active"] = atparams.get("FringeQuadExit", 0)
 
 
 class Sextupole(Multipole):
