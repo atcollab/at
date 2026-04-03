@@ -329,8 +329,6 @@ class XsElement(dict):
                 xs_model = cls._at2xsuite_model.get(None, None)
             if (integrator := cls._at_integrator) is not None:
                 xsparams["integrator"] = integrator
-        else:
-            xsparams.pop("num_multipole_kicks", None)
         if xs_model is not None:
             xsparams["model"] = xs_model
         # Set the Xsuite class
@@ -407,7 +405,6 @@ class Multipole(XsElement):
     _at_integrator = "yoshida4"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
-        "num_multipole_kicks": "NumIntSteps",
     }
 
     def _set_at_transforms(self) -> dict:
@@ -478,6 +475,8 @@ class Multipole(XsElement):
             "PolynomB": polyb[: maxorder + 1],
             "PolynomA": polya[: maxorder + 1],
         }
+        if (nk := self.get("num_multipole_kicks", 0)) != 0:
+            atparams["NumIntSteps"] = (nk-1) // 3 + 1
         if (taper := self.get("delta_taper")) is not None:
             atparams["FieldScaling"] = 1.0 + taper
         return atparams
@@ -521,7 +520,7 @@ class Multipole(XsElement):
 
         self.update(misalign)
 
-    def _set_xs_poly(self, atparams: dict) -> None:
+    def _set_xs_poly(self, atparams: dict, match_model: bool = False) -> None:
         """Generate the AT field expansion."""
         pata = atparams.get("PolynomA", np.zeros(4))
         pola = np.fromiter(poly_to_mad(pata), dtype=float, count=pata.size)
@@ -540,6 +539,8 @@ class Multipole(XsElement):
         if np.any(pola) or np.any(polb):
             self["knl"] = list(polb)
             self["ksl"] = list(pola)
+        if match_model:
+            self["num_multipole_kicks"] = 3 * atparams["NumIntSteps"]
         if (scaling := atparams.get("FieldScaling")) is not None:
             self["delta_taper"] = scaling - 1.0
         self["_isthick"] = length != 0.0
@@ -562,9 +563,9 @@ class Multipole(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
-        elem._set_xs_poly(atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
+        elem._set_xs_poly(atparams, match_model=match_model)
         elem._set_xs_fringe(atparams)
         elem._set_xs_transforms(atparams)
         return elem
@@ -649,8 +650,8 @@ class Bend(Multipole):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
         elem["k0_from_h"] = True
         return elem
 
@@ -698,8 +699,8 @@ class RBend(Bend):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
         elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
         elem["edge_entry_angle"] -= hangle
@@ -739,8 +740,8 @@ class Cavity(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
         elem._set_xs_lag(atparams)
         return elem
 
