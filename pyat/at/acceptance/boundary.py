@@ -5,17 +5,16 @@ Functions used to calculate the loss boundary for different grid definitions.
 import time
 import warnings
 from collections import namedtuple
+from collections.abc import Sequence
 from enum import Enum
 from typing import Optional
-from collections.abc import Sequence
 
 import numpy as np
 from scipy.ndimage import binary_dilation, binary_opening
 
-from at.lattice import AtError, AtWarning, Lattice, Refpts
+from at.lattice import AtError, AtWarning, Lattice, Refpts, axisdef
 
 from .floodfill_acceptance import floodfill
-from .grid_definitions import get_plane_index
 
 __all__ = ["GridMode"]
 
@@ -40,7 +39,7 @@ def grid_config(axes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     shape = np.array(npoints, dtype=np.int32)
     d = {
         "axes": np.atleast_1d(axes),
-        "axesi": np.atleast_1d(get_plane_index(axes)),
+        "axesi": np.atleast_1d(axisdef.axis_(axes, key="index")),
         "amplitudes": np.atleast_1d(amplitudes),
         "shape": np.atleast_1d(shape),
         "bounds": bounds,
