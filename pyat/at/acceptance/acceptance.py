@@ -28,9 +28,9 @@ from .boundary import GridMode, boundary_search
 @frequency_control
 def get_acceptance(
     ring: Lattice,
-    axes,
-    npoints,
-    amplitudes,
+    axes: tuple | list = ("x", "y"),
+    npoints: tuple | list = (10, 10),
+    amplitudes: tuple | list = (10e-3, 10e-3),
     nturns: int = 1024,
     refpts: Refpts | None = None,
     dp: float | None = None,
@@ -129,11 +129,17 @@ def get_acceptance(
     if use_mp is True:
         use_mp = MPMode.CPU
 
+    # For backwards compatibility check kwarg planes
+    if "planes" in kwargs:
+        msg = "'planes' is deprecated, use 'axes' instead."
+        warnings.warn(AtWarning(msg))
+        axes = kwargs["planes"]
+
     # For backwards compatibility px could be xp, and py could be yp
     deprecated_axis_name = ("xp", "yp")
     for idx_, axis_name in enumerate(axes):
         if axis_name in deprecated_axis_name:
-            axes = list(axes) # set to a modifiable list
+            axes = list(axes)  # set to a modifiable list
             msg = f"Axis name {axis_name} is deprecated."
             warnings.warn(AtWarning(msg))
             axes[idx_] = axes[idx_][::-1]  # reverse string
