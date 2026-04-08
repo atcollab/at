@@ -137,6 +137,7 @@ def get_acceptance(
             msg = f"Axis name {axis_name} is deprecated."
             warnings.warn(AtWarning(msg))
             axes[idx_] = axes[idx_][::-1]  # reverse string
+    axes = tuple(axes)
 
     if (grid_mode is GridMode.FLOODFILL) and (use_mp is MPMode.GPU):
         msg = "floodfill is not implemented for GPU tracking"
