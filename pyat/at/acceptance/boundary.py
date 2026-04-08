@@ -330,7 +330,7 @@ def grid_boundary_search(
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
 
-    if kwargs.get("floodfill"):
+    if grid_mode is GridMode.FLOODFILL:
         s_ffallrefpts = []
         g_ffallrefpts = []
         for obs, orbit in zip(obspt, offset, strict=True):
