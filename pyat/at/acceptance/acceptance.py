@@ -27,7 +27,7 @@ from .boundary import GridMode, boundary_search
 @frequency_control
 def get_acceptance(
     ring: Lattice,
-    planes,
+    axes,
     npoints,
     amplitudes,
     nturns: int = 1024,
@@ -49,12 +49,12 @@ def get_acceptance(
 
     Parameters:
         ring:           Lattice definition
-        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
+        axes:           max. dimension 2, Plane(s) to scan for the acceptance.
           Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
           ``'yp'``, ``'dp'``, ``'ct'``
-        npoints:        (len(planes),) array: number of points in each
+        npoints:        (len(axes),) array: number of points in each
           dimension
-        amplitudes:     (len(planes),) array: set the search range:
+        amplitudes:     (len(axes),) array: set the search range:
 
           * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
             max. amplitude
@@ -104,7 +104,7 @@ def get_acceptance(
 
     Examples:
 
-        >>> bf, sf, gf = ring.get_acceptance(planes, npoints, amplitudes)
+        >>> bf, sf, gf = ring.get_acceptance(axes, npoints, amplitudes)
         >>> plt.plot(*gf, ".")
         >>> plt.plot(*sf, ".")
         >>> plt.plot(*bf)
@@ -175,7 +175,7 @@ def get_acceptance(
 
     b, s, g = boundary_search(
         ring,
-        planes,
+        axes,
         npoints,
         amplitudes,
         nturns=nturns,
@@ -195,7 +195,7 @@ def get_acceptance(
 
 def get_1d_acceptance(
     ring: Lattice,
-    plane: str,
+    axis: str,
     resolution: float,
     amplitude: float,
     nturns: int | None = 1024,
@@ -217,7 +217,7 @@ def get_1d_acceptance(
 
     Parameters:
         ring:           Lattice definition
-        plane:          Plane to scan for the acceptance.
+        axis:           Plane to scan for the acceptance.
           Allowed values are: ``'x'``, ``'xp'``, ``'y'``, ``'yp'``, ``'dp'``,
           ``'ct'``
         resolution:     Minimum distance between 2 grid points
@@ -277,7 +277,7 @@ def get_1d_acceptance(
         if verbose:
             print("No parallel calculation selected, force to GridMode.RECURSIVE")
         grid_mode = GridMode.RECURSIVE
-    assert len(np.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
+    assert len(np.atleast_1d(axis)) == 1, "1D acceptance: single axis required"
     assert np.isscalar(resolution), "1D acceptance: scalar args required"
     assert np.isscalar(amplitude), "1D acceptance: scalar args required"
     npoint = np.ceil(amplitude / resolution)
@@ -287,7 +287,7 @@ def get_1d_acceptance(
         ), "Grid has only one point: increase amplitude or reduce resolution"
     b, s, g = get_acceptance(
         ring,
-        plane,
+        axis,
         npoint,
         amplitude,
         nturns=nturns,
