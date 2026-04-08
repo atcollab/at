@@ -22,7 +22,7 @@ __all__ = ["floodfill"]
 def floodfill(
     ring: at.Lattice,
     nturns: int = 1024,
-    planes: list | tuple = ("x", "y"),
+    axes: list | tuple = ("x", "y"),
     amplitudes: list | tuple = (10e-3, 10e-3),
     bounds: list | tuple = ((-1, 1), (0, 1)),
     npoints: list | tuple = (10, 10),
@@ -41,7 +41,7 @@ def floodfill(
     Parameters:
         ring: pyat lattice
         nturns: Number of turns for the tracking. Default: 1024
-        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
+        axes: max. dimension 2, Plane(s) to scan for the acceptance.
           Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
           ``'yp'``, ``'dp'``, ``'ct'``
         amplitudes: (2,) array, set the search range per plane.
@@ -54,9 +54,9 @@ def floodfill(
           or off-momentum acceptance by adding dp to the 5th coord.,
           to track particles on the closed orbit, or to add
           a small deviation to the tracked coordinates,
-          e.g. [10e-5 10e-5] in the transverse planes.
-        verbose:    Print extra info. Default 0.
-        use_mp:     Parallel tracking, default True. It uses at.MPMode.CPU,
+          e.g. [10e-5 10e-5] in the transverse axes.
+        verbose: Print extra info. Default 0.
+        use_mp: Parallel tracking, default True. It uses at.MPMode.CPU,
           not at.MPMode.GPU.
         pool_size:  Number of cpus.
 
@@ -132,7 +132,7 @@ def floodfill(
     if offset is None:
         offset = 6 * [0]
     offset = np.array(offset)
-    axes = get_plane_index(planes)
+    axes = get_plane_index(axes)
 
     # Initialize output in case we return earlier
     data_tracked = np.zeros((4, 0))
