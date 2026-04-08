@@ -132,7 +132,6 @@ def get_acceptance(
         msg = "floodfill is not implemented for GPU tracking"
         raise AtError(msg) from None
     if grid_mode is GridMode.FLOODFILL:
-        kwargs["floodfill"] = True
         if "pool_size" not in kwargs:
             kwargs["pool_size"] = multiprocessing.cpu_count()
 
