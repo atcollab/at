@@ -11,11 +11,12 @@ __all__ = [
 ]
 
 import multiprocessing
+import warnings
 from collections.abc import Sequence
 
 import numpy as np
 
-from at.lattice import AtError
+from at.lattice import AtError, AtWarning
 
 from ..lattice import Lattice, Refpts, frequency_control
 from ..tracking import MPMode, gpu_core_count
@@ -50,8 +51,8 @@ def get_acceptance(
     Parameters:
         ring:           Lattice definition
         axes:           max. dimension 2, Plane(s) to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
-          ``'yp'``, ``'dp'``, ``'ct'``
+          Allowed values are: ``'x'``, ``'px'``, ``'y'``,
+          ``'py'``, ``'dp'``, ``'ct'``
         npoints:        (len(axes),) array: number of points in each
           dimension
         amplitudes:     (len(axes),) array: set the search range:
@@ -127,6 +128,15 @@ def get_acceptance(
     # For backward compatibility (use_mp can be a boolean)
     if use_mp is True:
         use_mp = MPMode.CPU
+
+    # For backwards compatibility px could be xp, and py could be yp
+    deprecated_axis_name = ("xp", "yp")
+    for idx_, axis_name in enumerate(axes):
+        if axis_name in deprecated_axis_name:
+            axes = list(axes) # set to a modifiable list
+            msg = f"Axis name {axis_name} is deprecated."
+            warnings.warn(AtWarning(msg))
+            axes[idx_] = axes[idx_][::-1]  # reverse string
 
     if (grid_mode is GridMode.FLOODFILL) and (use_mp is MPMode.GPU):
         msg = "floodfill is not implemented for GPU tracking"
@@ -218,7 +228,7 @@ def get_1d_acceptance(
     Parameters:
         ring:           Lattice definition
         axis:           Plane to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``, ``'yp'``, ``'dp'``,
+          Allowed values are: ``'x'``, ``'px'``, ``'y'``, ``'py'``, ``'dp'``,
           ``'ct'``
         resolution:     Minimum distance between 2 grid points
         amplitude:      Search range:
