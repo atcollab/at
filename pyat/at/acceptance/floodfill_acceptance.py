@@ -5,7 +5,8 @@ from multiprocessing import Manager, Process, Queue
 import numpy as np
 
 import at
-from .grid_definitions import get_plane_index
+from at.lattice import Lattice, axisdef
+from at.tracking.track import MPMode
 
 # Author : E. Serra,  UAB and ALBA,  2025 original version in python
 #                                    See. IPAC2025, MOPB065.
@@ -20,7 +21,7 @@ __all__ = ["floodfill"]
 
 
 def floodfill(
-    ring: at.Lattice,
+    ring: Lattice,
     nturns: int = 1024,
     axes: list | tuple = ("x", "y"),
     amplitudes: list | tuple = (10e-3, 10e-3),
@@ -28,7 +29,7 @@ def floodfill(
     npoints: list | tuple = (10, 10),
     offset: list | np.ndarray | None = None,
     verbose: bool = False,
-    use_mp: bool | at.MPMode = True,
+    use_mp: bool | MPMode = True,
     pool_size: int = 10,
 ) -> np.ndarray:
     """Find the 2D acceptance of the ring using Flood Fill [1]_.
@@ -42,8 +43,8 @@ def floodfill(
         ring: pyat lattice
         nturns: Number of turns for the tracking. Default: 1024
         axes: max. dimension 2, Plane(s) to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
-          ``'yp'``, ``'dp'``, ``'ct'``
+          Allowed values are: ``'x'``, ``'px'``, ``'y'``,
+          ``'py'``, ``'dp'``, ``'ct'``
         amplitudes: (2,) array, set the search range per plane.
           Default [10e-3,10e-3]
         bounds: (2,2) array, defines the tracked range: range=bounds*amplitude
@@ -86,7 +87,7 @@ def floodfill(
     """
 
     def track_queue(
-        ring: at.Lattice,
+        ring: Lattice,
         zin: np.ndarray,
         nturns: int,
         n_x: int,
@@ -132,7 +133,7 @@ def floodfill(
     if offset is None:
         offset = 6 * [0]
     offset = np.array(offset)
-    axes = get_plane_index(axes)
+    axesi = np.atleast_1d(axisdef.axis_(tuple(axes), key="index"))
 
     # Initialize output in case we return earlier
     data_tracked = np.zeros((4, 0))
@@ -177,8 +178,8 @@ def floodfill(
     ndims = 6
     particles = np.zeros((nparticles, ndims))
     particles = particles + offset
-    particles[:, axes[0]] = particles[:, axes[0]] + points[0, :]
-    particles[:, axes[1]] = particles[:, axes[1]] + points[1, :]
+    particles[:, axesi[0]] = particles[:, axesi[0]] + points[0, :]
+    particles[:, axesi[1]] = particles[:, axesi[1]] + points[1, :]
 
     # parallel parameters
     nproc = pool_size if use_mp else 1
