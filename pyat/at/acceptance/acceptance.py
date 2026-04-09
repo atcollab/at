@@ -131,9 +131,9 @@ def get_acceptance(
 
     # For backwards compatibility px could be xp, and py could be yp
     deprecated_axis_name = ("xp", "yp")
+    axes = list(planes)  # set to a modifiable list
     for idx_, axis_name in enumerate(planes):
         if axis_name in deprecated_axis_name:
-            axes = list(planes)  # set to a modifiable list
             msg = f"Axis name {axis_name} is deprecated."
             warnings.warn(AtWarning(msg))
             axes[idx_] = axes[idx_][::-1]  # reverse string
