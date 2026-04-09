@@ -279,7 +279,7 @@ def get_grid_boundary(mask, grid, config):
 
 def grid_boundary_search(
     ring,
-    axes,
+    planes,
     npoints,
     amplitudes,
     nturns=1024,
@@ -297,7 +297,7 @@ def grid_boundary_search(
     Search for the boundary by tracking a grid
     """
     config = grid_configuration(
-        axes, npoints, amplitudes, grid_mode, bounds=bounds, shift_zero=shift_zero
+        planes, npoints, amplitudes, grid_mode, bounds=bounds, shift_zero=shift_zero
     )
 
     if verbose:
@@ -318,7 +318,7 @@ def grid_boundary_search(
                 )
             )
         print("The grid mode is {0}".format(config.mode))
-        print("The axes are {0}".format(config.axes))
+        print("The planes are {0}".format(config.planes))
         print("Number of steps are {0}".format(config.shape))
         print("The maximum amplitudes are {0}".format(config.amplitudes))
         print("The maximum boundaries are {0}".format(config.bounds))
@@ -342,7 +342,7 @@ def grid_boundary_search(
             data_ff = floodfill(
                 _ringrot,
                 nturns=nturns,
-                axes=config.axes,
+                planes=config.axes,
                 amplitudes=config.amplitudes,
                 bounds=config.bounds,
                 npoints=config.shape,
@@ -408,7 +408,7 @@ def grid_boundary_search(
 
 def recursive_boundary_search(
     ring,
-    axes,
+    planes,
     npoints,
     amplitudes,
     nturns=1024,
@@ -476,7 +476,7 @@ def recursive_boundary_search(
 
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
     config = grid_configuration(
-        axes,
+        planes,
         npoints,
         amplitudes,
         GridMode.RECURSIVE,
@@ -498,7 +498,7 @@ def recursive_boundary_search(
         else:
             print("Element {0}, obspt={1}".format(ring[obspt].FamName, obspt))
         print("The grid mode is {0}".format(config.mode))
-        print("The axes are {0}".format(config.axes))
+        print("The planes are {0}".format(config.planes))
         print(
             "Number of angles is {0} from {1} to {2} rad".format(
                 len(angles), angles[0], angles[-1]
@@ -519,7 +519,7 @@ def recursive_boundary_search(
 
 def boundary_search(
     ring: Lattice,
-    axes,
+    planes,
     npoints,
     amplitudes,
     nturns: Optional[int] = 1024,
@@ -559,7 +559,7 @@ def boundary_search(
         for r, o in zip(rp, offset):
             b, s, g = recursive_boundary_search(
                 ring,
-                axes,
+                planes,
                 npoints,
                 amplitudes,
                 nturns=nturns,
@@ -583,7 +583,7 @@ def boundary_search(
     else:
         result = grid_boundary_search(
             ring,
-            axes,
+            planes,
             npoints,
             amplitudes,
             nturns=nturns,
