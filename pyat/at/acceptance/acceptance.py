@@ -28,7 +28,7 @@ from .boundary import GridMode, boundary_search
 @frequency_control
 def get_acceptance(
     ring: Lattice,
-    axes: tuple | list = ("x", "y"),
+    planes: tuple | list = ("x", "y"),
     npoints: tuple | list = (10, 10),
     amplitudes: tuple | list = (10e-3, 10e-3),
     nturns: int = 1024,
@@ -50,12 +50,12 @@ def get_acceptance(
 
     Parameters:
         ring:           Lattice definition
-        axes:           max. dimension 2, Plane(s) to scan for the acceptance.
+        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
           Allowed values are: ``'x'``, ``'px'``, ``'y'``,
           ``'py'``, ``'dp'``, ``'ct'``
-        npoints:        (len(axes),) array: number of points in each
+        npoints:        (len(planes),) array: number of points in each
           dimension
-        amplitudes:     (len(axes),) array: set the search range:
+        amplitudes:     (len(planes),) array: set the search range:
 
           * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
             max. amplitude
@@ -105,7 +105,7 @@ def get_acceptance(
 
     Examples:
 
-        >>> bf, sf, gf = ring.get_acceptance(axes, npoints, amplitudes)
+        >>> bf, sf, gf = ring.get_acceptance(planes, npoints, amplitudes)
         >>> plt.plot(*gf, ".")
         >>> plt.plot(*sf, ".")
         >>> plt.plot(*bf)
@@ -129,21 +129,15 @@ def get_acceptance(
     if use_mp is True:
         use_mp = MPMode.CPU
 
-    # For backwards compatibility check kwarg planes
-    if "planes" in kwargs:
-        msg = "'planes' is deprecated, use 'axes' instead."
-        warnings.warn(AtWarning(msg))
-        axes = kwargs["planes"]
-
     # For backwards compatibility px could be xp, and py could be yp
     deprecated_axis_name = ("xp", "yp")
-    for idx_, axis_name in enumerate(axes):
+    for idx_, axis_name in enumerate(planes):
         if axis_name in deprecated_axis_name:
-            axes = list(axes)  # set to a modifiable list
+            axes = list(planes)  # set to a modifiable list
             msg = f"Axis name {axis_name} is deprecated."
             warnings.warn(AtWarning(msg))
             axes[idx_] = axes[idx_][::-1]  # reverse string
-    axes = tuple(axes)
+    planes = tuple(axes)
 
     if (grid_mode is GridMode.FLOODFILL) and (use_mp is MPMode.GPU):
         msg = "floodfill is not implemented for GPU tracking"
@@ -192,7 +186,7 @@ def get_acceptance(
 
     b, s, g = boundary_search(
         ring,
-        axes,
+        planes,
         npoints,
         amplitudes,
         nturns=nturns,
