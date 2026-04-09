@@ -288,7 +288,7 @@ def get_1d_acceptance(
         if verbose:
             print("No parallel calculation selected, force to GridMode.RECURSIVE")
         grid_mode = GridMode.RECURSIVE
-    assert len(np.atleast_1d(axis)) == 1, "1D acceptance: single axis required"
+    assert len(np.atleast_1d(plane)) == 1, "1D acceptance: single plane required"
     assert np.isscalar(resolution), "1D acceptance: scalar args required"
     assert np.isscalar(amplitude), "1D acceptance: scalar args required"
     npoint = np.ceil(amplitude / resolution)
