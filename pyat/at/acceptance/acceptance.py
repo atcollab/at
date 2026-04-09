@@ -28,9 +28,9 @@ from .boundary import GridMode, boundary_search
 @frequency_control
 def get_acceptance(
     ring: Lattice,
-    planes: tuple | list = ("x", "y"),
-    npoints: tuple | list = (10, 10),
-    amplitudes: tuple | list = (10e-3, 10e-3),
+    planes,
+    npoints,
+    amplitudes,
     nturns: int = 1024,
     refpts: Refpts | None = None,
     dp: float | None = None,
