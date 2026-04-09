@@ -206,7 +206,7 @@ def get_acceptance(
 
 def get_1d_acceptance(
     ring: Lattice,
-    axis: str,
+    plane: str,
     resolution: float,
     amplitude: float,
     nturns: int | None = 1024,
@@ -228,7 +228,7 @@ def get_1d_acceptance(
 
     Parameters:
         ring:           Lattice definition
-        axis:           Plane to scan for the acceptance.
+        plane:          Plane to scan for the acceptance.
           Allowed values are: ``'x'``, ``'px'``, ``'y'``, ``'py'``, ``'dp'``,
           ``'ct'``
         resolution:     Minimum distance between 2 grid points
