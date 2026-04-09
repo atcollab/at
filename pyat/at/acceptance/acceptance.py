@@ -298,7 +298,7 @@ def get_1d_acceptance(
         ), "Grid has only one point: increase amplitude or reduce resolution"
     b, s, g = get_acceptance(
         ring,
-        axis,
+        plane,
         npoint,
         amplitude,
         nturns=nturns,
