@@ -206,9 +206,9 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
 
 
 def gen_m66_elem(ring: Lattice, 
-                 ringrad: Lattice = None,
                  o6b: Orbit = None,
                  o6e: Orbit = None,
+                 ringrad: Lattice = None,
                  o6brad: Orbit = None,
                  o6erad: Orbit = None,
                  **kwargs) -> M66:
