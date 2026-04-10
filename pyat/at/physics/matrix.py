@@ -232,7 +232,8 @@ def gen_m66_elem(ring: Lattice,
     length = ring.circumference
     kwargs.update({"Length": length})
     m66_mat, _ = find_m66(ring, [], orbit=o6b)
-    m66_mat_rad, _ = find_m66(ringrad, [], orbit=o6brad)
+    if ringrad is not None:
+        m66_mat_rad, _ = find_m66(ringrad, [], orbit=o6brad)
     kwargs.update({"M66Rad": m66_mat_rad})
     if o6b is not None:
         kwargs.update({"T1": -o6b})
