@@ -229,7 +229,8 @@ def gen_m66_elem(ring: Lattice,
     Returns:
         m66:        :py:obj:`M66` object
     """
-    length = ring.circumference
+    s_pos = ring.get_s_pos()
+    length = numpy.diff(numpy.array([s_pos[0], s_pos[-1]]))[0]
     kwargs.update({"Length": length})
     m66_mat, _ = find_m66(ring, [], orbit=o6b)
     if ringrad is not None:
