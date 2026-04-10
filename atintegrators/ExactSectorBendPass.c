@@ -1,8 +1,8 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkick.c"  /* strthinkick.c */
-#include "exactbend.c"
+#include "drift_exactbend.h"
+#include "kick_k1h_kn.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -50,12 +50,19 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
     double K2 = SL*KICK2;
-    double B0 = B[0];
-    double A0 = A[0];
+    double B0 = 0.0;
+    double A0 = 0.0;
+    double k1_theta_entrance = 0.0;
+    double k1_theta_exit = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le;
-        A[0] += sin(KickAngle[1])/le;
+
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 = -sin(KickAngle[0]) / le;
+        A0 = sin(KickAngle[1]) / le;
+    }
+    if (max_order >= 1) {
+        k1_theta_entrance = B[1] * entrance_angle;
+        k1_theta_exit = B[1] * exit_angle;
     }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -82,20 +89,22 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
                 bend_fringe(r6, irho, gK);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
+            if (k1_theta_entrance != 0.0)
+                quad_wedge(r6, -k1_theta_entrance);
             bend_edge(r6, irho, -entrance_angle);
 
             if (num_int_steps == 0) {
-                exact_bend(r6, irho, le);
+                drift(r6, le, irho);
             }
             else {
                 for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                    exact_bend(r6, irho, L1);
-                    strthinkick(r6, A, B, K1, max_order);
-                    exact_bend(r6, irho, L2);
-                    strthinkick(r6, A, B, K2, max_order);
-                    exact_bend(r6, irho, L2);
-                    strthinkick(r6, A, B, K1, max_order);
-                    exact_bend(r6, irho, L1);
+                    drift(r6, L1, irho);
+                    kick(r6, A0, B0, A, B, max_order, K1, irho);
+                    drift(r6, L2, irho);
+                    kick(r6, A0, B0, A, B, max_order, K2, irho);
+                    drift(r6, L2, irho);
+                    kick(r6, A0, B0, A, B, max_order, K1, irho);
+                    drift(r6, L1, irho);
                 }
             }
 
@@ -104,6 +113,8 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
 
             /* edge focus */
             bend_edge(r6, irho, -exit_angle);
+            if (k1_theta_exit != 0.0)
+                quad_wedge(r6, -k1_theta_exit);
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
@@ -122,9 +133,6 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
-    /* Remove corrector component in polynomial coefficients */
-    B[0] = B0;
-    A[0] = A0;
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)

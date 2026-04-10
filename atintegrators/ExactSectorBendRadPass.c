@@ -1,8 +1,8 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactkickrad.c"
-#include "exactbend.c"
+#include "drift_exactbend.h"
+#include "kickrad_k1h_kn.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -50,14 +50,14 @@ static void ExactSectorBendRad(double *r, double le, double irho,
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
     double K2 = SL*KICK2;
-    double B0 = B[0];
-    double A0 = A[0];
     double rad_const = RAD_CONST*pow(gamma, 3);
     double diff_const = DIF_CONST*pow(gamma, 5);
+    double B0 = 0.0;
+    double A0 = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le;
-        A[0] += sin(KickAngle[1])/le;
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 = -sin(KickAngle[0]) / le;
+        A0 = sin(KickAngle[1]) / le;
     }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -88,13 +88,13 @@ static void ExactSectorBendRad(double *r, double le, double irho,
             bend_edge(r6, irho, -entrance_angle);
 
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_bend(r6, irho, L1);
-                ex_bndthinkickrad(r6, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L2);
-                ex_bndthinkickrad(r6, A, B, max_order, K2, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L2);
-                ex_bndthinkickrad(r6, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L1);
+                drift(r6, L1, irho);
+                kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
+                drift(r6, L2, irho);
+                kick(r6, A0, B0, A, B, max_order, K2, irho, rad_const, diff_const, NULL);
+                drift(r6, L2, irho);
+                kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
+                drift(r6, L1, irho);
             }
 
             /* Convert absolute path length to path lengthening */
@@ -120,9 +120,6 @@ static void ExactSectorBendRad(double *r, double le, double irho,
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
-    /* Remove corrector component in polynomial coefficients */
-    B[0] = B0;
-    A[0] = A0;
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
