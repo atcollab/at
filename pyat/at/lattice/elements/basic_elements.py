@@ -461,9 +461,9 @@ class M66(Radiative, Element):
         Default PassMethod: ``Matrix66Pass``
         """
         if m66 is None:
-            m66 = np.identity(6)
+            m66 = np.asfortranarray(np.identity(6))
         if m66rad is None:
-            m66rad = np.identity(6)       
+            m66rad = np.asfortranarray(np.identity(6))       
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
         kwargs.setdefault("M66Rad", m66rad)
