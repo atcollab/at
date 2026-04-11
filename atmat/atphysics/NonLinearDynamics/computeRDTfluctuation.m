@@ -25,17 +25,21 @@ function [RDT,buildup_fluctuation,natural_fluctuation] = computeRDTfluctuation(r
 %       absolute values of one-period RDTs observed at different
 %       longitudinal starting position.
 %       same as s_dependent_driving_terms in ELEGANT.
-%   
+%
+%  Bingfeng WEI, NSRL, USTC
+%
 %  REFERENCES
 %    [1] Johan Bengtsson, SLS Note 09/97, (1997)
 %    [2] S. C. Leemann, A. Streun, Phys. Rev. ST Accel. Beams 14, 030701 (2011)
 %    [3] A. Franchi, L. Farvacque, F. Ewald, G. Le Bec, and K. B. Scheidt, Phys. Rev. ST Accel. Beams 17, 074001 (2014)
 %    [4] B. Wei, Z. Bai, J. Tan, L. Wang, and G. Feng, Phys. Rev. Accel. Beams 26, 084001 (2023)
+%    [5] B. Wei, Z. Bai, G. Feng, A. Loulergue, L. S. Nadolski and R. Nagaoka, Phys. Rev. Accel. Beams 27, 104001 (2024)
 %
 
 % Validates the input arguements.
 [nslices,varargs]=getoption(varargin,'nslices',4);
 [nperiods,varargs]=getoption(varargs,'nperiods',1);
+[dpp,varargs]=getoption(varargs,'dpp',0.00);
 if ~ isempty(varargs)
     throw(MException('RDTFluctuation:parameterError', ...
         ['Unsupported parameter: ' varargs{1}]))
@@ -65,7 +69,7 @@ end
 % same as computeRDT().
 indDQSO=findcells(splitring,'Class','Bend','Quadrupole','Sextupole','Octupole','Multipole');
 
-[~,AVEBETA,AVEMU,AVEDISP,nu,~]=atavedata(splitring,0,1:length(splitring));
+[LINDATA,AVEBETA,AVEMU,AVEDISP,nu,~]=atavedata(splitring,dpp,1:length(splitring));
 
 s=[0,findspos(splitring,indDQSO)];
 betax=AVEBETA(indDQSO,1);
@@ -78,12 +82,28 @@ if any(a2L)
     throw(MException('RDTFluctuation:Unfinished', ...
         'The coupling case cannot be handled in the current version.'))
 end
-b2L=getcellstruct(splitring,'PolynomB',indDQSO,1,2).*getcellstruct(splitring,'Length',indDQSO);
-b2L(isnan(b2L))=0;
-b3L=getcellstruct(splitring,'PolynomB',indDQSO,1,3).*getcellstruct(splitring,'Length',indDQSO);
-b3L(isnan(b3L))=0;
 b4L=getcellstruct(splitring,'PolynomB',indDQSO,1,4).*getcellstruct(splitring,'Length',indDQSO);
 b4L(isnan(b4L))=0;
+b3L=getcellstruct(splitring,'PolynomB',indDQSO,1,3).*getcellstruct(splitring,'Length',indDQSO);
+b3L(isnan(b3L))=0;
+b2L=getcellstruct(splitring,'PolynomB',indDQSO,1,2).*getcellstruct(splitring,'Length',indDQSO);
+b2L(isnan(b2L))=0;
+
+if dpp ~= 0
+    closed_orbit = cat(2,LINDATA.ClosedOrbit);
+
+    if any(closed_orbit(3,:))
+        throw(MException('RDTFluctuation:Unfinished', ...
+            'The coupling case cannot be handled in the current version.'))
+    end
+
+    b2L = (b2L + b3L .* closed_orbit(1,indDQSO)' .* 2 + b4L .* closed_orbit(1,indDQSO)' .* closed_orbit(1,indDQSO)' .* 3);
+    b3L = (b3L + b4L .* closed_orbit(1,indDQSO)' .* 3);
+    b4L = b4L;
+
+end
+
+
 nData=length(indDQSO) + 1;
 
 % calculate the build-up fluctuation of RDTs.
@@ -234,6 +254,16 @@ else
             'h31000', buildup_fluctuation.h31000(end), 'h40000', buildup_fluctuation.h40000(end), 'h20110', buildup_fluctuation.h20110(end), 'h11200', buildup_fluctuation.h11200(end), ...
             'h20020', buildup_fluctuation.h20020(end), 'h20200', buildup_fluctuation.h20200(end), 'h00310', buildup_fluctuation.h00310(end), 'h00400', buildup_fluctuation.h00400(end),...
             'dnux_dJx', -4*real(buildup_fluctuation.h22000(end))/pi, 'dnux_dJy', -2*real(buildup_fluctuation.h11110(end))/pi, 'dnuy_dJy',-4*real(buildup_fluctuation.h00220(end))/pi);
+end
+
+if dpp ~= 0
+    % remove misleading information. 
+    % the off-momentum RDTs directly describe the nonlinear dynamics for
+    % the given dpp case. So we don't use the chromatic terms which
+    % describe the deviation from the on-momentum case.
+    natural_fluctuation = rmfield(natural_fluctuation, {'f20001', 'f00201', 'f10002'});
+    RDT = rmfield(RDT, {'h20001', 'h00201', 'h10002'});
+    buildup_fluctuation = rmfield(buildup_fluctuation, {'h20001', 'h00201', 'h10002'});
 end
 
     function newelems=splitelem(elem)
