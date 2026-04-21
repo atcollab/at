@@ -59,12 +59,18 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
     double A0 = A[0];
     double rad_const = RAD_CONST*pow(gamma, 3);
     double diff_const = DIF_CONST*pow(gamma, 5);
+    double k1_theta_entrance = 0.0;
+    double k1_theta_exit = 0.0;
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
     B[0] += irho;
+    if (max_order >= 1) {
+        k1_theta_entrance = B[1] * entrance_angle;
+        k1_theta_exit = B[1] * exit_angle;
+    }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
@@ -94,6 +100,8 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
                 bend_fringe(r6, irho, gK);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
+            if (k1_theta_entrance != 0.0)
+                quad_wedge(r6, -k1_theta_entrance);
             bend_edge(r6, irho, phi2-entrance_angle);
 
             /* integrator */
@@ -114,6 +122,8 @@ static void ExactRectangularBendRad(double *r, double le, double bending_angle,
 
             /* edge focus */
             bend_edge(r6, irho, phi2-exit_angle);
+            if (k1_theta_exit != 0.0)
+                quad_wedge(r6, -k1_theta_exit);
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)

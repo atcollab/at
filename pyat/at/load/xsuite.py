@@ -476,7 +476,7 @@ class Multipole(XsElement):
             "PolynomA": polya[: maxorder + 1],
         }
         if (nk := self.get("num_multipole_kicks", 0)) != 0:
-            atparams["NumIntSteps"] = (nk-1) // 3 + 1
+            atparams["NumIntSteps"] = (nk - 1) // 3 + 1
         if (taper := self.get("delta_taper")) is not None:
             atparams["FieldScaling"] = 1.0 + taper
         return atparams
@@ -522,25 +522,36 @@ class Multipole(XsElement):
 
     def _set_xs_poly(self, atparams: dict, match_model: bool = False) -> None:
         """Generate the AT field expansion."""
+
+        def extract(poly, ord):
+            try:
+                v = poly[ord]
+            except IndexError:
+                v = 0.0
+            else:
+                poly[ord] = 0.0
+            return v
+
         pata = atparams.get("PolynomA", np.zeros(4))
         pola = np.fromiter(poly_to_mad(pata), dtype=float, count=pata.size)
         patb = atparams.get("PolynomB", np.zeros(4))
         polb = np.fromiter(poly_to_mad(patb), dtype=float, count=patb.size)
         length = atparams.get("Length")
         korder = getattr(self, "_mag_order", None)
-        if korder is not None:
-            self["k" + str(korder)] = polb[korder]
-            self["k" + str(korder) + "s"] = pola[korder]
-            pola[korder] = 0.0
-            polb[korder] = 0.0
+        if korder == 0:  # dipole
+            self["k1"] = extract(polb, 1)
+            self["k2"] = extract(polb, 2)
+        elif korder is not None:  # quadrupole, sextupole, octupole
+            self["k" + str(korder)] = extract(polb, korder)
+            self["k" + str(korder) + "s"] = extract(pola, korder)
         if length > 0.0:
             polb *= length
             pola *= length
         if np.any(pola) or np.any(polb):
             self["knl"] = list(polb)
             self["ksl"] = list(pola)
-        if match_model:
-            self["num_multipole_kicks"] = 3 * atparams["NumIntSteps"]
+        if match_model and (numintsteps := atparams.get("NumIntSteps")) is not None:
+            self["num_multipole_kicks"] = 3 * numintsteps
         if (scaling := atparams.get("FieldScaling")) is not None:
             self["delta_taper"] = scaling - 1.0
         self["_isthick"] = length != 0.0
@@ -613,7 +624,7 @@ class Bend(Multipole):
         "edge_entry_angle": "EntranceAngle",
         "edge_exit_angle": "ExitAngle",
     }
-    _mag_order = 1
+    _mag_order = 0
     _edge_to_xs: ClassVar[dict[bool, dict[bool, str]]] = {
         True: {True: "full", False: "dipole-only"},
         False: {True: "linear", False: "linear"},

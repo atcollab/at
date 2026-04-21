@@ -54,10 +54,16 @@ static void ExactSectorBendRad(double *r, double le, double irho,
     double diff_const = DIF_CONST*pow(gamma, 5);
     double B0 = 0.0;
     double A0 = 0.0;
+    double k1_theta_entrance = 0.0;
+    double k1_theta_exit = 0.0;
 
     if (KickAngle) { /* Convert corrector component to polynomial coefficients */
         B0 = -sin(KickAngle[0]) / le;
         A0 = sin(KickAngle[1]) / le;
+    }
+    if (max_order >= 1) {
+        k1_theta_entrance = B[1] * entrance_angle;
+        k1_theta_exit = B[1] * exit_angle;
     }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -85,6 +91,8 @@ static void ExactSectorBendRad(double *r, double le, double irho,
                 bend_fringe(r6, irho, gK);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
+            if (k1_theta_entrance != 0.0)
+                quad_wedge(r6, -k1_theta_entrance);
             bend_edge(r6, irho, -entrance_angle);
 
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
@@ -102,6 +110,8 @@ static void ExactSectorBendRad(double *r, double le, double irho,
 
             /* edge focus */
             bend_edge(r6, irho, -exit_angle);
+            if (k1_theta_exit != 0.0)
+                quad_wedge(r6, -k1_theta_exit);
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
