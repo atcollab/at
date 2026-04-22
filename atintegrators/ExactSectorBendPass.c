@@ -22,7 +22,8 @@ struct elem
     int FringeBendExit;
     int FringeQuadEntrance;
     int FringeQuadExit;
-    double gK;
+    double gKEntrance;
+    double gKExit;
     double *R1;
     double *R2;
     double *T1;
@@ -38,7 +39,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
         double entrance_angle, double exit_angle,
         int FringeBendEntrance, int FringeBendExit,
         int FringeQuadEntrance, int FringeQuadExit,
-        double gK,
+        double gKEntrance, double gKExit,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
@@ -55,7 +56,6 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
     double k1_theta_entrance = 0.0;
     double k1_theta_exit = 0.0;
 
-
     if (KickAngle) { /* Convert corrector component to polynomial coefficients */
         B0 = -sin(KickAngle[0]) / le;
         A0 = sin(KickAngle[1]) / le;
@@ -67,7 +67,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
-    irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
+    irho,gKEntrance,gKExit,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
     entrance_angle,exit_angle,\
     FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,le)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
@@ -86,7 +86,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
 
             Yrot(r6, entrance_angle);
             if (FringeBendEntrance)
-                bend_fringe(r6, irho, gK);
+                bend_fringe(r6, irho, gKEntrance);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             if (k1_theta_entrance != 0.0)
@@ -118,7 +118,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
-                bend_fringe(r6, -irho, gK);
+                bend_fringe(r6, -irho, gKExit);
             Yrot(r6, exit_angle);
 
             /* Check physical apertures at the exit of the magnet */
@@ -154,7 +154,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
-        double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
+        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0.0); check_error();
+        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0.0); check_error();
+        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0.0); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -186,7 +188,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->FringeBendExit=FringeBendExit;
         Elem->FringeQuadEntrance=FringeQuadEntrance;
         Elem->FringeQuadExit=FringeQuadExit;
-        Elem->gK=gK;
+        Elem->gKEntrance=FullGap * FringeInt1;
+        Elem->gKExit=FullGap * FringeInt2;
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -200,7 +203,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
             Elem->FringeQuadEntrance, Elem->FringeQuadExit,
-            Elem->gK,
+            Elem->gKEntrance, Elem->gKExit,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
             Elem->KickAngle, Elem->Scaling, num_particles);
@@ -234,7 +237,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
-        double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
+        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0.0); check_error();
+        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0.0); check_error();
+        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0.0); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -258,7 +263,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             FringeBendEntrance, FringeBendExit,
             FringeQuadEntrance, FringeQuadExit,
-            gK,
+            FullGap*FringeInt1, FullGap*FringeInt1,
             T1, T2, R1, R2, RApertures, EApertures,
             KickAngle, Scaling, num_particles);
     } else if (nrhs == 0) {
@@ -275,12 +280,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0], i0++, mxCreateString("ExitAngle"));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
-            plhs[1] = mxCreateCellMatrix(13, 1);
+            plhs[1] = mxCreateCellMatrix(15, 1);
             mxSetCell(plhs[1], i1++, mxCreateString("FringeBendEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeBendExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
-            mxSetCell(plhs[1], i1++, mxCreateString("gK"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FullGap"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FringeInt1"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FringeInt2"));
             mxSetCell(plhs[1], i1++, mxCreateString("T1"));
             mxSetCell(plhs[1], i1++, mxCreateString("T2"));
             mxSetCell(plhs[1], i1++, mxCreateString("R1"));
