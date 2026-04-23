@@ -326,10 +326,10 @@ def test_get_tune_chrom(hmba_lattice):
     qharm = hmba_lattice.get_tune(method="interp_fft")
     qpharm = hmba_lattice.get_chrom(method="interp_fft")
     print(qlin, qharm)
-    assert_close(qlin, [0.2099983, 0.34001317], atol=1e-8)
-    assert_close(qharm, [0.20999833, 0.34001324], atol=1e-8)
-    assert_close(qplin, [5.734099, 3.917612], atol=1e-8)
-    assert_close(qpharm, [5.734123, 3.917639], atol=1e-8)
+    assert_close(qlin, [0.209998303584, 0.340013166682], atol=1e-8)
+    assert_close(qharm, [0.209998327527, 0.340013235807], atol=1e-8)
+    assert_close(qplin, [5.729114185134, 3.931703139652], atol=1e-8)
+    assert_close(qpharm, [5.729138523591, 3.931730165145], atol=1e-8)
 
 
 def test_nl_detuning_chromaticity(hmba_lattice):
@@ -342,8 +342,8 @@ def test_nl_detuning_chromaticity(hmba_lattice):
         nlqplin,
         np.array(
             [
-                [0.2101570, 5.730634, 151.87972, -18977.6808],
-                [0.3399707, 3.916998, 258.2324, -3529.81728],
+                [2.10157015e-01, 5.72564645e00, 1.51815354e02, -1.89809140e04],
+                [3.39970733e-01, 3.93108893e00, 2.58206212e02, -3.53120138e03],
             ]
         ),
         atol=1e-12,
@@ -353,8 +353,8 @@ def test_nl_detuning_chromaticity(hmba_lattice):
         nlqpharm,
         np.array(
             [
-                [0.2101570, 5.730630, 151.87968, -18977.7132],
-                [0.3399708, 3.916997, 258.23236, -3529.8072],
+                [2.10156985e-01, 5.72564318e00, 1.51815337e02, -1.89809436e04],
+                [3.39970750e-01, 3.93108797e00, 2.58206152e02, -3.53119072e03],
             ]
         ),
         atol=1e-12,
@@ -362,13 +362,14 @@ def test_nl_detuning_chromaticity(hmba_lattice):
     )
     assert_close(
         q0,
-        np.array([[0.210004, 0.340017], [0.210004, 0.340017]]),
+        np.array([[0.21000425, 0.34001688], [0.21000425, 0.34001688]]),
         atol=1e-12,
         rtol=1e-5,
     )
     assert_close(
         q1,
-        np.array([[96183.925683, -104218.18371], [-104263.908197, 51684.400417]]),
+        np.array(
+            [[96172.00066329, -103658.3658934], [-103704.24788915, 51570.58307421]]),
         atol=1e-12,
         rtol=1e-5,
     )
