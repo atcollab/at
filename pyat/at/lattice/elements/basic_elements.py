@@ -637,46 +637,49 @@ class Feedback(Element):
     def __init__(
         self,
         family_name: str,
-        Gx: float = 0.0,
-        Gy: float = 0.0,
-        Gz: float = 0.0,
-        closed_orbit: Sequence[float] = np.zeros(6),
-        bufferlength_x: int = 0,
-        bufferlength_y: int = 0,
-        bufferlength_z: int = 0,
+        Gxp: float = 0.0,
+        Gyp: float = 0.0,
+        Gdp: float = 0.0,
+        closed_orbit: Sequence[float] = np.zeros(3),
+        bufferlength_xp: int = 0,
+        bufferlength_yp: int = 0,
+        bufferlength_dp: int = 0,
         **kwargs
     ):
         """
         Args:
-            family_name:    Name of the element
-            Gx:             Feedback Gain in Horizontal (no units:
-                            damping_time [turns] = 2 / Gx )
-            Gy:             Feedback Gain in Vertical (no units:
-                            damping_time [turns] = 2 / Gy )
-            Gz:             Feedback Gain in Longitudinal (no units:
-                            damping_time [turns] = 2 / Gz )
-            closed_orbit:   6D closed orbit to feedback onto
-            bufferlength_x: How many turns to use for a rolling
-                            buffer in horizontal?
-            bufferlength_y: How many turns to use for a rolling
-                            buffer in vertical?
-            bufferlength_z: How many turns to use for a rolling
-                            buffer in longitudinal?
+            family_name:     Name of the element
+            Gxp:              Feedback Gain in Horizontal (no units:
+                             damping_time [turns] = 2 / Gx )
+            Gyp:              Feedback Gain in Vertical (no units:
+                             damping_time [turns] = 2 / Gy )
+            Gdp:             Feedback Gain in Longitudinal (no units:
+                             damping_time [turns] = 2 / Gdp )
+            closed_orbit:    [xp, yp, dp] - desired angle set points
+                             default = [0, 0, 0]
+            bufferlength_xp: How many turns to use for a rolling
+                             buffer in horizontal?
+            bufferlength_yp: How many turns to use for a rolling
+                             buffer in vertical?
+            bufferlength_dp: How many turns to use for a rolling
+                             buffer in longitudinal?
 
         Default PassMethod: ``FeedbackPass``
 
-        Note that this element does not SET the closed orbit. That
-        is handled by the lattice (either full ring or linear maps for x and y,
-        or the ct for the longitudinal plane). An accurate closed orbit must be
-        provided in order to have a well behaving feedback.
         """
         kwargs.setdefault("PassMethod", "FeedbackPass")
-        self._bufferlength_x = bufferlength_x
-        self._bufferlength_y = bufferlength_y
-        self._bufferlength_z = bufferlength_z
-        self._xbuffer = np.zeros(bufferlength_x)
-        self._ybuffer = np.zeros(bufferlength_y)
-        self._zbuffer = np.zeros(bufferlength_z)
-        super().__init__(family_name, Gx=Gx, Gy=Gy, Gz=Gz, closed_orbit=closed_orbit, **kwargs)
+        self._bufferlength_xp = bufferlength_xp
+        self._bufferlength_yp = bufferlength_yp
+        self._bufferlength_dp = bufferlength_dp
+        self._xpbuffer = np.zeros(bufferlength_xp)
+        self._ypbuffer = np.zeros(bufferlength_yp)
+        self._dpbuffer = np.zeros(bufferlength_dp)
+        
+        assert_msg = 'closed_orbit must have length 3' + \
+                     'referring to [xp,yp,dp] set points'
+                     
+        assert len(closed_orbit)==3, assert_msg
+            
+        super().__init__(family_name, Gxp=Gxp, Gyp=Gyp, Gdp=Gdp, closed_orbit=closed_orbit, **kwargs)
 
 Radiative.register(EnergyLoss)
