@@ -219,7 +219,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         struct elem El, *Elem=&El;
         
         double Gxp,Gyp,Gdp,*closed_orbit;
-        double *xpbuffer, *ypbuffer, *zpbuffer;
+        double *xpbuffer, *ypbuffer, *dpbuffer;
         long bufferlength_xp, bufferlength_yp, bufferlength_dp;
         Gxp=atGetOptionalDouble(ElemData,"Gxp",0.0); check_error();
         Gyp=atGetOptionalDouble(ElemData,"Gyp",0.0); check_error();
