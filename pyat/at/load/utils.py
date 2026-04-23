@@ -6,10 +6,10 @@ from __future__ import annotations
 
 __all__ = [
     "RingParam",
+    "element_from_dict",
     "find_class",
     "keep_attributes",
     "keep_elements",
-    "element_from_dict",
     "protect",
     "restore",
     "split_ignoring_parentheses",

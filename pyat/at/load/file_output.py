@@ -4,21 +4,29 @@ __all__ = ["Exporter"]
 
 import sys
 from collections.abc import Sequence, Generator
+from pathlib import Path
+from typing import ClassVar
 
 from .file_input import ElementDescr
 from ..lattice import Lattice, elements as elt
 
 
 class Exporter:
-    delimiter: str = ";"
-    continuation: str = ""
-    label_fmt = str.maketrans("*/+-", "..__")  # Not allowed in destination format
-    bool_fmt = None
-    use_line = True
+    # Class attributes
+    delimiter: ClassVar[str] = ";"
+    continuation: ClassVar[str] = ""
+    label_fmt: ClassVar = str.maketrans("*/+-", "..__")  # Not allowed in output format
+    bool_fmt: ClassVar[dict[bool, str]] = {False: "False", True: "True"}
+    use_line: ClassVar[bool] = True
+
+    # Instance attributes
+    store: dict[type[elt.Element], dict[str, ElementDescr] | None]
+    anystore: dict[str, ElementDescr]
+    all_stores: list[dict[str, ElementDescr]]
 
     def __init__(self, ring: Lattice, **kwargs):
         def store_elem(store, elem: ElementDescr):
-            """Store an element in the selected dictionary"""
+            """Store an element in the selected dictionary."""
 
             def name_gen(name: str, max: int = 10000):
                 yield name
@@ -44,16 +52,18 @@ class Exporter:
                         store[nm] = elem
                     return nm
 
-            raise NameError(f"Cannot store {elem.name}")
+            msg = f"Cannot store {elem.name}"
+            raise NameError(msg)
 
-        def scan(ring: Lattice) -> Generator[tuple[str, ElementDescr], None, None]:
-            """Run through the lattice and store the converted elements"""
+        def scan(ring: Lattice) -> Generator[tuple[str, float], None, None]:
+            """Run through the lattice and store the converted elements."""
             end = 0.0
             for atelem in ring:
                 attyp = type(atelem)
-                elms = self.generate_madelems(attyp, vars(atelem).copy())
+                elemdict = atelem.to_dict()
+                elms = self.generate_madelems(attyp, elemdict)
                 if isinstance(elms, ElementDescr):
-                    elms = (elms,)
+                    elms = [elms]
                 for elem in elms:
                     store = self.store.get(attyp, self.anystore)
                     length = elem.get("L", 0.0)
@@ -79,7 +89,7 @@ class Exporter:
         self.seq = list(scan(ring))
         self.length = ring.cell_length
         self.in_file = getattr(ring, "in_file", "<unknown>")
-        self.in_use = getattr(ring, "use", "<unknown")
+        self.in_use = getattr(ring, "use", "<unknown>")
         self.energy = ring.energy
         self.particle = ring.particle
         self.is_6d = ring.is_6d
@@ -88,7 +98,7 @@ class Exporter:
     def generate_madelems(
         self, eltype: type[elt.Element], elemdict: dict
     ) -> ElementDescr | list[ElementDescr]:
-        pass
+        return []
 
     def print_beam(self, file):
         pass
@@ -97,7 +107,7 @@ class Exporter:
         print(file=file)
         for elname, el in store.items():
             if el is not None:
-                print(f"{elname.ljust(10)}: {str(el)}{self.delimiter}", file=file)
+                print(f"{elname.ljust(10)}: {el}{self.delimiter}", file=file)
 
     def print_sequence(self, file) -> None:
         line = f"{self.seqname.ljust(10)}: SEQUENCE, L={self.length}"
@@ -114,15 +124,17 @@ class Exporter:
         print(f"\n{self.seqname.ljust(10)}: LINE=( {self.continuation}", file=file)
         for lnum in range(nl):
             print(
-                f"  {elnames(self.seq[10*lnum:10*(lnum+1)])}, {self.continuation}",
+                f"  {elnames(self.seq[10 * lnum : 10 * (lnum + 1)])},"
+                f" {self.continuation}",
                 file=file,
             )
-        print(f"  {elnames(self.seq[10*nl:])}){self.delimiter}\n", file=file)
+        print(f"  {elnames(self.seq[10 * nl :])}){self.delimiter}\n", file=file)
 
-    def export(self, filename: str | None = None) -> None:
+    def export(self, filename: str | Path | None = None) -> None:
         def do_export(file):
             print(
-                f"! Converted by PyAT from in_file={self.in_file}, use={self.in_use!r}\n",
+                f"! Converted by PyAT from in_file={self.in_file},"
+                f" use={self.in_use!r}\n",
                 file=file,
             )
             self.print_beam(file)
@@ -138,5 +150,6 @@ class Exporter:
         if filename is None:
             do_export(sys.stdout)
         else:
-            with open(filename, "w") as mfile:
+            filename = Path(filename)
+            with filename.open("w") as mfile:
                 do_export(mfile)

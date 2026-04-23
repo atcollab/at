@@ -1,34 +1,36 @@
 """
-Functions used to
-calculate the loss boundary for different
-grid definitions
+Functions used to calculate the loss boundary for different grid definitions.
 """
 
-from at.lattice import Lattice, AtError, AtWarning, Refpts
-from typing import Optional, Sequence
-from enum import Enum
-import numpy as np
-from scipy.ndimage import binary_dilation, binary_opening
-from collections import namedtuple
 import time
 import warnings
+from collections import namedtuple
+from collections.abc import Sequence
+from enum import Enum
+from typing import Optional
+
+import numpy as np
+from scipy.ndimage import binary_dilation, binary_opening
+
+from at.lattice import AtError, AtWarning, Lattice, Refpts, axisdef
+
+from .floodfill_acceptance import floodfill
 
 __all__ = ["GridMode"]
-
-_pdict = {"x": 0, "xp": 1, "y": 2, "yp": 3, "dp": 4, "ct": 5}
 
 
 class GridMode(Enum):
     """
-    Grid definition for 2D acceptance boundary search
+    Grid definition for 2D acceptance boundary search.
     """
 
     RADIAL = 0  #: full [:math:`\:r, \theta\:`] grid
     CARTESIAN = 1  #: full [:math:`\:x, y\:`] grid
     RECURSIVE = 2  #: radial recursive search
+    FLOODFILL = 3  #: from exterior to stable boundary
 
 
-def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
+def grid_config(axes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     """
     Returns an object that defines the grid configuration
     """
@@ -36,8 +38,8 @@ def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     bounds = tuple(map(tuple, bounds))
     shape = np.array(npoints, dtype=np.int32)
     d = {
-        "planes": np.atleast_1d(planes),
-        "planesi": np.atleast_1d(get_plane_index(planes)),
+        "axes": np.atleast_1d(axes),
+        "axesi": np.atleast_1d(axisdef.axis_(axes, key="index")),
         "amplitudes": np.atleast_1d(amplitudes),
         "shape": np.atleast_1d(shape),
         "bounds": bounds,
@@ -53,22 +55,6 @@ def grid(grid, offset):
     """
     d = {"grid": np.atleast_2d(grid), "offset": np.atleast_1d(offset)}
     return namedtuple("grid", d.keys())(**d)
-
-
-def get_plane_index(planes):
-    """
-    Converts plane to particle coordinate index
-    """
-    planesi = np.array([], dtype=np.int32)
-    for i, p in enumerate(np.atleast_1d(planes)):
-        if isinstance(p, str):
-            try:
-                planesi = np.append(planesi, _pdict[p])
-            except KeyError:
-                raise AtError("Allowed values for plane are x,xp,y,yp,dp,ct")
-        else:
-            raise AtError("Allowed values for plane are x,xp,y,yp,dp,ct")
-    return planesi
 
 
 def set_ring_orbit(ring, dp, obspt, orbit):
@@ -88,37 +74,37 @@ def set_ring_orbit(ring, dp, obspt, orbit):
 
 
 def grid_configuration(
-    planes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=1.0e-6
+    axes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=1.0e-6
 ):
     """
     Return a grid configuration based on user input parameters, the ordering
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
     Scalar inputs can be used for 1D grid
     """
-    ndims = len(np.atleast_1d(planes))
+    ndims = len(np.atleast_1d(axes))
     if ndims > 2 or ndims == 0:
-        raise AtError("planes can have 1 or 2 element (1D or 2D aperture)")
+        raise AtError("axes can have 1 or 2 element (1D or 2D aperture)")
     elif ndims == 1 and grid_mode is GridMode.RADIAL:
         grid_mode = GridMode.CARTESIAN
 
     if np.shape(np.atleast_1d(npoints)) != (ndims,):
-        raise AtError("npoints shape should be (len(planes),)")
+        raise AtError("npoints shape should be (len(axes),)")
     if np.shape(np.atleast_1d(amplitudes)) != (ndims,):
-        raise AtError("amplitudes shape should be (len(planes),)")
+        raise AtError("amplitudes shape should be (len(axes),)")
     if np.shape(np.atleast_2d(bounds)) != (ndims, 2) and bounds is not None:
-        raise AtError("bounds shape should be (len(planes),2)")
+        raise AtError("bounds shape should be (len(axes),2)")
 
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
             bounds = np.array([[0, 1], [np.pi, 0]])
         bounds[0][bounds[0] == 0] = 1.0e-6
-    elif grid_mode is GridMode.CARTESIAN:
+    elif (grid_mode is GridMode.CARTESIAN) or (grid_mode is GridMode.FLOODFILL):
         if bounds is None:
             bounds = np.array([[p - 1, 1] for p in range(ndims)])
     else:
         raise AtError("GridMode {0} undefined.".format(grid_mode))
 
-    config = grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero)
+    config = grid_config(axes, amplitudes, npoints, bounds, grid_mode, shift_zero)
     return config
 
 
@@ -144,7 +130,7 @@ def get_parts(config, offset):
         g2r = amp[1] * np.sin(g2) * g1
         return np.array([g1r.flatten(), g2r.flatten()])
 
-    pind = config.planesi
+    pind = config.axesi
     amp = config.amplitudes
     npt = config.shape
     bnd = config.bounds
@@ -315,7 +301,6 @@ def grid_boundary_search(
     )
 
     if verbose:
-        kwargs["verbose"] = verbose
         print("\nRunning grid boundary search:")
         if len(obspt) == 1:
             if obspt[0] is None:
@@ -343,6 +328,44 @@ def grid_boundary_search(
     grids = []
     if offset is None:
         offset = [None for _ in np.arange(len(obspt))]
+
+    if grid_mode is GridMode.FLOODFILL:
+        s_ffallrefpts = []
+        g_ffallrefpts = []
+        for obs, orbit in zip(obspt, offset, strict=True):
+            # set ring and offsets
+            _obs = 0 if obs is None else obs
+            _dpp = 0.0 if dp is None else dp
+            _orbit, _ringrot = set_ring_orbit(ring, _dpp, _obs, orbit)
+            _offset = _orbit + np.array([0, 0, 0, 0, _dpp, 0])
+            # flood fill
+            data_ff = floodfill(
+                _ringrot,
+                nturns=nturns,
+                planes=config.axes,
+                amplitudes=config.amplitudes,
+                bounds=config.bounds,
+                npoints=config.shape,
+                offset=_offset,
+                verbose=False,
+                use_mp=use_mp,
+                pool_size=kwargs["pool_size"],
+            )
+            mask_alive = data_ff[3, :] == 0
+            s_ffallrefpts.append(data_ff[0:2, mask_alive])
+            g_ffallrefpts.append(data_ff[0:2, :])
+        if len(obspt) == 1:
+            s_ff = s_ffallrefpts[0]
+            g_ff = g_ffallrefpts[0]
+        else:
+            s_ff = s_ffallrefpts
+            g_ff = g_ffallrefpts
+        # floodfill boundary and survived are the same,
+        # but they need to be sorted
+        _ia = np.argsort(np.arctan2(s_ff[1, :], s_ff[0, :]))
+        b_ff = s_ff[:, _ia]
+        # we return boundary, survived, tracked
+        return b_ff, s_ff, g_ff
 
     for i, obs, orbit in zip(np.arange(len(obspt)), obspt, offset):
         orbit, _ = set_ring_orbit(ring, dp, obs, orbit)
@@ -400,12 +423,10 @@ def recursive_boundary_search(
     **kwargs,
 ):
     """
-    Recursively search for the boundary in a given plane and direction (angle)
+    Recursively search for the boundary in a given axis and direction (angle)
     """
 
-    def search_boundary(
-        planesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs
-    ):
+    def search_boundary(axesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs):
         ftol = min(rtol / rsteps)
         cs = np.squeeze([np.cos(angles), np.sin(angles)])
         cs = np.around(cs, decimals=9)
@@ -416,41 +437,41 @@ def recursive_boundary_search(
         mask = np.array([])
 
         while np.any(survived):
-            for i, pi in enumerate(planesi):
+            for i, pi in enumerate(axesi):
                 part[pi, survived] += cs[i, survived] * rsteps[i] * fact[survived]
             istracked = np.array(
                 [
                     not np.any([np.allclose(p, g, rtol=1.0e-9) for g in grid.T])
-                    for p in part[planesi].T
+                    for p in part[axesi].T
                 ]
             )
             survived = np.array(
                 [
                     np.any([np.allclose(p, m, rtol=1.0e-9) for m in mask.T])
-                    for p in part[planesi].T
+                    for p in part[axesi].T
                 ]
             )
             pt = part[:, istracked]
-            grid = np.hstack([grid, pt[planesi]]) if grid.size else pt[planesi]
+            grid = np.hstack([grid, pt[axesi]]) if grid.size else pt[axesi]
             ptmp = (pt.T + offset).T
             survived[istracked] = get_survived(ptmp, newring, nturns, use_mp, **kwargs)
             pm = part[:, np.logical_and(istracked, survived)]
-            mask = np.hstack([mask, pm[planesi]]) if mask.size else pm[planesi]
+            mask = np.hstack([mask, pm[axesi]]) if mask.size else pm[axesi]
             for i in range(len(angles)):
                 if not survived[i] and fact[i] > ftol:
                     deltas = cs[:, i] * rsteps[:] * min(1, 2 * fact[i])
-                    if np.any(abs(deltas) > abs(part[planesi, i])):
-                        part[planesi, i] = np.zeros(len(planesi))
+                    if np.any(abs(deltas) > abs(part[axesi, i])):
+                        part[axesi, i] = np.zeros(len(axesi))
                     else:
-                        for j, pi in enumerate(planesi):
+                        for j, pi in enumerate(axesi):
                             part[pi, i] -= deltas[j]
                     survived[i] = True
                     fact[i] *= 1 / divider
 
-        for i, pi in enumerate(planesi):
+        for i, pi in enumerate(axesi):
             part[pi] -= cs[i] * rsteps[i] * fact
 
-        p = np.squeeze(part[planesi])
+        p = np.squeeze(part[axesi])
         return p, mask, grid
 
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
@@ -489,7 +510,7 @@ def recursive_boundary_search(
 
     t0 = time.time()
     result = search_boundary(
-        config.planesi, angles, rtol, rstep, nturns, offset, use_mp, **kwargs
+        config.axesi, angles, rtol, rstep, nturns, offset, use_mp, **kwargs
     )
     if verbose:
         print("Calculation took {0}".format(time.time() - t0))

@@ -117,6 +117,13 @@ def _lattice_pass(
             msg = "No GPU support enabled"
             raise AtError(msg)
         else:
+            if "harmonic_number" in kwargs:
+                # GPU harmonic_number is computed using round( RF/T0 )
+                kwargs.pop("harmonic_number")
+            if "fillpattern" in kwargs:
+                fp = kwargs.pop("fillpattern")
+                if fp is not None and len(fp) > 0:
+                    print("_gpupass(): fillpattern not supported in GPU")
             return _gpupass(lattice, r_in, nturns, refpts=refs, **kwargs)
     else:
         return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)

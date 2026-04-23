@@ -64,16 +64,63 @@ machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
 build = ["*"]
-# Remove free-threaded builds
-skip = ["cp3{8,9}-*", "cp314t-*"]
+# Skip free-threaded builds
+skip = ["cp3{8,9}-*", "cp*t-*"]
 archs = ["auto64"]
 build-verbosity = "1"
 
-#[tool.cibuildwheel.linux]
-## Pass the detected PyAT version to the linux docker containers
-#environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
+[tool.cibuildwheel.linux]
+# Pass environment variables to the linux docker containers
+environment-pass = ["SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX"]
 
 [tool.setuptools_scm]
 write_to = "pyat/at/_version.py"
 git_describe_command = "git describe --dirty --tags --long --match pyat-[0-9]*"
 fallback_version = "0.0.0"
+
+[tool.ruff]
+extend-include = ["*.ipynb"]
+output-format = "concise"
+
+[tool.ruff.lint]
+# Allow en-dash used in docstrings
+allowed-confusables = ["–"]
+extend-select = [
+  "E",  # pycodestyle
+  "W",  # pycodestyle warning
+  "UP",  # pyupgrade
+  "B",  # bugbear
+  "C4",  # comprehensions
+  "SLOT",  # slot in str and tuple derivatives
+  "EM",  # Error messages
+  "ISC",  # concatenated strings
+  "PIE",  # unnecessary pass statement
+  "PYI",  # typing
+  "Q",  # quotes
+  "SIM",  # simplify
+  "PTH",  # use Pathlib
+  "NPY",  # numpy
+  "PERF",  # performance
+  "PL",
+  "RUF",
+  "D415",  # period at the end of comments
+]
+ignore = [
+  "D417",  # undocumented param
+  "PLW0603",  # global variables
+  "PLR2004",  # magic value
+  "RUF012",  # Class attributes
+  "PLR0911",  # too many
+  "PLR0912",  # too many
+  "PLR0913",  # too many
+  "PLR0915",  # too many
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

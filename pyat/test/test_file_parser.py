@@ -1,10 +1,10 @@
-from math import sqrt  # noqa: F401
+from math import sqrt
 
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose as assert_close
 
-from at import UnorderedParser, MadxParser, Mad8Parser, ElegantParser, set_argparser
+from at import UnorderedParser, MadxParser, Mad8Parser, ElegantParser, AtWarning
 
 __all__ = []
 
@@ -19,6 +19,7 @@ v2 = 2*(sqrt(4) + 2**2) ;    // Test expression
 
 label : command1, flag1,     ! Test continuation
 -FLAG2, title="test parser", ! Test disabled flag
+arg0=(v1, v2),               ! Test array
 arg1=v1, ARG2=v2, ARG3=V3 ;  ! Test postponed definition
 
 V3 = True ; V4 = False ;     ! Test several commands
@@ -36,6 +37,7 @@ V2 = 2*(sqrt(4) + 2**2)       # Test expression
 
 label : command1, flag1, \    # Test continuation
 -FLAG2, title="test parser",\ # Test disabled flag
+arg0=(V1, V2),\               # Test array
 arg1=V1, ARG2=V2, ARG3=V3     # Test postponed definition
 
 V3 = True ; V4 = False        # Test several commands
@@ -173,30 +175,35 @@ CELL.1: LINE=(DR1, Q1.F, DR2, Q1.D, DR3)
 RING.1: LINE=(CELL.1, DR1, SOL1, DR4, MULT1, &
               HK:1, VK:1, HVK2, DR4, BPM1, DR4, BPM2, CELL.1)
 """
+
+
+class _Command1:
+    """Test command checking its arguments versus the database."""
+
+    @staticmethod
+    def argparser(parser, argcount, argstr):
+        return parser._argparser(
+            argcount, argstr, bool_attr={"flag1", "FLAG2"}, str_attr={"title"}
+        )
+
+    def __call__(self, **kwargs):
+        print("command1")
+        assert kwargs["title"] == "test parser"
+        assert kwargs["flag1"] is True
+        assert kwargs["FLAG2"] is False
+        assert kwargs["arg0"] == (42.0, 12.0)
+        assert kwargs["arg1"] == 42.0
+        assert kwargs["ARG2"] == 12.0
+        assert kwargs["ARG3"] is True
+        return "done"
+
+
 # Global definitions for BaseParser
-
-true = True
-false = False
-
-
-def _command1_parser(parser, argcount, argstr):
-    return parser._argparser(
-        argcount, argstr, bool_attr={"flag1", "FLAG2"}, str_attr={"title"}
-    )
-
-
-@set_argparser(_command1_parser)
-def command1(**kwargs):
-    """Sample command testing that arguments are as expected"""
-    assert kwargs["title"] == "test parser"
-    assert kwargs["flag1"] is True
-    assert kwargs["FLAG2"] is False
-    assert kwargs["arg1"] == 42.0
-    assert kwargs["ARG2"] == 12.0
-    assert kwargs["ARG3"] is True
-    return "done"
-
-
+_parser_env = {
+    "sqrt": sqrt,
+    "command1": _Command1(),
+    "__builtins__": {},
+}
 # End of global definitions
 
 
@@ -211,7 +218,7 @@ def test_unordered_parser(cont, delimit, linecomm, data: str):
         _continuation = cont
         _delimiter = delimit
 
-    parser = _Parser(globals())
+    parser = _Parser(_parser_env, verbose=True)
     parser.parse_lines(data.splitlines())
     assert parser["label"] == "done"  # Make sure that "command1" was executed
 
@@ -239,7 +246,8 @@ def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: b
 
     assert sequences == ["cell_1", "ring_1"]
 
-    ring = parser.lattice(use="ring.1")
+    with pytest.warns(AtWarning):
+        ring = parser.lattice(use="ring.1")
     assert len(ring) == 22
     assert ring.energy == energy
     assert str(ring.particle) == particle
@@ -247,7 +255,8 @@ def test_madx_parser(Parser, data: str, energy: float, particle: str, radiate: b
     assert ring.is_6d is radiate
     assert_close(ring.get_s_pos(), expected_ring_pos)
 
-    cell = parser.lattice(use="cell.1")
+    with pytest.warns(AtWarning):
+        cell = parser.lattice(use="cell.1")
     assert len(cell) == 5
     assert cell.energy == 2.0e09
     assert str(cell.particle) == "positron"
@@ -272,7 +281,8 @@ def test_elegant_parser():
 
     assert sequences == ["CELL_1", "RING_1"]
 
-    ring = parser.lattice(use="ring.1", particle="electron", energy=6.0e9)
+    with pytest.warns(AtWarning):
+        ring = parser.lattice(use="ring.1", particle="electron", energy=6.0e9)
     assert len(ring) == 23
     assert ring.energy == 6.0e9
     assert str(ring.particle) == "electron"
@@ -280,7 +290,8 @@ def test_elegant_parser():
     assert ring.is_6d is False
     assert_close(ring.get_s_pos(), expected_ring_pos)
 
-    cell = parser.lattice(use="cell.1", particle="positron", energy=2.0e9)
+    with pytest.warns(AtWarning):
+        cell = parser.lattice(use="cell.1", particle="positron", energy=2.0e9)
     assert len(cell) == 5
     assert cell.energy == 2.0e09
     assert str(cell.particle) == "positron"

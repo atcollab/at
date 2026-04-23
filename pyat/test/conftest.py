@@ -4,6 +4,8 @@ A special file that contains test fixtures for the other test files to use.
 
 import sys
 
+import scipy
+
 if sys.version_info.minor < 9:
     from importlib_resources import files, as_file
 else:
@@ -24,7 +26,8 @@ def pytest_report_header(config):
     except AttributeError:
         sysinfo = ""
     numpyinfo = f"numpy version: {numpy.__version__}"
-    return [sysinfo, numpyinfo]
+    scipyinfo = f"scipy version: {scipy.__version__}"
+    return [sysinfo, numpyinfo, scipyinfo]
 
 
 @pytest.fixture
