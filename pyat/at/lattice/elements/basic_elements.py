@@ -17,11 +17,14 @@ __all__ = [
     "RFCavity",
     "SimpleQuantDiff",
     "SimpleRadiation",
+    "Feedback",
     "SliceMoments",
 ]
 
 import warnings
 from collections.abc import Iterable
+
+from typing import Sequence
 
 import numpy as np
 
@@ -627,5 +630,56 @@ class EnergyLoss(_DictLongtMotion, Element):
         kwargs.setdefault("PassMethod", self.default_pass[False])
         super().__init__(family_name, EnergyLoss=energy_loss, **kwargs)
 
+
+class Feedback(Element):
+    """Transverse and Longitudinal Feedback element"""
+
+    def __init__(
+        self,
+        family_name: str,
+        Gxp: float = 0.0,
+        Gyp: float = 0.0,
+        Gdp: float = 0.0,
+        closed_orbit: Sequence[float] = np.zeros(3),
+        bufferlength_xp: int = 0,
+        bufferlength_yp: int = 0,
+        bufferlength_dp: int = 0,
+        **kwargs
+    ):
+        """
+        Args:
+            family_name:     Name of the element
+            Gxp:              Feedback Gain in Horizontal (no units:
+                             damping_time [turns] = 2 / Gx )
+            Gyp:              Feedback Gain in Vertical (no units:
+                             damping_time [turns] = 2 / Gy )
+            Gdp:             Feedback Gain in Longitudinal (no units:
+                             damping_time [turns] = 2 / Gdp )
+            closed_orbit:    [xp, yp, dp] - desired angle set points
+                             default = [0, 0, 0]
+            bufferlength_xp: How many turns to use for a rolling
+                             buffer in horizontal?
+            bufferlength_yp: How many turns to use for a rolling
+                             buffer in vertical?
+            bufferlength_dp: How many turns to use for a rolling
+                             buffer in longitudinal?
+
+        Default PassMethod: ``FeedbackPass``
+
+        """
+        kwargs.setdefault("PassMethod", "FeedbackPass")
+        self._bufferlength_xp = bufferlength_xp
+        self._bufferlength_yp = bufferlength_yp
+        self._bufferlength_dp = bufferlength_dp
+        self._xpbuffer = np.zeros(bufferlength_xp)
+        self._ypbuffer = np.zeros(bufferlength_yp)
+        self._dpbuffer = np.zeros(bufferlength_dp)
+        
+        assert_msg = 'closed_orbit must have length 3' + \
+                     'referring to [xp,yp,dp] set points'
+                     
+        assert len(closed_orbit)==3, assert_msg
+            
+        super().__init__(family_name, Gxp=Gxp, Gyp=Gyp, Gdp=Gdp, closed_orbit=closed_orbit, **kwargs)
 
 Radiative.register(EnergyLoss)
