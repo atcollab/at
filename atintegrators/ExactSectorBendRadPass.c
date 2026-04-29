@@ -1,8 +1,8 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactkickrad.c"
-#include "exactbend.c"
+#include "drift_exactbend.h"
+#include "kickrad_k1h_kn.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
 
@@ -23,7 +23,8 @@ struct elem
     int FringeBendExit;
     int FringeQuadEntrance;
     int FringeQuadExit;
-    double gK;
+    double gK_entrance;
+    double gK_exit;
     double *R1;
     double *R2;
     double *T1;
@@ -39,7 +40,7 @@ static void ExactSectorBendRad(double *r, double le, double irho,
         double entrance_angle, double exit_angle,
         int FringeBendEntrance, int FringeBendExit,
         int FringeQuadEntrance, int FringeQuadExit,
-        double gK,
+        double gK_entrance, double gK_exit,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
@@ -50,20 +51,26 @@ static void ExactSectorBendRad(double *r, double le, double irho,
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
     double K2 = SL*KICK2;
-    double B0 = B[0];
-    double A0 = A[0];
     double rad_const = RAD_CONST*pow(gamma, 3);
     double diff_const = DIF_CONST*pow(gamma, 5);
+    double B0 = 0.0;
+    double A0 = 0.0;
+    double k1_entrance_angle = 0.0;
+    double k1_exit_angle = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le;
-        A[0] += sin(KickAngle[1])/le;
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 = -sin(KickAngle[0]) / le;
+        A0 = sin(KickAngle[1]) / le;
+    }
+    if (max_order >= 1) {
+        k1_entrance_angle = B[1] * entrance_angle;
+        k1_exit_angle = B[1] * exit_angle;
     }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
-    irho,gK,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
-    entrance_angle,exit_angle,\
+    irho,gK_entrance,gK_exit,A0,B0,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
+    k1_entrance_angle,k1_exit_angle,entrance_angle,exit_angle,\
     FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,le,\
     rad_const, diff_const)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
@@ -82,30 +89,36 @@ static void ExactSectorBendRad(double *r, double le, double irho,
 
             Yrot(r6, entrance_angle);
             if (FringeBendEntrance)
-                bend_fringe(r6, irho, gK);
+                bend_fringe(r6, irho, gK_entrance);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
-            bend_edge(r6, irho, -entrance_angle);
+            if (entrance_angle != 0.0) {
+                if (k1_entrance_angle != 0.0) quad_wedge(r6, -k1_entrance_angle);
+                bend_edge(r6, irho, -entrance_angle);
+            }
 
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
-                exact_bend(r6, irho, L1);
-                ex_bndthinkickrad(r6, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L2);
-                ex_bndthinkickrad(r6, A, B, max_order, K2, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L2);
-                ex_bndthinkickrad(r6, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
-                exact_bend(r6, irho, L1);
+                drift(r6, L1, irho);
+                kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
+                drift(r6, L2, irho);
+                kick(r6, A0, B0, A, B, max_order, K2, irho, rad_const, diff_const, NULL);
+                drift(r6, L2, irho);
+                kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, NULL);
+                drift(r6, L1, irho);
             }
 
             /* Convert absolute path length to path lengthening */
             r6[5] -= le;
 
             /* edge focus */
-            bend_edge(r6, irho, -exit_angle);
+            if (exit_angle != 0.0) {
+                bend_edge(r6, irho, -exit_angle);
+                if (k1_exit_angle != 0.0) quad_wedge(r6, -k1_exit_angle);
+            }
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
-                bend_fringe(r6, -irho, gK);
+                bend_fringe(r6, -irho, gK_exit);
             Yrot(r6, exit_angle);
 
             /* Check physical apertures at the exit of the magnet */
@@ -120,9 +133,6 @@ static void ExactSectorBendRad(double *r, double le, double irho,
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
-    /* Remove corrector component in polynomial coefficients */
-    B[0] = B0;
-    A[0] = A0;
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -147,7 +157,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
-        double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
+        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0.0); check_error();
+        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0.0); check_error();
+        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0.0); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -179,7 +191,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->FringeBendExit=FringeBendExit;
         Elem->FringeQuadEntrance=FringeQuadEntrance;
         Elem->FringeQuadExit=FringeQuadExit;
-        Elem->gK=gK;
+        Elem->gK_entrance=FullGap*FringeInt1;
+        Elem->gK_exit=FullGap*FringeInt2;
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -196,7 +209,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
             Elem->FringeQuadEntrance, Elem->FringeQuadExit,
-            Elem->gK,
+            Elem->gK_entrance, Elem->gK_exit,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
             Elem->KickAngle, Elem->Scaling, gamma, num_particles);
@@ -235,7 +248,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
-        double gK=atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
+        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0.0); check_error();
+        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0.0); check_error();
+        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0.0); check_error();
         double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -259,13 +274,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
             FringeBendEntrance, FringeBendExit,
             FringeQuadEntrance, FringeQuadExit,
-            gK,
+            FullGap*FringeInt1, FullGap*FringeInt2,
             T1, T2, R1, R2, RApertures, EApertures,
             KickAngle, Scaling, Gamma, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;
-        plhs[0] = mxCreateCellMatrix(9, 1);
+        plhs[0] = mxCreateCellMatrix(8, 1);
         mxSetCell(plhs[0], i0++, mxCreateString("Length"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
@@ -276,13 +291,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0], i0++, mxCreateString("ExitAngle"));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
-            plhs[1] = mxCreateCellMatrix(14, 1);
+            plhs[1] = mxCreateCellMatrix(16, 1);
             mxSetCell(plhs[1], i1++, mxCreateString("Energy"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeBendEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeBendExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
-            mxSetCell(plhs[1], i1++, mxCreateString("gK"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FullGap"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FringeInt1"));
+            mxSetCell(plhs[1], i1++, mxCreateString("FringeInt2"));
             mxSetCell(plhs[1], i1++, mxCreateString("T1"));
             mxSetCell(plhs[1], i1++, mxCreateString("T2"));
             mxSetCell(plhs[1], i1++, mxCreateString("R1"));

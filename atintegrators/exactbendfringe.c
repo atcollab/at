@@ -118,6 +118,16 @@ static void bend_edge(double *r6, double rhoinv, double theta)
     }
 }
 
+static void quad_wedge(double *r6, double k1_theta)
+{
+    double x = r6[x_];
+    double y = r6[y_];
+    double dpx = k1_theta * (x*x - 0.5*y*y);
+    double dpy = k1_theta * x * y;
+    r6[px_] -= dpx;
+    r6[py_] += dpy;
+}
+
 static void bend_fringe_test(double *r6, double irho, double gK)
 {
     /* Forest 13.13, bend fringe in the hard-edge limit */
