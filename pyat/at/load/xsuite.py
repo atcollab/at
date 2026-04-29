@@ -638,7 +638,7 @@ class Bend(Multipole):
             msg = "Entry and Exit gaps for dipole are different, use entry"
             warnings.warn(AtWarning(msg), stacklevel=2)
         if entry_hgap is not None:
-            atparams["FullGap"] = entry_hgap
+            atparams["FullGap"] = 2.0 * entry_hgap
 
         if self.get("edge_entry_model", "linear") in ["linear", "full"]:
             atparams["FringeQuadEntrance"] = 1
@@ -648,8 +648,8 @@ class Bend(Multipole):
 
     def _set_xs_fringe(self, atparams: dict):
         if (gap := atparams.get("FullGap")) is not None:
-            self["edge_entry_gap"] = gap
-            self["edge_exit_gap"] = gap
+            self["edge_entry_hgap"] = 0.5 * gap
+            self["edge_exit_hgap"] = 0.5 * gap
         exact = atparams.get("PassMethod", "").startswith("Exact")
         qentry = atparams.get("FringeQuadEntrance", 0)
         qexit = atparams.get("FringeQuadExit", 0)
@@ -1051,9 +1051,7 @@ class XsLine:
         def refpart(rng):
             prt = rng.particle
             if prt.name == "relativistic":
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", category=UserWarning)
-                    prt = Particle("electron")
+                prt = Particle("electron")
             gamma0 = rng.energy / prt.rest_energy
             beta0 = sqrt(1.0 - 1.0 / gamma0 / gamma0)
             return {
