@@ -88,6 +88,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
+            r6[0] += x0ref;
 
             /* Change to the magnet referential */
             Yrot(r6, entrance_angle);
@@ -107,7 +108,6 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             }
 
             /* integrator */
-            r6[0] += x0ref;
             for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */
                 exact_drift(r6, L1);
                 strthinkick(r6, A, B, K1, max_order);
@@ -117,7 +117,6 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
                 strthinkick(r6, A, B, K1, max_order);
                 exact_drift(r6, L1);
             }
-            r6[0] -= x0ref;
 
             /* Convert absolute path length to path lengthening */
             r6[5] -= (le+refdz);
@@ -140,6 +139,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             Yrot(r6, exit_angle);
 
             /* Misalignment at exit */
+            r6[0] -= x0ref;
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
 

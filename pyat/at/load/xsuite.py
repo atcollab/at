@@ -647,7 +647,7 @@ class Bend(Multipole):
     }
     _xsuite2at_edge: ClassVar[dict[str, tuple]] = {
         "suppress": (0, None),
-        "linear": (None, None),
+        "linear": (1, None),
         "dipole-only": (None, None),
         "full": (None, 1),
     }
