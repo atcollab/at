@@ -90,7 +90,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             if (entrance_angle != 0.0) {
-                if (k1_entrance_angle != 0.0) quad_wedge(r6, -k1_entrance_angle);
+                if (k1_entrance_angle != 0.0 && FringeQuadEntrance) quad_wedge(r6, -k1_entrance_angle);
                 bend_edge(r6, irho, -entrance_angle);
             }
 
@@ -115,7 +115,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             /* edge focus */
             if (exit_angle != 0.0) {
                 bend_edge(r6, irho, -exit_angle);
-                if (k1_exit_angle != 0.0) quad_wedge(r6, -k1_exit_angle);
+                if (k1_exit_angle != 0.0 && FringeQuadEntrance) quad_wedge(r6, -k1_exit_angle);
             }
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);

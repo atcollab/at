@@ -88,7 +88,6 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
-            r6[0] += x0ref;
 
             /* Change to the magnet referential */
             Yrot(r6, entrance_angle);
@@ -97,13 +96,14 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 
-            /* edge focus */
+            /* Entry face */
+            r6[0] += x0ref;
             if (FringeBendEntrance)
                 bend_fringe(r6, irho, gK_entrance);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             if (phi_entrance != 0.0) {
-                if (k1_entrance_angle != 0.0) quad_wedge(r6, -k1_entrance_angle);
+                if (k1_entrance_angle != 0.0 && FringeQuadEntrance) quad_wedge(r6, -k1_entrance_angle);
                 bend_edge(r6, irho, phi_entrance);
             }
 
@@ -121,15 +121,16 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             /* Convert absolute path length to path lengthening */
             r6[5] -= (le+refdz);
 
-            /* edge focus */
+            /* Exit face */
             if (phi_exit != 0.0) {
                 bend_edge(r6, irho, phi_exit);
-                if (k1_exit_angle != 0.0) quad_wedge(r6, -k1_exit_angle);
+                if (k1_exit_angle != 0.0 && FringeQuadExit) quad_wedge(r6, -k1_exit_angle);
             }
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
                 bend_fringe(r6, -irho, gK_exit);
+            r6[0] -= x0ref;
 
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6, RApertures);
@@ -139,7 +140,6 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             Yrot(r6, exit_angle);
 
             /* Misalignment at exit */
-            r6[0] -= x0ref;
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
 
