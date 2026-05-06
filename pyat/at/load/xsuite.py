@@ -654,7 +654,7 @@ class Bend(Multipole):
 
     def _set_at_fringe(self) -> dict[str, Any]:
         def edge_model(xskey, bendkey, quadkey):
-            [bend, quad] = self._at2xsuite_edge[xskey]
+            [bend, quad] = self._xsuite2at_edge[self.get(xskey, "linear")]
             if bend is not None:
                 atparams[bendkey] = bend
             if quad is not None:
