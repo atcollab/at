@@ -39,7 +39,7 @@ function [RDT,buildup_fluctuation,natural_fluctuation] = computeRDTfluctuation(r
 % Validates the input arguements.
 [nslices,varargs]=getoption(varargin,'nslices',4);
 [nperiods,varargs]=getoption(varargs,'nperiods',1);
-[dpp,varargs]=getoption(varargs,'dpp',0.00);
+[dp,varargs]=getoption(varargs,'dp',0.00);
 if ~ isempty(varargs)
     throw(MException('RDTFluctuation:parameterError', ...
         ['Unsupported parameter: ' varargs{1}]))
@@ -69,7 +69,7 @@ end
 % same as computeRDT().
 indDQSO=findcells(splitring,'Class','Bend','Quadrupole','Sextupole','Octupole','Multipole');
 
-[LINDATA,AVEBETA,AVEMU,AVEDISP,nu,~]=atavedata(splitring,dpp,1:length(splitring));
+[LINDATA,AVEBETA,AVEMU,AVEDISP,nu,~]=atavedata(splitring,dp,1:length(splitring));
 
 s=[0,findspos(splitring,indDQSO)];
 betax=AVEBETA(indDQSO,1);
@@ -89,7 +89,7 @@ b3L(isnan(b3L))=0;
 b2L=getcellstruct(splitring,'PolynomB',indDQSO,1,2).*getcellstruct(splitring,'Length',indDQSO);
 b2L(isnan(b2L))=0;
 
-if dpp ~= 0
+if dp ~= 0
     closed_orbit = cat(2,LINDATA.ClosedOrbit);
 
     if any(closed_orbit(3,:))
@@ -256,10 +256,10 @@ else
             'dnux_dJx', -4*real(buildup_fluctuation.h22000(end))/pi, 'dnux_dJy', -2*real(buildup_fluctuation.h11110(end))/pi, 'dnuy_dJy',-4*real(buildup_fluctuation.h00220(end))/pi);
 end
 
-if dpp ~= 0
+if dp ~= 0
     % remove misleading information. 
     % the off-momentum RDTs directly describe the nonlinear dynamics for
-    % the given dpp case. So we don't use the chromatic terms which
+    % the given dp case. So we don't use the chromatic terms which
     % describe the deviation from the on-momentum case.
     natural_fluctuation = rmfield(natural_fluctuation, {'f20001', 'f00201', 'f10002'});
     RDT = rmfield(RDT, {'h20001', 'h00201', 'h10002'});
