@@ -848,6 +848,13 @@ class Corrector(_XsFactory):
         if (length := atparams["Length"]) != 0.0:
             pola /= length
             polb /= length
+
+      ####################################
+        atparams.pop("PolynomA", None)
+        atparams.pop("PolynomB", None)
+        atparams.pop("MaxOrder", None)
+      #####################################
+      
         return Multipole.from_at(PolynomA=pola, PolynomB=polb, MaxOrder=0, **atparams)
 
 
