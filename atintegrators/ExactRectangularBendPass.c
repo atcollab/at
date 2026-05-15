@@ -60,23 +60,18 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
     double K2 = SL*KICK2;
     double B0 = B[0];
     double A0 = A[0];
-    double k1_entrance_angle = 0.0;
-    double k1_exit_angle = 0.0;
+    double B1 = (max_order >= 1) ? B[1] : 0.0;
 
     if (KickAngle) { /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
     B[0] += irho;
-    if (max_order >= 1) {
-        k1_entrance_angle = B[1] * entrance_angle;
-        k1_exit_angle = B[1] * exit_angle;
-    }
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
-    irho,gK_entrance,gK_exit,A0,B0,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
-    k1_entrance_angle,k1_exit_angle,entrance_angle,exit_angle,x0ref,refdz,\
+    irho,gK_entrance,gK_exit,A0,B0,B1,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
+    entrance_angle,exit_angle,x0ref,refdz,\
     FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,\
     LR,le,phi_entrance,phi_exit)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
@@ -103,7 +98,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             if (phi_entrance != 0.0) {
-                if (k1_entrance_angle != 0.0 && FringeQuadEntrance) quad_wedge(r6, -k1_entrance_angle);
+                if (B1 != 0.0 && FringeQuadEntrance) quad_wedge(r6, -B1 * phi_entrance);
                 bend_edge(r6, irho, phi_entrance);
             }
 
@@ -124,7 +119,7 @@ static void ExactRectangularBend(double *r, double le, double bending_angle,
             /* Exit face */
             if (phi_exit != 0.0) {
                 bend_edge(r6, irho, phi_exit);
-                if (k1_exit_angle != 0.0 && FringeQuadExit) quad_wedge(r6, -k1_exit_angle);
+                if (B1 != 0.0 && FringeQuadExit) quad_wedge(r6, -B1 * phi_exit);
             }
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);

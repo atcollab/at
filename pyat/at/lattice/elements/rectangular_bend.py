@@ -48,7 +48,7 @@ def rbendtune(self: Dipole) -> None:
         "BndStrMPoleSymplectic4Pass",
         "ExactRectangularBendPass",
         "ExactRectBendPass",
-    }:
+    } and checkmul(self):
         elem = self.copy()
         elem.PassMethod = passmethod
         theta = elem.BendingAngle
@@ -56,9 +56,8 @@ def rbendtune(self: Dipole) -> None:
         # Analytical estimate
         x0ref = elem.Length * ((cos(0.5 * theta) - 1.0) / theta + sin(0.5 * theta) / 12)
 
-        # Search if there are multipoles
-        if checkmul(self):
-            x0ref = float(fsolve(cross, x0ref))
+        # cancel output angle
+        x0ref = float(fsolve(cross, x0ref))
 
         self.X0ref = x0ref
         rout = self.track(np.zeros(6))
