@@ -19,7 +19,7 @@ from .geometry import *
 from .transformation import *
 from .lattice_object import *
 from .lattice_parameterise import *
-# from .lattice_variables import *
+from .lattice_variables import *
 from .cavity_access import *
 from .deprecated import *
 # Define the module "lattice.constants" for backward compatibility
