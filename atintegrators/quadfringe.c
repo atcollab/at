@@ -133,7 +133,7 @@ static void linearQuadFringeElegantExit(double* r6, double b2, double *fringeInt
     fringeIntP = fringeIntP0;
     delta = r6[4];
     /* determine first linear matrix for this delta */
-    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntM, 1);
+    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntP, 2);
     r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
     r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
     r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
@@ -143,7 +143,7 @@ static void linearQuadFringeElegantExit(double* r6, double b2, double *fringeInt
     /*Linear fringe fields from elegant*/
     inFringe=1.0;
     /* determine and apply second linear matrix, from elegant code */
-    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntP, 2);
+    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntM, 1);
     r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
     r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
     r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
