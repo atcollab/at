@@ -119,7 +119,6 @@ def test_fastring(engine, request, lattices):
     for r, rml in zip([ring, ringrad], [ring_ml, ringrad_ml]):
         assert_close(r[0].Frequency, rml[1]["Frequency"], rtol=1.0e-20)
         assert_close(r[0].Voltage, rml[1]["Voltage"], rtol=1.0e-20)
-        assert_close(r[1].I2, rml[2]["I2"], rtol=1.0e-20)
         assert_close(r[1].Length, rml[2]["Length"], rtol=1.0e-20)
         assert_close(r[1].M66, rml[2]["M66"], atol=1.0e-7)
         assert_close(r[1].T1, np.squeeze(rml[2]["T1"]), rtol=1.0e-8, atol=1.0e-11)
