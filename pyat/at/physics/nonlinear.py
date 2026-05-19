@@ -209,10 +209,13 @@ def chromaticity(
         return np.array([fitx, fity]), dpa, np.array(qz)
 
 
-def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None,
-                      qpx: Sequence[float] = None,
-                      qpy: Sequence[float] = None,
-                      detuning_coeff: Sequence[float] = None) -> Element:
+def gen_detuning_elem(
+    ring: Lattice,
+    orbit: Optional[Orbit] = None,
+    qpx: Sequence[float] = None,
+    qpy: Sequence[float] = None,
+    detuning_coeff: Sequence[float] = None,
+) -> Element:
     """Generates a detuning element
 
     Parameters:
@@ -233,25 +236,29 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None,
           amplitude and momentum
     """
     if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
-        msg = ("Both transverse planes have to be provided for manual" +
-               " non-linear chromaticity input")             
+        msg = (
+            "Both transverse planes have to be provided for manual"
+            + " non-linear chromaticity input"
+        )
         raise AtError(msg)
-    elif(qpx is None and qpy is None):
-        qpx, qpy = get_chrom(ring.disable_6d(copy=True))[:2]       
+    elif qpx is None and qpy is None:
+        qpx, qpy = get_chrom(ring.disable_6d(copy=True))[:2]
 
     qpx = np.atleast_1d(qpx)
     qpy = np.atleast_1d(qpy)
     maxorder = max(len(qpx), len(qpy))
-    qpx = np.pad(qpx, (0, maxorder-len(qpx)))
-    qpy = np.pad(qpy, (0, maxorder-len(qpy)))
-        
+    qpx = np.pad(qpx, (0, maxorder - len(qpx)))
+    qpy = np.pad(qpy, (0, maxorder - len(qpy)))
+
     if detuning_coeff is None:
-        _, r1, *_ = detuning(ring.disable_6d(copy=True), xm=1.0e-4, ym=1.0e-4, npoints=3)
+        _, r1, *_ = detuning(
+            ring.disable_6d(copy=True), xm=1.0e-4, ym=1.0e-4, npoints=3
+        )
         detuning_coeff = [r1[0][0], r1[0][1], r1[1][1]]
-            
+
     if orbit is None:
         orbit, _ = find_orbit(ring)
-        
+
     lindata0, _, _ = ring.linopt6(get_chrom=False, orbit=orbit)
 
     nonlin_elem = Element(

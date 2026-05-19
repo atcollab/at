@@ -36,7 +36,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double *M66;
         double *R1, *R2, *T1, *T2;
-        M66=atGetDoubleArray(ElemData,"M66Rad"); check_error();
+        M66=atGetOptionalDoubleArray(ElemData,"M66Rad");
+        if (M66 == NULL) {
+            M66=atGetDoubleArray(ElemData,"M66");
+        }
         /*optional fields*/
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
