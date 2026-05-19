@@ -462,7 +462,7 @@ class M66(Radiative, Element):
         if m66 is None:
             m66 = np.asfortranarray(np.identity(6))
         if m66rad is None:
-            m66rad = m66     
+            m66rad = m66
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
         kwargs.setdefault("M66Rad", m66rad)
