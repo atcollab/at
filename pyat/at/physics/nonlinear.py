@@ -232,8 +232,8 @@ def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None,
         detuneElem:     Element reproducing the detuning of the ring with
           amplitude and momentum
     """
-    if (qpx is None and qpy is None) or (qpy is None and qpx is None):
-        msg = ("Both transverse planes have to be provided for manual " +
+    if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
+        msg = ("Both transverse planes have to be provided for manual" +
                " non-linear chromaticity input")             
         raise AtError(msg)
     elif(qpx is None and qpy is None):

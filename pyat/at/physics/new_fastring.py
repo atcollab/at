@@ -12,7 +12,7 @@ import numpy as np
 
 from ..lattice import Lattice, Refpts
 from ..lattice import Drift, RFCavity, Element, Marker
-from ..physics import gen_m66_elem
+from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 
 
 def _replace_cav(cav_element: Element) -> Element:
@@ -60,7 +60,10 @@ def _rearrange(ring: Lattice, split_inds: Refpts = None) -> tuple:
     return newring, all_rings, all_cavs
 
 
-def fast_ring(ring, split_inds: Refpts = None) -> Lattice:
+def fast_ring(ring, split_inds: Refpts = None,
+              qpx: Sequence[float] = None,
+              qpy: Sequence[float] = None,
+              detuning_coeff: Sequence[float] = None) -> Lattice:
     new_ring, all_rings, all_cavs = _rearrange(ring, split_inds)
     fastring=[]
     _, o4 = new_ring.disable_6d(copy=True).find_orbit(refpts='xsplit')
@@ -69,6 +72,11 @@ def fast_ring(ring, split_inds: Refpts = None) -> Lattice:
         lin_elem = gen_m66_elem(r.disable_6d(copy=True), o4b, o4e,
                                 r.enable_6d(copy=True), o6b, o6e)
         fastring = fastring + list(np.atleast_1d(cav)) + [lin_elem]
+    detuning_elem = gen_detuning_elem(ring, qpx=qpx, qpy=qpy,
+                                      detuning_coeff=detuning_coeff)
+    qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[0])
+    fastring.append(detuning_elem)
+    fastring.append(qd_elem)
     fastring = Lattice(fastring, **vars(ring))
     if ring.radiation:
         fastring.enable_6d() 
