@@ -60,6 +60,7 @@ def _rearrange(ring: Lattice, split_inds: Refpts = None):
     return new_ring, all_rings, all_cavs
 
 
-def _fring(ring, split_inds: Refpts = None, detuning_elem=None)
+def _fring(ring, split_inds: Refpts = None, detuning_elem=None):
+    new_ring, all_rings, all_cavs = _rearrange(ring, split_inds)
     
 
