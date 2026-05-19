@@ -1,5 +1,5 @@
 """
-Functions relating to fast_ring
+Functions relating to fast_ring.
 """
 
 from __future__ import annotations
@@ -7,9 +7,7 @@ from __future__ import annotations
 __all__ = ["fast_ring_new"]
 
 from collections.abc import Sequence
-
 import numpy as np
-
 from ..lattice import Lattice, Refpts
 from ..lattice import Drift, RFCavity, Element, Marker
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
@@ -17,10 +15,7 @@ from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 
 def _replace_cav(cav_element: Element) -> Element:
     name = ("DR_" + cav_element.FamName,)
-    if cav_element.Length > 0:
-        elem = Drift(name, cav_element.Length)
-    else:
-        elem = Marker(name)
+    elem = Drift(name, cav_element.Length) if cav_element.Length > 0 else Marker(name)
     return elem
 
 
@@ -43,15 +38,15 @@ def _merge_cavs(all_cavs: Sequence) -> Sequence[RFCavity]:
     return m_cavs
 
 
-def _split_ring(ring: Lattice, split_inds: Refpts = None) -> Sequence:
+def _split_ring(ring: Lattice, split_inds: Refpts | None = None) -> Sequence:
     inds = ring.get_bool_index(split_inds, endpoint=True)
     inds[0] = True
     inds[-1] = True
     inds = ring.get_uint32_index(inds)
-    return [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:])]
+    return [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:], strict=True)]
 
 
-def _rearrange(ring: Lattice, split_inds: Refpts = None) -> tuple:
+def _rearrange(ring: Lattice, split_inds: Refpts | None = None) -> tuple:
     all_rings = _split_ring(ring, split_inds)
     newring = []
     all_cavs = []
@@ -69,10 +64,10 @@ def _rearrange(ring: Lattice, split_inds: Refpts = None) -> tuple:
 
 def fast_ring_new(
     ring,
-    split_inds: Refpts = None,
-    qpx: Sequence[float] = None,
-    qpy: Sequence[float] = None,
-    detuning_coeff: Sequence[float] = None,
+    split_inds: Refpts | None = None,
+    qpx: Sequence[float] | None = None,
+    qpy: Sequence[float] | None = None,
+    detuning_coeff: Sequence[float] | None = None,
 ) -> Lattice:
     """
     A fast ring consisting in:
@@ -110,7 +105,7 @@ def fast_ring_new(
     _, o4 = new_ring.disable_6d(copy=True).find_orbit(refpts="xsplit")
     _, o6 = new_ring.enable_6d(copy=True).find_orbit(refpts="xsplit")
     for r, cav, o4b, o4e, o6b, o6e in zip(
-        all_rings, all_cavs, o4[:-1], o4[1:], o6[:-1], o6[1:]
+        all_rings, all_cavs, o4[:-1], o4[1:], o6[:-1], o6[1:], strict=True
     ):
         lin_elem = gen_m66_elem(
             r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e
