@@ -6,20 +6,16 @@ from __future__ import annotations
 
 __all__ = ["fast_ring", "simple_ring"]
 
-import copy
 from collections.abc import Sequence
-from functools import reduce
 
 import numpy as np
 
-from ..constants import clight
-from ..lattice import Lattice, Particle, Refpts
-from ..lattice import Drift, RFCavity, Element, Marker, get_cells, checkname
-from ..lattice import get_elements, M66, SimpleQuantDiff, AtError, SimpleRadiation
-from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
+from ..lattice import Lattice, Refpts
+from ..lattice import Drift, RFCavity, Element, Marker
+from ..physics import gen_m66_elem
 
 
-def _replace_cav(cav_element):
+def _replace_cav(cav_element: Element) -> Element:
     name = "DR_"+cav_element.FamName,
     if cav_element.Length > 0:
         elem = Drift(name, cav_element.Length)
@@ -28,7 +24,7 @@ def _replace_cav(cav_element):
     return elem
 
 
-def _merge_cavs(all_cavs):
+def _merge_cavs(all_cavs: Sequence) -> Sequence[RFCavity]:
     m_cavs= []
     freqs = [e.Frequency for e in all_cavs]
     for i, fr in enumerate(np.atleast_1d(np.unique(freqs))):
@@ -40,7 +36,7 @@ def _merge_cavs(all_cavs):
     return m_cavs
 
 
-def _split_ring(ring: Lattice, split_inds: Refpts = None):
+def _split_ring(ring: Lattice, split_inds: Refpts = None) -> Sequence:
     inds = ring.get_bool_index(split_inds, endpoint=True)
     inds[0] = True
     inds[-1] = True
@@ -48,19 +44,40 @@ def _split_ring(ring: Lattice, split_inds: Refpts = None):
     return [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:])]
 
 
-def _rearrange(ring: Lattice, split_inds: Refpts = None):
-    new_ring = ring.copy()
-    cav_idx = new_ring.get_uint32_index(RFCavity)
+def _rearrange(ring: Lattice, split_inds: Refpts = None) -> tuple:
+    all_rings = _split_ring(ring, split_inds)
+    newring = []
     all_cavs = []
-    for cavi in cav_idx:
-        all_cavs.append(new_ring[cavi])
-        new_ring[cavi] = _replace_cav(new_ring[cavi])
-    all_cavs = _merge_cavs(all_cavs)
-    all_rings = _split_ring(new_ring, split_inds)
-    return new_ring, all_rings, all_cavs
+    for r in all_rings:
+        r.insert(0, Marker("xsplit"))
+        cav_idx = r.get_uint32_index(RFCavity)
+        mcavs = _merge_cavs(r[cav_idx])
+        r[cav_idx] = [_replace_cav(r[i]) for i in cav_idx]
+        newring = newring + r + mcavs
+        all_cavs.append(mcavs)
+    newring.append(Marker("xsplit"))
+    newring = Lattice(newring, **vars(ring))
+    return newring, all_rings, all_cavs
 
 
-def _fring(ring, split_inds: Refpts = None, detuning_elem=None):
+def fast_ring(ring, split_inds: Refpts = None) -> Lattice:
     new_ring, all_rings, all_cavs = _rearrange(ring, split_inds)
+    fastring=[]
+    _, o4 = new_ring.disable_6d(copy=True).find_orbit(refpts='xsplit')
+    _, o6 = new_ring.enable_6d(copy=True).find_orbit(refpts='xsplit')
+    for r, cav, o4b, o4e, o6b, o6e in zip(all_rings, all_cavs, o4[:-1], o4[1:], o6[:-1], o6[1:]):
+        lin_elem = gen_m66_elem(r.disable_6d(copy=True), o4b, o4e,
+                                r.enable_6d(copy=True), o6b, o6e)
+        fastring = fastring + list(np.atleast_1d(cav)) + [lin_elem]
+    fastring = Lattice(fastring, **vars(ring))
+    if ring.radiation:
+        fastring.enable_6d() 
+    else:
+        fastring.disable_6d() 
+    return fastring
+        
+        
+
+    
     
 
