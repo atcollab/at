@@ -9,8 +9,9 @@ __all__ = ["fast_ring_new"]
 from collections.abc import Sequence
 import numpy as np
 from ..lattice import Lattice, Refpts
-from ..lattice import Drift, RFCavity, Element, Marker
+from ..lattice import Drift, RFCavity, Element, Marker, Radiative
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
+from ..physics import ELossMethod
 
 
 def _replace_cav(cav_element: Element) -> Element:
@@ -106,10 +107,16 @@ def fast_ring_new(
     for r, cav, o4b, o4e, o6b, o6e in zip(
         all_rings, all_cavs, o4[:-1], o4[1:], o6[:-1], o6[1:], strict=True
     ):
-        lin_elem = gen_m66_elem(
-            r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e
+        rcav = r + cav
+        do6 = np.zeros(6)
+        do6[4] = (
+            -rcav.enable_6d(copy=True).get_energy_loss(method=ELossMethod.TRACKING)
+            / r.energy
         )
-        fastring = fastring + list(np.atleast_1d(cav)) + [lin_elem]
+        lin_elem = gen_m66_elem(
+            r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e + do6
+        )
+        fastring = fastring + [lin_elem] + list(np.atleast_1d(cav))
     detuning_elem = gen_detuning_elem(
         ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o4[-1]
     )

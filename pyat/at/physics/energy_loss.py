@@ -10,7 +10,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 from at.constants import clight, Cgamma
-from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
+from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss, Radiative
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
@@ -82,13 +82,20 @@ def get_energy_loss(
         energy = ring.energy
         particle = ring.particle
         delta = 0.0
-        for e in ring:
-            if e.PassMethod == 'SimpleRadiationRadPass':
-                delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
-            elif e.PassMethod.endswith('RadPass'):
-                ot = e.track(np.zeros(6), energy=energy, particle=particle)
-                delta += ot[4]
-        return -delta * energy
+        try:
+            nr = ring.disable_6d(copy=True)
+            nr.enable_6d(RFCavity, Radiative)
+            o6, *_ = nr.find_orbit(method=ELossMethod.INTEGRAL)
+            o6l, *_ = nr.disable_6d(RFCavity, copy=True).track(o6)
+            delta = np.squeeze(o6l)[4] - o6[4]
+        except:
+            for e in ring:
+                if e.PassMethod == 'SimpleRadiationRadPass':
+                    delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
+                elif e.PassMethod.endswith('RadPass'):
+                    ot = e.track(np.zeros(6), energy=energy, particle=particle)
+                    delta += ot[4]
+        return -delta*energy
 
     if isinstance(method, str):
         method = ELossMethod[method.upper()]
