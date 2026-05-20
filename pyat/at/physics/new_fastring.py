@@ -40,8 +40,7 @@ def _merge_cavs(all_cavs: Sequence) -> Sequence[RFCavity]:
 
 def _split_ring(ring: Lattice, split_inds: Refpts | None = None) -> Sequence:
     inds = ring.get_bool_index(split_inds, endpoint=True)
-    inds[0] = True
-    inds[-1] = True
+    inds[[0, -1]] = True
     inds = ring.get_uint32_index(inds)
     return [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:], strict=True)]
 
@@ -112,9 +111,9 @@ def fast_ring_new(
         )
         fastring = fastring + list(np.atleast_1d(cav)) + [lin_elem]
     detuning_elem = gen_detuning_elem(
-        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff
+        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o4[-1]
     )
-    qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[0])
+    qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[-1])
     fastring.append(detuning_elem)
     fastring.append(qd_elem)
     fastring = Lattice(fastring, **vars(ring))
