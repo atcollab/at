@@ -107,18 +107,15 @@ def fast_ring_new(
     for r, cav, o4b, o4e, o6b, o6e in zip(
         all_rings, all_cavs, o4[:-1], o4[1:], o6[:-1], o6[1:], strict=True
     ):
-        rcav = r + cav
+        rcav = r.enable_6d(copy=True) + cav
         do6 = np.zeros(6)
-        do6[4] = (
-            -rcav.enable_6d(copy=True).get_energy_loss(method=ELossMethod.TRACKING)
-            / r.energy
-        )
+        do6[4] = -rcav.get_energy_loss(method=ELossMethod.TRACKING) / r.energy
         lin_elem = gen_m66_elem(
             r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e + do6
         )
         fastring = fastring + [lin_elem] + list(np.atleast_1d(cav))
     detuning_elem = gen_detuning_elem(
-        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o4[-1]
+        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o6[-1]
     )
     qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[-1])
     fastring.append(detuning_elem)
