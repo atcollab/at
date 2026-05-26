@@ -83,10 +83,8 @@ def get_energy_loss(
         particle = ring.particle
         delta = 0.0
         try:
-            nr = ring.disable_6d(copy=True)
-            nr.enable_6d(RFCavity, Radiative)
-            o6, *_ = nr.find_orbit(method=ELossMethod.INTEGRAL)
-            o6l, *_ = nr.disable_6d(RFCavity, copy=True).track(o6)
+            o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
+            o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
             delta = np.squeeze(o6l)[4] - o6[4]
         except:
             for e in ring:
