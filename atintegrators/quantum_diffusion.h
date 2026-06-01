@@ -4,8 +4,13 @@
 
 const double alpha0 = 7.2973525643e-3; // fine-structure constant [] - from CODATA 2022
 const double emass = 510998.95069; // electron mass [eV] - from CODATA 2022
-static double CST1 = 1.0e9 * 3.0/ 2.0 * __HBAR_C  / emass; // [m]
-static double CST2 = 5.0 * ROOT_3 / 6.0 * alpha0; // []
+#ifdef _WIN32
+const double CST1 = 5.792389009807655298e-13; // [m]
+const double CST2 = 1.053282116842552650e-02; // []
+#else
+const double CST1 = 1.0e9 * 3.0/ 2.0 * __HBAR_C  / emass; // [m]
+const double CST2 = 5.0 * ROOT_3 / 6.0 * alpha0; // []
+#endif
 
 /*this is quite ugly....but avoids reading form file*/
 
