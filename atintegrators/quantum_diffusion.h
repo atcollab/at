@@ -1,4 +1,5 @@
 #include <math.h>
+#include "atconstants.h"
 #include "atrandom.c"
 /*this is quite ugly....but avoids reading form file*/
 
