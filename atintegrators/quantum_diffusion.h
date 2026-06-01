@@ -1,6 +1,12 @@
 #include <math.h>
 #include "atconstants.h"
 #include "atrandom.c"
+
+const double alpha0 = 7.2973525643e-3; // fine-structure constant [] - from CODATA 2022
+const double emass = 510998.95069; // electron mass [eV] - from CODATA 2022
+static double CST1 = 1.0e9 * 3.0/ 2.0 * __HBAR_C  / emass; // [m]
+static double CST2 = 5.0 * ROOT_3 / 6.0 * alpha0; // []
+
 /*this is quite ugly....but avoids reading form file*/
 
 static int nt = 347;
@@ -455,11 +461,6 @@ static double getEnergy(pcg32_random_t *rng, double ec)
 
     return re * ec;
 }
-
-const double alpha0 = 7.2973525643e-3; // fine-structure constant [] - from CODATA 2022
-const double emass = 510998.95069; // electron mass [eV] - from CODATA 2022
-const double CST1 = 1.0e9 * 3.0/ 2.0 * __HBAR_C  / emass; // [m]
-const double CST2 = 5.0 * ROOT_3 / 6.0 * alpha0; // []
 
 #define INTEGRATOR_PREFIX \
     double dp1 = 1.0 + r6[4]; \
