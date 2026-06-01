@@ -1,6 +1,6 @@
 #include <math.h>
 #include "atelem.c"
-#include "driftkickrad.c"
+#include "drift_expanded.h"
 
 void trackRFCavity(double *r_in, double le, double nv, double freq, double h, double lag, double philag,
                   int nturn, double T0, int num_particles)
@@ -31,11 +31,11 @@ void trackRFCavity(double *r_in, double le, double nv, double freq, double h, do
             double *r6 = r_in+c*6;
             if(!atIsNaN(r6[0]))  {
                 /* Propagate through a drift equal to half cavity length */
-                drift6(r6, halflength);
+                drift(r6, halflength, 0.0, NULL);
                 /* Longitudinal momentum kick */
                 if(nv!=0.0) r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
                 /* Propagate through a drift equal to half cavity length */
-                drift6(r6, halflength);
+                drift(r6, halflength, 0.0, NULL);
             }
         }
     }

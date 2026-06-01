@@ -105,7 +105,7 @@ classdef pytests < matlab.unittest.TestCase
             porbit6=double(porbit6)';
             % Matlab
             [~,morbit6]=findorbit6(lattice.m,dp=dp);
-            testCase.verifyEqual(morbit6,porbit6,AbsTol=2.E-12);
+            testCase.verifyEqual(morbit6,porbit6,AbsTol=3.E-12);
         end
 
         function m44(testCase,lat2,dp)

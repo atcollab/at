@@ -6,6 +6,7 @@
 */
 #include "atelem.c"
 #include "atlalib.c"
+#include "drift_expanded.h"
 
 struct elem {
     double Length;
@@ -32,8 +33,8 @@ void quad6 (double *r, double L, double K)
 	double x, xpr, y ,ypr, g, t ,lt;
 	double M12,M21,M34,M43,MVD,MHD;  /* non-0 elements of transfer matrix */
 		
-	if(K==0) /* Track as a drift */
-	{	ATdrift6(r,L);
+	if (K==0.0) { /* Track as a drift */
+	    drift(r, L, 0.0, NULL);
 		return;
 	}   
 	

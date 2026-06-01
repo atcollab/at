@@ -1,6 +1,6 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "exactdrift.c"
+#include "drift_exact.h"
 
 struct elem {
   double Length;
@@ -35,7 +35,7 @@ static void drift_pass(double *r_in, double le, const double *T1, const double *
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
       if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
-      exact_drift(r6, le);
+      drift(r6, le, 0.0, NULL);
 
       /* Convert absolute path length to path lengthening */
       r6[5] -= le;

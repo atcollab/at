@@ -454,3 +454,44 @@ static double getEnergy(pcg32_random_t *rng, double ec)
 
     return re * ec;
 }
+
+const double alpha0 = 7.2973525643e-3; // fine-structure constant [] - from CODATA 2022
+const double emass = 510998.95069; // electron mass [eV] - from CODATA 2022
+const double CST1 = 1.0e9 * 3.0/ 2.0 * __HBAR_C  / emass; // [m]
+const double CST2 = 5.0 * ROOT_3 / 6.0 * alpha0; // []
+
+#define INTEGRATOR_PREFIX \
+    double dp1 = 1.0 + r6[4]; \
+    double gamma = dp1 * gamma0; \
+    double cstec = CST1 * gamma * gamma; \
+    double cstng = CST2 * gamma; \
+    double p_norm = 1.0 / dp1; \
+    double xp0 = r6[1] * p_norm; \
+    double yp0 = r6[3] * p_norm; \
+    double s0 = r6[5];
+
+#ifdef ABSOLUTE_PATH_LENGTH
+#define SLDS ds
+#else
+#define SLDS (SL + ds)
+#endif
+
+#define INTEGRATOR_SUFFIX \
+    double dxp = r6[1] * p_norm - xp0 - irho * SL; \
+    double dyp = r6[3] * p_norm - yp0; \
+    double ds = r6[5] - s0; \
+    \
+    double rho = SLDS / sqrt(dxp * dxp + dyp * dyp); \
+    \
+    double ng = cstng / rho * SLDS; \
+    double ec = cstec / rho; \
+    \
+    int nph = atrandp_r(rng, ng); \
+    \
+    double dee = 0.0; \
+    for (int i = 0; i < nph; i++) { \
+        dee = dee + getEnergy(rng, ec); \
+    }; \
+    r6[4] = r6[4] - dee; \
+    r6[1] = r6[1] * p_norm * (1 + r6[4]); \
+    r6[3] = r6[3] * p_norm * (1 + r6[4]);
