@@ -13,6 +13,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atconstants.h"
+#include "drift_expanded.h"
 
 #define SQR(X) ((X)*(X))
 
@@ -232,8 +233,6 @@ static void thinkickM(double* orbit_in, double* A, double* B, double L,
 
 }
 
-
-
 static void thinkickB(double* orbit_in, double* A, double* B, double L,
 							double irho, int max_order, double E0, double *B66)
 
@@ -299,41 +298,6 @@ static void thinkickB(double* orbit_in, double* A, double* B, double L,
 	B66[28]     = BB;
 }
 
-
-
-
-
-static void drift_propagateB(double *orb_in, double L,  double *B)
-{	/* Propagate cumulative Ohmi's diffusion matrix B through a drift
-	   B is a (*double) pointer to 1-dimentional array 
-	   containing 36 elements of matrix elements arranged column-by-column
-	   as in MATLAB representation 
-
-	   The relationship between indexes when a 6-by-6 matrix is 
-	   represented in MATLAB as one-dimentional array containing
-	   36 elements arranged column-by-column is
-	   [i][j] <---> [i+6*j] 
-	*/
-		
-	int m;
-		
-	double DRIFTMAT[36];
-	for (m=0;m<36;m++) DRIFTMAT[m] = 0.0;
-	/* Set diagonal elements to 1	*/
-	for (m=0;m<6;m++) DRIFTMAT[m*7] = 1.0;
-
-	DRIFTMAT[6]  =  L/(1+orb_in[4]);
-	DRIFTMAT[20] =  DRIFTMAT[6];
-	DRIFTMAT[24] = -L*orb_in[1]/SQR(1+orb_in[4]);
-	DRIFTMAT[26] = -L*orb_in[3]/SQR(1+orb_in[4]);
-	DRIFTMAT[11] =  L*orb_in[1]/SQR(1+orb_in[4]);
-	DRIFTMAT[23] =  L*orb_in[3]/SQR(1+orb_in[4]);	
-	DRIFTMAT[29] = -L*(SQR(orb_in[1])+SQR(orb_in[3]))/((1+orb_in[4])*SQR(1+orb_in[4]));
-
-	ATsandwichmmt(DRIFTMAT,B);
-}
-
-
 static void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
 					double *T1, double* T2,double *R1, double *R2,
 					double entrance_angle, 	double exit_angle,
@@ -378,8 +342,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 	/* Propagate orbit_in and BDIFF through a 4-th orderintegrator */
 
 	for(m=0; m < num_int_steps; m++) /* Loop over slices	*/			
-		{		drift_propagateB(orbit_in,L1, BDIFF);
-				ATdrift6(orbit_in,L1);
+		{		drift(orbit_in, L1, irho, BDIFF);
 				
 				thinkickM(orbit_in, A,B, K1, irho, max_order, MKICK);
 				thinkickB(orbit_in, A,B, K1, irho, max_order, E0, BKICK);
@@ -387,8 +350,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 				ATaddmm(BKICK,BDIFF);
 				thinkickrad(orbit_in, A, B, K1, irho, E0, max_order);
 		
-				drift_propagateB(orbit_in,L2, BDIFF);
-				ATdrift6(orbit_in,L2);
+				drift(orbit_in, L2, irho, BDIFF);
 				
 				thinkickM(orbit_in, A,B, K2, irho, max_order, MKICK);
 				thinkickB(orbit_in, A,B, K2, irho, max_order, E0, BKICK);
@@ -396,8 +358,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 				ATaddmm(BKICK,BDIFF);
 				thinkickrad(orbit_in, A, B, K2, irho, E0, max_order);
 	
-				drift_propagateB(orbit_in,L2, BDIFF);
-				ATdrift6(orbit_in,L2);
+				drift(orbit_in, L2, irho, BDIFF);
 				
 				thinkickM(orbit_in, A,B, K1, irho, max_order, MKICK);
 				thinkickB(orbit_in, A,B, K1, irho, max_order, E0, BKICK);
@@ -405,8 +366,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 				ATaddmm(BKICK,BDIFF);
 				thinkickrad(orbit_in, A, B,  K1, irho, E0, max_order);
 
-				drift_propagateB(orbit_in,L1, BDIFF);
-				ATdrift6(orbit_in,L1);
+				drift(orbit_in, L1, irho, BDIFF);
 		}  
 		
     edgefringeB(orbit_in, BDIFF, irho, exit_angle, fringe_int2, full_gap);
