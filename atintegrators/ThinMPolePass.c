@@ -5,7 +5,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkick.c"
+#include "kick_kn.h"  /* kick */
 
 struct elem
 {
@@ -32,15 +32,16 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
         double *RApertures, double *EApertures,
         double *KickAngle, double scaling, int num_particles)
 {
-    double B0 = B[0];
-    double A0 = A[0];
+    double B0 = 0.0;
+    double A0 = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= KickAngle[0];
-        A[0] += KickAngle[1];
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 = -sin(KickAngle[0]);
+        A0 = sin(KickAngle[1]);
     }
+
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r,num_particles,A,B,max_order,bax,bay,T1,T2,R1,R2,EApertures,RApertures,scaling)
+    shared(r,num_particles,A0,B0,A,B,max_order,bax,bay,T1,T2,R1,R2,EApertures,RApertures,scaling)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
         if (!atIsNaN(r6[0])) {
@@ -52,7 +53,7 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            strthinkick(r6, A, B, 1.0, max_order);
+            kick(r6, A0, B0, A, B, max_order, 1.0, 0.0);
             r6[1] += bax*r6[4];
             r6[3] -= bay*r6[4];
             r6[5] -= bax*r6[0]-bay*r6[2]; /* Path lenghtening */
@@ -62,10 +63,6 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
-    }
-    if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
-        B[0] = B0;
-        A[0] = A0;
     }
 }
 
