@@ -115,11 +115,11 @@ This is summarised in this table:
    |Straight magnet  +------------------------+----------------+---------------------------+
    |                 |*default*               |"adaptive"      |"drift-kick-drift-expanded"|
    +-----------------+------------------------+----------------+---------------------------+
-   |                 |ExactSectorBendPass     |"bend-kick-bend"|                           |
+   |                 |ExactSectorBendPass     |"bend-kick-bend"                            |
    |                 +------------------------+----------------+---------------------------+
    |Dipole           |ExactRectangularBendPass|"drift-kick-drift-exact"                    |
    |                 +------------------------+----------------+---------------------------+
-   |                 |*default*               |"adaptive"      |"rot-kick-rot"             |
+   |                 |*default*               |"adaptive"      |"drift-kick-drift-expanded"|
    +-----------------+------------------------+----------------+---------------------------+
 
 Longitudinal motion
@@ -157,10 +157,11 @@ __all__ = [
 
 import json
 import warnings
+from abc import abstractmethod
 from math import sqrt
 from pathlib import Path
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 import contextlib
 
 import numpy as np
@@ -225,7 +226,15 @@ class _AtEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-class XsElement(dict):
+class _XsFactory(Protocol):
+    """Base class for Xsuite element factories."""
+
+    @classmethod
+    @abstractmethod
+    def from_at(cls, **atparams) -> XsElement: ...
+
+
+class XsElement(dict, _XsFactory):
     """Base class for Xsuite elements."""
 
     # Class attributes
@@ -329,8 +338,6 @@ class XsElement(dict):
                 xs_model = cls._at2xsuite_model.get(None, None)
             if (integrator := cls._at_integrator) is not None:
                 xsparams["integrator"] = integrator
-        else:
-            xsparams.pop("num_multipole_kicks", None)
         if xs_model is not None:
             xsparams["model"] = xs_model
         # Set the Xsuite class
@@ -407,7 +414,6 @@ class Multipole(XsElement):
     _at_integrator = "yoshida4"
     _xsuite2at_attr = XsElement._xsuite2at_attr | {
         "order": "MaxOrder",
-        "num_multipole_kicks": "NumIntSteps",
     }
 
     def _set_at_transforms(self) -> dict:
@@ -468,8 +474,8 @@ class Multipole(XsElement):
             return porder, np.fromiter(poly_from_mad(poly), dtype=float, count=lpoly)
 
         length = self.get("length", 0.0)
-        xsorder = self.get("order", 0)
-        atorder = getattr(self._atClass, "DefaultOrder", xsorder)
+        xsorder: int = self.get("order", 0)
+        atorder: int = getattr(self._atClass, "DefaultOrder", xsorder)
         aorder, polya = xspoly(["k0s", "k1s", "k2s", "k3s"], "ksl")
         border, polyb = xspoly(["k0", "k1", "k2", "k3"], "knl")
         maxorder = max(aorder, border)
@@ -478,13 +484,20 @@ class Multipole(XsElement):
             "PolynomB": polyb[: maxorder + 1],
             "PolynomA": polya[: maxorder + 1],
         }
+        if (nk := self.get("num_multipole_kicks", 0)) != 0:
+            atparams["NumIntSteps"] = (nk - 1) // 3 + 1
         if (taper := self.get("delta_taper")) is not None:
             atparams["FieldScaling"] = 1.0 + taper
         return atparams
 
     def _set_at_fringe(self) -> dict[str, Any]:
         """generate the AT fringe field description."""
-        return {}
+        atparams = {}
+        if self.get("edge_entry_active", False):
+            atparams["FringeQuadEntrance"] = 1
+        if self.get("edge_exit_active", False):
+            atparams["FringeQuadExit"] = 1
+        return atparams
 
     def _set_xs_transforms(self, atparams: dict) -> None:
         """Generate Xsuite element displacements."""
@@ -516,31 +529,45 @@ class Multipole(XsElement):
 
         self.update(misalign)
 
-    def _set_xs_poly(self, atparams: dict) -> None:
+    def _set_xs_poly(self, atparams: dict, match_model: bool = False) -> None:
         """Generate the AT field expansion."""
+
+        def extract(poly, ord):
+            try:
+                v = poly[ord]
+            except IndexError:
+                v = 0.0
+            else:
+                poly[ord] = 0.0
+            return v
+
         pata = atparams.get("PolynomA", np.zeros(4))
         pola = np.fromiter(poly_to_mad(pata), dtype=float, count=pata.size)
         patb = atparams.get("PolynomB", np.zeros(4))
         polb = np.fromiter(poly_to_mad(patb), dtype=float, count=patb.size)
-        length = atparams.get("Length")
+        length: float = atparams.get("Length")
         korder = getattr(self, "_mag_order", None)
-        if korder is not None:
-            self["k" + str(korder)] = polb[korder]
-            self["k" + str(korder) + "s"] = pola[korder]
-            pola[korder] = 0.0
-            polb[korder] = 0.0
+        if korder == 0:  # dipole
+            self["k1"] = extract(polb, 1)
+            self["k2"] = extract(polb, 2)
+        elif korder is not None:  # quadrupole, sextupole, octupole
+            self["k" + str(korder)] = extract(polb, korder)
+            self["k" + str(korder) + "s"] = extract(pola, korder)
         if length > 0.0:
             polb *= length
             pola *= length
         if np.any(pola) or np.any(polb):
             self["knl"] = list(polb)
             self["ksl"] = list(pola)
+        if match_model and (numintsteps := atparams.get("NumIntSteps")) is not None:
+            self["num_multipole_kicks"] = 3 * numintsteps
         if (scaling := atparams.get("FieldScaling")) is not None:
             self["delta_taper"] = scaling - 1.0
         self["_isthick"] = length != 0.0
 
     def _set_xs_fringe(self, atparams: dict) -> None:
-        """generate the Xsuite fringe field description."""
+        self["edge_entry_active"] = bool(atparams.get("FringeQuadEntrance", 0))
+        self["edge_exit_active"] = bool(atparams.get("FringeQuadExit", 0))
 
     def _class_to_at(self, atparams: dict[str, Any]) -> type[elt.Element]:
         if atparams.get("Length", 0.0) == 0.0:
@@ -556,9 +583,9 @@ class Multipole(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
-        elem._set_xs_poly(atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
+        elem._set_xs_poly(atparams, match_model=match_model)
         elem._set_xs_fringe(atparams)
         elem._set_xs_transforms(atparams)
         return elem
@@ -570,19 +597,6 @@ class Quadrupole(Multipole):
     # Class variables
     _atClass = elt.Quadrupole
     _mag_order: ClassVar[int] = 1
-
-    def _set_at_fringe(self):
-        """generate the AT fringe field description."""
-        atparams = {}
-        if self.get("edge_entry_active", 0):
-            atparams["FringeQuadEntrance"] = 1
-        if self.get("edge_exit_active", 0):
-            atparams["FringeQuadExit"] = 1
-        return atparams
-
-    def _set_xs_fringe(self, atparams: dict):
-        self["edge_entry_active"] = atparams.get("FringeQuadEntrance", 0)
-        self["edge_exit_active"] = atparams.get("FringeQuadExit", 0)
 
 
 class Sextupole(Multipole):
@@ -619,13 +633,33 @@ class Bend(Multipole):
         "edge_entry_angle": "EntranceAngle",
         "edge_exit_angle": "ExitAngle",
     }
-    _mag_order = 1
-    _edge_to_xs: ClassVar[dict[bool, dict[bool, str]]] = {
-        True: {True: "full", False: "dipole-only"},
-        False: {True: "linear", False: "linear"},
+    _mag_order = 0
+    _default_bend_fringe: ClassVar[dict[bool, int]] = {
+        True: 4,
+        False: 1,
+    }
+    _at2xsuite_edge: ClassVar[dict[int, str]] = {
+        0: "suppressed",
+        1: "linear",
+        2: "linear",
+        3: "linear",
+        4: "dipole-only",
+    }
+    _xsuite2at_edge: ClassVar[dict[str, tuple]] = {
+        "suppressed": (0, None),
+        "linear": (1, None),
+        "dipole-only": (None, None),
+        "full": (None, 1),
     }
 
     def _set_at_fringe(self) -> dict[str, Any]:
+        def edge_model(xskey, bendkey, quadkey):
+            [bend, quad] = self._xsuite2at_edge[self.get(xskey, "linear")]
+            if bend is not None:
+                atparams[bendkey] = bend
+            if quad is not None:
+                atparams[quadkey] = quad
+
         atparams = {}
         entry_hgap = self.get("edge_entry_hgap")
         exit_hgap = self.get("edge_exit_hgap")
@@ -633,31 +667,37 @@ class Bend(Multipole):
             msg = "Entry and Exit gaps for dipole are different, use entry"
             warnings.warn(AtWarning(msg), stacklevel=2)
         if entry_hgap is not None:
-            atparams["FullGap"] = entry_hgap
+            atparams["FullGap"] = 2.0 * entry_hgap
 
-        if self.get("edge_entry_model", "linear") in ["linear", "full"]:
-            atparams["FringeQuadEntrance"] = 1
-        if self.get("edge_exit_model", "linear") in ["linear", "full"]:
-            atparams["FringeQuadExit"] = 1
+        edge_model("edge_entry_model", "FringeBendEntrance", "FringeQuadEntrance")
+        edge_model("edge_exit_model", "FringeBendExit", "FringeQuadExit")
         return atparams
 
     def _set_xs_fringe(self, atparams: dict):
+        def edge_model(bendkey, quadkey):
+            at_quad_fringe = atparams.get(quadkey, 0)
+            if at_quad_fringe > 0:
+                return "full"
+            else:
+                return self._at2xsuite_edge[atparams.get(bendkey, default_bend_fringe)]
+
         if (gap := atparams.get("FullGap")) is not None:
-            self["edge_entry_gap"] = gap
-            self["edge_exit_gap"] = gap
+            self["edge_entry_hgap"] = 0.5 * gap
+            self["edge_exit_hgap"] = 0.5 * gap
         exact = atparams.get("PassMethod", "").startswith("Exact")
-        qentry = atparams.get("FringeQuadEntrance", 0)
-        qexit = atparams.get("FringeQuadExit", 0)
-        self["edge_entry_model"] = self._edge_to_xs[exact][qentry > 0]
-        self["edge_exit_model"] = self._edge_to_xs[exact][qexit > 0]
+        default_bend_fringe = self._default_bend_fringe[exact]
+        self["edge_entry_model"] = edge_model(
+            "FringeBendEntrance", "FringeQuadEntrance"
+        )
+        self["edge_exit_model"] = edge_model("FringeBendExit", "FringeQuadExit")
 
     def _params_to_at(self, **atparams) -> dict[str, Any]:
         atparams = super()._params_to_at(EntranceAngle=0.0, ExitAngle=0.0, **atparams)
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
         elem["k0_from_h"] = True
         return elem
 
@@ -705,8 +745,8 @@ class RBend(Bend):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
         elem["rbend_model"] = "straight-body"
         hangle = 0.5 * elem["angle"]
         elem["edge_entry_angle"] -= hangle
@@ -746,13 +786,13 @@ class Cavity(XsElement):
         return atparams
 
     @classmethod
-    def from_at(cls, **atparams):
-        elem = super().from_at(**atparams)
+    def from_at(cls, match_model: bool = False, **atparams):
+        elem = super().from_at(match_model=match_model, **atparams)
         elem._set_xs_lag(atparams)
         return elem
 
 
-class NotInAT:
+class NotInAT(_XsFactory):
     """Class for Xsuite elements without AT equivalent."""
 
     @classmethod
@@ -771,7 +811,7 @@ class NotInAT:
         return xsclass.from_dict(xsparams, name=name, warn=warn)
 
 
-class NotInXsuite:
+class NotInXsuite(_XsFactory):
     """Class for AT elements without Xsuite equivalent."""
 
     @classmethod
@@ -783,7 +823,7 @@ class NotInXsuite:
         return xsclass.from_at(**atparams)
 
 
-class Dipole:
+class Dipole(_XsFactory):
     """Class for handling AT dipoles."""
 
     @classmethod
@@ -795,6 +835,24 @@ class Dipole:
             return RBend.from_at(**atparams)
         else:
             return Bend.from_at(**atparams)
+
+
+class Corrector(_XsFactory):
+    """Class for handling AT correctors."""
+
+    # noinspection PyPep8Naming
+    @classmethod
+    def from_at(cls, KickAngle=(0.0, 0.0), **atparams) -> XsElement:
+        pola = np.array([KickAngle[1]])
+        polb = np.array([-KickAngle[0]])
+        if (length := atparams["Length"]) != 0.0:
+            pola /= length
+            polb /= length
+        # Prevent from duplicate attributes
+        atparams.pop("PolynomA", None)
+        atparams.pop("PolynomB", None)
+        atparams.pop("MaxOrder", None)
+        return Multipole.from_at(PolynomA=pola, PolynomB=polb, MaxOrder=0, **atparams)
 
 
 _xsclass: dict[str, type[XsElement]] = {
@@ -810,7 +868,7 @@ _xsclass: dict[str, type[XsElement]] = {
 }
 
 
-_at2xsclass: dict[type[elt.Element], type[XsElement]] = {
+_at2xsclass: dict[type[elt.Element], type[_XsFactory]] = {
     elt.Marker: Marker,
     elt.Monitor: Marker,
     elt.Drift: Drift,
@@ -821,6 +879,7 @@ _at2xsclass: dict[type[elt.Element], type[XsElement]] = {
     elt.Multipole: Multipole,
     elt.ThinMultipole: Multipole,
     elt.Dipole: Dipole,
+    elt.Corrector: Corrector,
 }
 
 
@@ -1046,9 +1105,7 @@ class XsLine:
         def refpart(rng):
             prt = rng.particle
             if prt.name == "relativistic":
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", category=UserWarning)
-                    prt = Particle("electron")
+                prt = Particle("electron")
             gamma0 = rng.energy / prt.rest_energy
             beta0 = sqrt(1.0 - 1.0 / gamma0 / gamma0)
             return {

@@ -43,14 +43,12 @@ def rbendtune(self: Dipole) -> None:
                 return True
         return False
 
-    passmethod = self.PassMethod.replace("RadPass", "Pass")
-    if passmethod in {
+    elem = self.set_longt_motion(False, new_pass="auto", copy=True)
+    if elem.PassMethod in {
         "BndStrMPoleSymplectic4Pass",
         "ExactRectangularBendPass",
         "ExactRectBendPass",
     }:
-        elem = self.copy()
-        elem.PassMethod = passmethod
         theta = elem.BendingAngle
 
         # Analytical estimate
@@ -60,8 +58,8 @@ def rbendtune(self: Dipole) -> None:
         if checkmul(self):
             x0ref = float(fsolve(cross, x0ref))
 
+        rout = elem.track(np.zeros(6))
         self.X0ref = x0ref
-        rout = self.track(np.zeros(6))
         self.RefDZ = rout[5]
 
 
