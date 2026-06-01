@@ -4,7 +4,8 @@
  *  22/09/2015
  *  Nicola Carmignani
  */
-
+#include "atelem.c"
+#include "atlalib.c"
 #include "atconstants.h"
 #include "attrackfunc.c"
 

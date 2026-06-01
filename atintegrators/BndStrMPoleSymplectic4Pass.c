@@ -1,8 +1,7 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "atphyslib.c"
-#include "driftkick.c"  /* strthinkick.c */
+#include "kick_kn.h"  /* kick */
 
 /* Straight dipole w/ multipole using Symplectic Integration and rotation at
  * dipole faces.
@@ -133,14 +132,13 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
     double K2 = SL*KICK2;
     bool useFringe1 = (fint1 != 0) && (gap != 0);
     bool useFringe2 = (fint2 != 0) && (gap != 0);
-    double B0 = B[0];
-    double A0 = A[0];
+    double B0 = irho;
+    double A0 = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le;
-        A[0] += sin(KickAngle[1])/le;
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 -= sin(KickAngle[0]) / le;
+        A0 = sin(KickAngle[1]) / le;
     }
-    B[0] += irho;
 
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
@@ -164,11 +162,11 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
 				ladrift6(r6,L1);
-			    strthinkick(r6, A, B, K1, max_order);
+			    kick(r6, A0, B0, A, B, max_order, K1, 0.0);
 				ladrift6(r6,L2);
-			    strthinkick(r6, A, B, K2, max_order);
+			    kick(r6, A0, B0, A, B, max_order, K2, 0.0);
 				ladrift6(r6,L2);
-				strthinkick(r6, A, B, K1, max_order);
+				kick(r6, A0, B0, A, B, max_order, K1, 0.0);
 				ladrift6(r6,L1);
 			}
             /* Rotate and translate back to curvilinear coordinate */
@@ -189,8 +187,6 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
-    B[0] = B0;
-    A[0] = A0;
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
