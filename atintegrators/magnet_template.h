@@ -132,16 +132,13 @@ static void magnet(double *r, double le, double bending_angle,
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 
+            /* Entry face */
             MAGNET_ENTRY
 
             /* Integrator */
             INTEGRATOR(r6, num_int_steps, DL, SL, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff);
-//
-//             /* Convert absolute path length to path lengthening */
-//             #ifdef ABSOLUTE_PATH_LENGTH
-//             r6[5] -= (le+refdz);
-//             #endif
 
+            /* Exit face*/
             MAGNET_EXIT
 
             /* Check physical apertures at the exit of the magnet */
@@ -289,7 +286,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         #if defined(RADIATION) || defined(QUANTUM)
         double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
-        double rest_energy = 0.0;;
+        double rest_energy = 0.0;
         double charge = -1.0;
         if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
         double gamma0 = atGamma(Energy, Energy, rest_energy);
