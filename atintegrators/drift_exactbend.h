@@ -4,15 +4,7 @@
 
 #include <math.h>
 #include "atlalib.c"
-/*
-To speed up the integration loop, the path length is computed in absolute on
-each step, and the reference total length is subtracted at the end of the loop.
-For other uses, the relative path length is computed.
-*/
-#ifdef MAGNET_PASS
 #define ABSOLUTE_PATH_LENGTH
-#define FIX_LENGTH(length) r6[5] -= (length)
-#endif
 
 #ifndef PXYZ
 #define PXYZ
@@ -22,9 +14,7 @@ static double pxyz(double dp1, double px, double py)
 }
 #endif /*PXYZ*/
 
-#define DRIFT(r6,length,irho,bdiff) drift(r6,length,irho)
-
-static void drift(double *r6, double L, double irho)
+static void drift(double *r6, double L, double irho, double *bdiff)
 {
     /* Forest 12.18, bend-kick split, map W(L,irho) */
 
@@ -52,7 +42,4 @@ static void drift(double *r6, double L, double irho)
         r6[y_] += dy;
         r6[ct_] += dct;
     }
-    #ifndef ABSOLUTE_PATH_LENGTH
-    r6[ct_] -= L;
-    #endif
 }

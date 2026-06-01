@@ -36,14 +36,10 @@ static double B2perp(double bx, double by, double irho, double x, double xpr, do
     return SQR(bx) + SQR(by) - SQR(bx*xpr + by*ypr) / v_norm2;
 }
 
-static void kick(double *r6, const double *A, const double *B, int max_order,
+static void kick(double *r6, double A0, double B0, const double *A, const double *B, int max_order,
                  double L, double irho, double rad_const, double diff_const, double *bdiff)
 #else
-
-#define KICK(r6, A, B, max_order, length, irho, rad_const, diff_const, bdiff) \
-    kick(r6, A, B, max_order, length, irho)
-
-static void kick(double *r6, const double *A, const double *B, int max_order,
+static void kick(double *r6, double A0, double B0, const double *A, const double *B, int max_order,
                  double L, double irho)
 #endif /* RADIATION */
 {
@@ -83,9 +79,8 @@ theta  = --- B  + ----------
         ImSum = ImSum*x + ReSum*y + A[i];
         ReSum = ReSumTemp;
     }
-    #ifdef CURVATURE_IN_B0
-    ReSum += irho;
-    #endif
+    ReSum += B0;
+    ImSum += A0;
 
     #ifdef RADIATION
     double p_norm = 1.0 / (1.0+r6[4]);
@@ -111,6 +106,6 @@ theta  = --- B  + ----------
     #endif /* RADIATION */
 
     /* Multipole kick */
-    r6[1] -= L * ReSum;
-    r6[3] += L * ImSum;
+    r6[1] -= L * (ReSum + irho*B1*(x*x-0.5*y*y));
+    r6[3] += L * (ImSum + irho*B1*x*y);
 }

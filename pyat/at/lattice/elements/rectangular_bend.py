@@ -1,4 +1,4 @@
-"""Additional method for rectangular bending magnets."""
+"""Additional method for rectangular bending magnets"""
 
 from math import sin, cos
 
@@ -12,7 +12,7 @@ __all__ = []
 
 def rbendtune(self: Dipole) -> None:
     # noinspection PyUnresolvedReferences
-    r"""Set *X0ref* and *RefDZ* for rectangular bending magnets.
+    r"""Set *X0ref* and *RefDZ* for rectangular bending magnets
 
     This method must be called after creating a rectangular bending magnet
     or after setting its *PolynomA/B* attributes. It will set the correct *X0ref*
@@ -30,15 +30,18 @@ def rbendtune(self: Dipole) -> None:
 
     """
 
-    def cross(x0r):
-        """Return the horizontal exit angle of the reference particle."""
-        elem.X0ref = float(x0r[0])
+    def cross(x0r: float):
+        """Return the horizontal exit angle of the reference particle"""
+        elem.X0ref = x0r
         out = elem.track(np.zeros(6))
-        return out[1:2]
+        return out[1]
 
     def checkmul(el):
-        """Check if there are multipoles."""
-        return any(el.PolynomB[order] != 0.0 for order in range(el.MaxOrder + 1))
+        """Check if there are multipoles"""
+        for order in range(el.MaxOrder + 1):
+            if el.PolynomB[order] != 0.0:
+                return True
+        return False
 
     elem = self.set_longt_motion(False, new_pass="auto", copy=True)
     if elem.PassMethod in {
@@ -53,10 +56,8 @@ def rbendtune(self: Dipole) -> None:
 
         # Search if there are multipoles
         if checkmul(self):
-            x0ref = float(fsolve(cross, [x0ref])[0])
+            x0ref = float(fsolve(cross, x0ref))
 
-        elem.X0ref = x0ref
-        elem.RefDZ = 0.0
         rout = elem.track(np.zeros(6))
         self.X0ref = x0ref
         self.RefDZ = rout[5]

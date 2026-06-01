@@ -61,34 +61,34 @@ static void quadPartialFringeMatrix(double R[6][6], double K1, double inFringe, 
   K1sqr = K1*K1;
 
   if (part==1) {
-    J1x = inFringe*(K1*fringeInt[1] - 2*K1sqr*fringeInt[3]/3. - K1sqr * fringeInt[0] * fringeInt[2] / 2);
-    J2x = inFringe*K1*fringeInt[2];
-    J3x = inFringe*K1sqr*(fringeInt[2] + fringeInt[4] + fringeInt[0] * fringeInt[1]);
+    J1x = inFringe*(K1*fringeInt[1] - 2*K1sqr*fringeInt[3]/3.);
+    J2x = inFringe*(K1*fringeInt[2]);
+    J3x = inFringe*(K1sqr*(fringeInt[2] + fringeInt[4]));
 
-    //K1 = -K1;
-    J1y = inFringe * (-K1 * fringeInt[1] - 2 * K1sqr * fringeInt[3] / 3. - K1sqr * fringeInt[0] * fringeInt[2] / 2);
+    K1 = -K1;
+    J1y = inFringe*(K1*fringeInt[1] - 2*K1sqr*fringeInt[3]/3.);
     J2y = -J2x;
     J3y = J3x;
   } else {
-    J1x = inFringe * (K1 * fringeInt[1] + K1sqr * fringeInt[0] * fringeInt[2] / 2);
-    J2x = inFringe * K1 * fringeInt[2];
-    J3x = inFringe * K1sqr * (fringeInt[4] - fringeInt[0] * fringeInt[1]);
+    J1x = inFringe*(K1*fringeInt[1] + K1sqr*fringeInt[0]*fringeInt[2]/2);
+    J2x = inFringe*(K1*fringeInt[2]);
+    J3x = inFringe*(K1sqr*(fringeInt[4]-fringeInt[0]*fringeInt[1]));
 
-    //K1 = -K1;
-    J1y = inFringe * (-K1 * fringeInt[1] + K1sqr * fringeInt[0] * fringeInt[2] / 2);
+    K1 = -K1;
+    J1y = inFringe*(K1*fringeInt[1] + K1sqr*fringeInt[0]*fringeInt[2]);
     J2y = -J2x;
     J3y = J3x;
   }
 
   expJ1x = R[0][0] = exp(J1x);
-  R[0][1] = J2x / expJ1x;
-  R[1][0] = expJ1x * J3x;
-  R[1][1] = (1 + J2x * J3x) / expJ1x;
+  R[0][1] = J2x/expJ1x;
+  R[1][0] = expJ1x*J3x;
+  R[1][1] = (1 + J2x*J3x)/expJ1x;
 
   expJ1y = R[2][2] = exp(J1y);
-  R[2][3] = J2y / expJ1y;
-  R[3][2] = expJ1y * J3y;
-  R[3][3] = (1 + J2y * J3y) / expJ1y;
+  R[2][3] = J2y/expJ1y;
+  R[3][2] = expJ1y*J3y;
+  R[3][3] = (1 + J2y*J3y)/expJ1y;
 
   return;
 }
@@ -97,36 +97,28 @@ static void linearQuadFringeElegantEntrance(double* r6, double b2, double *fring
 {
     double R[6][6];
     double *fringeIntM, *fringeIntP;
-    double inFringe;
-    double x, px, y, py, swap_temp;
+    double delta, inFringe;
     /* quadrupole linear fringe field, from elegant code */
-    inFringe=1.0;
-    fringeIntM = fringeIntM0;
-    fringeIntP = fringeIntP0;
+    inFringe=-1.0;
+    fringeIntM = fringeIntP0;
+    fringeIntP = fringeIntM0;
+    delta = r6[4];
     /* determine first linear matrix for this delta */
-    quadPartialFringeMatrix(R, b2, inFringe, fringeIntP, 2);
-    swap_temp = R[0][0]; R[0][0] = R[1][1]; R[1][1] = swap_temp;
-    swap_temp = R[2][2]; R[2][2] = R[3][3]; R[3][3] = swap_temp;
-
-    x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
-    r6[0] = R[0][0]*x + R[0][1]*px;
-    r6[1] = R[1][0]*x + R[1][1]*px;
-    r6[2] = R[2][2]*y + R[2][3]*py;
-    r6[3] = R[3][2]*y + R[3][3]*py;
+    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntM, 1);
+    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
     /* nonlinear fringe field */
     QuadFringePassP(r6,b2);   /*This is original AT code*/
     /*Linear fringe fields from elegant*/
-    inFringe=1.0;
+    inFringe=-1.0;
     /* determine and apply second linear matrix, from elegant code */
-    quadPartialFringeMatrix(R, b2, inFringe, fringeIntM, 1);
-    swap_temp = R[0][0]; R[0][0] = R[1][1]; R[1][1] = swap_temp;
-    swap_temp = R[2][2]; R[2][2] = R[3][3]; R[3][3] = swap_temp;
-
-    x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
-    r6[0] = R[0][0]*x + R[0][1]*px;
-    r6[1] = R[1][0]*x + R[1][1]*px;
-    r6[2] = R[2][2]*y + R[2][3]*py;
-    r6[3] = R[3][2]*y + R[3][3]*py;
+    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntP, 2);
+    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
 }
 
 
@@ -134,28 +126,28 @@ static void linearQuadFringeElegantExit(double* r6, double b2, double *fringeInt
 {
     double R[6][6];
     double *fringeIntM, *fringeIntP;
-    double inFringe;
-    double x, px, y, py;
+    double delta, inFringe;
     /* quadrupole linear fringe field, from elegant code */
     inFringe=1.0;
     fringeIntM = fringeIntM0;
     fringeIntP = fringeIntP0;
+    delta = r6[4];
     /* determine first linear matrix for this delta */
-    quadPartialFringeMatrix(R, b2, inFringe, fringeIntM, 1);
-    x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
-    r6[0] = R[0][0]*x + R[0][1]*px;
-    r6[1] = R[1][0]*x + R[1][1]*px;
-    r6[2] = R[2][2]*y + R[2][3]*py;
-    r6[3] = R[3][2]*y + R[3][3]*py;
+    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntP, 2);
+    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
     /* nonlinear fringe field */
     QuadFringePassN(r6,b2);   /*This is original AT code*/
     /*Linear fringe fields from elegant*/
     inFringe=1.0;
     /* determine and apply second linear matrix, from elegant code */
-    quadPartialFringeMatrix(R, b2, inFringe, fringeIntP, 2);
-    x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
-    r6[0] = R[0][0]*x + R[0][1]*px;
-    r6[1] = R[1][0]*x + R[1][1]*px;
-    r6[2] = R[2][2]*y + R[2][3]*py;
-    r6[3] = R[3][2]*y + R[3][3]*py;
+    quadPartialFringeMatrix(R, b2/(1+delta), inFringe, fringeIntM, 1);
+    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
 }
+
+

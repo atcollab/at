@@ -14,16 +14,16 @@ static void quad_fringe(double* r6, const double b2, double edge)
   const double xy = x*y;
   const double dx = u * (x2 + 3.0*y2) * x;
   const double dy = u * (y2 + 3.0*x2) * y;
-
+/*
   const double dpx = 3.0 * u * (2.0*xy*r6[py_] - (x2+y2)*r6[px_]);
   const double dpy = 3.0 * u * (2.0*xy*r6[px_] - (x2+y2)*r6[py_]);
 
-  r6[ct_] -= (dy*r6[py_] - dx*r6[px_]) * p_norm;
   r6[x_] += dx;
   r6[px_] += dpx;
   r6[y_] -= dy;
   r6[py_] -= dpy;
-/*
+  r6[ct_] -= (dy*r6[3] - dx*r6[1]) * p_norm;
+*/
   const double fxx = -edge * b2 / 4.0 * (x2+y2);
   const double fxy = -edge * b2 / 2.0 * xy;
   const double fyx = -fxy;
@@ -42,7 +42,6 @@ static void quad_fringe(double* r6, const double b2, double edge)
   r6[y_] -= dy;
   r6[py_] = pyf;
   r6[ct_] -= dct;
-*/
 }
 
 static void all_mult_fringe(double *r6,
@@ -138,7 +137,6 @@ static void multipole_fringe(double *r6, int method, double B1,
                              double edge)
 {
     switch (method) {
-        case 0: break;
         case 1: quad_fringe(r6, B1, edge);
                 break;
         case 2: if (fringeIntM0 && fringeIntP0) {

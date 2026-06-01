@@ -10,10 +10,6 @@
     }
 #endif
 
-#ifndef FIX_LENGTH
-#define FIX_LENGTH(length)
-#endif
-
 struct elem
 {
     double Length;
@@ -41,6 +37,7 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
+    double *KickAngle;
 #ifdef STRAIGHT_DIPOLE
     double X0ref;
     double RefDZ;
@@ -63,7 +60,7 @@ static void magnet(double *r, double le, double bending_angle,
     double *T1, double *T2,
     double *R1, double *R2,
     double *RApertures, double *EApertures,
-    double scaling,
+    double *KickAngle, double scaling,
 #if defined(STRAIGHT_DIPOLE)
     double x0ref,
     double refdz,
@@ -84,14 +81,12 @@ static void magnet(double *r, double le, double bending_angle,
 )
 {
     double irho = bending_angle / le;
-
     #ifdef RADIATION
     double rad_const = RAD_CONST*pow(gamma0, 3);
     double diff_const = DIF_CONST*pow(gamma0, 5);
     #else
     double *bdiff = NULL;
     #endif
-
     #ifdef STRAIGHT_DIPOLE
     double phi2 = 0.5 * bending_angle;
     double phi_entrance = phi2-entrance_angle;
@@ -102,9 +97,18 @@ static void magnet(double *r, double le, double bending_angle,
     double refdz = 0.0;
     double SL = (num_int_steps > 0) ? le/num_int_steps : le;
     #endif /*STRAIGHT_DIPOLE*/
-
-    INTEGRATOR_STEPS(SL)
     double B1 = (max_order >= 1) ? B[1] : 0.0;
+    double A0 = 0.0;
+    #ifdef CURVATURE_IN_B0
+    double B0 = irho;
+    #else
+    double B0 = 0.0;
+    #endif
+
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 -= sin(KickAngle[0]) / le;
+        A0 += sin(KickAngle[1]) / le;
+    }
 
     #ifndef NO_OMP
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared)
@@ -114,6 +118,11 @@ static void magnet(double *r, double le, double bending_angle,
         if (!atIsNaN(r6[0])) {
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, scaling);
+            #ifdef FAST_DRIFT
+            double DL = SL / (1.0 + r6[4]);
+            #else
+            #define DL SL
+            #endif
 
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
@@ -123,16 +132,16 @@ static void magnet(double *r, double le, double bending_angle,
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 
-            /* Entry face */
             MAGNET_ENTRY
 
             /* Integrator */
-            INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
+            INTEGRATOR(r6, num_int_steps, DL, SL, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff);
+//
+//             /* Convert absolute path length to path lengthening */
+//             #ifdef ABSOLUTE_PATH_LENGTH
+//             r6[5] -= (le+refdz);
+//             #endif
 
-            /* Compensate for absolute path length if necessary */
-            FIX_LENGTH(le+refdz);
-
-            /* Exit face*/
             MAGNET_EXIT
 
             /* Check physical apertures at the exit of the magnet */
@@ -153,11 +162,13 @@ static void magnet(double *r, double le, double bending_angle,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
+    double *bdiff = NULL;
     if (!Elem) {
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         MAGNET_ARGUMENTS
         /*optional fields*/
         #if defined(RADIATION) || defined(QUANTUM)
@@ -165,7 +176,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         #else
         double Energy=0.0;
         #endif
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -177,6 +187,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         CHECK_NSTEPS
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -199,44 +210,41 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
+        Elem->KickAngle=KickAngle;
     }
     #if defined(RADIATION) || defined(QUANTUM)
     double gamma0 = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
     #ifdef DIFFUSION
-    double *bdiff = Param->bdiff;
-    #elif defined RADIATION
-    double *bdiff = NULL;
+    bdiff = Param->bdiff;
     #endif
     #endif
-    if ((num_particles > 0) && (r_in) && (Elem->Length != 0.0)) {
-        magnet(r_in, Elem->Length, Elem->BendingAngle,
-                Elem->PolynomA, Elem->PolynomB,
-                Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
-                Elem->FringeBendEntrance,Elem->FringeBendExit,
-                Elem->gK_entrance, Elem->gK_exit,
-                Elem->FringeQuadEntrance, Elem->FringeQuadExit,
-                Elem->fringeIntM0, Elem->fringeIntP0,
-                Elem->T1, Elem->T2, Elem->R1, Elem->R2,
-                Elem->RApertures, Elem->EApertures,
-                Elem->Scaling,
-#if defined(STRAIGHT_DIPOLE)
-                Elem->X0ref,
-                Elem->RefDZ,
-#endif /* STRAIGHT_DIPOLE */
-#if defined(E2_DIPOLE)
-                Elem->H1,
-                Elem->H2,
-#endif /* E2_DIPOLE */
-#if defined(RADIATION)
-                gamma0,
-                bdiff,
-#endif /* RADIATION */
-#if defined(QUANTUM)
-                gamma0,
-                Param->thread_rng,
-#endif /* QUANTUM */
-                num_particles);
-    }
+    magnet(r_in, Elem->Length, Elem->BendingAngle,
+            Elem->PolynomA, Elem->PolynomB,
+            Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,
+            Elem->FringeBendEntrance,Elem->FringeBendExit,
+            Elem->gK_entrance, Elem->gK_exit,
+            Elem->FringeQuadEntrance, Elem->FringeQuadExit,
+            Elem->fringeIntM0, Elem->fringeIntP0,
+            Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+            Elem->RApertures, Elem->EApertures,
+            Elem->KickAngle, Elem->Scaling,
+    #if defined(STRAIGHT_DIPOLE)
+            Elem->X0ref,
+            Elem->RefDZ,
+    #endif
+    #if defined(E2_DIPOLE)
+            Elem->H1,
+            Elem->H2,
+    #endif
+    #if defined(RADIATION)
+            gamma0,
+            bdiff,
+    #endif
+    #if defined(QUANTUM)
+            gamma0,
+            Param->thread_rng,
+    #endif
+            num_particles);
     return Elem;
 }
 
@@ -257,9 +265,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         MAGNET_ARGUMENTS
         /*optional fields*/
-        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -271,6 +279,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         CHECK_NSTEPS
         MAGNET_MEX_ITEMS
 
@@ -280,7 +289,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         #if defined(RADIATION) || defined(QUANTUM)
         double Energy=atGetOptionalDouble(ElemData,"Energy",0.0); check_error();
-        double rest_energy = 0.0;
+        double rest_energy = 0.0;;
         double charge = -1.0;
         if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
         double gamma0 = atGamma(Energy, Energy, rest_energy);
@@ -293,7 +302,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             FringeQuadEntrance, FringeQuadExit,
             fringeIntM0, fringeIntP0,
             T1, T2, R1, R2, RApertures, EApertures,
-            Scaling,
+            KickAngle, Scaling,
         #if defined(STRAIGHT_DIPOLE)
             X0ref,
             RefDZ,
@@ -314,11 +323,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;
-        plhs[0] = mxCreateCellMatrix(4+N_REQUIRED, 1);
+        plhs[0] = mxCreateCellMatrix(5+N_REQUIRED, 1);
         mxSetCell(plhs[0], i0++, mxCreateString("Length"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
         mxSetCell(plhs[0], i0++, mxCreateString("MaxOrder"));
+        mxSetCell(plhs[0], i0++, mxCreateString("NumIntSteps"));
         for (int i=0; i<N_REQUIRED; i++)
             mxSetCell(plhs[0], i0++, mxCreateString(required[i]));
         if (nlhs>1) {    /* list of optional fields */
@@ -326,7 +336,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
-            mxSetCell(plhs[1], i1++, mxCreateString("NumIntSteps"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("fringeIntM0"));
@@ -337,6 +346,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1], i1++, mxCreateString("R2"));
             mxSetCell(plhs[1], i1++, mxCreateString("RApertures"));
             mxSetCell(plhs[1], i1++, mxCreateString("EApertures"));
+            mxSetCell(plhs[1], i1++, mxCreateString("KickAngle"));
             mxSetCell(plhs[1], i1++, mxCreateString("FieldScaling"));
         }
     }
