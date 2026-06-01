@@ -1,6 +1,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
+#include "drift_expanded.h"
 
 struct elem 
 {
@@ -36,7 +37,9 @@ void DriftPass(double *r_in, double le,
       /* Check physical apertures at the entrance of the magnet */
       if (RApertures) checkiflostRectangularAp(r6,RApertures);
       if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-      ATdrift6(r6, le);
+
+      drift(r6, le, 0.0, NULL);
+
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6,RApertures);
       if (EApertures) checkiflostEllipticalAp(r6,EApertures);
