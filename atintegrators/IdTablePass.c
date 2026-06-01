@@ -12,6 +12,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
+#include "drift_expanded.h"
 #include "interpolate.c"
 
 struct elem {
@@ -77,7 +78,7 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
             checkiflostRectangularAp(r6, limitsptr);
             /*Tracking in the main body*/
             for (ns=0; ns<Nslice; ns++) { /* Loop over slices*/
-                ATdrift6(r6,L1);
+                drift(r6, L1, 0.0, NULL);
                 if (!atIsNaN(r6[0])&&!atIsNaN(r6[2])) {
                     /*The kick from IDs varies quadratically, not linearly, with energy.   */
                     deltaxp = get_kick(r6, xkick)/(1.0+r6[4]);
@@ -87,7 +88,7 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
                     r6[1] = r6[1] + deltaxp / Nslice;
                     r6[3] = r6[3] + deltayp / Nslice;
                 }
-                ATdrift6(r6,L1);
+                drift(r6, L1, 0.0, NULL);
             }
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
