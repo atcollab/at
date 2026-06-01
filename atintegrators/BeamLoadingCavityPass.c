@@ -1,5 +1,6 @@
 #include "atconstants.h"
 #include "atelem.c"
+#include "atlalib.c"
 #include "atimplib.c"
 #include "attrackfunc.c"
 

@@ -1,4 +1,6 @@
 #include <math.h>
+#include "atlalib.c"
+#define ABSOLUTE_PATH_LENGTH
 #define SQR(X) ((X)*(X))
 
 static void drift_propagateB(double NormL, double xpr, double ypr, double *bdiff)
@@ -34,7 +36,7 @@ static void drift_propagateB(double NormL, double xpr, double ypr, double *bdiff
 /* Forest 10.23, exact drift
    L: length [m]
 */
-static void diff_exactdrift(double *r6, double L, double *bdiff)
+static void drift(double *r6, double L, double irho, double *bdiff)
 {
   double p_norm = 1.0 / (1.0+r6[4]);
   double xpr = r6[1] * p_norm;
