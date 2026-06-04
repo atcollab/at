@@ -46,8 +46,8 @@ void MatrixTijkPass(double *r, const double *M66, const double *Tijk,
     double *r6;
     int c;
     
-    for (c = 0; c<num_particles; c++) {	/*Loop over particles  */
-        r6 = r+c*6;
+    for (int c = 0; c<num_particles; c++) {	/*Loop over particles  */
+        double *r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             /* Misalignment at entrance */
             if (T1) ATaddvv(r6, T1);

@@ -81,12 +81,14 @@ static void magnet(double *r, double le, double bending_angle,
 )
 {
     double irho = bending_angle / le;
+
     #ifdef RADIATION
     double rad_const = RAD_CONST*pow(gamma0, 3);
     double diff_const = DIF_CONST*pow(gamma0, 5);
     #else
     double *bdiff = NULL;
     #endif
+
     #ifdef STRAIGHT_DIPOLE
     double phi2 = 0.5 * bending_angle;
     double phi_entrance = phi2-entrance_angle;
@@ -97,6 +99,8 @@ static void magnet(double *r, double le, double bending_angle,
     double refdz = 0.0;
     double SL = (num_int_steps > 0) ? le/num_int_steps : le;
     #endif /*STRAIGHT_DIPOLE*/
+
+    INTEGRATOR_STEPS(SL)
     double B1 = (max_order >= 1) ? B[1] : 0.0;
     double A0 = 0.0;
     #ifdef CURVATURE_IN_B0
@@ -118,11 +122,6 @@ static void magnet(double *r, double le, double bending_angle,
         if (!atIsNaN(r6[0])) {
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, scaling);
-            #ifdef FAST_DRIFT
-            double DL = SL / (1.0 + r6[4]);
-            #else
-            #define DL SL
-            #endif
 
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
@@ -136,7 +135,7 @@ static void magnet(double *r, double le, double bending_angle,
             MAGNET_ENTRY
 
             /* Integrator */
-            INTEGRATOR(r6, num_int_steps, DL, SL, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff);
+            INTEGRATOR(r6, num_int_steps, SL, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff)
 
             /* Exit face*/
             MAGNET_EXIT
