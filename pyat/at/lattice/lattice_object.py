@@ -64,6 +64,7 @@ _DEFAULT_PASS = {
         ("energyloss_pass", elt.EnergyLoss, "auto"),
         ("simplequantdiff_pass", elt.SimpleQuantDiff, "auto"),
         ("simpleradiation_pass", elt.SimpleRadiation, "auto"),
+        ("m66_pass", elt.M66, "auto"),
     ),
     True: (
         ("cavity_pass", elt.RFCavity, "auto"),
@@ -78,6 +79,7 @@ _DEFAULT_PASS = {
         ("energyloss_pass", elt.EnergyLoss, "auto"),
         ("simplequantdiff_pass", elt.SimpleQuantDiff, "auto"),
         ("simpleradiation_pass", elt.SimpleRadiation, "auto"),
+        ("m66_pass", elt.M66, "auto"),
     ),
 }
 
