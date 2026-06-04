@@ -4,7 +4,7 @@
 #define QUANTUM
 #define NO_OMP  /* because of problems with random generator and OpenMP */
 
-#include "drift_fast.h"
+#include "drift_expanded.h"
 #include "kick_h_k0h_k1h_kn.h"
 #include "curved_dipole.h"
 

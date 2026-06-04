@@ -137,6 +137,7 @@ static void multipole_fringe(double *r6, int method, double B1,
                              double edge)
 {
     switch (method) {
+        case 0: break;
         case 1: quad_fringe(r6, B1, edge);
                 break;
         case 2: if (fringeIntM0 && fringeIntP0) {

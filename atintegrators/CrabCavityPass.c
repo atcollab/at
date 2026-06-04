@@ -72,11 +72,11 @@ void CrabCavityPass(
             double *r6 = r_in+c*6;
             if (!atIsNaN(r6[0]))  {
                 /* Propagate through a drift equal to half cavity length */
-                drift(r6, halflength, 0.0, NULL);
+                DRIFT(r6, halflength, 0.0, NULL);
                 /* Transverse kick */
                 relativistic_kick(r6, nvx, nvy, k, phitot);
                 /* Propagate through a drift equal to half cavity length */
-                drift(r6, halflength, 0.0, NULL);
+                DRIFT(r6, halflength, 0.0, NULL);
             }
         }
     }

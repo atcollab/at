@@ -375,33 +375,4 @@ C_LINK ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem
 
 #endif /* defined(PYAT) || defined(MATLAB_MEX_FILE) */
 
-typedef void (*integr_norad_type)(
-    double *r6,
-    int num_int_steps,
-    double slength,
-    double klength,
-    double irho,
-    double A0,
-    double B0,
-    const double *A,
-    const double *B,
-    int max_order
-);
-
-typedef void (*integr_rad_type)(
-    double *r6,
-    int num_int_steps,
-    double slength,
-    double klength,
-    double irho,
-    double A0,
-    double B0,
-    const double *A,
-    const double *B,
-    int max_order,
-    double rad_const,
-    double diff_const,
-    double *bdiff
-);
-
 #endif /*ATELEM_C*/
