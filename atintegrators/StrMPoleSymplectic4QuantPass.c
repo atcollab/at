@@ -3,8 +3,8 @@
 #define QUANTUM
 #define NO_OMP  /* because of problems with random generator and OpenMP */
 
-#include "drift_fast.h"    /* drift */
-#include "kick_kn.h"  /* kick */
+#include "drift_expanded.h"
+#include "kick_kn.h"
 #include "straight_multipole.h"
 
 #include "magnet_template.h"

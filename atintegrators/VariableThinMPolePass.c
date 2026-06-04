@@ -86,8 +86,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
 void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles)
 {
 
-    int i, c;
-    double* r6;
+    int i;
     double t = t0 * turn;
 
     int maxorder = Elem->MaxOrder;
@@ -107,8 +106,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         };
     };
 
-    for (c = 0; c < num_particles; c++) {
-        r6 = r + c * 6;
+    for (int c = 0; c < num_particles; c++) {
+        double *r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
