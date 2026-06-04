@@ -342,7 +342,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 	/* Propagate orbit_in and BDIFF through a 4-th orderintegrator */
 
 	for(m=0; m < num_int_steps; m++) /* Loop over slices	*/			
-		{		drift(orbit_in, L1, irho, BDIFF);
+		{		DRIFT(orbit_in, L1, irho, BDIFF);
 				
 				thinkickM(orbit_in, A,B, K1, irho, max_order, MKICK);
 				thinkickB(orbit_in, A,B, K1, irho, max_order, E0, BKICK);
@@ -350,7 +350,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 				ATaddmm(BKICK,BDIFF);
 				thinkickrad(orbit_in, A, B, K1, irho, E0, max_order);
 		
-				drift(orbit_in, L2, irho, BDIFF);
+				DRIFT(orbit_in, L2, irho, BDIFF);
 				
 				thinkickM(orbit_in, A,B, K2, irho, max_order, MKICK);
 				thinkickB(orbit_in, A,B, K2, irho, max_order, E0, BKICK);
@@ -358,7 +358,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 				ATaddmm(BKICK,BDIFF);
 				thinkickrad(orbit_in, A, B, K2, irho, E0, max_order);
 	
-				drift(orbit_in, L2, irho, BDIFF);
+				DRIFT(orbit_in, L2, irho, BDIFF);
 				
 				thinkickM(orbit_in, A,B, K1, irho, max_order, MKICK);
 				thinkickB(orbit_in, A,B, K1, irho, max_order, E0, BKICK);
@@ -366,7 +366,7 @@ static void FindElemB(double *orbit_in, double le, double irho, double *A, doubl
 				ATaddmm(BKICK,BDIFF);
 				thinkickrad(orbit_in, A, B,  K1, irho, E0, max_order);
 
-				drift(orbit_in, L1, irho, BDIFF);
+				DRIFT(orbit_in, L1, irho, BDIFF);
 		}  
 		
     edgefringeB(orbit_in, BDIFF, irho, exit_angle, fringe_int2, full_gap);
