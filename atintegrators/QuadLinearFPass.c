@@ -34,7 +34,7 @@ void quad6 (double *r, double L, double K)
 	double M12,M21,M34,M43,MVD,MHD;  /* non-0 elements of transfer matrix */
 		
 	if (K==0.0) { /* Track as a drift */
-	    drift(r, L, 0.0, NULL);
+	    DRIFT(r, L, 0.0, NULL);
 		return;
 	}   
 	
@@ -138,12 +138,10 @@ void quadnonlinearfringe(double *r, double kv)
 
 
 void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,double *T1, double *T2, double *R1, double *R2, int num_particles)
-{	int c;
-	double *r6;
-
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6)
-    for (c = 0;c<num_particles;c++) {
-        r6 = r+c*6;
+{
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles)
+    for (int c = 0;c<num_particles;c++) {
+        double *r6 = r+c*6;
         if (!atIsNaN(r6[0]) && atIsFinite(r6[4])) {
             /*
              * function quad6 internally calculates the square root

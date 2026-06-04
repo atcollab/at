@@ -141,13 +141,11 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
          * Set fint OR gap are 0 to ignore fringe effects
          * Set bye to 0 to ignore ByError*/
 {
-    double *r6;
     double irho = ba/le;
-    int c;
-    
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6)
-    for (c = 0;c<num_particles;c++) {
-        r6 = r+c*6;
+
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles)
+    for (int c = 0;c<num_particles;c++) {
+        double *r6 = r+c*6;
         if(!atIsNaN(r6[0]) && atIsFinite(r6[4]))
         /*
          * function bend6 internally calculates the square root

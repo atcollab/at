@@ -1,6 +1,8 @@
 #include "atlalib.c"
 #define SQR(X) ((X)*(X))
 
+#define DRIFT(r6, length, irho, bdiff) drift(r6, length, bdiff)
+
 static void drift_propagateB(double NormL, double xpr, double ypr, double *bdiff)
 { /* Propagate cumulative Ohmi's diffusion matrix B through a drift.
    B is a (*double) pointer to 1-dimensional array containing 36 elements of
@@ -29,7 +31,7 @@ static void drift_propagateB(double NormL, double xpr, double ypr, double *bdiff
   ATsandwichmmt(M66, bdiff);
 }
 
-static void drift(double *r6, double L, double irho, double *bdiff)
+static void drift(double *r6, double L, double *bdiff)
 {
   double p_norm = 1.0 / (1.0+r6[4]);
   double px = r6[1];
