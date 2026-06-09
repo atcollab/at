@@ -16,7 +16,7 @@ from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
 
-_EXCLUDED = [Collective, SimpleQuantDiff, QuantumDiffusion, VariableMultipole]
+_EXCLUDED = [Collective, SimpleQuantDiff, QuantumDiffusion]
 
 
 class ELossMethod(Enum):
@@ -87,6 +87,8 @@ def get_energy_loss(
         delta = 0.0
         try:
             ring = ring.disable_6d(*_EXCLUDED, copy=True)
+            for e in ring[VariableMultipole]:
+                e.PassMethod = "IdentityPass"
             o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
             o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
             delta = np.squeeze(o6l)[4] - o6[4]
