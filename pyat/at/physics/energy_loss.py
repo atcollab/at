@@ -91,6 +91,9 @@ def get_energy_loss(
             o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
             delta = np.squeeze(o6l)[4] - o6[4]
         except:
+            msg = ("Closed orbit not found, falling back to enerly loss "
+                   "calculation excluding orbit effects")
+            warn(AtWarning(msg))
             for e in ring:
                 if e.PassMethod == 'SimpleRadiationRadPass':
                     delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
