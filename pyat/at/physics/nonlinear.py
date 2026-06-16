@@ -273,8 +273,6 @@ def gen_detuning_elem(
         A1=detuning_coeff[0],
         A2=detuning_coeff[1],
         A3=detuning_coeff[2],
-        T1=-orbit,
-        T2=orbit,
         chrom_maxorder=maxorder,
     )
     return nonlin_elem
