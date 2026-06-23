@@ -43,23 +43,24 @@ def _split_ring(ring: Lattice, split_inds: Refpts | None = None) -> Sequence:
     inds = ring.get_bool_index(split_inds, endpoint=True)
     inds[[0, -1]] = True
     inds = ring.get_uint32_index(inds)
-    return [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:], strict=True)]
-
-
-def _rearrange(ring: Lattice, split_inds: Refpts | None = None) -> tuple:
-    all_rings = _split_ring(ring, split_inds)
-    newring = []
-    all_cavs = []
+    all_rings = [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:], strict=True)]
+    split_ring = []
     for r in all_rings:
         r.insert(0, Marker("xsplit"))
+        split_ring += r
+    split_ring = Lattice(split_ring, **vars(ring))
+    split_ring.append(Marker("xsplit"))
+    return all_rings, split_ring
+
+
+def _rearrange(all_rings) -> tuple:
+    all_cavs = []
+    for r in all_rings:
         cav_idx = r.get_uint32_index(RFCavity)
         mcavs = _merge_cavs(r[cav_idx])
         r[cav_idx] = [_replace_cav(r[i]) for i in cav_idx]
-        newring = newring + r + mcavs
         all_cavs.append(mcavs)
-    newring.append(Marker("xsplit"))
-    newring = Lattice(newring, **vars(ring))
-    return newring, all_rings, all_cavs
+    return all_cavs
 
 
 def fast_ring_new(
@@ -100,10 +101,11 @@ def fast_ring_new(
     Returns:
         fastring (Lattice):    Fast ring lattice object
     """
-    new_ring, all_rings, all_cavs = _rearrange(ring, split_inds)
+    all_rings, split_ring = _split_ring(ring, split_inds)
+    all_cavs = _rearrange(all_rings)
     fastring = []
-    _, o4 = new_ring.disable_6d(copy=True).find_orbit(refpts="xsplit")
-    _, o6 = new_ring.enable_6d(copy=True).find_orbit(refpts="xsplit")
+    _, o4 = split_ring.disable_6d(copy=True).find_orbit(refpts="xsplit")
+    _, o6 = split_ring.enable_6d(copy=True).find_orbit(refpts="xsplit")
     for r, cav, o4b, o4e, o6b, o6e in zip(
         all_rings, all_cavs, o4[:-1], o4[1:], o6[:-1], o6[1:], strict=True
     ):
