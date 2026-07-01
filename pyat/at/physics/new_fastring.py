@@ -117,7 +117,8 @@ def fast_ring_new(
         )
         fastring = fastring + [lin_elem] + list(np.atleast_1d(cav))
     detuning_elem = gen_detuning_elem(
-        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o6[-1]
+        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o4[-1],
+        orbit6 = o6[-1]
     )
     qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[-1])
     fastring.append(detuning_elem)

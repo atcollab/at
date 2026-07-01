@@ -18,10 +18,11 @@ __all__ = [
     "SimpleQuantDiff",
     "SimpleRadiation",
     "SliceMoments",
+    "DeltaQ",
 ]
 
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 
@@ -467,6 +468,69 @@ class M66(Radiative, Element):
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
         kwargs.setdefault("M66Rad", m66rad)
+        super().__init__(family_name, **kwargs)
+        
+
+class DeltaQ(Radiative, Element):
+    """Lumped element describing amplitude detuning and chromaticity."""
+
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, 
+                         "Betax", 
+                         "Betay",
+                         "Alphax",
+                         "Alphay", 
+                         "chromx_arr",
+                         "chromy_arr",
+                         "A1",
+                         "A2",
+                         "A3"]
+    
+    _conversions = dict(Element._conversions,
+                        Betax=float,
+                        Betay=float,                       
+                        Alphax=float,
+                        Alphay=float,                       
+                        A1=float,
+                        A2=float,
+                        A3=float,
+                        )
+    chromx_arr: np.ndarray
+    chromy_arr: np.ndarray   
+    
+    _file_classname = "DeltaQ"
+    default_pass = {False: "DeltaQPass", True: "DeltaQRadPass"}
+
+    def __init__(self, family_name: str,
+                 beta: Sequence[float],
+                 alpha: Sequence[float],
+                 qpx: Sequence[float],
+                 qpy: Sequence[float], 
+                 detuning_coefficients: Sequence[float],
+                 **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            beta:                   Beta functions at the entrance of the element
+            alpha:                  Alpha function at the entrance of the element
+            qpx:                    Horizontal energy detuning coefficients
+            qpy:                    Vertical energy detuning coefficients
+            detuning_coefficients:  First order amplitude detuning coefficients 
+                                    [dQx/dJx, dQx/dJy, dQy/dJy]
+            
+
+
+        Default PassMethod: ``DeltaQPass``
+        """ 
+        kwargs.setdefault("PassMethod", "DeltaQPass")
+        kwargs.setdefault("Betax", beta[0])
+        kwargs.setdefault("Betay", beta[1])
+        kwargs.setdefault("Alphax", alpha[0])
+        kwargs.setdefault("Alphay", alpha[1])
+        kwargs.setdefault("chromx_arr", qpx)
+        kwargs.setdefault("chromy_arr", qpy)
+        kwargs.setdefault("A1", detuning_coefficients[0])
+        kwargs.setdefault("A2", detuning_coefficients[1])
+        kwargs.setdefault("A3", detuning_coefficients[2])           
         super().__init__(family_name, **kwargs)
 
 

@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 import numpy as np
 from scipy.special import factorial
 
-from ..lattice import Element, Lattice, AtError
+from ..lattice import Element, Lattice, AtError, DeltaQ
 from ..tracking import internal_lpass
 from .harmonic_analysis import get_tunes_harmonic
 from .linear import get_chrom, get_tune, linopt4, linopt6
@@ -212,10 +212,11 @@ def chromaticity(
 def gen_detuning_elem(
     ring: Lattice,
     orbit: Optional[Orbit] = None,
+    orbit6: Optional[Orbit] = None,
     qpx: Sequence[float] = None,
     qpy: Sequence[float] = None,
     detuning_coeff: Sequence[float] = None,
-) -> Element:
+) -> DeltaQ:
     """Generates a detuning element
 
     Parameters:
@@ -235,6 +236,7 @@ def gen_detuning_elem(
         detuneElem:     Element reproducing the detuning of the ring with
           amplitude and momentum
     """
+    ringnorad = ring.disable_6d(copy=True)
     if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
         msg = (
             "Both transverse planes have to be provided for manual"
@@ -242,39 +244,31 @@ def gen_detuning_elem(
         )
         raise AtError(msg)
     elif qpx is None and qpy is None:
-        qpx, qpy = get_chrom(ring.disable_6d(copy=True))[:2]
-
-    qpx = np.atleast_1d(qpx)
-    qpy = np.atleast_1d(qpy)
-    maxorder = max(len(qpx), len(qpy))
-    qpx = np.pad(qpx, (0, maxorder - len(qpx)))
-    qpy = np.pad(qpy, (0, maxorder - len(qpy)))
+        qpx, qpy = get_chrom(ringnorad)[:2]
 
     if detuning_coeff is None:
         _, r1, *_ = detuning(
-            ring.disable_6d(copy=True), xm=1.0e-4, ym=1.0e-4, npoints=3
+            ringnorad, xm=1.0e-4, ym=1.0e-4, npoints=3
         )
         detuning_coeff = [r1[0][0], r1[0][1], r1[1][1]]
 
     if orbit is None:
-        orbit, _ = find_orbit(ring)
+        orbit, _ = find_orbit(ringnorad)
+        
+    if orbit6 is None:
+        orbit6, _ = find_orbit(ring.enable_6d(copy=True))   
 
-    lindata0, _, _ = ring.linopt6(get_chrom=False, orbit=orbit)
+    lindata0, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
 
-    nonlin_elem = Element(
-        "NonLinear",
-        PassMethod="DeltaQPass",
-        Betax=lindata0.beta[0],
-        Betay=lindata0.beta[1],
-        Alphax=lindata0.alpha[0],
-        Alphay=lindata0.alpha[1],
-        chromx_arr=qpx,
-        chromy_arr=qpy,
-        A1=detuning_coeff[0],
-        A2=detuning_coeff[1],
-        A3=detuning_coeff[2],
+    nonlin_elem = DeltaQ("NonLinear",
+        lindata0.beta,
+        lindata0.alpha,
+        np.atleast_1d(qpx),
+        np.atleast_1d(qpy),
+        detuning_coeff,
         T1=-orbit,
         T2=orbit,
-        chrom_maxorder=maxorder,
+        T1Rad=-orbit6,
+        T2Rad=orbit6,
     )
     return nonlin_elem
