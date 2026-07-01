@@ -464,49 +464,55 @@ class M66(Radiative, Element):
         if m66 is None:
             m66 = np.asfortranarray(np.identity(6))
         if m66rad is None:
-            m66rad = m66     
+            m66rad = m66
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
         kwargs.setdefault("M66Rad", m66rad)
         super().__init__(family_name, **kwargs)
-        
+
 
 class DeltaQ(Radiative, Element):
     """Lumped element describing amplitude detuning and chromaticity."""
 
-    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, 
-                         "Betax", 
-                         "Betay",
-                         "Alphax",
-                         "Alphay", 
-                         "chromx_arr",
-                         "chromy_arr",
-                         "A1",
-                         "A2",
-                         "A3"]
-    
-    _conversions = dict(Element._conversions,
-                        Betax=float,
-                        Betay=float,                       
-                        Alphax=float,
-                        Alphay=float,                       
-                        A1=float,
-                        A2=float,
-                        A3=float,
-                        )
+    _BUILD_ATTRIBUTES = [
+        *Element._BUILD_ATTRIBUTES,
+        "Betax",
+        "Betay",
+        "Alphax",
+        "Alphay",
+        "chromx_arr",
+        "chromy_arr",
+        "A1",
+        "A2",
+        "A3",
+    ]
+
+    _conversions = dict(
+        Element._conversions,
+        Betax=float,
+        Betay=float,
+        Alphax=float,
+        Alphay=float,
+        A1=float,
+        A2=float,
+        A3=float,
+    )
     chromx_arr: np.ndarray
-    chromy_arr: np.ndarray   
-    
+    chromy_arr: np.ndarray
+
     _file_classname = "DeltaQ"
     default_pass = {False: "DeltaQPass", True: "DeltaQRadPass"}
 
-    def __init__(self, family_name: str,
-                 beta: Sequence[float],
-                 alpha: Sequence[float],
-                 qpx: Sequence[float],
-                 qpy: Sequence[float], 
-                 detuning_coefficients: Sequence[float],
-                 **kwargs):
+    def __init__(
+        self,
+        family_name: str,
+        beta: Sequence[float],
+        alpha: Sequence[float],
+        qpx: Sequence[float],
+        qpy: Sequence[float],
+        detuning_coefficients: Sequence[float],
+        **kwargs,
+    ):
         """
         Args:
             family_name:    Name of the element
@@ -514,13 +520,18 @@ class DeltaQ(Radiative, Element):
             alpha:                  Alpha function at the entrance of the element
             qpx:                    Horizontal energy detuning coefficients
             qpy:                    Vertical energy detuning coefficients
-            detuning_coefficients:  First order amplitude detuning coefficients 
+            detuning_coefficients:  First order amplitude detuning coefficients
                                     [dQx/dJx, dQx/dJy, dQy/dJy]
-            
+
 
 
         Default PassMethod: ``DeltaQPass``
-        """ 
+        """
+        qpx = np.atleast_1d(qpx)
+        qpy = np.atleast_1d(qpy)
+        maxorder = max(len(qpx), len(qpy))
+        qpx = np.pad(qpx, (0, maxorder - len(qpx)))
+        qpy = np.pad(qpy, (0, maxorder - len(qpy)))
         kwargs.setdefault("PassMethod", "DeltaQPass")
         kwargs.setdefault("Betax", beta[0])
         kwargs.setdefault("Betay", beta[1])
@@ -530,7 +541,8 @@ class DeltaQ(Radiative, Element):
         kwargs.setdefault("chromy_arr", qpy)
         kwargs.setdefault("A1", detuning_coefficients[0])
         kwargs.setdefault("A2", detuning_coefficients[1])
-        kwargs.setdefault("A3", detuning_coefficients[2])           
+        kwargs.setdefault("A3", detuning_coefficients[2])
+        kwargs.setdefault("chrom_maxorder", maxorder)
         super().__init__(family_name, **kwargs)
 
 

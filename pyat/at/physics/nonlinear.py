@@ -247,20 +247,19 @@ def gen_detuning_elem(
         qpx, qpy = get_chrom(ringnorad)[:2]
 
     if detuning_coeff is None:
-        _, r1, *_ = detuning(
-            ringnorad, xm=1.0e-4, ym=1.0e-4, npoints=3
-        )
+        _, r1, *_ = detuning(ringnorad, xm=1.0e-4, ym=1.0e-4, npoints=3)
         detuning_coeff = [r1[0][0], r1[0][1], r1[1][1]]
 
     if orbit is None:
         orbit, _ = find_orbit(ringnorad)
-        
+
     if orbit6 is None:
-        orbit6, _ = find_orbit(ring.enable_6d(copy=True))   
+        orbit6, _ = find_orbit(ring.enable_6d(copy=True))
 
     lindata0, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
 
-    nonlin_elem = DeltaQ("NonLinear",
+    nonlin_elem = DeltaQ(
+        "NonLinear",
         lindata0.beta,
         lindata0.alpha,
         np.atleast_1d(qpx),

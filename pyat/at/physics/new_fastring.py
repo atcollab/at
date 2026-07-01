@@ -43,7 +43,9 @@ def _split_ring(ring: Lattice, split_inds: Refpts | None = None) -> Sequence:
     inds = ring.get_bool_index(split_inds, endpoint=True)
     inds[[0, -1]] = True
     inds = ring.get_uint32_index(inds)
-    all_rings = [ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:], strict=True)]
+    all_rings = [
+        ring[int(b) : int(e)] for b, e in zip(inds[:-1], inds[1:], strict=True)
+    ]
     split_ring = []
     for r in all_rings:
         r.insert(0, Marker("xsplit"))
@@ -117,8 +119,12 @@ def fast_ring_new(
         )
         fastring = fastring + [lin_elem] + list(np.atleast_1d(cav))
     detuning_elem = gen_detuning_elem(
-        ring, qpx=qpx, qpy=qpy, detuning_coeff=detuning_coeff, orbit=o4[-1],
-        orbit6 = o6[-1]
+        ring,
+        qpx=qpx,
+        qpy=qpy,
+        detuning_coeff=detuning_coeff,
+        orbit=o4[-1],
+        orbit6=o6[-1],
     )
     qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[-1])
     fastring.append(detuning_elem)
