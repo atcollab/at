@@ -334,7 +334,7 @@ def element_from_dict(
     if check:
         sanitise_class(index, cls, elem_dict)
     try:
-        elem = cls.from_file(copy.deepcopy(elem_dict))
+        elem = cls.from_file(elem_dict.copy())
     except AtError as err:
         if cls.__name__ == "Quadrupole":
             elem_dict.pop('K', None)
