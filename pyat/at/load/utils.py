@@ -19,7 +19,6 @@ import collections
 import re
 import sysconfig
 import warnings
-import copy
 from typing import ClassVar
 from pathlib import Path
 from warnings import warn, filterwarnings
@@ -28,9 +27,9 @@ from collections.abc import Generator
 import numpy as np
 
 from at import integrators
-from at.lattice import AtWarning
+from at.lattice import AtWarning, AtError
 from at.lattice import elements as elt
-from at.lattice import Lattice, Particle, Element, Marker, AtError, AtWarning
+from at.lattice import Lattice, Particle, Element, Marker
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
