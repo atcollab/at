@@ -319,7 +319,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
     double *vbr = vbunch;
-    double *vbi = vbunch+nbunch;
+    double *vbi = vbunch+ring_harmn;
     int ibunch, islice, total_slice_counter;
     int bunch_counter = 0;
     double bucket_curr = 0.0;
@@ -329,13 +329,15 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     
     
     for (i=0;i<nslice*nbunch;i++) {
-        ibunch = (int)(i/nslice);
         vbeam_kicks[i] = 0.0;
-        vbr[ibunch] = 0.0;
-        vbi[ibunch] = 0.0;
     }
 
+    for (ibunch=0;ibunch<ring_harmn;ibunch++){
+        vbr[ibunch] = 0.0;
+        vbi[ibunch] = 0.0;
     
+    }
+
     /* The vbeam_complex will always be sent to the center of the next bucket */
     
     for(ibunch=0; ibunch<ring_harmn; ibunch++){
@@ -365,20 +367,17 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter] - bunch_spos[0])/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             
-            /* move to ts_central time */
-            dt = -ts_central_z/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-            
-            vbr[bunch_counter] = cabs(vbeam_complex);
-            vbi[bunch_counter] = carg(vbeam_complex);
-                        
             bunch_counter += 1;
-        }else{
-            /* move to ts_central time */
-            dt = -ts_central_z/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);     
         }
+        
+        /* move to ts_central time */
+        dt = -ts_central_z/bc;
+        vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+                       
 
+        vbr[ibunch] = cabs(vbeam_complex);
+        vbi[ibunch] = carg(vbeam_complex);
+            
         ave_vbeam_ri[0] += creal(vbeam_complex)/ring_harmn;
         ave_vbeam_ri[1] += cimag(vbeam_complex)/ring_harmn;
 
@@ -402,8 +401,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     #endif    
 };
 
-
-static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
+static void compute_set_params(double *vbeam, double *vgen, double detune_angle, double *vgen_set){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
     double vbeami_meas = vbeam[0]*sin(vbeam[1]);
@@ -417,19 +415,35 @@ static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain
     double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
 
-    double phis = vcav[1];   
-    /* This computes the delta theta g*/
-    double ptmp = phis_meas - phis; 
     
     /* This computes the delta psi */
-    double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
+    //double meas_psi = vgen[1] - vgen[2] - phis + detune_angle;
 
-    double dtmp = vcav[0] / vcav_meas;
-    
+    vgen_set[0] = vcav_meas;
+    vgen_set[1] = phis_meas;
+    //vgen_set[2] = meas_psi;
+
+}
+static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
+                        double phasegain, double tunergain, double detune_angle){
+
+    /* This computes the delta theta g*/
+    double phis = vcav[1];   
+    double ptmp = vcav_meas[1] - phis; 
+
+    /* This computes the delta psi */
+    //double dttmp = vcav_meas[1] - vgen[2] - phis + detune_angle;
+    double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
+    double dtmp = vcav[0] / vcav_meas[0];
+
+    //printf("%f\t%f\n", vgen[1], vcav_meas[1]);
+        
     vgen[3] *= pow(dtmp,voltgain);
-    vgen[2] += dttmp*phasegain; 
+    vgen[2] += dttmp*tunergain; 
     vgen[1] -= ptmp*phasegain;
     vgen[0] = vgen[3]*cos(vgen[2]);
+    
+    //printf("%f\t%f\t%f\n", vgen[0], vgen[1], vgen[2]);
 }
 
 
