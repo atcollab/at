@@ -409,32 +409,33 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
         fb_value_imag = gain[0] * diff_imag + gain[1] * I_record[1];
         fb_amp = sqrt(fb_value_real*fb_value_real + fb_value_imag*fb_value_imag);
         fb_phase = -atan2(fb_value_real, fb_value_imag);
-        printf("greetings sailor \n");
+
         fbr = Vg2Ig_real(fb_amp, fb_phase, psi, rshunt);
         fbi = Vg2Ig_imag(fb_amp, fb_phase, psi, rshunt);
         for(index=idx;index<ring_harmn;index++){
             ig_phasor_real[index] = fbr + FFconst[0];
             ig_phasor_imag[index] = fbi + FFconst[1];
             }
-        printf("greetings sailor girl \n");
-        roll_array(diff_real, record_size);
-        roll_array(diff_imag, record_size);
-        printf("greetings sailor non bin \n");
+
+        roll_array(diff_record_real, record_size);
+        roll_array(diff_record_imag, record_size);
+
         compute_mean_vc(vc_list_real, vc_list_imag, mean_vc_arr, idx, samplenum);
         mean_vc = (mean_vc_arr[0] + _Complex_I * mean_vc_arr[1])*exp(-_Complex_I * theta);
-        
+
         IIR(mean_vc, IIRcoef, IIRout);
+
         diff_record_real[0] = Vc - IIRout[0];
         diff_record_imag[0] = Vc - IIRout[1];
         };
 
 
         update_sample_list(sample_list, idx, every, ring_harmn);
-        
+        printf("greetings sailor \n");
         update_vc_previous(vc_previous_real, vc_previous_imag,
                            samplenum, ring_harmn, 
                            cavity_phasor_record_real, cavity_phasor_record_imag);
-                           
+        printf("greetings sailor girl \n");
                            
         int apply_changes=1;
         //if(apply_changes==1){                           
@@ -444,6 +445,7 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
                      ig_phasor_record_real, ig_phasor_record_imag,
                      dot_output_real, dot_output_imag,
                      kloss, T1, ring_harmn, vgen_arr);
+        printf("greetings sailor boy \n");                     
         //};    
     };
 
@@ -461,6 +463,7 @@ void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int 
     */
     int idx=0;
     for(idx=0;idx<samplenum;idx++){
+        printf("ring_harmn - samplenum + idx: %d \n", ring_harmn-samplenum+idx);
         vc_previous_real[idx] = cavity_phasor_record_real[ring_harmn-samplenum+idx];
         vc_previous_imag[idx] = cavity_phasor_record_imag[ring_harmn-samplenum+idx];
     }
@@ -481,17 +484,20 @@ void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean
 
 void roll_array(double *arr, int arr_len){
 
+
     if(arr_len>1){
         int idx = 0;
         double tmp=0.0;
         double tmp2=0.0;    
         tmp = arr[arr_len-1];
+       
         for(idx=0;idx<arr_len;idx++){
             tmp2 = arr[idx];
             arr[idx] = tmp;
             tmp = tmp2;
         }
     }
+    
 }
 
 

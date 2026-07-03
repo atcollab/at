@@ -106,7 +106,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int FF = Elem->ff; 
     int samplenum = Elem->samplenum; 
     int record_size = ceil(delay / every); /* check this one works */
-    printf("ceil %d \n", record_size);
+
     
     size_t sztmp2 = sizeof(double)*ring_harmn;
     double *Ig2Vg_vec_real = atMalloc(sztmp2); // complex
@@ -150,6 +150,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int samplelist_length = ceil(ring_harmn/every);
     size_t sztmp6 = sizeof(long)*samplelist_length;
     double *sample_list = atMalloc(sztmp6);
+    
     init_sample_list(sample_list, ring_harmn, every);
     printf("%d \t %d \t %d \n", every, samplelist_length, samplenum);
 
@@ -167,6 +168,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     
     
     
+
         
         
     double vbeam_set[] = {vbeam[0], vbeam[1]};
@@ -315,30 +317,54 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     }
     // here I free all the buffers. Later, this should be moved to one buffer creationg
     // at element instantiation, and then use pointers to define each one. 
+    printf("1 \n");
     atFree(Ig2Vg_vec_real);
     atFree(Ig2Vg_vec_imag);
+    printf("2 \n");
+
     atFree(Ig2Vg_tmp_real);
     atFree(Ig2Vg_tmp_imag);
+    printf("3 \n");
+
+    atFree(ig_phasor_real);
+    atFree(ig_phasor_imag);
+    printf("1 \n");
+
+    atFree(ig_phasor_record_real);
+    atFree(ig_phasor_record_imag);    
+    atFree(dot_output_real);
+    printf("1 \n");
+
+    atFree(dot_output_imag);
+    printf("1 \n");
+    atFree(generator_phasor_record_real);
+    printf("2 \n");
+    atFree(generator_phasor_record_imag);  
+    printf("3 \n");      
+    atFree(beam_phasor_record_real);
+    printf("4 \n");
+    atFree(beam_phasor_record_imag);
+    printf("5 \n");
+    atFree(cavity_phasor_record_real);
+    printf("6 \n");
+    atFree(cavity_phasor_record_imag);
+    printf("7 \n");
+
     atFree(Ig2Vg_mat_real);
     atFree(Ig2Vg_mat_imag);
     atFree(set_params);
-    atFree(ig_phasor_real);
-    atFree(ig_phasor_imag);
-    atFree(ig_phasor_record_real);
-    atFree(ig_phasor_record_imag);
-    atFree(generator_phasor_record_real);
-    atFree(generator_phasor_record_imag);
-    atFree(dot_output_real);
-    atFree(dot_output_imag);
-    atFree(beam_phasor_record_real);
-    atFree(beam_phasor_record_imag);
     atFree(vc_previous_real);
-    atFree(vc_previous_imag);
+    atFree(vc_previous_imag);    
+        printf("1 \n");
+
     atFree(diff_record_real);
     atFree(diff_record_imag);
     atFree(sample_list);    
     atFree(vc_list_real);
     atFree(vc_list_imag);
+    
+    
+    
     
 }
 
