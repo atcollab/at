@@ -106,7 +106,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int FF = Elem->ff; 
     int samplenum = Elem->samplenum; 
     int record_size = ceil(delay / every); /* check this one works */
-        
+    printf("ceil %d \n", record_size);
+    
     size_t sztmp2 = sizeof(double)*ring_harmn;
     double *Ig2Vg_vec_real = atMalloc(sztmp2); // complex
     double *Ig2Vg_vec_imag = atMalloc(sztmp2); // complex
@@ -147,15 +148,12 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     
     int samplelist_length = ceil(ring_harmn/every);
-    size_t sztmp6 = sizeof(int)*samplelist_length;
+    size_t sztmp6 = sizeof(long)*samplelist_length;
     double *sample_list = atMalloc(sztmp6);
-    //int idx=0;
-    //for(idx=0;idx<samplelist_length;idx++){
-    //    sample_list[idx] = every*idx;
-    //}
+    init_sample_list(sample_list, ring_harmn, every);
     printf("%d \t %d \t %d \n", every, samplelist_length, samplenum);
 
-    size_t sztmp7 = sizeof(double)*ring_harmn;// + sizeof(double)*samplenum;
+    size_t sztmp7 = sizeof(double)*ring_harmn + sizeof(double)*samplenum;
     double *vc_list_real = atMalloc(sztmp7);
     double *vc_list_imag = atMalloc(sztmp7);
     printf("%d \t %d \t %d \n", every, samplelist_length, samplenum);           
@@ -169,7 +167,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     
     
     
-
         
         
     double vbeam_set[] = {vbeam[0], vbeam[1]};
@@ -198,7 +195,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     double vcav_phasor[] = {0.0, 0.0}; 
     set_cavity_phasor(vgen, gen_phase, vbeam_phasor, vcav_phasor);
-
+    printf("vcav_phasor: %f \t %f \n", vcav_phasor[0], vcav_phasor[1]);
     
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
@@ -215,9 +212,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         printf("5 \n");
         init_vc_previous(vc_previous_real, vc_previous_imag, samplenum, vcav_phasor);
         printf("6 \n");
-        init_sample_list(sample_list, ring_harmn, every);
     }
-    printf("bikey teeth");
+    printf("bikey teeth \n");
         
         
     /*Track RF cavity is always done. */
@@ -253,14 +249,18 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         /* 
         This bit probably isn't needed but I feel better about it for now */
         int idx;
+        printf(" or is it here??? \n");
         for(idx=0;idx<ring_harmn;idx++){
             beam_phasor_record_real[idx] = vbunch[idx];
             beam_phasor_record_imag[idx] = vbunch[idx+ring_harmn];
         }
+        printf(" jam ??? \n");
+
         for(idx=0;idx<ring_harmn;idx++){
             cavity_phasor_record_real[idx] = beam_phasor_record_real[idx] + generator_phasor_record_real[idx];
             cavity_phasor_record_imag[idx] = beam_phasor_record_imag[idx] + generator_phasor_record_imag[idx];
         }
+        printf(" sandwich \n");
         
         
         
@@ -271,6 +271,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*ring_harmn, buffersize);
         }   
 
+        printf("wh ywould it be here \n");
 
         update_vbeam_set(fbmode, vbeam_set, ave_vbeam, vbeam_buffer,
                              buffersize, windowlength);
@@ -283,11 +284,11 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                 update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], tunergain, feedback_angle_offset);
             }
             if(fbmode==2){
-                printf("ahoyhoy");
+                printf("ahoyhoy \n");
                 track_PIL(vc_previous_real, vc_previous_imag,
                           cavity_phasor_record_real, cavity_phasor_record_imag,
                           ig_phasor_real, ig_phasor_imag,
-                          sample_list, samplenum,
+                          sample_list, samplenum, record_size,
                           diff_record_real, diff_record_imag,
                           FFconst, gain, I_record,
                           rffreq,

@@ -128,16 +128,9 @@ static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig
             Ig2Vg_mat_real[idx + idtmpv + ring_harmn*idx] = Ig2Vg_tmp_real[idtmpv];
             Ig2Vg_mat_imag[idx + idtmpv + ring_harmn*idx] = Ig2Vg_tmp_imag[idtmpv];
             
-            //printf("%d \t %d \t %d \n", idtmpv + ring_harmn*idx, idtmpv, idx);
         }
     }     
     
-
-    //for(idx=ring_harmn*991;idx<992*ring_harmn;idx++){
-
-    //    printf("%d \t %f \t %f \n", idx, Ig2Vg_mat_real[idx], Ig2Vg_mat_imag[idx]);
-    //}
-    //printf("%d \t %f \t %f \n", idx, Ig2Vg_mat_real[idx+1], Ig2Vg_mat_imag[idx+1]);
 }
 static void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag, int ring_harmn, double *FFconst){
     //Initialize feedforward constant
@@ -255,6 +248,16 @@ static void init_sample_list(double *sample_list, int ring_harmn, int every){
     }
 }
 
+void update_sample_list(double *sample_list, int index, int every, int ring_harmn){
+    int idx=0;
+    int tt = 0;
+    for(idx=index+every-ring_harmn;idx<ring_harmn;idx=idx+every){
+        sample_list[tt] = idx;
+        tt += 1;
+    }   
+}
+
+
 static void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator_phasor_record_imag,
                          double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
                          double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
@@ -332,7 +335,7 @@ static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor
 static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
                       double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
                       double *ig_phasor_real, double *ig_phasor_imag,
-                      double *sample_list, int samplenum,
+                      double *sample_list, int samplenum, int record_size,
                       double *diff_record_real, double *diff_record_imag,
                       double *FFconst, double *gain, double *I_record,
                       double frf,
@@ -398,25 +401,25 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
     concat_vc_list(vc_previous_real, vc_previous_imag, vc_list_real, vc_list_imag, cavity_phasor_record_real, cavity_phasor_record_imag, ring_harmn, samplenum);
     
     for(idx=0;idx<samplenum;idx++){
-        diff_real = diff_record_real[ring_harmn-1] - FFconst[0];
-        diff_imag = diff_record_imag[ring_harmn-1] - FFconst[1];
+        diff_real = diff_record_real[record_size-1] - FFconst[0];
+        diff_imag = diff_record_imag[record_size-1] - FFconst[1];
         I_record[0] += diff_real *T1;/// f1;
         I_record[1] += diff_imag *T1;/// f1;
         fb_value_real = gain[0] * diff_real + gain[1] * I_record[0];
         fb_value_imag = gain[0] * diff_imag + gain[1] * I_record[1];
         fb_amp = sqrt(fb_value_real*fb_value_real + fb_value_imag*fb_value_imag);
         fb_phase = -atan2(fb_value_real, fb_value_imag);
-        
+        printf("greetings sailor \n");
         fbr = Vg2Ig_real(fb_amp, fb_phase, psi, rshunt);
         fbi = Vg2Ig_imag(fb_amp, fb_phase, psi, rshunt);
         for(index=idx;index<ring_harmn;index++){
             ig_phasor_real[index] = fbr + FFconst[0];
             ig_phasor_imag[index] = fbi + FFconst[1];
             }
-            
-        roll_array(diff_real, ring_harmn);
-        roll_array(diff_imag, ring_harmn);
-        
+        printf("greetings sailor girl \n");
+        roll_array(diff_real, record_size);
+        roll_array(diff_imag, record_size);
+        printf("greetings sailor non bin \n");
         compute_mean_vc(vc_list_real, vc_list_imag, mean_vc_arr, idx, samplenum);
         mean_vc = (mean_vc_arr[0] + _Complex_I * mean_vc_arr[1])*exp(-_Complex_I * theta);
         
@@ -463,15 +466,8 @@ void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int 
     }
     
 }
-void update_sample_list(double *sample_list, int index, int every, int ring_harmn){
-    int idx=0;
-    int tt = 0;
-    for(idx=index+every-ring_harmn;idx<ring_harmn;idx=idx+every){
-        sample_list[tt] = idx;
-        tt += 1;
-    }
-    
-}
+
+
 void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean, int index, int samplenum){
     int idx=0;
     for(idx=index;idx<index+samplenum;idx++){
@@ -485,14 +481,16 @@ void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean
 
 void roll_array(double *arr, int arr_len){
 
-    int idx = 0;
-    double tmp=0.0;
-    double tmp2=0.0;    
-    tmp = arr[arr_len-1];
-    for(idx=0;idx<arr_len;idx++){
-        tmp2 = arr[idx];
-        arr[idx] = tmp;
-        tmp = tmp2;
+    if(arr_len>1){
+        int idx = 0;
+        double tmp=0.0;
+        double tmp2=0.0;    
+        tmp = arr[arr_len-1];
+        for(idx=0;idx<arr_len;idx++){
+            tmp2 = arr[idx];
+            arr[idx] = tmp;
+            tmp = tmp2;
+        }
     }
 }
 
