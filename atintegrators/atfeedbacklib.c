@@ -103,7 +103,6 @@ static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig
         Ig2Vg_mat_imag[idx] = 0.0;            
     }
     
-    //printf("%f \t %f \t %f \t %d \n", filling_time*1e6, psi, T1*1e9, idx);
     
     int ibucket=0;
     for(ibucket=0;ibucket<ring_harmn;ibucket++){
@@ -129,9 +128,9 @@ static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig
             Ig2Vg_mat_imag[idx + idtmpv + ring_harmn*idx] = Ig2Vg_tmp_imag[idtmpv];
             
         }
-    }     
-    
+    }        
 }
+
 static void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag, int ring_harmn, double *FFconst){
     //Initialize feedforward constant
     double FFconst_real=0.0;
@@ -183,21 +182,29 @@ static void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, 
 
 
 static void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, double *dot_output_real, double *dot_output_imag, int ring_harmn){	
-    /* Mutrix multiplication M2*M1, the result is stored in the M1 memory area */
+    /*
+    For whatever stupud reason I have mIg2V to be the inverse matrix in the memory. So the logic
+    here is kind of inverted with i and j
+    
+    The problem here is the fucking complex numbers. 
+    */
     int i,j;
     double val_real=0.0;
     double val_imag=0.0;
+    double complex tmp=0;
     for (i=0;i<ring_harmn;i++){ 
         val_real = 0.0;
         val_imag = 0.0;
         for(j=0;j<ring_harmn;j++){
-            val_real += Ig2Vg_mat_real[ring_harmn*i + j]*ig_phasor_record_real[j];
-            val_imag += Ig2Vg_mat_imag[ring_harmn*i + j]*ig_phasor_record_imag[j];
+            tmp = (Ig2Vg_mat_real[ring_harmn*j + i] + _Complex_I*Ig2Vg_mat_imag[ring_harmn*j + i]) * (ig_phasor_record_real[j] + _Complex_I*ig_phasor_record_imag[j]);
+            val_real += creal(tmp);
+            val_imag += cimag(tmp);
         }
         dot_output_real[i] = val_real;
         dot_output_imag[i] = val_imag;
         
     }   
+
 }
 
 static void init_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, double *vcav_phasor){
@@ -231,7 +238,7 @@ static void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, d
 
 
 
-static void init_sample_list(double *sample_list, int ring_harmn, int every){
+static void init_sample_list(int *sample_list, int ring_harmn, int every){
     /*
     self.sample_list = range(0, self.ring.h, self.every)
     
@@ -248,7 +255,7 @@ static void init_sample_list(double *sample_list, int ring_harmn, int every){
     }
 }
 
-void update_sample_list(double *sample_list, int index, int every, int ring_harmn){
+void update_sample_list(int *sample_list, int index, int every, int ring_harmn){
     int idx=0;
     int tt = 0;
     for(idx=index+every-ring_harmn;idx<ring_harmn;idx=idx+every){
@@ -277,13 +284,14 @@ static void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator
         
     */
     int idx;
+    double complex tmp=0;
     mat_dot(Ig2Vg_mat_real, Ig2Vg_mat_imag, ig_phasor_record_real, ig_phasor_record_imag, dot_output_real, dot_output_imag, ring_harmn);
     
     for(idx=0;idx<ring_harmn;idx++){
-    
-        generator_phasor_record_real[idx] = Ig2Vg_vec_real[idx] * generator_phasor_record_real[ring_harmn] +
+        tmp =  (Ig2Vg_vec_real[idx] + _Complex_I*Ig2Vg_vec_imag[idx])*(generator_phasor_record_real[ring_harmn-1] + _Complex_I * generator_phasor_record_imag[ring_harmn-1]);
+        generator_phasor_record_real[idx] = creal(tmp) +
                                             dot_output_real[idx] * kloss * T1;       
-        generator_phasor_record_imag[idx] = Ig2Vg_vec_imag[idx] * generator_phasor_record_imag[ring_harmn] +
+        generator_phasor_record_imag[idx] = cimag(tmp) +
                                             dot_output_imag[idx] * kloss * T1;     
     }        
 }
@@ -315,6 +323,7 @@ static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor
                  ig_phasor_record_real, ig_phasor_record_imag,
                  dot_output_real, dot_output_imag,
                  kloss, T1, ring_harmn);
+                 
     int idx;
     double mean_vg = 0.0;
     double mean_thetag=0.0;
@@ -323,11 +332,11 @@ static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor
                         generator_phasor_record_imag[idx]*generator_phasor_record_imag[idx]);
         mean_thetag += -atan2(generator_phasor_record_real[idx], generator_phasor_record_imag[idx]);
     }
+
     mean_vg /= ring_harmn;
     mean_thetag /= ring_harmn;
     vgen_arr[0] = mean_vg;
     vgen_arr[1] = mean_thetag;
-    printf("%f\t%f\n",mean_vg, mean_thetag);
 }
 
 
@@ -335,7 +344,7 @@ static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor
 static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
                       double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
                       double *ig_phasor_real, double *ig_phasor_imag,
-                      double *sample_list, int samplenum, int record_size,
+                      int *sample_list, int samplenum, int record_size, int samplelist_length,
                       double *diff_record_real, double *diff_record_imag,
                       double *FFconst, double *gain, double *I_record,
                       double frf,
@@ -394,6 +403,8 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
 
     int idx=0;
     int index=0;
+    int index2=0;
+    int sample=0;
     double diff_real, diff_imag, fb_value_real, fb_value_imag;
     double fb_amp, fb_phase, fb_real, fbr, fbi;
     double mean_vc_arr[] = {0.0, 0.0};
@@ -401,10 +412,12 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
     concat_vc_list(vc_previous_real, vc_previous_imag, vc_list_real, vc_list_imag, cavity_phasor_record_real, cavity_phasor_record_imag, ring_harmn, samplenum);
     
     for(idx=0;idx<samplenum;idx++){
+        index = sample_list[idx];
+        
         diff_real = diff_record_real[record_size-1] - FFconst[0];
         diff_imag = diff_record_imag[record_size-1] - FFconst[1];
-        I_record[0] += diff_real *T1;/// f1;
-        I_record[1] += diff_imag *T1;/// f1;
+        I_record[0] += diff_real *T1; // f1;
+        I_record[1] += diff_imag *T1; // f1;
         fb_value_real = gain[0] * diff_real + gain[1] * I_record[0];
         fb_value_imag = gain[0] * diff_imag + gain[1] * I_record[1];
         fb_amp = sqrt(fb_value_real*fb_value_real + fb_value_imag*fb_value_imag);
@@ -412,30 +425,35 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
 
         fbr = Vg2Ig_real(fb_amp, fb_phase, psi, rshunt);
         fbi = Vg2Ig_imag(fb_amp, fb_phase, psi, rshunt);
-        for(index=idx;index<ring_harmn;index++){
-            ig_phasor_real[index] = fbr + FFconst[0];
-            ig_phasor_imag[index] = fbi + FFconst[1];
+        for(index2=index;index2<ring_harmn;index2++){
+            ig_phasor_real[index2] = fbr + FFconst[0];
+            ig_phasor_imag[index2] = fbi + FFconst[1];
             }
 
         roll_array(diff_record_real, record_size);
         roll_array(diff_record_imag, record_size);
 
-        compute_mean_vc(vc_list_real, vc_list_imag, mean_vc_arr, idx, samplenum);
-        mean_vc = (mean_vc_arr[0] + _Complex_I * mean_vc_arr[1])*exp(-_Complex_I * theta);
 
+        compute_mean_vc(vc_list_real, vc_list_imag, mean_vc_arr, idx, samplenum);
+        
+        
+        mean_vc = (mean_vc_arr[0] + _Complex_I * mean_vc_arr[1])*cexp(-_Complex_I * (theta+TWOPI/4));
+        
+        
         IIR(mean_vc, IIRcoef, IIRout);
 
         diff_record_real[0] = Vc - IIRout[0];
-        diff_record_imag[0] = Vc - IIRout[1];
+        diff_record_imag[0] =  IIRout[1];
         };
 
-
-        update_sample_list(sample_list, idx, every, ring_harmn);
-        printf("greetings sailor \n");
+        update_sample_list(sample_list, index, every, ring_harmn);
+        
+        
         update_vc_previous(vc_previous_real, vc_previous_imag,
                            samplenum, ring_harmn, 
                            cavity_phasor_record_real, cavity_phasor_record_imag);
-        printf("greetings sailor girl \n");
+                           
+        update_ig_phasor(ig_phasor_real, ig_phasor_imag, ig_phasor_record_real, ig_phasor_record_imag, ring_harmn);
                            
         int apply_changes=1;
         //if(apply_changes==1){                           
@@ -445,11 +463,11 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
                      ig_phasor_record_real, ig_phasor_record_imag,
                      dot_output_real, dot_output_imag,
                      kloss, T1, ring_harmn, vgen_arr);
-        printf("greetings sailor boy \n");                     
+                         
         //};    
     };
 
-static void update_ig_phasor(double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn){
+void update_ig_phasor(double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn){
     int idx=0;
     for(idx=0;idx<ring_harmn;idx++){
         ig_phasor_record_real[idx] = ig_phasor_real[idx];
@@ -463,7 +481,6 @@ void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int 
     */
     int idx=0;
     for(idx=0;idx<samplenum;idx++){
-        printf("ring_harmn - samplenum + idx: %d \n", ring_harmn-samplenum+idx);
         vc_previous_real[idx] = cavity_phasor_record_real[ring_harmn-samplenum+idx];
         vc_previous_imag[idx] = cavity_phasor_record_imag[ring_harmn-samplenum+idx];
     }

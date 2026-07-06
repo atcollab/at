@@ -174,9 +174,9 @@ class BeamLoadingElement(RFCavity, Collective):
         _vbeam=lambda v: _array(v, shape=(2,)),
         _vcav=lambda v: _array(v, shape=(2,)),
         _vgen=lambda v: _array(v, shape=(4,)),
-        Delay=int,
-        Every=int,
-        SampleNum=int,
+        delay=int,
+        every=int,
+        sample_num=int,
     )
 
     def __init__(
@@ -297,12 +297,12 @@ class BeamLoadingElement(RFCavity, Collective):
         #self.VoltGain = kwargs.pop("VoltGain", 1.0)
 
 
-        self.Delay = kwargs.pop("Delay", 1)
-        self.Every = kwargs.pop("Every", 1)
-        self.SampleNum = kwargs.pop("SampleNum", 1)
+        self.delay = kwargs.pop("delay", 1)
+        self.every = kwargs.pop("every", 1)
+        self.sample_num = kwargs.pop("sample_num", 1)
         self.Cutoff = kwargs.pop("IIRcutoff",0.0)
         self.FF = kwargs.pop("FF", 1)
-        self.RecordSize = int(np.ceil(self.Delay / self.Every))
+        self.RecordSize = int(np.ceil(self.delay / self.every))
         
         self._cavitymode = int(cavitymode)
 

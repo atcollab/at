@@ -148,17 +148,17 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     
     int samplelist_length = ceil(ring_harmn/every);
-    size_t sztmp6 = sizeof(long)*samplelist_length;
-    double *sample_list = atMalloc(sztmp6);
-    
-    init_sample_list(sample_list, ring_harmn, every);
-    printf("%d \t %d \t %d \n", every, samplelist_length, samplenum);
+    size_t sztmp6 = sizeof(int)*samplelist_length;
+    int *sample_list = atMalloc(sztmp6);
 
     size_t sztmp7 = sizeof(double)*ring_harmn + sizeof(double)*samplenum;
     double *vc_list_real = atMalloc(sztmp7);
     double *vc_list_imag = atMalloc(sztmp7);
-    printf("%d \t %d \t %d \n", every, samplelist_length, samplenum);           
-            
+    
+          
+    init_sample_list(sample_list, ring_harmn, every);
+
+    
     double *z_cuts = Elem->z_cuts;
     double *vbunch = Elem->vbunch;
     double *vbeam = Elem->vbeam;
@@ -197,25 +197,17 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     double vcav_phasor[] = {0.0, 0.0}; 
     set_cavity_phasor(vgen, gen_phase, vbeam_phasor, vcav_phasor);
-    printf("vcav_phasor: %f \t %f \n", vcav_phasor[0], vcav_phasor[1]);
     
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
     if(fbmode==2){
-        printf("1 \n");
         init_phasor_arrays(vgen, gen_phase, ig_phasor_real, ig_phasor_imag, ig_phasor_record_real, ig_phasor_record_imag, ring_harmn, rshunt, psi, generator_phasor_record_real, generator_phasor_record_imag);
-        printf("2 \n");
         IIR_init(cutoff, IIRcoef, IIRout, T1, every, vcav_set[0]);
-        printf("3 \n");
         init_Ig2Vg_matrix(ring_harmn, Ig2Vg_vec_real, Ig2Vg_vec_imag, Ig2Vg_tmp_real, Ig2Vg_tmp_imag, filling_time, psi, T1, Ig2Vg_mat_real, Ig2Vg_mat_imag);
-        printf("4 \n");
         init_FFconst(FF, ig_phasor_real, ig_phasor_imag, ring_harmn, FFconst);
-        printf("5 \n");
         init_vc_previous(vc_previous_real, vc_previous_imag, samplenum, vcav_phasor);
-        printf("6 \n");
     }
-    printf("bikey teeth \n");
         
         
     /*Track RF cavity is always done. */
@@ -251,19 +243,16 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         /* 
         This bit probably isn't needed but I feel better about it for now */
         int idx;
-        printf(" or is it here??? \n");
         for(idx=0;idx<ring_harmn;idx++){
             beam_phasor_record_real[idx] = vbunch[idx];
             beam_phasor_record_imag[idx] = vbunch[idx+ring_harmn];
         }
-        printf(" jam ??? \n");
 
         for(idx=0;idx<ring_harmn;idx++){
             cavity_phasor_record_real[idx] = beam_phasor_record_real[idx] + generator_phasor_record_real[idx];
             cavity_phasor_record_imag[idx] = beam_phasor_record_imag[idx] + generator_phasor_record_imag[idx];
         }
-        printf(" sandwich \n");
-        
+       
         
         
         // First write the values to the buffer
@@ -273,7 +262,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             write_buffer(vbunch, vbunch_buffer, 2*ring_harmn, buffersize);
         }   
 
-        printf("wh ywould it be here \n");
 
         update_vbeam_set(fbmode, vbeam_set, ave_vbeam, vbeam_buffer,
                              buffersize, windowlength);
@@ -286,11 +274,10 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                 update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], tunergain, feedback_angle_offset);
             }
             if(fbmode==2){
-                printf("ahoyhoy \n");
                 track_PIL(vc_previous_real, vc_previous_imag,
                           cavity_phasor_record_real, cavity_phasor_record_imag,
                           ig_phasor_real, ig_phasor_imag,
-                          sample_list, samplenum, record_size,
+                          sample_list, samplenum, record_size, samplelist_length,
                           diff_record_real, diff_record_imag,
                           FFconst, gain, I_record,
                           rffreq,
@@ -316,53 +303,42 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         atFree(buffer);
     }
     // here I free all the buffers. Later, this should be moved to one buffer creationg
-    // at element instantiation, and then use pointers to define each one. 
-    printf("1 \n");
-    atFree(Ig2Vg_vec_real);
-    atFree(Ig2Vg_vec_imag);
-    printf("2 \n");
+    // at element instantiation, and then use pointers to define each one.
+    if(fbmode==2){ 
+        atFree(Ig2Vg_vec_real);
+        atFree(Ig2Vg_vec_imag);
 
-    atFree(Ig2Vg_tmp_real);
-    atFree(Ig2Vg_tmp_imag);
-    printf("3 \n");
+        atFree(Ig2Vg_tmp_real);
+        atFree(Ig2Vg_tmp_imag);
 
-    atFree(ig_phasor_real);
-    atFree(ig_phasor_imag);
-    printf("1 \n");
+        atFree(ig_phasor_real);
+        atFree(ig_phasor_imag);
 
-    atFree(ig_phasor_record_real);
-    atFree(ig_phasor_record_imag);    
-    atFree(dot_output_real);
-    printf("1 \n");
+        atFree(ig_phasor_record_real);
+        atFree(ig_phasor_record_imag);    
+        atFree(dot_output_real);
 
-    atFree(dot_output_imag);
-    printf("1 \n");
-    atFree(generator_phasor_record_real);
-    printf("2 \n");
-    atFree(generator_phasor_record_imag);  
-    printf("3 \n");      
-    atFree(beam_phasor_record_real);
-    printf("4 \n");
-    atFree(beam_phasor_record_imag);
-    printf("5 \n");
-    atFree(cavity_phasor_record_real);
-    printf("6 \n");
-    atFree(cavity_phasor_record_imag);
-    printf("7 \n");
+        atFree(dot_output_imag);
+        atFree(generator_phasor_record_real);
+        atFree(generator_phasor_record_imag);  
+        atFree(beam_phasor_record_real);
+        atFree(beam_phasor_record_imag);
+        atFree(cavity_phasor_record_imag);
+        atFree(cavity_phasor_record_real);
 
-    atFree(Ig2Vg_mat_real);
-    atFree(Ig2Vg_mat_imag);
-    atFree(set_params);
-    atFree(vc_previous_real);
-    atFree(vc_previous_imag);    
-        printf("1 \n");
 
-    atFree(diff_record_real);
-    atFree(diff_record_imag);
-    atFree(sample_list);    
-    atFree(vc_list_real);
-    atFree(vc_list_imag);
-    
+        atFree(Ig2Vg_mat_real);
+        atFree(Ig2Vg_mat_imag);
+        atFree(set_params);
+        atFree(vc_previous_real);
+        atFree(vc_previous_imag);    
+
+        atFree(diff_record_real);
+        atFree(diff_record_imag);
+        atFree(sample_list);    
+        atFree(vc_list_real);
+        atFree(vc_list_imag);
+    }    
     
     
     
@@ -432,9 +408,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
         ts=atGetDouble(ElemData,"_ts"); check_error();
         
-        delay=atGetLong(ElemData,"Delay"); check_error();
-        every=atGetLong(ElemData,"Every"); check_error();
-        samplenum=atGetLong(ElemData,"SampleNum"); check_error();        
+        delay=atGetLong(ElemData,"delay"); check_error();
+        every=atGetLong(ElemData,"every"); check_error();
+        samplenum=atGetLong(ElemData,"sample_num"); check_error();        
         cutoff=atGetDouble(ElemData,"Cutoff"); check_error();        
         ff=atGetLong(ElemData,"FF"); check_error();
         
@@ -574,9 +550,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       phis=atGetDouble(ElemData,"_phis"); check_error();
       system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
       ts=atGetDouble(ElemData,"_ts"); check_error();
-      delay=atGetLong(ElemData,"Delay"); check_error();
-      every=atGetLong(ElemData,"Every"); check_error();
-      samplenum=atGetLong(ElemData,"SampleNum"); check_error();        
+      delay=atGetLong(ElemData,"delay"); check_error();
+      every=atGetLong(ElemData,"every"); check_error();
+      samplenum=atGetLong(ElemData,"sample_num"); check_error();        
       cutoff=atGetDouble(ElemData,"Cutoff"); check_error();        
       ff=atGetLong(ElemData,"FF"); check_error();
         
