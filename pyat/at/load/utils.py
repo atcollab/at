@@ -18,6 +18,7 @@ __all__ = [
 import collections
 import re
 import sysconfig
+import warnings
 from typing import ClassVar
 from pathlib import Path
 from warnings import warn, filterwarnings
@@ -26,7 +27,7 @@ from collections.abc import Generator
 import numpy as np
 
 from at import integrators
-from at.lattice import AtWarning
+from at.lattice import AtWarning, AtError
 from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
 
@@ -331,7 +332,17 @@ def element_from_dict(
     cls = find_class(elem_dict, quiet=quiet, index=index)
     if check:
         sanitise_class(index, cls, elem_dict)
-    return cls.from_file(elem_dict)
+    try:
+        elem = cls.from_file(elem_dict.copy())
+    except AtError as err:
+        if cls.__name__ == "Quadrupole":
+            elem_dict.pop('K', None)
+        if cls.__name__ == "Sextupole":
+            elem_dict.pop('H', None)
+        msg = f"{err}, positional argument ignored"
+        warnings.warn(AtWarning(msg))
+        elem = cls.from_file(elem_dict)
+    return elem
 
 
 def split_ignoring_parentheses(
