@@ -260,9 +260,9 @@ def _computedrivingterms(
                 }
             )
             # fmt: off
-            # The variable imag_and_sign multiplies by -1 the expression in¶
-            # ANL/APS/LS-330 March 10, 2012. Chun-xi Wang. Eq (46)¶
-            # in order to follow AT sign convention.¶
+            # The variable imag_and_sign multiplies by -1 the expression in
+            # ANL/APS/LS-330 March 10, 2012. Chun-xi Wang. Eq (46)
+            # in order to follow AT sign convention.
             imag_and_sign = 1j * (np.tri(nelem, nelem, -1) - 1 + np.tri(nelem))
             bsign = np.array([imag_and_sign[i] * b3lm[i] * b3lm for i in range(nelem)])
             rbbx = np.array([bsign[i] * rbbetaxm[i] * rbbetaxm
