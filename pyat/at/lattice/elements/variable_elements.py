@@ -20,7 +20,7 @@ class ACMode(IntEnum):
     ARBITRARY = 2
 
 
-class VariableMultipole(Element):
+class VariableThinMultipole(Element):
     """Class to generate an AT variable thin multipole element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
@@ -81,13 +81,13 @@ class VariableMultipole(Element):
 
         Examples:
 
-            >>> acmpole = at.VariableMultipole(
+            >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", AmplitudeB=amp, FrequencyB=frequency
             ... )
-            >>> acmpole = at.VariableMultipole(
+            >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", AmplitudeB=amp, mode=at.ACMode.WHITENOISE
             ... )
-            >>> acmpole = at.VariableMultipole(
+            >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", AmplitudeB=amp, FuncB=fun, mode=at.ACMode.ARBITRARY
             ... )
 
