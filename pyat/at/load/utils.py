@@ -30,6 +30,7 @@ from at import integrators
 from at.lattice import AtWarning, AtError
 from at.lattice import elements as elt
 from at.lattice import Lattice, Particle, Element, Marker
+from at.lattice import variable_elements
 
 _ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
 _plh = "placeholder"
@@ -125,6 +126,7 @@ _PASS_MAP = {
     "AperturePass": elt.Aperture,
     "IdTablePass": elt.InsertionDeviceKickMap,
     "GWigSymplecticPass": elt.Wiggler,
+    "VariableThinMPolePass": variable_elements.VariableThinMultipole,
 }
 
 # Lattice attributes which must be dropped when writing a file
