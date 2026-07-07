@@ -16,6 +16,5 @@ at.load.madx
 
    .. autosummary::
    
-      MadParameter
       MadxParser
    

@@ -15,6 +15,7 @@ import machine_data
 from at.lattice import Lattice
 from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
+from at.load import save_xsuite, load_xsuite
 
 
 @pytest.fixture()
@@ -107,6 +108,36 @@ def test_long_arrays_in_m_file() -> None:
     ring1 = Lattice.load(fname)
 
     assert_equal(ring1[0].xkick.shape, ring0[0].xkick.shape)  # act
+
+    # delete temporary file
+    temp_file = Path(fname)
+    temp_file.unlink()
+
+
+@pytest.mark.parametrize("lattice", ["dba_lattice", "simple_hmba"])
+def test_xsuite_json(request, lattice: Lattice) -> None:
+    """Test xsuite json saving in .json file.
+
+    This checks that the Xsuite json output can be written and read without loosing
+    information, but does not check that Xsuite can interpret it.
+    """
+    ring0 = request.getfixturevalue(lattice)
+    fhandle, fname = mkstemp(suffix=".json")
+    os.close(fhandle)
+
+    # Create a new file
+    save_xsuite(ring0, fname)
+
+    # load the new file
+    ring1 = load_xsuite(fname, particle="relativistic")
+
+    # Check that we get back the original lattice
+    _, rg1, _ = ring0.linopt6()
+    _, rg2, _ = ring1.linopt6()
+
+    assert_allclose(rg1.tune, rg2.tune, atol=1.0e-12)  # act
+
+    assert_allclose(rg1.chromaticity, rg2.chromaticity, atol=1.0e-12)
 
     # delete temporary file
     temp_file = Path(fname)

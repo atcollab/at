@@ -102,11 +102,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 		SigVV = atGetOptionalDouble(ElemData,"SigVV",0.0); check_error();
 
         /* Check energy */
-        Energy = atEnergy(Param->energy, Energy);
-        if (Energy == 0) {
-            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
-            check_error();
-        }
+        Energy = atEnergy(Param->energy, Energy); check_error();
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
@@ -125,7 +121,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         SigPhi=Elem->SigPhi;
         SigVV=Elem->SigVV;
     }
-    energy = atEnergy(Param->energy, Elem->Energy);
+    energy = atEnergy(Param->energy, Elem->Energy); check_error(); check_error();
     nvx = Elem->Vx;
     nvy = Elem->Vy;
 

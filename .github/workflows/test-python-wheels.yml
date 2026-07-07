@@ -1,11 +1,8 @@
 # See the Python documentation: https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 # and cibuildwheel: https://cibuildwheel.readthedocs.io/en/stable/
-name: Build and upload wheels and sdist
+name: Test build and publish
 
 on:
-  push:
-    tags:
-      - pyat-[0-9]*
   workflow_dispatch:
 
 jobs:
@@ -14,6 +11,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
+    env:
+      SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX: '{local_scheme = "no-local-version"}'
 
     steps:
       - uses: actions/checkout@v6
@@ -31,14 +30,20 @@ jobs:
         uses: pypa/cibuildwheel@v3.4
 
       - name: Upload wheels
+        id: wheel-upload
         uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
           if-no-files-found: error
 
+      - name: Output ID
+        run: echo 'Artifact ID is ${{ steps.wheel-upload.outputs.artifact-id }}'
+
   build_sdist:
     runs-on: ubuntu-latest
+    env:
+      SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX: '{local_scheme = "no-local-version"}'
 
     steps:
       - uses: actions/checkout@v6
@@ -62,18 +67,17 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: tar.gz
-          path: ./dist/*.tar.gz
+          path: dist/
           if-no-files-found: error
 
-  publish-to-pypi:
-    name: Publish to PyPI
-    if: startsWith(github.ref, 'refs/tags/')  # only publish on tag pushes
+  publish-to-testpypi:
+    name: Publish to TestPyPI
     runs-on: ubuntu-latest
     needs: [build_wheels, build_sdist]
 
     environment:
-      name: pypi
-      url: https://pypi.org/p/accelerator-toolbox
+      name: testpypi
+      url: https://test.pypi.org/p/accelerator-toolbox
 
     permissions:
       id-token: write
@@ -85,7 +89,12 @@ jobs:
           path: dist/
           merge-multiple: true
 
-      - name: Publish to PyPi
+      - name: Show structure
+        run: ls -R dist/
+
+      - name: Publish to TestPyPi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
+          skip-existing: true
+          repository-url: https://test.pypi.org/legacy/

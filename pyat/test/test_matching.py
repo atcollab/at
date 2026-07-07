@@ -6,10 +6,9 @@ import numpy as np
 import pytest
 
 # import at
-from at.lattice import Lattice, End
+from at.lattice import Lattice, RefptsVariable, VariableList, End
 from at.latticetools import LocalOpticsObservable, GlobalOpticsObservable
-from at.latticetools import EmittanceObservable, ObservableList
-from at.future import RefptsVariable, VariableList, ring_match
+from at.latticetools import EmittanceObservable, ObservableList, ring_match
 
 
 @pytest.fixture()
@@ -38,7 +37,7 @@ def mline(hmba_lattice: Lattice):
     sf1 = ring[sf[0]].divide([0.5, 0.5])
     ring.pop(sf[0])
     ring.insert(sf[0], sf1[0])
-    return ring[:sf[0]+1], twiss_in
+    return ring[: sf[0] + 1], twiss_in
 
 
 def test_linopt_matching(mring: Lattice):
@@ -59,7 +58,7 @@ def test_linopt_matching(mring: Lattice):
     bounds = [[0, 5], [-5, 0], [-5, 0], [0, 5], [-5, 0], [0, 5], [0, 5]]
     variables = VariableList(
         RefptsVariable(nm, "PolynomB", index=1, bounds=bnd, name=nm, ring=mring)
-        for nm, bnd in zip(names, bounds)
+        for nm, bnd in zip(names, bounds, strict=True)
     )
 
     # Define the observables

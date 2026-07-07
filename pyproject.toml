@@ -64,14 +64,14 @@ machine_data = ["*.m", "*.mat"]
 
 [tool.cibuildwheel]
 build = ["*"]
-# Remove free-threaded builds
-skip = ["cp3{8,9}-*", "cp314t-*"]
+# Skip free-threaded builds
+skip = ["cp3{8,9}-*", "cp*t-*"]
 archs = ["auto64"]
 build-verbosity = "1"
 
-#[tool.cibuildwheel.linux]
-## Pass the detected PyAT version to the linux docker containers
-#environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
+[tool.cibuildwheel.linux]
+# Pass environment variables to the linux docker containers
+environment-pass = ["SETUPTOOLS_SCM_OVERRIDES_FOR_ACCELERATOR_TOOLBOX"]
 
 [tool.setuptools_scm]
 write_to = "pyat/at/_version.py"

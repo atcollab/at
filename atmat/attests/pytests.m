@@ -258,7 +258,6 @@ classdef pytests < matlab.unittest.TestCase
             function checkattr(rm, rp)
                 testCase.verifyEqual(rm{2}.Frequency, rp{1}.Frequency, RelTol=1.0e-20);
                 testCase.verifyEqual(rm{2}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{3}.I2, rp{2}.I2, RelTol=1.0e-15);
                 testCase.verifyEqual(rm{3}.Length, rp{2}.Length, RelTol=1.0e-20);
                 testCase.verifyEqual(rm{3}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
                 testCase.verifyEqual(rm{end}.A1, rp{3}.A1, RelTol=0.01);

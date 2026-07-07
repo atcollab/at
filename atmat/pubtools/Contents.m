@@ -14,6 +14,7 @@
 %   calc_TouschekPM                     - TauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)
 %   freqsearch                          - =========================================================================
 %   nlchromplot                         - Example:   nlchromplot(esrf,-.04,.04,30,16,1)
+%   atfloodfill                         - Explores the acceptance from the unstable to the stable region
 %   
 %   PUBTOOLS/APERTURE
 %   SetPhysicalAperture                 - Ringapert=SetPhysicalAperture(ring,apertureX,apertureY)
