@@ -32,6 +32,16 @@ else
     orbit=num2cell(linepass(ring, orb0, 1:NumElements),1)';
 end
 
+% check for non-supported pass methods
+nonsupported_methods = {'VariableThinMultipole'};
+for i = 1:length(nonsupported_methods)
+    thepassm = nonsupported_methods{i};
+    lidx = find(atgetcells(ring, 'Class', thepassm));
+    if ~isempty(lidx)
+        ring = atsetfieldvalues(ring, lidx, 'PassMethod', 'IdentityPass');
+    end
+end
+
 zr=zeros(6,6);
 % Calculate cumulative Radiation-Diffusion matrix for the ring
 BCUM = zeros(6,6);
