@@ -299,11 +299,17 @@ class BeamLoadingElement(RFCavity, Collective):
 
         self.delay = kwargs.pop("delay", 1)
         self.every = kwargs.pop("every", 1)
-        self.sample_num = kwargs.pop("sample_num", 1)
-        self.Cutoff = kwargs.pop("IIRcutoff",0.0)
-        self.FF = kwargs.pop("FF", 1)
-        self.RecordSize = int(np.ceil(self.delay / self.every))
-        
+        self.samplenum = kwargs.pop("samplenum", 1)
+        self.samplelist_length = int(np.ceil(ring.harmonic_number/self.every))
+        self.recordsize = int(np.ceil(self.delay / self.every))
+
+        self.cutoff = kwargs.pop("IIRcutoff",0.0)
+        self.FF = kwargs.pop("FF", 1) #bool
+        self._IIRcoef = np.zeros(1)
+        self._IIRout = np.zeros(2)
+        self._FFconst = np.zeros(2)        
+        self._I_record = np.zeros(2)
+            
         self._cavitymode = int(cavitymode)
 
         ####################################
@@ -394,6 +400,24 @@ class BeamLoadingElement(RFCavity, Collective):
         self._vcav = np.array([cavity_voltage, self._phis])
         self.clear_history(ring=ring)
 
+
+        self._Ig2Vg_vec = np.zeros(ring.harmonic_number*2)
+        self._Ig2Vg_tmp = np.zeros(ring.harmonic_number*2)
+        self._ig_phasor = np.zeros(ring.harmonic_number*2)
+        self._ig_phasor_record = np.zeros(ring.harmonic_number*2)
+        self._dot_output = np.zeros(ring.harmonic_number*2)
+        self._generator_phasor_record = np.zeros(ring.harmonic_number*2)
+        self._beam_phasor_record = np.zeros(ring.harmonic_number*2)                
+        self._cavity_phasor_record = np.zeros(ring.harmonic_number*2)        
+        
+        self._Ig2Vg_mat = np.zeros(ring.harmonic_number**2 * 2)
+        self._vc_previous = np.zeros(self.sample_num*2)
+        self._diff_record = np.zeros(self.recordsize*2)
+        self._samplelist = np.zeros(self.samplelist_length)
+
+        self._vc_list = np.zeros((ring.harmonic_number + self.sample_num)*2)        
+
+        
     def is_compatible(self, other):
         return False
 
