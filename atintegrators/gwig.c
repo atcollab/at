@@ -74,6 +74,10 @@ static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
         Wig->Hky[i] = (*tmppr) * kw;
         tmppr++;
         Wig->Hkz[i] = (*tmppr) * kw;
+        if (fabs(Wig->Hkz[i] / kw) <= GWIG_EPS) {
+            atError("GWig error: By harmonic %d has kz=0 "
+            "; kz must be larger than 0.", i);
+        }
         tmppr++;
         Wig->Htz[i] = *tmppr;
         tmppr++;
@@ -88,6 +92,10 @@ static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
         Wig->Vky[i] = (*tmppr) * kw;
         tmppr++;
         Wig->Vkz[i] = (*tmppr) * kw;
+        if (fabs(Wig->Vkz[i] / kw) <= GWIG_EPS) {
+            atError("GWig error: Bx harmonic %d has kz=0 "
+            "; kz must be larger than 0.", i);
+        }
         tmppr++;
         Wig->Vtz[i] = *tmppr;
         tmppr++;
