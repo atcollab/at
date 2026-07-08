@@ -338,9 +338,7 @@ class Lattice(list):
                 rev = self.beta * clight / length
                 frequency = cavities[0].Frequency
                 self._cell_harmnumber = round(frequency / rev)
-        self._radiation = getattr(self, "_radiation", False) | params.pop(
-            "_radiation"
-        )
+        self._radiation = getattr(self, "_radiation", False) | params.pop("_radiation")
 
     def insert(self, idx: SupportsIndex, elem: Element, copy_elements=False):
         r"""This method allow to insert an AT element in the lattice.
@@ -1048,9 +1046,6 @@ class Lattice(list):
             def getpass(elem):
                 return "auto" if isinstance(elem, args) else None
 
-            if not all(issubclass(cl, elt.LongtMotion) for cl in args):
-                msg = "All arguments must be subclasses of 'LongtMotion'"
-                raise TypeError(msg)
             if len(kwargs) > 0:
                 msg = "No keyword is allowed in this mode"
                 raise KeyError(msg)
