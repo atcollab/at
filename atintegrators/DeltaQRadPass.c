@@ -21,7 +21,7 @@ struct elem
   int chrom_maxorder;
 };
 
-void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
+void DeltaQRadPass(double *r_in, int num_particles, double alphax, double alphay,
         double betax, double betay, double *chromx_arr, double *chromy_arr,
         double chrom_maxorder, double a1, double a2, double a3,
         const double *T1, const double *T2,
@@ -142,13 +142,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    DeltaQPass(r_in, num_particles, Elem->Alphax, Elem->Alphay, 
+    DeltaQRadPass(r_in, num_particles, Elem->Alphax, Elem->Alphay, 
             Elem->Betax, Elem->Betay, Elem->chromx_arr, Elem->chromy_arr, Elem->chrom_maxorder,
             Elem->A1, Elem->A2, Elem->A3, Elem->T1, Elem->T2, Elem->R1, Elem->R2);
     return Elem;
 }
 
-MODULE_DEF(DeltaQPass)        /* Dummy module initialisation */
+MODULE_DEF(DeltaQRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
