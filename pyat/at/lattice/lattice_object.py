@@ -1046,6 +1046,9 @@ class Lattice(list):
             def getpass(elem):
                 return "auto" if isinstance(elem, args) else None
 
+            if not all(issubclass(cl, elt.LongtMotion) for cl in args):
+                msg = "All arguments must be subclasses of 'LongtMotion'"
+                raise TypeError(msg)
             if len(kwargs) > 0:
                 msg = "No keyword is allowed in this mode"
                 raise KeyError(msg)
