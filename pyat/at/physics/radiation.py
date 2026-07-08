@@ -18,14 +18,37 @@ import numpy as np
 from scipy.linalg import det, inv, solve_sylvester
 
 from ..constants import Cgamma
-from ..lattice import (All, Collective, DConstant, Dipole, Element, EnergyLoss,
-                       Lattice, Multipole, Quadrupole, QuantumDiffusion,
-                       Refpts, SimpleQuantDiff, VariableThinMultipole, Wiggler,
-                       check_radiation, frequency_control, set_value_refpts,
-                       test_mode)
+from ..lattice import (
+    All,
+    Collective,
+    DConstant,
+    Dipole,
+    Element,
+    EnergyLoss,
+    Lattice,
+    Multipole,
+    Quadrupole,
+    QuantumDiffusion,
+    Refpts,
+    SimpleQuantDiff,
+    VariableThinMultipole,
+    Wiggler,
+    check_radiation,
+    frequency_control,
+    set_value_refpts,
+    test_mode,
+)
 from ..tracking import diffusion_matrix, internal_lpass
-from . import (FDW, ELossMethod, Orbit, find_elem_m66, find_m66,
-               find_mpole_raddiff_matrix, find_orbit6, get_tunes_damp)
+from . import (
+    FDW,
+    ELossMethod,
+    Orbit,
+    find_elem_m66,
+    find_m66,
+    find_mpole_raddiff_matrix,
+    find_orbit6,
+    get_tunes_damp,
+)
 
 _new_methods = {
     "BndMPoleSymplectic4RadPass",
