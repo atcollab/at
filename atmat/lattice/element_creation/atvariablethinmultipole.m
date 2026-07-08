@@ -1,15 +1,15 @@
 function elem=atvariablethinmultipole(fname,mode,varargin)
 %ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE,[KEY,VALUE]...)
 %  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
-%	
+%
 %  INPUTS
 %    FNAME          Family name 
 %    MODE           Excitation mode: 'SINE', 'WHITENOISE' or 'ARBITRARY'.
-%                   Default: 'SINE'
-%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %
 %  OPTIONS (order does not matter)
+%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
 %    AMPLITUDEB     Vector or scalar to define the excitation amplitude for
@@ -50,17 +50,16 @@ function elem=atvariablethinmultipole(fname,mode,varargin)
 % >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
-if ~any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'}))
+if ~any(strcmpi(mode,{'SINE','WHITENOISE','ARBITRARY'}))
   error("Mode should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
 end
-[method,rsrc]=getargs(rsrc,'VariableThinMPolePass','check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
-[method,rsrc]                     = getoption(rsrc,'PassMethod',method);
-[cl,rsrc]                         = getoption(rsrc,'Class','VariableThinMultipole');
-[maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
-rsrc                              = struct(rsrc{:});
-rsrc.MaxOrder                     = maxorder;
-
-m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
+[method,rsrc]   = getargs(varargin,'VariableThinMPolePass', ...
+                    'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
+[method,rsrc]   = getoption(rsrc,'PassMethod',method);
+[cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
+[maxorder,rsrc] = getoption(rsrc,'MaxOrder',0);
+rsrc            = struct(rsrc{:});
+rsrc.MaxOrder   = maxorder;
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
     error("Please provide at least one amplitude for A or B")
@@ -72,7 +71,7 @@ rsrc = setmaxorder(rsrc);
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
 rsrc=reshape([fieldnames(rsrc) struct2cell(rsrc)]',1,[]);
-elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
+elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',mode,...
                'PolynomA',[],'PolynomB',[],rsrc{:});
 
 
