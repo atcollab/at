@@ -1,4 +1,4 @@
-function elem=atvariablethinmultipole(fname,varargin)
+function elem=atvariablethinmultipole(fname,mode,varargin)
 %ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
 %  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
@@ -50,9 +50,10 @@ function elem=atvariablethinmultipole(fname,varargin)
 % >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
-[mode,rsrc]=getargs(varargin,'SINE','check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
+if ~any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'}))
+  error("Mode should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
+end
 [method,rsrc]=getargs(rsrc,'VariableThinMPolePass','check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
-[mode,rsrc]                       = getoption(rsrc,'Mode',mode);
 [method,rsrc]                     = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]                         = getoption(rsrc,'Class','VariableThinMultipole');
 [maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
