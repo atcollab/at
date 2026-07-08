@@ -117,9 +117,9 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         axis=(1, 3),
     ).T
 
-    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs, strict=True)]
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
 
-    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb, strict=True))), axis=0)
+    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
 
@@ -450,7 +450,7 @@ def get_radiation_integrals(
     elif len(twiss) != len(ring) + 1:
         msg = f"length of Twiss data should be {len(ring) + 1}"
         raise ValueError(msg)
-    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:], strict=True):
+    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:]):
         if isinstance(el, (Dipole, Quadrupole)):
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != "DriftPass":
