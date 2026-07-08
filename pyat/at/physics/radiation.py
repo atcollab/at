@@ -113,10 +113,10 @@ def _lmat(dmat):
     lmat = np.zeros((6, 6))
     try:
         v, w = np.linalg.eigh(dmat)
-        eps = np.finfo(float).eps # set eps to numerical accuracy
+        eps = np.finfo(float).eps  # set eps to numerical accuracy
         tol = eps * np.abs(v).max()
-        v[v < tol] = tol   # push small/megative values slightly above 0
-        dmat = w@np.diag(v)@w.T
+        v[v < tol] = tol  # push small/megative values slightly above 0
+        dmat = w @ np.diag(v) @ w.T
         lmat = np.linalg.cholesky(dmat)
     except np.linalg.LinAlgError:
         nz = np.where(dmat != 0)
@@ -209,7 +209,10 @@ def ohmi_envelope(
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
-    rtmp = ring.disable_6d(QuantumDiffusion, Collective, SimpleQuantDiff, copy=True)
+    rtmp = ring.disable_6d(
+        QuantumDiffusion, Collective, SimpleQuantDiff, VariableThinMultipole, copy=True
+    )
+
     uint32refs = rtmp.get_uint32_index(refpts)
     bbcum, orbs = _dmatr(rtmp, orbit=orbit, keep_lattice=keep_lattice)
     mring, ms = find_m66(rtmp, uint32refs, orbit=orbs[0], keep_lattice=True)
