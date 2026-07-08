@@ -181,7 +181,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        DeltaQPass(r_in, num_particles, alphax, alphay, 
+        DeltaQRadPass(r_in, num_particles, alphax, alphay, 
             betax, betay, chromx_arr, chromy_arr, chrom_maxorder,
             a1, a2, a3, T1, T2, R1, R2);
     }
