@@ -55,6 +55,8 @@ _new_methods = {
     "EnergyLossRadPass",
 }
 
+_excluded_pass_methods = ["VariableThinMultipolePass"]
+
 _NSTEP = 60  # nb slices in a wiggler period
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
@@ -229,7 +231,6 @@ def ohmi_envelope(
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
     rtmp = ring.disable_6d(QuantumDiffusion, Collective, SimpleQuantDiff, copy=True)
-    _excluded_pass_methods = ["VariableThinMultipolePass"]
     for _expm in _excluded_pass_methods:
         for e in rtmp[_expm]:
             e_length = getattr(e, "Length", 0.0)
