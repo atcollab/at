@@ -12,21 +12,20 @@ __all__ = [
     "tapering",
 ]
 
-from math import sin, cos, tan, sqrt, sinh, cosh, pi
+from math import cos, cosh, pi, sin, sinh, sqrt, tan
 
 import numpy as np
-from scipy.linalg import inv, det, solve_sylvester
+from scipy.linalg import det, inv, solve_sylvester
 
-from ..lattice import Dipole, Wiggler, EnergyLoss, DConstant, test_mode
-from ..lattice import Lattice, Element, check_radiation, Refpts, All
-from ..lattice import Quadrupole, Multipole, QuantumDiffusion
-from ..lattice import Collective, SimpleQuantDiff
-from ..lattice import frequency_control, set_value_refpts
 from ..constants import Cgamma
-from . import ELossMethod
-from . import find_mpole_raddiff_matrix, FDW, get_tunes_damp
-from . import find_orbit6, find_m66, find_elem_m66, Orbit
-from ..tracking import internal_lpass, diffusion_matrix
+from ..lattice import (All, Collective, DConstant, Dipole, Element, EnergyLoss,
+                       Lattice, Multipole, Quadrupole, QuantumDiffusion,
+                       Refpts, SimpleQuantDiff, VariableThinMultipole, Wiggler,
+                       check_radiation, frequency_control, set_value_refpts,
+                       test_mode)
+from ..tracking import diffusion_matrix, internal_lpass
+from . import (FDW, ELossMethod, Orbit, find_elem_m66, find_m66,
+               find_mpole_raddiff_matrix, find_orbit6, get_tunes_damp)
 
 _new_methods = {
     "BndMPoleSymplectic4RadPass",
