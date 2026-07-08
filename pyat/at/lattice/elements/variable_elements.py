@@ -26,7 +26,7 @@ class VariableThinMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
     _conversions = dict(
         Element._conversions,
-        Mode=int,
+        Mode=str,
         AmplitudeA=_array,
         AmplitudeB=_array,
         FrequencyA=float,
@@ -49,11 +49,11 @@ class VariableThinMultipole(Element):
         r"""
         Parameters:
             family_name(str):    Element name
-            mode(ACMode):  one of the following:
+            mode:  one of the following:
 
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
+              * :py:attr:`SINE`: sine function
+              * :py:attr:`WHITENOISE`: gaussian white noise
+              * :py:attr:`ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -83,34 +83,31 @@ class VariableThinMultipole(Element):
         Examples:
 
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, FrequencyB=frequency
+            ...     "ACMPOLE", "SINE", AmplitudeB=amp, FrequencyB=frequency
             ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, mode=at.ACMode.WHITENOISE
-            ... )
+            ...     "ACMPOLE", "WHITENOISE", AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, FuncB=fun, mode=at.ACMode.ARBITRARY
-            ... )
+            ...     "ACMPOLE", "ARBITRARY", AmplitudeB=amp, FuncB=fun, ... )
 
         .. note::
 
-            * For all excitation modes at least one amplitude has to be provided.
-              The default excitation is ``ACMode.SINE``
-            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
+            * At least AmplitudeA or AmplitudeB has to be provided.
+            * For ``mode="SINE"`` the ``Frequency(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
-            * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
+            * For ``mode="ARBITRARY"`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         self.MaxOrder = kwargs.pop("MaxOrder", 0)
         self.Periodic = kwargs.pop("Periodic", True)
-        self.Mode = int(mode)
+        self.Mode = mode
         if AmplitudeA is None and AmplitudeB is None:
             raise AtError("Please provide at least one amplitude for A or B")
         AmplitudeB = self._set_params(AmplitudeB, mode, "B", **kwargs)
         AmplitudeA = self._set_params(AmplitudeA, mode, "A", **kwargs)
         self._setmaxorder(AmplitudeA, AmplitudeB)
-        if mode == ACMode.WHITENOISE:
+        if mode == "WHITENOISE":
             self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = np.zeros(self.MaxOrder + 1)
         self.PolynomB = np.zeros(self.MaxOrder + 1)
@@ -143,9 +140,9 @@ class VariableThinMultipole(Element):
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
                 amplitude = np.append(amp, amplitude)
-            if mode == ACMode.SINE:
+            if mode == "SINE":
                 self._set_sine(ab, **kwargs)
-            if mode == ACMode.ARBITRARY:
+            if mode == "ARBITRARY":
                 self._set_arb(ab, **kwargs)
         return amplitude
 
