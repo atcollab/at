@@ -76,24 +76,15 @@ typedef mxArray atElem;
 
 double atEnergy(double ringenergy, double elemenergy)
 {
-    if (ringenergy!=0.0)
+    if (ringenergy > 0.0)
         return ringenergy;
     else
-        if (elemenergy!=0.0)
+        if (elemenergy > 0.0)
             return elemenergy;
         else {
-            atError("Energy not defined.");
+            atError("Energy must be positive. Check lattice or passmethod parameters.");
             return 0.0;   /* Never reached but makes the compiler happy */
         }
-}
-
-double atGamma(double ringenergy, double elemenergy, double rest_energy)
-{
-    double energy = atEnergy(ringenergy, elemenergy);
-    if (rest_energy == 0.0)
-        return 1.0E-9 * energy / __E0;
-    else
-        return energy / rest_energy;
 }
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
@@ -206,10 +197,18 @@ typedef PyObject atElem;
 #define atError(...) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
 #define atWarning(...) PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__)
 #define atPrintf(...) PySys_WriteStdout(__VA_ARGS__)
-#define atEnergy(ringenergy,elemenergy) (ringenergy)
-#define atGamma(ringenergy,elemenergy,rest_energy) ((rest_energy) == 0.0 ? 1.0E-9*(ringenergy)/__E0 : (ringenergy)/(rest_energy))
 
 static int array_imported = 0;
+
+double atEnergy(double ringenergy, double elemenergy)
+{
+    if (ringenergy > 0.0)
+        return ringenergy;
+    else {
+        atError("Energy must be positive. Check lattice or set the track() keyword argument.");
+        return 0.0;   /* Never reached but makes the compiler happy */
+    }       
+}
 
 static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void)
 {
@@ -361,6 +360,15 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 #else
 #define C_LINK
 #endif
+
+double atGamma(double ringenergy, double elemenergy, double rest_energy)
+{
+    double energy = atEnergy(ringenergy, elemenergy);
+    if (rest_energy == 0.0)
+        return 1.0E-9 * energy / __E0;
+    else
+        return energy / rest_energy;
+}
 
 C_LINK ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem, double *r_in,
                                       int num_particles, struct parameters *Param);

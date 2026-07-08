@@ -174,11 +174,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         }
 
         /* Check energy */
-        Energy = atEnergy(Param->energy, Energy);
-        if (Energy == 0) {
-            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
-            check_error();
-        }
+        Energy = atEnergy(Param->energy, Energy); check_error();
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
@@ -207,7 +203,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
     }
-    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+    gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
 
     ExactRectangularBendRad(r_in, Elem->Length, Elem->BendingAngle,
             Elem->PolynomA, Elem->PolynomB,

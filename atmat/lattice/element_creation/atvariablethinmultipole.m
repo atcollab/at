@@ -1,7 +1,7 @@
-function elem=atvariablemultipole(fname,varargin)
-%ATVARIABLEMULTIPOLE Creates a variable thin multipole element
+function elem=atvariablethinmultipole(fname,varargin)
+%ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
-%  ATVARIABLEMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
 %	
 %  INPUTS
 %    FNAME          Family name 
@@ -44,17 +44,17 @@ function elem=atvariablemultipole(fname,varargin)
 %  EXAMPLES
 %
 % % Create a sinusoidal dipole with amplitude 0.1 mrad and frequency 1 kHz
-% >> atvariablemultipole('ACM','SINE','AmplitudeB',1.e-4,'FrequencyB',1.e3);
+% >> atvariablethinmultipole('ACM','SINE','AmplitudeB',1.e-4,'FrequencyB',1.e3);
 %
 % % Create a white noise dipole excitation of amplitude 0.1 mrad
-% >> atvariablemultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
+% >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
 [mode,rsrc]=getargs(varargin,'SINE','check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
 [method,rsrc]=getargs(rsrc,'VariableThinMPolePass','check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [mode,rsrc]                       = getoption(rsrc,'Mode',mode);
 [method,rsrc]                     = getoption(rsrc,'PassMethod',method);
-[cl,rsrc]                         = getoption(rsrc,'Class','VariableMultipole');
+[cl,rsrc]                         = getoption(rsrc,'Class','VariableThinMultipole');
 [maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
 rsrc                              = struct(rsrc{:});
 rsrc.MaxOrder                     = maxorder;

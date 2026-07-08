@@ -8,7 +8,7 @@ from collections.abc import Sequence, Iterable
 from typing import Optional
 from ..lattice import Lattice, Element
 from ..lattice import BeamMoments, Collective, QuantumDiffusion
-from ..lattice import SimpleQuantDiff, VariableMultipole
+from ..lattice import SimpleQuantDiff, VariableThinMultipole
 from ..lattice import elements, refpts_iterator, set_value_refpts
 from ..lattice import DConstant, checktype, checkattr, get_bool_index
 
@@ -20,7 +20,7 @@ __all__ = ['fortran_align', 'get_bunches', 'format_results',
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 _COLLECTIVE_ELEMS = (BeamMoments, Collective)
-_VAR_ELEMS = (QuantumDiffusion, SimpleQuantDiff, VariableMultipole)
+_VAR_ELEMS = (QuantumDiffusion, SimpleQuantDiff, VariableThinMultipole)
 _DISABLE_ELEMS = _COLLECTIVE_ELEMS + _VAR_ELEMS
 
 

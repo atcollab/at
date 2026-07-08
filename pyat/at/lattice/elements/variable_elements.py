@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import IntEnum
 
-import numpy
+import numpy as np
 
 from .conversions import _array
 from .element_object import Element
@@ -20,7 +20,7 @@ class ACMode(IntEnum):
     ARBITRARY = 2
 
 
-class VariableMultipole(Element):
+class VariableThinMultipole(Element):
     """Class to generate an AT variable thin multipole element"""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
@@ -81,13 +81,13 @@ class VariableMultipole(Element):
 
         Examples:
 
-            >>> acmpole = at.VariableMultipole(
+            >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", AmplitudeB=amp, FrequencyB=frequency
             ... )
-            >>> acmpole = at.VariableMultipole(
+            >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", AmplitudeB=amp, mode=at.ACMode.WHITENOISE
             ... )
-            >>> acmpole = at.VariableMultipole(
+            >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", AmplitudeB=amp, FuncB=fun, mode=at.ACMode.ARBITRARY
             ... )
 
@@ -111,8 +111,8 @@ class VariableMultipole(Element):
         self._setmaxorder(AmplitudeA, AmplitudeB)
         if mode == ACMode.WHITENOISE:
             self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-        self.PolynomA = numpy.zeros(self.MaxOrder + 1)
-        self.PolynomB = numpy.zeros(self.MaxOrder + 1)
+        self.PolynomA = np.zeros(self.MaxOrder + 1)
+        self.PolynomB = np.zeros(self.MaxOrder + 1)
         ramps = kwargs.pop("Ramps", None)
         if ramps is not None:
             assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
@@ -122,26 +122,26 @@ class VariableMultipole(Element):
     def _setmaxorder(self, ampa, ampb):
         mxa, mxb = 0, 0
         if ampa is not None:
-            mxa = numpy.max(numpy.nonzero(ampa))
+            mxa = np.max(np.nonzero(ampa))
         if ampb is not None:
-            mxb = numpy.max(numpy.nonzero(ampb))
+            mxb = np.max(np.nonzero(ampb))
         self.MaxOrder = max(mxa, mxb)
         if ampa is not None:
             delta = self.MaxOrder - len(ampa)
             if delta > 0:
-                ampa = numpy.pad(ampa, (0, delta))
+                ampa = np.pad(ampa, (0, delta))
             self.AmplitudeA = ampa
         if ampb is not None:
             delta = self.MaxOrder + 1 - len(ampb)
             if delta > 0:
-                ampb = numpy.pad(ampb, (0, delta))
+                ampb = np.pad(ampb, (0, delta))
             self.AmplitudeB = ampb
 
     def _set_params(self, amplitude, mode, ab, **kwargs):
         if amplitude is not None:
-            if numpy.isscalar(amplitude):
-                amp = numpy.zeros(self.MaxOrder)
-                amplitude = numpy.append(amp, amplitude)
+            if np.isscalar(amplitude):
+                amp = np.zeros(self.MaxOrder)
+                amplitude = np.append(amp, amplitude)
             if mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
             if mode == ACMode.ARBITRARY:

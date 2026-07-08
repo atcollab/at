@@ -164,7 +164,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->RApertures = RApertures;
     Elem->KickAngle = KickAngle;
   }
-  gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy);
+  gamma = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
 
   multipole_pass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                  Elem->MaxOrder, Elem->NumIntSteps,

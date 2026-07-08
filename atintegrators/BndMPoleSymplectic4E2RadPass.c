@@ -233,11 +233,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
 
         /* Check energy */
-        Energy = atEnergy(Param->energy, Energy);
-        if (Energy == 0) {
-            atError("Energy needs to be defined. Check lattice parameters or pass method options.\n");
-            check_error();
-        }
+        Energy = atEnergy(Param->energy, Energy); check_error();
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
@@ -265,7 +261,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->KickAngle=KickAngle;
     }
     irho = Elem->BendingAngle/Elem->Length;
-    energy = atEnergy(Param->energy, Elem->Energy);
+    energy = atEnergy(Param->energy, Elem->Energy); check_error();
 
     BndMPoleSymplectic4E2RadPass(r_in, Elem->Length, irho, Elem->PolynomA, Elem->PolynomB,
             Elem->MaxOrder, Elem->NumIntSteps, Elem->EntranceAngle, Elem->ExitAngle,

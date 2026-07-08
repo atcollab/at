@@ -1,3 +1,5 @@
+import copy
+
 import numpy
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -141,6 +143,27 @@ def test_copy(hmba_lattice):
 def test_deepcopy(hmba_lattice):
     assert id(hmba_lattice.deepcopy()) != id(hmba_lattice)
     assert id(hmba_lattice.deepcopy()[0]) != id(hmba_lattice[0])
+
+
+def test_deepcopy_without_radiation_access(hmba_lattice):
+    """Deepcopy must succeed even when _radiation was never accessed.
+
+    Regression test: _addition_filter() used ``self._radiation |= ...``
+    which raises AttributeError when _radiation has not been lazily
+    initialised on the source lattice.
+    """
+    # Ensure the lazy _radiation attribute is absent, as it would be
+    # on any freshly-loaded lattice whose .is_6d / .radiation was
+    # never queried.
+    hmba_lattice.__dict__.pop("_radiation", None)
+    assert "_radiation" not in hmba_lattice.__dict__
+
+    # This line raised AttributeError before the fix.
+    lat2 = copy.deepcopy(hmba_lattice)
+
+    assert len(lat2) == len(hmba_lattice)
+    # After deepcopy the radiation state should be determined correctly.
+    assert isinstance(lat2.radiation, bool)
 
 
 def test_property_values_against_known(hmba_lattice):

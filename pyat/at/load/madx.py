@@ -714,13 +714,11 @@ class _Beam(ElementDescr):
         return []
 
     def resolve(self) -> dict:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            atparticle = Particle(
-                self["particle"],
-                rest_energy=self.get("mass", emass),
-                charge=self.get("charge", 1),
-            )
+        atparticle = Particle(
+            self["particle"],
+            rest_energy=self.get("mass", emass),
+            charge=self.get("charge", 1),
+        )
         mass = 1.0e-09 * atparticle.rest_energy  # [GeV]
         charge = atparticle.charge
 
