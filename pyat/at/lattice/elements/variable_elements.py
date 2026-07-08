@@ -1,4 +1,4 @@
-"""Time-dependent Multipole"""
+"""Time-dependent thin multipole."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ class ACMode(IntEnum):
 class VariableThinMultipole(Element):
     """Class to generate an AT variable thin multipole element"""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
     _conversions = dict(
         Element._conversions,
         Mode=int,
@@ -43,23 +43,24 @@ class VariableThinMultipole(Element):
     )
 
     def __init__(
-        self, family_name, AmplitudeA=None, AmplitudeB=None, mode=ACMode.SINE, **kwargs
+        self, family_name, mode, AmplitudeA=None, AmplitudeB=None, **kwargs
     ):
         # noinspection PyUnresolvedReferences,SpellCheckingInspection
         r"""
         Parameters:
             family_name(str):    Element name
+            mode(ACMode):  one of the following:
+
+              * :py:attr:`.ACMode.SINE`: sine function
+              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
               Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
               Default None
-            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
 
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
             FrequencyA(float): Frequency of the sine excitation for PolynomA
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
