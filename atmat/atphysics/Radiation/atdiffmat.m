@@ -33,7 +33,8 @@ else
 end
 
 % check for non-supported pass methods
-nonsupported_methods = {'VariableThinMultipole'};
+nonsupported_methods = {'QuantumDiffusion','Collective', ...
+                        'SimpleQuantDiff','VariableThinMultipole'};
 for i = 1:length(nonsupported_methods)
     thepassm = nonsupported_methods{i};
     lidx = find(atgetcells(ring, 'Class', thepassm));
