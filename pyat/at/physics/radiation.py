@@ -232,7 +232,11 @@ def ohmi_envelope(
     _excluded_pass_methods = ["VariableThinMultipolePass"]
     for _expm in _excluded_pass_methods:
         for e in rtmp[_expm]:
-            e.PassMethod = "IdentityPass"
+            e_length = getattr(e, "Length", 0.0)
+            if e_length == 0.0:
+                e.PassMethod = "IdentityPass"
+            else:
+                e.PassMethod = "DriftPass"
 
     uint32refs = rtmp.get_uint32_index(refpts)
     bbcum, orbs = _dmatr(rtmp, orbit=orbit, keep_lattice=keep_lattice)
