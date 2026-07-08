@@ -1,14 +1,12 @@
-"""
-Radiation and equilibrium emittances
-"""
+"""Radiation and equilibrium emittances."""
 
 from __future__ import annotations
 
 __all__ = [
-    "ohmi_envelope",
-    "get_radiation_integrals",
-    "quantdiffmat",
     "gen_quantdiff_elem",
+    "get_radiation_integrals",
+    "ohmi_envelope",
+    "quantdiffmat",
     "tapering",
 ]
 
@@ -31,7 +29,6 @@ from ..lattice import (
     QuantumDiffusion,
     Refpts,
     SimpleQuantDiff,
-    VariableThinMultipole,
     Wiggler,
     check_radiation,
     frequency_control,
@@ -78,11 +75,11 @@ _b0 = np.zeros((6, 6), dtype=np.float64)
 def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
     """
     compute the cumulative diffusion and orbit
-    matrices over the ring
+    matrices over the ring.
     """
 
     def _cumulb(it):
-        """accumulate diffusion matrices"""
+        """accumulate diffusion matrices."""
         cumul = np.zeros((6, 6))
         yield cumul
         for el, orbin, b in it:
@@ -120,9 +117,9 @@ def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
         axis=(1, 3),
     ).T
 
-    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs)]
+    bb = [elem_diffusion(elem, orb) for elem, orb in zip(ring, orbs, strict=True)]
 
-    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
+    bbcum = np.stack(list(_cumulb(zip(ring, orbs, bb, strict=True))), axis=0)
     return bbcum, orbs
 
 
@@ -130,7 +127,7 @@ def _lmat(dmat):
     """
     lmat is Cholesky decomp of dmat unless diffusion is 0 in
     vertical.  Then do chol on 4x4 hor-long matrix and put 0's
-    in vertical
+    in vertical.
     """
     lmat = np.zeros((6, 6))
     try:
@@ -155,7 +152,7 @@ def ohmi_envelope(
     orbit: Orbit = None,
     keep_lattice: bool = False,
 ):
-    """Calculates the equilibrium beam envelope
+    """Calculates the equilibrium beam envelope.
 
     Computation based on Ohmi's beam envelope formalism [1]_
 
@@ -226,14 +223,16 @@ def ohmi_envelope(
         return r44, emit2, emit3
 
     def propag(m, cumb, orbit6):
-        """Propagate the beam matrix to refpts"""
+        """Propagate the beam matrix to refpts."""
         sigmatrix = m.dot(rr).dot(m.T) + cumb
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
-    rtmp = ring.disable_6d(
-        QuantumDiffusion, Collective, SimpleQuantDiff, VariableThinMultipole, copy=True
-    )
+    rtmp = ring.disable_6d(QuantumDiffusion, Collective, SimpleQuantDiff, copy=True)
+    _excluded_pass_methods = ["VariableThinMultipolePass"]
+    for _expm in _excluded_pass_methods:
+        for e in rtmp[_expm]:
+            e.PassMethod = "IdentityPass"
 
     uint32refs = rtmp.get_uint32_index(refpts)
     bbcum, orbs = _dmatr(rtmp, orbit=orbit, keep_lattice=keep_lattice)
@@ -273,7 +272,7 @@ def ohmi_envelope(
 
 @frequency_control
 def get_radiation_integrals(
-    ring, dp: float = None, twiss=None, **kwargs
+    ring, dp: float | None = None, twiss=None, **kwargs
 ) -> tuple[float, float, float, float, float]:
     r"""Computes the 5 radiation integrals for uncoupled lattices.
 
@@ -302,7 +301,7 @@ def get_radiation_integrals(
     """
 
     def element_radiation(elem: Dipole | Quadrupole, vini, vend):
-        """Analytically compute the radiation integrals in dipoles"""
+        """Analytically compute the radiation integrals in dipoles."""
         beta0 = vini.beta[0]
         alpha0 = vini.alpha[0]
         eta0 = vini.dispersion[0]
@@ -390,7 +389,7 @@ def get_radiation_integrals(
         """
 
         def b_on_axis(wiggler: Wiggler, s):
-            """On-axis wiggler field"""
+            """On-axis wiggler field."""
 
             def harm(coef, h, phi):
                 return -Bmax * coef * np.cos(h * kws + phi)
@@ -449,8 +448,9 @@ def get_radiation_integrals(
             refpts=range(len(ring) + 1), dp=dp, get_chrom=True, **kwargs
         )
     elif len(twiss) != len(ring) + 1:
-        raise ValueError(f"length of Twiss data should be {len(ring) + 1}")
-    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:]):
+        msg = f"length of Twiss data should be {len(ring) + 1}"
+        raise ValueError(msg)
+    for el, vini, vend in zip(ring, twiss[:-1], twiss[1:], strict=True):
         if isinstance(el, (Dipole, Quadrupole)):
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != "DriftPass":
@@ -462,7 +462,7 @@ def get_radiation_integrals(
 
 @check_radiation(True)
 def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
-    """Computes the diffusion matrix of the whole ring
+    """Computes the diffusion matrix of the whole ring.
 
     Parameters:
         ring:           Lattice description. Radiation must be ON
@@ -479,7 +479,7 @@ def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> np.ndarray:
 
 @check_radiation(True)
 def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
-    """Generates a quantum diffusion element
+    """Generates a quantum diffusion element.
 
     Parameters:
         ring:           Lattice description. Radiation must be ON
@@ -497,7 +497,7 @@ def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
 
 @check_radiation(True)
 def tapering(ring: Lattice, multipoles: bool = True, niter: int = 1, **kwargs) -> None:
-    """Scales magnet strengths
+    """Scales magnet strengths.
 
     Scales magnet strengths with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. The dipole bending angle
