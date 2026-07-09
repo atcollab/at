@@ -43,13 +43,13 @@ class VariableThinMultipole(Element):
     )
 
     def __init__(
-        self, family_name, mode, AmplitudeA=None, AmplitudeB=None, **kwargs
+        self, family_name, modename, AmplitudeA=None, AmplitudeB=None, **kwargs
     ):
         # noinspection PyUnresolvedReferences,SpellCheckingInspection
         r"""
         Parameters:
             family_name(str):    Element name
-            mode:  one of the following:
+            modename:  one of the following:
 
               * :py:attr:`SINE`: sine function
               * :py:attr:`WHITENOISE`: gaussian white noise
@@ -93,21 +93,27 @@ class VariableThinMultipole(Element):
         .. note::
 
             * At least AmplitudeA or AmplitudeB has to be provided.
-            * For ``mode="SINE"`` the ``Frequency(A,B)`` corresponding to the
+            * For ``modename="SINE"`` the ``Frequency(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
-            * For ``mode="ARBITRARY"`` the ``Func(A,B)`` corresponding to the
+            * For ``modename="ARBITRARY"`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         self.MaxOrder = kwargs.pop("MaxOrder", 0)
         self.Periodic = kwargs.pop("Periodic", True)
-        self.Mode = mode
+        self.Modename = modename
+        if modename == "SINE":
+            self.Mode = ACMode.SINE
+        if modename == "WHITENOISE":
+            self.Mode = ACMode.WHITENOISE
+        if modename == "ARBITRARY":
+            self.Mode = ACMode.ARBITRARY
         if AmplitudeA is None and AmplitudeB is None:
             raise AtError("Please provide at least one amplitude for A or B")
-        AmplitudeB = self._set_params(AmplitudeB, mode, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, mode, "A", **kwargs)
+        AmplitudeB = self._set_params(AmplitudeB, modename, "B", **kwargs)
+        AmplitudeA = self._set_params(AmplitudeA, modename, "A", **kwargs)
         self._setmaxorder(AmplitudeA, AmplitudeB)
-        if mode == "WHITENOISE":
+        if modename == "WHITENOISE":
             self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = np.zeros(self.MaxOrder + 1)
         self.PolynomB = np.zeros(self.MaxOrder + 1)
@@ -135,14 +141,14 @@ class VariableThinMultipole(Element):
                 ampb = np.pad(ampb, (0, delta))
             self.AmplitudeB = ampb
 
-    def _set_params(self, amplitude, mode, ab, **kwargs):
+    def _set_params(self, amplitude, modename, ab, **kwargs):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
                 amplitude = np.append(amp, amplitude)
-            if mode == "SINE":
+            if modename == "SINE":
                 self._set_sine(ab, **kwargs)
-            if mode == "ARBITRARY":
+            if modename == "ARBITRARY":
                 self._set_arb(ab, **kwargs)
         return amplitude
 
