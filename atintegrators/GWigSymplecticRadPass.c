@@ -263,6 +263,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         NVharm = atGetLong(ElemData, "NVharm"); check_error();
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
+        GWigCheckKz(NHharm, NVharm, By, Bx); check_error();
         /* Optional fields */
         Energy = atGetOptionalDouble(ElemData, "Energy",Param->energy); check_error();
         R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
