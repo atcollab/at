@@ -31,7 +31,28 @@
 #include <math.h>
 #include <stdio.h>
 
+static void GWigCheckKz(int NHharm, int NVharm, const double *By, const double *Bx)
+{
+    int i;
 
+    for (i = 0; i < NHharm; i++) {
+        double kz = By[6*i + 4];
+
+        if (fabs(kz) <= GWIG_EPS) {
+            atError("GWig error: By harmonic %d has kz=0; kz must be non-zero.", i);
+            return;
+        }
+    }
+
+    for (i = 0; i < NVharm; i++) {
+        double kz = Bx[6*i + 4];
+
+        if (fabs(kz) <= GWIG_EPS) {
+            atError("GWig error: Bx harmonic %d has kz=0; kz must be non-zero.", i);
+            return;
+        }
+    }
+}
 
 static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
