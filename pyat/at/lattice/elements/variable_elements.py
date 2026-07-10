@@ -7,13 +7,13 @@ from enum import IntEnum
 
 import numpy as np
 
+from ..exceptions import AtError
 from .conversions import _array
 from .element_object import Element
-from ..exceptions import AtError
 
 
 class ACMode(IntEnum):
-    """Class to define the excitation types"""
+    """Class to define the excitation types."""
 
     SINE = 0
     WHITENOISE = 1
@@ -21,9 +21,9 @@ class ACMode(IntEnum):
 
 
 class VariableThinMultipole(Element):
-    """Class to generate an AT variable thin multipole element"""
+    """Class to generate an AT variable thin multipole element."""
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ["Mode"]
+    _BUILD_ATTRIBUTES = [Element._BUILD_ATTRIBUTES, "Mode"]
     _conversions = dict(
         Element._conversions,
         Mode=str,
@@ -46,7 +46,8 @@ class VariableThinMultipole(Element):
         self, family_name, modename, AmplitudeA=None, AmplitudeB=None, **kwargs
     ):
         # noinspection PyUnresolvedReferences,SpellCheckingInspection
-        r"""
+        r"""Create a variable thin multipole.
+
         Parameters:
             family_name(str):    Element name
             modename:  one of the following:
@@ -109,7 +110,8 @@ class VariableThinMultipole(Element):
         if modename == "ARBITRARY":
             self.Mode = ACMode.ARBITRARY
         if AmplitudeA is None and AmplitudeB is None:
-            raise AtError("Please provide at least one amplitude for A or B")
+            msg = "Please provide at least one amplitude for A or B"
+            raise AtError(msg)
         AmplitudeB = self._set_params(AmplitudeB, modename, "B", **kwargs)
         AmplitudeA = self._set_params(AmplitudeA, modename, "A", **kwargs)
         self._setmaxorder(AmplitudeA, AmplitudeB)
