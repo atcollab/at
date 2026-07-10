@@ -101,7 +101,7 @@ class VariableThinMultipole(Element):
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         self.MaxOrder = kwargs.pop("MaxOrder", 0)
         self.Periodic = kwargs.pop("Periodic", True)
-        self.Modename = modename
+        self.ModeName = modename
         if modename == "SINE":
             self.Mode = ACMode.SINE
         if modename == "WHITENOISE":
