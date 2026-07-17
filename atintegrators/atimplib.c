@@ -319,36 +319,42 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
     double *vbr = vbunch;
-    double *vbi = vbunch+nbunch;
+    double *vbi = vbunch+ring_harmn;
     int ibunch, islice, total_slice_counter;
     int bunch_counter = 0;
-    double bucket_curr = 0.0;
+    double is_filled = 0.0;
     double main_bucket = circumference / (double) ring_harmn;
     double ave_vbeam_ri[] = {0.0, 0.0};
     
     
     
     for (i=0;i<nslice*nbunch;i++) {
-        ibunch = (int)(i/nslice);
         vbeam_kicks[i] = 0.0;
-        vbr[ibunch] = 0.0;
-        vbi[ibunch] = 0.0;
     }
 
+    for (ibunch=0;ibunch<ring_harmn;ibunch++){
+        vbr[ibunch] = 0.0;
+        vbi[ibunch] = 0.0;
     
+    }
+
     /* The vbeam_complex will always be sent to the center of the next bucket */
-    
+
+    double bucket_z_center = 0.0;
     for(ibunch=0; ibunch<ring_harmn; ibunch++){
-        bucket_curr = fillpattern[ibunch];
-        if(bucket_curr!=0.0){
+        is_filled = fillpattern[ibunch]; 
+
+        bucket_z_center = ibunch*main_bucket;
+        
+        if(is_filled!=0.0){
             for(islice=0; islice<nslice; islice++){
                 total_slice_counter = islice + nslice*bunch_counter; 
                 wi = turnhistoryW[total_slice_counter];
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
-                    /* TurnhistoryZ goes from -bucket991 to bucket0 */
-                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter] - bunch_spos[0])/bc;
-                    
+                    // TurnhistoryZ goes from -bucket991 to bucket0 
+                    // so the bucket center in the turnhistory reference is one bucket shifted,
+                    dt = (turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc; 
                 }else{
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
@@ -357,28 +363,26 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 /* track the dt */
                 vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                 vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
-                
                 vbeam_complex += 2*selfkick;    
                
             }
             /* back to the center of the bucket */
-            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter] - bunch_spos[0])/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+            dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
             
-            /* move to ts_central time */
-            dt = -ts_central_z/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             
-            vbr[bunch_counter] = cabs(vbeam_complex);
-            vbi[bunch_counter] = carg(vbeam_complex);
-                        
+            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             bunch_counter += 1;
-        }else{
-            /* move to ts_central time */
-            dt = -ts_central_z/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);     
         }
+        
+        /* move to ts_central time */
+        
+        dt = -ts_central_z/bc;
+        vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+                       
 
+        vbr[ibunch] = cabs(vbeam_complex);
+        vbi[ibunch] = carg(vbeam_complex);
+            
         ave_vbeam_ri[0] += creal(vbeam_complex)/ring_harmn;
         ave_vbeam_ri[1] += cimag(vbeam_complex)/ring_harmn;
 
@@ -390,7 +394,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
        
         dt = main_bucket/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-        
+
     }
     /* store the phasor for the next turn */
     vbeam_phasor[0] = cabs(vbeam_complex);
@@ -401,125 +405,4 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 
     #endif    
 };
-
-
-static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
-
-    double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
-    double vbeami_meas = vbeam[0]*sin(vbeam[1]);
-    
-    double vgenr_meas = -vgen[0]*sin(vgen[1]);
-    double vgeni_meas = vgen[0]*cos(vgen[1]);      
-    
-    double vcavr_meas = vgenr_meas + vbeamr_meas;
-    double vcavi_meas = vgeni_meas + vbeami_meas;   
-
-    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
-    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
-
-    double phis = vcav[1];   
-    /* This computes the delta theta g*/
-    double ptmp = phis_meas - phis; 
-    
-    /* This computes the delta psi */
-    double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
-
-    double dtmp = vcav[0] / vcav_meas;
-    
-    vgen[3] *= pow(dtmp,voltgain);
-    vgen[2] += dttmp*phasegain; 
-    vgen[1] -= ptmp*phasegain;
-    vgen[0] = vgen[3]*cos(vgen[2]);
-}
-
-
-static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double phasegain){
-    /* The cavity voltage is
-    V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
-    We save the amplitude of vbeam, so the exponent goes to 1.
-    Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
-    */
-    double vset = vcav[0];
-    double psi = vgen[2];
-    double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
-    double delta_v = vset - vpeak;
-    double grad = vbeam[0]*sin(psi)/cos(psi); 
-    /*vbeam amp contains cos(psi). So replace with sin(psi)
-    to get get the gradient */
-    
-    double delta_psi = delta_v / grad; /*linear extrapolation*/
-
-    
-    /* If the cavity is detuned positively, the psi needs to
-    be increased to reduce the voltage. Likewise, if the cavity
-    is detuned negatively, the psi needs to be decreased to reduce
-    the voltage.
-    */
-        
-    int sg = (psi<0) - (psi>0);
-
-    /* This is to avoid setting a value if grad is 0, as then
-    delta_psi is inf, which even when multiplied by 0 gives nan
-    */
-    if (grad!=0.0){
-        vgen[2] += sg*delta_psi*phasegain;
-    }
-}
-
-static void compute_buffer_mean(double *out_array, double *buffer, long windowlength, long buffersize, long numcolumns){
-
-    int c,p,offset;
-    offset = buffersize - windowlength;
-
-    for (p=0; p<numcolumns; p++) {
-        out_array[p] = 0.0;
-    }
-    
-    for (c=offset; c<buffersize; c++) {
-        for (p=0; p<numcolumns; p++) {
-            out_array[p] += buffer[2*c+p];
-        }
-    }
-    
-    for (p=0; p<numcolumns; p++) {
-        out_array[p] /= windowlength ; 
-    }
-}
-
-int check_buffer_length(double *buffer, long buffersize, long numcolumns){
-    int c;
-    int bufferlengthnow=0;
-    for (c=0; c<numcolumns*buffersize; c++){
-        if (buffer[c]!=0.0){
-            bufferlengthnow += 1;
-        }
-    }
-    bufferlengthnow /= numcolumns;
-    return bufferlengthnow;
-}
-
-
-static void update_vbeam_set(long fbmode, double *vbeam_set,
-                             double *vbeamk, double *vbeam_buffer,
-                             long buffersize, long windowlength){
-    int bufferlengthnow = 0;
-    // If FBMode is set to ONETURN, then set the vbeam and move on
-    if(fbmode==1){
-        vbeam_set[0] = vbeamk[0];
-        vbeam_set[1] = vbeamk[1];        
-    }
-    // If FBMode is set to WINDOW, compute the vbeam_set from the buffer
-    
-    else if(fbmode==2){
-        // Compute the length of the buffer as we will not act until 
-        // the buffer is full. (2 arrays of vbeam and psi)
-        
-        bufferlengthnow = check_buffer_length(vbeam_buffer, buffersize, 2);
-
-        if(bufferlengthnow >= windowlength){
-            compute_buffer_mean(vbeam_set, vbeam_buffer, windowlength, buffersize, 2);
-        } 
-    }
-}
-
 
