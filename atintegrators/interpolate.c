@@ -2,12 +2,12 @@
    Accelerator Toolbox 
    Created: 14/11/08
    Z.Martí
- 
-  
-  
- Numerical recipies functions for 2D interpolation adapted to Matlab 
- * leanguagge
- 
+
+
+
+ Numerical recipies functions for 2D interpolation adapted to Matlab
+ * language
+
 */
 
 #include "at.h"
