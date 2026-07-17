@@ -176,7 +176,7 @@ class BeamLoadingElement(RFCavity, Collective):
         _vgen=lambda v: _array(v, shape=(4,)),
         delay=int,
         every=int,
-        sample_num=int,
+        samplenum=int,
     )
 
     def __init__(
@@ -191,7 +191,6 @@ class BeamLoadingElement(RFCavity, Collective):
         detune: float | None = 0.0,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
         fbmode: FeedbackMode | None = FeedbackMode.PROP,
-        buffersize: int | None = 0,
         IIR_cutoff: float = 0.0,
         **kwargs,
     ):
@@ -250,7 +249,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 a cutoff frequency of infinity is assumed. 
             Delay: Loop delay [buckets]
             Every: Every what
-            SampleNum: Sample whhatt?
+            samplenum: Sample whhatt?
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -411,11 +410,11 @@ class BeamLoadingElement(RFCavity, Collective):
         self._cavity_phasor_record = np.zeros(ring.harmonic_number*2)        
         
         self._Ig2Vg_mat = np.zeros(ring.harmonic_number**2 * 2)
-        self._vc_previous = np.zeros(self.sample_num*2)
+        self._vc_previous = np.zeros(self.samplenum*2)
         self._diff_record = np.zeros(self.recordsize*2)
         self._samplelist = np.zeros(self.samplelist_length)
 
-        self._vc_list = np.zeros((ring.harmonic_number + self.sample_num)*2)        
+        self._vc_list = np.zeros((ring.harmonic_number + self.samplenum)*2)        
 
         
     def is_compatible(self, other):

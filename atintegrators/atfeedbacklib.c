@@ -633,19 +633,17 @@ static void compute_set_params(double *vbeam, double *vgen, double detune_angle,
 
 }
 static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
-                        double phasegain, double tunergain, double detune_angle){
+                        double phasegain, double detune_angle){
 
     /* This computes the delta theta g*/
     double phis = vcav[1];   
     double ptmp = vcav_meas[1] - phis; 
 
     /* This computes the delta psi */
-    //double dttmp = vcav_meas[1] - vgen[2] - phis + detune_angle;
-    double dttmp = vgen[1] - vgen[2] - phis + detune_angle;
+
     double dtmp = vcav[0] / vcav_meas[0];
-        
+
     vgen[3] *= pow(dtmp,voltgain);
-    vgen[2] += dttmp*tunergain; 
     vgen[1] -= ptmp*phasegain;
     vgen[0] = vgen[3]*cos(vgen[2]);
     

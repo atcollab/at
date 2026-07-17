@@ -322,7 +322,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double *vbi = vbunch+ring_harmn;
     int ibunch, islice, total_slice_counter;
     int bunch_counter = 0;
-    double bucket_curr = 0.0;
+    double is_filled = 0.0;
     double main_bucket = circumference / (double) ring_harmn;
     double ave_vbeam_ri[] = {0.0, 0.0};
     
@@ -339,18 +339,22 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     }
 
     /* The vbeam_complex will always be sent to the center of the next bucket */
-    
+
+    double bucket_z_center = 0.0;
     for(ibunch=0; ibunch<ring_harmn; ibunch++){
-        bucket_curr = fillpattern[ibunch];
-        if(bucket_curr!=0.0){
+        is_filled = fillpattern[ibunch]; 
+
+        bucket_z_center = ibunch*main_bucket;
+        
+        if(is_filled!=0.0){
             for(islice=0; islice<nslice; islice++){
                 total_slice_counter = islice + nslice*bunch_counter; 
                 wi = turnhistoryW[total_slice_counter];
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
-                    /* TurnhistoryZ goes from -bucket991 to bucket0 */
-                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter] - bunch_spos[0])/bc;
-                    
+                    // TurnhistoryZ goes from -bucket991 to bucket0 
+                    // so the bucket center in the turnhistory reference is one bucket shifted,
+                    dt = (turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc; 
                 }else{
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
@@ -359,18 +363,19 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                 /* track the dt */
                 vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                 vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
-                
                 vbeam_complex += 2*selfkick;    
                
             }
             /* back to the center of the bucket */
-            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter] - bunch_spos[0])/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
+            dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
             
+            
+            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             bunch_counter += 1;
         }
         
         /* move to ts_central time */
+        
         dt = -ts_central_z/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                        
@@ -389,7 +394,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
        
         dt = main_bucket/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-        
+
     }
     /* store the phasor for the next turn */
     vbeam_phasor[0] = cabs(vbeam_complex);

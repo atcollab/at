@@ -260,7 +260,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             }
             if(fbmode==1){
                 // If FBMode=PROP
-                update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], tunergain, feedback_angle_offset);
+                update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], feedback_angle_offset);
             }
             if(fbmode==2){
                 if(iturn==0){
@@ -523,7 +523,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if(Elem->cavitymode==0 || Elem->cavitymode>=4){
         atError("Unknown cavitymode provided."); check_error();
     } 
-    if(Elem->fbmode==0 || Elem->fbmode>=3){
+    if(Elem->fbmode>=3){
         atError("Unknown fbmode provided."); check_error();
     } 
 
