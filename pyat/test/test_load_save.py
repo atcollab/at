@@ -4,18 +4,17 @@ from __future__ import annotations
 
 import os
 from importlib.resources import files
-from typing import Any
 from pathlib import Path
 from tempfile import mkstemp
-
-import pytest
-from numpy.testing import assert_allclose, assert_equal
+from typing import Any
 
 import machine_data
+import pytest
 from at.lattice import Lattice
 from at.lattice import elements as elt
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
-from at.load import save_xsuite, load_xsuite
+from at.load import load_xsuite, save_xsuite
+from numpy.testing import assert_allclose, assert_equal
 
 
 @pytest.fixture()
@@ -97,6 +96,10 @@ def test_long_arrays_in_m_file() -> None:
     thepath = files(machine_data).as_posix()
     theidfname = "/kickmap_w150_20mm.txt"
     elem = InsertionDeviceKickMap("idmap", 10, thepath + theidfname, 6.04)
+
+    # check the block first value
+    assert_equal(elem.xkick[0, 0], 6.67990816327951e-06)
+    assert_equal(elem.ykick[0, 0], -1.2785328387976177e-07)
 
     # save a ring with one element into a temporary file
     ring0 = Lattice([elem], energy=6.04e9)
