@@ -3,7 +3,7 @@ transfer matrix related functions
 
 A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
-import numpy
+import numpy as np
 from ..lattice import Lattice, Element, DConstant, Refpts, Orbit
 from ..lattice import frequency_control, get_uint32_index
 from ..lattice.elements import Dipole, M66
@@ -64,7 +64,7 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
     """
 
     def mrotate(m):
-        m = numpy.squeeze(m)
+        m = np.squeeze(m)
         return m.dot(m44.dot(_jmt.T.dot(m.T.dot(_jmt))))
 
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
@@ -74,17 +74,17 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
                                keep_lattice=keep_lattice, XYStep=xy_step)
         keep_lattice = True
     # Construct matrix of plus and minus deltas
-    # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1])
-    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0])
-    dg = numpy.asfortranarray(
-        numpy.concatenate((0.5 * numpy.diag(scaling), numpy.zeros((2, 4)))))
-    dmat = numpy.concatenate((dg, -dg), axis=1)
+    # scaling = 2*xy_step*np.array([1.0, 0.1, 1.0, 0.1])
+    scaling = xy_step * np.array([1.0, 1.0, 1.0, 1.0])
+    dg = np.asfortranarray(
+        np.concatenate((0.5 * np.diag(scaling), np.zeros((2, 4)))))
+    dmat = np.concatenate((dg, -dg), axis=1)
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
 
     refs = get_uint32_index(ring, refpts)
-    out_mat = numpy.rollaxis(
-        numpy.squeeze(internal_lpass(ring, in_mat, refpts=refs,
+    out_mat = np.rollaxis(
+        np.squeeze(internal_lpass(ring, in_mat, refpts=refs,
                                      keep_lattice=keep_lattice), axis=3), -1
     )
     # out_mat: 8 particles at n refpts for one turn
@@ -94,9 +94,9 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
     if len(refs) > 0:
         mstack = (out_mat[:, :4, :4] - out_mat[:, :4, 4:]) / scaling
         if full:
-            mstack = numpy.stack([mrotate(mat) for mat in mstack], axis=0)
+            mstack = np.stack([mrotate(mat) for mat in mstack], axis=0)
     else:
-        mstack = numpy.empty((0, 4, 4), dtype=float)
+        mstack = np.empty((0, 4, 4), dtype=float)
 
     return m44, mstack
 
@@ -143,17 +143,17 @@ def find_m66(ring: Lattice, refpts: Refpts = None,
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas
-    # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1, 1.0, 1.0])
-    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
-        dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
-    dg = numpy.asfortranarray(0.5 * numpy.diag(scaling))
-    dmat = numpy.concatenate((dg, -dg), axis=1)
+    # scaling = 2*xy_step*np.array([1.0, 0.1, 1.0, 0.1, 1.0, 1.0])
+    scaling = xy_step * np.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
+        dp_step * np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+    dg = np.asfortranarray(0.5 * np.diag(scaling))
+    dmat = np.concatenate((dg, -dg), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
 
     refs = get_uint32_index(ring, refpts)
-    out_mat = numpy.rollaxis(
-        numpy.squeeze(internal_lpass(ring, in_mat, refpts=refs,
+    out_mat = np.rollaxis(
+        np.squeeze(internal_lpass(ring, in_mat, refpts=refs,
                                      keep_lattice=keep_lattice), axis=3), -1
     )
     # out_mat: 12 particles at n refpts for one turn
@@ -163,7 +163,7 @@ def find_m66(ring: Lattice, refpts: Refpts = None,
     if len(refs) > 0:
         mstack = (out_mat[:, :, :6] - out_mat[:, :, 6:]) / scaling
     else:
-        mstack = numpy.empty((0, 6, 6), dtype=float)
+        mstack = np.empty((0, 6, 6), dtype=float)
 
     return m66, mstack
 
@@ -191,13 +191,13 @@ def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     if orbit is None:
-        orbit = numpy.zeros((6,))
+        orbit = np.zeros((6,))
 
     # Construct matrix of plus and minus deltas
-    # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1, 1.0, 1.0])
-    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-    dg = numpy.asfortranarray(0.5 * numpy.diag(scaling))
-    dmat = numpy.concatenate((dg, -dg), axis=1)
+    # scaling = 2*xy_step*np.array([1.0, 0.1, 1.0, 0.1, 1.0, 1.0])
+    scaling = xy_step * np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    dg = np.asfortranarray(0.5 * np.diag(scaling))
+    dmat = np.concatenate((dg, -dg), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
     internal_epass(elem, in_mat, **kwargs)
@@ -230,7 +230,7 @@ def gen_m66_elem(ring: Lattice,
         m66:        :py:obj:`M66` object
     """
     s_pos = ring.get_s_pos()
-    length = numpy.diff(numpy.array([s_pos[0], s_pos[-1]]))[0]
+    length = np.diff(np.array([s_pos[0], s_pos[-1]]))[0]
     kwargs.update({"Length": length})
     m66_mat, _ = find_m66(ring, [], orbit=o6b)
     if ringrad is not None:
@@ -241,9 +241,9 @@ def gen_m66_elem(ring: Lattice,
     if o6e is not None:
         kwargs.update({"T2": o6e})
     if o6brad is not None:
-        kwargs.update({"T1rad": -o6brad})
+        kwargs.update({"T1Rad": np.asfortranarray(-o6brad)})
     if o6erad is not None:
-        kwargs.update({"T2rad": o6erad})  
+        kwargs.update({"T2Rad": np.asfortranarray(o6erad)})  
     lin_elem = M66('Linear', m66_mat, **kwargs)
     return lin_elem
        

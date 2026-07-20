@@ -11,9 +11,12 @@ from scipy.optimize import least_squares
 
 from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
+from at.lattice import Collective, SimpleQuantDiff, QuantumDiffusion, VariableMultipole
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
+
+_EXCLUDED = [Collective, SimpleQuantDiff, QuantumDiffusion]
 
 
 class ELossMethod(Enum):
@@ -82,12 +85,25 @@ def get_energy_loss(
         energy = ring.energy
         particle = ring.particle
         delta = 0.0
-        for e in ring:
-            if e.PassMethod == 'SimpleRadiationRadPass':
-                delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
-            elif e.PassMethod.endswith('RadPass'):
-                ot = e.track(np.zeros(6), energy=energy, particle=particle)
-                delta += ot[4]
+        try:
+            ring = ring.disable_6d(*_EXCLUDED, copy=True)
+            for e in ring[VariableMultipole]:
+                e.PassMethod = "IdentityPass"
+            o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
+            o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
+            delta = np.squeeze(o6l)[4] - o6[4]
+        except:
+            msg = (
+                "Closed orbit not found, falling back to enerly loss "
+                "calculation excluding orbit effects"
+            )
+            warn(AtWarning(msg))
+            for e in ring:
+                if e.PassMethod == "SimpleRadiationRadPass":
+                    delta -= e.U0 / energy  # Needed to prevent mixing with rad. damping
+                elif e.PassMethod.endswith("RadPass"):
+                    ot = e.track(np.zeros(6), energy=energy, particle=particle)
+                    delta += ot[4]
         return -delta * energy
 
     if isinstance(method, str):
