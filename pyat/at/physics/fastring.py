@@ -141,7 +141,9 @@ def simple_ring(
     U0: float = 0.0,
     name: str = "",
     particle: str | Particle = "relativistic",
-    TimeLag: float | Sequence[float] = 0.0
+    TimeLag: float | Sequence[float] = 0.0,
+    orb6: Sequence[float] = np.zeros(6), 
+    
 ) -> Lattice:
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -201,7 +203,8 @@ def simple_ring(
           or a Particle object
         TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
           or sequence of scalars (as with harmonic_number and Vrf).      
-
+        orb6: 6d closed orbit. Needed for inclusion of feedbacks.
+        
     If the given emitx, emity or espread is 0, then no equlibrium emittance
     is applied in this plane.
     If the given tau is 0, then no radiation damping is applied for this plane.
@@ -265,7 +268,8 @@ def simple_ring(
     # generate the linear tracking element, we set a length
     # which is needed to give the lattice object the correct length
     # (although it is not used for anything else)
-    lin_elem = M66("Linear", m66=Mat66, Length=circumference)
+    
+    lin_elem = M66("Linear", m66=Mat66, Length=circumference, T1=-orb6, T2=orb6)
 
     # Generate the simple radiation element
     simplerad = SimpleRadiation(
