@@ -48,7 +48,6 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
     double *z_cuts = Elem->z_cuts;    
 
     size_t sz = 7*nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
-    int c;
 
     int *pslice;
     double *kx;
@@ -87,7 +86,7 @@ void WakeFieldPass(double *r_in,int num_particles,double circumference,int nbunc
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
     */
-    for (c=0; c<num_particles; c++) {
+    for (int c=0; c<num_particles; c++) {
         double *r6 = r_in+c*6;
         int islice=pslice[c];
         if (!atIsNaN(r6[0])) {
