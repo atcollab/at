@@ -23,7 +23,7 @@ class ACMode(IntEnum):
 class VariableThinMultipole(Element):
     """Class to generate an AT variable thin multipole element."""
 
-    _BUILD_ATTRIBUTES = [Element._BUILD_ATTRIBUTES, "Mode"]
+    _BUILD_ATTRIBUTES = [Element._BUILD_ATTRIBUTES]
     _conversions = dict(
         Element._conversions,
         Mode=int,
@@ -43,17 +43,19 @@ class VariableThinMultipole(Element):
         Periodic=bool,
     )
 
-    def __init__(self, family_name, mode, AmplitudeA=None, AmplitudeB=None, **kwargs):
+    def __init__(
+        self, family_name, mode=ACMode.SINE, AmplitudeA=None, AmplitudeB=None, **kwargs
+    ):
         # noinspection PyUnresolvedReferences,SpellCheckingInspection
         r"""Create a variable thin multipole.
 
         Parameters:
             family_name(str):    Element name
-            mode(ACMode):  one of the following:
+            mode(ACMode):  one of the following at.ACMode. Default at.ACMode.SINE.
 
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
+              * :py:attr:`at.ACMode.SINE`: sine function
+              * :py:attr:`at.ACMode.WHITENOISE`: gaussian white noise
+              * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -83,19 +85,19 @@ class VariableThinMultipole(Element):
         Examples:
 
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency
+            ...     "ACMPOLE", at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency
             ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", ACMode.WHITENOISE, AmplitudeB=amp, ... )
+            ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
+            ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
 
         .. note::
 
             * At least AmplitudeA or AmplitudeB has to be provided.
-            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
+            * For ``mode=at.ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
-            * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
+            * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
         self.Mode = mode.value
