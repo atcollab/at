@@ -26,7 +26,8 @@ class VariableThinMultipole(Element):
     _BUILD_ATTRIBUTES = [Element._BUILD_ATTRIBUTES, "Mode"]
     _conversions = dict(
         Element._conversions,
-        Mode=str,
+        Mode=int,
+        ModeName=str,
         AmplitudeA=_array,
         AmplitudeB=_array,
         FrequencyA=float,
