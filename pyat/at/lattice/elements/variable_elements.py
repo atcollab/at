@@ -42,19 +42,17 @@ class VariableThinMultipole(Element):
         Periodic=bool,
     )
 
-    def __init__(
-        self, family_name, modename, AmplitudeA=None, AmplitudeB=None, **kwargs
-    ):
+    def __init__(self, family_name, mode, AmplitudeA=None, AmplitudeB=None, **kwargs):
         # noinspection PyUnresolvedReferences,SpellCheckingInspection
         r"""Create a variable thin multipole.
 
         Parameters:
             family_name(str):    Element name
-            modename:  one of the following:
+            mode(ACMode):  one of the following:
 
-              * :py:attr:`SINE`: sine function
-              * :py:attr:`WHITENOISE`: gaussian white noise
-              * :py:attr:`ARBITRARY`: user defined turn-by-turn kick list
+              * :py:attr:`.ACMode.SINE`: sine function
+              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -84,38 +82,33 @@ class VariableThinMultipole(Element):
         Examples:
 
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", "SINE", AmplitudeB=amp, FrequencyB=frequency
+            ...     "ACMPOLE", ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency
             ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", "WHITENOISE", AmplitudeB=amp, ... )
+            ...     "ACMPOLE", ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", "ARBITRARY", AmplitudeB=amp, FuncB=fun, ... )
+            ...     "ACMPOLE", ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
 
         .. note::
 
             * At least AmplitudeA or AmplitudeB has to be provided.
-            * For ``modename="SINE"`` the ``Frequency(A,B)`` corresponding to the
+            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
-            * For ``modename="ARBITRARY"`` the ``Func(A,B)`` corresponding to the
+            * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
+        self.Mode = mode.value
+        self.ModeName = mode.name
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         self.MaxOrder = kwargs.pop("MaxOrder", 0)
         self.Periodic = kwargs.pop("Periodic", True)
-        self.ModeName = modename
-        if modename == "SINE":
-            self.Mode = ACMode.SINE
-        if modename == "WHITENOISE":
-            self.Mode = ACMode.WHITENOISE
-        if modename == "ARBITRARY":
-            self.Mode = ACMode.ARBITRARY
         if AmplitudeA is None and AmplitudeB is None:
             msg = "Please provide at least one amplitude for A or B"
             raise AtError(msg)
-        AmplitudeB = self._set_params(AmplitudeB, modename, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, modename, "A", **kwargs)
+        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
+        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
         self._setmaxorder(AmplitudeA, AmplitudeB)
-        if modename == "WHITENOISE":
+        if self.Mode == ACMode.WHITENOISE:
             self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = np.zeros(self.MaxOrder + 1)
         self.PolynomB = np.zeros(self.MaxOrder + 1)
@@ -143,14 +136,14 @@ class VariableThinMultipole(Element):
                 ampb = np.pad(ampb, (0, delta))
             self.AmplitudeB = ampb
 
-    def _set_params(self, amplitude, modename, ab, **kwargs):
+    def _set_params(self, amplitude, ab, **kwargs):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
                 amplitude = np.append(amp, amplitude)
-            if modename == "SINE":
+            if self.Mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
-            if modename == "ARBITRARY":
+            if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
         return amplitude
 
