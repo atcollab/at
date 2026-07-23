@@ -18,7 +18,7 @@ function elem=atvariablethinmultipole(fname,modename,varargin)
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
-%	   MAXORDER       Order of the multipole for a scalar amplitude
+%    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
