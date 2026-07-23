@@ -1,14 +1,16 @@
-function elem=atvariablethinmultipole(fname,modename,varargin)
+function elem=atvariablethinmultipole(fname,varargin)
 %ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,[KEY,VALUE]...)
 %  ATVARIABLETHINMULTIPOLE(FAMNAME,MODENAME,[KEY,VALUE]...)
 %  ATVARIABLETHINMULTIPOLE(FAMNAME,MODENAME,PASSMETHOD,[KEY,VALUE]...)
 %
 %  INPUTS
-%    FNAME          Family name 
-%    MODENAME       'SINE', 'WHITENOISE' or 'ARBITRARY'.
+%    FNAME          Family name
 %
 %  OPTIONS (order does not matter)
+%    MODENAME       'SINE', 'WHITENOISE' or 'ARBITRARY'.
+%                   Default: 'SINE'
 %    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
@@ -50,10 +52,14 @@ function elem=atvariablethinmultipole(fname,modename,varargin)
 % >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
+
+[modename, rsrc] = getargs(varargin,'SINE', ...
+                   'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
+[modename, rsrc] = getoption(rsrc,'ModeName',modename);
 if ~any(strcmpi(modename,{'SINE','WHITENOISE','ARBITRARY'}))
-  error("Mode name should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
+  error("ModeName should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
 end
-[method,rsrc]   = getargs(varargin,'VariableThinMPolePass', ...
+[method,rsrc]   = getargs(rsrc,'VariableThinMPolePass', ...
                   'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [method,rsrc]   = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
