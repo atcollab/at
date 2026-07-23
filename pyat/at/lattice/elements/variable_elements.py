@@ -23,7 +23,7 @@ class ACMode(IntEnum):
 class VariableThinMultipole(Element):
     """Class to generate an AT variable thin multipole element."""
 
-    _BUILD_ATTRIBUTES = [Element._BUILD_ATTRIBUTES]
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(
         Element._conversions,
         Mode=int,
