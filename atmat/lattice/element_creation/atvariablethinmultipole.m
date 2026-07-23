@@ -1,15 +1,17 @@
 function elem=atvariablethinmultipole(fname,varargin)
 %ATVARIABLETHINMULTIPOLE Creates a variable thin multipole element
 %
-%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODE,PASSMETHOD,[KEY,VALUE]...)
-%	
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,[KEY,VALUE]...)
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODENAME,[KEY,VALUE]...)
+%  ATVARIABLETHINMULTIPOLE(FAMNAME,MODENAME,PASSMETHOD,[KEY,VALUE]...)
+%
 %  INPUTS
-%    FNAME          Family name 
-%    MODE           Excitation mode: 'SINE', 'WHITENOISE' or 'ARBITRARY'.
-%                   Default: 'SINE'
-%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
+%    FNAME          Family name
 %
 %  OPTIONS (order does not matter)
+%    MODENAME       'SINE', 'WHITENOISE' or 'ARBITRARY'.
+%                   Default: 'SINE'
+%    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
 %                   PolynomA
 %    AMPLITUDEB     Vector or scalar to define the excitation amplitude for
@@ -18,7 +20,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
-%	 MAXORDER       Order of the multipole for a scalar amplitude
+%    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
@@ -35,7 +37,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 %  NOTES
 %    1. For all excitation modes at least one amplitude (A or B) is
-%    required. The default excitation is SINE
+%    required.
 %    2. For SINE excitation modes the FREQUENCY corresponding to the input
 %    AMPLITUDE is required
 %    3. For ARBITRARY excitation modes the FUNC corresponding to the input
@@ -50,29 +52,35 @@ function elem=atvariablethinmultipole(fname,varargin)
 % >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
 
 % Input parser for option
-[mode,rsrc]=getargs(varargin,'SINE','check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
-[method,rsrc]=getargs(rsrc,'VariableThinMPolePass','check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
-[mode,rsrc]                       = getoption(rsrc,'Mode',mode);
-[method,rsrc]                     = getoption(rsrc,'PassMethod',method);
-[cl,rsrc]                         = getoption(rsrc,'Class','VariableThinMultipole');
-[maxorder,rsrc]                   = getoption(rsrc,'MaxOrder',0);
-rsrc                              = struct(rsrc{:});
-rsrc.MaxOrder                     = maxorder;
 
-m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
+[modename, rsrc] = getargs(varargin,'SINE', ...
+                   'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
+[modename, rsrc] = getoption(rsrc,'ModeName',modename);
+if ~any(strcmpi(modename,{'SINE','WHITENOISE','ARBITRARY'}))
+  error("ModeName should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
+end
+[method,rsrc]   = getargs(rsrc,'VariableThinMPolePass', ...
+                  'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
+[method,rsrc]   = getoption(rsrc,'PassMethod',method);
+[cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
+[maxorder,rsrc] = getoption(rsrc,'MaxOrder',0);
+rsrc            = struct(rsrc{:});
+rsrc.MaxOrder   = maxorder;
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
     error("Please provide at least one amplitude for A or B")
 end
-rsrc = setparams(rsrc,mode,'A');
-rsrc = setparams(rsrc,mode,'B');
+rsrc = setparams(rsrc,modename,'A');
+rsrc = setparams(rsrc,modename,'B');
 rsrc = setmaxorder(rsrc);
+
+m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
 
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
 rsrc=reshape([fieldnames(rsrc) struct2cell(rsrc)]',1,[]);
-elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(upper(mode)),...
-               'PolynomA',[],'PolynomB',[],rsrc{:});
+elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
+               'ModeName',modename,'PolynomA',[],'PolynomB',[],rsrc{:});
 
 
     function setsine(rsrc, ab)

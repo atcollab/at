@@ -1,4 +1,4 @@
-"""Time-dependent Multipole"""
+"""Time-dependent thin multipole."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ from enum import IntEnum
 
 import numpy as np
 
+from ..exceptions import AtError
 from .conversions import _array
 from .element_object import Element
-from ..exceptions import AtError
 
 
 class ACMode(IntEnum):
-    """Class to define the excitation types"""
+    """Class to define the excitation types."""
 
     SINE = 0
     WHITENOISE = 1
@@ -21,12 +21,13 @@ class ACMode(IntEnum):
 
 
 class VariableThinMultipole(Element):
-    """Class to generate an AT variable thin multipole element"""
+    """Class to generate an AT variable thin multipole element."""
 
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(
         Element._conversions,
         Mode=int,
+        ModeName=str,
         AmplitudeA=_array,
         AmplitudeB=_array,
         FrequencyA=float,
@@ -43,23 +44,25 @@ class VariableThinMultipole(Element):
     )
 
     def __init__(
-        self, family_name, AmplitudeA=None, AmplitudeB=None, mode=ACMode.SINE, **kwargs
+        self, family_name, mode=ACMode.SINE, AmplitudeA=None, AmplitudeB=None, **kwargs
     ):
         # noinspection PyUnresolvedReferences,SpellCheckingInspection
-        r"""
+        r"""Create a variable thin multipole.
+
         Parameters:
             family_name(str):    Element name
+            mode(ACMode):  one of the following at.ACMode. Default at.ACMode.SINE.
+
+              * :py:attr:`at.ACMode.SINE`: sine function
+              * :py:attr:`at.ACMode.WHITENOISE`: gaussian white noise
+              * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
               Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
               Default None
-            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
 
-              * :py:attr:`.ACMode.SINE`: sine function
-              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
-              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
             FrequencyA(float): Frequency of the sine excitation for PolynomA
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
@@ -82,34 +85,33 @@ class VariableThinMultipole(Element):
         Examples:
 
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, FrequencyB=frequency
+            ...     "ACMPOLE", at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency
             ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, mode=at.ACMode.WHITENOISE
-            ... )
+            ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
-            ...     "ACMPOLE", AmplitudeB=amp, FuncB=fun, mode=at.ACMode.ARBITRARY
-            ... )
+            ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
 
         .. note::
 
-            * For all excitation modes at least one amplitude has to be provided.
-              The default excitation is ``ACMode.SINE``
-            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
+            * At least AmplitudeA or AmplitudeB has to be provided.
+            * For ``mode=at.ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
-            * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
+            * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
+        self.Mode = mode.value
+        self.ModeName = mode.name
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         self.MaxOrder = kwargs.pop("MaxOrder", 0)
         self.Periodic = kwargs.pop("Periodic", True)
-        self.Mode = int(mode)
         if AmplitudeA is None and AmplitudeB is None:
-            raise AtError("Please provide at least one amplitude for A or B")
-        AmplitudeB = self._set_params(AmplitudeB, mode, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, mode, "A", **kwargs)
+            msg = "Please provide at least one amplitude for A or B"
+            raise AtError(msg)
+        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
+        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
         self._setmaxorder(AmplitudeA, AmplitudeB)
-        if mode == ACMode.WHITENOISE:
+        if self.Mode == ACMode.WHITENOISE:
             self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = np.zeros(self.MaxOrder + 1)
         self.PolynomB = np.zeros(self.MaxOrder + 1)
@@ -137,14 +139,14 @@ class VariableThinMultipole(Element):
                 ampb = np.pad(ampb, (0, delta))
             self.AmplitudeB = ampb
 
-    def _set_params(self, amplitude, mode, ab, **kwargs):
+    def _set_params(self, amplitude, ab, **kwargs):
         if amplitude is not None:
             if np.isscalar(amplitude):
                 amp = np.zeros(self.MaxOrder)
                 amplitude = np.append(amp, amplitude)
-            if mode == ACMode.SINE:
+            if self.Mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
-            if mode == ACMode.ARBITRARY:
+            if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
         return amplitude
 
