@@ -119,6 +119,12 @@ switch atclass
                             'xtable', ...
                             'ytable' ...
                             });
+    case 'VariableThinMultipole'
+        create=@atvariablethinmultipole;
+        [options,args]=doptions(elem,create);
+        if isfield(options,'Energy')
+            options=rmfield(options,'Energy');
+        end
     otherwise %'Marker'
         create=@atmarker;
         [options,args]=doptions(elem,create);
