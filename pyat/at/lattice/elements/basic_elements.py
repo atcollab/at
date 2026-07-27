@@ -474,18 +474,7 @@ class M66(Radiative, Element):
 class DeltaQ(Radiative, Element):
     """Lumped element describing amplitude detuning and chromaticity."""
 
-    _BUILD_ATTRIBUTES = [
-        *Element._BUILD_ATTRIBUTES,
-        "Betax",
-        "Betay",
-        "Alphax",
-        "Alphay",
-        "chromx_arr",
-        "chromy_arr",
-        "A1",
-        "A2",
-        "A3",
-    ]
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES]
 
     _conversions = dict(
         Element._conversions,
@@ -506,22 +495,27 @@ class DeltaQ(Radiative, Element):
     def __init__(
         self,
         family_name: str,
-        beta: Sequence[float],
-        alpha: Sequence[float],
-        qpx: Sequence[float],
-        qpy: Sequence[float],
-        detuning_coefficients: Sequence[float],
+        beta: Sequence[float]=[1.0,1.0],
+        alpha: Sequence[float]=[0.0, 0.0],
+        qpx: Sequence[float]=0.0,
+        qpy: Sequence[float]=0.0,
+        detuning_coefficients: Sequence[float]=[0.0, 0.0, 0.0],
         **kwargs,
     ):
         """
         Args:
             family_name:    Name of the element
             beta:                   Beta functions at the entrance of the element
+                                    Default=[1.0, 1.0]
             alpha:                  Alpha function at the entrance of the element
+                                    Default=[0.0, 0.0]
             qpx:                    Horizontal energy detuning coefficients
+                                    Default=0.0
             qpy:                    Vertical energy detuning coefficients
+                                    Default=0.0
             detuning_coefficients:  First order amplitude detuning coefficients
                                     [dQx/dJx, dQx/dJy, dQy/dJy]
+                                    Default=[0.0, 0.0, 0.0]
 
 
 
