@@ -1,6 +1,4 @@
 #include <math.h>
-static double swap_tmp;
-#define SWAP_DOUBLE(x, y) (swap_tmp = (x), (x) = (y), (y) = swap_tmp)
 
 static void QuadFringePassP(double* r, const double b2)
 {
@@ -100,7 +98,7 @@ static void linearQuadFringeElegantEntrance(double* r6, double b2, double *fring
     double R[6][6];
     double *fringeIntM, *fringeIntP;
     double delta, inFringe;
-    double x, px, y, py;
+    double x, px, y, py, swap_temp;
     /* quadrupole linear fringe field, from elegant code */
     inFringe=1.0;
     fringeIntM = fringeIntM0;
@@ -108,8 +106,8 @@ static void linearQuadFringeElegantEntrance(double* r6, double b2, double *fring
     delta = r6[4];
     /* determine first linear matrix for this delta */
     quadPartialFringeMatrix(R, b2, inFringe, fringeIntP, 2);
-    SWAP_DOUBLE(R[0][0], R[1][1]);
-    SWAP_DOUBLE(R[2][2], R[3][3]);
+    swap_temp = R[0][0]; R[0][0] = R[1][1]; R[1][1] = swap_temp;
+    swap_temp = R[2][2]; R[2][2] = R[3][3]; R[3][3] = swap_temp;
 
     x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
     r6[0] = R[0][0]*x + R[0][1]*px;
@@ -122,8 +120,9 @@ static void linearQuadFringeElegantEntrance(double* r6, double b2, double *fring
     inFringe=1.0;
     /* determine and apply second linear matrix, from elegant code */
     quadPartialFringeMatrix(R, b2, inFringe, fringeIntM, 1);
-    SWAP_DOUBLE(R[0][0], R[1][1]);
-    SWAP_DOUBLE(R[2][2], R[3][3]);
+    swap_temp = R[0][0]; R[0][0] = R[1][1]; R[1][1] = swap_temp;
+    swap_temp = R[2][2]; R[2][2] = R[3][3]; R[3][3] = swap_temp;
+
     x = r6[0]; px = r6[1]; y = r6[2]; py = r6[3];
     r6[0] = R[0][0]*x + R[0][1]*px;
     r6[1] = R[1][0]*x + R[1][1]*px;
