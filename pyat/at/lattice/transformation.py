@@ -226,7 +226,7 @@ def transform_elem(
     """
 
     if reference is None:
-        reference = transform_options.referencepoint
+        reference = getattr(elem, "ReferencePoint", transform_options.referencepoint)
 
     if relative:
 
