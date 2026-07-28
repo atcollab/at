@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 import numpy as np
 from scipy.special import factorial
 
-from ..lattice import Element, Lattice, AtError, DeltaQ
+from ..lattice import Lattice, AtError, DeltaQ
 from ..tracking import internal_lpass
 from .harmonic_analysis import get_tunes_harmonic
 from .linear import get_chrom, get_tune, linopt4, linopt6

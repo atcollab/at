@@ -83,7 +83,8 @@ def fast_ring_new(
     A new lattices is returned with the same attributes (energy, particle,
     circumference, periodicity,…) as the initial one. The radiation state is
     also concerved. Radiations can be turned on or of using ring.disable_6d()
-    or ring.enable_6d().
+    or ring.enable_6d(). *Rad attribute will be used when radiations are turned
+    on.
 
     It is possible to split the original ring in multiple "fastrings"
     using the ``split_inds`` argument.
@@ -93,12 +94,15 @@ def fast_ring_new(
         split_inds: List of indexes where to split the ring
         qpx:            horizontal chromatic detuning coefficients. Default None.
           If specified qpy should also be provided, if not first order term computed
-          automatically from ring.
+          automatically from ring. at.physics.chromaticity can be used to compute
+          higher order chromatic coefficients
         qpy:            vertical chromatic detuning coefficients. Default None.
           If specified qpy should also be provided, if not first order term computed
-          automatically from ring.
+          automatically from ring. at.physics.chromaticity can be used to compute
+          higher order chromatic coefficients
         detuning_coeff: First order amplitude detuning coefficients
           [dQx/dJx, dQx/dJy, dQy/dJy]. Default None: coefficient computer from ring.
+          at.physics.detuning can be used to compute detuning coefficients
 
     Returns:
         fastring (Lattice):    Fast ring lattice object
