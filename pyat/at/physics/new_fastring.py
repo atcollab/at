@@ -64,7 +64,6 @@ def _rearrange(all_rings) -> tuple:
         all_cavs.append(mcavs)
     for i, c in enumerate(sum(all_cavs, [])):
         c.FamName += f"_{i}"
-    print(all_cavs)
     return all_cavs
 
 
