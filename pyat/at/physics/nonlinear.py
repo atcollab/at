@@ -1,9 +1,8 @@
 """
-Non-linear optics
+Non-linear optics.
 """
 
-from typing import Optional, Sequence
-
+from collections.abc import Sequence
 import numpy as np
 from scipy.special import factorial
 
@@ -13,17 +12,17 @@ from .harmonic_analysis import get_tunes_harmonic
 from .linear import get_chrom, get_tune, linopt4, linopt6
 from .orbit import Orbit, find_orbit
 
-__all__ = ["detuning", "chromaticity", "gen_detuning_elem", "tunes_vs_amp"]
+__all__ = ["chromaticity", "detuning", "gen_detuning_elem", "tunes_vs_amp"]
 
 
 def tunes_vs_amp(
     ring: Lattice,
-    amp: Optional[Sequence[float]] = None,
-    dim: Optional[int] = 0,
-    nturns: Optional[int] = 512,
+    amp: Sequence[float] | None = None,
+    dim: int = 0,
+    nturns: int = 512,
     **kwargs,
 ) -> np.ndarray:
-    r"""Generates a range of tunes for varying x, y, or z amplitudes
+    r"""Generates a range of tunes for varying x, y, or z amplitudes.
 
     Parameters:
         ring:               Lattice description
@@ -84,10 +83,10 @@ def tunes_vs_amp(
 
 def detuning(
     ring: Lattice,
-    xm: Optional[float] = 0.3e-4,
-    ym: Optional[float] = 0.3e-4,
-    npoints: Optional[int] = 3,
-    nturns: Optional[int] = 512,
+    xm: float = 0.3e-4,
+    ym: float = 0.3e-4,
+    npoints: int = 3,
+    nturns: int = 512,
     **kwargs,
 ) -> tuple:
     """Compute the tunes for a sequence of amplitudes.
@@ -159,14 +158,14 @@ def detuning(
 
 def chromaticity(
     ring: Lattice,
-    method: Optional[str] = "linopt",
-    dpm: Optional[float] = 0.02,
-    npoints: Optional[int] = 11,
-    order: Optional[int] = 3,
-    dp: Optional[float] = 0,
+    method: str = "linopt",
+    dpm: float = 0.02,
+    npoints: int = 11,
+    order: int = 3,
+    dp: float = 0,
     **kwargs,
 ):
-    r"""Computes the non-linear chromaticities
+    r"""Computes the non-linear chromaticities.
 
     This function computes the tunes for the specified momentum offsets.
     Then it fits this data and returns the chromaticity up to the given
@@ -195,14 +194,14 @@ def chromaticity(
     if order == 0:
         return get_chrom(ring, dp=dp, **kwargs)
     elif order > npoints - 1:
-        raise ValueError("order should be smaller than npoints-1")
+        msg = f"order should be smaller than {npoints-1}"
+        raise ValueError(msg)
     else:
         dpa = np.linspace(-dpm, dpm, npoints)
-        qz = []
-        for dpi in dpa:
-            qz.append(
-                get_tune(ring, method=method, dp=dp + dpi, remove_dc=True, **kwargs)
-            )
+        qz = [
+            get_tune(ring, method=method, dp=dp + dpi, remove_dc=True, **kwargs)
+            for dpi in dpa
+        ]
         fit = np.polyfit(dpa, qz, order)[::-1]
         fitx = fit[:, 0] * factorial(np.arange(order + 1))
         fity = fit[:, 1] * factorial(np.arange(order + 1))
@@ -211,14 +210,15 @@ def chromaticity(
 
 def gen_detuning_elem(
     ring: Lattice,
-    orbit: Optional[Orbit] = None,
-    orbit6: Optional[Orbit] = None,
-    qpx: Sequence[float] = None,
-    qpy: Sequence[float] = None,
-    detuning_coeff: Sequence[float] = None,
+    orbit: Orbit | None = None,
+    orbit6: Orbit | None = None,
+    qpx: Sequence[float] | None = None,
+    qpy: Sequence[float] | None = None,
+    detuning_coeff: Sequence[float] | None = None,
+    alphac: Sequence[float] | None = None,
 ) -> DeltaQ:
-    """Generates a detuning element
-    
+    """Generates a detuning element.
+
     The detuning coefficients and chromaticities are computed in using the 4D
     lattice model if they are not provided by the user.
 
@@ -228,24 +228,27 @@ def gen_detuning_elem(
           already known ((6,) array).
         qpx:            horizontal chromatic detuning coefficients. Default None.
           If specified qpy should also be provided, if not first order term computed
-          automatically from ring.
+          automatically from ring. Higher order terms can be calculated with
+          physics.chromaticity()
         qpy:            vertical chromatic detuning coefficients. Default None.
           If specified qpy should also be provided, if not first order term computed
-          automatically from ring.
+          automatically from ring. Higher order terms can be calculated with
+          physics.chromaticity()
         detuning_coeff: First order amplitude detuning coefficients
           [dQx/dJx, dQx/dJy, dQy/dJy]. Default None: coefficient computer from ring.
+          Can be claculated with physics.detuning()
+        alphac: Higher order momentum compaction factor. Default None. Can be
+          Can be claculated with physics.mcf()
 
     Returns:
-        detuneElem:     Element reproducing the detuning of the ring with
+        nonlin_elem:     DeltaQ Element reproducing the detuning of the ring with
           amplitude and momentum
     """
     ringnorad = ring.disable_6d(copy=True)
     ringrad = ring.enable_6d(copy=True)
     if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
-        msg = (
-            "Both transverse planes have to be provided for manual"
-            + " non-linear chromaticity input"
-        )
+        msg = ("Both transverse planes have to be provided for"
+               "manual non-linear chromaticity input")
         raise AtError(msg)
     elif qpx is None and qpy is None:
         qpx, qpy = get_chrom(ringnorad)[:2]
@@ -261,7 +264,7 @@ def gen_detuning_elem(
         orbit6, _ = find_orbit(ringrad)
 
     ld_norad, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
-    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit6)   
+    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit6)
 
     nonlin_elem = DeltaQ(
         "NonLinear",
@@ -272,6 +275,7 @@ def gen_detuning_elem(
         np.atleast_1d(qpx),
         np.atleast_1d(qpy),
         detuning_coeff,
+        alphac,
         T1=-orbit,
         T2=orbit,
         T1Rad=-orbit6,

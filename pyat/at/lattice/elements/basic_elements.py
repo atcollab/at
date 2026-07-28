@@ -7,6 +7,7 @@ __all__ = [
     "Aperture",
     "BeamMoments",
     "Collimator",
+    "DeltaQ",
     "Drift",
     "EnergyLoss",
     "LongElement",
@@ -18,7 +19,6 @@ __all__ = [
     "SimpleQuantDiff",
     "SimpleRadiation",
     "SliceMoments",
-    "DeltaQ",
 ]
 
 import warnings
@@ -456,7 +456,8 @@ class M66(Radiative, Element):
         Args:
             family_name:    Name of the element
             m66:            Transfer matrix. Default: Identity matrix.
-            m66rad:         Transfer matrix including radiation. Default: Identity matrix.
+            m66rad:         Transfer matrix including radiation.
+                            Default:Identity matrix.
 
 
         Default PassMethod: ``Matrix66Pass``
@@ -499,16 +500,19 @@ class DeltaQ(Radiative, Element):
     def __init__(
         self,
         family_name: str,
-        beta: Sequence[float]=[1.0,1.0],
-        alpha: Sequence[float]=[0.0, 0.0],
-        betarad: Sequence[float]=None,
-        alpharad: Sequence[float]=None,
-        qpx: Sequence[float]=0.0,
-        qpy: Sequence[float]=0.0,
-        detuning_coefficients: Sequence[float]=[0.0, 0.0, 0.0],
+        beta: Sequence[float] = [1.0, 1.0],
+        alpha: Sequence[float] = [0.0, 0.0],
+        betarad: Sequence[float] | None = None,
+        alpharad: Sequence[float] | None = None,
+        qpx: Sequence[float] = [0.0],
+        qpy: Sequence[float] = [0.0],
+        detuning_coefficients: Sequence[float] = [0.0, 0.0, 0.0],
+        alphac: Sequence[float] | None = None,
         **kwargs,
     ):
         """
+        Object to lump sources of tune shifts from a ring in a single Element.
+
         Args:
             family_name:    Name of the element
             beta:                   Beta functions at the entrance of the element
@@ -522,6 +526,8 @@ class DeltaQ(Radiative, Element):
             detuning_coefficients:  First order amplitude detuning coefficients
                                     [dQx/dJx, dQx/dJy, dQy/dJy]
                                     Default=[0.0, 0.0, 0.0]
+            alphac:                 Higher order (>1) momentum compaction factor
+                                    Default=[0.0]
 
 
 
@@ -530,8 +536,8 @@ class DeltaQ(Radiative, Element):
         if betarad is None:
             betarad = beta
         if alpharad is None:
-            alpharad = alpha       
-            
+            alpharad = alpha
+
         qpx = np.atleast_1d(qpx)
         qpy = np.atleast_1d(qpy)
         maxorder = max(len(qpx), len(qpy))
@@ -552,6 +558,9 @@ class DeltaQ(Radiative, Element):
         kwargs.setdefault("A2", detuning_coefficients[1])
         kwargs.setdefault("A3", detuning_coefficients[2])
         kwargs.setdefault("chrom_maxorder", maxorder)
+        if alphac is not None:
+            kwargs.setdefault("alphac", alphac)
+            kwargs.setdefault("alphac_maxorder", len(alphac))
         super().__init__(family_name, **kwargs)
 
 

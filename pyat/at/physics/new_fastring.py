@@ -9,7 +9,7 @@ __all__ = ["fast_ring_new"]
 from collections.abc import Sequence
 import numpy as np
 from ..lattice import Lattice, Refpts
-from ..lattice import Drift, RFCavity, Element, Marker, Radiative
+from ..lattice import Drift, RFCavity, Element, Marker
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from ..physics import ELossMethod
 
@@ -71,9 +71,10 @@ def fast_ring_new(
     qpx: Sequence[float] | None = None,
     qpy: Sequence[float] | None = None,
     detuning_coeff: Sequence[float] | None = None,
+    alphac: Sequence[float] | None = None
 ) -> Lattice:
     """
-    A fast ring consisting in:
+    A fast ring consisting in the following elements.
 
     * a RF cavity per distinct frequency,
     * a 6x6 linear transfer map,
@@ -103,6 +104,8 @@ def fast_ring_new(
         detuning_coeff: First order amplitude detuning coefficients
           [dQx/dJx, dQx/dJy, dQy/dJy]. Default None: coefficient computer from ring.
           at.physics.detuning can be used to compute detuning coefficients
+        alphac: Higher order momentum compaction factor. Default None. Can be
+          Can be claculated with physics.mcf()
 
     Returns:
         fastring (Lattice):    Fast ring lattice object
@@ -121,12 +124,13 @@ def fast_ring_new(
         lin_elem = gen_m66_elem(
             r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e + do6
         )
-        fastring = fastring + [lin_elem] + list(np.atleast_1d(cav))
+        fastring = [*fastring, lin_elem , *list(np.atleast_1d(cav))]
     detuning_elem = gen_detuning_elem(
         ring,
         qpx=qpx,
         qpy=qpy,
         detuning_coeff=detuning_coeff,
+        alphac=alphac,
         orbit=o4[-1],
         orbit6=o6[-1],
     )
