@@ -261,7 +261,7 @@ def gen_detuning_elem(
         orbit6, _ = find_orbit(ringrad)
 
     ld_norad, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
-    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit)   
+    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit6)   
 
     nonlin_elem = DeltaQ(
         "NonLinear",
