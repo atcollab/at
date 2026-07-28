@@ -218,6 +218,9 @@ def gen_detuning_elem(
     detuning_coeff: Sequence[float] = None,
 ) -> DeltaQ:
     """Generates a detuning element
+    
+    The detuning coefficients and chromaticities are computed in using the 4D
+    lattice model if they are not provided by the user.
 
     Parameters:
         ring:           Lattice description
@@ -237,6 +240,7 @@ def gen_detuning_elem(
           amplitude and momentum
     """
     ringnorad = ring.disable_6d(copy=True)
+    ringrad = ring.enable_6d(copy=True)
     if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
         msg = (
             "Both transverse planes have to be provided for manual"
@@ -254,14 +258,17 @@ def gen_detuning_elem(
         orbit, _ = find_orbit(ringnorad)
 
     if orbit6 is None:
-        orbit6, _ = find_orbit(ring.enable_6d(copy=True))
+        orbit6, _ = find_orbit(ringrad)
 
-    lindata0, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
+    ld_norad, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
+    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit)   
 
     nonlin_elem = DeltaQ(
         "NonLinear",
-        lindata0.beta,
-        lindata0.alpha,
+        ld_norad.beta,
+        ld_norad.alpha,
+        ld_rad.beta,
+        ld_rad.alpha,
         np.atleast_1d(qpx),
         np.atleast_1d(qpy),
         detuning_coeff,

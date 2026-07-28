@@ -480,8 +480,12 @@ class DeltaQ(Radiative, Element):
         Element._conversions,
         Betax=float,
         Betay=float,
+        BetaxRad=float,
+        BetayRad=float,
         Alphax=float,
         Alphay=float,
+        AlphaxRad=float,
+        AlphayRad=float,
         A1=float,
         A2=float,
         A3=float,
@@ -497,6 +501,8 @@ class DeltaQ(Radiative, Element):
         family_name: str,
         beta: Sequence[float]=[1.0,1.0],
         alpha: Sequence[float]=[0.0, 0.0],
+        betarad: Sequence[float]=None,
+        alpharad: Sequence[float]=None,
         qpx: Sequence[float]=0.0,
         qpy: Sequence[float]=0.0,
         detuning_coefficients: Sequence[float]=[0.0, 0.0, 0.0],
@@ -521,6 +527,11 @@ class DeltaQ(Radiative, Element):
 
         Default PassMethod: ``DeltaQPass``
         """
+        if betarad is None:
+            betarad = beta
+        if alpharad is None:
+            alpharad = alpha       
+            
         qpx = np.atleast_1d(qpx)
         qpy = np.atleast_1d(qpy)
         maxorder = max(len(qpx), len(qpy))
@@ -531,6 +542,10 @@ class DeltaQ(Radiative, Element):
         kwargs.setdefault("Betay", beta[1])
         kwargs.setdefault("Alphax", alpha[0])
         kwargs.setdefault("Alphay", alpha[1])
+        kwargs.setdefault("BetaxRad", betarad[0])
+        kwargs.setdefault("BetayRad", betarad[1])
+        kwargs.setdefault("AlphaxRad", alpharad[0])
+        kwargs.setdefault("AlphayRad", alpharad[1])
         kwargs.setdefault("chromx_arr", qpx)
         kwargs.setdefault("chromy_arr", qpy)
         kwargs.setdefault("A1", detuning_coefficients[0])

@@ -109,10 +109,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         int chrom_maxorder;
         double alphax, alphay, betax, betay, a1, a2, a3;
         double  *R1, *R2, *T1, *T2, *chromx_arr, *chromy_arr;
-        alphax=atGetDouble(ElemData,"Alphax"); check_error();
-        alphay=atGetDouble(ElemData,"Alphay"); check_error();
-        betax=atGetDouble(ElemData,"Betax"); check_error();
-        betay=atGetDouble(ElemData,"Betay"); check_error();
+        alphax=atGetDouble(ElemData,"AlphaxRad"); check_error();
+        alphay=atGetDouble(ElemData,"AlphayRad"); check_error();
+        betax=atGetDouble(ElemData,"BetaxRad"); check_error();
+        betay=atGetDouble(ElemData,"BetayRad"); check_error();
         chromx_arr=atGetDoubleArray(ElemData,"chromx_arr"); check_error();
         chromy_arr=atGetDoubleArray(ElemData,"chromy_arr"); check_error();
         a1=atGetDouble(ElemData,"A1"); check_error();
@@ -162,10 +162,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int chrom_maxorder;
         double alphax, alphay, betax, betay, a1, a2, a3;
         double  *R1, *R2, *T1, *T2, *chromx_arr, *chromy_arr;
-        alphax=atGetDouble(ElemData,"Alphax"); check_error();
-        alphay=atGetDouble(ElemData,"Alphay"); check_error();
-        betax=atGetDouble(ElemData,"Betax"); check_error();
-        betay=atGetDouble(ElemData,"Betay"); check_error();
+        alphax=atGetDouble(ElemData,"AlphaxRad"); check_error();
+        alphay=atGetDouble(ElemData,"AlphayRad"); check_error();
+        betax=atGetDouble(ElemData,"BetaxRad"); check_error();
+        betay=atGetDouble(ElemData,"BetayRad"); check_error();
         chromx_arr=atGetDoubleArray(ElemData,"chromx_arr"); check_error();
         chromy_arr=atGetDoubleArray(ElemData,"chromy_arr"); check_error();
         a1=atGetDouble(ElemData,"A1"); check_error();
@@ -188,10 +188,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(9,1);
-        mxSetCell(plhs[0],0,mxCreateString("Alphax"));
-        mxSetCell(plhs[0],1,mxCreateString("Alphay"));
-        mxSetCell(plhs[0],2,mxCreateString("Betax"));
-        mxSetCell(plhs[0],3,mxCreateString("Betay"));
+        mxSetCell(plhs[0],0,mxCreateString("AlphaxRad"));
+        mxSetCell(plhs[0],1,mxCreateString("AlphayRad"));
+        mxSetCell(plhs[0],2,mxCreateString("BetaxRad"));
+        mxSetCell(plhs[0],3,mxCreateString("BetayRad"));
         mxSetCell(plhs[0],4,mxCreateString("chromx_arr"));
         mxSetCell(plhs[0],5,mxCreateString("chromy_arr"));
         mxSetCell(plhs[0],6,mxCreateString("A1"));
