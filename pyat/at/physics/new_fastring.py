@@ -27,7 +27,7 @@ def _merge_cavs(all_cavs: Sequence) -> Sequence[RFCavity]:
         cavf = [cav for cav in all_cavs if cav.Frequency == fr]
         vol = np.sum([c.Voltage for c in cavf])
         cavl = RFCavity(
-            f"CAV_{i}",
+            "CAV",
             0,
             vol,
             fr,
@@ -62,6 +62,9 @@ def _rearrange(all_rings) -> tuple:
         mcavs = _merge_cavs(r[cav_idx])
         r[cav_idx] = [_replace_cav(r[i]) for i in cav_idx]
         all_cavs.append(mcavs)
+    for i, c in enumerate(sum(all_cavs, [])):
+        c.FamName += f"_{i}"
+    print(all_cavs)
     return all_cavs
 
 
