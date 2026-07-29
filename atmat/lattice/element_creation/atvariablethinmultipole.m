@@ -84,7 +84,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
                'ModeName',modename,'PolynomA',[],'PolynomB',[],rsrc{:});
 
 
-    function setsine(rsrc, ab)
+    function rsrc = setsine(rsrc, ab)
         funcarg = strcat('Frequency',ab);
         if ~isfield(rsrc,funcarg)
             rsrc.(funcarg) = 0;
@@ -106,38 +106,36 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
     function rsrc = setparams(rsrc,mode,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
-            amp=rsrc.(amplarg);
-            if isscalar(amp)
-                rsrc.(amplarg)=[zeros(1,rsrc.MaxOrder) amp];
+            switch mode
+                case "SINE"
+                    rsrc = setsine(rsrc,ab);
+                case "ARBITRARY"
+                    rsrc = setarb(rsrc,ab);
+                case "WHITENOISE"
+                    rsrc = setwhitenoise(rsrc,ab);
             end
-            if strcmpi(mode,'SINE')
-                setsine(rsrc,ab);
-            end
-            if strcmpi(mode,'ARBITRARY')
-                rsrc = setarb(rsrc,ab);
-            end        
         end
     end
 
     function rsrc = setmaxorder(rsrc)
-        if isfield(rsrc,'AmplitudeA')
-            mxa=find(abs(rsrc.AmplitudeA)>0,1,'last');
-        else
-            mxa=0;
+        mxab = [0 0];
+        thefields = {'AmplitudeA','AmplitudeB'};
+        for i = 1:2
+          ampab = thefields{i};
+          tmp = 0;
+          if isfield(rsrc,ampab)
+              tmp=find(abs(rsrc.(ampab))>0,1,'last');
+              if isempty(tmp), tmp=1; end
+          end
+          mxab(i) = tmp;
         end
-        if isfield(rsrc,'AmplitudeB')
-            mxb=find(abs(rsrc.AmplitudeB)>0,1,'last');
-        else
-            mxb=0;
+        maxamp=max([mxab,rsrc.MaxOrder-1]);
+        rsrc.MaxOrder=maxamp-1;
+        for i = 1:2
+          ampab = thefields{i};
+          if isfield(rsrc,ampab)
+            rsrc.(ampab)(mxab(i)+1:maxamp)=0;
+          end
         end
-        mxab=max([mxa,mxb,rsrc.MaxOrder-1]);
-        rsrc.MaxOrder=mxab-1;
-        if isfield(rsrc,'AmplitudeA')
-            rsrc.AmplitudeA(mxa+1:mxab)=0;
-        end
-        if isfield(rsrc,'AmplitudeB')
-            rsrc.AmplitudeB(mxb+1:mxab)=0;
-        end               
     end
-    
 end
