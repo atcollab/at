@@ -68,8 +68,9 @@ rsrc            = struct(rsrc{:});
 rsrc.MaxOrder   = maxorder;
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
-    error("Please provide at least one amplitude for A or B")
+    rsrc.AmplitudeB = 0;
 end
+
 rsrc = setparams(rsrc,modename,'A');
 rsrc = setparams(rsrc,modename,'B');
 rsrc = setmaxorder(rsrc);
@@ -84,8 +85,13 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
 
 
     function setsine(rsrc, ab)
-        if ~isfield(rsrc,strcat('Frequency',ab))
-            error(strcat('Please provide a value for Frequency',ab))
+        funcarg = strcat('Frequency',ab);
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
+        end
+        funcarg=strcat('Phase',ab);
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 0;
         end
     end
 
