@@ -129,7 +129,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
           end
           mxab(i) = tmp;
         end
-        maxamp=max([mxab,rsrc.MaxOrder-1]);
+        maxamp=max([mxab,rsrc.MaxOrder+1]);
         rsrc.MaxOrder=maxamp-1;
         for i = 1:2
           ampab = thefields{i};
