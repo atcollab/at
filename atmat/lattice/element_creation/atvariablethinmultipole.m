@@ -103,10 +103,10 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
     end
 
-    function rsrc = setparams(rsrc,mode,ab)
+    function rsrc = setparams(rsrc,modename,ab)
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
-            switch mode
+            switch modename
                 case "SINE"
                     rsrc = setsine(rsrc,ab);
                 case "ARBITRARY"
