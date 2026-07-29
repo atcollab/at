@@ -5,8 +5,9 @@ Non-linear optics.
 from collections.abc import Sequence
 import numpy as np
 from scipy.special import factorial
+import warnings
 
-from ..lattice import Lattice, AtError, DeltaQ
+from ..lattice import Lattice, AtError, DeltaQ, AtWarning
 from ..tracking import internal_lpass
 from .harmonic_analysis import get_tunes_harmonic
 from .linear import get_chrom, get_tune, linopt4, linopt6
@@ -198,14 +199,21 @@ def chromaticity(
         raise ValueError(msg)
     else:
         dpa = np.linspace(-dpm, dpm, npoints)
-        qz = [
-            get_tune(ring, method=method, dp=dp + dpi, remove_dc=True, **kwargs)
-            for dpi in dpa
-        ]
-        fit = np.polyfit(dpa, qz, order)[::-1]
+        qz = []
+        dpf = []
+        for dpi in dpa:
+            try:
+                qi = get_tune(ring, method=method, dp=dp + dpi, **kwargs)
+                qz.append(qi)
+                dpf.append(dpi)
+            except AtError:
+                msg = f"Unstable ring, skip step dp={dpi}"
+                warnings.warn(AtWarning(msg))
+
+        fit = np.polyfit(dpf, qz, order)[::-1]
         fitx = fit[:, 0] * factorial(np.arange(order + 1))
         fity = fit[:, 1] * factorial(np.arange(order + 1))
-        return np.array([fitx, fity]), dpa, np.array(qz)
+        return np.array([fitx, fity]), dpf, np.array(qz)
 
 
 def gen_detuning_elem(
