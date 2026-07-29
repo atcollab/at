@@ -194,7 +194,7 @@ def chromaticity(
     if order == 0:
         return get_chrom(ring, dp=dp, **kwargs)
     elif order > npoints - 1:
-        msg = f"order should be smaller than {npoints-1}"
+        msg = f"order should be smaller than npoints-1={npoints-1}"
         raise ValueError(msg)
     else:
         dpa = np.linspace(-dpm, dpm, npoints)

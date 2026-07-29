@@ -23,7 +23,7 @@ struct elem
   int alphac_maxorder;
 };
 
-void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
+void DeltaQRadPass(double *r_in, int num_particles, double alphax, double alphay,
         double betax, double betay, double *chromx_arr, double *chromy_arr,
         int chrom_maxorder, double a1, double a2, double a3,
         double *alphac, int alphac_maxorder, double circumference,
@@ -161,14 +161,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T1=T1;
         Elem->T2=T2;
     }
-    DeltaQPass(r_in, num_particles, Elem->Alphax, Elem->Alphay, 
+    DeltaQRadPass(r_in, num_particles, Elem->Alphax, Elem->Alphay, 
             Elem->Betax, Elem->Betay, Elem->chromx_arr, Elem->chromy_arr, Elem->chrom_maxorder,
             Elem->A1, Elem->A2, Elem->A3, Elem->alphac, Elem->alphac_maxorder, circumference,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2);
     return Elem;
 }
 
-MODULE_DEF(DeltaQPass)        /* Dummy module initialisation */
+MODULE_DEF(DeltaQRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -205,7 +205,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        DeltaQPass(r_in, num_particles, alphax, alphay, 
+        DeltaQRadPass(r_in, num_particles, alphax, alphay, 
             betax, betay, chromx_arr, chromy_arr, chrom_maxorder,
             a1, a2, a3, alphac, alphac_maxorder, circumference,
             T1, T2, R1, R2);
