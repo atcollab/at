@@ -133,10 +133,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         alphay=atGetDouble(ElemData,"AlphayRad"); check_error();
         betax=atGetDouble(ElemData,"BetaxRad"); check_error();
         betay=atGetDouble(ElemData,"BetayRad"); check_error();
-        dx=atGetDouble(ElemData,"DispxRad"); check_error();
-        dy=atGetDouble(ElemData,"DispyRad"); check_error();
-        dpx=atGetDouble(ElemData,"DDispxRad"); check_error();
-        dpy=atGetDouble(ElemData,"DDispyRad"); check_error();
         chromx_arr=atGetDoubleArray(ElemData,"chromx_arr"); check_error();
         chromy_arr=atGetDoubleArray(ElemData,"chromy_arr"); check_error();
         chrom_maxorder=atGetLong(ElemData,"chrom_maxorder"); check_error();
@@ -144,6 +140,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         a2=atGetDouble(ElemData,"A2"); check_error();
         a3=atGetDouble(ElemData,"A3"); check_error();
         /*optional fields*/
+        dx=atGetOptionalDouble(ElemData,"DispxRad",0.0); check_error();
+        dy=atGetOptionalDouble(ElemData,"DispyRad",0.0); check_error();
+        dpx=atGetOptionalDouble(ElemData,"DDispxRad",0.0); check_error();
+        dpy=atGetOptionalDouble(ElemData,"DDispyRad",0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
@@ -203,10 +203,6 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         alphay=atGetDouble(ElemData,"AlphayRad"); check_error();
         betax=atGetDouble(ElemData,"BetaxRad"); check_error();
         betay=atGetDouble(ElemData,"BetayRad"); check_error();
-        dx=atGetDouble(ElemData,"DispxRad"); check_error();
-        dy=atGetDouble(ElemData,"DispyRad"); check_error();
-        dpx=atGetDouble(ElemData,"DDispxRad"); check_error();
-        dpy=atGetDouble(ElemData,"DDispyRad"); check_error();
         chromx_arr=atGetDoubleArray(ElemData,"chromx_arr"); check_error();
         chromy_arr=atGetDoubleArray(ElemData,"chromy_arr"); check_error();
         chrom_maxorder=atGetLong(ElemData,"chrom_maxorder"); check_error();
@@ -214,6 +210,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         a2=atGetDouble(ElemData,"A2"); check_error();
         a3=atGetDouble(ElemData,"A3"); check_error();
         /*optional fields*/
+        dx=atGetOptionalDouble(ElemData,"DispxRad",0.0); check_error();
+        dy=atGetOptionalDouble(ElemData,"DispyRad",0.0); check_error();
+        dpx=atGetOptionalDouble(ElemData,"DDispxRad",0.0); check_error();
+        dpy=atGetOptionalDouble(ElemData,"DDispyRad",0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1Rad"); check_error();
@@ -233,24 +233,20 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(14,1);
+        plhs[0] = mxCreateCellMatrix(10,1);
         mxSetCell(plhs[0],0,mxCreateString("AlphaxRad"));
         mxSetCell(plhs[0],1,mxCreateString("AlphayRad"));
         mxSetCell(plhs[0],2,mxCreateString("BetaxRad"));
         mxSetCell(plhs[0],3,mxCreateString("BetayRad"));
-        mxSetCell(plhs[0],4,mxCreateString("DispxRad"));
-        mxSetCell(plhs[0],5,mxCreateString("DispyRad"));
-        mxSetCell(plhs[0],6,mxCreateString("DDispxRad"));
-        mxSetCell(plhs[0],7,mxCreateString("DDispyRad"));
-        mxSetCell(plhs[0],8,mxCreateString("chromx_arr"));
-        mxSetCell(plhs[0],9,mxCreateString("chromy_arr"));
-        mxSetCell(plhs[0],10,mxCreateString("chrom_maxorder"));
-        mxSetCell(plhs[0],11,mxCreateString("A1"));
-        mxSetCell(plhs[0],12,mxCreateString("A2"));
-        mxSetCell(plhs[0],13,mxCreateString("A3"));
+        mxSetCell(plhs[0],4,mxCreateString("chromx_arr"));
+        mxSetCell(plhs[0],5,mxCreateString("chromy_arr"));
+        mxSetCell(plhs[0],6,mxCreateString("chrom_maxorder"));
+        mxSetCell(plhs[0],7,mxCreateString("A1"));
+        mxSetCell(plhs[0],8,mxCreateString("A2"));
+        mxSetCell(plhs[0],9,mxCreateString("A3"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(5,1);
+            plhs[1] = mxCreateCellMatrix(11,1);
             mxSetCell(plhs[1],0,mxCreateString("T1Rad"));
             mxSetCell(plhs[1],1,mxCreateString("T2Rad"));
             mxSetCell(plhs[1],2,mxCreateString("R1"));
@@ -258,6 +254,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],4,mxCreateString("alphac"));
             mxSetCell(plhs[1],5,mxCreateString("alphac_maxorder"));
             mxSetCell(plhs[1],6,mxCreateString("circumference"));
+            mxSetCell(plhs[1],7,mxCreateString("DispxRad"));
+            mxSetCell(plhs[1],8,mxCreateString("DispyRad"));
+            mxSetCell(plhs[1],9,mxCreateString("DDispxRad"));
+            mxSetCell(plhs[1],10,mxCreateString("DDispyRad"));
         }
     }
     else {

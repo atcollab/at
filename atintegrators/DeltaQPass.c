@@ -133,10 +133,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         alphay=atGetDouble(ElemData,"Alphay"); check_error();
         betax=atGetDouble(ElemData,"Betax"); check_error();
         betay=atGetDouble(ElemData,"Betay"); check_error();
-        dx=atGetDouble(ElemData,"Dispx"); check_error();
-        dy=atGetDouble(ElemData,"Dispy"); check_error();
-        dpx=atGetDouble(ElemData,"DDispx"); check_error();
-        dpy=atGetDouble(ElemData,"DDispy"); check_error();
         chromx_arr=atGetDoubleArray(ElemData,"chromx_arr"); check_error();
         chromy_arr=atGetDoubleArray(ElemData,"chromy_arr"); check_error();
         chrom_maxorder=atGetLong(ElemData,"chrom_maxorder"); check_error();
@@ -144,6 +140,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         a2=atGetDouble(ElemData,"A2"); check_error();
         a3=atGetDouble(ElemData,"A3"); check_error();
         /*optional fields*/
+        dx=atGetOptionalDouble(ElemData,"Dispx", 0.0); check_error();
+        dy=atGetOptionalDouble(ElemData,"Dispy", 0.0); check_error();
+        dpx=atGetOptionalDouble(ElemData,"DDispx", 0.0); check_error();
+        dpy=atGetOptionalDouble(ElemData,"DDispy", 0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -203,10 +203,6 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         alphay=atGetDouble(ElemData,"Alphay"); check_error();
         betax=atGetDouble(ElemData,"Betax"); check_error();
         betay=atGetDouble(ElemData,"Betay"); check_error();
-        dx=atGetDouble(ElemData,"Dispx"); check_error();
-        dy=atGetDouble(ElemData,"Dispy"); check_error();
-        dpx=atGetDouble(ElemData,"DDispx"); check_error();
-        dpy=atGetDouble(ElemData,"DDispy"); check_error();
         chromx_arr=atGetDoubleArray(ElemData,"chromx_arr"); check_error();
         chromy_arr=atGetDoubleArray(ElemData,"chromy_arr"); check_error();
         chrom_maxorder=atGetLong(ElemData,"chrom_maxorder"); check_error();
@@ -214,6 +210,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         a2=atGetDouble(ElemData,"A2"); check_error();
         a3=atGetDouble(ElemData,"A3"); check_error();
         /*optional fields*/
+        dx=atGetOptionalDouble(ElemData,"Dispx", 0.0); check_error();
+        dy=atGetOptionalDouble(ElemData,"Dispy", 0.0); check_error();
+        dpx=atGetOptionalDouble(ElemData,"DDispx", 0.0); check_error();
+        dpy=atGetOptionalDouble(ElemData,"DDispy", 0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -233,24 +233,20 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(14,1);
+        plhs[0] = mxCreateCellMatrix(10,1);
         mxSetCell(plhs[0],0,mxCreateString("Alphax"));
         mxSetCell(plhs[0],1,mxCreateString("Alphay"));
         mxSetCell(plhs[0],2,mxCreateString("Betax"));
         mxSetCell(plhs[0],3,mxCreateString("Betay"));
-        mxSetCell(plhs[0],4,mxCreateString("Dispx"));
-        mxSetCell(plhs[0],5,mxCreateString("Dispy"));
-        mxSetCell(plhs[0],6,mxCreateString("DDispx"));
-        mxSetCell(plhs[0],7,mxCreateString("DDispy"));
-        mxSetCell(plhs[0],8,mxCreateString("chromx_arr"));
-        mxSetCell(plhs[0],9,mxCreateString("chromy_arr"));
-        mxSetCell(plhs[0],10,mxCreateString("chrom_maxorder"));
-        mxSetCell(plhs[0],11,mxCreateString("A1"));
-        mxSetCell(plhs[0],12,mxCreateString("A2"));
-        mxSetCell(plhs[0],13,mxCreateString("A3"));
+        mxSetCell(plhs[0],4,mxCreateString("chromx_arr"));
+        mxSetCell(plhs[0],5,mxCreateString("chromy_arr"));
+        mxSetCell(plhs[0],6,mxCreateString("chrom_maxorder"));
+        mxSetCell(plhs[0],7,mxCreateString("A1"));
+        mxSetCell(plhs[0],8,mxCreateString("A2"));
+        mxSetCell(plhs[0],9,mxCreateString("A3"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(5,1);
+            plhs[1] = mxCreateCellMatrix(11,1);
             mxSetCell(plhs[1],0,mxCreateString("T1"));
             mxSetCell(plhs[1],1,mxCreateString("T2"));
             mxSetCell(plhs[1],2,mxCreateString("R1"));
@@ -258,6 +254,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],4,mxCreateString("alphac"));
             mxSetCell(plhs[1],5,mxCreateString("alphac_maxorder"));
             mxSetCell(plhs[1],6,mxCreateString("circumference"));
+            mxSetCell(plhs[1],7,mxCreateString("Dispx"));
+            mxSetCell(plhs[1],8,mxCreateString("Dispy"));
+            mxSetCell(plhs[1],9,mxCreateString("DDispx"));
+            mxSetCell(plhs[1],10,mxCreateString("DDispy"));
         }
     }
     else {
