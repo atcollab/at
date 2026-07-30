@@ -1,4 +1,4 @@
-"""Resonance Driving Terms"""
+"""Resonance Driving Terms."""
 
 from __future__ import annotations
 
@@ -11,11 +11,11 @@ import numpy as np
 
 from ..lattice import All, Lattice, Multipole, Refpts
 
-__all__ = ["get_rdts", "RDTType"]
+__all__ = ["RDTType", "get_rdts"]
 
 
 class RDTType(Enum):
-    """Enum class for RDT type"""
+    """Enum class for RDT type."""
 
     ALL = 0  #: all available RDTs
     FOCUSING = 1  #: Normal quadrupole RDTs
@@ -76,7 +76,7 @@ def _computedrivingterms(
     periodic_factor,
 ):
     """
-    Original implementation from ELEGANT
+    Original implementation from ELEGANT.
     """
 
     def pf(i, j):
@@ -244,7 +244,7 @@ def _computedrivingterms(
             1 / 32 * pf(1, 4) * sum(b5lm * rbetaxm * betaym2 * pxm * pym2 * pym2)
         )
         rdts["h10310"] = 1 / 8 * pf(1, 2) * sum(b5lm * rbetaxm * betaym2 * pxm * pym2)
-        rdts["h10220"] = 3 / 16 * pf(1, 0) * sum(b5lm * rbetaxm * betaym2 * pmx)
+        rdts["h10220"] = 3 / 16 * pf(1, 0) * sum(b5lm * rbetaxm * betaym2 * pxm)
         rdts["h30200"] = (
             -1 / 16 * pf(3, 2) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm * pym2)
         )
@@ -262,7 +262,6 @@ def _computedrivingterms(
 
         if (RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
             nelem = sum(mask_b3l)
-            sm = s[mask_b3l]
             b3lm = b3l[mask_b3l]
             betaxm = betax[mask_b3l]
             betaym = betay[mask_b3l]
@@ -613,7 +612,7 @@ def get_rdts(
     use_mp: bool = False,
     pool_size: int = None,
 ):
-    """Get the lattice Resonance Driving Terms
+    """Get the lattice Resonance Driving Terms.
 
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
     from ELEGANT. For consistency, pyAT keeps the sign convention of the AT MATLAB
