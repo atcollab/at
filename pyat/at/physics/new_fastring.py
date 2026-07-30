@@ -122,7 +122,7 @@ def fast_ring_new(
     ):
         rcav = r.enable_6d(copy=True) + cav
         do6 = np.zeros(6)
-        do6[4] = -rcav.get_energy_loss(method=ELossMethod.TRACKING) / r.energy
+        do6[4] = -rcav.get_energy_loss(method=ELossMethod.TRACKING, orbit6=o6b) / r.energy
         lin_elem = gen_m66_elem(
             r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e + do6
         )
