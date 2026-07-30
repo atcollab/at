@@ -502,8 +502,10 @@ class DeltaQ(Radiative, Element):
         family_name: str,
         beta: Sequence[float] = [1.0, 1.0],
         alpha: Sequence[float] = [0.0, 0.0],
+        dispersion: Sequence[float] = [0.0, 0.0, 0.0, 0.0],
         betarad: Sequence[float] | None = None,
         alpharad: Sequence[float] | None = None,
+        dispersionrad: Sequence[float] | None = None,
         qpx: Sequence[float] = [0.0],
         qpy: Sequence[float] = [0.0],
         detuning_coefficients: Sequence[float] = [0.0, 0.0, 0.0],
@@ -537,6 +539,8 @@ class DeltaQ(Radiative, Element):
             betarad = beta
         if alpharad is None:
             alpharad = alpha
+        if dispersionrad is None:
+            dispersionrad = dispersion
 
         qpx = np.atleast_1d(qpx)
         qpy = np.atleast_1d(qpy)
@@ -548,10 +552,18 @@ class DeltaQ(Radiative, Element):
         kwargs.setdefault("Betay", beta[1])
         kwargs.setdefault("Alphax", alpha[0])
         kwargs.setdefault("Alphay", alpha[1])
+        kwargs.setdefault("Dispx", dispersion[0])
+        kwargs.setdefault("Dispy", dispersion[1])
+        kwargs.setdefault("DDispx", dispersion[2])
+        kwargs.setdefault("DDispy", dispersion[3])
         kwargs.setdefault("BetaxRad", betarad[0])
         kwargs.setdefault("BetayRad", betarad[1])
         kwargs.setdefault("AlphaxRad", alpharad[0])
         kwargs.setdefault("AlphayRad", alpharad[1])
+        kwargs.setdefault("DispxRad", dispersionrad[0])
+        kwargs.setdefault("DispyRad", dispersionrad[1])
+        kwargs.setdefault("DDispxRad", dispersionrad[2])
+        kwargs.setdefault("DDispyRad", dispersionrad[3])
         kwargs.setdefault("chromx_arr", np.asfortranarray(qpx))
         kwargs.setdefault("chromy_arr", np.asfortranarray(qpy))
         kwargs.setdefault("A1", detuning_coefficients[0])

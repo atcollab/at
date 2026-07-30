@@ -200,16 +200,15 @@ def chromaticity(
     else:
         dpa = np.linspace(-dpm, dpm, npoints)
         qz = []
-        dpf = []
+        dpf = [] 
         for dpi in dpa:
-            try:
+            try:            
                 qi = get_tune(ring, method=method, dp=dp + dpi, **kwargs)
                 qz.append(qi)
                 dpf.append(dpi)
             except AtError:
                 msg = f"Unstable ring, skip step dp={dpi}"
-                warnings.warn(AtWarning(msg))
-
+                warnings.warn(AtWarning(msg))         
         fit = np.polyfit(dpf, qz, order)[::-1]
         fitx = fit[:, 0] * factorial(np.arange(order + 1))
         fity = fit[:, 1] * factorial(np.arange(order + 1))
@@ -278,8 +277,10 @@ def gen_detuning_elem(
         "NonLinear",
         ld_norad.beta,
         ld_norad.alpha,
+        ld_norad.dispersion,
         ld_rad.beta,
         ld_rad.alpha,
+        ld_rad.dispersion,
         np.atleast_1d(qpx),
         np.atleast_1d(qpy),
         detuning_coeff,
