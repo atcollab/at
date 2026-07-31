@@ -304,16 +304,12 @@ def simple_ring(
     nonlin_elem = Element(
         "NonLinear",
         PassMethod="DeltaQPass",
-        Betax=betax,
-        Betay=betay,
-        Alphax=alphax,
-        Alphay=alphay,
-        chromx_arr=chromx_arr,
-        chromy_arr=chromy_arr,
-        A1=A1,
-        A2=A2,
-        A3=A3,
-        chrom_maxorder=chrom_maxorder,
+        Beta=[betax, betay],
+        Alphax= [alphax, alphay],
+        ChromX=chromx_arr,
+        ChromY=chromy_arr,
+        Detuning=[A1, A2, A3],
+        Chrom_MaxOrder=chrom_maxorder,
     )
 
     # Assemble all elements into the lattice object
