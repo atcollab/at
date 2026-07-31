@@ -304,11 +304,11 @@ def simple_ring(
     nonlin_elem = Element(
         "NonLinear",
         PassMethod="DeltaQPass",
-        Beta=[betax, betay],
-        Alpha=[alphax, alphay],
+        Beta=np.asfortranarray([betax, betay]),
+        Alpha=np.asfortranarray([alphax, alphay]),
         ChromX=chromx_arr,
         ChromY=chromy_arr,
-        Detuning=[A1, A2, A3],
+        Detuning=np.asfortranarray([A1, A2, A3]),
         Chrom_MaxOrder=chrom_maxorder,
     )
 
