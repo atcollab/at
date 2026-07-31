@@ -31,7 +31,28 @@
 #include <math.h>
 #include <stdio.h>
 
+static void GWigCheckKz(int NHharm, int NVharm, const double *By, const double *Bx)
+{
+    int i;
 
+    for (i = 0; i < NHharm; i++) {
+        double kz = By[6*i + 4];
+
+        if (fabs(kz) <= GWIG_EPS) {
+            atError("GWig error: By harmonic %d has kz=0; kz must be non-zero.", i);
+            return;
+        }
+    }
+
+    for (i = 0; i < NVharm; i++) {
+        double kz = Bx[6*i + 4];
+
+        if (fabs(kz) <= GWIG_EPS) {
+            atError("GWig error: Bx harmonic %d has kz=0; kz must be non-zero.", i);
+            return;
+        }
+    }
+}
 
 static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
@@ -74,10 +95,6 @@ static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
         Wig->Hky[i] = (*tmppr) * kw;
         tmppr++;
         Wig->Hkz[i] = (*tmppr) * kw;
-        if (fabs(Wig->Hkz[i] / kw) <= GWIG_EPS) {
-            atError("GWig error: By harmonic %d has kz=0 "
-            "; kz must be larger than 0.", i);
-        }
         tmppr++;
         Wig->Htz[i] = *tmppr;
         tmppr++;
@@ -92,10 +109,6 @@ static void GWigInit2(struct gwig *Wig,double gamma, double Ltot, double Lw,
         Wig->Vky[i] = (*tmppr) * kw;
         tmppr++;
         Wig->Vkz[i] = (*tmppr) * kw;
-        if (fabs(Wig->Vkz[i] / kw) <= GWIG_EPS) {
-            atError("GWig error: Bx harmonic %d has kz=0 "
-            "; kz must be larger than 0.", i);
-        }
         tmppr++;
         Wig->Vtz[i] = *tmppr;
         tmppr++;
