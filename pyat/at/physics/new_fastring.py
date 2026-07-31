@@ -9,7 +9,7 @@ __all__ = ["fast_ring_new"]
 from collections.abc import Sequence
 import numpy as np
 from ..lattice import Lattice, Refpts
-from ..lattice import Drift, RFCavity, Element, Marker
+from ..lattice import Drift, RFCavity, Element, Marker, SimpleQuantDiff
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from ..physics import ELossMethod
 
@@ -74,6 +74,9 @@ def fast_ring_new(
     qpy: Sequence[float] | None = None,
     detuning_coeff: Sequence[float] | None = None,
     alphac: Sequence[float] | None = None,
+    emitx: float = None,
+    emity: float = None,
+    espread: float = None,
 ) -> Lattice:
     """
     A fast ring consisting in the following elements.
@@ -138,7 +141,27 @@ def fast_ring_new(
         orbit=o4[-1],
         orbit6=o6[-1],
     )
-    qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[-1])
+    if emity is None and emitx is None and espread is None:
+        qd_elem = gen_quantdiff_elem(ring.enable_6d(copy=True), orbit=o6[-1])
+    else:
+        params = ring.enable_6d(copy=True).envelope_parameters()
+        taux, tauy, tauz = params.Tau
+        if emitx is None:
+            emitx = params.emittances[0]
+        if emity is None:
+            emitx = params.emittances[1]
+        if espread is None:
+            espread = params.sigma_e
+        qd_elem = SimpleQuantDiff("Diffusion",
+                                  betax=detuning_elem.BetaRad[0],
+                                  betay=detuning_elem.BetaRad[1],
+                                  emitx=emitx,
+                                  emity=emity,
+                                  espread=espread,
+                                  taux=taux,
+                                  tauy=tauy,
+                                  tauz=tauz,
+        )       
     fastring.append(detuning_elem)
     fastring.append(qd_elem)
     fastring = Lattice(fastring, **vars(ring))
