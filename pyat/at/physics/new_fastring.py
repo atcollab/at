@@ -111,6 +111,9 @@ def fast_ring_new(
           at.physics.detuning can be used to compute detuning coefficients
         alphac: Higher order momentum compaction factor. Default None. Can be
           Can be claculated with physics.mcf()
+        emitx: Equilibrium horizontal emittance. Default is the one given by ring
+        emity: Equilibrium vertical emittance. Default is the one given by ring
+        espread: Equilibrium energy spread. Default is the one given by ring
 
     Returns:
         fastring (Lattice):    Fast ring lattice object
