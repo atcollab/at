@@ -260,7 +260,7 @@ classdef pytests < matlab.unittest.TestCase
                 testCase.verifyEqual(rm{2}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
                 testCase.verifyEqual(rm{3}.Length, rp{2}.Length, RelTol=1.0e-20);
                 testCase.verifyEqual(rm{3}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
-                testCase.verifyEqual(rm{end}.Detuning, rp{3}.Detuning', RelTol=0.01);
+                testCase.verifyEqual(rm{end}.Detuning', double(rp{3}.Detuning), RelTol=0.01);
                 testCase.verifyEqual(rm{end}.Alpha, double(rp{3}.Alpha), AbsTol=1.e-10);
                 testCase.verifyEqual(rm{end}.Beta, double(rp{3}.Beta), RelTol=1.e-10);
                 testCase.verifyEqual(rm{end}.ChromX, double(rp{3}.ChromX), RelTol=1.e-8);
