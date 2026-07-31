@@ -77,10 +77,10 @@ class VariableThinMultipole(Element):
                          of the excitation
 
               * ``t<t0``: excitation amplitude is zero
-              * ``t0<t<t1``: exciation amplitude is linearly ramped up
-              * ``t1<t<t2``: exciation amplitude is constant
-              * ``t2<t<t3``: exciation amplitude is linearly ramped down
-              * ``t3<t``: exciation amplitude is zero
+              * ``t0<t<t1``: excitation amplitude is linearly ramped up
+              * ``t1<t<t2``: excitation amplitude is constant
+              * ``t2<t<t3``: excitation amplitude is linearly ramped down
+              * ``t3<t``: excitation amplitude is zero
 
         Examples:
 
@@ -100,25 +100,26 @@ class VariableThinMultipole(Element):
             * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
-        self.Mode = mode.value
-        self.ModeName = mode.name
-        kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-        self.MaxOrder = kwargs.pop("MaxOrder", 0)
-        self.Periodic = kwargs.pop("Periodic", True)
-        if AmplitudeA is None and AmplitudeB is None:
-            msg = "Please provide at least one amplitude for A or B"
-            raise AtError(msg)
-        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
-        self._setmaxorder(AmplitudeA, AmplitudeB)
-        if self.Mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-        self.PolynomA = np.zeros(self.MaxOrder + 1)
-        self.PolynomB = np.zeros(self.MaxOrder + 1)
-        ramps = kwargs.pop("Ramps", None)
-        if ramps is not None:
-            assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
-            self.Ramps = ramps
+        if len(kwargs) > 0:
+            self.Mode = mode.value
+            self.ModeName = mode.name
+            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
+            self.MaxOrder = kwargs.pop("MaxOrder", 0)
+            self.Periodic = kwargs.pop("Periodic", True)
+            if AmplitudeA is None and AmplitudeB is None:
+                msg = "Please provide at least one amplitude for A or B"
+                raise AtError(msg)
+            AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
+            AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
+            self._setmaxorder(AmplitudeA, AmplitudeB)
+            if self.Mode == ACMode.WHITENOISE:
+                self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
+            self.PolynomA = np.zeros(self.MaxOrder + 1)
+            self.PolynomB = np.zeros(self.MaxOrder + 1)
+            ramps = kwargs.pop("Ramps", None)
+            if ramps is not None:
+                assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
+                self.Ramps = ramps
         super().__init__(family_name, **kwargs)
 
     def _setmaxorder(self, ampa, ampb):
