@@ -21,7 +21,7 @@ struct elem
 };
 
 void DeltaQRadPass(double *r_in, int num_particles, double *alpha,
-        double *beta, double *disp, double *chromx, double *chromy,
+        double *beta, double *dispersion, double *chromx, double *chromy,
         int chrom_maxorder, double *detuning,
         double *alphac, int alphac_maxorder, double circumference,
         const double *T1, const double *T2,
@@ -35,10 +35,16 @@ void DeltaQRadPass(double *r_in, int num_particles, double *alpha,
     double alphay = alpha[1];
     double betax = beta[0];
     double betay = beta[1];
-    double dx = disp[0];
-    double dy = disp[1];
-    double dpx = disp[2];
-    double dpy = disp[3];
+    double dx = 0.0;
+    double dy = 0.0;
+    double dpx = 0.0;
+    double dpy = 0.0;
+    if(dispersion){
+        dx = dispersion[0];
+        dy = dispersion[1];
+        dpx = dispersion[2];
+        dpy = dispersion[3];
+    }
     double a1 = detuning[0];
     double a2 = detuning[1];
     double a3 = detuning[2];

@@ -14,7 +14,7 @@ import numpy as np
 
 from ..constants import clight
 from ..lattice import Lattice, Particle, Refpts
-from ..lattice import RFCavity, Element, Marker, get_cells, checkname
+from ..lattice import RFCavity, DeltaQ, Marker, get_cells, checkname
 from ..lattice import get_elements, M66, SimpleQuantDiff, AtError, SimpleRadiation
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 
@@ -301,14 +301,13 @@ def simple_ring(
     chromy_arr = np.pad(chromy_arr, (0, chrom_maxorder-len(chromy_arr)))
 
     # Generate the detuning element
-    nonlin_elem = Element(
+    nonlin_elem = DeltaQ(
         "NonLinear",
-        PassMethod="DeltaQPass",
-        Beta=np.asfortranarray([betax, betay]),
-        Alpha=np.asfortranarray([alphax, alphay]),
-        ChromX=chromx_arr,
-        ChromY=chromy_arr,
-        Detuning=np.asfortranarray([A1, A2, A3]),
+        alpha=[alphax, alphay],
+        beta=[betax, betay],
+        qpx=chromx_arr,
+        qpy=chromy_arr,
+        detuning_coefficients=[A1, A2, A3],
         Chrom_MaxOrder=chrom_maxorder,
     )
 

@@ -552,14 +552,17 @@ class DeltaQ(Radiative, Element):
         kwargs.setdefault("PassMethod", "DeltaQPass")
         kwargs.setdefault("Beta", np.asfortranarray(beta))
         kwargs.setdefault("Alpha", np.asfortranarray(alpha))
-        kwargs.setdefault("Dispersion", np.asfortranarray(dispersion))
         kwargs.setdefault("BetaRad", np.asfortranarray(betarad))
         kwargs.setdefault("AlphaRad", np.asfortranarray(alpharad))
-        kwargs.setdefault("DispersionRad", np.asfortranarray(dispersionrad))
         kwargs.setdefault("ChromX", np.asfortranarray(qpx))
         kwargs.setdefault("ChromY", np.asfortranarray(qpy))
         kwargs.setdefault("Detuning", np.asfortranarray(detuning_coefficients))
         kwargs.setdefault("Chrom_MaxOrder", maxorder)
+        if dispersion is not None:
+            if dispersionrad is None:
+                dispersionrad = dispersion
+            kwargs.setdefault("Dispersion", np.asfortranarray(dispersion))
+            kwargs.setdefault("DispersionRad", np.asfortranarray(dispersionrad))
         if alphac is not None:
             kwargs.setdefault("Alphac", np.asfortranarray(alphac))
             kwargs.setdefault("Alphac_MaxOrder", len(alphac))
