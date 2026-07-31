@@ -481,16 +481,16 @@ class DeltaQ(Radiative, Element):
         Element._conversions,
         Chrom_MaxOrder=int,
         Alphac_MaxOrder=int,
+        Beta=_array,
+        Alpha=_array,
+        Dispersion=_array,
+        BetaRad=_array,
+        AlphaRad=_array,
+        DispersionRad=_array,
+        ChromX=_array,
+        ChromY=_array,
+        Detuning=_array,
     )
-    Beta: np.ndarray
-    Alpha: np.ndarray
-    Dispersion: np.ndarray
-    BetaRad: np.ndarray
-    AlphaRad: np.ndarray
-    DispersionRad: np.ndarray
-    ChromX: np.ndarray
-    ChromY: np.ndarray
-    Detuning: np.ndarray
 
     _file_classname = "DeltaQ"
     default_pass = {False: "DeltaQPass", True: "DeltaQRadPass"}
@@ -550,21 +550,21 @@ class DeltaQ(Radiative, Element):
         qpx = np.pad(qpx, (0, maxorder - len(qpx)))
         qpy = np.pad(qpy, (0, maxorder - len(qpy)))
         kwargs.setdefault("PassMethod", "DeltaQPass")
-        kwargs.setdefault("Beta", np.asfortranarray(beta))
-        kwargs.setdefault("Alpha", np.asfortranarray(alpha))
-        kwargs.setdefault("BetaRad", np.asfortranarray(betarad))
-        kwargs.setdefault("AlphaRad", np.asfortranarray(alpharad))
-        kwargs.setdefault("ChromX", np.asfortranarray(qpx))
-        kwargs.setdefault("ChromY", np.asfortranarray(qpy))
-        kwargs.setdefault("Detuning", np.asfortranarray(detuning_coefficients))
+        kwargs.setdefault("Beta", beta)
+        kwargs.setdefault("Alpha", alpha)
+        kwargs.setdefault("BetaRad", betarad)
+        kwargs.setdefault("AlphaRad", alpharad)
+        kwargs.setdefault("ChromX", qpx)
+        kwargs.setdefault("ChromY", qpy)
+        kwargs.setdefault("Detuning", detuning_coefficients)
         kwargs.setdefault("Chrom_MaxOrder", maxorder)
         if dispersion is not None:
             if dispersionrad is None:
                 dispersionrad = dispersion
-            kwargs.setdefault("Dispersion", np.asfortranarray(dispersion))
-            kwargs.setdefault("DispersionRad", np.asfortranarray(dispersionrad))
+            kwargs.setdefault("Dispersion", dispersion)
+            kwargs.setdefault("DispersionRad", dispersionrad)
         if alphac is not None:
-            kwargs.setdefault("Alphac", np.asfortranarray(alphac))
+            kwargs.setdefault("Alphac", alphac)
             kwargs.setdefault("Alphac_MaxOrder", len(alphac))
         super().__init__(family_name, **kwargs)
 
