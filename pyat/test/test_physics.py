@@ -1,12 +1,9 @@
+import at
 import numpy as np
 import pytest
+from at import AtWarning, internal_lpass, lattice_pass, lattice_track, physics
 from numpy.testing import assert_allclose as assert_close
 from numpy.testing import assert_equal
-
-import at
-from at import AtWarning, physics
-from at import lattice_pass, internal_lpass
-from at import lattice_track
 
 DP = 1e-5
 DP2 = 0.005
@@ -431,9 +428,9 @@ def test_simple_ring():
     ring = physics.simple_ring(6e9, 844, 992, 0.1, 0.2, 6e6, 8.5e-5)
     assert_equal(len(ring), 5)
     num_cavities = len(ring[at.RFCavity])
-    assert_equal(ring[num_cavities+1].PassMethod, "SimpleQuantDiffPass")
+    assert_equal(ring[num_cavities + 1].PassMethod, "SimpleQuantDiffPass")
     ring.disable_6d()
-    assert_equal(ring[num_cavities+1].PassMethod, "IdentityPass")
+    assert_equal(ring[num_cavities + 1].PassMethod, "IdentityPass")
     assert_close(ring.get_tune(), [0.1, 0.2], atol=1e-10)
 
 
