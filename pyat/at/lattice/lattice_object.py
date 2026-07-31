@@ -64,8 +64,8 @@ _DEFAULT_PASS = {
         ("energyloss_pass", elt.EnergyLoss, "auto"),
         ("simplequantdiff_pass", elt.SimpleQuantDiff, "auto"),
         ("simpleradiation_pass", elt.SimpleRadiation, "auto"),
-        ("m66_pass", elt.M66, "auto"),   
-        ("deltaq_pass", elt.DeltaQ, "auto"),  
+        ("m66_pass", elt.M66, "auto"),
+        ("deltaq_pass", elt.DeltaQ, "auto"),
     ),
     True: (
         ("cavity_pass", elt.RFCavity, "auto"),
@@ -81,7 +81,7 @@ _DEFAULT_PASS = {
         ("simplequantdiff_pass", elt.SimpleQuantDiff, "auto"),
         ("simpleradiation_pass", elt.SimpleRadiation, "auto"),
         ("m66_pass", elt.M66, "auto"),
-        ("deltaq_pass", elt.DeltaQ, "auto"),  
+        ("deltaq_pass", elt.DeltaQ, "auto"),
     ),
 }
 
@@ -340,9 +340,7 @@ class Lattice(list):
                 rev = self.beta * clight / length
                 frequency = cavities[0].Frequency
                 self._cell_harmnumber = round(frequency / rev)
-        self._radiation = getattr(self, "_radiation", False) | params.pop(
-            "_radiation"
-        )
+        self._radiation = getattr(self, "_radiation", False) | params.pop("_radiation")
 
     def insert(self, idx: SupportsIndex, elem: Element, copy_elements=False):
         r"""This method allow to insert an AT element in the lattice.

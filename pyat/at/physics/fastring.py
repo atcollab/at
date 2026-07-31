@@ -141,7 +141,7 @@ def simple_ring(
     U0: float = 0.0,
     name: str = "",
     particle: str | Particle = "relativistic",
-    TimeLag: float | Sequence[float] = 0.0
+    TimeLag: float | Sequence[float] = 0.0,
 ) -> Lattice:
     """Generates a "simple ring" based on a given dictionary
        of global parameters
@@ -153,7 +153,7 @@ def simple_ring(
     * a simplified quantum diffusion element which contains equilibrium emittance
     * a detuning and chromaticity element,
     * a 6x6 linear transfer map with no radiation damping
-    
+
     Parameters:
         energy: [eV]
         circumference: [m]
@@ -172,11 +172,11 @@ def simple_ring(
         dispy: vertical dispersion [m], Default=0
         dispyp: vertical dispersion prime, Default=0
         Qpx: If single value, it is horizontal linear chromaticity
-          If an array is given it corresponds to a list of horizontal 
+          If an array is given it corresponds to a list of horizontal
           non linear chromaticities [Q',Q'',Q''',...]. This is expanded
           following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc. Default=0.0
         Qpy: If single value, it is vertical linear chromaticity
-          If an array is given it corresponds to a list of horizontal 
+          If an array is given it corresponds to a list of horizontal
           non linear chromaticities [Q',Q'',Q''',...]. This is expanded
           following Q'/1! * (dp/p) + Q''/2! *(dp/p)^2 etc. Default=0.0
         A1: horizontal amplitude detuning coefficient, Default=0
@@ -200,7 +200,7 @@ def simple_ring(
           'relativistic', 'electron', 'positron', 'proton'
           or a Particle object
         TimeLag: Set the timelag of the cavities, Default=0. Can be scalar
-          or sequence of scalars (as with harmonic_number and Vrf).      
+          or sequence of scalars (as with harmonic_number and Vrf).
 
     If the given emitx, emity or espread is 0, then no equlibrium emittance
     is applied in this plane.
@@ -297,8 +297,8 @@ def simple_ring(
     chromy_arr = np.ravel(Qpy)
     chrom_maxorder = max(chromx_arr.size, chromy_arr.size)
 
-    chromx_arr = np.pad(chromx_arr, (0, chrom_maxorder-len(chromx_arr)))
-    chromy_arr = np.pad(chromy_arr, (0, chrom_maxorder-len(chromy_arr)))
+    chromx_arr = np.pad(chromx_arr, (0, chrom_maxorder - len(chromx_arr)))
+    chromy_arr = np.pad(chromy_arr, (0, chrom_maxorder - len(chromy_arr)))
 
     # Generate the detuning element
     nonlin_elem = DeltaQ(

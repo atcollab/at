@@ -200,15 +200,15 @@ def chromaticity(
     else:
         dpa = np.linspace(-dpm, dpm, npoints)
         qz = []
-        dpf = [] 
+        dpf = []
         for dpi in dpa:
-            try:            
+            try:
                 qi = get_tune(ring, method=method, dp=dp + dpi, **kwargs)
                 qz.append(qi)
                 dpf.append(dpi)
             except AtError:
                 msg = f"Unstable ring, skip step dp={dpi}"
-                warnings.warn(AtWarning(msg))         
+                warnings.warn(AtWarning(msg), stacklevel=1)
         fit = np.polyfit(dpf, qz, order)[::-1]
         fitx = fit[:, 0] * factorial(np.arange(order + 1))
         fity = fit[:, 1] * factorial(np.arange(order + 1))
@@ -254,8 +254,10 @@ def gen_detuning_elem(
     ringnorad = ring.disable_6d(copy=True)
     ringrad = ring.enable_6d(copy=True)
     if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
-        msg = ("Both transverse planes have to be provided for"
-               "manual non-linear chromaticity input")
+        msg = (
+            "Both transverse planes have to be provided for"
+            "manual non-linear chromaticity input"
+        )
         raise AtError(msg)
     elif qpx is None and qpy is None:
         qpx, qpy = get_chrom(ringnorad)[:2]
@@ -283,7 +285,7 @@ def gen_detuning_elem(
         ld_rad.dispersion,
         np.atleast_1d(qpx),
         np.atleast_1d(qpy),
-        np.array(detuning_coeff),
+        detuning_coeff,
         alphac,
         T1=-orbit,
         T2=orbit,

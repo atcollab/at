@@ -479,15 +479,15 @@ class DeltaQ(Radiative, Element):
 
     _conversions = dict(
         Element._conversions,
-        Chrom_MaxOrder = int,
-        Alphac_MaxOrder = int,      
-    )   
+        Chrom_MaxOrder=int,
+        Alphac_MaxOrder=int,
+    )
     Beta: np.ndarray
     Alpha: np.ndarray
     Dispersion: np.ndarray
     BetaRad: np.ndarray
     AlphaRad: np.ndarray
-    DispersionRad: np.ndarray   
+    DispersionRad: np.ndarray
     ChromX: np.ndarray
     ChromY: np.ndarray
     Detuning: np.ndarray
@@ -524,7 +524,7 @@ class DeltaQ(Radiative, Element):
             dispersion:             Dispersion function at the entrance of the element.
                                     Used to cancel dispersion contribution to the closed
                                     orbit for off-momentum particles before applying the
-                                    rotation in phase-space. Default=None                                 
+                                    rotation in phase-space. Default=None
             qpx:                    Horizontal energy detuning coefficients
                                     Default=0.0
             qpy:                    Vertical energy detuning coefficients

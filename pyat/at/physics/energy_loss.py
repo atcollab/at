@@ -32,8 +32,7 @@ class ELossMethod(Enum):
 
 
 def get_energy_loss(
-    ring: Lattice, method: ELossMethod | None = ELossMethod.INTEGRAL,
-    orbit6 = None
+    ring: Lattice, method: ELossMethod | None = ELossMethod.INTEGRAL, orbit6=None
 ) -> float:
     """Computes the energy loss per turn
 

@@ -23,7 +23,7 @@ def _replace_cav(cav_element: Element) -> Element:
 def _merge_cavs(all_cavs: Sequence) -> Sequence[RFCavity]:
     m_cavs = []
     freqs = [e.Frequency for e in all_cavs]
-    for i, fr in enumerate(np.atleast_1d(np.unique(freqs))):
+    for fr in np.atleast_1d(np.unique(freqs)):
         cavf = [cav for cav in all_cavs if cav.Frequency == fr]
         vol = np.sum([c.Voltage for c in cavf])
         cavl = RFCavity(
@@ -62,7 +62,7 @@ def _rearrange(all_rings) -> tuple:
         mcavs = _merge_cavs(r[cav_idx])
         r[cav_idx] = [_replace_cav(r[i]) for i in cav_idx]
         all_cavs.append(mcavs)
-    for i, c in enumerate(sum(all_cavs, [])):
+    for i, c in enumerate([c for cavs in all_cavs for c in cavs]):
         c.FamName += f"_{i}"
     return all_cavs
 
@@ -73,7 +73,7 @@ def fast_ring_new(
     qpx: Sequence[float] | None = None,
     qpy: Sequence[float] | None = None,
     detuning_coeff: Sequence[float] | None = None,
-    alphac: Sequence[float] | None = None
+    alphac: Sequence[float] | None = None,
 ) -> Lattice:
     """
     A fast ring consisting in the following elements.
@@ -122,11 +122,13 @@ def fast_ring_new(
     ):
         rcav = r.enable_6d(copy=True) + cav
         do6 = np.zeros(6)
-        do6[4] = -rcav.get_energy_loss(method=ELossMethod.TRACKING, orbit6=o6b) / r.energy
+        do6[4] = (
+            -rcav.get_energy_loss(method=ELossMethod.TRACKING, orbit6=o6b) / r.energy
+        )
         lin_elem = gen_m66_elem(
             r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e + do6
         )
-        fastring = [*fastring, lin_elem , *list(np.atleast_1d(cav))]
+        fastring = [*fastring, lin_elem, *list(np.atleast_1d(cav))]
     detuning_elem = gen_detuning_elem(
         ring,
         qpx=qpx,
