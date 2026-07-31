@@ -479,20 +479,18 @@ class DeltaQ(Radiative, Element):
 
     _conversions = dict(
         Element._conversions,
-        Betax=float,
-        Betay=float,
-        BetaxRad=float,
-        BetayRad=float,
-        Alphax=float,
-        Alphay=float,
-        AlphaxRad=float,
-        AlphayRad=float,
-        A1=float,
-        A2=float,
-        A3=float,
-    )
-    chromx_arr: np.ndarray
-    chromy_arr: np.ndarray
+        Chrom_MaxOrder = int,
+        Alphac_MaxOrder = int,      
+    )   
+    Beta: np.ndarray
+    Alpha: np.ndarray
+    Dispersion: np.ndarray
+    BetaRad: np.ndarray
+    AlphaRad: np.ndarray
+    DispersionRad: np.ndarray   
+    ChromX: np.ndarray
+    ChromY: np.ndarray
+    Detuning: np.ndarray
 
     _file_classname = "DeltaQ"
     default_pass = {False: "DeltaQPass", True: "DeltaQRadPass"}
@@ -502,7 +500,7 @@ class DeltaQ(Radiative, Element):
         family_name: str,
         beta: Sequence[float] = [1.0, 1.0],
         alpha: Sequence[float] = [0.0, 0.0],
-        dispersion: Sequence[float] = [0.0, 0.0, 0.0, 0.0],
+        dispersion: Sequence[float] | None = None,
         betarad: Sequence[float] | None = None,
         alpharad: Sequence[float] | None = None,
         dispersionrad: Sequence[float] | None = None,
@@ -514,6 +512,8 @@ class DeltaQ(Radiative, Element):
     ):
         """
         Object to lump sources of tune shifts from a ring in a single Element.
+        All optics imput argument and T1 /T2 have *Rad equivalent used to
+        enable_6d.
 
         Args:
             family_name:    Name of the element
@@ -521,6 +521,10 @@ class DeltaQ(Radiative, Element):
                                     Default=[1.0, 1.0]
             alpha:                  Alpha function at the entrance of the element
                                     Default=[0.0, 0.0]
+            dispersion:             Dispersion function at the entrance of the element.
+                                    Used to cancel dispersion contribution to the closed
+                                    orbit for off-momentum particles before applying the
+                                    rotation in phase-space. Default=None                                 
             qpx:                    Horizontal energy detuning coefficients
                                     Default=0.0
             qpy:                    Vertical energy detuning coefficients
@@ -539,8 +543,6 @@ class DeltaQ(Radiative, Element):
             betarad = beta
         if alpharad is None:
             alpharad = alpha
-        if dispersionrad is None:
-            dispersionrad = dispersion
 
         qpx = np.atleast_1d(qpx)
         qpy = np.atleast_1d(qpy)
@@ -548,31 +550,19 @@ class DeltaQ(Radiative, Element):
         qpx = np.pad(qpx, (0, maxorder - len(qpx)))
         qpy = np.pad(qpy, (0, maxorder - len(qpy)))
         kwargs.setdefault("PassMethod", "DeltaQPass")
-        kwargs.setdefault("Betax", beta[0])
-        kwargs.setdefault("Betay", beta[1])
-        kwargs.setdefault("Alphax", alpha[0])
-        kwargs.setdefault("Alphay", alpha[1])
-        kwargs.setdefault("Dispx", dispersion[0])
-        kwargs.setdefault("Dispy", dispersion[1])
-        kwargs.setdefault("DDispx", dispersion[2])
-        kwargs.setdefault("DDispy", dispersion[3])
-        kwargs.setdefault("BetaxRad", betarad[0])
-        kwargs.setdefault("BetayRad", betarad[1])
-        kwargs.setdefault("AlphaxRad", alpharad[0])
-        kwargs.setdefault("AlphayRad", alpharad[1])
-        kwargs.setdefault("DispxRad", dispersionrad[0])
-        kwargs.setdefault("DispyRad", dispersionrad[1])
-        kwargs.setdefault("DDispxRad", dispersionrad[2])
-        kwargs.setdefault("DDispyRad", dispersionrad[3])
-        kwargs.setdefault("chromx_arr", np.asfortranarray(qpx))
-        kwargs.setdefault("chromy_arr", np.asfortranarray(qpy))
-        kwargs.setdefault("A1", detuning_coefficients[0])
-        kwargs.setdefault("A2", detuning_coefficients[1])
-        kwargs.setdefault("A3", detuning_coefficients[2])
-        kwargs.setdefault("chrom_maxorder", maxorder)
+        kwargs.setdefault("Beta", np.asfortranarray(beta))
+        kwargs.setdefault("Alpha", np.asfortranarray(alpha))
+        kwargs.setdefault("Dispersion", np.asfortranarray(dispersion))
+        kwargs.setdefault("BetaRad", np.asfortranarray(betarad))
+        kwargs.setdefault("AlphaRad", np.asfortranarray(alpharad))
+        kwargs.setdefault("DispersionRad", np.asfortranarray(dispersionrad))
+        kwargs.setdefault("ChromX", np.asfortranarray(qpx))
+        kwargs.setdefault("ChromY", np.asfortranarray(qpy))
+        kwargs.setdefault("Detuning", np.asfortranarray(detuning_coefficients))
+        kwargs.setdefault("Chrom_MaxOrder", maxorder)
         if alphac is not None:
-            kwargs.setdefault("alphac", alphac)
-            kwargs.setdefault("alphac_maxorder", len(alphac))
+            kwargs.setdefault("Alphac", np.asfortranarray(alphac))
+            kwargs.setdefault("Alphac_MaxOrder", len(alphac))
         super().__init__(family_name, **kwargs)
 
 

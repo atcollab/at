@@ -283,7 +283,7 @@ def gen_detuning_elem(
         ld_rad.dispersion,
         np.atleast_1d(qpx),
         np.atleast_1d(qpy),
-        detuning_coeff,
+        np.array(detuning_coeff),
         alphac,
         T1=-orbit,
         T2=orbit,
