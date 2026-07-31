@@ -214,7 +214,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         r_in = mxGetDoubles(plhs[0]);
         DeltaQRadPass(r_in, num_particles, alpha, beta, dispersion,
                    chromx, chromy, chrom_maxorder, detuning, alphac,
-                   alphac_maxorder, circumference, T1, T2, R1, R2);
+                   alphac_maxorder, 1.0, T1, T2, R1, R2);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -227,15 +227,14 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],5,mxCreateString("Detuning"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(8,1);
+            plhs[1] = mxCreateCellMatrix(7,1);
             mxSetCell(plhs[1],0,mxCreateString("T1Rad"));
             mxSetCell(plhs[1],1,mxCreateString("T2Rad"));
             mxSetCell(plhs[1],2,mxCreateString("R1"));
             mxSetCell(plhs[1],3,mxCreateString("R2"));
             mxSetCell(plhs[1],4,mxCreateString("Alphac"));
             mxSetCell(plhs[1],5,mxCreateString("Alphac_MaxOrder"));
-            mxSetCell(plhs[1],6,mxCreateString("circumference"));
-            mxSetCell(plhs[1],7,mxCreateString("DispersionRad"));
+            mxSetCell(plhs[1],6,mxCreateString("DispersionRad"));
         }
     }
     else {
