@@ -240,16 +240,28 @@ def _computedrivingterms(
         betaxm5o2 = betaxm3o2 * betaxm
         pxm2 = pxm * pxm
         pym2 = pym * pym
+        cpym = np.conj(pym)
+        cpym2 = cpym * cpym
         rdts["h10400"] = (
             1 / 32 * pf(1, 4) * sum(b5lm * rbetaxm * betaym2 * pxm * pym2 * pym2)
         )
+        rdts["h10040"] = (
+            1 / 32 * pf(1, -4) * sum(b5lm * rbetaxm * betaym2 * pxm * cpym2 * cpym2)
+        )
         rdts["h10310"] = 1 / 8 * pf(1, 2) * sum(b5lm * rbetaxm * betaym2 * pxm * pym2)
+        rdts["h10130"] = 1 / 8 * pf(1, -2) * sum(b5lm * rbetaxm * betaym2 * pxm * cpym2)
         rdts["h10220"] = 3 / 16 * pf(1, 0) * sum(b5lm * rbetaxm * betaym2 * pxm)
         rdts["h30200"] = (
             -1 / 16 * pf(3, 2) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm * pym2)
         )
+        rdts["h30020"] = (
+            -1 / 16 * pf(3, -2) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm * cpym2)
+        )
         rdts["h21200"] = (
             -3 / 16 * pf(1, 2) * sum(b5lm * betaxm3o2 * betaym * pxm * pym2)
+        )
+        rdts["h21020"] = (
+            -3 / 16 * pf(1, -2) * sum(b5lm * betaxm3o2 * betaym * pxm * cpym2)
         )
         rdts["h30110"] = -1 / 8 * pf(3, 0) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm)
         rdts["h21110"] = -3 / 8 * pf(1, 0) * sum(b5lm * betaxm3o2 * betaym * pxm)
@@ -610,7 +622,7 @@ def get_rdts(
     rdt_type: Container[RDTType] | RDTType,
     second_order: bool = False,
     use_mp: bool = False,
-    pool_size: int = None,
+    pool_size: int | None = None,
 ):
     """Get the lattice Resonance Driving Terms.
 
@@ -688,8 +700,9 @@ def get_rdts(
         `h20002`, `h00112`, `h00202`, `h10003`, `h00004`
 
     for :py:obj:`~RDTType.GEOMETRIC3`:
-        `h10400`, `h10310`, `h10220`, `h30200`, `h21200`, `h30110`
-        `h21110`, `h50000`, `h41000`, `h32000`
+        `h10400`, `h10040`, `h10310`, `h10130`, `h10220`, `h30200`,
+        `h30020`, `h21200`, `h21020`, `h30110` `h21110`, `h50000`,
+        `h41000`, `h32000`
 
     for :py:obj:`~RDTType.TUNESHIFT`:
         `dnux_dJx`, `dnux_dJy`, `dnuy_dJy`
