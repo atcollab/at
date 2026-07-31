@@ -227,7 +227,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         DeltaQPass(r_in, num_particles, alphax, alphay, 
-            betax, betaydx, dpx, dy, dpy, chromx_arr, chromy_arr, chrom_maxorder,
+            betax, betay, dx, dpx, dy, dpy, chromx_arr, chromy_arr, chrom_maxorder,
             a1, a2, a3, alphac, alphac_maxorder, circumference,
             T1, T2, R1, R2);
     }
