@@ -305,7 +305,7 @@ def simple_ring(
         "NonLinear",
         PassMethod="DeltaQPass",
         Beta=[betax, betay],
-        Alphax= [alphax, alphay],
+        Alpha=[alphax, alphay],
         ChromX=chromx_arr,
         ChromY=chromy_arr,
         Detuning=[A1, A2, A3],
