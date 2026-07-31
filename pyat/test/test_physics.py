@@ -158,7 +158,7 @@ def test_find_sync_orbit_finds_zeros(dba_lattice):
 def test_find_orbit6(request, lattice):
     lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
     refpts = np.ones(len(lattice), dtype=bool)
-    orbit6, all_points = lattice.find_orbit6(refpts)
+    orbit6, _ = lattice.find_orbit6(refpts)
     assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-12)
 
 
@@ -196,10 +196,8 @@ def test_find_m44_no_refpts(dba_lattice):
 
 @pytest.mark.parametrize("refpts", ([145], [1, 2, 3, 145]))
 def test_linopt(dba_lattice, refpts):
-    """Compare with Matlab results"""
-    lindata0, tune, chrom, lindata = physics.linopt(
-        dba_lattice, DP2, refpts, get_chrom=True
-    )
+    """Compare with Matlab results."""
+    _, tune, chrom, lindata = physics.linopt(dba_lattice, DP2, refpts, get_chrom=True)
     obs = lindata[-1]
     assert_close(tune, [0.355804633927360, 0.488487169156598], rtol=1e-8)
     assert_close(chrom, [-3.428312247995742, -1.597924047969101], rtol=2e-4)
@@ -264,10 +262,8 @@ def test_linopt(dba_lattice, refpts):
 
 @pytest.mark.parametrize("refpts", ([145], [1, 2, 3, 145]))
 def test_linopt_uncoupled(dba_lattice, refpts):
-    """Compare with Matlab results"""
-    lindata0, tune, chrom, lindata = physics.linopt(
-        dba_lattice, DP2, refpts, coupled=False
-    )
+    """Compare with Matlab results."""
+    _, tune, _, lindata = physics.linopt(dba_lattice, DP2, refpts, coupled=False)
     obs = lindata[-1]
     assert_close(tune, [0.355804634603528, 0.488487169156732], rtol=1e-8)
     assert_close(obs["s_pos"], 56.209377216, atol=1e-9)
@@ -300,7 +296,7 @@ def test_linopt_uncoupled(dba_lattice, refpts):
 
 
 def test_linopt_no_refpts(dba_lattice):
-    lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, get_chrom=True)
+    _, _, _, lindata = physics.linopt(dba_lattice, DP, get_chrom=True)
     assert list(lindata) == []
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
@@ -308,8 +304,8 @@ def test_linopt_no_refpts(dba_lattice):
 @pytest.mark.parametrize("refpts", ([121], [1, 2, 3, 121]))
 def test_linopt_line(hmba_lattice, refpts):
     #    refpts.append(len(hmba_lattice))
-    l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts)
-    lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
+    l0, _, _, ld = at.linopt(hmba_lattice, refpts=refpts)
+    _, _, _, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
     assert_close(ld["beta"], ltd["beta"], rtol=1e-12)
     assert_close(ld["s_pos"], ltd["s_pos"], rtol=1e-12)
     assert_close(ld["closed_orbit"], ltd["closed_orbit"], rtol=1e-12)
@@ -441,7 +437,7 @@ def test_simple_ring():
 @pytest.mark.parametrize("refpts", ([121], [0, 40, 121]))
 def test_ohmi_envelope(request, lattice, refpts):
     lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
-    emit0, beamdata, emit = lattice.ohmi_envelope(refpts)
+    _, beamdata, emit = lattice.ohmi_envelope(refpts)
     obs = emit[-1]
 
     # All expected values are Matlab results
