@@ -685,14 +685,23 @@ def get_rdts(
     beta = avebeta[idx_mag]
     etax = avedisp[idx_mag, 0]
     phi = avemu[idx_mag]
+    
+    Lengths = [e.Length for e in ring[idx_mag]]
+    Lengths = [1 if L == 0 else L for L in Lengths] 
+    
+    pola1 = [_get_polynom(e, "PolynomA", 1) for e in ring[idx_mag]]
+    polb1 = [_get_polynom(e, "PolynomB", 1) for e in ring[idx_mag]]
+    polb2 = [_get_polynom(e, "PolynomB", 2) for e in ring[idx_mag]]
+    polb3 = [_get_polynom(e, "PolynomB", 3) for e in ring[idx_mag]]
+    
     pols = [
         [
-            _get_polynom(e, "PolynomA", 1) * e.Length,
-            _get_polynom(e, "PolynomB", 1) * e.Length,
-            _get_polynom(e, "PolynomB", 2) * e.Length,
-            _get_polynom(e, "PolynomB", 3) * e.Length,
+            pola1[i]*Lengths[i],
+            polb1[i]*Lengths[i],
+            polb2[i]*Lengths[i],
+            polb3[i]*Lengths[i],
         ]
-        for e in ring[idx_mag]
+        for i in range(len(Lengths))
     ]
 
     mu = lo[-1].mu
