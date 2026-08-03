@@ -110,7 +110,7 @@ def fast_ring_new(
           [dQx/dJx, dQx/dJy, dQy/dJy]. Default None: coefficient computer from ring.
           at.physics.detuning can be used to compute detuning coefficients
         alphac: Higher order momentum compaction factor. Default None. Can be
-          Can be claculated with physics.mcf()
+          Can be claculated with physics.get_mcf()
         emitx: Equilibrium horizontal emittance. Default is the one given by ring
         emity: Equilibrium vertical emittance. Default is the one given by ring
         espread: Equilibrium energy spread. Default is the one given by ring
