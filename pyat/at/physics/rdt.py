@@ -45,7 +45,7 @@ def _get_polynom(elem, attr, index):
 
 
 def _compute_pf(tune, nperiods):
-    """This uses the formula Sum(x^k, k=1->p) = x(x^p-1)/(x-1)."""
+    """This uses the formula Sum(x^k, k=0->p-1) = (x^p-1)/(x-1)."""
     pf = np.ones((10, 10), dtype=complex)
     if nperiods != 1:
         for i in range(10):
