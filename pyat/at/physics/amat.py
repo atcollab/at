@@ -2,7 +2,7 @@
 
 from math import pi
 
-import numpy
+import numpy as np
 from scipy.linalg import block_diag, eig, inv, solve
 
 from at.lattice import AtError
@@ -17,10 +17,10 @@ __all__ = [
     "symplectify",
 ]
 
-_i2 = numpy.array([[-1.0j, -1.0], [1.0, 1.0j]])
+_i2 = np.array([[-1.0j, -1.0], [1.0, 1.0j]])
 
 # Prepare symplectic identity matrix
-_j2 = numpy.array([[0.0, 1.0], [-1.0, 0.0]])
+_j2 = np.array([[0.0, 1.0], [-1.0, 0.0]])
 _jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
 _jmswap = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2.T)]
 
@@ -92,14 +92,14 @@ def a_matrix(M):
     nv = M.shape[0]
     dms = int(nv / 2)
     jmt = jmatswap(dms)
-    select = numpy.arange(0, nv, 2)
-    rbase = numpy.stack((select, select), axis=1).flatten()
+    select = np.arange(0, nv, 2)
+    rbase = np.stack((select, select), axis=1).flatten()
 
     # noinspection PyTupleAssignmentBalance
     lmbd, vv = eig(M)
     # Compute the norms
     vp = vv.conj().T @ jmt
-    n = -0.5j * numpy.sum(vp.T * vv, axis=0)
+    n = -0.5j * np.sum(vp.T * vv, axis=0)
     if any(abs(n) < 1.0e-12):
         msg = "Unstable ring"
         raise AtError(msg)
@@ -109,22 +109,22 @@ def a_matrix(M):
     n = n[order]
     lmbd = lmbd[order]
     # Normalize vectors
-    vn = vv / numpy.sqrt(abs(n)).reshape((1, nv))
+    vn = vv / np.sqrt(abs(n)).reshape((1, nv))
     # find the vectors that project most onto x,y,z, and reorder
     # nn will have structure
     #  n1x n1y n1z
     #  n2x n2y n2z
     #  n3x n3y n3z
-    nn = 0.5 * abs(numpy.sqrt(-1.0j * vn.conj().T @ jmt @ _vxyz[dms - 1]))
+    nn = 0.5 * abs(np.sqrt(-1.0j * vn.conj().T @ jmt @ _vxyz[dms - 1]))
     rows = list(select)
     order = []
     for ixz in select:
-        ind = numpy.argmax(nn[rows, ixz])
+        ind = np.argmax(nn[rows, ixz])
         order.append(rows[ind])
         del rows[ind]
     v_ordered = vn[:, order]
     lmbd = lmbd[order]
-    aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
+    aa = np.vstack((np.real(v_ordered), np.imag(v_ordered))).reshape(
         (nv, nv), order="F"
     )
     return aa, lmbd
@@ -165,7 +165,7 @@ def symplectify(M):
     """
     nv = M.shape[0]
     S = jmat(nv // 2)
-    I = numpy.identity(nv)  # noqa: E741
+    I = np.identity(nv)  # noqa: E741
 
     V = S @ (I - M) @ inv(I + M)
     # V should be almost symmetric.  Replace with symmetrised version.
@@ -196,14 +196,14 @@ def get_mode_matrices(A):
 
     dms = A.shape[0] // 2
     # Rk = A * Ik * A.T                     Only for symplectic
-    # modelist = [numpy.dot(A[:, sl], A.T[sl, :]) for sl in _submat[:dms]]
+    # modelist = [np.dot(A[:, sl], A.T[sl, :]) for sl in _submat[:dms]]
     # Rk = A * S * Ik * inv(A) * S.T        Even for non-symplectic
     ss = jmat(dms)
     tt = jmatswap(dms)
-    a_s = numpy.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
+    a_s = np.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
     inva = solve(A, ss.T)
     modelist = [a_s[:, sl] @ inva[sl, :] for sl in _submat[:dms]]
-    return numpy.stack(modelist, axis=0)
+    return np.stack(modelist, axis=0)
 
 
 # noinspection PyPep8Naming
@@ -234,37 +234,37 @@ def get_tunes_damp(M, R=None):
     nv = M.shape[0]
     dms = int(nv / 2)
     A, vps = a_matrix(M)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
-    damping_rates = -numpy.log(numpy.absolute(vps))
+    tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
+    damping_rates = -np.log(np.absolute(vps))
 
     if R is None:
-        return numpy.rec.fromarrays(
+        return np.rec.fromarrays(
             (
-                numpy.array(tunes),
-                numpy.array(damping_rates),
-                numpy.array(get_mode_matrices(A)),
+                np.array(tunes),
+                np.array(damping_rates),
+                np.array(get_mode_matrices(A)),
             ),
             dtype=[
-                ("tunes", numpy.float64, (dms,)),
-                ("damping_rates", numpy.float64, (dms,)),
-                ("mode_matrices", numpy.float64, (dms, nv, nv)),
+                ("tunes", np.float64, (dms,)),
+                ("damping_rates", np.float64, (dms,)),
+                ("mode_matrices", np.float64, (dms, nv, nv)),
             ],
         )
     else:
         inva = inv(A)
-        rdiag = numpy.diag(inva @ R @ inva.T)
+        rdiag = np.diag(inva @ R @ inva.T)
         mode_emit = 0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
-        return numpy.rec.fromarrays(
+        return np.rec.fromarrays(
             (
-                numpy.array(tunes),
-                numpy.array(damping_rates),
-                numpy.array(get_mode_matrices(A)),
+                np.array(tunes),
+                np.array(damping_rates),
+                np.array(get_mode_matrices(A)),
                 mode_emit,
             ),
             dtype=[
-                ("tunes", numpy.float64, (dms,)),
-                ("damping_rates", numpy.float64, (dms,)),
-                ("mode_matrices", numpy.float64, (dms, nv, nv)),
-                ("mode_emittances", numpy.float64, (dms,)),
+                ("tunes", np.float64, (dms,)),
+                ("damping_rates", np.float64, (dms,)),
+                ("mode_matrices", np.float64, (dms, nv, nv)),
+                ("mode_emittances", np.float64, (dms,)),
             ],
         )
