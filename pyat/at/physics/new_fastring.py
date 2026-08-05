@@ -48,7 +48,9 @@ def _rearrange(ring) -> tuple:
     ring += [Marker("xsplit")]
 
 
-def _split_ring(ring: Lattice, split_inds: Refpts | None = None, keep_cavities: bool = False) -> Sequence:
+def _split_ring(
+    ring: Lattice, split_inds: Refpts | None = None, keep_cavities: bool = False
+) -> Sequence:
     inds = ring.get_bool_index(split_inds, endpoint=True)
     inds[[0, -1]] = True
     if keep_cavities:
@@ -59,9 +61,9 @@ def _split_ring(ring: Lattice, split_inds: Refpts | None = None, keep_cavities: 
     split_ring = []
     for b, e in zip(inds[:-1], inds[1:], strict=True):
         split_ring += [Marker("xsplit")]
-        split_ring += ring[int(b) : int(e)] 
+        split_ring += ring[int(b) : int(e)]
     split_ring += [Marker("xsplit")]
-    split_ring = Lattice(split_ring, **vars(ring)) 
+    split_ring = Lattice(split_ring, **vars(ring))
     if keep_cavities is False:
         _rearrange(split_ring)
     return split_ring, split_ring.get_uint32_index("xsplit")
@@ -95,7 +97,7 @@ def fast_ring_new(
 
     It is possible to split the original ring in multiple "fastrings"
     using the ``split_inds`` argument.
-    
+
     By default all the cavities are merged ans placed at the end of the ring this
     allows to minimize the number of segments and therefore lattice elements.
     Howevever, the longitudinal dynamics is modified by this action. In order to
@@ -130,23 +132,27 @@ def fast_ring_new(
         fastring (Lattice):    Fast ring lattice object
     """
     split_ring, split_inds = _split_ring(ring, split_inds, keep_cavities)
-    _, o4 = split_ring.disable_6d(copy=True).find_orbit(refpts=split_inds)  
+    _, o4 = split_ring.disable_6d(copy=True).find_orbit(refpts=split_inds)
     _, o6 = split_ring.enable_6d(copy=True).find_orbit(refpts=split_inds)
-    
+
     fastring = []
-    for o4b, o4e, o6b, o6e, sib, sie in zip(o4[:-1], o4[1:], o6[:-1], o6[1:], split_inds[:-1], split_inds[1:]):
-        r = split_ring[sib+1:sie]
+    for o4b, o4e, o6b, o6e, sib, sie in zip(
+        o4[:-1], o4[1:], o6[:-1], o6[1:], split_inds[:-1], split_inds[1:]
+    ):
+        r = split_ring[sib + 1 : sie]
         iscav = np.array([isinstance(elem, RFCavity) for elem in r], dtype=bool)
         if np.all(iscav):
             fastring = [*fastring, *list(r)]
         elif np.all(~iscav):
             lin_elem = gen_m66_elem(
                 r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e
-            ) 
+            )
             fastring = [*fastring, lin_elem]
         else:
-            msg = ("One fast ring segment contains a combination of magnets and cavity."
-                   "They need to be separated")
+            msg = (
+                "One fast ring segment contains a combination of magnets and cavity."
+                "They need to be separated"
+            )
             raise AtError(msg)
     detuning_elem = gen_detuning_elem(
         split_ring,
@@ -168,19 +174,20 @@ def fast_ring_new(
             emity = params.emittances[1]
         if espread is None:
             espread = params.sigma_e
-        qd_elem = SimpleQuantDiff("Diffusion",
-                                  betax=detuning_elem.BetaRad[0],
-                                  betay=detuning_elem.BetaRad[1],
-                                  emitx=emitx,
-                                  emity=emity,
-                                  espread=espread,
-                                  taux=taux*clight/ring.circumference,
-                                  tauy=tauy*clight/ring.circumference,
-                                  tauz=tauz*clight/ring.circumference,
-                                  )     
+        qd_elem = SimpleQuantDiff(
+            "Diffusion",
+            betax=detuning_elem.BetaRad[0],
+            betay=detuning_elem.BetaRad[1],
+            emitx=emitx,
+            emity=emity,
+            espread=espread,
+            taux=taux * clight / ring.circumference,
+            tauy=tauy * clight / ring.circumference,
+            tauz=tauz * clight / ring.circumference,
+        )
     fastring.append(detuning_elem)
     fastring.append(qd_elem)
-    fastring = Lattice(fastring, **vars(ring))  
+    fastring = Lattice(fastring, **vars(ring))
     if ring.radiation:
         fastring.enable_6d()
     else:
