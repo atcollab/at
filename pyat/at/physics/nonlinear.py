@@ -170,7 +170,7 @@ def chromaticity(
 
     This function computes the tunes for the specified momentum offsets.
     Then it fits this data and returns the chromaticity up to the given
-    order (npoints>order)
+    order (npoints>order).
 
     Parameters:
         ring:       Lattice description
@@ -188,7 +188,10 @@ def chromaticity(
 
     Returns:
         fit (ndarray): Horizontal Vertical polynomial coefficients
-                       from ``np.polyfit`` of shape (2, order+1)
+                       from ``np.polyfit`` of shape (2, order+1).
+                       The polynomial coefficients are multiplied by
+                       ```k!``` where ```k``` is the order of the
+                       coefficient.
         dpa: dp array of shape (npoints,)
         qz: tune array of shape (npoints, 2)
     """
