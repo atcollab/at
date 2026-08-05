@@ -12,6 +12,7 @@ from ..lattice import Lattice, Refpts, AtError
 from ..lattice import Drift, RFCavity, Element, Marker, SimpleQuantDiff
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 from ..physics import ELossMethod
+from ..constants import clight
 
 
 def _replace_cav(cav_element: Element) -> Element:
@@ -61,7 +62,7 @@ def _split_ring(ring: Lattice, split_inds: Refpts | None = None, keep_cavities: 
         split_ring += ring[int(b) : int(e)] 
     split_ring += [Marker("xsplit")]
     split_ring = Lattice(split_ring, **vars(ring)) 
-    if not keep_cavities:
+    if keep_cavities is False:
         _rearrange(split_ring)
     return split_ring, split_ring.get_uint32_index("xsplit")
 
@@ -135,11 +136,10 @@ def fast_ring_new(
     fastring = []
     for o4b, o4e, o6b, o6e, sib, sie in zip(o4[:-1], o4[1:], o6[:-1], o6[1:], split_inds[:-1], split_inds[1:]):
         r = split_ring[sib+1:sie]
-        cond1 = np.all([isinstance(elem, RFCavity) for elem in r])
-        cond2 = np.all([not isinstance(elem, RFCavity) for elem in r])
-        if cond1:
+        iscav = np.array([isinstance(elem, RFCavity) for elem in r], dtype=bool)
+        if np.all(iscav):
             fastring = [*fastring, *list(r)]
-        elif cond2:
+        elif np.all(~iscav):
             lin_elem = gen_m66_elem(
                 r.disable_6d(copy=True), o4b, o4e, r.enable_6d(copy=True), o6b, o6e
             ) 
@@ -165,7 +165,7 @@ def fast_ring_new(
         if emitx is None:
             emitx = params.emittances[0]
         if emity is None:
-            emitx = params.emittances[1]
+            emity = params.emittances[1]
         if espread is None:
             espread = params.sigma_e
         qd_elem = SimpleQuantDiff("Diffusion",
@@ -174,10 +174,10 @@ def fast_ring_new(
                                   emitx=emitx,
                                   emity=emity,
                                   espread=espread,
-                                  taux=taux,
-                                  tauy=tauy,
-                                  tauz=tauz,
-        )     
+                                  taux=taux*clight/ring.circumference,
+                                  tauy=tauy*clight/ring.circumference,
+                                  tauz=tauz*clight/ring.circumference,
+                                  )     
     fastring.append(detuning_elem)
     fastring.append(qd_elem)
     fastring = Lattice(fastring, **vars(ring))  
