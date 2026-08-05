@@ -1,19 +1,21 @@
-"""Resonance Driving Terms"""
+"""Resonance Driving Terms."""
+
 from __future__ import annotations
 
-import numpy as np
 import multiprocessing
-from functools import partial
-from ..lattice import Lattice, Refpts, Multipole, All
-from enum import Enum
 from collections.abc import Container
+from enum import Enum
+from functools import partial
 
+import numpy as np
 
-__all__ = ["get_rdts", "RDTType"]
+from ..lattice import All, Lattice, Multipole, Refpts
+
+__all__ = ["RDTType", "get_rdts"]
 
 
 class RDTType(Enum):
-    """Enum class for RDT type"""
+    """Enum class for RDT type."""
 
     ALL = 0  #: all available RDTs
     FOCUSING = 1  #: Normal quadrupole RDTs
@@ -30,6 +32,8 @@ class RDTType(Enum):
     #: Chromatic RDTs from octupoles
     #: optionally includes the second order contribution of sextupoles
     CHROMATIC2 = 7
+    #: Geometric RDTs from decapoles
+    GEOMETRIC3 = 8
 
 
 def _get_polynom(elem, attr, index):
@@ -41,11 +45,11 @@ def _get_polynom(elem, attr, index):
 
 
 def _compute_pf(tune, nperiods):
-    """This uses the formula Sum(x^k, k=1->p) = x(x^p-1)/(x-1)"""
-    pf = np.ones((9, 9), dtype=complex)
+    """This uses the formula Sum(x^k, k=0->p-1) = (x^p-1)/(x-1)."""
+    pf = np.ones((10, 10), dtype=complex)
     if nperiods != 1:
-        for i in range(9):
-            for j in range(9):
+        for i in range(10):
+            for j in range(10):
                 a1 = np.pi * 2 * (tune[0] * (i - 4) + tune[1] * (j - 4))
                 a2 = a1 / nperiods
                 pf[i][j] = (np.exp(1j * a1) - 1.0) / (np.exp(1j * a2) - 1.0)
@@ -63,6 +67,7 @@ def _computedrivingterms(
     b2l,
     b3l,
     b4l,
+    b5l,
     tune,
     rdttype,
     nperiods,
@@ -71,7 +76,7 @@ def _computedrivingterms(
     periodic_factor,
 ):
     """
-    Original implementation from ELEGANT
+    Original implementation from ELEGANT.
     """
 
     def pf(i, j):
@@ -89,6 +94,7 @@ def _computedrivingterms(
     mask_b2l = np.absolute(b2l) > 1.0e-6
     mask_b3l = np.absolute(b3l) > 1.0e-6
     mask_b4l = np.absolute(b4l) > 1.0e-6
+    mask_b5l = np.absolute(b5l) > 1.0e-6
 
     if (RDTType.FOCUSING in rdttype) or (RDTType.ALL in rdttype):
         b2lm = b2l[mask_b2l]
@@ -222,12 +228,52 @@ def _computedrivingterms(
         rdts["h10003"] = 1 / 2 * pf(1, 0) * sum(b4lm * etaxm2 * etaxm * rbetaxm * pxm)
         rdts["h00004"] = 1 / 4 * nperiods * sum(b4lm * etaxm2 * etaxm2)
 
+    if (RDTType.GEOMETRIC3 in rdttype) or (RDTType.ALL in rdttype):
+        b5lm = b5l[mask_b5l]
+        betaxm = betax[mask_b5l]
+        betaym = betay[mask_b5l]
+        pxm = px[mask_b5l]
+        pym = py[mask_b5l]
+        rbetaxm = np.sqrt(betaxm)
+        betaym2 = betaym * betaym
+        betaxm3o2 = rbetaxm * betaxm
+        betaxm5o2 = betaxm3o2 * betaxm
+        pxm2 = pxm * pxm
+        pym2 = pym * pym
+        cpym = np.conj(pym)
+        cpym2 = cpym * cpym
+        rdts["h10400"] = (
+            1 / 32 * pf(1, 4) * sum(b5lm * rbetaxm * betaym2 * pxm * pym2 * pym2)
+        )
+        rdts["h10040"] = (
+            1 / 32 * pf(1, -4) * sum(b5lm * rbetaxm * betaym2 * pxm * cpym2 * cpym2)
+        )
+        rdts["h10310"] = 1 / 8 * pf(1, 2) * sum(b5lm * rbetaxm * betaym2 * pxm * pym2)
+        rdts["h10130"] = 1 / 8 * pf(1, -2) * sum(b5lm * rbetaxm * betaym2 * pxm * cpym2)
+        rdts["h10220"] = 3 / 16 * pf(1, 0) * sum(b5lm * rbetaxm * betaym2 * pxm)
+        rdts["h30200"] = (
+            -1 / 16 * pf(3, 2) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm * pym2)
+        )
+        rdts["h30020"] = (
+            -1 / 16 * pf(3, -2) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm * cpym2)
+        )
+        rdts["h21200"] = (
+            -3 / 16 * pf(1, 2) * sum(b5lm * betaxm3o2 * betaym * pxm * pym2)
+        )
+        rdts["h21020"] = (
+            -3 / 16 * pf(1, -2) * sum(b5lm * betaxm3o2 * betaym * pxm * cpym2)
+        )
+        rdts["h30110"] = -1 / 8 * pf(3, 0) * sum(b5lm * betaxm3o2 * betaym * pxm2 * pxm)
+        rdts["h21110"] = -3 / 8 * pf(1, 0) * sum(b5lm * betaxm3o2 * betaym * pxm)
+        rdts["h50000"] = 1 / 160 * pf(5, 0) * sum(b5lm * betaxm5o2 * pxm2 * pxm2 * pxm)
+        rdts["h41000"] = 1 / 32 * pf(3, 0) * sum(b5lm * betaxm5o2 * pxm2 * pxm)
+        rdts["h32000"] = 1 / 16 * pf(1, 0) * sum(b5lm * betaxm5o2 * pxm)
+
     if second_order:
         assert nperiods == 1, "Second order available only for nperiods=1"
 
         if (RDTType.GEOMETRIC2 in rdttype) or (RDTType.ALL in rdttype):
             nelem = sum(mask_b3l)
-            sm = s[mask_b3l]
             b3lm = b3l[mask_b3l]
             betaxm = betax[mask_b3l]
             betaym = betay[mask_b3l]
@@ -557,6 +603,7 @@ def _get_rdtlist(
             pols_rot[:, 1],
             pols_rot[:, 2],
             pols_rot[:, 3],
+            pols_rot[:, 4],
             tune,
             rdt_type,
             nperiods,
@@ -575,9 +622,9 @@ def get_rdts(
     rdt_type: Container[RDTType] | RDTType,
     second_order: bool = False,
     use_mp: bool = False,
-    pool_size: int = None,
+    pool_size: int | None = None,
 ):
-    """Get the lattice Resonance Driving Terms
+    """Get the lattice Resonance Driving Terms.
 
     :py:func:`get_rdts` computes the ring RDTs based on the original implementation
     from ELEGANT. For consistency, pyAT keeps the sign convention of the AT MATLAB
@@ -615,6 +662,7 @@ def get_rdts(
             order contribution of sextupoles is added when *second_order* is True
           * :py:obj:`RDTType.TUNESHIFT`: Amplitude detuning coefficients. The second
             order contribution of sextupoles is added when *second_order* is True
+          * :py:obj:`RDTType.GEOMETRIC3`: Geometric RDTs from decapoles.
 
     Keyword Args:
         second_order (bool): Compute second order terms. Computation is significantly
@@ -650,6 +698,11 @@ def get_rdts(
     for :py:obj:`~RDTType.CHROMATIC2`:
         `h21001`, `h30001`, `h10021`, `h10111`, `h10201`, `h11002`
         `h20002`, `h00112`, `h00202`, `h10003`, `h00004`
+
+    for :py:obj:`~RDTType.GEOMETRIC3`:
+        `h10400`, `h10040`, `h10310`, `h10130`, `h10220`, `h30200`,
+        `h30020`, `h21200`, `h21020`, `h30110` `h21110`, `h50000`,
+        `h41000`, `h32000`
 
     for :py:obj:`~RDTType.TUNESHIFT`:
         `dnux_dJx`, `dnux_dJy`, `dnuy_dJy`
@@ -691,6 +744,7 @@ def get_rdts(
             _get_polynom(e, "PolynomB", 1) * e.Length,
             _get_polynom(e, "PolynomB", 2) * e.Length,
             _get_polynom(e, "PolynomB", 3) * e.Length,
+            _get_polynom(e, "PolynomB", 4) * e.Length,
         ]
         for e in ring[idx_mag]
     ]
