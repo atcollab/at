@@ -102,11 +102,13 @@ def _computedrivingterms(
         betaym = betay[mask_b2l]
         pxm = px[mask_b2l]
         pym = py[mask_b2l]
+        rbetaxm = rbetax[mask_b2l]
         etaxm = etax[mask_b2l]
         rdts["h20000"] = 1 / 8 * pf(2, 0) * sum(b2lm * betaxm * pxm * pxm)
         rdts["h00200"] = -1 / 8 * pf(0, 2) * sum(b2lm * betaym * pym * pym)
         rdts["h11000"] = 1 / 4 * sum(b2lm * betaxm)
         rdts["h00110"] = -1 / 4 * sum(b2lm * betaym)
+        rdts["h10001"] = 1 / 2 * pf(1, 0) * sum(b2lm * rbetaxm * etaxm)
         rdts["h00002"] = 1 / 2 * sum(b2lm * etaxm * etaxm)
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
