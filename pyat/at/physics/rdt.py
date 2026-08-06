@@ -145,7 +145,7 @@ def _computedrivingterms(
             1 / 2 * pf(1, 0)
             * sum((b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm) * pxm)
         )
-        rdts["h00003"] = 1 / 6 * sum((2 * b3lm * etaxm + 3 * b2lm) * etaxm * etaxm)
+        rdts["h00003"] = 1 / 6 * sum((2 * b3lm * etaxm - 3 * b2lm) * etaxm * etaxm)
         # fmt: on
 
     if (RDTType.GEOMETRIC1 in rdttype) or (RDTType.ALL in rdttype):
