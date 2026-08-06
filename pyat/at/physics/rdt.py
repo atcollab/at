@@ -210,25 +210,23 @@ def _computedrivingterms(
         rbetaxm = np.sqrt(betaxm)
         etaxm2 = etaxm * etaxm
         cpym = np.conj(pym)
-        rdts["h21001"] = 3 / 8 * pf(1, 0) * sum(b4lm * etaxm * rbetaxm * betaxm * pxm)
+        rdts["h21001"] = 1 / 8 * pf(1, 0) * sum(( 3* b4lm * etaxm + b3lm) * rbetaxm * betaxm * pxm)
         rdts["h30001"] = (
-            1 / 8 * pf(3, 0) * sum(b4lm * etaxm * rbetaxm * betaxm * pxm * pxm * pxm)
+            1 / 24 * pf(3, 0) * sum((3 * b4lm * etaxm + b3lm) * rbetaxm * betaxm * pxm * pxm * pxm)
         )
-        # fmt: off
         rdts["h10021"] = (
-            -3 / 8 * pf(1, -2)
-            * sum(b4lm * etaxm * rbetaxm * betaym * pxm * cpym * cpym)
+            -1 / 8 * pf(1, -2)
+            * sum((3 * b4lm * etaxm + b3lm)* rbetaxm * betaym * pxm * cpym * cpym)
         )
-        # fmt: on
-        rdts["h10111"] = -3 / 4 * pf(1, 0) * sum(b4lm * etaxm * rbetaxm * betaym * pxm)
+        rdts["h10111"] = -1 / 4 * pf(1, 0) * sum((3 * b4lm * etaxm + b3lm)* rbetaxm * betaym * pxm)
         rdts["h10201"] = (
-            -3 / 8 * pf(1, 2) * sum(b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym)
+            -1 / 8 * pf(1, 2) * sum((3 * b4lm * etaxm + b3lm) * rbetaxm * betaym * pxm * pym * pym)
         )
-        rdts["h11002"] = 1 / 4 * nperiods * sum(3 * b4lm * etaxm2 * betaxm + b2lm * betxm)
-        rdts["h20002"] = 1 / 8 * pf(2, 0) * sum(3 * b4lm * etaxm2 * betaxm * pxm * pxm + b2lm * betaxm * pxm * pxm)
-        rdts["h00112"] = -1 / 4 * nperiods * sum(3 * b4lm * etaxm2 * betaym + b2lm * betaym)
-        rdts["h00202"] = -1 / 8 * pf(0, 2) * sum(3 * b4lm * etaxm2 * betaym * pym * pym + b2lm * betaym * pym * pym)
-        rdts["h10003"] = 1 / 2 * pf(1, 0) * sum(b4lm * etaxm2 * etaxm * rbetaxm * pxm + b2lm * rbetaxm * etaxm * pxm)
+        rdts["h11002"] = 1 / 4 * nperiods * sum((3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betxm)
+        rdts["h20002"] = 1 / 8 * pf(2, 0) * sum((3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betaxm * pxm * pxm)
+        rdts["h00112"] = -1 / 4 * nperiods * sum(3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betaym)
+        rdts["h00202"] = -1 / 8 * pf(0, 2) * sum((3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betaym * pym * pym)
+        rdts["h10003"] = 1 / 2 * pf(1, 0) * sum((b4lm * etaxm2 + b3lm * etaxm + b2lm ) * rbetaxm * etaxm * pxm)
         rdts["h00004"] = 1 / 4 * nperiods * sum(b4lm * etaxm2 * etaxm2)
 
     if (RDTType.GEOMETRIC3 in rdttype) or (RDTType.ALL in rdttype):
