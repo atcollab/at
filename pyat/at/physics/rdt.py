@@ -714,13 +714,13 @@ def get_rdts(
     **rdts** is a :py:class:`record array <numpy.recarray>` with fields:
 
     for :py:obj:`~RDTType.FOCUSING`:
-        `h20000`, `h00200`
+        `h20000`, `h00200`, `h11000`, `h00110`, `h00002`
 
     for :py:obj:`~RDTType.COUPLING`:
         `h10010`, `h10100`
 
     for :py:obj:`~RDTType.CHROMATIC`:
-        `h11001`, `h00111`, `h20001`, `h00201`, `h10002`
+        `h11001`, `h00111`, `h20001`, `h00201`, `h10002`, `h00003`
 
     for :py:obj:`~RDTType.GEOMETRIC1`:
         `h21000`, `h30000`, `h10110`, `h10020`, `h10200`
