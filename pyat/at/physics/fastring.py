@@ -133,7 +133,8 @@ def fast_ring(
         fastring (Lattice):    Fast ring lattice object
     """
     split_ring, split_inds = _split_ring(ring, split_inds, keep_cavities)
-    split_ring.set_rf_frequency(dp=dp)
+    if dp is not None:
+        split_ring.set_rf_frequency(dp=dp)
     _, o4 = split_ring.disable_6d(copy=True).find_orbit(refpts=split_inds, dp=dp)
     _, o6 = split_ring.enable_6d(copy=True).find_orbit(refpts=split_inds, dp=dp)
 
@@ -190,6 +191,7 @@ def fast_ring(
     fastring.append(detuning_elem)
     fastring.append(qd_elem)
     fastring = Lattice(fastring, **vars(ring))
+    fastring.periodicity = 1
     if ring.radiation:
         fastring.enable_6d()
     else:
