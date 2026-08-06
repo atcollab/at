@@ -21,6 +21,7 @@ def tunes_vs_amp(
     amp: Sequence[float] | None = None,
     dim: int = 0,
     nturns: int = 512,
+    dp: float = None,
     **kwargs,
 ) -> np.ndarray:
     r"""Generates a range of tunes for varying x, y, or z amplitudes.
@@ -69,7 +70,7 @@ def tunes_vs_amp(
         py = np.array([np.matmul(invy, [party[i], partyp[i]]) for i in range(len(amp))])
         return px[:, 0, :] - 1j * px[:, 1, :], py[:, 0, :] - 1j * py[:, 1, :]
 
-    l0, bd, _ = linopt6(ring)
+    l0, bd, _ = linopt6(ring, dp=dp)
     orbit = l0["closed_orbit"]
     tunes = bd["tune"]
 
@@ -88,6 +89,7 @@ def detuning(
     ym: float = 0.3e-4,
     npoints: int = 3,
     nturns: int = 512,
+    dp: float = None,
     **kwargs,
 ) -> tuple:
     """Compute the tunes for a sequence of amplitudes.
@@ -127,7 +129,7 @@ def detuning(
     """
     ring4d = ring.disable_6d(copy=True)
 
-    lindata0, *_ = linopt4(ring4d)
+    lindata0, *_ = linopt4(ring4d, dp=dp)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
     _x = np.linspace(-xm, xm, npoints)
@@ -135,8 +137,8 @@ def detuning(
     _x2 = _x * _x
     _y2 = _y * _y
 
-    q_dx = tunes_vs_amp(ring4d, amp=_x, dim=0, nturns=nturns, **kwargs)
-    q_dy = tunes_vs_amp(ring4d, amp=_y, dim=2, nturns=nturns, **kwargs)
+    q_dx = tunes_vs_amp(ring4d, amp=_x, dim=0, nturns=nturns, dp=dp, **kwargs)
+    q_dy = tunes_vs_amp(ring4d, amp=_y, dim=2, nturns=nturns, dp=dp, **kwargs)
     q_dx, _ = np.modf(q_dx * ring4d.periodicity)
     q_dy, _ = np.modf(q_dy * ring4d.periodicity)
 
@@ -226,6 +228,7 @@ def gen_detuning_elem(
     qpy: Sequence[float] | None = None,
     detuning_coeff: Sequence[float] | None = None,
     alphac: Sequence[float] | None = None,
+    dp: float = None,
 ) -> DeltaQ:
     """Generates a detuning element.
 
@@ -270,13 +273,13 @@ def gen_detuning_elem(
         detuning_coeff = [r1[0][0], r1[0][1], r1[1][1]]
 
     if orbit is None:
-        orbit, _ = find_orbit(ringnorad)
+        orbit, _ = find_orbit(ringnorad, dp=dp)
 
     if orbit6 is None:
-        orbit6, _ = find_orbit(ringrad)
+        orbit6, _ = find_orbit(ringrad, dp=dp)
 
-    ld_norad, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit)
-    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit6)
+    ld_norad, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit, dp=dp)
+    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit6, dp=dp)
 
     nonlin_elem = DeltaQ(
         "NonLinear",

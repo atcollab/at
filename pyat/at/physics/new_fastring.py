@@ -80,6 +80,7 @@ def fast_ring_new(
     emity: float = None,
     espread: float = None,
     keep_cavities: bool = False,
+    dp: float = None,
 ) -> Lattice:
     """
     A fast ring consisting in the following elements.
@@ -132,8 +133,9 @@ def fast_ring_new(
         fastring (Lattice):    Fast ring lattice object
     """
     split_ring, split_inds = _split_ring(ring, split_inds, keep_cavities)
-    _, o4 = split_ring.disable_6d(copy=True).find_orbit(refpts=split_inds)
-    _, o6 = split_ring.enable_6d(copy=True).find_orbit(refpts=split_inds)
+    split_ring.set_rf_frequency(dp=dp)
+    _, o4 = split_ring.disable_6d(copy=True).find_orbit(refpts=split_inds, dp=dp)
+    _, o6 = split_ring.enable_6d(copy=True).find_orbit(refpts=split_inds, dp=dp)
 
     fastring = []
     for o4b, o4e, o6b, o6e, sib, sie in zip(
@@ -166,7 +168,7 @@ def fast_ring_new(
     if emity is None and emitx is None and espread is None:
         qd_elem = gen_quantdiff_elem(split_ring.enable_6d(copy=True), orbit=o6[-1])
     else:
-        params = ring.enable_6d(copy=True).envelope_parameters()
+        params = split_ring.enable_6d(copy=True).envelope_parameters()
         taux, tauy, tauz = params.Tau
         if emitx is None:
             emitx = params.emittances[0]
