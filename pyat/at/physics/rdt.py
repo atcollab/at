@@ -200,7 +200,7 @@ def _computedrivingterms(
     if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
         mask_b234l = mask_b2l | mask_b3l | maks_b4l
         b4lm = b4l[mask_b234l]
-        b3lm = b2l[mask_b234l]
+        b3lm = b3l[mask_b234l]
         b2lm = b2l[mask_b234l]
         betaxm = betax[mask_b234l]
         betaym = betay[mask_b234l]
