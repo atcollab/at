@@ -218,7 +218,7 @@ def _computedrivingterms(
         etaxm2 = etaxm * etaxm
         cpym = np.conj(pym)
         rdts["h21001"] = (
-            1 / 8 * pf(1, 0) * sum((3 * b4lm * etaxm + b3lm) * rbetaxm * betaxm * pxm)
+            1 / 8 * pf(1, 0) * sum((3 * b4lm * etaxm - b3lm) * rbetaxm * betaxm * pxm)
         )
         # fmt: off
         rdts["h30001"] = (
