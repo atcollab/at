@@ -198,12 +198,15 @@ def _computedrivingterms(
         )
 
     if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
-        b4lm = b4l[mask_b4l]
-        betaxm = betax[mask_b4l]
-        betaym = betay[mask_b4l]
-        etaxm = etax[mask_b4l]
-        pxm = px[mask_b4l]
-        pym = py[mask_b4l]
+        mask_b234l = mask_b2l | mask_b3l | maks_b4l
+        b4lm = b4l[mask_b234l]
+        b3lm = b2l[mask_b234l]
+        b2lm = b2l[mask_b234l]
+        betaxm = betax[mask_b234l]
+        betaym = betay[mask_b234l]
+        etaxm = etax[mask_b234l]
+        pxm = px[mask_b234l]
+        pym = py[mask_b234l]
         rbetaxm = np.sqrt(betaxm)
         etaxm2 = etaxm * etaxm
         cpym = np.conj(pym)
@@ -221,11 +224,11 @@ def _computedrivingterms(
         rdts["h10201"] = (
             -3 / 8 * pf(1, 2) * sum(b4lm * etaxm * rbetaxm * betaym * pxm * pym * pym)
         )
-        rdts["h11002"] = 3 / 4 * nperiods * sum(b4lm * etaxm2 * betaxm)
-        rdts["h20002"] = 3 / 8 * pf(2, 0) * sum(b4lm * etaxm2 * betaxm * pxm * pxm)
-        rdts["h00112"] = -3 / 4 * nperiods * sum(b4lm * etaxm2 * betaym)
-        rdts["h00202"] = -3 / 8 * pf(0, 2) * sum(b4lm * etaxm2 * betaym * pym * pym)
-        rdts["h10003"] = 1 / 2 * pf(1, 0) * sum(b4lm * etaxm2 * etaxm * rbetaxm * pxm)
+        rdts["h11002"] = 1 / 4 * nperiods * sum(3 * b4lm * etaxm2 * betaxm + b2lm * betxm)
+        rdts["h20002"] = 1 / 8 * pf(2, 0) * sum(3 * b4lm * etaxm2 * betaxm * pxm * pxm + b2lm * betaxm * pxm * pxm)
+        rdts["h00112"] = -1 / 4 * nperiods * sum(3 * b4lm * etaxm2 * betaym + b2lm * betaym)
+        rdts["h00202"] = -1 / 8 * pf(0, 2) * sum(3 * b4lm * etaxm2 * betaym * pym * pym + b2lm * betaym * pym * pym)
+        rdts["h10003"] = 1 / 2 * pf(1, 0) * sum(b4lm * etaxm2 * etaxm * rbetaxm * pxm + b2lm * rbetaxm * etaxm * pxm)
         rdts["h00004"] = 1 / 4 * nperiods * sum(b4lm * etaxm2 * etaxm2)
 
     if (RDTType.GEOMETRIC3 in rdttype) or (RDTType.ALL in rdttype):
