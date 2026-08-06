@@ -223,7 +223,7 @@ def _computedrivingterms(
         # fmt: off
         rdts["h30001"] = (
             1 / 24 * pf(3, 0)
-            * sum((3 * b4lm * etaxm + b3lm) * rbetaxm * betaxm * pxm * pxm * pxm)
+            * sum((3 * b4lm * etaxm - b3lm) * rbetaxm * betaxm * pxm * pxm * pxm)
         )
         rdts["h10021"] = (
             -1 / 8 * pf(1, -2)
