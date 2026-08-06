@@ -11,7 +11,6 @@ import numpy as np
 from ..lattice import Lattice, Refpts, AtError
 from ..lattice import Drift, RFCavity, Element, Marker, SimpleQuantDiff
 from ..physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
-from ..physics import ELossMethod
 from ..constants import clight
 
 
@@ -76,11 +75,11 @@ def fast_ring_new(
     qpy: Sequence[float] | None = None,
     detuning_coeff: Sequence[float] | None = None,
     alphac: Sequence[float] | None = None,
-    emitx: float = None,
-    emity: float = None,
-    espread: float = None,
+    emitx: float | None = None,
+    emity: float | None = None,
+    espread: float | None = None,
     keep_cavities: bool = False,
-    dp: float = None,
+    dp: float | None = None,
 ) -> Lattice:
     """
     A fast ring consisting in the following elements.
@@ -139,7 +138,7 @@ def fast_ring_new(
 
     fastring = []
     for o4b, o4e, o6b, o6e, sib, sie in zip(
-        o4[:-1], o4[1:], o6[:-1], o6[1:], split_inds[:-1], split_inds[1:]
+        o4[:-1], o4[1:], o6[:-1], o6[1:], split_inds[:-1], split_inds[1:], strict=True
     ):
         r = split_ring[sib + 1 : sie]
         iscav = np.array([isinstance(elem, RFCavity) for elem in r], dtype=bool)
