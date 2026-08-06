@@ -246,7 +246,7 @@ def _computedrivingterms(
         )
         rdts["h00112"] = (
             -1 / 4 * nperiods
-            * sum((3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betaym)
+            * sum((3 * b4lm * etaxm2 - 2 * b3lm * etaxm + b2lm) * betaym)
         )
         rdts["h00202"] = (
             -1 / 8 * pf(0, 2)
