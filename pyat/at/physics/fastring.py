@@ -229,8 +229,7 @@ def simple_ring(
     particle: str | Particle = "relativistic",
     TimeLag: float | Sequence[float] = 0.0,
 ) -> Lattice:
-    """Generates a "simple ring" based on a given dictionary
-       of global parameters
+    """Generates a "simple ring" based on a given dictionary of global parameters.
 
     A simple ring consists of:
 
@@ -298,7 +297,8 @@ def simple_ring(
     try:
         rfp = np.broadcast(Vrf, harmonic_number, TimeLag)
     except ValueError as exc:
-        raise AtError("Vrf, harmonic_number and TimeLag must be broadcastable") from exc
+        msg = "Vrf, harmonic_number and TimeLag must be broadcastable"
+        raise AtError(msg) from exc
 
     # revolution frequency
     f0 = clight / circumference
@@ -399,7 +399,7 @@ def simple_ring(
 
     # Assemble all elements into the lattice object
     ring = Lattice(
-        all_cavities + [simplerad, quantdiff, lin_elem, nonlin_elem],
+        [*all_cavities, simplerad, quantdiff, lin_elem, nonlin_elem],
         name=name,
         energy=energy,
         particle=particle,
