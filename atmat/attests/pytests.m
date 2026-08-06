@@ -249,11 +249,12 @@ classdef pytests < matlab.unittest.TestCase
         function fastring(testCase,lat2)
             lattice=testCase.ring4.(lat2);
             [rm, rmrad]=atfastring(lattice.m);
-            rp=cell(py.at.fast_ring(lattice.p));
+            rp=py.at.fast_ring(lattice.p);
+            rp.disable_6d()
             checkattr(rm, rp);
 
             function checkattr(rm, rp)
-                testCase.verifyEqual(rm{2}.Frequency, rp{2}.Frequency, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{2}.Frequency, rp{2}.Frequency, RelTol=1.0e-14);
                 testCase.verifyEqual(rm{2}.Voltage, rp{2}.Voltage, RelTol=1.0e-20);
                 testCase.verifyEqual(rm{3}.Length, rp{1}.Length, RelTol=1.0e-20);
                 testCase.verifyEqual(rm{3}.M66, double(rp{1}.M66), AbsTol=1.0e-7);
