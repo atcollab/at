@@ -106,10 +106,10 @@ def _computedrivingterms(
         etaxm = etax[mask_b2l]
         rdts["h20000"] = 1 / 8 * pf(2, 0) * sum(b2lm * betaxm * pxm * pxm)
         rdts["h00200"] = -1 / 8 * pf(0, 2) * sum(b2lm * betaym * pym * pym)
-        rdts["h11000"] = 1 / 4 * sum(b2lm * betaxm)
-        rdts["h00110"] = -1 / 4 * sum(b2lm * betaym)
+        rdts["h11000"] = 1 / 4 * nperiods * sum(b2lm * betaxm)
+        rdts["h00110"] = -1 / 4 * nperiods * sum(b2lm * betaym)
         rdts["h10001"] = 1 / 2 * pf(1, 0) * sum(b2lm * rbetaxm * etaxm)
-        rdts["h00002"] = 1 / 2 * sum(b2lm * etaxm * etaxm)
+        rdts["h00002"] = 1 / 2 * nperiods * sum(b2lm * etaxm * etaxm)
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
         a2lm = a2l[mask_a2l]
@@ -145,7 +145,7 @@ def _computedrivingterms(
             1 / 2 * pf(1, 0)
             * sum((b3lm * rbetaxm * etaxm * etaxm - b2lm * rbetaxm * etaxm) * pxm)
         )
-        rdts["h00003"] = 1 / 6 * sum((2 * b3lm * etaxm - 3 * b2lm) * etaxm * etaxm)
+        rdts["h00003"] = 1 / 6 * nperiods * sum((2 * b3lm * etaxm - 3 * b2lm) * etaxm * etaxm)
         # fmt: on
 
     if (RDTType.GEOMETRIC1 in rdttype) or (RDTType.ALL in rdttype):
