@@ -64,6 +64,7 @@ def _split_ring(
         split_ring += ring[int(b) : int(e)]
     split_ring += [Marker("xsplit")]
     split_ring = Lattice(split_ring, **vars(ring))
+    split_ring.periodicity = 1
     if keep_cavities is False:
         _rearrange(split_ring)
     return split_ring, split_ring.get_uint32_index("xsplit")
