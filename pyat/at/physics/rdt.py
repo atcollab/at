@@ -108,7 +108,7 @@ def _computedrivingterms(
         rdts["h00200"] = -1 / 8 * pf(0, 2) * sum(b2lm * betaym * pym * pym)
         rdts["h11000"] = 1 / 4 * nperiods * sum(b2lm * betaxm)
         rdts["h00110"] = -1 / 4 * nperiods * sum(b2lm * betaym)
-        rdts["h10001"] = 1 / 2 * pf(1, 0) * sum(b2lm * rbetaxm * etaxm)
+        rdts["h10001"] = 1 / 2 * pf(1, 0) * sum(b2lm * rbetaxm * etaxm * pxm)
         rdts["h00002"] = 1 / 2 * nperiods * sum(b2lm * etaxm * etaxm)
 
     if (RDTType.COUPLING in rdttype) or (RDTType.ALL in rdttype):
