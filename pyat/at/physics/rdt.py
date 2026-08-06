@@ -203,7 +203,7 @@ def _computedrivingterms(
         )
 
     if (RDTType.CHROMATIC2 in rdttype) or (RDTType.ALL in rdttype):
-        mask_b234l = mask_b2l | mask_b3l | maks_b4l
+        mask_b234l = mask_b2l | mask_b3l | mask_b4l
         b4lm = b4l[mask_b234l]
         b3lm = b3l[mask_b234l]
         b2lm = b2l[mask_b234l]
@@ -236,7 +236,7 @@ def _computedrivingterms(
         )
         rdts["h11002"] = (
             1 / 4 * nperiods
-            * sum((3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betxm)
+            * sum((3 * b4lm * etaxm2 + 2 * b3lm * etaxm + b2lm) * betaxm)
         )
         rdts["h20002"] = (
             1 / 8 * pf(2, 0)
