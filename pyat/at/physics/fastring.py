@@ -192,7 +192,6 @@ def fast_ring(
     fastring.append(detuning_elem)
     fastring.append(qd_elem)
     fastring = Lattice(fastring, **vars(ring))
-    fastring.periodicity = 1
     if ring.radiation:
         fastring.enable_6d()
     else:
