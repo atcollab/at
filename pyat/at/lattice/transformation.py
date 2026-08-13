@@ -26,8 +26,8 @@ from collections.abc import Sequence
 import numpy as np
 
 from .elements import Element, ReferencePoint, transform_options
-from .utils import Refpts, All, refpts_iterator, _refcount
 from .exceptions import AtError
+from .utils import All, Refpts, _refcount, refpts_iterator
 
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
@@ -173,7 +173,9 @@ def transform_elem(
     r"""Set the translations and rotations of an :py:class:`.Element`.
 
     The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis.
+    rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis,
+    where axes follow the relation :math:`\hat{x}\times\hat{y}=\hat{s}` defined by the
+    right hand side rule.
 
     A positive angle represents a clockwise rotation when
     looking in the direction of the rotation axis.
