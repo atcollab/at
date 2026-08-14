@@ -99,20 +99,35 @@ class InsertionDeviceKickMap(Element):
             elemargs = dict(zip(_argnames, args))
         elemargs.update(kwargs)
         super().__init__(family_name, **elemargs)
-        # Register the initial kickmap as "default" and mark it active
-        self._kickmap_store = {
-            "default": {
-                "Nslice": self.Nslice,
-                "Length": self.Length,
-                "xkick": self.xkick,
-                "ykick": self.ykick,
-                "xkick1": self.xkick1,
-                "ykick1": self.ykick1,
-                "xtable": self.xtable,
-                "ytable": self.ytable,
-            },
-            "_active": "default",
-        }
+        if hasattr(self, "_kickmap_store"):
+            # Loaded from file: arrays may be plain lists; normalise them.
+            self._normalise_kickmap_store()
+        else:
+            # Fresh creation: register current fields as "default" and activate.
+            self._kickmap_store = {
+                "default": {
+                    "Nslice": self.Nslice,
+                    "Length": self.Length,
+                    "xkick": self.xkick,
+                    "ykick": self.ykick,
+                    "xkick1": self.xkick1,
+                    "ykick1": self.ykick1,
+                    "xtable": self.xtable,
+                    "ytable": self.ytable,
+                },
+                "_active": "default",
+            }
+
+    def _normalise_kickmap_store(self: InsertionDeviceKickMap) -> None:
+        """Convert array fields in a deserialized store back to F-contiguous float64."""
+        _array_fields = ("xkick", "ykick", "xkick1", "ykick1", "xtable", "ytable")
+        for key, entry in self._kickmap_store.items():
+            if isinstance(entry, dict):
+                for field in _array_fields:
+                    if field in entry:
+                        entry[field] = _anyarray(np.asarray(entry[field]))
+                if "Nslice" in entry:
+                    entry["Nslice"] = np.uint8(entry["Nslice"])
 
     def set_DriftPass(self: InsertionDeviceKickMap) -> None:
         """Set DriftPass tracking pass method."""
