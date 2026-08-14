@@ -99,6 +99,20 @@ class InsertionDeviceKickMap(Element):
             elemargs = dict(zip(_argnames, args))
         elemargs.update(kwargs)
         super().__init__(family_name, **elemargs)
+        # Register the initial kickmap as "default" and mark it active
+        self._kickmap_store = {
+            "default": {
+                "Nslice": self.Nslice,
+                "Length": self.Length,
+                "xkick": self.xkick,
+                "ykick": self.ykick,
+                "xkick1": self.xkick1,
+                "ykick1": self.ykick1,
+                "xtable": self.xtable,
+                "ytable": self.ytable,
+            },
+            "_active": "default",
+        }
 
     def set_DriftPass(self: InsertionDeviceKickMap) -> None:
         """Set DriftPass tracking pass method."""

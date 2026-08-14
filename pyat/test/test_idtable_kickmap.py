@@ -30,23 +30,41 @@ class TestKickmapStore:
     """Tests for add_kickmap / use_kickmap / list_kickmaps / active_kickmap."""
 
     def test_list_kickmaps_empty_on_new_element(self, idkm_elem):
-        """A freshly constructed element has no entries in the store."""
-        assert idkm_elem.list_kickmaps() == []
+        """A freshly constructed element has only the 'default' entry in the store."""
+        assert idkm_elem.list_kickmaps() == ["default"]
 
     def test_active_kickmap_none_on_new_element(self, idkm_elem):
-        """active_kickmap is None before any use_kickmap call."""
-        assert idkm_elem.active_kickmap is None
+        """active_kickmap is 'default' immediately after construction."""
+        assert idkm_elem.active_kickmap == "default"
 
-    def test_add_kickmap_registers_key(self, idkm_elem, idkm_file):
+    def test_default_kickmap_matches_initial_fields(self, idkm_elem):
+        """The 'default' kickmap must contain the element's construction-time arrays."""
+        assert_array_equal(
+            idkm_elem._kickmap_store["default"]["xkick"], idkm_elem.xkick
+        )
+        assert_array_equal(
+            idkm_elem._kickmap_store["default"]["ykick"], idkm_elem.ykick
+        )
+
+    def test_use_kickmap_default_restores_initial_fields(self, idkm_elem, idkm_file):
+        """use_kickmap('default') restores the original kick arrays after a swap."""
+        xkick_initial = idkm_elem.xkick.copy()
+        idkm_elem.add_kickmap("half_e", 5, idkm_file, 3.0)
+        idkm_elem.use_kickmap("half_e")
+        idkm_elem.use_kickmap("default")
+        assert_array_equal(idkm_elem.xkick, xkick_initial)
+        assert idkm_elem.active_kickmap == "default"
+
+
         """add_kickmap makes the key visible in list_kickmaps."""
         idkm_elem.add_kickmap("mode_a", 10, idkm_file, 6.04)
         assert "mode_a" in idkm_elem.list_kickmaps()
 
     def test_add_multiple_kickmaps_independent(self, idkm_elem, idkm_file):
-        """Multiple keys are stored independently."""
+        """Multiple keys are stored independently alongside 'default'."""
         idkm_elem.add_kickmap("mode_a", 10, idkm_file, 6.04)
         idkm_elem.add_kickmap("mode_b", 5, idkm_file, 3.0)
-        assert set(idkm_elem.list_kickmaps()) == {"mode_a", "mode_b"}
+        assert set(idkm_elem.list_kickmaps()) == {"default", "mode_a", "mode_b"}
 
     def test_use_kickmap_sets_active_key(self, idkm_elem, idkm_file):
         """use_kickmap updates active_kickmap to the chosen key."""
@@ -124,7 +142,7 @@ class TestKickmapStore:
         xkick_orig = idkm_elem.xkick.copy()
         idkm_elem.add_kickmap("other", 5, idkm_file, 3.0)
         assert_array_equal(idkm_elem.xkick, xkick_orig)
-        assert idkm_elem.active_kickmap is None
+        assert idkm_elem.active_kickmap == "default"
 
 
 # ---------------------------------------------------------------------------
