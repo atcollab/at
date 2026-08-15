@@ -174,7 +174,7 @@ def transform_elem(
 
     The tilt is a rotation around the *s*-axis, the pitch is a
     rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis,
-    where axes follow the relation :math:`\hat{x}\times\hat{y}=\hat{s}` defined by the
+    where axes follow the relation :math:`\hat{x}\times\hat{y}=\hat{z}` defined by the
     right hand rule.
 
     A positive angle represents a clockwise rotation when
