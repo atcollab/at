@@ -172,7 +172,7 @@ def transform_elem(
 ) -> None:
     r"""Set the translations and rotations of an :py:class:`.Element`.
 
-    The tilt is a rotation around the *s*-axis, the pitch is a
+    The tilt is a rotation around the *z*-axis, the pitch is a
     rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis,
     where axes follow the relation :math:`\hat{x}\times\hat{y}=\hat{z}` defined by the
     right hand rule.
