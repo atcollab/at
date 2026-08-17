@@ -26,8 +26,8 @@ from collections.abc import Sequence
 import numpy as np
 
 from .elements import Element, ReferencePoint, transform_options
-from .utils import Refpts, All, refpts_iterator, _refcount
 from .exceptions import AtError
+from .utils import All, Refpts, _refcount, refpts_iterator
 
 _x_axis = np.array([1.0, 0.0, 0.0])
 _y_axis = np.array([0.0, 1.0, 0.0])
@@ -172,8 +172,10 @@ def transform_elem(
 ) -> None:
     r"""Set the translations and rotations of an :py:class:`.Element`.
 
-    The tilt is a rotation around the *s*-axis, the pitch is a
-    rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis.
+    The tilt is a rotation around the *z*-axis, the pitch is a
+    rotation around the *x*-axis, and the yaw is a rotation around the *y*-axis,
+    where axes follow the relation :math:`\hat{x}\times\hat{y}=\hat{z}` defined by the
+    right hand rule.
 
     A positive angle represents a clockwise rotation when
     looking in the direction of the rotation axis.
@@ -360,7 +362,7 @@ def tilt_elem(
     relative: bool = False,
     reference: ReferencePoint | None = None,
 ) -> None:
-    r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
+    r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`.
 
     The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
     attributes.
@@ -405,7 +407,7 @@ def shift_elem(
     reference: ReferencePoint | None = None,
     relative: bool = False,
 ) -> None:
-    r"""Sets the translations of an :py:class:`.Element`
+    r"""Sets the translations of an :py:class:`.Element`.
 
     The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
     attributes.
@@ -580,7 +582,7 @@ def set_shift(
 
 
 def _get_referencePoint(elem: Element) -> ReferencePoint:
-    """Rotation reference point"""
+    """Rotation reference point."""
     idx = getattr(elem, "_referencepoint", transform_options.referencepoint.value)
     return ReferencePoint(idx)
 
@@ -590,7 +592,7 @@ def _set_referencePoint(elem: Element, value: ReferencePoint) -> None:
 
 
 def _get_dx(elem: Element) -> float:
-    """Horizontal element shift"""
+    """Horizontal element shift."""
     return getattr(elem, "_dx", 0.0)
 
 
@@ -599,7 +601,7 @@ def _set_dx(elem: Element, value: float) -> None:
 
 
 def _get_dy(elem: Element) -> float:
-    """Vertical element shift"""
+    """Vertical element shift."""
     return getattr(elem, "_dy", 0.0)
 
 
@@ -608,7 +610,7 @@ def _set_dy(elem: Element, value: float) -> None:
 
 
 def _get_dz(elem: Element) -> float:
-    """Longitudinal element shift"""
+    """Longitudinal element shift."""
     return getattr(elem, "_dz", 0.0)
 
 
@@ -617,7 +619,7 @@ def _set_dz(elem: Element, value: float) -> None:
 
 
 def _get_tilt(elem: Element) -> float:
-    """Element tilt"""
+    """Element tilt."""
     return getattr(elem, "_tilt", 0.0)
 
 
@@ -626,7 +628,7 @@ def _set_tilt(elem: Element, value: float) -> None:
 
 
 def _get_pitch(elem: Element) -> float:
-    """Element pitch"""
+    """Element pitch."""
     return getattr(elem, "_pitch", 0.0)
 
 
@@ -635,7 +637,7 @@ def _set_pitch(elem: Element, value: float) -> None:
 
 
 def _get_yaw(elem: Element) -> float:
-    """Element yaw"""
+    """Element yaw."""
     return getattr(elem, "_yaw", 0.0)
 
 
@@ -644,7 +646,7 @@ def _set_yaw(elem: Element, value: float) -> None:
 
 
 def _get_tilt_frame(elem: Element) -> float:
-    """Element tilt frame, different from tilt only for bends"""
+    """Element tilt frame, different from tilt only for bends."""
     return getattr(elem, "_tilt_frame", 0.0)
 
 
