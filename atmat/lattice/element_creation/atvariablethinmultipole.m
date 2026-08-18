@@ -95,6 +95,10 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         end
     end
 
+    function rsrc = setwhitenoise(rsrc, ~)
+    % it will later implement a buffer
+    end
+
     function rsrc = setarb(rsrc, ab)
         funcarg=strcat('Func',ab);
         if ~isfield(rsrc,funcarg)

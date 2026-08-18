@@ -7,7 +7,6 @@ from enum import IntEnum
 
 import numpy as np
 
-from ..exceptions import AtError
 from .conversions import _array
 from .element_object import Element
 
@@ -100,37 +99,52 @@ class VariableThinMultipole(Element):
             * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
         """
-        if len(kwargs) > 0:
-            self.Mode = mode.value
-            self.ModeName = mode.name
-            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-            self.MaxOrder = kwargs.pop("MaxOrder", 0)
-            self.Periodic = kwargs.pop("Periodic", True)
-            if AmplitudeA is None and AmplitudeB is None:
-                msg = "Please provide at least one amplitude for A or B"
-                raise AtError(msg)
-            AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
-            AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
-            self._setmaxorder(AmplitudeA, AmplitudeB)
-            if self.Mode == ACMode.WHITENOISE:
-                self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-            self.PolynomA = np.zeros(self.MaxOrder + 1)
-            self.PolynomB = np.zeros(self.MaxOrder + 1)
-            ramps = kwargs.pop("Ramps", None)
-            if ramps is not None:
-                assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
-                self.Ramps = ramps
+
+        def _default_amplitudes(ampa, ampb):
+            if ampa is None and ampb is None:
+                ampb = np.array([0])
+            if np.isscalar(ampa):
+                ampa = np.array([ampa])
+            if np.isscalar(ampb):
+                ampb = np.array([ampb])
+            return ampa, ampb
+
+        def _getmaxorder(ampa, ampb):
+            mxa, mxb = 0, 0
+            if ampa is not None:
+                mxa = np.max(np.append(np.nonzero(ampa), 0))
+            if ampb is not None:
+                mxb = np.max(np.append(np.nonzero(ampb), 0))
+            return max(mxa, mxb)
+
+        self.Mode = mode.value
+        self.ModeName = mode.name
+        kwargs.setdefault("PassMethod", "VariableThinMPolePass")
+
+        AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
+
+        # MaxOrder is set finally by the user if given
+        max_order_ampab = _getmaxorder(AmplitudeA, AmplitudeB)
+        self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
+        # after the definition of MaxOrder we can create Amplitudes
+        self._set_amplitudes(AmplitudeA, AmplitudeB)
+
+        self.Periodic = kwargs.pop("Periodic", True)
+        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
+        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
+        if self.Mode == ACMode.WHITENOISE:
+            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
+        self.PolynomA = np.zeros(self.MaxOrder + 1)
+        self.PolynomB = np.zeros(self.MaxOrder + 1)
+        ramps = kwargs.pop("Ramps", None)
+        if ramps is not None:
+            assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
+            self.Ramps = ramps
         super().__init__(family_name, **kwargs)
 
-    def _setmaxorder(self, ampa, ampb):
-        mxa, mxb = 0, 0
+    def _set_amplitudes(self, ampa, ampb):
         if ampa is not None:
-            mxa = np.max(np.nonzero(ampa))
-        if ampb is not None:
-            mxb = np.max(np.nonzero(ampb))
-        self.MaxOrder = max(mxa, mxb)
-        if ampa is not None:
-            delta = self.MaxOrder - len(ampa)
+            delta = self.MaxOrder + 1 - len(ampa)
             if delta > 0:
                 ampa = np.pad(ampa, (0, delta))
             self.AmplitudeA = ampa
@@ -152,9 +166,8 @@ class VariableThinMultipole(Element):
         return amplitude
 
     def _set_sine(self, ab, **kwargs):
-        frequency = kwargs.pop("Frequency" + ab, None)
+        frequency = kwargs.pop("Frequency" + ab, 0)
         phase = kwargs.pop("Phase" + ab, 0)
-        assert frequency is not None, "Please provide a value for Frequency" + ab
         setattr(self, "Frequency" + ab, frequency)
         setattr(self, "Phase" + ab, phase)
 
