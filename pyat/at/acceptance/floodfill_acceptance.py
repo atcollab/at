@@ -133,7 +133,7 @@ def floodfill(
     if offset is None:
         offset = 6 * [0]
     offset = np.array(offset)
-    axesi = np.atleast_1d(axisdef.axis_(tuple(planes), key="index"))
+    planesi = np.atleast_1d(axisdef.axis_(tuple(planes), key="index"))
 
     # Initialize output in case we return earlier
     data_tracked = np.zeros((4, 0))
@@ -178,8 +178,8 @@ def floodfill(
     ndims = 6
     particles = np.zeros((nparticles, ndims))
     particles = particles + offset
-    particles[:, axesi[0]] = particles[:, axesi[0]] + points[0, :]
-    particles[:, axesi[1]] = particles[:, axesi[1]] + points[1, :]
+    particles[:, planesi[0]] = particles[:, planesi[0]] + points[0, :]
+    particles[:, planesi[1]] = particles[:, planesi[1]] + points[1, :]
 
     # parallel parameters
     nproc = pool_size if use_mp else 1
