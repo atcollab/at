@@ -12,6 +12,7 @@
 
 #include "atelem.c"
 #include "atlalib.c"
+#include "drift_expanded.h"
 #include "interpolate.c"
 
 struct elem {
@@ -51,8 +52,8 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
         double *xkick, double *ykick, double *x_map, double *y_map,int nx_map,int ny_map, int Nslice,
         double *T1, double *T2, double *R1, double *R2, int num_particles)
 {
-    double *r6, deltaxp, deltayp, limitsptr[4];
-    int c, ns;
+    double deltaxp, deltayp, limitsptr[4];
+    int ns;
     double L1 = le/(2*Nslice);
     
     /*Act as AperturePass*/
@@ -67,8 +68,8 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
     GLOBAL_nx_map=nx_map;
     GLOBAL_ny_map=ny_map;
     
-    for (c=0; c<num_particles; c++) {
-        r6 = r+c*6;
+    for (int c=0; c<num_particles; c++) {
+        double *r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             /* Misalignment at entrance */
             if (T1) ATaddvv(r6,T1);
@@ -77,7 +78,7 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
             checkiflostRectangularAp(r6, limitsptr);
             /*Tracking in the main body*/
             for (ns=0; ns<Nslice; ns++) { /* Loop over slices*/
-                ATdrift6(r6,L1);
+                DRIFT(r6, L1, 0.0, NULL);
                 if (!atIsNaN(r6[0])&&!atIsNaN(r6[2])) {
                     /*The kick from IDs varies quadratically, not linearly, with energy.   */
                     deltaxp = get_kick(r6, xkick)/(1.0+r6[4]);
@@ -87,7 +88,7 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
                     r6[1] = r6[1] + deltaxp / Nslice;
                     r6[3] = r6[3] + deltayp / Nslice;
                 }
-                ATdrift6(r6,L1);
+                DRIFT(r6, L1, 0.0, NULL);
             }
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);

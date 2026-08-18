@@ -18,14 +18,11 @@ void SimpleRadiationRadPass(double *r_in,
            double dispy, double dispyp, double EnergyLossFactor, int num_particles)
 
 {
-  double *r6;
-  int c, i;
-  double x,xp,y,yp,z,dpp;
-  
-  #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,r6)
-  for (c = 0; c<num_particles; c++) { /*Loop over particles  */
-    r6 = r_in+c*6;
-    
+  #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles)
+  for (int c = 0; c<num_particles; c++) { /*Loop over particles  */
+    double *r6 = r_in+c*6;
+    double x,xp,y,yp,z,dpp;
+
    
     if(!atIsNaN(r6[0])) {
 

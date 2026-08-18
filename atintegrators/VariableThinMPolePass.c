@@ -7,7 +7,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "atrandom.c"
-#include "driftkick.c"
+#include "kick_kn.h"  /* kick */
 
 struct elemab {
     double* Amplitude;
@@ -86,8 +86,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
 void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles)
 {
 
-    int i, c;
-    double* r6;
+    int i;
     double t = t0 * turn;
 
     int maxorder = Elem->MaxOrder;
@@ -107,8 +106,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         };
     };
 
-    for (c = 0; c < num_particles; c++) {
-        r6 = r + c * 6;
+    for (int c = 0; c < num_particles; c++) {
+        double *r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
@@ -117,7 +116,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
                     polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
                 };
             };
-            strthinkick(r6, pola, polb, 1.0, maxorder);
+            kick(r6, 0.0, 0.0, pola, polb, maxorder, 1.0, 0.0);
         }
     }
 }
