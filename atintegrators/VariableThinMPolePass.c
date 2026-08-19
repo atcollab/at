@@ -164,7 +164,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
-        double *PolynomAstart, *PolynomBstart;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
