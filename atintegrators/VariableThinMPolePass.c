@@ -27,6 +27,12 @@ struct elem {
     int MaxOrder;
     double* Ramps;
     int Periodic;
+    double *R1;
+    double *R2;
+    double *T1;
+    double *T2;
+    double *EApertures;
+    double *RApertures;
 };
 
 double get_amp(double amp, double* ramps, double t)
@@ -100,6 +106,17 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     struct elemab* ElemB = Elem->ElemB;
     double* ramps = Elem->Ramps;
 
+
+    // offsets at input and output
+    double *T1 = Elem->T1;
+    double *T2 = Elem->T2;
+    // rotations at input and output
+    double *R1 = Elem->R1;
+    double *R2 = Elem->R2;
+    // apertures
+    double *RApertures = Elem->RApertures;
+    double *EApertures = Elem->EApertures;
+
     if (mode != 0) {
         for (i = 0; i < maxorder + 1; i++) {
             pola[i] = get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
@@ -117,7 +134,16 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
                     polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
                 };
             };
+            /*  misalignment at entrance  */
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
+            /* Check physical apertures at the entrance of the magnet */
+            if (RApertures) checkiflostRectangularAp(r6,RApertures);
+            if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             strthinkick(r6, pola, polb, 1.0, maxorder);
+            /* Misalignment at exit */
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
 }
@@ -128,11 +154,18 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
 {
     if (!Elem) {
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         struct elemab *ElemA, *ElemB;
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -153,6 +186,12 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         ElemA = (struct elemab*)atMalloc(sizeof(struct elemab));
         ElemB = (struct elemab*)atMalloc(sizeof(struct elemab));
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+        Elem->EApertures=EApertures;
+        Elem->RApertures=RApertures;
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
@@ -191,6 +230,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
@@ -198,6 +238,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -222,6 +268,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
+        Elem->R1 = R1;
+        Elem->R2 = R2;
+        Elem->T1 = T1;
+        Elem->T2 = T2;
+        Elem->EApertures = EApertures;
+        Elem->RApertures = RApertures;
         ElemA->Amplitude = AmplitudeA;
         ElemB->Amplitude = AmplitudeB;
         ElemA->Frequency = FrequencyA;
@@ -247,7 +299,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(13, 1);
+            plhs[1] = mxCreateCellMatrix(19, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -261,6 +313,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 10, mxCreateString("NSamplesA"));
             mxSetCell(plhs[1], 11, mxCreateString("NSamplesB"));
             mxSetCell(plhs[1], 12, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 13,mxCreateString("T1"));
+            mxSetCell(plhs[1], 14,mxCreateString("T2"));
+            mxSetCell(plhs[1], 15,mxCreateString("R1"));
+            mxSetCell(plhs[1], 16,mxCreateString("R2"));
+            mxSetCell(plhs[1], 17,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 18,mxCreateString("EApertures"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
