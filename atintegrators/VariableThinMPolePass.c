@@ -146,6 +146,13 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (T2) ATaddvv(r6,T2);
         }
     }
+
+    /* reset the polynom values.
+    This is done to return the element to an unperturbed configuration.*/
+    for (i = 0; i < maxorder + 1; i++){
+        Elem->PolynomA[i] = 0;
+        Elem->PolynomB[i] = 0;
+    };
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
