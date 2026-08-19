@@ -294,7 +294,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self.TunerGain = kwargs.pop("TunerGain", 1.0)
         #self.PhaseGain = kwargs.pop("PhaseGain", 1.0)
         #self.VoltGain = kwargs.pop("VoltGain", 1.0)
-
+        self.OpenLoop = int(kwargs.pop("OpenLoop", 0))
 
         self.delay = kwargs.pop("delay", 1)
         self.every = kwargs.pop("every", 1)

@@ -369,13 +369,11 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             /* back to the center of the bucket */
             dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
             
-            
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             bunch_counter += 1;
         }
         
         /* move to ts_central time */
-        
         dt = -ts_central_z/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                        
