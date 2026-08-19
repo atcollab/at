@@ -20,6 +20,8 @@ struct elemab {
 struct elem {
     double* PolynomA;
     double* PolynomB;
+    double* PolynomA0;
+    double* PolynomB0;
     struct elemab* ElemA;
     struct elemab* ElemB;
     int Seed;
@@ -146,6 +148,12 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (T2) ATaddvv(r6,T2);
         }
     }
+
+    /* restore polynoms to initial value.*/
+    for (i = 0; i < maxorder + 1; i++) {
+        pola[i] = Elem->PolynomA0[i];
+        polb[i] = Elem->PolynomB0[i];
+    }
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -156,6 +164,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
+        double *PolynomA0, *PolynomB0;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
@@ -194,6 +203,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->RApertures=RApertures;
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
+        memcpy(Elem->PolynomA0, PolynomA, (MaxOrder + 1)*(sizeof(PolynomA[0])));
+        memcpy(Elem->PolynomB0, PolynomB, (MaxOrder + 1)*(sizeof(PolynomB[0])));
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
         Elem->Mode = Mode;
@@ -263,6 +274,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
+        printf("Aqui1");
+        memcpy(Elem->PolynomA0, PolynomA, (MaxOrder + 1)*(sizeof(PolynomA[0])));
+        memcpy(Elem->PolynomB0, PolynomB, (MaxOrder + 1)*(sizeof(PolynomB[0])));
+        printf("Aqui2");
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
         Elem->Mode = Mode;
