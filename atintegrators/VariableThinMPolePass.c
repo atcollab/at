@@ -268,6 +268,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
+        Elem->R1 = R1;
+        Elem->R2 = R2;
+        Elem->T1 = T1;
+        Elem->T2 = T2;
+        Elem->EApertures = EApertures;
+        Elem->RApertures = RApertures;
         ElemA->Amplitude = AmplitudeA;
         ElemB->Amplitude = AmplitudeB;
         ElemA->Frequency = FrequencyA;
