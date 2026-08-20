@@ -93,6 +93,9 @@ class VariableThinMultipole(Element):
             >>> pos_halfsine = at.VariableThinMultipole(
             ...     "PHALFSINE", at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency,
             ...     Sinmin=0)
+            >>> sine_saturated, at.VariableThinMultipole(
+            ...     "SATSINE", at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency,
+            ...     Sinmax=0.9)
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
