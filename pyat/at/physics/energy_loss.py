@@ -11,9 +11,12 @@ from scipy.optimize import least_squares
 
 from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
+from at.lattice import Collective, SimpleQuantDiff, QuantumDiffusion, VariableMultipole
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
+
+_EXCLUDED = [Collective, SimpleQuantDiff, QuantumDiffusion]
 
 
 class ELossMethod(Enum):
@@ -29,7 +32,7 @@ class ELossMethod(Enum):
 
 
 def get_energy_loss(
-    ring: Lattice, method: ELossMethod | None = ELossMethod.INTEGRAL
+    ring: Lattice, method: ELossMethod | None = ELossMethod.INTEGRAL, orbit6=None
 ) -> float:
     """Computes the energy loss per turn
 
@@ -77,17 +80,33 @@ def get_energy_loss(
 
     # noinspection PyShadowingNames
     @check_radiation(True)
-    def tracking(ring):
+    def tracking(ring, orbit6):
         """Losses from tracking"""
         energy = ring.energy
         particle = ring.particle
         delta = 0.0
-        for e in ring:
-            if e.PassMethod == 'SimpleRadiationRadPass':
-                delta -= e.U0 / energy #Needed to prevent mixing with rad. damping
-            elif e.PassMethod.endswith('RadPass'):
-                ot = e.track(np.zeros(6), energy=energy, particle=particle)
-                delta += ot[4]
+        try:
+            ring = ring.disable_6d(*_EXCLUDED, copy=True)
+            for e in ring[VariableMultipole]:
+                e.PassMethod = "IdentityPass"
+            if orbit6 is None:
+                o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
+            else:
+                o6 = orbit6
+            o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
+            delta = np.squeeze(o6l)[4] - o6[4]
+        except:
+            msg = (
+                "Closed orbit not found, falling back to energy loss "
+                "calculation excluding orbit effects"
+            )
+            warn(AtWarning(msg))
+            for e in ring:
+                if e.PassMethod == "SimpleRadiationRadPass":
+                    delta -= e.U0 / energy  # Needed to prevent mixing with rad. damping
+                elif e.PassMethod.endswith("RadPass"):
+                    ot = e.track(np.zeros(6), energy=energy, particle=particle)
+                    delta += ot[4]
         return -delta * energy
 
     if isinstance(method, str):
@@ -96,7 +115,7 @@ def get_energy_loss(
     if method is ELossMethod.INTEGRAL:
         return ring.periodicity * integral(ring)
     elif method == ELossMethod.TRACKING:
-        return ring.periodicity * tracking(ring)
+        return ring.periodicity * tracking(ring, orbit6)
     else:
         raise AtError(f"Invalid method: {method}")
 

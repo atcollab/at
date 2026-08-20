@@ -1,29 +1,30 @@
 """
-Non-linear optics
+Non-linear optics.
 """
 
-from typing import Optional, Sequence
-
+from collections.abc import Sequence
 import numpy as np
 from scipy.special import factorial
+import warnings
 
-from ..lattice import Element, Lattice
+from ..lattice import Lattice, AtError, DeltaQ, AtWarning
 from ..tracking import internal_lpass
 from .harmonic_analysis import get_tunes_harmonic
 from .linear import get_chrom, get_tune, linopt4, linopt6
 from .orbit import Orbit, find_orbit
 
-__all__ = ["detuning", "chromaticity", "gen_detuning_elem", "tunes_vs_amp"]
+__all__ = ["chromaticity", "detuning", "gen_detuning_elem", "tunes_vs_amp"]
 
 
 def tunes_vs_amp(
     ring: Lattice,
-    amp: Optional[Sequence[float]] = None,
-    dim: Optional[int] = 0,
-    nturns: Optional[int] = 512,
+    amp: Sequence[float] | None = None,
+    dim: int = 0,
+    nturns: int = 512,
+    dp: float = None,
     **kwargs,
 ) -> np.ndarray:
-    r"""Generates a range of tunes for varying x, y, or z amplitudes
+    r"""Generates a range of tunes for varying x, y, or z amplitudes.
 
     Parameters:
         ring:               Lattice description
@@ -69,7 +70,7 @@ def tunes_vs_amp(
         py = np.array([np.matmul(invy, [party[i], partyp[i]]) for i in range(len(amp))])
         return px[:, 0, :] - 1j * px[:, 1, :], py[:, 0, :] - 1j * py[:, 1, :]
 
-    l0, bd, _ = linopt6(ring)
+    l0, bd, _ = linopt6(ring, dp=dp)
     orbit = l0["closed_orbit"]
     tunes = bd["tune"]
 
@@ -84,10 +85,11 @@ def tunes_vs_amp(
 
 def detuning(
     ring: Lattice,
-    xm: Optional[float] = 0.3e-4,
-    ym: Optional[float] = 0.3e-4,
-    npoints: Optional[int] = 3,
-    nturns: Optional[int] = 512,
+    xm: float = 0.3e-4,
+    ym: float = 0.3e-4,
+    npoints: int = 3,
+    nturns: int = 512,
+    dp: float = None,
     **kwargs,
 ) -> tuple:
     """Compute the tunes for a sequence of amplitudes.
@@ -127,7 +129,7 @@ def detuning(
     """
     ring4d = ring.disable_6d(copy=True)
 
-    lindata0, *_ = linopt4(ring4d)
+    lindata0, *_ = linopt4(ring4d, dp=dp)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
     _x = np.linspace(-xm, xm, npoints)
@@ -135,8 +137,8 @@ def detuning(
     _x2 = _x * _x
     _y2 = _y * _y
 
-    q_dx = tunes_vs_amp(ring4d, amp=_x, dim=0, nturns=nturns, **kwargs)
-    q_dy = tunes_vs_amp(ring4d, amp=_y, dim=2, nturns=nturns, **kwargs)
+    q_dx = tunes_vs_amp(ring4d, amp=_x, dim=0, nturns=nturns, dp=dp, **kwargs)
+    q_dy = tunes_vs_amp(ring4d, amp=_y, dim=2, nturns=nturns, dp=dp, **kwargs)
     q_dx, _ = np.modf(q_dx * ring4d.periodicity)
     q_dy, _ = np.modf(q_dy * ring4d.periodicity)
 
@@ -159,18 +161,18 @@ def detuning(
 
 def chromaticity(
     ring: Lattice,
-    method: Optional[str] = "linopt",
-    dpm: Optional[float] = 0.02,
-    npoints: Optional[int] = 11,
-    order: Optional[int] = 3,
-    dp: Optional[float] = 0,
+    method: str = "linopt",
+    dpm: float = 0.02,
+    npoints: int = 11,
+    order: int = 3,
+    dp: float = 0,
     **kwargs,
 ):
-    r"""Computes the non-linear chromaticities
+    r"""Computes the non-linear chromaticities.
 
     This function computes the tunes for the specified momentum offsets.
     Then it fits this data and returns the chromaticity up to the given
-    order (npoints>order)
+    order (npoints>order).
 
     Parameters:
         ring:       Lattice description
@@ -188,60 +190,112 @@ def chromaticity(
 
     Returns:
         fit (ndarray): Horizontal Vertical polynomial coefficients
-                       from ``np.polyfit`` of shape (2, order+1)
+                       from ``np.polyfit`` of shape (2, order+1).
+                       The polynomial coefficients are multiplied by
+                       ```k!``` where ```k``` is the order of the
+                       coefficient.
         dpa: dp array of shape (npoints,)
         qz: tune array of shape (npoints, 2)
     """
     if order == 0:
         return get_chrom(ring, dp=dp, **kwargs)
     elif order > npoints - 1:
-        raise ValueError("order should be smaller than npoints-1")
+        msg = f"order should be smaller than npoints-1={npoints-1}"
+        raise ValueError(msg)
     else:
         dpa = np.linspace(-dpm, dpm, npoints)
         qz = []
+        dpf = []
         for dpi in dpa:
-            qz.append(
-                get_tune(ring, method=method, dp=dp + dpi, remove_dc=True, **kwargs)
-            )
-        fit = np.polyfit(dpa, qz, order)[::-1]
+            try:
+                qi = get_tune(ring, method=method, dp=dp + dpi, **kwargs)
+                qz.append(qi)
+                dpf.append(dpi)
+            except AtError:
+                msg = f"Unstable ring, skip step dp={dpi}"
+                warnings.warn(AtWarning(msg), stacklevel=1)
+        fit = np.polyfit(dpf, qz, order)[::-1]
         fitx = fit[:, 0] * factorial(np.arange(order + 1))
         fity = fit[:, 1] * factorial(np.arange(order + 1))
-        return np.array([fitx, fity]), dpa, np.array(qz)
+        return np.array([fitx, fity]), dpf, np.array(qz)
 
 
-def gen_detuning_elem(ring: Lattice, orbit: Optional[Orbit] = None) -> Element:
-    """Generates a detuning element
+def gen_detuning_elem(
+    ring: Lattice,
+    orbit: Orbit | None = None,
+    orbit6: Orbit | None = None,
+    qpx: Sequence[float] | None = None,
+    qpy: Sequence[float] | None = None,
+    detuning_coeff: Sequence[float] | None = None,
+    alphac: Sequence[float] | None = None,
+    dp: float = None,
+) -> DeltaQ:
+    """Generates a detuning element.
+
+    The detuning coefficients and chromaticities are computed in using the 4D
+    lattice model if they are not provided by the user.
 
     Parameters:
         ring:           Lattice description
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array).
+        qpx:            horizontal chromatic detuning coefficients. Default None.
+          If specified qpy should also be provided, if not first order term computed
+          automatically from ring. Higher order terms can be calculated with
+          physics.chromaticity()
+        qpy:            vertical chromatic detuning coefficients. Default None.
+          If specified qpy should also be provided, if not first order term computed
+          automatically from ring. Higher order terms can be calculated with
+          physics.chromaticity()
+        detuning_coeff: First order amplitude detuning coefficients
+          [dQx/dJx, dQx/dJy, dQy/dJy]. Default None: coefficient computer from ring.
+          Can be claculated with physics.detuning()
+        alphac: Higher order momentum compaction factor. Default None. Can be
+          Can be claculated with physics.mcf()
 
     Returns:
-        detuneElem:     Element reproducing the detuning of the ring with
+        nonlin_elem:     DeltaQ Element reproducing the detuning of the ring with
           amplitude and momentum
     """
+    ringnorad = ring.disable_6d(copy=True)
+    ringrad = ring.enable_6d(copy=True)
+    if (qpx is None and qpy is not None) or (qpy is None and qpx is not None):
+        msg = (
+            "Both transverse planes have to be provided for"
+            "manual non-linear chromaticity input"
+        )
+        raise AtError(msg)
+    elif qpx is None and qpy is None:
+        qpx, qpy = get_chrom(ringnorad)[:2]
+
+    if detuning_coeff is None:
+        _, r1, *_ = detuning(ringnorad, xm=1.0e-4, ym=1.0e-4, npoints=3)
+        detuning_coeff = [r1[0][0], r1[0][1], r1[1][1]]
+
     if orbit is None:
-        orbit, _ = find_orbit(ring)
-    lindata0, _, _ = ring.linopt6(get_chrom=False, orbit=orbit)
-    xsi = get_chrom(ring.disable_6d(copy=True))
-    r0, r1, x, q_dx, y, q_dy = detuning(
-        ring.radiation_off(copy=True), xm=1.0e-4, ym=1.0e-4, npoints=3
-    )
-    nonlin_elem = Element(
+        orbit, _ = find_orbit(ringnorad, dp=dp)
+
+    if orbit6 is None:
+        orbit6, _ = find_orbit(ringrad, dp=dp)
+
+    ld_norad, _, _ = ringnorad.linopt6(get_chrom=False, orbit=orbit, dp=dp)
+    ld_rad, _, _ = ringrad.linopt6(get_chrom=False, orbit=orbit6, dp=dp)
+
+    nonlin_elem = DeltaQ(
         "NonLinear",
-        PassMethod="DeltaQPass",
-        Betax=lindata0.beta[0],
-        Betay=lindata0.beta[1],
-        Alphax=lindata0.alpha[0],
-        Alphay=lindata0.alpha[1],
-        chromx_arr=np.array([xsi[0]]),
-        chromy_arr=np.array([xsi[1]]),
-        A1=r1[0][0],
-        A2=r1[0][1],
-        A3=r1[1][1],
+        ld_norad.beta,
+        ld_norad.alpha,
+        ld_norad.dispersion,
+        ld_rad.beta,
+        ld_rad.alpha,
+        ld_rad.dispersion,
+        np.atleast_1d(qpx),
+        np.atleast_1d(qpy),
+        detuning_coeff,
+        alphac,
         T1=-orbit,
         T2=orbit,
-        chrom_maxorder=1,
+        T1Rad=-orbit6,
+        T2Rad=orbit6,
     )
     return nonlin_elem
