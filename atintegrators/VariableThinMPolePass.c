@@ -20,6 +20,8 @@ struct elemab {
 struct elem {
     double* PolynomA;
     double* PolynomB;
+    double* PolynomAstart;
+    double* PolynomBstart;
     struct elemab* ElemA;
     struct elemab* ElemB;
     int Seed;
@@ -146,6 +148,12 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (T2) ATaddvv(r6,T2);
         }
     }
+
+    /* restore polynoms to initial value.*/
+    for (i = 0; i < maxorder + 1; i++) {
+        pola[i] = Elem->PolynomAstart[i];
+        polb[i] = Elem->PolynomBstart[i];
+    }
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -194,6 +202,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->RApertures=RApertures;
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
+        Elem->PolynomAstart = (double *) atMalloc(sizeof(double *));
+        Elem->PolynomBstart = (double *) atMalloc(sizeof(double *));
+        memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
+        memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
         Elem->Mode = Mode;
@@ -263,6 +275,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
+        Elem->PolynomAstart = (double *) atMalloc(sizeof(double *));
+        Elem->PolynomBstart = (double *) atMalloc(sizeof(double *));
+        memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
+        memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
         Elem->Seed = Seed;
         Elem->Mode = Mode;
