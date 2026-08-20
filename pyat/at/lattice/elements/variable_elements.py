@@ -33,6 +33,8 @@ class VariableThinMultipole(Element):
         FrequencyB=float,
         PhaseA=float,
         PhaseB=float,
+        Sinmin=float,
+        Sinmax=float,
         Seed=int,
         NSamplesA=int,
         NSamplesB=int,
@@ -66,6 +68,8 @@ class VariableThinMultipole(Element):
             FrequencyB(float): Frequency of the sine excitation for PolynomB
             PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0
+            Sinmin(float): Sine function min limit. Default -1.1
+            Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
             Seed(int): Seed of the random number generator for white
                        noise excitation. Default datetime.now()
@@ -86,6 +90,9 @@ class VariableThinMultipole(Element):
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency
             ... )
+            >>> pos_halfsine = at.VariableThinMultipole(
+            ...     "PHALFSINE", at.ACMode.SINE, AmplitudeB=amp, FrequencyB=frequency,
+            ...     Sinmin=0)
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
@@ -168,8 +175,12 @@ class VariableThinMultipole(Element):
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
         phase = kwargs.pop("Phase" + ab, 0)
+        sinmin = kwargs.pop("Sinmin", -1.1)
+        sinmax = kwargs.pop("Sinmax", 1.1)
         setattr(self, "Frequency" + ab, frequency)
         setattr(self, "Phase" + ab, phase)
+        setattr(self, "Sinmin", sinmin)
+        setattr(self, "Sinmax", sinmax)
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
