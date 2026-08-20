@@ -13,6 +13,7 @@ struct elemab {
     double* Amplitude;
     double Frequency;
     double Phase;
+    double Sinmin, Sinmax;
     int NSamples;
     double* Func;
 };
@@ -60,7 +61,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int seed, int order, int periodic)
 {
     int idx;
-    double ampt, freq, ph, val;
+    double ampt, freq, ph, sinval, val;
     double* func;
     double* amp = elem->Amplitude;
     if (!amp) {
@@ -71,7 +72,10 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     case 0:
         freq = elem->Frequency;
         ph = elem->Phase;
-        ampt *= sin(TWOPI * freq * t + ph);
+        sinval = sin(TWOPI * freq * t + ph);
+        if (sinval < elem->Sinmin) sinval = elem->Sinmin;
+        if (sinval > elem->Sinmax) sinval = elem->Sinmax;
+        ampt *= sinval;
         return ampt;
     case 1:
         val = atrandn(0.0, 1.0);
@@ -149,7 +153,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         }
     }
 
-    /* restore polynoms to initial value.*/
+    /* restore polynoms to initial value. */
     for (i = 0; i < maxorder + 1; i++) {
         pola[i] = Elem->PolynomAstart[i];
         polb[i] = Elem->PolynomBstart[i];
@@ -167,6 +171,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
+        double Sinmin, Sinmax;
         struct elemab *ElemA, *ElemB;
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -184,6 +189,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
+        Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
+        Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
@@ -217,6 +224,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
+        ElemA->Sinmin = Sinmin;
+        ElemB->Sinmin = Sinmin;
+        ElemA->Sinmax = Sinmax;
+        ElemB->Sinmax = Sinmax;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -247,6 +258,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
+        double Sinmin, Sinmax;
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
@@ -266,6 +278,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
+        Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
+        Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
@@ -296,6 +310,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
         ElemB->Phase = PhaseB;
+        ElemA->Sinmin = Sinmin;
+        ElemB->Sinmin = Sinmin;
+        ElemA->Sinmax = Sinmax;
+        ElemB->Sinmax = Sinmax;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -315,7 +333,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(19, 1);
+            plhs[1] = mxCreateCellMatrix(21, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -329,12 +347,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 10, mxCreateString("NSamplesA"));
             mxSetCell(plhs[1], 11, mxCreateString("NSamplesB"));
             mxSetCell(plhs[1], 12, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 13,mxCreateString("T1"));
-            mxSetCell(plhs[1], 14,mxCreateString("T2"));
-            mxSetCell(plhs[1], 15,mxCreateString("R1"));
-            mxSetCell(plhs[1], 16,mxCreateString("R2"));
-            mxSetCell(plhs[1], 17,mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 18,mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 13, mxCreateString("T1"));
+            mxSetCell(plhs[1], 14, mxCreateString("T2"));
+            mxSetCell(plhs[1], 15, mxCreateString("R1"));
+            mxSetCell(plhs[1], 16, mxCreateString("R2"));
+            mxSetCell(plhs[1], 17, mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 18, mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 19, mxCreateString("Sinmin"));
+            mxSetCell(plhs[1], 20, mxCreateString("Sinmax"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
