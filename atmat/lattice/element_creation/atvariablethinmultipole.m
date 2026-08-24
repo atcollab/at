@@ -20,6 +20,8 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
+%    SINMIN         Sine function min limit. Default -1.1
+%    SINMAX         Sine function max limit. Default +1.1
 %    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
@@ -50,6 +52,12 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 % % Create a white noise dipole excitation of amplitude 0.1 mrad
 % >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
+%
+% % Create a half-sine function
+% >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmin',0)
+%
+% % Create a sine saturation
+% >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmax',0.9)
 
 % Input parser for option
 
@@ -93,6 +101,15 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         if ~isfield(rsrc,funcarg)
             rsrc.(funcarg) = 0;
         end
+        funcarg="Sinmin";
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = -1.1;
+        end
+        funcarg="Sinmax";
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 1.1;
+        end
+
     end
 
     function rsrc = setwhitenoise(rsrc, ~)
