@@ -7,6 +7,7 @@ __all__ = [
     "Aperture",
     "BeamMoments",
     "Collimator",
+    "DeltaQ",
     "Drift",
     "EnergyLoss",
     "LongElement",
@@ -21,7 +22,7 @@ __all__ = [
 ]
 
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 
@@ -455,7 +456,8 @@ class M66(Radiative, Element):
         Args:
             family_name:    Name of the element
             m66:            Transfer matrix. Default: Identity matrix.
-            m66rad:         Transfer matrix including radiation. Default: Identity matrix.
+            m66rad:         Transfer matrix including radiation.
+                            Default:Identity matrix.
 
 
         Default PassMethod: ``Matrix66Pass``
@@ -463,10 +465,107 @@ class M66(Radiative, Element):
         if m66 is None:
             m66 = np.asfortranarray(np.identity(6))
         if m66rad is None:
-            m66rad = m66     
+            m66rad = m66
         kwargs.setdefault("PassMethod", "Matrix66Pass")
         kwargs.setdefault("M66", m66)
         kwargs.setdefault("M66Rad", m66rad)
+        super().__init__(family_name, **kwargs)
+
+
+class DeltaQ(Radiative, Element):
+    """Lumped element describing amplitude detuning and chromaticity."""
+
+    _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES]
+
+    _conversions = dict(
+        Element._conversions,
+        Chrom_MaxOrder=int,
+        Alphac_MaxOrder=int,
+        Beta=_array,
+        Alpha=_array,
+        Dispersion=_array,
+        BetaRad=_array,
+        AlphaRad=_array,
+        DispersionRad=_array,
+        ChromX=_array,
+        ChromY=_array,
+        Detuning=_array,
+    )
+
+    _file_classname = "DeltaQ"
+    default_pass = {False: "DeltaQPass", True: "DeltaQRadPass"}
+
+    def __init__(
+        self,
+        family_name: str,
+        beta: Sequence[float] = [1.0, 1.0],
+        alpha: Sequence[float] = [0.0, 0.0],
+        dispersion: Sequence[float] | None = None,
+        betarad: Sequence[float] | None = None,
+        alpharad: Sequence[float] | None = None,
+        dispersionrad: Sequence[float] | None = None,
+        qpx: Sequence[float] = [0.0],
+        qpy: Sequence[float] = [0.0],
+        detuning_coefficients: Sequence[float] = [0.0, 0.0, 0.0],
+        alphac: Sequence[float] | None = None,
+        **kwargs,
+    ):
+        """
+        Object to lump sources of tune shifts from a ring in a single Element.
+        All optics imput argument and T1 /T2 have *Rad equivalent used to
+        enable_6d.
+
+        Args:
+            family_name:    Name of the element
+            beta:                   Beta functions at the entrance of the element
+                                    Default=[1.0, 1.0]
+            alpha:                  Alpha function at the entrance of the element
+                                    Default=[0.0, 0.0]
+            dispersion:             Dispersion function at the entrance of the element.
+                                    Used to cancel dispersion contribution to the closed
+                                    orbit for off-momentum particles before applying the
+                                    rotation in phase-space. Default=None
+            qpx:                    Horizontal energy detuning coefficients
+                                    Default=0.0
+            qpy:                    Vertical energy detuning coefficients
+                                    Default=0.0
+            detuning_coefficients:  First order amplitude detuning coefficients
+                                    [dQx/dJx, dQx/dJy, dQy/dJy]
+                                    Default=[0.0, 0.0, 0.0]
+            alphac:                 Higher order (>1) momentum compaction factor
+                                    Default=[0.0]
+
+
+
+        Default PassMethod: ``DeltaQPass``
+        """
+        if betarad is None:
+            betarad = beta
+        if alpharad is None:
+            alpharad = alpha
+
+        qpx = np.atleast_1d(qpx)
+        qpy = np.atleast_1d(qpy)
+        maxorder = max(len(qpx), len(qpy))
+        qpx = np.pad(qpx, (0, maxorder - len(qpx)))
+        qpy = np.pad(qpy, (0, maxorder - len(qpy)))
+        kwargs.setdefault("PassMethod", "DeltaQPass")
+        kwargs.setdefault("Beta", beta)
+        kwargs.setdefault("Alpha", alpha)
+        kwargs.setdefault("BetaRad", betarad)
+        kwargs.setdefault("AlphaRad", alpharad)
+        kwargs.setdefault("ChromX", qpx)
+        kwargs.setdefault("ChromY", qpy)
+        kwargs.setdefault("Detuning", detuning_coefficients)
+        kwargs.setdefault("Chrom_MaxOrder", maxorder)
+        if dispersion is not None:
+            if dispersionrad is None:
+                dispersionrad = dispersion
+            kwargs.setdefault("Dispersion", dispersion)
+            kwargs.setdefault("DispersionRad", dispersionrad)
+        if alphac is not None:
+            kwargs.setdefault("Alphac", alphac)
+            kwargs.setdefault("Alphac_MaxOrder", len(alphac))
         super().__init__(family_name, **kwargs)
 
 
