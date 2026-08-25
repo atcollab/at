@@ -35,7 +35,10 @@ class VariableThinMultipole(Element):
         PhaseB=float,
         Sinmin=float,
         Sinmax=float,
-        Seed=int,
+        BufferA=_anyarray,
+        BufferB=_anyarray,
+        BufferSize=int,
+        BufferOffset=int,
         NSamplesA=int,
         NSamplesB=int,
         FuncA=_array,
@@ -70,9 +73,10 @@ class VariableThinMultipole(Element):
             PhaseB(float): Phase of the sine excitation for PolynomB. Default 0
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
+            BufferSize(int): Sets the buffer size in WHITENOISE mode.
+            BufferOffset(int): Offset in turns for the first element of the buffer
+                         in WHITENOISE mode.
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
             FuncA(list): User defined tbt kick list for PolynomA
             FuncB(list): User defined tbt kick list for PolynomB
             Periodic(bool): If True (default) the user defined kick is repeated
@@ -108,6 +112,8 @@ class VariableThinMultipole(Element):
               ``Amplitude(A,B)`` has to be provided
             * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
+            * In ``at.ACMode.ARBITRARY`` the seed is fixed by the tracking function, and
+              it is common to all threads. See at.track.
         """
 
         def _default_amplitudes(ampa, ampb):
@@ -142,8 +148,6 @@ class VariableThinMultipole(Element):
         self.Periodic = kwargs.pop("Periodic", True)
         AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
         AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
-        if self.Mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = np.zeros(self.MaxOrder + 1)
         self.PolynomB = np.zeros(self.MaxOrder + 1)
         ramps = kwargs.pop("Ramps", None)
@@ -171,6 +175,8 @@ class VariableThinMultipole(Element):
                 amplitude = np.append(amp, amplitude)
             if self.Mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
+            if self.Mode == ACMode.WHITENOISE:
+                self._set_white_noise(ab, **kwargs)
             if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
         return amplitude
@@ -184,6 +190,16 @@ class VariableThinMultipole(Element):
         setattr(self, "Phase" + ab, phase)
         setattr(self, "Sinmin", sinmin)
         setattr(self, "Sinmax", sinmax)
+
+    def _set_white_noise(ab, **kwargs):
+        bfsize = int(kwargs.setdefault("BufferSize", 0))
+        bfoffset = int(kwargs.setdefault("BufferOffset", 0))
+        if not hasattr(self, "BufferSize"):
+            setattr(self, "BufferSize", bfsize)
+        if not hasattr(self, "BufferOffset"):
+            setattr(self, "BufferOffset", bfoffset)
+        if not hasattr(self, "Buffer" + ab):
+            setattr(self, "Buffer" + ab, np.zeros((self,bfsize)))
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
