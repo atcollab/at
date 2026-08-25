@@ -59,7 +59,7 @@ double get_amp(double amp, double* ramps, double t)
 }
 
 double get_pol(struct elem* El, struct elemab* elem, double* ramps, int mode,
-    double t, int turn, int order, int periodic)
+    double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
     int idx;
     double ampt, freq, ph, val;
@@ -79,9 +79,8 @@ double get_pol(struct elem* El, struct elemab* elem, double* ramps, int mode,
         ampt *= val;
         return ampt;
     case 1:
-        val = atrandn(0.0, 1.0); // uses pcg32_global
+        val = atrandn_r(rng, 0, 1);
         idx = turn - El->BufferOffset;
-        printf("idx %d\n", idx);
         if (idx >= 0 && idx < El->BufferSize) elem->Buffer[idx] = val;
         ampt *= val;
         return ampt;
@@ -99,7 +98,8 @@ double get_pol(struct elem* El, struct elemab* elem, double* ramps, int mode,
     }
 }
 
-void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles)
+void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles,
+    pcg32_random_t* rng)
 {
 
     int i, c;
@@ -127,8 +127,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
 
     if (mode != 0) {
         for (i = 0; i < maxorder + 1; i++) {
-            pola[i] = get_pol(Elem, ElemA, ramps, mode, t, turn, i, periodic);
-            polb[i] = get_pol(Elem, ElemB, ramps, mode, t, turn, i, periodic);
+            pola[i] = get_pol(Elem, ElemA, ramps, mode, t, turn, i, periodic, rng);
+            polb[i] = get_pol(Elem, ElemB, ramps, mode, t, turn, i, periodic, rng);
         };
     };
 
@@ -138,8 +138,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(Elem, ElemA, ramps, mode, tpart, turn, i, periodic);
-                    polb[i] = get_pol(Elem, ElemB, ramps, mode, tpart, turn, i, periodic);
+                    pola[i] = get_pol(Elem, ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(Elem, ElemB, ramps, mode, tpart, turn, i, periodic, rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -246,7 +246,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles);
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->thread_rng);
     return Elem;
 }
 
@@ -318,8 +318,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->RApertures = RApertures;
         Elem->BufferSize = BufferSize;
         Elem->BufferOffset= BufferOffset;
-        Elem->Amplitude = AmplitudeA;
-        Elem->Amplitude = AmplitudeB;
+        ElemA->Amplitude = AmplitudeA;
+        ElemB->Amplitude = AmplitudeB;
         ElemA->Frequency = FrequencyA;
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
@@ -339,7 +339,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
