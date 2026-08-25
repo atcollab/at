@@ -35,8 +35,8 @@ class VariableThinMultipole(Element):
         PhaseB=float,
         Sinmin=float,
         Sinmax=float,
-        BufferA=_anyarray,
-        BufferB=_anyarray,
+        BufferA=_array,
+        BufferB=_array,
         BufferSize=int,
         BufferOffset=int,
         NSamplesA=int,
@@ -191,7 +191,7 @@ class VariableThinMultipole(Element):
         setattr(self, "Sinmin", sinmin)
         setattr(self, "Sinmax", sinmax)
 
-    def _set_white_noise(ab, **kwargs):
+    def _set_white_noise(self, ab, **kwargs):
         bfsize = int(kwargs.setdefault("BufferSize", 0))
         bfoffset = int(kwargs.setdefault("BufferOffset", 0))
         if not hasattr(self, "BufferSize"):
@@ -199,7 +199,7 @@ class VariableThinMultipole(Element):
         if not hasattr(self, "BufferOffset"):
             setattr(self, "BufferOffset", bfoffset)
         if not hasattr(self, "Buffer" + ab):
-            setattr(self, "Buffer" + ab, np.zeros((self,bfsize)))
+            setattr(self, "Buffer" + ab, np.zeros((bfsize)))
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
