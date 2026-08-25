@@ -147,10 +147,8 @@ class VariableThinMultipole(Element):
             # after the definition of MaxOrder we can create Amplitudes
             self._set_amplitudes(AmplitudeA, AmplitudeB)
             self.Periodic = kwargs.pop("Periodic", True)
-            if AmplitudeB:
-                self._set_params(AmplitudeB, "B", **kwargs)
-            if AmplitudeA:
-                self._set_params(AmplitudeA, "A", **kwargs)
+            self._set_params(AmplitudeB, "B", **kwargs)
+            self._set_params(AmplitudeA, "A", **kwargs)
             self.PolynomA = np.zeros(self.MaxOrder + 1)
             self.PolynomB = np.zeros(self.MaxOrder + 1)
             ramps = kwargs.pop("Ramps", None)
@@ -172,12 +170,13 @@ class VariableThinMultipole(Element):
             self.AmplitudeB = ampb
 
     def _set_params(self, amplitude, ab, **kwargs):
-        if self.Mode == ACMode.SINE:
-            self._set_sine(ab, **kwargs)
-        if self.Mode == ACMode.WHITENOISE:
-            self._set_white_noise(ab, **kwargs)
-        if self.Mode == ACMode.ARBITRARY:
-            self._set_arb(ab, **kwargs)
+        if amplitude is not None:
+            if self.Mode == ACMode.SINE:
+                self._set_sine(ab, **kwargs)
+            if self.Mode == ACMode.WHITENOISE:
+                self._set_white_noise(ab, **kwargs)
+            if self.Mode == ACMode.ARBITRARY:
+                self._set_arb(ab, **kwargs)
 
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
