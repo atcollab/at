@@ -197,8 +197,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         BufferA=atGetOptionalDoubleArray(ElemData,"BufferA"); check_error();
         BufferB=atGetOptionalDoubleArray(ElemData,"BufferB"); check_error();
-        BufferSize=atGetOptionalLong(ElemData, "Buffersize", 0); check_error();
-        BufferOffset=atGetOptionalLong(ElemData, "Bufferoffset", 0); check_error();
+        BufferSize=atGetOptionalLong(ElemData, "BufferSize", 0); check_error();
+        BufferOffset=atGetOptionalLong(ElemData, "BufferOffset", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
@@ -354,7 +354,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(22, 1);
+            plhs[1] = mxCreateCellMatrix(24, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -375,8 +375,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 17, mxCreateString("EApertures"));
             mxSetCell(plhs[1], 18, mxCreateString("Sinmin"));
             mxSetCell(plhs[1], 19, mxCreateString("Sinmax"));
-            mxSetCell(plhs[1], 20, mxCreateString("Buffer"));
-            mxSetCell(plhs[1], 21, mxCreateString("Buffersize"));
+            mxSetCell(plhs[1], 20, mxCreateString("BufferA"));
+            mxSetCell(plhs[1], 21, mxCreateString("BufferB"));
+            mxSetCell(plhs[1], 22, mxCreateString("BufferSize"));
+            mxSetCell(plhs[1], 23, mxCreateString("BufferOffset"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
