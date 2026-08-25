@@ -16,6 +16,7 @@ struct elemab {
     double Sinmin, Sinmax;
     int NSamples;
     double* Func;
+    double* Buffer;
 };
 
 struct elem {
@@ -35,9 +36,7 @@ struct elem {
     double *T2;
     double *EApertures;
     double *RApertures;
-    double *Buffer;
-    double BufferSize;
-    double BufferOffset;
+    int BufferSize, BufferOffset;
 };
 
 double get_amp(double amp, double* ramps, double t)
@@ -59,7 +58,7 @@ double get_amp(double amp, double* ramps, double t)
     return ampt;
 }
 
-double get_pol(struct elemab* elem, double* ramps, int mode,
+double get_pol(struct elem* El, struct elemab* elem, double* ramps, int mode,
     double t, int turn, int order, int periodic)
 {
     int idx;
@@ -81,8 +80,9 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
         return ampt;
     case 1:
         val = atrandn(0.0, 1.0); // uses pcg32_global
-        idx = turn - elem->BufferOffset;
-        if (idx >= 0 && idx < elem->BufferSize) elem->Buffer[idx] = val;
+        idx = turn - El->BufferOffset;
+        printf("idx %d\n", idx);
+        if (idx >= 0 && idx < El->BufferSize) elem->Buffer[idx] = val;
         ampt *= val;
         return ampt;
     case 2:
@@ -115,7 +115,6 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     struct elemab* ElemB = Elem->ElemB;
     double* ramps = Elem->Ramps;
 
-
     // offsets at input and output
     double *T1 = Elem->T1;
     double *T2 = Elem->T2;
@@ -128,8 +127,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
 
     if (mode != 0) {
         for (i = 0; i < maxorder + 1; i++) {
-            pola[i] = get_pol(ElemA, ramps, mode, t, turn, i, periodic, rng);
-            polb[i] = get_pol(ElemB, ramps, mode, t, turn, i, periodic, rng);
+            pola[i] = get_pol(Elem, ElemA, ramps, mode, t, turn, i, periodic);
+            polb[i] = get_pol(Elem, ElemB, ramps, mode, t, turn, i, periodic);
         };
     };
 
@@ -139,8 +138,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic);
+                    pola[i] = get_pol(Elem, ElemA, ramps, mode, tpart, turn, i, periodic);
+                    polb[i] = get_pol(Elem, ElemB, ramps, mode, tpart, turn, i, periodic);
                 };
             };
             /*  misalignment at entrance  */
@@ -224,6 +223,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
+        Elem->BufferSize = BufferSize;
+        Elem->BufferOffset= BufferOffset;
         ElemA->Amplitude = AmplitudeA;
         ElemB->Amplitude = AmplitudeB;
         ElemA->Frequency = FrequencyA;
@@ -236,10 +237,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Sinmax = Sinmax;
         ElemA->Buffer = BufferA;
         ElemB->Buffer = BufferB;
-        ElemA->BufferSize = BufferSize;
-        ElemB->BufferSize = BufferSize;
-        ElemA->BufferOffset= BufferOffset;
-        ElemB->BufferOffset = BufferOffset;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
@@ -319,8 +316,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Elem->T2 = T2;
         Elem->EApertures = EApertures;
         Elem->RApertures = RApertures;
-        ElemA->Amplitude = AmplitudeA;
-        ElemB->Amplitude = AmplitudeB;
+        Elem->BufferSize = BufferSize;
+        Elem->BufferOffset= BufferOffset;
+        Elem->Amplitude = AmplitudeA;
+        Elem->Amplitude = AmplitudeB;
         ElemA->Frequency = FrequencyA;
         ElemB->Frequency = FrequencyB;
         ElemA->Phase = PhaseA;
@@ -331,10 +330,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Sinmax = Sinmax;
         ElemA->Buffer = BufferA;
         ElemB->Buffer = BufferB;
-        ElemA->BufferSize = BufferSize;
-        ElemB->BufferSize = BufferSize;
-        ElemA->BufferOffset= BufferOffset;
-        ElemB->BufferOffset = BufferOffset;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
