@@ -22,8 +22,10 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    PHASEB         Phase of SINE excitation for PolynomB
 %    SINMIN         Sine function min limit. Default -1.1
 %    SINMAX         Sine function max limit. Default +1.1
+%    BUFFERSIZE     Set the buffer length in WHITENOISE mode.
+%    BUFFEROFFSET   Offset in turns for the first element of the buffer
+%                         in WHITENOISE mode.
 %    MAXORDER       Order of the multipole for a scalar amplitude
-%    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
 %    PERIODIC       If true (default) the user input kick list is repeated
@@ -44,6 +46,8 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    AMPLITUDE is required
 %    3. For ARBITRARY excitation modes the FUNC corresponding to the input
 %    AMPLITUDE is required
+%    4. In ARBITRARY mode the seed is fixed by the tracking function, and
+%    it is common to all threads. See at.track.
 %
 %  EXAMPLES
 %
@@ -58,6 +62,9 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 % % Create a sine saturation
 % >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmax',0.9)
+%
+% % Create whitenoise and store the random values starting from third turn for 10 turns.
+% >> atvariablethinmultipole('v',"WHITENOISE",'AmplitudeB',1e-3,'BufferSize',10,'BufferOffset',2);
 
 % Input parser for option
 
@@ -112,8 +119,20 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
 
     end
 
-    function rsrc = setwhitenoise(rsrc, ~)
-    % it will later implement a buffer
+    function rsrc = setwhitenoise(rsrc, ab)
+      funcarg = 'BufferSize';
+      if ~isfield(rsrc,funcarg)
+          rsrc.(funcarg) = 0;
+      end
+      funcarg = 'BufferOffset';
+      if ~isfield(rsrc,funcarg)
+          rsrc.(funcarg) = 0;
+      end
+      funcarg = strcat('Buffer',ab);
+      if ~isfield(rsrc,funcarg)
+          bfsize = rsrc.('BufferSize');
+          rsrc.(funcarg) = zeros(1,bfsize);
+      end
     end
 
     function rsrc = setarb(rsrc, ab)
