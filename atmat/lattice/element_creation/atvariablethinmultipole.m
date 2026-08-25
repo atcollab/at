@@ -47,7 +47,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    3. For ARBITRARY excitation modes the FUNC corresponding to the input
 %    AMPLITUDE is required
 %    4. In ARBITRARY mode the seed is fixed by the tracking function, and
-%    it is common to all threads. See at.track.
+%    it is common to all threads. See ringpass, linepass and elempass.
 %
 %  EXAMPLES
 %
