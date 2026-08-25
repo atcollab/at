@@ -104,6 +104,8 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
+            >>> elewhitenoise = at.VariableThinMultipole('v',at.ACMode.WHITENOISE,
+            ...     AmplitudeA=0.001,BufferSize=10,BufferOffset=2)
 
         .. note::
 
@@ -133,10 +135,11 @@ class VariableThinMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        self.Mode = mode.value
-        self.ModeName = mode.name
-        if len(kwargs) == 0:
-            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
+        kwargs.setdefault("Mode", mode.value)
+        kwargs.setdefault("ModeName", mode.name)
+        kwargs.setdefault("PassMethod", "VariableThinMPolePass")
+        if len(kwargs) > 3:
+            self.Mode = kwargs["Mode"]
             AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
             # MaxOrder is set finally by the user if given
             max_order_ampab = _getmaxorder(AmplitudeA, AmplitudeB)
@@ -167,16 +170,12 @@ class VariableThinMultipole(Element):
             self.AmplitudeB = ampb
 
     def _set_params(self, amplitude, ab, **kwargs):
-        if amplitude is not None:
-            if np.isscalar(amplitude):
-                amp = np.zeros(self.MaxOrder)
-                amplitude = np.append(amp, amplitude)
-            if self.Mode == ACMode.SINE:
-                self._set_sine(ab, **kwargs)
-            if self.Mode == ACMode.WHITENOISE:
-                self._set_white_noise(ab, **kwargs)
-            if self.Mode == ACMode.ARBITRARY:
-                self._set_arb(ab, **kwargs)
+        if self.Mode == ACMode.SINE:
+            self._set_sine(ab, **kwargs)
+        if self.Mode == ACMode.WHITENOISE:
+            self._set_white_noise(ab, **kwargs)
+        if self.Mode == ACMode.ARBITRARY:
+            self._set_arb(ab, **kwargs)
         return amplitude
 
     def _set_sine(self, ab, **kwargs):
