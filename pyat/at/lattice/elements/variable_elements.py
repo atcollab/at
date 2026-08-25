@@ -135,25 +135,23 @@ class VariableThinMultipole(Element):
 
         self.Mode = mode.value
         self.ModeName = mode.name
-        kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-
-        AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
-
-        # MaxOrder is set finally by the user if given
-        max_order_ampab = _getmaxorder(AmplitudeA, AmplitudeB)
-        self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
-        # after the definition of MaxOrder we can create Amplitudes
-        self._set_amplitudes(AmplitudeA, AmplitudeB)
-
-        self.Periodic = kwargs.pop("Periodic", True)
-        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
-        self.PolynomA = np.zeros(self.MaxOrder + 1)
-        self.PolynomB = np.zeros(self.MaxOrder + 1)
-        ramps = kwargs.pop("Ramps", None)
-        if ramps is not None:
-            assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
-            self.Ramps = ramps
+        if len(kwargs) == 0:
+            kwargs.setdefault("PassMethod", "VariableThinMPolePass")
+            AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
+            # MaxOrder is set finally by the user if given
+            max_order_ampab = _getmaxorder(AmplitudeA, AmplitudeB)
+            self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
+            # after the definition of MaxOrder we can create Amplitudes
+            self._set_amplitudes(AmplitudeA, AmplitudeB)
+            self.Periodic = kwargs.pop("Periodic", True)
+            AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
+            AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
+            self.PolynomA = np.zeros(self.MaxOrder + 1)
+            self.PolynomB = np.zeros(self.MaxOrder + 1)
+            ramps = kwargs.pop("Ramps", None)
+            if ramps is not None:
+                assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
+                self.Ramps = ramps
         super().__init__(family_name, **kwargs)
 
     def _set_amplitudes(self, ampa, ampb):
