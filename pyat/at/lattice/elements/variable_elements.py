@@ -127,7 +127,7 @@ class VariableThinMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        self.Mode = kwargs.get("Mode",  mode.value)
+        self.Mode = kwargs.get("Mode", mode.value)
         self.ModeName = kwargs.get("ModeName", mode.name)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
@@ -175,8 +175,8 @@ class VariableThinMultipole(Element):
         sinmax = kwargs.pop("Sinmax", 1.1)
         setattr(self, "Frequency" + ab, frequency)
         setattr(self, "Phase" + ab, phase)
-        setattr(self, "Sinmin", sinmin)
-        setattr(self, "Sinmax", sinmax)
+        self.Sinmin = sinmin
+        self.Sinmax = sinmax
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
