@@ -127,25 +127,22 @@ class VariableThinMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        self.Mode = mode.value
-        self.ModeName = mode.name
+        self.Mode = kwargs.get("Mode",  mode.value)
+        self.ModeName = kwargs.get("ModeName", mode.name)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-
         AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
-
         # MaxOrder is set finally by the user if given
         max_order_ampab = _getmaxorder(AmplitudeA, AmplitudeB)
         self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
         # after the definition of MaxOrder we can create Amplitudes
         self._set_amplitudes(AmplitudeA, AmplitudeB)
-
         self.Periodic = kwargs.pop("Periodic", True)
-        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
+        self._set_params(AmplitudeB, "B", **kwargs)
+        self._set_params(AmplitudeA, "A", **kwargs)
         if self.Mode == ACMode.WHITENOISE:
             self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-        self.PolynomA = np.zeros(self.MaxOrder + 1)
-        self.PolynomB = np.zeros(self.MaxOrder + 1)
+        self.PolynomA = kwargs.get("PolynomA", np.zeros(self.MaxOrder + 1))
+        self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
         if ramps is not None:
             assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
@@ -166,14 +163,10 @@ class VariableThinMultipole(Element):
 
     def _set_params(self, amplitude, ab, **kwargs):
         if amplitude is not None:
-            if np.isscalar(amplitude):
-                amp = np.zeros(self.MaxOrder)
-                amplitude = np.append(amp, amplitude)
             if self.Mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
             if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
-        return amplitude
 
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
