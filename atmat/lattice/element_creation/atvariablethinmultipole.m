@@ -63,7 +63,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 
 [modename, rsrc] = getargs(varargin,'SINE', ...
                    'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
-[modename, rsrc] = getoption(rsrc,'ModeName',modename);
+[modename, rsrc] = getoption(rsrc,'ModeName',convertStringsToChars(modename));
 if ~any(strcmpi(modename,{'SINE','WHITENOISE','ARBITRARY'}))
   error("ModeName should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
 end
