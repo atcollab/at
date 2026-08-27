@@ -14,6 +14,11 @@ def _array(value, shape=(-1,), dtype=np.float64):
     )
 
 
+def _anyarray(value: np.ndarray) -> np.ndarray:
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return np.require(value, dtype=np.float64, requirements=["F", "A"])
+
+
 def _array66(value):
     return _array(value, shape=(6, 6))
 
