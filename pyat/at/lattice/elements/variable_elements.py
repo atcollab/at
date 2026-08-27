@@ -74,8 +74,9 @@ class VariableThinMultipole(Element):
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
             Seed(int): Seed of the random number generator for white
                        noise excitation. Default datetime.now()
-            FuncA(list): User defined tbt kick list for PolynomA
-            FuncB(list): User defined tbt kick list for PolynomB
+            FuncA(ndarray): User defined tbt kick list for PolynomA
+            FuncB(ndarray): User defined tbt kick list for PolynomB
+            FuncDelay(float): Value to substract from the particles 6th coordinate
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
                          of the excitation
@@ -101,6 +102,10 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
+            >>> customf = at.VariableThinMultiple(
+            ...     "ACFUNC", at.ACMoode.ARBITRARY, AmplitudA=amp, ...
+            ...     FuncA=np.array([[1,.1,0.01],[0.2,0.02,0.002]]), ...
+            ...     FuncDelay=0.2)
 
         .. note::
 
@@ -109,6 +114,13 @@ class VariableThinMultipole(Element):
               ``Amplitude(A,B)`` has to be provided
             * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
+            * Func(A,B) could be an array of size (m,n) with n coefficients in the first
+              row for the function over n turns, and other m-1 rows with higher order
+              derivatives with respect to ctau
+                i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
+                particle with 6th coordinate ctau is calculated as,
+                   amp(A/B)[i] * func(0,k) + (ctau-delay) * func(1,k) + ...
+                                        + (ctau-delay)**m * func(m,k)
         """
 
         def _default_amplitudes(ampa, ampb):
@@ -181,7 +193,6 @@ class VariableThinMultipole(Element):
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
-        print(func)
         if func is None:
             raise AtError("Please provide a value for Func" + ab)
         if np.any(np.isnan(func)):
