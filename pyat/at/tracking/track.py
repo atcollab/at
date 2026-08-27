@@ -90,6 +90,9 @@ def _pass(ring, r_in, pool_size, start_method, seed, **kwargs):
 
 @fortran_align
 def _element_pass(element: Element, r_in, **kwargs):
+    seed = kwargs.pop("seed")
+    if seed is not None:
+        reset_rng(seed=seed)
     return _elempass(element, r_in, **kwargs)
 
 
@@ -408,6 +411,8 @@ def element_track(element: Element, r_in, in_place: bool = False, **kwargs):
           Default: :code:`lattice.particle` if existing,
           otherwise :code:`Particle('relativistic')`
         energy (Optiona[float]): lattice energy. Default 0.
+        seed (int | None): Seed for the random generators. If None (default)
+          continue the sequence
 
     Returns:
         r_out: (6, N, R, T) array containing output coordinates of N particles
