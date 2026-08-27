@@ -120,7 +120,8 @@ class Element:
     def __str__(self):
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {v!s}" for k, v in self.items()]
+            + [f"{k:>14}: {v!s}" for k, v in self.items()
+               if k not in self._drop_attr]
         )
 
     def __repr__(self):
@@ -253,7 +254,9 @@ class Element:
             k: v
             for k, v in attrs.items()
             if not np.array_equal(v, getattr(defelem, k, None))
+            and k not in self._drop_attr
         }
+        print(keywords)
         return self.__class__.__name__, arguments, keywords
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
