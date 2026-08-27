@@ -1,8 +1,8 @@
-"""Conversion functions for :py:class:`.Element` attributes"""
+"""Conversion functions for :py:class:`.Element` attributes."""
 
 from __future__ import annotations
 
-__all__ = ["_array", "_array66", "_float", "_int"]
+__all__ = ["_anyarray", "_array", "_array66", "_float", "_int"]
 
 import numpy as np
 
