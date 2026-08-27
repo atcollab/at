@@ -24,8 +24,9 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    SINMAX         Sine function max limit. Default +1.1
 %    MAXORDER       Order of the multipole for a scalar amplitude
 %    SEED           Input seed for the random number generator
-%    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
-%    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
+%    FUNCA          ARBITRARY excitation turn-by-turn kick array for PolynomA
+%    FUNCB          ARBITRARY excitation turn-by-turn kick array for PolynomB
+%    FUNCDELAY      Value to substract from the particles 6th coordinate
 %    PERIODIC       If true (default) the user input kick list is repeated
 %    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
 %                   * t<t0: excitation amlpitude is zero
@@ -44,6 +45,14 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    AMPLITUDE is required
 %    3. For ARBITRARY excitation modes the FUNC corresponding to the input
 %    AMPLITUDE is required
+%    4. Func(A,B) could be an array of size (m,n) with n coefficients in the first
+%       row for the function over n turns, and other m-1 rows with higher order
+%       derivatives with respect to ctau
+%       i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
+%       particle with 6th coordinate ctau is calculated as,
+%          amp(A/B)[i] * func(0,k) + (ctau-delay) * func(1,k) + ...
+%                                      + (ctau-delay)**m * func(m,k)
+%
 %
 %  EXAMPLES
 %
@@ -58,6 +67,16 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 % % Create a sine saturation
 % >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmax',0.9)
+%
+% % Create a pulse that decreses to 10% on the second turn and dissappears afterwards.
+% >> atvariablethimultipole('PULSE','ARBITRARY','AmplitudeB',1e-3, ...
+%        'FuncB',[1 0.1])
+%
+% % Delay the pulse to match the particle delay ctau=0.2 [m], and include the first order
+%   derivative with respect to ctau
+% >> atvariablethimultipole('PULSE','ARBITRARY','AmplitudeB',1e-3, ...
+%        'FuncB',[1 0.1;der1turn0 der1turn1],'FuncDelay',0.2)
+
 
 % Input parser for option
 
@@ -77,6 +96,15 @@ rsrc.MaxOrder   = maxorder;
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
     rsrc.AmplitudeB = 0;
+end
+
+if modename == "ARBITRARY"
+  if isfield(rsrc,'AmplitudeA') && ~isfield(rsrc,'FuncA')
+    error("This mode requires matching Func(A/B) and Amplitude(A/B)");
+  end
+  if isfield(rsrc,'AmplitudeB') && ~isfield(rsrc,'FuncB')
+    error("This mode requires matching Func(A/B) and Amplitude(A/B)");
+  end
 end
 
 rsrc = setparams(rsrc,modename,'A');
@@ -118,10 +146,11 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
 
     function rsrc = setarb(rsrc, ab)
         funcarg=strcat('Func',ab);
-        if ~isfield(rsrc,funcarg)
-            error(strcat('Please provide a value for Func',ab))
+        if isfield(rsrc,funcarg)
+          [rows, nsamples] = size(rsrc.(funcarg));
+          rsrc.(strcat('NSamples',ab)) = nsamples;
+          rsrc.(strcat('Dorder', ab)) = rows-1;
         end
-        rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
     end
 
     function rsrc = setparams(rsrc,modename,ab)
@@ -132,6 +161,12 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
                     rsrc = setsine(rsrc,ab);
                 case "ARBITRARY"
                     rsrc = setarb(rsrc,ab);
+                    if ~isfield(rsrc,'Periodic')
+                       rsrc.Periodic = 0;
+                    end
+                    if ~isfield(rsrc,'FuncDelay')
+                       rsrc.FuncDelay = 0;
+                    end
                 case "WHITENOISE"
                     rsrc = setwhitenoise(rsrc,ab);
             end
