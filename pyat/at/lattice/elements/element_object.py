@@ -66,9 +66,12 @@ class Element:
     _entrance_fields: ClassVar[list[str]] = ["T1", "R1"]
     _exit_fields: ClassVar[list[str]] = ["T2", "R2"]
     _no_swap = _entrance_fields + _exit_fields
-    # For the moment keep empty for Matlab compatibility
+    # For the moment keep T1, T2, R1, R2 for Matlab compatibility
     # _drop_attr = ["T1", "T2", "R1", "R2"]
-    _drop_attr: ClassVar[list[str]] = []
+    _drop_attr: ClassVar[list[str]] = [
+        "_enable_passmethod",
+        "_disable_passmethod",
+    ]
     _convert_attr: ClassVar[dict] = {
         "_dx": "dx",
         "_dy": "dy",
@@ -91,6 +94,11 @@ class Element:
         self.FamName = family_name
         self.Length = kwargs.pop("Length", 0.0)
         self.PassMethod = kwargs.pop("PassMethod", "IdentityPass")
+        self._enable_passmethod = self.PassMethod
+        if self.Length==0.0:
+            self._disable_passmethod = "IdentityPass"
+        else:
+            self._disable_passmethod = "DriftPass"
         self.update(kwargs)
 
     def __setattr__(self, attrname: str, value: Any) -> None:
@@ -140,7 +148,23 @@ class Element:
         for subclass in cls.__subclasses__():
             yield from subclass.subclasses()
         yield cls
-
+        
+    def enable(self):
+        """Function to enable an element in the lattice.
+        Convert DriftPass / IdentityPass to the standard
+        or user defined element pass method
+        """          
+        self.PassMethod = self._enable_passmethod
+        
+    def disable(self):
+        """Function to disable an element in the lattice.
+        Convert the element passmethod to either a DrifPass
+        is the length is not zero or IdentityPass otherwise
+        """ 
+        if self.PassMethod != self._disable_passmethod:
+            self._enable_passmethod = self.PassMethod
+            self.PassMethod = self._disable_passmethod   
+        
     def to_dict(self):
         return vars(self).copy()
 
