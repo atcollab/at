@@ -93,7 +93,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int seed, int order, int periodic)
 {
     int i, turnidx_modn;
-    double ampt, freq, ph, sinval, val;
+    double ampt, freq, ph, val;
     double* func;
     double* amp = elem->Amplitude;
     double funcdelay, functot;
@@ -107,10 +107,10 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     case 0:
         freq = elem->Frequency;
         ph = elem->Phase;
-        sinval = sin(TWOPI * freq * t + ph);
-        if (sinval < elem->Sinmin) sinval = elem->Sinmin;
-        if (sinval > elem->Sinmax) sinval = elem->Sinmax;
-        ampt *= sinval;
+        val = sin(TWOPI * freq * t + ph);
+        if (val < elem->Sinmin) val = elem->Sinmin;
+        if (val > elem->Sinmax) val = elem->Sinmax;
+        ampt *= val;
         return ampt;
     case 1:
         val = atrandn(0.0, 1.0);
@@ -121,10 +121,9 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
             func = elem->Func;
             funcdelay = elem->FuncDelay;
             turnidx_modn = turn % elem->NSamples;
-            ampt *= func[turnidx_modn];
             allorders = elem->Dorder + 1;
             /* Calculate the amplitude of function func in sample turnidx_modn */
-            functot = func[(allorders)*turnidx_modn]; //order zero
+            functot = func[allorders*turnidx_modn]; //order zero
             /* Add derivatives for the sample turnidx mod NSamples */
             tpow = 1;
             t = t*C0 - funcdelay; // change to ctau coordinates and offset
@@ -442,7 +441,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 17, mxCreateString("T2"));
             mxSetCell(plhs[1], 18, mxCreateString("R1"));
             mxSetCell(plhs[1], 19, mxCreateString("R2"));
-            mxSetCell(plhs[1], 10, mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 20, mxCreateString("RApertures"));
             mxSetCell(plhs[1], 21, mxCreateString("EApertures"));
             mxSetCell(plhs[1], 22, mxCreateString("Sinmin"));
             mxSetCell(plhs[1], 23, mxCreateString("Sinmax"));
