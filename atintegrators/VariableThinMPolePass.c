@@ -98,7 +98,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double* amp = elem->Amplitude;
     double funcdelay, functot;
     double tpow;
-    int dorder;
+    int allorders;
     if (!amp) {
         return 0.0;
     }
@@ -122,19 +122,19 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
             funcdelay = elem->FuncDelay;
             turnidx_modn = turn % elem->NSamples;
             ampt *= func[turnidx_modn];
-            dorder = elem->Dorder;
+            allorders = elem->Dorder + 1;
             /* Calculate the amplitude of function func in sample turnidx_modn */
-            functot = func[dorder*turnidx_modn]; //order zero
-            /* Add dorder derivatives for the sample turnidx mod NSamples*/
+            functot = func[(allorders)*turnidx_modn]; //order zero
+            /* Add derivatives for the sample turnidx mod NSamples */
             tpow = 1;
             t = t*C0 - funcdelay; // change to ctau coordinates and offset
-            for (i=1;i<dorder;i++){
+            for (i=1;i<allorders;i++){
               /* indexing is fortran-like. We start with columns.
                  cols are derivative components.
                  rows are turn samples.
               */
               tpow = tpow * t;
-              functot = functot + tpow * func[i + dorder*turnidx_modn];
+              functot = functot + tpow * func[i + allorders*turnidx_modn];
             };
             return ampt * functot;
         } else {
@@ -268,8 +268,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
-        DorderA=atGetOptionalLong(ElemData, "DorderA", 1); check_error();
-        DorderB=atGetOptionalLong(ElemData, "DorderB", 1); check_error();
+        DorderA=atGetOptionalLong(ElemData, "DorderA", 0); check_error();
+        DorderB=atGetOptionalLong(ElemData, "DorderB", 0); check_error();
         FuncDelay=atGetOptionalDouble(ElemData,"FuncDelay", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
@@ -365,8 +365,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
-        DorderA=atGetOptionalLong(ElemData, "DorderA", 1); check_error();
-        DorderB=atGetOptionalLong(ElemData, "DorderB", 1); check_error();
+        DorderA=atGetOptionalLong(ElemData, "DorderA", 0); check_error();
+        DorderB=atGetOptionalLong(ElemData, "DorderB", 0); check_error();
         FuncDelay=atGetOptionalDouble(ElemData,"FuncDelay", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
