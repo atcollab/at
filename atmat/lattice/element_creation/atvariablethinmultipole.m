@@ -40,12 +40,14 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 %  NOTES
 %    1. For all excitation modes at least one amplitude (A or B) is
-%    required.
+%       required.
 %    2. For SINE excitation modes the FREQUENCY corresponding to the input
-%    AMPLITUDE is required
+%       AMPLITUDE is required
 %    3. For ARBITRARY excitation modes the FUNC corresponding to the input
-%    AMPLITUDE is required
-%    4. Func(A,B) could be an array of size (m,n) with n coefficients in the first
+%       AMPLITUDE is required
+%    4. In ARBITRARY mode the seed is fixed by the tracking function, and
+%       it is common to all threads. See ringpass, linepass and elempass.
+%    5. Func(A,B) could be an array of size (m,n) with n coefficients in the first
 %       row for the function over n turns, and other m-1 rows with higher order
 %       derivatives with respect to ctau
 %       i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
@@ -140,10 +142,6 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
 
     end
 
-    function rsrc = setwhitenoise(rsrc, ~)
-    % it will later implement a buffer
-    end
-
     function rsrc = setarb(rsrc, ab)
         funcarg=strcat('Func',ab);
         if isfield(rsrc,funcarg)
@@ -167,8 +165,6 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
                     if ~isfield(rsrc,'FuncDelay')
                        rsrc.FuncDelay = 0;
                     end
-                case "WHITENOISE"
-                    rsrc = setwhitenoise(rsrc,ab);
             end
         end
     end
