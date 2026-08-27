@@ -90,7 +90,7 @@ def _pass(ring, r_in, pool_size, start_method, seed, **kwargs):
 
 @fortran_align
 def _element_pass(element: Element, r_in, **kwargs):
-    seed = kwargs.pop("seed")
+    seed = kwargs.pop("seed", None)
     if seed is not None:
         reset_rng(seed=seed)
     return _elempass(element, r_in, **kwargs)
