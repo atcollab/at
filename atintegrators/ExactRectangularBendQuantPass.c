@@ -142,11 +142,11 @@ static void ExactRectangularBendQuant(
                 cstec = 3.0 * gamma * gamma * gamma * clight / (2.0) * hbar / qe;
                 cstng = 5.0 * sqrt(3.0) * alpha0 * gamma / (6.0);
 
-                dxp = r6[1] * p_norm - xp0 - irho * SL;
+                dxp = r6[1] * p_norm - xp0;
                 dyp = r6[3] * p_norm - yp0;
                 ds = r6[5] - s0;
 
-                rho = (ds + SL) / sqrt(dxp * dxp + dyp * dyp);
+                rho = ds / sqrt(dxp * dxp + dyp * dyp);
 
                 ng = cstng / rho * (ds);
                 ec = cstec / rho;
