@@ -312,7 +312,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0; // revolution time of the nominal ring
     int turn = Param->nturn;  // current turn
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->thread_rng);
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->common_rng);
     return Elem;
 }
 
