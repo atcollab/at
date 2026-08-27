@@ -41,13 +41,11 @@ function elem=atvariablethinmultipole(fname,varargin)
 %  NOTES
 %    1. For all excitation modes at least one amplitude (A or B) is
 %       required.
-%    2. For SINE excitation modes the FREQUENCY corresponding to the input
+%    2. For ARBITRARY excitation modes the FUNC corresponding to the input
 %       AMPLITUDE is required
-%    3. For ARBITRARY excitation modes the FUNC corresponding to the input
-%       AMPLITUDE is required
-%    4. In ARBITRARY mode the seed is fixed by the tracking function, and
+%    3. In ARBITRARY mode the seed is fixed by the tracking function, and
 %       it is common to all threads. See ringpass, linepass and elempass.
-%    5. Func(A,B) could be an array of size (m,n) with n coefficients in the first
+%    4. Func(A,B) could be an array of size (m,n) with n coefficients in the first
 %       row for the function over n turns, and other m-1 rows with higher order
 %       derivatives with respect to ctau
 %       i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
