@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
 import numpy as np
@@ -36,7 +35,6 @@ class VariableThinMultipole(Element):
         PhaseB=float,
         Sinmin=float,
         Sinmax=float,
-        Seed=int,
         NSamplesA=int,
         NSamplesB=int,
         FuncA=_anyarray,
@@ -52,6 +50,7 @@ class VariableThinMultipole(Element):
         r"""Create a variable thin multipole.
 
         Parameters:
+
             family_name(str):    Element name
             mode(ACMode):  one of the following at.ACMode. Default at.ACMode.SINE.
 
@@ -60,6 +59,7 @@ class VariableThinMultipole(Element):
               * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
+
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
               Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
@@ -72,10 +72,8 @@ class VariableThinMultipole(Element):
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
-            FuncA(ndarray): User defined tbt kick list for PolynomA
-            FuncB(ndarray): User defined tbt kick list for PolynomB
+            FuncA(ndarray): User defined tbt kick ndarray for PolynomA
+            FuncB(ndarray): User defined tbt kick ndarray for PolynomB
             FuncDelay(float): Value to substract from the particles 6th coordinate
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
@@ -109,18 +107,23 @@ class VariableThinMultipole(Element):
 
         .. note::
 
-            * At least AmplitudeA or AmplitudeB has to be provided.
-            * For ``mode=at.ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
-            * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
-            * Func(A,B) could be an array of size (m,n) with n coefficients in the first
-              row for the function over n turns, and other m-1 rows with higher order
-              derivatives with respect to ctau
-                i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
-                particle with 6th coordinate ctau is calculated as,
-                   amp(A/B)[i] * func(0,k) + (ctau-delay) * func(1,k) + ...
-                                        + (ctau-delay)**m * func(m,k)
+                * At least AmplitudeA or AmplitudeB has to be provided.
+                * For ``mode=at.ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
+                  ``Amplitude(A,B)`` has to be provided
+                * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
+                  ``Amplitude(A,B)`` has to be provided
+                * In ``at.ACMode.ARBITRARY`` the seed is fixed by the tracking function, and
+                  it is common to all threads. See at.track.
+                * Func(A,B) could be an array of size (m,n) with n coefficients in the first
+                  row for the function over n turns, and other m-1 rows with higher order
+                  derivatives with respect to ctau
+                    i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
+                    particle with 6th coordinate ctau is calculated as,
+                .. math::
+                       Amp(A/B)[i] [ f(0,k) + (c\tau-delay) f(1,k) + ...
+                                            + (c\tau-delay)^m f(m,k) ]
+
+
         """
 
         def _default_amplitudes(ampa, ampb):
@@ -151,8 +154,6 @@ class VariableThinMultipole(Element):
         self._set_amplitudes(AmplitudeA, AmplitudeB)
         self._set_params(AmplitudeB, "B", **kwargs)
         self._set_params(AmplitudeA, "A", **kwargs)
-        if self.Mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = kwargs.get("PolynomA", np.zeros(self.MaxOrder + 1))
         self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
