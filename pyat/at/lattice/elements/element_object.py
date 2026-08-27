@@ -256,7 +256,6 @@ class Element:
             if not np.array_equal(v, getattr(defelem, k, None))
             and k not in self._drop_attr
         }
-        print(keywords)
         return self.__class__.__name__, arguments, keywords
 
     def items(self) -> Generator[tuple[str, Any], None, None]:
