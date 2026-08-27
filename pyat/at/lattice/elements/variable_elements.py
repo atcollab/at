@@ -7,7 +7,8 @@ from enum import IntEnum
 
 import numpy as np
 
-from .conversions import _array
+from ..exceptions import AtError
+from .conversions import _anyarray, _array
 from .element_object import Element
 
 
@@ -38,8 +39,8 @@ class VariableThinMultipole(Element):
         Seed=int,
         NSamplesA=int,
         NSamplesB=int,
-        FuncA=_array,
-        FuncB=_array,
+        FuncA=_anyarray,
+        FuncB=_anyarray,
         Ramps=_array,
         Periodic=bool,
     )
@@ -180,7 +181,21 @@ class VariableThinMultipole(Element):
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
-        nsamp = len(func)
-        assert func is not None, "Please provide a value for Func" + ab
+        print(func)
+        if func is None:
+            raise AtError("Please provide a value for Func" + ab)
+        if np.any(np.isnan(func)):
+            raise AtError("Function" + ab + " contains nan.")
+        if not np.all(np.isreal(func)):
+            raise AtError("Function" + ab + " contains non real values.")
+        func = np.squeeze(func)
+        if func.ndim == 1:
+            nsamples = len(func)
+            rows = 1
+        else:
+            rows, nsamples = func.shape
         setattr(self, "Func" + ab, func)
-        setattr(self, "NSamples" + ab, nsamp)
+        setattr(self, "NSamples" + ab, nsamples)
+        setattr(self, "Dorder" + ab, rows - 1)
+        self.FuncDelay = kwargs.setdefault("FuncDelay", 0)
+        self.Periodic = kwargs.setdefault("Periodic", False)
