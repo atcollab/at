@@ -108,20 +108,20 @@ class VariableThinMultipole(Element):
         .. note::
 
                 * At least AmplitudeA or AmplitudeB has to be provided.
-                * For ``mode=at.ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
-                  ``Amplitude(A,B)`` has to be provided
                 * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
                   ``Amplitude(A,B)`` has to be provided
                 * In ``at.ACMode.ARBITRARY`` the seed is fixed by the tracking function, and
                   it is common to all threads. See at.track.
                 * Func(A,B) could be an array of size (m,n) with n coefficients in the first
                   row for the function over n turns, and other m-1 rows with higher order
-                  derivatives with respect to ctau
-                    i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
-                    particle with 6th coordinate ctau is calculated as,
-                .. math::
-                       Amp(A/B)[i] [ f(0,k) + (c\tau-delay) f(1,k) + ...
+                  derivatives with respect to ctau, i.e. on the kth turn the ith component
+                  of the Polynom(A/B) seen by a particle with 6th coordinate ctau is
+                  calculated as,
+
+                .. math:: \begin{equation}
+                          Amp_i(A/B)[f(0,k) + (c\tau-delay) f(1,k) + ...
                                             + (c\tau-delay)^m f(m,k) ]
+                          \end{equation}
 
 
         """
