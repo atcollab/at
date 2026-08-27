@@ -149,7 +149,7 @@ class VariableThinMultipole(Element):
         self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
         # after the definition of MaxOrder we can create Amplitudes
         self._set_amplitudes(AmplitudeA, AmplitudeB)
-        self.Periodic = kwargs.pop("Periodic", True)
+        self.Periodic = kwargs.pop("Periodic", False)
         self._set_params(AmplitudeB, "B", **kwargs)
         self._set_params(AmplitudeA, "A", **kwargs)
         if self.Mode == ACMode.WHITENOISE:
