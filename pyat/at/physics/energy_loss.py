@@ -88,12 +88,14 @@ def get_energy_loss(
         try:
             ring = ring.disable_6d(*_EXCLUDED, copy=True)
             for e in ring[VariableThinMultipole]:
-                e.PassMethod = "IdentityPass"
+                e.disable()
             if orbit6 is None:
                 o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
             else:
                 o6 = orbit6
             o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
+            for e in ring[VariableThinMultipole]:
+                e.enable()
             delta = np.squeeze(o6l)[4] - o6[4]
         except:
             msg = (
