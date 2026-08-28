@@ -153,7 +153,6 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     int c; // particle, counter
     double* r6; // particle 6D coordinates
     double tpart; // particle time delay
-    double time_in_this_mode = 0; // particle time offset for this mode
 
     // setting the element properties
     int maxorder = Elem->MaxOrder;
