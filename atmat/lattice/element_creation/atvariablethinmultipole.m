@@ -47,11 +47,11 @@ function elem=atvariablethinmultipole(fname,varargin)
 %       it is common to all threads. See ringpass, linepass and elempass.
 %    4. Func(A,B) could be an array of size (m,n) with n coefficients in the first
 %       row for the function over n turns, and other m-1 rows with higher order
-%       derivatives with respect to ctau
+%       derivatives with respect to ct
 %       i.e. on the kth turn the ith component of the Polynom(A/B) seen by a
-%       particle with 6th coordinate ctau is calculated as,
-%          amp(A/B)[i] * func(0,k) + (ctau-delay) * func(1,k) + ...
-%                                      + (ctau-delay)**m * func(m,k)
+%       particle with 6th coordinate ct is calculated as,
+%          amp(A/B)[i] * func(0,k) + (ct-delay) * func(1,k) + ...
+%                                      + (ct-delay)**m * func(m,k)
 %
 %
 %  EXAMPLES
@@ -72,8 +72,8 @@ function elem=atvariablethinmultipole(fname,varargin)
 % >> atvariablethimultipole('PULSE','ARBITRARY','AmplitudeB',1e-3, ...
 %        'FuncB',[1 0.1])
 %
-% % Delay the pulse to match the particle delay ctau=0.2 [m], and include the first order
-%   derivative with respect to ctau
+% % Delay the pulse to match the particle delay ct=0.2 [m], and include the first order
+%   derivative with respect to ct
 % >> atvariablethimultipole('PULSE','ARBITRARY','AmplitudeB',1e-3, ...
 %        'FuncB',[1 0.1;der1turn0 der1turn1],'FuncDelay',0.2)
 
