@@ -124,7 +124,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
             functot = func[allorders*turnidx_modn]; //order zero
             /* Add derivatives for the sample turnidx mod NSamples */
             tpow = 1;
-            t = t*C0 - funcdelay; // change to ctau coordinates and offset
+            t = t*C0 - funcdelay; // change to ct coordinates and offset
             for (i=1;i<allorders;i++){
               /* indexing is fortran-like. We start with columns.
                  cols are derivative components.
