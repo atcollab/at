@@ -179,7 +179,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     /* mode 1 : random value applied to all particles */
     /* mode 2 : custom function */
 
-    if (mode != 0) {
+    if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
             /* calculate the polynom to apply on all particles */
             /* the particle delay time, tpart, is not used */
