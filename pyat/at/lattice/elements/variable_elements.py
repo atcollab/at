@@ -114,13 +114,13 @@ class VariableThinMultipole(Element):
                   it is common to all threads. See at.track.
                 * Func(A,B) could be an array of size (m,n) with n coefficients in the first
                   row for the function over n turns, and other m-1 rows with higher order
-                  derivatives with respect to ctau, i.e. on the kth turn the ith component
-                  of the Polynom(A/B) seen by a particle with 6th coordinate ctau is
+                  derivatives with respect to ct, i.e. on the kth turn the ith component
+                  of the Polynom(A/B) seen by a particle with 6th coordinate ct is
                   calculated as,
 
                 .. math:: \begin{equation}
-                          Amp_i(A/B)[f(0,k) + (c\tau-delay) f(1,k) + ...
-                                            + (c\tau-delay)^m f(m,k) ]
+                          Amp_i(A/B)[f(0,k) + (ct-delay) f(1,k) + ...
+                                            + (ct-delay)^m f(m,k) ]
                           \end{equation}
 
 
