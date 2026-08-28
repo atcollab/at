@@ -188,21 +188,24 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         };
     };
 
-    // offset the time when applying the sin function
-    // branchless if
-    //   mode == 0      -> time_in_this_mode = t0 *turn
-    //   any other mode -> 0
-    time_in_this_mode = t0 * turn * (mode == 0);
-
     /* cycle over all particles */
     for (c = 0; c < num_particles; c++) {
         r6 = r + c * 6;
         /* check if the particle is alive */
         if (!atIsNaN(r6[0])) {
             /* mode 0 and mode 2 take into account the particle delay time */
-            if (mode == 0 || mode == 2) {
+            if (mode == 0) {
                /* modify the time of delay of the particle  */
-                tpart = time_in_this_mode + r6[5] / C0;
+                tpart = t0 * turn + r6[5] / C0;
+                 /* calculate the polynom A and B components seen by the particle */
+                for (i = 0; i < maxorder + 1; i++) {
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+                };
+            };
+            if (mode == 2) {
+               /* modify the time of delay of the particle  */
+                tpart = r6[5] / C0;
                  /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
                     pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
