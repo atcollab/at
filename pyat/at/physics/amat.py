@@ -1,16 +1,26 @@
-"""A-matrix construction"""
-import numpy
-from scipy.linalg import block_diag, eig, inv, solve
+"""A-matrix construction."""
+
 from math import pi
+
+import numpy as np
+from scipy.linalg import block_diag, eig, inv, solve
+
 from at.lattice import AtError
 
-__all__ = ['a_matrix', 'amat', 'jmat', 'jmatswap',
-           'get_tunes_damp', 'get_mode_matrices', 'symplectify']
+__all__ = [
+    "a_matrix",
+    "amat",
+    "get_mode_matrices",
+    "get_tunes_damp",
+    "jmat",
+    "jmatswap",
+    "symplectify",
+]
 
-_i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
+_i2 = np.array([[-1.0j, -1.0], [1.0, 1.0j]])
 
 # Prepare symplectic identity matrix
-_j2 = numpy.array([[0., 1.], [-1., 0.]])
+_j2 = np.array([[0.0, 1.0], [-1.0, 0.0]])
 _jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
 _jmswap = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2.T)]
 
@@ -19,7 +29,7 @@ _submat = [slice(0, 2), slice(2, 4), slice(4, 6)]
 
 
 def jmat(ind: int):
-    """antisymetric block diagonal matrix [[0, 1][-1, 0]]
+    """antisymetric block diagonal matrix [[0, 1][-1, 0]].
 
     Parameters:
         ind:    Matrix dimension: 1, 2 or 3
@@ -32,14 +42,14 @@ def jmat(ind: int):
 
 def jmatswap(ind: int):
     """Modified antisymetric block diagonal matrix to deal with the swap of the
-    longitudinal coordinates
+    longitudinal coordinates.
     """
     return _jmswap[ind - 1]
 
 
 # noinspection PyPep8Naming
 def a_matrix(M):
-    r"""Find the :math:`\mathbf{A}` matrix from one turn map :math:`\mathbf{M}`
+    r"""Find the :math:`\mathbf{A}` matrix from one turn map :math:`\mathbf{M}`.
 
     :math:`\mathbf{A}` represents a change of referential which converts the
     one-turn transfer matrix :math:`\mathbf{M}` into a set of rotations:
@@ -82,45 +92,47 @@ def a_matrix(M):
     nv = M.shape[0]
     dms = int(nv / 2)
     jmt = jmatswap(dms)
-    select = numpy.arange(0, nv, 2)
-    rbase = numpy.stack((select, select), axis=1).flatten()
+    select = np.arange(0, nv, 2)
+    rbase = np.stack((select, select), axis=1).flatten()
 
     # noinspection PyTupleAssignmentBalance
     lmbd, vv = eig(M)
     # Compute the norms
     vp = vv.conj().T @ jmt
-    n = -0.5j * numpy.sum(vp.T * vv, axis=0)
-    if any(abs(n) < 1.0E-12):
-        raise AtError('Unstable ring')
+    n = -0.5j * np.sum(vp.T * vv, axis=0)
+    if any(abs(n) < 1.0e-12):
+        msg = "Unstable ring"
+        raise AtError(msg)
     # Move positive before negatives
     order = rbase + (n < 0)
     vv = vv[:, order]
     n = n[order]
     lmbd = lmbd[order]
     # Normalize vectors
-    vn = vv / numpy.sqrt(abs(n)).reshape((1, nv))
+    vn = vv / np.sqrt(abs(n)).reshape((1, nv))
     # find the vectors that project most onto x,y,z, and reorder
     # nn will have structure
     #  n1x n1y n1z
     #  n2x n2y n2z
     #  n3x n3y n3z
-    nn = 0.5 * abs(numpy.sqrt(-1.j * vn.conj().T @ jmt @ _vxyz[dms - 1]))
+    nn = 0.5 * abs(np.sqrt(-1.0j * vn.conj().T @ jmt @ _vxyz[dms - 1]))
     rows = list(select)
     order = []
     for ixz in select:
-        ind = numpy.argmax(nn[rows, ixz])
+        ind = np.argmax(nn[rows, ixz])
         order.append(rows[ind])
         del rows[ind]
     v_ordered = vn[:, order]
     lmbd = lmbd[order]
-    aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
-        (nv, nv), order='F')
+    aa = np.vstack((np.real(v_ordered), np.imag(v_ordered))).reshape(
+        (nv, nv), order="F"
+    )
     return aa, lmbd
 
 
 # noinspection PyPep8Naming
 def amat(M):
-    """Find the A matrix from one turn map matrix T
+    """Find the A matrix from one turn map matrix T.
 
     Provided for backward compatibility, see :py:func:`a_matrix`
 
@@ -136,7 +148,7 @@ def amat(M):
 
 # noinspection PyPep8Naming
 def symplectify(M):
-    """Makes A matrix more symplectic
+    """Makes A matrix more symplectic.
 
     following the Healy algorithm described by MacKay
 
@@ -153,10 +165,10 @@ def symplectify(M):
     """
     nv = M.shape[0]
     S = jmat(nv // 2)
-    I = numpy.identity(nv)
+    I = np.identity(nv)  # noqa: E741
 
     V = S @ (I - M) @ inv(I + M)
-    # V should be almost symmetric.  Replace with symmetrized version.
+    # V should be almost symmetric.  Replace with symmetrised version.
     W = (V + V.T) / 2
     # Now reconstruct M from W
     SW = S @ W
@@ -166,7 +178,7 @@ def symplectify(M):
 
 # noinspection PyPep8Naming
 def get_mode_matrices(A):
-    """Derives the R-matrices from the A-matrix
+    """Derives the R-matrices from the A-matrix.
 
     Parameters:
         A:  A-matrix
@@ -184,19 +196,19 @@ def get_mode_matrices(A):
 
     dms = A.shape[0] // 2
     # Rk = A * Ik * A.T                     Only for symplectic
-    # modelist = [numpy.dot(A[:, sl], A.T[sl, :]) for sl in _submat[:dms]]
+    # modelist = [np.dot(A[:, sl], A.T[sl, :]) for sl in _submat[:dms]]
     # Rk = A * S * Ik * inv(A) * S.T        Even for non-symplectic
     ss = jmat(dms)
     tt = jmatswap(dms)
-    a_s = numpy.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
+    a_s = np.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
     inva = solve(A, ss.T)
     modelist = [a_s[:, sl] @ inva[sl, :] for sl in _submat[:dms]]
-    return numpy.stack(modelist, axis=0)
+    return np.stack(modelist, axis=0)
 
 
 # noinspection PyPep8Naming
 def get_tunes_damp(M, R=None):
-    r"""Computes the mode emittances, tunes and damping times
+    r"""Computes the mode emittances, tunes and damping times.
 
     Parameters:
         M:     (m, m) transfer matrix for 1 turn
@@ -222,26 +234,37 @@ def get_tunes_damp(M, R=None):
     nv = M.shape[0]
     dms = int(nv / 2)
     A, vps = a_matrix(M)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
-    damping_rates = -numpy.log(numpy.absolute(vps))
+    tunes = np.mod(np.angle(vps) / 2.0 / pi, 1.0)
+    damping_rates = -np.log(np.absolute(vps))
 
     if R is None:
-        return numpy.rec.fromarrays(
-            (numpy.array(tunes), numpy.array(damping_rates),
-             numpy.array(get_mode_matrices(A))),
-            dtype=[('tunes', numpy.float64, (dms,)),
-                   ('damping_rates', numpy.float64, (dms,)),
-                   ('mode_matrices', numpy.float64, (dms, nv, nv))]
+        return np.rec.fromarrays(
+            (
+                np.array(tunes),
+                np.array(damping_rates),
+                np.array(get_mode_matrices(A)),
+            ),
+            dtype=[
+                ("tunes", np.float64, (dms,)),
+                ("damping_rates", np.float64, (dms,)),
+                ("mode_matrices", np.float64, (dms, nv, nv)),
+            ],
         )
     else:
-        jmt = jmat(dms)
-        rdiag = numpy.diag(A.T @ jmt @ R @ jmt @ A)
-        mode_emit = -0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
-        return numpy.rec.fromarrays(
-            (numpy.array(tunes), numpy.array(damping_rates),
-             numpy.array(get_mode_matrices(A)), mode_emit),
-            dtype=[('tunes', numpy.float64, (dms,)),
-                   ('damping_rates', numpy.float64, (dms,)),
-                   ('mode_matrices', numpy.float64, (dms, nv, nv)),
-                   ('mode_emittances', numpy.float64, (dms,))]
+        inva = inv(A)
+        rdiag = np.diag(inva @ R @ inva.T)
+        mode_emit = 0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
+        return np.rec.fromarrays(
+            (
+                np.array(tunes),
+                np.array(damping_rates),
+                np.array(get_mode_matrices(A)),
+                mode_emit,
+            ),
+            dtype=[
+                ("tunes", np.float64, (dms,)),
+                ("damping_rates", np.float64, (dms,)),
+                ("mode_matrices", np.float64, (dms, nv, nv)),
+                ("mode_emittances", np.float64, (dms,)),
+            ],
         )
