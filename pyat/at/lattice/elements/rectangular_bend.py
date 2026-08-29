@@ -43,7 +43,7 @@ def rbendtune(self: Dipole) -> None:
                 return True
         return False
 
-    passmethod = self.PassMethod.replace("RadPass", "Pass")
+    passmethod = self.PassMethod.replace("RadPass", "Pass").replace("QuantPass", "Pass")
     if passmethod in {
         "BndStrMPoleSymplectic4Pass",
         "ExactRectangularBendPass",
@@ -58,10 +58,24 @@ def rbendtune(self: Dipole) -> None:
 
         # Search if there are multipoles
         if checkmul(self):
-            x0ref = float(fsolve(cross, x0ref))
+            # NumPy >=2.0 no longer allows float() on a non-0-d array; fsolve
+            # returns shape (1,) for a scalar problem, so extract the element.
+            x0ref = float(fsolve(cross, x0ref)[0])
 
         self.X0ref = x0ref
-        rout = self.track(np.zeros(6))
+
+        # RefDZ must reflect the actual (deterministic) path length, including
+        # mean radiation loss where applicable. A stochastic Quant passmethod
+        # would otherwise inject one random photon-emission draw into a
+        # reference/design attribute; substitute its deterministic RadPass
+        # counterpart (validated to reproduce the Quant ensemble mean).
+        refelem = self if not self.PassMethod.endswith("QuantPass") else self.copy()
+        if refelem is not self:
+            refelem.PassMethod = self.PassMethod.replace("QuantPass", "RadPass")
+        # Radiating passmethods need Energy passed explicitly to track() -- the
+        # element's own Energy attribute is not read automatically.
+        energy = getattr(refelem, "Energy", None)
+        rout = refelem.track(np.zeros(6), **({} if energy is None else {"energy": energy}))
         self.RefDZ = rout[5]
 
 
