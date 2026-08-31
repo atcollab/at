@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
 import numpy as np
 
-from .conversions import _array
+from at.constants import clight
+
+from ..exceptions import AtError
+from .conversions import _anyarray, _array
 from .element_object import Element
 
 
@@ -35,11 +37,10 @@ class VariableThinMultipole(Element):
         PhaseB=float,
         Sinmin=float,
         Sinmax=float,
-        Seed=int,
         NSamplesA=int,
         NSamplesB=int,
-        FuncA=_array,
-        FuncB=_array,
+        FuncA=_anyarray,
+        FuncB=_anyarray,
         Ramps=_array,
         Periodic=bool,
     )
@@ -51,6 +52,7 @@ class VariableThinMultipole(Element):
         r"""Create a variable thin multipole.
 
         Parameters:
+
             family_name(str):    Element name
             mode(ACMode):  one of the following at.ACMode. Default at.ACMode.SINE.
 
@@ -59,6 +61,7 @@ class VariableThinMultipole(Element):
               * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
 
         Keyword Arguments:
+
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
               Default None
             AmplitudeB(list,float): Amplitude of the excitation for PolynomB.
@@ -71,10 +74,9 @@ class VariableThinMultipole(Element):
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
-            FuncA(list): User defined tbt kick list for PolynomA
-            FuncB(list): User defined tbt kick list for PolynomB
+            FuncA(ndarray): User defined tbt kick ndarray for PolynomA
+            FuncB(ndarray): User defined tbt kick ndarray for PolynomB
+            FuncDelay(float): Value to substract from the particles 6th coordinate
             Periodic(bool): If True (default) the user defined kick is repeated
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping
                          of the excitation
@@ -100,14 +102,30 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
+            >>> customf = at.VariableThinMultiple(
+            ...     "ACFUNC", at.ACMoode.ARBITRARY, AmplitudA=amp, ...
+            ...     FuncA=np.array([[1,.1,0.01],[0.2,0.02,0.002]]), ...
+            ...     FuncDelay=0.2)
 
         .. note::
 
-            * At least AmplitudeA or AmplitudeB has to be provided.
-            * For ``mode=at.ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
-            * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
-              ``Amplitude(A,B)`` has to be provided
+                * At least AmplitudeA or AmplitudeB has to be provided.
+                * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
+                  ``Amplitude(A,B)`` has to be provided
+                * In ``at.ACMode.ARBITRARY`` the seed is fixed by the tracking function, and
+                  it is common to all threads. See at.track.
+                * Func(A,B) could be an array of size (m,n) with n coefficients in the first
+                  row for the function over n turns, and other m-1 rows with higher order
+                  derivatives with respect to ct, i.e. on the kth turn the ith component
+                  of the Polynom(A/B) seen by a particle with 6th coordinate ct is
+                  calculated as,
+
+                .. math:: \begin{equation}
+                          Amp_i(A/B)[f(0,k) + (ct-delay) f(1,k) + ...
+                                            + (ct-delay)^m f(m,k) ]
+                          \end{equation}
+
+
         """
 
         def _default_amplitudes(ampa, ampb):
@@ -136,11 +154,8 @@ class VariableThinMultipole(Element):
         self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
         # after the definition of MaxOrder we can create Amplitudes
         self._set_amplitudes(AmplitudeA, AmplitudeB)
-        self.Periodic = kwargs.pop("Periodic", True)
         self._set_params(AmplitudeB, "B", **kwargs)
         self._set_params(AmplitudeA, "A", **kwargs)
-        if self.Mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = kwargs.get("PolynomA", np.zeros(self.MaxOrder + 1))
         self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
@@ -178,9 +193,50 @@ class VariableThinMultipole(Element):
         self.Sinmin = sinmin
         self.Sinmax = sinmax
 
+    def create_func(self, inputdata):
+        cT0 = clight * inputdata.pop("revolution_time")
+        nturns = inputdata.pop("turns", 0)
+        dorder = inputdata.pop("dorder", 0)
+        curve = inputdata.pop("curve")
+
+        ct = clight * curve[0, :]
+        amplitude = curve[1, :]
+
+        # calculate table of derivatives
+        tderiv = np.empty((dorder + 1, len(amplitude)))
+        tderiv[0, :] = np.copy(amplitude)
+        for i in range(dorder):
+            tderiv[i + 1, :] = np.gradient(tderiv[i, :], ct)
+
+        # interpolate table of derivatives to turns
+        aturns = np.arange(nturns) * cT0
+        func = np.empty((dorder + 1, nturns))
+        for i in range(dorder + 1):
+            func[i, :] = np.interp(aturns, ct, tderiv[i, :])
+        return func
+
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
-        nsamp = len(func)
-        assert func is not None, "Please provide a value for Func" + ab
+        if func is None:
+            inputdata = kwargs.pop("inputcurve" + ab, None)
+            if inputdata is not None:
+                func = self.create_func(inputdata)
+            else:
+                raise AtError("Please provide data or Func" + ab)
+        if np.any(np.isnan(func)):
+            raise AtError("Function" + ab + " contains nan.")
+        if not np.all(np.isreal(func)):
+            raise AtError("Function" + ab + " contains non real values.")
+        if func.ndim == 0:
+            nsamples = 1
+            rows = 1
+        elif func.ndim == 1:
+            nsamples = len(func)
+            rows = 1
+        else:
+            rows, nsamples = func.shape
         setattr(self, "Func" + ab, func)
-        setattr(self, "NSamples" + ab, nsamp)
+        setattr(self, "NSamples" + ab, nsamples)
+        setattr(self, "Dorder" + ab, rows - 1)
+        self.FuncDelay = kwargs.setdefault("FuncDelay", 0)
+        self.Periodic = kwargs.setdefault("Periodic", False)

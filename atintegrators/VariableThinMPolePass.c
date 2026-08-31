@@ -9,23 +9,46 @@
 #include "atrandom.c"
 #include "driftkick.c"
 
+/*
+ This pass method implements three modes.
+ Mode 0 : a Sine function with frequency and phase
+ Mode 1 : a random kick
+ Mode 2 : a custom function defined in every turn
+
+ All modes could be ramped using the flag `ramp:.
+
+ The value of the polynoms A and B are calculated per turn during tracking,
+ and also, in modes 0 and 2, per particle taking into account
+ the individual delay time.
+
+ In mode 0, the Sine function could be limited.
+ In mode 1 uses a stream of pseudo-random values.
+ In mode 2, the values may be periodically applied.
+*/
+
+
+/* This struct contains the values used to set polynoms: A or B*/
 struct elemab {
     double* Amplitude;
     double Frequency;
     double Phase;
     double Sinmin, Sinmax;
     int NSamples;
+    int Dorder;
     double* Func;
+    double FuncDelay;
 };
 
+
+/* This struct contains the parameters of the element.
+ * It uses elemab struct */
 struct elem {
-    double* PolynomA;
-    double* PolynomB;
+    double* PolynomA; // calculated on every turn
+    double* PolynomB; // calculated on every turn
     double* PolynomAstart;
     double* PolynomBstart;
     struct elemab* ElemA;
     struct elemab* ElemB;
-    int Seed;
     int Mode;
     int MaxOrder;
     double* Ramps;
@@ -38,6 +61,10 @@ struct elem {
     double *RApertures;
 };
 
+
+/* get_amp returns the input value `amp` when ramps is False.
+ * If ramps is True, it returns a value linearly interpolated
+ * accoding to the ramping turn.*/
 double get_amp(double amp, double* ramps, double t)
 {
     double ampt = amp;
@@ -57,13 +84,20 @@ double get_amp(double amp, double* ramps, double t)
     return ampt;
 }
 
+
+/* get_pol calculates the PolynomA/B per turn and mode.
+   If the mode is 0 or 2, the polynom depends on the particle
+   time delay*/
 double get_pol(struct elemab* elem, double* ramps, int mode,
-    double t, int turn, int seed, int order, int periodic)
+    double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
-    int idx;
-    double ampt, freq, ph, sinval, val;
+    int i, turnidx_modn;
+    double ampt, freq, ph, val;
     double* func;
     double* amp = elem->Amplitude;
+    double funcdelay, functot;
+    double tpow;
+    int allorders;
     if (!amp) {
         return 0.0;
     }
@@ -72,21 +106,34 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     case 0:
         freq = elem->Frequency;
         ph = elem->Phase;
-        sinval = sin(TWOPI * freq * t + ph);
-        if (sinval < elem->Sinmin) sinval = elem->Sinmin;
-        if (sinval > elem->Sinmax) sinval = elem->Sinmax;
-        ampt *= sinval;
+        val = sin(TWOPI * freq * t + ph);
+        if (val < elem->Sinmin) val = elem->Sinmin;
+        if (val > elem->Sinmax) val = elem->Sinmax;
+        ampt *= val;
         return ampt;
     case 1:
-        val = atrandn(0.0, 1.0);
-        ampt *= val;
+        ampt *= atrandn_r(rng, 0, 1);
         return ampt;
     case 2:
         if (periodic || turn < elem->NSamples) {
             func = elem->Func;
-            idx = turn % elem->NSamples;
-            ampt *= func[idx];
-            return ampt;
+            funcdelay = elem->FuncDelay;
+            turnidx_modn = turn % elem->NSamples;
+            allorders = elem->Dorder + 1;
+            /* Calculate the amplitude of function func in sample turnidx_modn */
+            functot = func[allorders*turnidx_modn]; //order zero
+            /* Add derivatives for the sample turnidx mod NSamples */
+            tpow = 1;
+            t = t*C0 - funcdelay; // change to ct coordinates and offset
+            for (i=1;i<allorders;i++){
+              /* indexing is fortran-like. We start with columns.
+                 cols are derivative components.
+                 rows are turn samples.
+              */
+              tpow = tpow * t;
+              functot = functot + tpow * func[i + allorders*turnidx_modn];
+            };
+            return ampt * functot;
         } else {
             return 0.0;
         }
@@ -95,23 +142,27 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     }
 }
 
-void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles)
+
+/* This function tracks a particle through a thin element with
+   variable PolynomB and PolynomA per turn.*/
+void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles,
+    pcg32_random_t* rng)
 {
 
-    int i, c;
-    double* r6;
-    double t = t0 * turn;
+    int i; // order of polynom, counter
+    int c; // particle, counter
+    double* r6; // particle 6D coordinates
+    double tpart; // particle time delay
 
+    // setting the element properties
     int maxorder = Elem->MaxOrder;
     int periodic = Elem->Periodic;
     double* pola = Elem->PolynomA;
     double* polb = Elem->PolynomB;
-    int seed = Elem->Seed;
     int mode = Elem->Mode;
     struct elemab* ElemA = Elem->ElemA;
     struct elemab* ElemB = Elem->ElemB;
     double* ramps = Elem->Ramps;
-
 
     // offsets at input and output
     double *T1 = Elem->T1;
@@ -123,21 +174,41 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
 
-    if (mode != 0) {
+    /* mode 0 : sin function */
+    /* mode 1 : random value applied to all particles */
+    /* mode 2 : custom function */
+
+    if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
-            pola[i] = get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
-            polb[i] = get_pol(ElemB, ramps, mode, t, turn, seed, i, periodic);
+            /* calculate the polynom to apply on all particles */
+            /* the particle delay time, tpart, is not used */
+            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, i, periodic, rng);
+            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, i, periodic, rng);
         };
     };
 
+    /* cycle over all particles */
     for (c = 0; c < num_particles; c++) {
         r6 = r + c * 6;
+        /* check if the particle is alive */
         if (!atIsNaN(r6[0])) {
+            /* mode 0 and mode 2 take into account the particle delay time */
             if (mode == 0) {
-                double tpart = t + r6[5] / C0;
+               /* modify the time of delay of the particle  */
+                tpart = t0 * turn + r6[5] / C0;
+                 /* calculate the polynom A and B components seen by the particle */
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+                };
+            };
+            if (mode == 2) {
+               /* modify the time of delay of the particle  */
+                tpart = r6[5] / C0;
+                 /* calculate the polynom A and B components seen by the particle */
+                for (i = 0; i < maxorder + 1; i++) {
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -165,13 +236,14 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
     if (!Elem) {
-        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, DorderA, DorderB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
+        double FuncDelay;
         struct elemab *ElemA, *ElemB;
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -192,9 +264,11 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
         Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
+        DorderA=atGetOptionalLong(ElemData, "DorderA", 0); check_error();
+        DorderB=atGetOptionalLong(ElemData, "DorderB", 0); check_error();
+        FuncDelay=atGetOptionalDouble(ElemData,"FuncDelay", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
@@ -214,7 +288,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
         memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
-        Elem->Seed = Seed;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -230,14 +303,18 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Sinmax = Sinmax;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
+        ElemA->Dorder = DorderA;
+        ElemB->Dorder = DorderB;
+        ElemA->FuncDelay = FuncDelay;
+        ElemB->FuncDelay = FuncDelay;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
     }
-    double t0 = Param->T0;
-    int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles);
+    double t0 = Param->T0; // revolution time of the nominal ring
+    int turn = Param->nturn;  // current turn
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->common_rng);
     return Elem;
 }
 
@@ -252,13 +329,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double* r_in;
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, DorderA, DorderB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
+        double FuncDelay;
         struct elemab ElA, *ElemA = &ElA;
         struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
@@ -281,9 +359,11 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
         Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
+        DorderA=atGetOptionalLong(ElemData, "DorderA", 0); check_error();
+        DorderB=atGetOptionalLong(ElemData, "DorderB", 0); check_error();
+        FuncDelay=atGetOptionalDouble(ElemData,"FuncDelay", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
@@ -294,7 +374,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
         memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
-        Elem->Seed = Seed;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -316,6 +395,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Sinmax = Sinmax;
         ElemA->NSamples = NSamplesA;
         ElemB->NSamples = NSamplesB;
+        ElemA->Dorder = DorderA;
+        ElemB->Dorder = DorderB;
+        ElemA->FuncDelay = FuncDelay;
+        ElemB->FuncDelay = FuncDelay;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
         Elem->ElemA = ElemA;
@@ -323,7 +406,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
@@ -333,7 +416,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(21, 1);
+            plhs[1] = mxCreateCellMatrix(23, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -341,20 +424,22 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 4, mxCreateString("PhaseA"));
             mxSetCell(plhs[1], 5, mxCreateString("PhaseB"));
             mxSetCell(plhs[1], 6, mxCreateString("Ramps"));
-            mxSetCell(plhs[1], 7, mxCreateString("Seed"));
-            mxSetCell(plhs[1], 8, mxCreateString("FuncA"));
-            mxSetCell(plhs[1], 9, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 10, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 11, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 12, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 13, mxCreateString("T1"));
-            mxSetCell(plhs[1], 14, mxCreateString("T2"));
-            mxSetCell(plhs[1], 15, mxCreateString("R1"));
-            mxSetCell(plhs[1], 16, mxCreateString("R2"));
-            mxSetCell(plhs[1], 17, mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 18, mxCreateString("EApertures"));
-            mxSetCell(plhs[1], 19, mxCreateString("Sinmin"));
-            mxSetCell(plhs[1], 20, mxCreateString("Sinmax"));
+            mxSetCell(plhs[1], 7, mxCreateString("FuncA"));
+            mxSetCell(plhs[1], 8, mxCreateString("FuncB"));
+            mxSetCell(plhs[1], 9, mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 10, mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 11, mxCreateString("DorderA"));
+            mxSetCell(plhs[1], 12, mxCreateString("DorderB"));
+            mxSetCell(plhs[1], 13, mxCreateString("FuncDelay"));
+            mxSetCell(plhs[1], 14, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 15, mxCreateString("T1"));
+            mxSetCell(plhs[1], 16, mxCreateString("T2"));
+            mxSetCell(plhs[1], 17, mxCreateString("R1"));
+            mxSetCell(plhs[1], 18, mxCreateString("R2"));
+            mxSetCell(plhs[1], 19, mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 20, mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 21, mxCreateString("Sinmin"));
+            mxSetCell(plhs[1], 22, mxCreateString("Sinmax"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
