@@ -6,6 +6,8 @@ from enum import IntEnum
 
 import numpy as np
 
+from at.constants import clight
+
 from ..exceptions import AtError
 from .conversions import _anyarray, _array
 from .element_object import Element
@@ -191,16 +193,44 @@ class VariableThinMultipole(Element):
         self.Sinmin = sinmin
         self.Sinmax = sinmax
 
+    def create_func(self, inputdata):
+        cT0 = clight * inputdata.pop("revolution_time")
+        nturns = inputdata.pop("turns", 0)
+        dorder = inputdata.pop("dorder", 0)
+        curve = inputdata.pop("curve")
+
+        ct = clight * curve[0, :]
+        amplitude = curve[1, :]
+
+        # calculate table of derivatives
+        tderiv = np.empty((dorder + 1, len(amplitude)))
+        tderiv[0, :] = np.copy(amplitude)
+        for i in range(dorder):
+            tderiv[i + 1, :] = np.gradient(tderiv[i, :], ct)
+
+        # interpolate table of derivatives to turns
+        aturns = np.arange(nturns) * cT0
+        func = np.empty((dorder + 1, nturns))
+        for i in range(dorder + 1):
+            func[i, :] = np.interp(aturns, ct, tderiv[i, :])
+        return func
+
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
         if func is None:
-            raise AtError("Please provide a value for Func" + ab)
+            inputdata = kwargs.pop("inputcurve" + ab, None)
+            if inputdata is not None:
+                func = self.create_func(inputdata)
+            else:
+                raise AtError("Please provide data or Func" + ab)
         if np.any(np.isnan(func)):
             raise AtError("Function" + ab + " contains nan.")
         if not np.all(np.isreal(func)):
             raise AtError("Function" + ab + " contains non real values.")
-        func = np.squeeze(func)
-        if func.ndim == 1:
+        if func.ndim == 0:
+            nsamples = 1
+            rows = 1
+        elif func.ndim == 1:
             nsamples = len(func)
             rows = 1
         else:
