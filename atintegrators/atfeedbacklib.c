@@ -631,7 +631,7 @@ int check_buffer_length(double *buffer, long buffersize, long numcolumns){
 
 
 
-static void compute_set_params(double *vbeam, double *vgen, double detune_angle, double phis, double *vgen_set){
+static void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
     double vbeami_meas = vbeam[0]*sin(vbeam[1]);
@@ -645,30 +645,39 @@ static void compute_set_params(double *vbeam, double *vgen, double detune_angle,
     double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
 
+    double meas_psi = vgen[1] - phis_meas;
     
-    /* This computes the delta psi */
-    double meas_psi = vgen[1] - phis + detune_angle;
-
     vgen_set[0] = vcav_meas;
     vgen_set[1] = phis_meas;
     vgen_set[2] = meas_psi;
 
 }
 static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
-                        double phasegain, double detune_angle){
+                        double phasegain, double *VoltDelay, double *PhaseDelay, int delay){
+    /*
+            diff_A = self.volt_delay[-1] - self.cav_res.Vc
+        diff_P = self.phase_delay[-1] - self.cav_res.theta
+        self.cav_res.Vg -= self.gain_A * diff_A
+        self.cav_res.theta_g -= self.gain_P * diff_P
+        self.cav_res.generator_phasor_record = np.ones(
+            self.ring.h) * self.cav_res.generator_phasor
+        self.volt_delay = np.roll(self.volt_delay, 1)
+        self.phase_delay = np.roll(self.phase_delay, 1)
+        self.volt_delay[0] = self.cav_res.cavity_voltage
+        self.phase_delay[0] = self.cav_res.cavity_phase
 
-    /* This computes the delta theta g*/
-    double phis = vcav[1];   
-    double ptmp = vcav_meas[1] - phis; 
-
-    /* This computes the delta psi */
-
-    double dtmp = vcav[0] / vcav_meas[0];
-
-    vgen[3] *= pow(dtmp,voltgain);
-    vgen[1] -= ptmp*phasegain;
-    vgen[0] = vgen[3]*cos(vgen[2]);
+    */
     
+    double diff_Amp = VoltDelay[delay-1] - vcav[0];
+    double diff_Phase = PhaseDelay[delay-1] - vcav[1];
+    vgen[0] -= voltgain * diff_Amp;
+    vgen[1] -= phasegain * diff_Phase;
+    
+    roll_array(VoltDelay, delay);
+    roll_array(PhaseDelay, delay);
+    
+    VoltDelay[0] = vcav_meas[0];
+    PhaseDelay[0] = vcav_meas[1];    
 }
 
 
