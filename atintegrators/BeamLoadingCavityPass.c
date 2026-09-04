@@ -35,7 +35,6 @@ struct elem
   double *vbeam_phasor; double *vbeam;
   double *vcav; double *vgen;
   double *vgen_buffer; double *vbeam_buffer; double *vbunch_buffer;
-  int system_harmonic;
   int delay;  double *VoltDelay; double *PhaseDelay;
   int samplenum; int every; int recordsize;
   int ff; double cutoff;
@@ -351,7 +350,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy;
     int nturn = Param->nturn;
     if (!Elem) {
-        long nslice, nturns, cavitymode, fbmode, buffersize, windowlength, system_harmonic;
+        long nslice, nturns, cavitymode, fbmode, buffersize, windowlength;
         long delay, every, samplenum, ff, recordsize, openloop;
         double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
         double *VoltDelay, *PhaseDelay;
@@ -421,7 +420,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
         
         phis=atGetDouble(ElemData,"_phis"); check_error();
-        system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
         ts=atGetDouble(ElemData,"_ts"); check_error();
         
         openloop=atGetLong(ElemData,"OpenLoop"); check_error();
@@ -510,7 +508,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->fbmode = fbmode;
         Elem->phis = phis;
         Elem->ts = ts;
-        Elem->system_harmonic = system_harmonic;
         Elem->every=every;
         Elem->delay=delay;
         Elem->VoltDelay=VoltDelay;
@@ -576,7 +573,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
 
-      long nslice, nturns, cavitymode, fbmode, buffersize, windowlength, system_harmonic;
+      long nslice, nturns, cavitymode, fbmode, buffersize, windowlength;
       long delay, every, samplenum, ff, recordsize, openloop;
       double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
       double *VoltDelay, *PhaseDelay;
@@ -626,7 +623,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
       vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
       phis=atGetDouble(ElemData,"_phis"); check_error();
-      system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
       ts=atGetDouble(ElemData,"_ts"); check_error();
       openloop=atGetLong(ElemData,"OpenLoop"); check_error();
       
@@ -703,7 +699,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       Elem->phis = phis;
       Elem->ts = ts;
-      Elem->system_harmonic = system_harmonic;
       Elem->every=every;
       
       Elem->VoltDelay=VoltDelay;
@@ -747,7 +742,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(28,1);
+      plhs[0] = mxCreateCellMatrix(27,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -773,9 +768,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],22,mxCreateString("_buffersize"));
       mxSetCell(plhs[0],23,mxCreateString("_windowlength"));
       mxSetCell(plhs[0],24,mxCreateString("_phis"));
-      mxSetCell(plhs[0],25,mxCreateString("system_harmonic")); 
-      mxSetCell(plhs[0],26,mxCreateString("_ts"));     
-      mxSetCell(plhs[0],27,mxCreateString("OpenLoop"));     
+      mxSetCell(plhs[0],25,mxCreateString("_ts"));     
+      mxSetCell(plhs[0],26,mxCreateString("OpenLoop"));     
     
       
                                 

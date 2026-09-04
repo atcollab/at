@@ -271,6 +271,13 @@ class BeamLoadingElement(RFCavity, Collective):
             "system_harmonic", int(np.round(frequency / ring.rf_frequency))
         )
         harmonic_number = self.system_harmonic * ring.harmonic_number #cavity harmonic number
+        if harmonic_number % 1 != 0:
+            error_string = ("Cavity harmonic number must be a whole number"
+                            "Please check system_harmonic"
+                            )
+            raise AtError(error_string)
+        harmonic_number = int(harmonic_number)
+        
         self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets)        
         self._nbunch = ring.nbunch
         self._beta = ring.beta #particle velocity (NOT cavity beta)
