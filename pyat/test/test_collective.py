@@ -143,15 +143,15 @@ def test_buffers(hmba_lattice):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ring.harmonic_number = 32
-        
-    ring.set_fillpattern(nbunch)
-    ring.beam_current = 0.2
-
     nturns = 11
     nbunch = 4
     nslice = 51
     ns = nbunch*nslice
     ls = ns*ring.circumference/ring.periodicity
+
+    ring.set_fillpattern(nbunch)
+    ring.beam_current = 0.2
+
     add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
                     buffersize=nturns)
     rin = numpy.zeros((6, nbunch)) + 1.0e-6
