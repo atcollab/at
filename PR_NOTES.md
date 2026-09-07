@@ -228,16 +228,48 @@ converter bug 5.1/5.2, not A0. Only the `fb=1, fq=1` rows are A0-attributable.
 |---|---|---|---|---|
 | `ExactMultipolePass` | 5.9e-14 | 5.9e-14 (orders 0-3, A and B) | 5.9e-14 | **none** |
 | `ExactSectorBendPass` | 2.2e-11 (all six DOFs) | 2.0e-11 for B0-B3, A1-A3 | 2.2e-11 | **A0 only**, 2.5e-07 — deliberate, see 3.4 |
-| `ExactRectangularBendPass` | pending | pending | pending | re-measuring after the 2.5 fix; `k1=0` already at 1.5e-12 |
+| `ExactRectangularBendPass` | 9.8e-03 | 9.8e-03 | 9.8e-03 | **not comparable when `k1 != 0`** — converter limitation, see 3.6 |
+
+### 3.6 The rectangular bend cannot be compared through the converter when `X0ref != 0`
+
+`k1 = 0` agrees at **1.543e-12**, so the pass method itself is sound. As soon as
+`k1 != 0` a *constant* 9.76e-03 offset appears in `x`/`px`, identical for every
+field order, every misalignment, and every anchor — a fixed reference-orbit
+offset, not a physics disagreement. Fixing `rbendtune` (2.5) did not change it
+(8.9e-03 -> 9.8e-03; the number moved only because `X0ref` itself changed).
+
+The cause is documented in `xsuite.py` itself, which lists `X0ref` and `RefDZ`
+among the **ignored attributes**:
+
+> `X0ref`. This parameter defines the distance between the magnetic axis of a
+> rectangular bend and the reference trajectory. It only matters for rectangular
+> bends with focusing or higher order multipoles. Xsuite has a similar attribute
+> `rbend_shift` but there is no analytical conversion possible between both.
+
+That matches the observation exactly — `X0ref` is nonzero only when the bend
+carries multipoles, which is precisely when the disagreement appears. Scanning
+Xsuite's `rbend_shift` confirms the two are not equivalent: the best value found
+brings 9.76e-03 down to only 6.86e-04, still ~10^8 above the floor. (A scan
+minimum landed at exactly `-X0ref/4`, but that is a grid artefact — the 25-point
+scan had spacing 1.704e-02 — and should not be read as a relation.)
+
+So a meaningful AT/Xsuite comparison for combined-function rectangular bends is
+**out of reach with the current converter**, independently of anything in this
+branch. Only `k1 = 0` is a valid test, and it passes.
 
 ## 4. Open items — do not present these as done
-* **The rectangular bend is unmeasured.** Every earlier attempt was invalid
-  because `rbendtune()` was crashing (2.4). Re-running.
+* **The rectangular bend is only validated at `k1 = 0`** (1.543e-12). With
+  multipoles the converter drops `X0ref` by design (3.6), so there is currently
+  no way to test it against Xsuite. The exact-misalignment wiring for this pass
+  method is therefore **unvalidated** — it compiles and runs, but the only
+  configuration that can be checked is the one where misalignment geometry is
+  least demanding.
+* The `MisalignAnchor` question for rectangular bends could not be settled for
+  the same reason: the anchor scan showed no sensitivity because the constant
+  `X0ref` offset dominates everything.
 * **The full misalignment x field-error matrix has not been re-run since the
   2.3 fringe fix.** The per-order scan has (3.3), but the combined table in 3.2
   predates it and should be regenerated before submission.
-* The `MisalignAnchor` question for rectangular bends is unresolved: Xsuite's
-  `RBend` anchors on `length_straight` (the chord) while the AT side currently
   defaults to `Length/2` (the arc).
 * `ExactPitch`/`ExactYaw` sign conventions are exercised only through
   `transform_elem`; a lattice that sets `R1`/`T1` directly is untested.
