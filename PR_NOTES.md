@@ -138,24 +138,68 @@ misalignment cross-terms**. `ExactMultipolePass` is clean at every order
 including A0/B0, alone and misaligned (~5.9e-14) — a straight element has no
 curved-frame edge.
 
-### 3.3 B0 root cause
+### 3.3 B0 root cause and fix (validated)
 
-The residual is exactly linear in B0 (`1e-5`->1.521e-07, `1e-4`->1.522e-06,
-`1e-3`->1.523e-05), sits in `y`/`py`, and **vanishes at face angle 0 with
+The residual was exactly linear in B0 (`1e-5`->1.521e-07, `1e-4`->1.522e-06,
+`1e-3`->1.523e-05), sat in `y`/`py`, and **vanished at face angle 0 with
 fringes off** (3.185e-11 = the floor). So the curved-frame body kick, including
-the new K0h term, is correct; the disagreement was in the edge. See 2.3.
+the new K0h term, was already correct; the disagreement was in the edge — the
+dipole fringe was being handed the design curvature instead of the total field
+(see 2.3).
+
+After the fix, B0 is at the noise floor across four decades:
+
+| B0 (relative) | before | after |
+|---|---|---|
+| 1e-5 | 1.521e-07 | **2.005e-11** |
+| 1e-4 | 1.522e-06 | **2.005e-11** |
+| 1e-3 | 1.523e-05 | **2.000e-11** |
+| 1e-2 | — | **1.952e-11** |
+
+Final per-order state of the sector bend (error `1e-4`): B0, B1, B2, B3, A1, A2,
+A3 all at **2.005e-11**; only A0 remains, at 2.525e-07, which is the deliberate
+completeness difference of 3.4 and not a defect.
+
+### 3.4 A0 root cause — a completeness difference, **not** a bug
+
+Same isolation as B0. The A0 residual is exactly linear in A0 (`1e-5`->2.526e-08,
+`1e-4`->2.525e-07, `1e-3`->2.532e-06), **vanishes entirely with the fringes off**
+(3.249e-11 against a 3.185e-11 floor), and survives at zero face angle
+(1.308e-08) because `multipole_fringe` is not gated on the face angle.
+
+The mechanism is exact and verified on both sides. AT's `multipole_fringe`,
+called with `skip_b0=1`, drops only the *normal* term at order 0 and keeps the
+skew one:
+
+```c
+if (n == 0 && skip_b0) {
+  U  = - A * IX;   /* A = PolynomA[0] — the skew dipole is still included */
+  V  = + A * RX;
+```
+
+Xsuite's `MultFringe_track_single_particle` is called with `min_order=1`, and
+its guard `if (ii >= min_order)` covers **both** `kn_total` and `ks_total`, so
+order 0 is excluded normal *and* skew. Xsuite's `Bend` cannot represent a skew
+dipole at all — `bend.h` hardcodes `k0s=0`, and `DipoleFringe` takes a scalar
+`k0` with no skew counterpart.
+
+So AT computes a skew-dipole fringe term (Forest 13.29) that Xsuite's `Bend`
+structurally never computes. **AT is the more complete of the two here.**
+Making the two agree means deleting correct AT physics, which is a maintainer's
+call, not a bug fix — it is deliberately **not** done on this branch. If
+bit-agreement with Xsuite is ever required, it should be an opt-in flag rather
+than a silent change of the default.
+
+Caveat: the `fq=0` and `fb=0` rows of the A0 scan land at ~9.5e-05, but the
+no-A0 controls for those same configurations already sit at 9.265e-05 — that is
+converter bug 5.1/5.2, not A0. Only the `fb=1, fq=1` rows are A0-attributable.
 
 ## 4. Open items — do not present these as done
-
-* **A0 (skew dipole) is not root-caused.** The face/fringe isolation that
-  identified the B0 mechanism has not been repeated for A0. The standing
-  hypothesis — that Xsuite's `Bend` never computes a skew-dipole fringe at all
-  (`MultFringe` is called with `min_order=1`, `DipoleFringe` takes only a scalar
-  `k0`, and `bend.h` hardcodes `k0s=0`), making this a physics-completeness
-  difference rather than an AT bug — is **unverified in this round**.
 * **The rectangular bend is unmeasured.** Every earlier attempt was invalid
   because `rbendtune()` was crashing (2.4). Re-running.
-* **The 2.3 fringe fix is not yet validated.** Numbers pending.
+* **The full misalignment x field-error matrix has not been re-run since the
+  2.3 fringe fix.** The per-order scan has (3.3), but the combined table in 3.2
+  predates it and should be regenerated before submission.
 * The `MisalignAnchor` question for rectangular bends is unresolved: Xsuite's
   `RBend` anchors on `length_straight` (the chord) while the AT side currently
   defaults to `Length/2` (the arc).

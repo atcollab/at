@@ -30,9 +30,13 @@ def rbendtune(self: Dipole) -> None:
 
     """
 
-    def cross(x0r: float):
+    def cross(x0r):
         """Return the horizontal exit angle of the reference particle."""
-        elem.X0ref = x0r
+        # fsolve hands in a 1-element array. Assigning it as-is leaves X0ref
+        # non-scalar, the tracking never sees the new value, the objective is
+        # constant and fsolve stalls on its initial guess -- silently, bar a
+        # "not making good progress" warning.
+        elem.X0ref = float(np.asarray(x0r).reshape(-1)[0])
         out = elem.track(np.zeros(6))
         return out[1]
 
