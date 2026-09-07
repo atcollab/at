@@ -533,12 +533,14 @@ class BeamLoadingElement(RFCavity, Collective):
             
         elif self._cavitymode in {2, 3}:
             vgen = 0
+            theta_g = 0
             psi = np.arctan(
                 2 * self.Qfactor * (1 - self.Frequency / (self.Frequency + self.detune))
             )
         else:
             vgen = self.Voltage
             psi = 0
+            theta_g = 0
 
         self._vbeam = np.array([2 * current * self.Rshunt * np.cos(psi), np.pi + psi])
 
