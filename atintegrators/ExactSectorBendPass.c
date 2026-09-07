@@ -68,10 +68,17 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
         k1_exit_angle = B[1] * exit_angle;
     }
 
+    /* The dipole fringe sees the TOTAL normal dipole field, design plus error,
+       not just the design curvature.  Xsuite builds the same quantity in
+       track_magnet_edge.h as knorm[0] + knl[0]/length before handing it to
+       DipoleFringe_single_particle.  The wedge, by contrast, uses the design
+       field alone in both codes, so bend_edge() keeps irho. */
+    double b0_edge = irho + B[0] + B0;
+
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK_entrance,gK_exit,A0,B0,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
-    k1_entrance_angle,k1_exit_angle,entrance_angle,exit_angle,mis,bending_angle,\
+    k1_entrance_angle,k1_exit_angle,entrance_angle,exit_angle,mis,bending_angle,b0_edge,\
     FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,le)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
@@ -98,7 +105,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
 
             Yrot(r6, entrance_angle);
             if (FringeBendEntrance)
-                bend_fringe(r6, irho, gK_entrance);
+                bend_fringe(r6, b0_edge, gK_entrance);
             if (FringeQuadEntrance)
                 multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
             if (entrance_angle != 0.0) {
@@ -132,7 +139,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
             if (FringeBendExit)
-                bend_fringe(r6, -irho, gK_exit);
+                bend_fringe(r6, -b0_edge, gK_exit);
             Yrot(r6, exit_angle);
 
             /* Check physical apertures at the exit of the magnet */
