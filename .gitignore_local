@@ -1,0 +1,3 @@
+# Xsuite JIT compilation artefacts
+[0-9a-f][0-9a-f][0-9a-f]*.c
+*.log

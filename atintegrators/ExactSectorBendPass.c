@@ -5,6 +5,7 @@
 #include "kick_k1h_kn.h"
 #include "exactbendfringe.c"
 #include "exactmultipolefringe.c"
+#include "exact_misalign.h"
 
 struct elem
 {
@@ -31,6 +32,7 @@ struct elem
     double *RApertures;
     double *EApertures;
     double *KickAngle;
+    struct exact_misalign mis;
 };
 
 static void ExactSectorBend(double *r, double le, double bending_angle,
@@ -43,7 +45,8 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, int num_particles)
+        double *KickAngle, double scaling, const struct exact_misalign *mis,
+        int num_particles)
 {
     double irho = bending_angle / le;
     double SL = le/num_int_steps;
@@ -68,7 +71,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
     irho,gK_entrance,gK_exit,A0,B0,A,B,L1,L2,K1,K2,max_order,num_int_steps,scaling,\
-    k1_entrance_angle,k1_exit_angle,entrance_angle,exit_angle,\
+    k1_entrance_angle,k1_exit_angle,entrance_angle,exit_angle,mis,bending_angle,\
     FringeBendEntrance,FringeBendExit,FringeQuadEntrance,FringeQuadExit,le)
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
@@ -77,8 +80,17 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (scaling != 1.0) ATChangePRef(r6, scaling);
 
             /*  misalignment at entrance  */
-            if (T1) ATaddvv(r6,T1);
-            if (R1) ATmultmv(r6,R1);
+            if (mis->active) {
+                /* Exact rigid-body transformation, replacing the linearised
+                   R1/T1 built from the same geometry. */
+                exact_misalign_entry(r6, mis->dx, mis->dy, mis->dz,
+                        mis->theta, mis->phi, mis->psi, mis->anchor,
+                        le, bending_angle, irho, mis->psi_frame);
+            }
+            else {
+                if (T1) ATaddvv(r6,T1);
+                if (R1) ATmultmv(r6,R1);
+            }
 
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
@@ -115,7 +127,7 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             /* edge focus */
             if (exit_angle != 0.0) {
                 bend_edge(r6, irho, -exit_angle);
-                if (k1_exit_angle != 0.0 && FringeQuadEntrance) quad_wedge(r6, -k1_exit_angle);
+                if (k1_exit_angle != 0.0 && FringeQuadExit) quad_wedge(r6, -k1_exit_angle);
             }
             if (FringeQuadExit)
                 multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
@@ -128,8 +140,15 @@ static void ExactSectorBend(double *r, double le, double bending_angle,
             if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
             /* Misalignment at exit */
-            if (R2) ATmultmv(r6,R2);
-            if (T2) ATaddvv(r6,T2);
+            if (mis->active) {
+                exact_misalign_exit(r6, mis->dx, mis->dy, mis->dz,
+                        mis->theta, mis->phi, mis->psi, mis->anchor,
+                        le, bending_angle, irho, mis->psi_frame);
+            }
+            else {
+                if (R2) ATmultmv(r6,R2);
+                if (T2) ATaddvv(r6,T2);
+            }
 
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
@@ -166,6 +185,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+        int ExactMisalign=atGetOptionalLong(ElemData,"ExactMisalign",0); check_error();
 
         if (NumIntSteps == 0) {
             for (int i=MaxOrder; i>=0; i--) {
@@ -176,6 +196,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         }
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        GET_EXACT_MISALIGN(ElemData, Elem->mis, Length, ExactMisalign);
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
         Elem->PolynomB=PolynomB;
@@ -208,7 +229,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->gK_entrance, Elem->gK_exit,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, num_particles);
+            Elem->KickAngle, Elem->Scaling, &Elem->mis, num_particles);
     return Elem;
 }
 
@@ -249,6 +270,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+        int ExactMisalign=atGetOptionalLong(ElemData,"ExactMisalign",0); check_error();
+        struct exact_misalign mis;
 
         if (NumIntSteps == 0) {
             for (int i=MaxOrder; i>=0; i--) {
@@ -257,6 +280,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 }
             }
         }
+
+        GET_EXACT_MISALIGN(ElemData, mis, Length, ExactMisalign);
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -268,7 +293,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             FringeQuadEntrance, FringeQuadExit,
             FullGap*FringeInt1, FullGap*FringeInt2,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, num_particles);
+            KickAngle, Scaling, &mis, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;
