@@ -62,16 +62,21 @@ static void mis_xy_shift(double *r6, double dx, double dy)
 
 static void mis_s_shift(double *r6, double ds)
 {
-    /* Exact drift over ds, keeping only the *extra* path length: the straight
-       distance ds itself is not part of the element.  Mirrors Xsuite's
-       (Drift_single_particle_exact(ds); zeta -= ds). */
+    /* Longitudinal displacement of the element: the particle covers the real
+       path over ds, but the *design* orbit does not advance, so the whole
+       trajectory length is path lengthening.  This is the AT image of Xsuite's
+           Drift_single_particle_exact(ds); zeta -= ds; s -= ds;
+       whose net effect on zeta is -ds*(beta0/beta)*dp1/pz, i.e. the full
+       time of flight and not just its second-order part.  Subtracting ds here
+       (as a drift inside the element would) is wrong: it would cancel the
+       first-order term that Xsuite keeps. */
     if (ds != 0.0) {
         double dp1 = 1.0 + r6[delta_];
         double pz = pxyz(dp1, r6[px_], r6[py_]);
         double NormL = ds / pz;
         r6[x_] += r6[px_] * NormL;
         r6[y_] += r6[py_] * NormL;
-        r6[ct_] += NormL * dp1 - ds;
+        r6[ct_] += NormL * dp1;
     }
 }
 

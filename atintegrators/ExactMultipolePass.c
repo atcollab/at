@@ -4,6 +4,7 @@
 #include "driftkick.c"  /* fastdrift.c, strthinkick.c */
 #include "exactdrift.c"
 #include "exactmultipolefringe.c"
+#include "exact_misalign.h"
 
 struct elem {
   double Length;
@@ -22,13 +23,15 @@ struct elem {
   double *RApertures;
   double *EApertures;
   double *KickAngle;
+  struct exact_misalign mis;
 };
 
 static void multipole_pass(
   double *r, double le, double *A, double *B, int max_order, int num_int_steps,
   int FringeQuadEntrance, int FringeQuadExit, /* 0 (no fringe), else  */
   double *T1, double *T2, double *R1, double *R2, double *RApertures,
-  double *EApertures, double *KickAngle, double scaling, int num_particles)
+  double *EApertures, double *KickAngle, double scaling,
+  const struct exact_misalign *mis, int num_particles)
 {
   double SL = le / num_int_steps;
   double L1 = SL * DRIFT1;
@@ -47,7 +50,7 @@ static void multipole_pass(
                        shared(r, num_particles, R1, T1, R2, T2, RApertures, \
                        EApertures, A, B, L1, L2, K1, K2, max_order, \
                        FringeQuadEntrance, FringeQuadExit, \
-                       num_int_steps, scaling, le)
+                       num_int_steps, scaling, le, mis)
   for (int c = 0; c < num_particles; c++) { /*Loop over particles  */
     double *r6 = r + c * 6;
     if (!atIsNaN(r6[0])) {
@@ -57,8 +60,15 @@ static void multipole_pass(
       if (scaling != 1.0) ATChangePRef(r6, scaling);
 
       /*  misalignment at entrance  */
-      if (T1) ATaddvv(r6, T1);
-      if (R1) ATmultmv(r6, R1);
+      if (mis->active) {
+        exact_misalign_entry(r6, mis->dx, mis->dy, mis->dz,
+                mis->theta, mis->phi, mis->psi, mis->anchor,
+                le, 0.0, 0.0, mis->psi_frame);
+      }
+      else {
+        if (T1) ATaddvv(r6, T1);
+        if (R1) ATmultmv(r6, R1);
+      }
 
       /* Check physical apertures at the entrance of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
@@ -89,8 +99,15 @@ static void multipole_pass(
       if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
       /* Misalignment at exit */
-      if (R2) ATmultmv(r6, R2);
-      if (T2) ATaddvv(r6, T2);
+      if (mis->active) {
+        exact_misalign_exit(r6, mis->dx, mis->dy, mis->dz,
+                mis->theta, mis->phi, mis->psi, mis->anchor,
+                le, 0.0, 0.0, mis->psi_frame);
+      }
+      else {
+        if (R2) ATmultmv(r6, R2);
+        if (T2) ATaddvv(r6, T2);
+      }
 
       /* Check for change of reference momentum */
       if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
@@ -122,12 +139,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     double *EApertures = atGetOptionalDoubleArray(ElemData, "EApertures"); check_error();
     double *RApertures = atGetOptionalDoubleArray(ElemData, "RApertures"); check_error();
     double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle"); check_error();
+    int ExactMisalign=atGetOptionalLong(ElemData,"ExactMisalign",0); check_error();
 
     if (NumIntSteps <= 0) {
         atError("NumIntSteps must be positive"); check_error();
     }
 
     Elem = (struct elem *)atMalloc(sizeof(struct elem));
+    GET_EXACT_MISALIGN(ElemData, Elem->mis, Length, ExactMisalign);
     Elem->Length = Length;
     Elem->PolynomA = PolynomA;
     Elem->PolynomB = PolynomB;
@@ -150,7 +169,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                  Elem->FringeQuadEntrance, Elem->FringeQuadExit,
                  Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                  Elem->RApertures, Elem->EApertures,
-                 Elem->KickAngle, Elem->Scaling, num_particles);
+                 Elem->KickAngle, Elem->Scaling, &Elem->mis, num_particles);
   return Elem;
 }
 
@@ -181,10 +200,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *EApertures = atGetOptionalDoubleArray(ElemData, "EApertures"); check_error();
     double *RApertures = atGetOptionalDoubleArray(ElemData, "RApertures"); check_error();
     double *KickAngle = atGetOptionalDoubleArray(ElemData, "KickAngle"); check_error();
+    int ExactMisalign=atGetOptionalLong(ElemData,"ExactMisalign",0); check_error();
+    struct exact_misalign mis;
 
     if (NumIntSteps <= 0) {
         atError("NumIntSteps must be positive"); check_error();
     }
+    GET_EXACT_MISALIGN(ElemData, mis, Length, ExactMisalign);
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
     r_in = mxGetDoubles(plhs[0]);
@@ -192,7 +214,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                    FringeQuadEntrance, FringeQuadExit,
                    T1, T2, R1, R2,
                    RApertures, EApertures,
-                   KickAngle, Scaling, num_particles);
+                   KickAngle, Scaling, &mis, num_particles);
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;
