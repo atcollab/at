@@ -326,7 +326,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         if(TunerGain>0){
                 TunerParams[0] += 1; // TunerCount        
                 TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
-        
+                
                 if(TunerParams[0]==TunerAveragingPeriod){
                     TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
                     vgen_arr[2] += TunerGain * TunerParams[1];

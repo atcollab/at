@@ -53,7 +53,6 @@ static double complex Vg2Ig_real(double vgen, double thetag, double psi, double 
     */
     double complex vgen_phasor = vgen * cexp(_Complex_I * (thetag + TWOPI/4)); // phase shift needed for vgen def
     double complex Ig = (vgen_phasor / RL) * (1 - _Complex_I * tan(psi));
-    printf("some parameters %f \t %f \t %f \t %f \n", vgen, thetag, RL, psi);
     return creal(Ig);
 }
 
@@ -189,11 +188,10 @@ static void init_cavity_record_phasor_array(double *vbunch,
 }
 
 static void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, double *vcav_phasor){
-    // BE AWARE THAT MBTRACK2 INCLUDES LOSS FACTOR IN ADDITION TO u0. THIS MAY RESULT IN NUMBERS BEING SLIGHTLY DIFFERENT
     double complex generator_phasor = vgen*cexp(_Complex_I*(thetag+TWOPI/4));
     double complex beam_phasor = vbeam_phasor[0]*cexp(_Complex_I*vbeam_phasor[1]);
     double complex cavity_phasor = generator_phasor + beam_phasor;
-    printf("beam_phasor %f \t %f \n", creal(beam_phasor), cimag(beam_phasor));
+
     vcav_phasor[0] = creal(cavity_phasor);
     vcav_phasor[1] = cimag(cavity_phasor);
 
@@ -274,7 +272,6 @@ void update_sample_list(int *sample_list, int index, int every, int ring_harmn){
         sample_list[tt] = idx;
         tt += 1;
     }   
-    printf("DO I EVEN GET HERE[0] %d \n", sample_list[0]);
 }
 
 
@@ -545,7 +542,6 @@ void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean
     int idx=0;
     vc_mean[0] = 0.0;
     vc_mean[1] = 0.0;
-    printf("compute mean the index is %d \n", index);
     for(idx=index;idx<index+samplenum;idx++){
         vc_mean[0] += vc_list_real[idx]/samplenum;
         vc_mean[1] += vc_list_imag[idx]/samplenum;
@@ -646,6 +642,12 @@ static void compute_set_params(double *vbeam, double *vgen, double phis, double 
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
 
     double meas_psi = vgen[1] - phis_meas;
+    
+    if(meas_psi<-TWOPI/2){
+        meas_psi += TWOPI;
+    }else if(meas_psi > TWOPI/2){
+        meas_psi -= TWOPI;
+    }
     
     vgen_set[0] = vcav_meas;
     vgen_set[1] = phis_meas;
