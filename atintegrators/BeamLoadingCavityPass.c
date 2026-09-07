@@ -71,7 +71,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
-    int harmn = rffreq * circumference / C0 ;    // cavity harmonic number    
+    int harmn = rffreq * circumference / C0 ;    // cavity harmonic number 
+       
     int ring_harmn = harmonic_number;
     double tlag = Elem->TimeLag;
     double qfactor = Elem->Qfactor;
@@ -138,7 +139,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
                              beta, ave_vbeam, vbunch, bunch_spos, ring_harmn, fillpattern, ts);                        
 
-                
+
         /*apply kicks*/
         for (c=0; c<num_particles; c++) {
             double *r6 = r_in+c*6;

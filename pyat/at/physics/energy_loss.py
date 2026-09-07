@@ -85,7 +85,10 @@ def get_energy_loss(
         energy = ring.energy
         particle = ring.particle
         delta = 0.0
+        
         try:
+            if len(ring[at.SimpleRadiation]) > 0:
+                raise AtError("Simple Ring has no 6D orbit")
             ring = ring.disable_6d(*_EXCLUDED, copy=True)
             for e in ring[VariableThinMultipole]:
                 e.disable()
@@ -103,6 +106,7 @@ def get_energy_loss(
                 "calculation excluding orbit effects"
             )
             warn(AtWarning(msg))
+        
             for e in ring:
                 if e.PassMethod == "SimpleRadiationRadPass":
                     delta -= e.U0 / energy  # Needed to prevent mixing with rad. damping

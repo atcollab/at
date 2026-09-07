@@ -343,9 +343,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double bucket_z_center = 0.0;
     for(ibunch=0; ibunch<ring_harmn; ibunch++){
         is_filled = fillpattern[ibunch]; 
-
         bucket_z_center = ibunch*main_bucket;
-        
         if(is_filled!=0.0){
             for(islice=0; islice<nslice; islice++){
                 total_slice_counter = islice + nslice*bunch_counter; 
@@ -359,7 +357,6 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
                 }
-                
                 /* track the dt */
                 vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                 vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
@@ -368,7 +365,6 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
             }
             /* back to the center of the bucket */
             dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
-            
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
             bunch_counter += 1;
         }
@@ -376,7 +372,6 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         /* move to ts_central time */
         dt = -ts_central_z/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-                       
 
         vbr[ibunch] = cabs(vbeam_complex);
         vbi[ibunch] = carg(vbeam_complex);
