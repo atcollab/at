@@ -94,7 +94,35 @@ design field alone in both codes (`Wedge_single_particle(..., knorm[0])`), so
 | file | bug |
 |---|---|
 | `ExactSectorBendPass.c` | the **exit** quadrupole wedge tested `FringeQuadEntrance` instead of `FringeQuadExit` |
-| `pyat/at/lattice/elements/rectangular_bend.py:55` | `float(fsolve(...))` on a 1-element array — NumPy >= 2.0 removed that implicit conversion, so **`rbendtune()` raises `TypeError` on any current NumPy** and a rectangular bend carrying multipoles cannot be set up at all. Fixed with `fsolve(...)[0]`. |
+| `rectangular_bend.py` (`rbendtune`, outer) | `float(fsolve(...))` on a 1-element array — NumPy >= 2.0 removed that implicit conversion, so **`rbendtune()` raises `TypeError` on any current NumPy** and a rectangular bend carrying multipoles cannot be set up at all. Fixed with `fsolve(...)[0]`. |
+| `rectangular_bend.py` (`rbendtune`, objective) | With the above fixed it ran but **did nothing**. The objective does `elem.X0ref = x0r` with the 1-element array `fsolve` passes in; the tracking never picks up a non-scalar `X0ref`, so the objective is constant, `fsolve` stalls and returns its own initial guess. See 2.5. |
+
+### 2.5 `rbendtune` was silently producing a wrong reference orbit
+
+This one is **independent of the Xsuite comparison** and affects any AT lattice
+with combined-function rectangular bends, so it is probably the most
+consequential fix here.
+
+The only symptom was a `RuntimeWarning: The iteration is not making good
+progress`. The evidence that it was doing nothing at all:
+
+| | before | after |
+|---|---|---|
+| `X0ref`, k1=0.05 | -6.655556e-02 | **-6.702286e-02** |
+| `X0ref`, k1=0.3 | -6.655556e-02 — *identical* | **-6.816260e-02** |
+| reference `px` at exit, k1=0.3 | -7.910e-04 | **+1.4e-16** |
+
+`-6.655556e-02` is exactly the analytic initial guess
+`L*((cos(θ/2)-1)/θ + sin(θ/2)/12)`, returned unchanged for both k1 values.
+`X0ref` must depend on k1 — cancelling the exit angle is the entire purpose of
+the function — and the reference particle was leaving the magnet at
+`px = -7.9e-04` instead of 0.
+
+Consequence for this study: every rectangular-bend measurement before this fix
+was invalid. The signature was unmistakable in hindsight — `k1=0` (which needs
+no tuning, `X0ref=0`) agreed at **1.543e-12**, while every `k1 != 0` case sat at
+a *constant* 8.9e-03 regardless of field errors or misalignment, i.e. a fixed
+reference-orbit offset rather than a physics disagreement.
 
 ## 3. Results
 
@@ -193,6 +221,14 @@ than a silent change of the default.
 Caveat: the `fq=0` and `fb=0` rows of the A0 scan land at ~9.5e-05, but the
 no-A0 controls for those same configurations already sit at 9.265e-05 — that is
 converter bug 5.1/5.2, not A0. Only the `fb=1, fq=1` rows are A0-attributable.
+
+### 3.5 Status per pass method
+
+| pass method | misalignment | field errors | combined | outstanding |
+|---|---|---|---|---|
+| `ExactMultipolePass` | 5.9e-14 | 5.9e-14 (orders 0-3, A and B) | 5.9e-14 | **none** |
+| `ExactSectorBendPass` | 2.2e-11 (all six DOFs) | 2.0e-11 for B0-B3, A1-A3 | 2.2e-11 | **A0 only**, 2.5e-07 — deliberate, see 3.4 |
+| `ExactRectangularBendPass` | pending | pending | pending | re-measuring after the 2.5 fix; `k1=0` already at 1.5e-12 |
 
 ## 4. Open items — do not present these as done
 * **The rectangular bend is unmeasured.** Every earlier attempt was invalid
