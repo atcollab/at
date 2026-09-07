@@ -12,6 +12,7 @@ from scipy.optimize import least_squares
 from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
 from at.lattice import Collective, SimpleQuantDiff, QuantumDiffusion, VariableThinMultipole
+from at.lattice import SimpleRadiation
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
@@ -87,7 +88,7 @@ def get_energy_loss(
         delta = 0.0
         
         try:
-            if len(ring[at.SimpleRadiation]) > 0:
+            if len(ring[SimpleRadiation]) > 0:
                 raise AtError("Simple Ring has no 6D orbit")
             ring = ring.disable_6d(*_EXCLUDED, copy=True)
             for e in ring[VariableThinMultipole]:
