@@ -71,7 +71,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
-    double harmn = Elem->HarmNumber;
+    int harmn = rffreq * circumference / C0 ;    // cavity harmonic number    
     int ring_harmn = harmonic_number;
     double tlag = Elem->TimeLag;
     double qfactor = Elem->Qfactor;
@@ -121,7 +121,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     /*Track RF cavity is always done. */
     trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
     /*Only allocate memory if current is > 0*/
-    if(tot_current>0){
+    if(tot_current>0 && rshunt>0){
         void *buffer = atMalloc(sz);
         
         double *dptr = (double *) buffer;
@@ -152,7 +152,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         if(buffersize>0){
             write_buffer(vbeam, vbeam_buffer, 2, buffersize);
             write_buffer(vgen_arr, vgen_buffer, 4, buffersize);
-            write_buffer(vbunch, vbunch_buffer, 2*nbunch, buffersize);
+            write_buffer(vbunch, vbunch_buffer, 2*ring_harmn, buffersize);
         }   
 
         update_vbeam_set(fbmode, vbeam_set, ave_vbeam, vbeam_buffer,
@@ -238,7 +238,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
         int dimsth[] = {Param->nbunch*nslice*nturns, 4};
         atCheckArrayDims(ElemData,"_turnhistory", 2, dimsth); check_error();
-        int dimsvb[] = {Param->nbunch, 2};
+        int dimsvb[] = {Param->harmonic_number, 2};
         atCheckArrayDims(ElemData,"_vbunch", 2, dimsvb); check_error();
        
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
