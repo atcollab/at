@@ -9,6 +9,8 @@ produces is what gets compared, so a mismatch is a real AT/Xsuite disagreement
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import at
 import xobjects
@@ -68,10 +70,18 @@ def build_line(lattice):
 
 
 def compare(elem, amp=5e-3, n=11, planes=(0, 2), energy=ENERGY, delta=0.0,
-            label="", verbose=True, show_xs=False):
-    """Track one element through both codes; return the per-coordinate max |diff|."""
+            label="", verbose=True, show_xs=False, ref_elem=None):
+    """Track one element through both codes; return the per-coordinate max |diff|.
+
+    `ref_elem` pins the Xsuite side to a *different* AT element, so an AT-only
+    flag can be toggled against a fixed Xsuite reference.  Without it the two
+    sides always move together (the converter derives the Xsuite edge model
+    from AT's FringeQuad flags), which cannot isolate one code from the other.
+    """
     lattice = at.Lattice([elem.copy()], energy=energy, periodicity=1)
-    line = build_line(lattice)
+    ref_lat = lattice if ref_elem is None else at.Lattice(
+        [ref_elem.copy()], energy=energy, periodicity=1)
+    line = build_line(ref_lat)
 
     if show_xs:
         e0 = line[0]
@@ -118,7 +128,7 @@ def multipole(length=1.0, k1=0.5, nsteps=200, **kwargs):
     return d
 
 
-def rect_bend(length=2.0, angle=0.4, k1=0.3, nsteps=200, **kwargs):
+def rect_bend(length=2.0, angle=0.4, k1=0.3, nsteps=200, tune=True, **kwargs):
     d = at.Dipole("R", length, angle, k=k1,
                   PassMethod="ExactRectangularBendPass", NumIntSteps=nsteps,
                   EntranceAngle=angle / 2, ExitAngle=angle / 2,
@@ -126,7 +136,48 @@ def rect_bend(length=2.0, angle=0.4, k1=0.3, nsteps=200, **kwargs):
                   FringeQuadEntrance=1, FringeQuadExit=1)
     for k, v in kwargs.items():
         setattr(d, k, v)
+    if tune:
+        rbendtune(d)
     return d
+
+
+def rbendtune(elem):
+    """A rectangular bend carrying multipoles needs X0ref/RefDZ set so that the
+    reference particle has a zero closed orbit.  Must be re-run after any change
+    to PolynomA/B, otherwise the whole trajectory is offset."""
+    if hasattr(elem, "rbendtune"):
+        elem.rbendtune()
+    return elem
+
+
+def add_field_errors(elem, rel=1e-4, orders=(0, 1, 2, 3), skew=True, normal=True):
+    """Add errors of relative size `rel` to the given multipole orders.
+
+    Ordering matters, and not in the obvious direction: AT requires
+    MaxOrder < len(PolynomA/B), so MaxOrder can only be raised *after* the
+    longer polynomials are in place.  Assigning them first emits an
+    "truncated by MaxOrder" warning, but the full array is stored and raising
+    MaxOrder straight after makes the high orders active -- verified.
+    """
+    n = max(orders) + 1
+    scale = max(abs(elem.PolynomB[1]), 1.0) if len(elem.PolynomB) > 1 else 1.0
+    a = np.pad(np.asarray(elem.PolynomA, dtype=float), (0, max(0, n - len(elem.PolynomA))))
+    b = np.pad(np.asarray(elem.PolynomB, dtype=float), (0, max(0, n - len(elem.PolynomB))))
+    for o in orders:
+        if skew:
+            a[o] += rel * scale
+        if normal:
+            b[o] += rel * scale
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        elem.PolynomA = a
+        elem.PolynomB = b
+        elem.MaxOrder = max(elem.MaxOrder, max(orders))   # only legal once len > order
+    assert elem.MaxOrder >= max(orders), "MaxOrder too low: errors would be ignored"
+    assert elem.PolynomA[max(orders)] != 0.0 or not skew, "field error was truncated"
+    # X0ref/RefDZ depend on PolynomB, so a rectangular bend must be re-tuned
+    rbendtune(elem)
+    return elem
 
 
 def apply_misalign(elem, exact=True, **kwargs):

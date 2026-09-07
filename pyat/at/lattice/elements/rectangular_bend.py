@@ -52,7 +52,9 @@ def rbendtune(self: Dipole) -> None:
             x0ref = elem.Length * ((cos(0.5 * tta) - 1.0) / tta + sin(0.5 * tta) / 12)
 
             # cancel output angle
-            x0ref = float(fsolve(cross, x0ref))
+            # fsolve returns a 1-element array; numpy >= 2.0 dropped the
+            # implicit array -> scalar conversion, so index before float().
+            x0ref = float(fsolve(cross, x0ref)[0])
         else:
             x0ref = 0.0
 
