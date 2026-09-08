@@ -41,6 +41,7 @@ def get_energy_loss(
         ring:           Lattice description
         method:         Method for energy loss computation.
           See :py:class:`ELossMethod`.
+        orbit6:         6d orbit to use as initial condition for tracking
 
     Returns:
         eloss (float):  Energy loss per turn [eV]
@@ -66,6 +67,9 @@ def get_energy_loss(
 
         def eloss_i2(eloss: EnergyLoss):
             return eloss.EnergyLoss / coef
+        
+        def simplerad_i2(simplerad: SimpleRadiation):
+            return simplerad.U0 / ring.energy
 
         i2 = 0.0
         coef = Cgamma / 2.0 / np.pi * ring.energy**4
@@ -76,6 +80,8 @@ def get_energy_loss(
                 i2 += wiggler_i2(el)
             elif isinstance(el, EnergyLoss) and el.PassMethod != "IdentityPass":
                 i2 += eloss_i2(el)
+            elif isinstance(el, SimpleRadiation):
+                i2 += simplerad_i2(el)
         e_loss = coef * i2
         return e_loss
 
@@ -87,34 +93,33 @@ def get_energy_loss(
         particle = ring.particle
         delta = 0.0
         
-        try:
-            if len(ring[SimpleRadiation]) > 0:
-                raise AtError("Simple Ring has no 6D orbit")
-            ring = ring.disable_6d(*_EXCLUDED, copy=True)
-            for e in ring[VariableThinMultipole]:
-                e.disable()
-            if orbit6 is None:
-                o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
-            else:
-                o6 = orbit6
-            o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
-            for e in ring[VariableThinMultipole]:
-                e.enable()
-            delta = np.squeeze(o6l)[4] - o6[4]
-        except:
-            msg = (
-                "Closed orbit not found, falling back to energy loss "
-                "calculation excluding orbit effects"
-            )
-            warn(AtWarning(msg))
-        
-            for e in ring:
-                if e.PassMethod == "SimpleRadiationRadPass":
-                    delta -= e.U0 / energy  # Needed to prevent mixing with rad. damping
-                elif e.PassMethod.endswith("RadPass"):
-                    ot = e.track(np.zeros(6), energy=energy, particle=particle)
-                    delta += ot[4]
-        return -delta * energy
+        if len(ring[SimpleRadiation]) > 0:
+            return ring[SimpleRadiation][0].U0
+        else:
+            try:
+                ring = ring.disable_6d(*_EXCLUDED, copy=True)
+                for e in ring[VariableThinMultipole]:
+                    e.disable()
+                if orbit6 is None:
+                    o6, *_ = ring.find_orbit(method=ELossMethod.INTEGRAL)
+                else:
+                    o6 = orbit6
+                o6l, *_ = ring.disable_6d(RFCavity, copy=True).track(o6)
+                for e in ring[VariableThinMultipole]:
+                    e.enable()
+                delta = np.squeeze(o6l)[4] - o6[4]
+            except:
+                delta = 0.0
+                msg = (
+                    "Closed orbit not found, falling back to energy loss "
+                    "calculation excluding orbit effects"
+                )
+                warn(AtWarning(msg))
+                for e in ring:
+                    if e.PassMethod.endswith("RadPass"):
+                        ot = e.track(np.zeros(6), energy=energy, particle=particle)
+                        delta += ot[4]
+            return -delta * energy
 
     if isinstance(method, str):
         method = ELossMethod[method.upper()]
