@@ -31,24 +31,9 @@ void roll_array(double *arr, int arr_len){
 static void update_vbeam_set(long fbmode, double *vbeam_set,
                              double *vbeamk, double *vbeam_buffer,
                              long buffersize, long windowlength){
-    int bufferlengthnow = 0;
-    // If FBMode is set to ONETURN, then set the vbeam and move on
-    if(windowlength==1){
-        vbeam_set[0] = vbeamk[0];
-        vbeam_set[1] = vbeamk[1];        
-    }
-    // If FBMode is set to WINDOW, compute the vbeam_set from the buffer
-    
-    else if(windowlength>=2){
-        // Compute the length of the buffer as we will not act until 
-        // the buffer is full. (2 arrays of vbeam and psi)
-            
-        bufferlengthnow = check_buffer_length(vbeam_buffer, buffersize, 2);
 
-        if(bufferlengthnow >= windowlength){
-            compute_buffer_mean(vbeam_set, vbeam_buffer, windowlength, buffersize, 2);
-        } 
-    }
+    vbeam_set[0] = vbeamk[0];
+    vbeam_set[1] = vbeamk[1];        
 }
 
 
