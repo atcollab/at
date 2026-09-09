@@ -370,8 +370,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       int num_particles = mxGetN(prhs[1]);
       struct elem El, *Elem=&El;
       
-      long nslice, nturns, cavitymode, fbmode, buffersize, windowlength;
-      long delay, every, samplenum, ff, recordsize, openloop;
+      long nslice, nturns, cavitymode, fbmode, buffersize;
+      long delay;
       double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
       double *VoltDelay, *PhaseDelay;
       double wakefact, Energy, Frequency, TimeLag, Length;
