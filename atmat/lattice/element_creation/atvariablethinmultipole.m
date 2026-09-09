@@ -63,10 +63,8 @@ function elem=atvariablethinmultipole(fname,varargin)
 [modename, rsrc] = getargs(varargin,'SINE', ...
                    'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
 [modename, rsrc] = getoption(rsrc,'ModeName',modename);
+modename = char(modename);
 [~, rsrc] = getoption(rsrc,'Mode',2); % remove Mode, the element is set by ModeName
-if ~any(strcmpi(modename,{'SINE','WHITENOISE','ARBITRARY'}))
-  error("ModeName should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
-end
 [method,rsrc]   = getargs(rsrc,'VariableThinMPolePass', ...
                   'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [method,rsrc]   = getoption(rsrc,'PassMethod',method);
@@ -128,11 +126,11 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
             switch modename
-                case "SINE"
+                case 'SINE'
                     rsrc = setsine(rsrc,ab);
-                case "ARBITRARY"
+                case 'ARBITRARY'
                     rsrc = setarb(rsrc,ab);
-                case "WHITENOISE"
+                case 'WHITENOISE'
                     rsrc = setwhitenoise(rsrc,ab);
             end
         end
