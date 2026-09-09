@@ -190,7 +190,6 @@ class BeamLoadingElement(RFCavity, Collective):
         detune: float | None = 0.0,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
         fbmode: FeedbackMode | None = FeedbackMode.PROP,
-        buffersize: int | None = 0,
         **kwargs,
     ):
         r"""
@@ -249,7 +248,7 @@ class BeamLoadingElement(RFCavity, Collective):
         Returns:
             bl_elem (Element): beam loading element
         """
-
+        print(kwargs, 'init1')
         kwargs.setdefault("PassMethod", self.default_pass[True])
 
         # Initialise ring parameters
@@ -362,9 +361,9 @@ class BeamLoadingElement(RFCavity, Collective):
 
 
 
-        # buffer size 
-        self._buffersize = kwargs.pop("buffersize", 0) #is it still needed?
 
+        # buffer size 
+        self._buffersize = kwargs.pop("buffersize", 0)
 
 
         # Initlise the buffers before super. Redefined later.
@@ -377,7 +376,7 @@ class BeamLoadingElement(RFCavity, Collective):
         super().__init__(
             family_name, length, voltage, frequency, harmonic_number, energy, **kwargs
         )
-        
+
         # ts says where the beam will be. Is either provided or computed.
         ts = kwargs.pop("ts", None)
         if ts is None:
