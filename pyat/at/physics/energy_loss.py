@@ -69,7 +69,7 @@ def get_energy_loss(
             return eloss.EnergyLoss / coef
         
         def simplerad_i2(simplerad: SimpleRadiation):
-            return simplerad.U0 / ring.energy
+            return simplerad.U0 / coef
 
         i2 = 0.0
         coef = Cgamma / 2.0 / np.pi * ring.energy**4
