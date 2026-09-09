@@ -44,7 +44,6 @@ struct elem
   double *vgen_buffer;
   double *vbeam_buffer;
   double *vbunch_buffer;
-  int system_harmonic;
   double ts;
 }; 
 
@@ -223,7 +222,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double energy;
     int nturn=Param->nturn;
     if (!Elem) {
-        long nslice, nturns, cavitymode, fbmode, buffersize, system_harmonic;
+        long nslice, nturns, cavitymode, fbmode, buffersize;
         double wakefact;
         double normfact;
         int delay;
@@ -272,7 +271,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
         vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
         phis=atGetDouble(ElemData,"_phis"); check_error();
-        system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
         ts=atGetDouble(ElemData,"_ts"); check_error();
         
         /*optional attributes*/
@@ -330,7 +328,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->fbmode = fbmode;
         Elem->phis = phis;
         Elem->ts = ts;
-        Elem->system_harmonic = system_harmonic;
     }
     energy = atEnergy(Param->energy, Elem->Energy); check_error();
 
@@ -419,7 +416,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vbeam_buffer=atGetDoubleArray(ElemData,"_vbeam_buffer"); check_error();
       vbunch_buffer=atGetDoubleArray(ElemData,"_vbunch_buffer"); check_error();
       phis=atGetDouble(ElemData,"_phis"); check_error();
-      system_harmonic=atGetLong(ElemData,"system_harmonic"); check_error();
       ts=atGetDouble(ElemData,"_ts"); check_error();
       
       /*optional attributes*/
@@ -472,7 +468,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
       Elem->phis = phis;
       Elem->ts = ts;
-      Elem->system_harmonic = system_harmonic;
       
       Elem->fbmode = fbmode;
       if (nrhs > 2) atProperties(prhs[2], &Energy, &rest_energy, &charge);
@@ -489,7 +484,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
   else if (nrhs == 0)
   {   /* return list of required fields */
-      plhs[0] = mxCreateCellMatrix(26,1);
+      plhs[0] = mxCreateCellMatrix(25,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Energy"));
       mxSetCell(plhs[0],2,mxCreateString("Frequency"));
@@ -515,8 +510,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],21,mxCreateString("_vbunch_buffer"));
       mxSetCell(plhs[0],22,mxCreateString("_buffersize"));
       mxSetCell(plhs[0],23,mxCreateString("_phis"));
-      mxSetCell(plhs[0],24,mxCreateString("system_harmonic")); 
-      mxSetCell(plhs[0],25,mxCreateString("_ts"));     
+      mxSetCell(plhs[0],24,mxCreateString("_ts"));     
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(8,1);
