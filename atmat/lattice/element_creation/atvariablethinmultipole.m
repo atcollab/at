@@ -23,7 +23,6 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    SINMIN         Sine function min limit. Default -1.1
 %    SINMAX         Sine function max limit. Default +1.1
 %    MAXORDER       Order of the multipole for a scalar amplitude
-%    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
 %    PERIODIC       If true (default) the user input kick list is repeated
