@@ -23,7 +23,6 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    SINMIN         Sine function min limit. Default -1.1
 %    SINMAX         Sine function max limit. Default +1.1
 %    MAXORDER       Order of the multipole for a scalar amplitude
-%    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
 %    PERIODIC       If true (default) the user input kick list is repeated
@@ -64,6 +63,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 [modename, rsrc] = getargs(varargin,'SINE', ...
                    'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
 [modename, rsrc] = getoption(rsrc,'ModeName',convertStringsToChars(modename));
+[~, rsrc] = getoption(rsrc,'Mode',2); % remove Mode, the element is set by ModeName
 if ~any(strcmpi(modename,{'SINE','WHITENOISE','ARBITRARY'}))
   error("ModeName should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
 end

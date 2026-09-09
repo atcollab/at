@@ -25,7 +25,6 @@ struct elem {
     double* PolynomBstart;
     struct elemab* ElemA;
     struct elemab* ElemB;
-    int Seed;
     int Mode;
     int MaxOrder;
     double* Ramps;
@@ -58,7 +57,7 @@ double get_amp(double amp, double* ramps, double t)
 }
 
 double get_pol(struct elemab* elem, double* ramps, int mode,
-    double t, int turn, int seed, int order, int periodic)
+    double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
     int idx;
     double ampt, freq, ph, sinval, val;
@@ -78,8 +77,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
         ampt *= sinval;
         return ampt;
     case 1:
-        val = atrandn(0.0, 1.0);
-        ampt *= val;
+        ampt *= atrandn_r(rng, 0, 1);
         return ampt;
     case 2:
         if (periodic || turn < elem->NSamples) {
@@ -95,7 +93,8 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     }
 }
 
-void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles)
+void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, int num_particles,
+    pcg32_random_t* rng)
 {
 
     int i, c;
@@ -106,7 +105,6 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     int periodic = Elem->Periodic;
     double* pola = Elem->PolynomA;
     double* polb = Elem->PolynomB;
-    int seed = Elem->Seed;
     int mode = Elem->Mode;
     struct elemab* ElemA = Elem->ElemA;
     struct elemab* ElemB = Elem->ElemB;
@@ -125,8 +123,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
 
     if (mode != 0) {
         for (i = 0; i < maxorder + 1; i++) {
-            pola[i] = get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
-            polb[i] = get_pol(ElemB, ramps, mode, t, turn, seed, i, periodic);
+            pola[i] = get_pol(ElemA, ramps, mode, t, turn, i, periodic, rng);
+            polb[i] = get_pol(ElemB, ramps, mode, t, turn, i, periodic, rng);
         };
     };
 
@@ -136,8 +134,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
                 for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
                 };
             };
             /*  misalignment at entrance  */
@@ -165,7 +163,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     double* r_in, int num_particles, struct parameters* Param)
 {
     if (!Elem) {
-        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -192,7 +190,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
         Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
@@ -214,7 +211,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
         memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
-        Elem->Seed = Seed;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -237,7 +233,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
-    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles);
+    VariableThinMPolePass(r_in, Elem, t0, turn, num_particles, Param->common_rng);
     return Elem;
 }
 
@@ -252,7 +248,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double* r_in;
         const mxArray* ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
+        int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
@@ -281,7 +277,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
         Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
@@ -294,7 +289,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
         memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
-        Elem->Seed = Seed;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
         Elem->Periodic = Periodic;
@@ -323,7 +317,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(4, 1);
@@ -333,7 +327,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(21, 1);
+            plhs[1] = mxCreateCellMatrix(20, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -341,20 +335,19 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 4, mxCreateString("PhaseA"));
             mxSetCell(plhs[1], 5, mxCreateString("PhaseB"));
             mxSetCell(plhs[1], 6, mxCreateString("Ramps"));
-            mxSetCell(plhs[1], 7, mxCreateString("Seed"));
-            mxSetCell(plhs[1], 8, mxCreateString("FuncA"));
-            mxSetCell(plhs[1], 9, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 10, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 11, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 12, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 13, mxCreateString("T1"));
-            mxSetCell(plhs[1], 14, mxCreateString("T2"));
-            mxSetCell(plhs[1], 15, mxCreateString("R1"));
-            mxSetCell(plhs[1], 16, mxCreateString("R2"));
-            mxSetCell(plhs[1], 17, mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 18, mxCreateString("EApertures"));
-            mxSetCell(plhs[1], 19, mxCreateString("Sinmin"));
-            mxSetCell(plhs[1], 20, mxCreateString("Sinmax"));
+            mxSetCell(plhs[1], 7, mxCreateString("FuncA"));
+            mxSetCell(plhs[1], 8, mxCreateString("FuncB"));
+            mxSetCell(plhs[1], 9, mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 10, mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 11, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 12, mxCreateString("T1"));
+            mxSetCell(plhs[1], 13, mxCreateString("T2"));
+            mxSetCell(plhs[1], 14, mxCreateString("R1"));
+            mxSetCell(plhs[1], 15, mxCreateString("R2"));
+            mxSetCell(plhs[1], 16, mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 17, mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 18, mxCreateString("Sinmin"));
+            mxSetCell(plhs[1], 19, mxCreateString("Sinmax"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");

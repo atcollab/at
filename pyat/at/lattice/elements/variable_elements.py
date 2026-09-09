@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
 import numpy as np
@@ -35,7 +34,6 @@ class VariableThinMultipole(Element):
         PhaseB=float,
         Sinmin=float,
         Sinmax=float,
-        Seed=int,
         NSamplesA=int,
         NSamplesB=int,
         FuncA=_array,
@@ -71,8 +69,6 @@ class VariableThinMultipole(Element):
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
             FuncA(list): User defined tbt kick list for PolynomA
             FuncB(list): User defined tbt kick list for PolynomB
             Periodic(bool): If True (default) the user defined kick is repeated
@@ -127,25 +123,20 @@ class VariableThinMultipole(Element):
                 mxb = np.max(np.append(np.nonzero(ampb), 0))
             return max(mxa, mxb)
 
-        self.Mode = mode.value
-        self.ModeName = mode.name
+        self.Mode = kwargs.get("Mode", mode.value)
+        self.ModeName = kwargs.get("ModeName", mode.name)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
-
         AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
-
         # MaxOrder is set finally by the user if given
         max_order_ampab = _getmaxorder(AmplitudeA, AmplitudeB)
         self.MaxOrder = kwargs.get("MaxOrder", max_order_ampab)
         # after the definition of MaxOrder we can create Amplitudes
         self._set_amplitudes(AmplitudeA, AmplitudeB)
-
         self.Periodic = kwargs.pop("Periodic", True)
-        AmplitudeB = self._set_params(AmplitudeB, "B", **kwargs)
-        AmplitudeA = self._set_params(AmplitudeA, "A", **kwargs)
-        if self.Mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
-        self.PolynomA = np.zeros(self.MaxOrder + 1)
-        self.PolynomB = np.zeros(self.MaxOrder + 1)
+        self._set_params(AmplitudeB, "B", **kwargs)
+        self._set_params(AmplitudeA, "A", **kwargs)
+        self.PolynomA = kwargs.get("PolynomA", np.zeros(self.MaxOrder + 1))
+        self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
         if ramps is not None:
             assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
@@ -166,14 +157,10 @@ class VariableThinMultipole(Element):
 
     def _set_params(self, amplitude, ab, **kwargs):
         if amplitude is not None:
-            if np.isscalar(amplitude):
-                amp = np.zeros(self.MaxOrder)
-                amplitude = np.append(amp, amplitude)
             if self.Mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
             if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
-        return amplitude
 
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
@@ -182,8 +169,8 @@ class VariableThinMultipole(Element):
         sinmax = kwargs.pop("Sinmax", 1.1)
         setattr(self, "Frequency" + ab, frequency)
         setattr(self, "Phase" + ab, phase)
-        setattr(self, "Sinmin", sinmin)
-        setattr(self, "Sinmax", sinmax)
+        self.Sinmin = sinmin
+        self.Sinmax = sinmax
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
