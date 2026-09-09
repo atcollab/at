@@ -100,20 +100,7 @@ static void compute_set_params(double *vbeam, double *vgen, double phis, double 
 }
 static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
                         double phasegain, double *VoltDelay, double *PhaseDelay, int delay){
-    /*
-            diff_A = self.volt_delay[-1] - self.cav_res.Vc
-        diff_P = self.phase_delay[-1] - self.cav_res.theta
-        self.cav_res.Vg -= self.gain_A * diff_A
-        self.cav_res.theta_g -= self.gain_P * diff_P
-        self.cav_res.generator_phasor_record = np.ones(
-            self.ring.h) * self.cav_res.generator_phasor
-        self.volt_delay = np.roll(self.volt_delay, 1)
-        self.phase_delay = np.roll(self.phase_delay, 1)
-        self.volt_delay[0] = self.cav_res.cavity_voltage
-        self.phase_delay[0] = self.cav_res.cavity_phase
 
-    */
-    
     double diff_Amp = VoltDelay[delay-1] - vcav[0];
     double diff_Phase = PhaseDelay[delay-1] - vcav[1];
     vgen[0] -= voltgain * diff_Amp;

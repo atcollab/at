@@ -174,7 +174,7 @@ class BeamLoadingElement(RFCavity, Collective):
         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
         _vbeam=lambda v: _array(v, shape=(2,)),
         _vcav=lambda v: _array(v, shape=(2,)),
-        _vgen=lambda v: _array(v, shape=(4,)),
+        _vgen=lambda v: _array(v, shape=(3,)),
     )
 
     def __init__(
@@ -189,7 +189,7 @@ class BeamLoadingElement(RFCavity, Collective):
         cavitybeta: float,
         detune: float | None = 0.0,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
-        fbmode: FeedbackMode | None = FeedbackMode.ONETURN,
+        fbmode: FeedbackMode | None = FeedbackMode.PROP,
         buffersize: int | None = 0,
         **kwargs,
     ):
@@ -222,12 +222,6 @@ class BeamLoadingElement(RFCavity, Collective):
                 is Integral gain. 
             buffersize (int):  Size of the history buffer for vbeam, vgen,
                 vbunch (default 0)
-            feedback_angle_offset:      Fixed detuning from optimal tuning
-                angle [rad]. For a negative slope of the RF voltage at the
-                synchronous position, the optimum detuning is negative.
-                Applying a positive feedback_angle_offset will therefore
-                reduce the detuning. The reverse is true for positive RF
-                slope.
             ts (float):        The timelag of the synchronous particle in the
                 full RF system [m]. If not specified, it will be calculated
                 using get_timelag_fromU0. Defines the expected position of the
@@ -417,23 +411,6 @@ class BeamLoadingElement(RFCavity, Collective):
         self.VoltDelay *= self._vcav[0] # PROP 
         self.PhaseDelay *= self._vcav[1] # PROP
         self.clear_history(ring=ring)
-
-        # these big chaps are all for the memory assignment in C
-        self._Ig2Vg_vec = np.zeros(ring.harmonic_number*2)
-        self._Ig2Vg_tmp = np.zeros(ring.harmonic_number*2)
-        self._ig_phasor = np.zeros(ring.harmonic_number*2)
-        self._ig_phasor_record = np.zeros(ring.harmonic_number*2)
-        self._dot_output = np.zeros(ring.harmonic_number*2)
-        self._generator_phasor_record = np.zeros(ring.harmonic_number*2)
-        self._beam_phasor_record = np.zeros(ring.harmonic_number*2)                
-        self._cavity_phasor_record = np.zeros(ring.harmonic_number*2)        
-        
-        self._Ig2Vg_mat = np.zeros(ring.harmonic_number**2 * 2)
-        self._vc_previous = np.zeros(self.samplenum*2)
-        self._diff_record = np.zeros(self.recordsize*2)
-        self._samplelist = np.zeros(self.samplelist_length)
-
-        self._vc_list = np.zeros((ring.harmonic_number + self.samplenum)*2)        
 
     def is_compatible(self, other):
         return False
