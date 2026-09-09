@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["get_energy_loss", "set_cavity_phase", "ELossMethod", "get_timelag_fromU0"]
+__all__ = ["ELossMethod", "get_energy_loss", "get_timelag_fromU0", "set_cavity_phase"]
 
 from enum import Enum
 from warnings import warn
@@ -11,8 +11,8 @@ from scipy.optimize import least_squares
 
 from at.constants import clight, Cgamma
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts, EnergyLoss
-from at.lattice import Collective, SimpleQuantDiff, QuantumDiffusion, VariableThinMultipole
-from at.lattice import SimpleRadiation
+from at.lattice import Collective, SimpleQuantDiff, QuantumDiffusion
+from at.lattice import SimpleRadiation, VariableThinMultipole
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import get_bool_index, set_value_refpts
 from at.lattice import DConstant
@@ -21,7 +21,7 @@ _EXCLUDED = [Collective, SimpleQuantDiff, QuantumDiffusion]
 
 
 class ELossMethod(Enum):
-    """methods for the computation of energy losses"""
+    """methods for the computation of energy losses."""
 
     #: The losses are obtained from
     #: :math:`E_{loss}=C_\gamma/2\pi . E^4 . I_2`.
@@ -35,7 +35,7 @@ class ELossMethod(Enum):
 def get_energy_loss(
     ring: Lattice, method: ELossMethod | None = ELossMethod.INTEGRAL, orbit6=None
 ) -> float:
-    """Computes the energy loss per turn
+    """Computes the energy loss per turn.
 
     Parameters:
         ring:           Lattice description
@@ -49,7 +49,7 @@ def get_energy_loss(
 
     # noinspection PyShadowingNames
     def integral(ring):
-        """Losses = Cgamma / 2pi * EGeV^4 * i2"""
+        """Losses = Cgamma / 2pi * EGeV^4 * i2."""
 
         def wiggler_i2(wiggler: Wiggler):
             rhoinv = wiggler.Bmax / ring.BRho
@@ -67,7 +67,7 @@ def get_energy_loss(
 
         def eloss_i2(eloss: EnergyLoss):
             return eloss.EnergyLoss / coef
-        
+
         def simplerad_i2(simplerad: SimpleRadiation):
             return simplerad.U0 / coef
 
@@ -88,11 +88,11 @@ def get_energy_loss(
     # noinspection PyShadowingNames
     @check_radiation(True)
     def tracking(ring, orbit6):
-        """Losses from tracking"""
+        """Losses from tracking."""
         energy = ring.energy
         particle = ring.particle
         delta = 0.0
-        
+
         if len(ring[SimpleRadiation]) > 0:
             return ring[SimpleRadiation][0].U0
         else:
@@ -108,13 +108,13 @@ def get_energy_loss(
                 for e in ring[VariableThinMultipole]:
                     e.enable()
                 delta = np.squeeze(o6l)[4] - o6[4]
-            except:
+            except AtError:
                 delta = 0.0
                 msg = (
                     "Closed orbit not found, falling back to energy loss "
                     "calculation excluding orbit effects"
                 )
-                warn(AtWarning(msg))
+                warn(AtWarning(msg), stacklevel=2)
                 for e in ring:
                     if e.PassMethod.endswith("RadPass"):
                         ot = e.track(np.zeros(6), energy=energy, particle=particle)
@@ -129,7 +129,8 @@ def get_energy_loss(
     elif method == ELossMethod.TRACKING:
         return ring.periodicity * tracking(ring, orbit6)
     else:
-        raise AtError(f"Invalid method: {method}")
+        err_string = f"Invalid method: {method}"
+        raise AtError(err_string)
 
 
 # noinspection PyPep8Naming
@@ -144,7 +145,7 @@ def get_timelag_fromU0(
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
-    Used in set_cavity_phase()
+    Used in set_cavity_phase().
 
     Parameters:
         ring:               Lattice description
@@ -165,7 +166,8 @@ def get_timelag_fromU0(
     def singlev(values):
         vals = np.unique(values)
         if len(vals) > 1:
-            raise AtError("values not equal for all cavities")
+            err_string = "values not equal for all cavities"
+            raise AtError(err_string)
         return vals[0]
 
     def eq(x, freq, rfv, tl0, u0):
@@ -213,7 +215,8 @@ def get_timelag_fromU0(
         ok = res < ts_tol
         vals = np.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not np.any(ok):
-            raise AtError("No solution found for Phis: check RF settings") from None
+            err_string = "No solution found for Phis: check RF settings"
+            raise AtError(err_string) from None
         if len(np.unique(vals[ok])) > 1:
             warn(
                 AtWarning("More than one solution found for Phis: check RF settings"),
@@ -226,10 +229,12 @@ def get_timelag_fromU0(
         if u0 > vrf:
             v1 = ring.periodicity * vrf
             v2 = ring.periodicity * u0
-            raise AtError(
+            err_string = (
                 f"The RF voltage ({v1:.3e} eV) is lower than "
                 f"the radiation losses ({v2:.3e} eV)."
             )
+            raise AtError(err_string)
+
         timelag = clight / (2 * np.pi * frf) * np.arcsin(u0 / vrf)
         ts = timelag - tml
         timelag *= np.ones(ring.refcount(cavpts))
