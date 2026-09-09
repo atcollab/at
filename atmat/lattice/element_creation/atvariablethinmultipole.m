@@ -125,11 +125,11 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
             switch modename
-                case "SINE"
+                case 'SINE'
                     rsrc = setsine(rsrc,ab);
-                case "ARBITRARY"
+                case 'ARBITRARY'
                     rsrc = setarb(rsrc,ab);
-                case "WHITENOISE"
+                case 'WHITENOISE'
                     rsrc = setwhitenoise(rsrc,ab);
             end
         end
