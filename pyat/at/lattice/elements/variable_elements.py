@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import IntEnum
 
 import numpy as np
@@ -35,7 +34,6 @@ class VariableThinMultipole(Element):
         PhaseB=float,
         Sinmin=float,
         Sinmax=float,
-        Seed=int,
         NSamplesA=int,
         NSamplesB=int,
         FuncA=_array,
@@ -71,8 +69,6 @@ class VariableThinMultipole(Element):
             Sinmin(float): Sine function min limit. Default -1.1
             Sinmax(float): Sine function max limit. Default +1.1
             MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
-            Seed(int): Seed of the random number generator for white
-                       noise excitation. Default datetime.now()
             FuncA(list): User defined tbt kick list for PolynomA
             FuncB(list): User defined tbt kick list for PolynomB
             Periodic(bool): If True (default) the user defined kick is repeated
@@ -139,8 +135,6 @@ class VariableThinMultipole(Element):
         self.Periodic = kwargs.pop("Periodic", True)
         self._set_params(AmplitudeB, "B", **kwargs)
         self._set_params(AmplitudeA, "A", **kwargs)
-        if self.Mode == ACMode.WHITENOISE:
-            self.Seed = kwargs.pop("Seed", datetime.now().timestamp())
         self.PolynomA = kwargs.get("PolynomA", np.zeros(self.MaxOrder + 1))
         self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
