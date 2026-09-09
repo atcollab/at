@@ -272,10 +272,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._beta = ring.beta #particle velocity (NOT cavity beta)
         self._cavitymode = int(cavitymode)        
         
-        zcuts = kwargs.pop("ZCuts", None) #fixed or adaptive slicing
-        if zcuts is not None:
-            self.ZCuts = zcuts
-        
+       
 
         # Initialise resonator parameters
         self.CavityBeta = cavitybeta
@@ -291,21 +288,24 @@ class BeamLoadingElement(RFCavity, Collective):
         self._turnhistory = None  # Defined here to avoid warning
         self._vbunch = None
         self.NormFact = kwargs.pop("NormFact", 1.0)
-
+        zcuts = kwargs.pop("ZCuts", None) #fixed or adaptive slicing
+        if zcuts is not None:
+            self.ZCuts = zcuts
+            
 
         # Initialise tuner parameters
         self.TunerGain = kwargs.pop("TunerGain", 0.01)
         self.TunerOffset = kwargs.pop("TunerOffset", 0)
         self.TunerAveragingPeriod = kwargs.pop("TunerAveragingPeriod", 1)
         if self.TunerAveragingPeriod <1:
-            raise AtError('Tuner Averaging Period must be >=1)')
+            raise AttributeError('Tuner Averaging Period must be >=1)')
         self._TunerParams = np.array([0.0, 0.0]) #TunerCount and TunerDiff
             
         # Initialise common regulator parameters
         self.Gain = kwargs.pop("Gain", [1e-3,1e-3])
         self.delay = kwargs.pop("delay", 1)
         if self.delay <= 0:
-            raise AtError('Attribute delay must be >= 1')  
+            raise AttributeError('Attribute delay must be >= 1')  
 
 
         # Initialise FBMode=PROP buffers

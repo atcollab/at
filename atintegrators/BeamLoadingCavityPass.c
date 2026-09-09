@@ -408,7 +408,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       beta=atGetDouble(ElemData,"_beta"); check_error();
       normfact=atGetDouble(ElemData,"NormFact"); check_error();
 
-      gain=atGetDouble(ArrayElemData,"Gain"); check_error();
+      gain=atGetDoubleArray(ElemData,"Gain"); check_error();
       turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
       vbunch=atGetDoubleArray(ElemData,"_vbunch"); check_error();
       vbeam=atGetDoubleArray(ElemData,"_vbeam"); check_error();
