@@ -379,8 +379,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *gain;
       double *turnhistory;
       double *z_cuts;
-      double Energy, Frequency, TimeLag, Length;
-      double qfactor,rshunt,beta;
       double *vbunch;
       double *vbeam_phasor;
       double *vbeam;
