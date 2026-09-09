@@ -22,8 +22,9 @@ struct elem
   double voltgain;
   double *turnhistory;
   double *z_cuts;
+  int delay;  double *VoltDelay; double *PhaseDelay;
   double *gain;
-  double TunerOffset; int TunerAveragingPeriod; double TunerGain; double *TunerParams;
+  double TunerOffset; int TunerAveragingPeriod; double TunerGain; double *TunerParams;  
   double Length;
   double Voltage;
   double Energy;
@@ -34,7 +35,7 @@ struct elem
   double Rshunt;
   double Beta;
   double phis;
-  double feedback_angle_offset;
+
   double *vbunch;
   double *vbeam_phasor;
   double *vbeam;
@@ -97,7 +98,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double *PhaseDelay = Elem->PhaseDelay;
 
     double ts = Elem->ts;
-    double *vgen_arr = Elem->vgen; /* [vgen, thetag, psi] */
+
     
     
     
@@ -112,7 +113,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double *vbeam = Elem->vbeam;
     double *vcav_set = Elem->vcav; /* Vcav set points amplitude, phase */
 
-    double feedback_angle_offset = Elem->feedback_angle_offset;
+
     
     double vbeam_set[] = {vbeam[0], vbeam[1]};
     double vcav_meas[] = {0.0, 0.0, 0.0};
@@ -225,7 +226,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         long nslice, nturns, cavitymode, fbmode, buffersize, system_harmonic;
         double wakefact;
         double normfact;
-        
+        int delay;
         double TunerGain, TunerOffset, TunerAveragingPeriod, *TunerParams;
         double *VoltDelay, *PhaseDelay;
         double *gain;
@@ -234,7 +235,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *vbeam_buffer;
         double *vbunch_buffer;
         double *z_cuts;
-        double Energy, Frequency, TimeLag, Length, feedback_angle_offset;
+        double Energy, Frequency, TimeLag, Length;
         double qfactor,rshunt,beta;
         double *vbunch;
         double *vbeam_phasor;
@@ -325,7 +326,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vgen_buffer = vgen_buffer;
         Elem->vbeam_buffer = vbeam_buffer;
         Elem->vbunch_buffer = vbunch_buffer;
-        Elem->feedback_angle_offset = feedback_angle_offset;
+
         Elem->fbmode = fbmode;
         Elem->phis = phis;
         Elem->ts = ts;
@@ -381,7 +382,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *gain;
       double *turnhistory;
       double *z_cuts;
-      double Energy, Frequency, TimeLag, Length, feedback_angle_offset;
+      double Energy, Frequency, TimeLag, Length;
       double qfactor,rshunt,beta;
       double *vbunch;
       double *vbeam_phasor;
@@ -468,7 +469,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Elem->vgen_buffer = vgen_buffer;
       Elem->vbeam_buffer = vbeam_buffer;
       Elem->vbunch_buffer = vbunch_buffer;
-      Elem->feedback_angle_offset = feedback_angle_offset;
+
       Elem->phis = phis;
       Elem->ts = ts;
       Elem->system_harmonic = system_harmonic;
