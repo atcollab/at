@@ -308,10 +308,10 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double *fillpattern, double ts_central_z){ 
                           
     #ifndef _MSC_VER  
-    int i,ib;
+    int i=0;
     double wi;
     double selfkick;
-    double dt =0.0;
+    double dt=0.0;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
     double omr = TWOPI*resfreq;
@@ -320,7 +320,9 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double bc = beta*C0;
     double *vbr = vbunch;
     double *vbi = vbunch+ring_harmn;
-    int ibunch, islice, total_slice_counter;
+    int ibucket = 0;
+    int total_slice_counter = 0;
+    int islice = 0;
     int bunch_counter = 0;
     double is_filled = 0.0;
     double main_bucket = circumference / (double) ring_harmn;
@@ -332,18 +334,17 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         vbeam_kicks[i] = 0.0;
     }
 
-    for (ibunch=0;ibunch<ring_harmn;ibunch++){
-        vbr[ibunch] = 0.0;
-        vbi[ibunch] = 0.0;
-    
+    for (ibucket=0;ibucket<ring_harmn;ibucket++){
+        vbr[ibucket] = 0.0;
+        vbi[ibucket] = 0.0;
     }
 
     /* The vbeam_complex will always be sent to the center of the next bucket */
 
     double bucket_z_center = 0.0;
-    for(ibunch=0; ibunch<ring_harmn; ibunch++){
-        is_filled = fillpattern[ibunch]; 
-        bucket_z_center = ibunch*main_bucket;
+    for(ibucket=0; ibucket<ring_harmn; ibucket++){
+        is_filled = fillpattern[ibucket]; 
+        bucket_z_center = ibucket*main_bucket;
         if(is_filled!=0.0){
             for(islice=0; islice<nslice; islice++){
                 total_slice_counter = islice + nslice*bunch_counter; 
@@ -373,8 +374,8 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
         dt = -ts_central_z/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
-        vbr[ibunch] = cabs(vbeam_complex);
-        vbi[ibunch] = carg(vbeam_complex);
+        vbr[ibucket] = cabs(vbeam_complex);
+        vbi[ibucket] = carg(vbeam_complex);
             
         ave_vbeam_ri[0] += creal(vbeam_complex)/ring_harmn;
         ave_vbeam_ri[1] += cimag(vbeam_complex)/ring_harmn;
