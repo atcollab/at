@@ -113,6 +113,22 @@ static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double vo
     PhaseDelay[0] = vcav_meas[1];    
 }
 
+static void compute_tuner(double *vcav_meas, double *vgen_arr,
+                          double *TunerParams, double TunerGain, double TunerAveragingPeriod,
+                          double TunerOffset){
+
+    if(TunerGain>0){
+        TunerParams[0] += 1; // TunerCount        
+        TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
+        
+        if(TunerParams[0]==TunerAveragingPeriod){
+            TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
+            vgen_arr[2] += TunerGain * TunerParams[1];
+            TunerParams[0] = 0.0; //TunerCount
+            TunerParams[1] = 0.0; //TunerDiff
+        }
+    }     
+}
 
 static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double phasegain){
     /* The cavity voltage is

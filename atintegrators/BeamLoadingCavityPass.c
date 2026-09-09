@@ -133,9 +133,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double freqres = (rffreq * tan(psi) / qfactor + sqrt(delta)) / 2;
 
     double tot_lag_phase = (tlag+ts)*rffreq*TWOPI/C0;
-    double filling_time = 2*qfactor / (TWOPI * freqres);
-    double T1 = 1/rffreq;
-    double kloss = rshunt * TWOPI * freqres / (2 * qfactor);
 
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
@@ -194,17 +191,9 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
 
         /* Here is where the tuner is calculated and applied */
-        if(TunerGain>0){
-                TunerParams[0] += 1; // TunerCount        
-                TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
-                
-                if(TunerParams[0]==TunerAveragingPeriod){
-                    TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
-                    vgen_arr[2] += TunerGain * TunerParams[1];
-                    TunerParams[0] = 0.0; //TunerCount
-                    TunerParams[1] = 0.0; //TunerDiff
-                }
-            }
+        /* If TunerGain is zero, it is skipped */
+        compute_tuner(vcav_meas, vgen_arr,
+                      TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
             
 
         vbeam[0] = ave_vbeam[0];
