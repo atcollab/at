@@ -1,7 +1,5 @@
 /* Implementation of search algorithms for AT. */
 
-//#include "atelem.c"
-
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
