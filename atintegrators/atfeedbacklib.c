@@ -87,6 +87,8 @@ static void compute_set_params(double *vbeam, double *vgen, double phis, double 
 
     double meas_psi = vgen[1] - phis_meas;
     
+    // This part is needed to make sure there is not a 2pi
+    // phase difference (sometimes seen with harmonic cavity
     if(meas_psi<-TWOPI/2){
         meas_psi += TWOPI;
     }else if(meas_psi > TWOPI/2){

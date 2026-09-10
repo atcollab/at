@@ -248,7 +248,6 @@ class BeamLoadingElement(RFCavity, Collective):
         Returns:
             bl_elem (Element): beam loading element
         """
-        print(kwargs, 'init1')
         kwargs.setdefault("PassMethod", self.default_pass[True])
 
         # Initialise ring parameters
