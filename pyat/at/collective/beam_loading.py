@@ -253,6 +253,7 @@ class BeamLoadingElement(RFCavity, Collective):
         # Initialise ring parameters
         self.circumference = ring.circumference
         self.bunch_spos = ring.bunch_spos
+        self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets) 
         energy = ring.energy
         self.system_harmonic = kwargs.pop(
             "system_harmonic", int(np.round(frequency / ring.rf_frequency))
