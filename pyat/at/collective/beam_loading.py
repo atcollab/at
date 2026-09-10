@@ -266,6 +266,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
         self.circumference = ring.circumference
         self.bunch_spos = ring.bunch_spos
+        self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets) 
         energy = ring.energy
         harmonic_number = self.system_harmonic * ring.harmonic_number
         self.feedback_angle_offset = kwargs.pop("feedback_angle_offset", 0)
@@ -352,10 +353,8 @@ class BeamLoadingElement(RFCavity, Collective):
 
     def clear_history(self, ring=None):
         if ring is not None:
-            self._nbunch = ring.nbunch
             current = ring.beam_current
-            nbunch = ring.nbunch
-            self._vbunch = np.zeros((nbunch, 2), order="F")
+            self._vbunch = np.zeros((self.ring_harmonic_number, 2), order="F")
             self._init_bl_params(current)
         tl = self._nturns * self._nslice * self._nbunch
         self._turnhistory = np.zeros((tl, 4), order="F")
@@ -363,7 +362,7 @@ class BeamLoadingElement(RFCavity, Collective):
             self._vgen_buffer = np.zeros((4, self._buffersize), order="F")
             self._vbeam_buffer = np.zeros((2, self._buffersize), order="F")
             self._vbunch_buffer = np.zeros(
-                (self._nbunch, 2, self._buffersize), order="F"
+                (self.ring_harmonic_number, 2, self._buffersize), order="F"
             )
 
     def _init_bl_params(self, current):
