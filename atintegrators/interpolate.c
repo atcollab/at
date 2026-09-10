@@ -6,12 +6,24 @@
   
   
  Numerical recipies functions for 2D interpolation adapted to Matlab 
- * leanguagge
+ * language
  
 */
 
 #include "at.h"
 #include <math.h>
+
+
+double interpolTable(double *waketable,double *waketableT,double distance,int index){
+    double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
+          (waketableT[index+1]-waketableT[index]);
+    if(atIsNaN(w)){
+        return 0;
+    }else{
+        return w;
+    };
+};
+
 
 /*x1a is the direction of the colums: y and x1a the direction of the rows:x*/
 
