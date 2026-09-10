@@ -1,5 +1,5 @@
 #include "atelem.c"
-#include "atsearch.c"
+#include "interpolate.c"
 #include <math.h>
 #include <float.h>
 
