@@ -787,10 +787,12 @@ class OrbitResponseMatrix(ResponseMatrix):
     and optionally the sum of steerer angles named ``sum(h_kicks)`` or
     ``sum(v_kicks)``
 
-    The variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default
-    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
-    should be explicitly created.
+    By default, and when the steerer are explicitly selected, integrated dipole strengh
+    *Kn0L* and *Ks0L* are used. In case *use_polynoms=False* and the list of steerers is
+    not provided the variable elements must have the *KickAngle* attribute used for correction.
+    It's available for all magnets, though not present by default except in
+    :py:class:`.Corrector` magnets. For other magnets, the attribute should be explicitly
+    created.
 
     By default, the observables are all the :py:class:`.Monitor` elements, and the
     variables are all the elements having a *KickAngle* attribute.
@@ -809,7 +811,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         ring: Lattice,
         plane: AxisDef,
         bpmrefs: Refpts = Monitor,
-        steerrefs: Refpts = _orbit_correctors,
+        steerrefs: Refpts | None = None,
         *,
         cavrefs: Refpts = None,
         bpmweight: float | Sequence[float] = 1.0,
@@ -818,6 +820,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         cavdelta: float | None = None,
         steersum: bool = False,
         stsumweight: float | None = None,
+        use_polynoms: bool = True,
     ):
         """
         Args:
@@ -827,8 +830,10 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
               Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used and must be present in the selected elements.
+            steerrefs:  Location of orbit steerers. If *use_polynoms=False,
+              their *KickAngle* attribute is used and must be present in the
+              selected elements, otherwise integrated dipole strength *Kn0L* and
+              *Ks0L* are used, they are present in all magnets.
               Default: All Elements having a *KickAngle* attribute.
             cavrefs:    Location of RF cavities. Their *Frequency* attribute
               is used. If :py:obj:`None`, no cavity is included in the response.
@@ -854,9 +859,9 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         """
 
-        def steerer(ik, delta):
+        def steerer(ik, delta, attr_name, idx):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attr_name, index=idx, name=name, delta=delta)
 
         def set_norm():
             bpm = LocalOpticsObservable(bpmrefs, "beta", plane=pl)
@@ -878,6 +883,19 @@ class OrbitResponseMatrix(ResponseMatrix):
             return cd, sw
 
         pl = plane_(plane, key="index")
+        if (pl!=0) and (pl!=1):
+            msg = "Orbit response can only be horizontal or vertical"
+            raise AtError(msg)
+        attr_name = "KickAngle"
+        idx = pl
+        if use_polynoms and steerrefs is not None:
+            if pl==0:
+                attr_name = "Kn0L"
+            if pl==1:
+                attr_name = "Ks0L"
+            idx = None
+        if steerrefs is None:
+            steerrefs = _orbit_correctors
         plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
@@ -892,10 +910,10 @@ class OrbitResponseMatrix(ResponseMatrix):
             # noinspection PyUnboundLocalVariable
             sumobs = LatticeObservable(
                 steerrefs,
-                "KickAngle",
+                attr_name,
                 name=f"{plcode}_kicks",
                 target=0.0,
-                index=pl,
+                index=idx,
                 weight=stsumweight if stsumweight else stsw / 2.0,
                 statfun=np.sum,
             )
@@ -903,7 +921,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         # Variables
         variables = VariableList(
-            steerer(ik, delta) for ik, delta in zip(ids, deltas, strict=True)
+            steerer(ik, delta, attr_name, idx) for ik, delta in zip(ids, deltas, strict=True)
         )
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
