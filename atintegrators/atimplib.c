@@ -1,5 +1,6 @@
 #include "atconstants.h"
 #include "atelem.c"
+#include "interpolate.c"
 #include <math.h>
 #include <float.h>
 #include <complex.h>
@@ -8,35 +9,6 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
-
-int binarySearch(double *array,double value,int upper,int lower,int nStep){
-    int pivot = (int)(lower+upper)/2;
-    if ((upper-lower)<=1){
-        return lower;
-    };
-    if (value < array[pivot]){
-        upper = pivot;
-        nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
-    } else if (value > array[pivot]){
-        lower = pivot;
-        nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
-    }else{
-        return pivot;
-    };
-};
-
-
-static double getTableWake(double *waketable,double *waketableT,double distance,int index){
-    double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
-          (waketableT[index+1]-waketableT[index]);
-    if(atIsNaN(w)){
-        return 0;
-    }else{
-        return w;
-    };
-};
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
 
@@ -237,13 +209,13 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
                     index = binarySearch(waketableT,ds,nelem,0,0);          
-                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,ds,index);
-                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,ds,index);
-                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,ds,index);
-                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableQY,waketableT,ds,index);
-                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*getTableWake(waketableZ,waketableT,ds,index);
-                    if(waketableCX)kcx[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableCX,waketableT,ds,index);
-                    if(waketableCY)kcy[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableCY,waketableT,ds,index);
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
+                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);
+                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableQY,waketableT,ds,index);
+                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*interpolTable(waketableZ,waketableT,ds,index);
+                    if(waketableCX)kcx[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableCX,waketableT,ds,index);
+                    if(waketableCY)kcy[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableCY,waketableT,ds,index);
                     
                 }            
             }

@@ -1,4 +1,5 @@
 #include "atelem.c"
+#include "interpolate.c"
 #include <math.h>
 #include <float.h>
 
@@ -22,36 +23,6 @@ struct elem
   double *waketableQX;
   double *waketableQY;
   double *waketableZ;
-};
-
-
-double getWake(double *waketable,double *waketableT,double distance,int index){
-    double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
-          (waketableT[index+1]-waketableT[index]);
-    if(atIsNaN(w)){
-        return 0;
-    }else{
-        return w;
-    };
-};
-
-
-int binarySearch(double *array,double value,int upper,int lower,int nStep){
-    int pivot = (int)(lower+upper)/2;
-    if ((upper-lower)<=1){
-        return lower;
-    };
-    if (value < array[pivot]){
-        upper = pivot;
-        nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
-    } else if (value > array[pivot]){
-        lower = pivot;
-        nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
-    }else{
-        return pivot;
-    };
 };
 
 
@@ -210,11 +181,11 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
                 register double dx = xpos[ii];
                 register double dy = ypos[ii];
                 int index = binarySearch(waketableT,-ds,nelem,0,0);              
-                double fieldx = getWake(waketableDX,waketableT,-ds,index);
-                double fieldy = getWake(waketableDY,waketableT,-ds,index);
-                double fieldx2 = getWake(waketableQX,waketableT,-ds,index);
-                double fieldy2 = getWake(waketableQY,waketableT,-ds,index);
-                double fieldz = getWake(waketableZ,waketableT,-ds,index);
+                double fieldx = interpolTable(waketableDX,waketableT,-ds,index);
+                double fieldy = interpolTable(waketableDY,waketableT,-ds,index);
+                double fieldx2 = interpolTable(waketableQX,waketableT,-ds,index);
+                double fieldy2 = interpolTable(waketableQY,waketableT,-ds,index);
+                double fieldz = interpolTable(waketableZ,waketableT,-ds,index);
                 kx[i] += fx*wi*fieldx*dx;
                 ky[i] += fy*wi*fieldy*dy;
                 kx2[i] += fqx*wi*fieldx2;
