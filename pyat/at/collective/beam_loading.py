@@ -34,23 +34,23 @@ class CavityMode(IntEnum):
 
 class FeedbackMode(IntEnum):
     """
-    FeedbackMode.ONETURN means the feedback is only using the most recent
+    FeedbackMode.PROP means the feedback is only using the most recent
     turn, and the delta is applied each turn multiplied by VoltGain or
     PhaseGain.
 
-    FeedbackMode.WINDOW means the beam voltage passed to the feedback is
-    the average of the WINDOW. For this method, buffersize and windowlength
-    must also be provided.
+    FeedbackMode.PROP_INTEGRAL means
+    
     """
 
-    ONETURN = 1
-    WINDOW = 2
+    PROP = 1
+    PROP_INTEGRAL = 2
 
 
 def add_beamloading(
     ring: Lattice,
     qfactor: float | Sequence[float],
     rshunt: float | Sequence[float],
+    cavitybeta: float | Sequence[float],
     cavpts: Refpts = None,
     copy: bool | None = False,
     **kwargs,
@@ -61,10 +61,11 @@ def add_beamloading(
 
     Parameters:
         ring:           Lattice object
-        qfactor:        Q factor. Scalar or array of float are accepted
-        rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal
+        qfactor:        Unloaded Q factor. Scalar or array of float are accepted
+        rshunt:         Unloaded Shunt impedance, [:math:`\Omega`] for longitudinal
                         Scalar or array of float are accepted
-
+        cavitybeta:     Cavity coupling factor. 
+        
     Keyword Arguments:
         cavpts (Refpts):    refpts of the cavity. If None (default) apply
                             to all cavity in the ring
@@ -90,14 +91,15 @@ def add_beamloading(
         cavpts = uint32_refpts(cavpts, len(ring))
     qfactor = np.broadcast_to(qfactor, (len(cavpts),))
     rshunt = np.broadcast_to(rshunt, (len(cavpts),))
+    cavitybeta = np.broadcast_to(cavitybeta, (len(cavpts),))
     new_elems = []
-    for ref, qf, rs in zip(cavpts, qfactor, rshunt, strict=True):
+    for ref, qf, rs, be in zip(cavpts, qfactor, rshunt, cavitybeta, strict=True):
         cav = ring[ref]
         if not isinstance(cav, RFCavity):
             raise TypeError(
                 "Beam loading can only be assigned" + "to an RFCavity element"
             )
-        new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf, rs, **kwargs))
+        new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf, rs, be, **kwargs))
     return apply(ring, cavpts, new_elems)
 
 
@@ -149,7 +151,7 @@ def remove_beamloading(ring, cavpts: Refpts = None, copy: bool | None = False):
 
 class BeamLoadingElement(RFCavity, Collective):
     """Class to generate a beamloading element, inherits from Element
-    additional argument are ring, cavity, qfactor, rshunt.
+    additional argument are ring, cavity, qfactor, rshunt, cavitybeta.
     """
 
     default_pass = {False: "DriftPass", True: "BeamLoadingCavityPass"}
@@ -157,9 +159,10 @@ class BeamLoadingElement(RFCavity, Collective):
         RFCavity._conversions,
         Rshunt=float,
         Qfactor=float,
+        CavityBeta=float,        
+        TunerGain=float,
         NormFact=float,
-        PhaseGain=float,
-        VoltGain=float,
+        Gain=lambda v: _array(v, shape=(2,)),
         _beta=float,
         _wakefact=float,
         _nslice=int,
@@ -171,7 +174,7 @@ class BeamLoadingElement(RFCavity, Collective):
         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
         _vbeam=lambda v: _array(v, shape=(2,)),
         _vcav=lambda v: _array(v, shape=(2,)),
-        _vgen=lambda v: _array(v, shape=(4,)),
+        _vgen=lambda v: _array(v, shape=(3,)),
     )
 
     def __init__(
@@ -183,10 +186,10 @@ class BeamLoadingElement(RFCavity, Collective):
         ring: Lattice,
         qfactor: float,
         rshunt: float,
+        cavitybeta: float,
         detune: float | None = 0.0,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
-        fbmode: FeedbackMode | None = FeedbackMode.ONETURN,
-        buffersize: int | None = 0,
+        fbmode: FeedbackMode | None = FeedbackMode.PROP,
         **kwargs,
     ):
         r"""
@@ -197,7 +200,8 @@ class BeamLoadingElement(RFCavity, Collective):
             frequency:       Cavity frequency [Hz]
             qfactor:         Q factor
             rshunt:          Shunt impedance, [:math:`\Omega`].
-
+            cavitybeta:      Cavity coupling factor
+            
         Keyword Arguments:
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
@@ -211,76 +215,122 @@ class BeamLoadingElement(RFCavity, Collective):
                 passive_voltage
             passive_voltage [V] (float): Voltage setpoint with the passive
                 cavity with feedback.
-            PhaseGain (float):  Used for cavity feedbacks. States the gain on
-                the phase correction factor to be applied.
-            VoltGain (float):  Used for cavity feedbacks. States the gain on
-                the phase correction factor to be applied.
+            Gain ([float, float]):  Used for cavity feedbacks. If FBMode is PROP
+                then Gain[0] is the amplitude gain, and Gain[1] is the phase gain.
+                If FBMode is PROP_INTEGRAL, then Gain[0] is Prop gain and Gain[1]
+                is Integral gain. 
             buffersize (int):  Size of the history buffer for vbeam, vgen,
                 vbunch (default 0)
-            feedback_angle_offset:      Fixed detuning from optimal tuning
-                angle [rad]. For a negative slope of the RF voltage at the
-                synchronous position, the optimum detuning is negative.
-                Applying a positive feedback_angle_offset will therefore
-                reduce the detuning. The reverse is true for positive RF
-                slope.
             ts (float):        The timelag of the synchronous particle in the
                 full RF system [m]. If not specified, it will be calculated
                 using get_timelag_fromU0. Defines the expected position of the
                 beam to be used for the beam loading setpoints.
             fbmode (FeedbackMode): States the mode for the parameter
-                calculation to be used for the loop. ONETURN (default) takes
-                only the current turn, compared to WINDOW which takes a
-                sliding window.
-            windowlength (int): for WINDOW feedback mode, states the length
-                [turns] for the sliding window. Must be smaller than
-                buffersize.
+                calculation to be used for the loop. PROP (default) takes
+                only the proportional component, compared to PROP_INTEGRAL
+                (coming soon) which takes a the Proportional and Integral
+                parts.
             system_harmonic (float): Used to compute the nominal rf frequency
                 for the given system. e.g. third of fourth harmonic of
                 rf_frequency. If None, then will be computed to the nearest
-                integer multiple of rf_frequency.
+                integer multiple of rf_frequency.    
+            TunerOffset:      Fixed detuning from optimal tuning
+                angle [rad]. For a negative slope of the RF voltage at the
+                synchronous position, the optimum detuning is negative.
+                Applying a positive TunerOffset will therefore
+                reduce the detuning. The reverse is true for positive RF
+                slope.
+            TunerGain (float): Used for detuning of the cavities. States the gain
+                of the correction factor to be applied.
+            TunerAveragingPeriod (int): Detuning is applied in steps of
+                TunerAveragingPeriod with the average difference over this period. 
+            
         Returns:
             bl_elem (Element): beam loading element
         """
         kwargs.setdefault("PassMethod", self.default_pass[True])
-        if not isinstance(cavitymode, CavityMode):
-            raise TypeError("cavitymode has to be an " + "instance of CavityMode")
 
-        zcuts = kwargs.pop("ZCuts", None)
-        ts = kwargs.pop("ts", None)
-        self.system_harmonic = kwargs.pop(
-            "system_harmonic", int(np.round(frequency / ring.rf_frequency))
-        )
-        self.detune = detune
-
-        check_frequency = np.abs(frequency - self.system_harmonic * ring.rf_frequency)
-
-        if check_frequency > 1.0:  # 1 Hz is the limit for the float check
-
-            error_string = (
-                "Cavity must be an integer of rf_frequency, otherwise"
-                "the phi_s computation will be wrong. Please use the detune"
-                "argument when adding beamloading to a cavity that is an"
-                "integer harmonic."
-            )
-            raise AtError(error_string)
-
+        # Initialise ring parameters
         self.circumference = ring.circumference
         self.bunch_spos = ring.bunch_spos
         self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets) 
         energy = ring.energy
-        harmonic_number = self.system_harmonic * ring.harmonic_number
-        self.feedback_angle_offset = kwargs.pop("feedback_angle_offset", 0)
-        self.Rshunt = rshunt
-        self.Qfactor = qfactor
+        self.system_harmonic = kwargs.pop(
+            "system_harmonic", int(np.round(frequency / ring.rf_frequency))
+        )
+        harmonic_number = self.system_harmonic * ring.harmonic_number #cavity harmonic number
+        if harmonic_number % 1 != 0:
+            error_string = ("Cavity harmonic number must be a whole number"
+                            "Please check system_harmonic"
+                            )
+            raise AtError(error_string)
+        harmonic_number = int(harmonic_number)
+        
+        self.ring_harmonic_number = ring.harmonic_number #ring harmonic number (nbuckets)        
+        self._nbunch = ring.nbunch
+        self._beta = ring.beta #particle velocity (NOT cavity beta)
+        self._cavitymode = int(cavitymode)        
+        
+       
+
+        # Initialise resonator parameters
+        self.CavityBeta = cavitybeta
+        self.Rshunt = rshunt/(1+self.CavityBeta)
+        self.Rshunt_unloaded = rshunt
+        self.Qfactor = qfactor/(1+self.CavityBeta)
+        self.Qfactor_unloaded = qfactor
+
+        # Initialise wake computation parameters
+        self._wakefact = -ring.circumference / (clight * ring.energy * ring.beta**3)
+        self._nslice = kwargs.pop("Nslice", 101)
+        self._nturns = kwargs.pop("Nturns", 1)
+        self._turnhistory = None  # Defined here to avoid warning
+        self._vbunch = None
         self.NormFact = kwargs.pop("NormFact", 1.0)
-        self.PhaseGain = kwargs.pop("PhaseGain", 1.0)
-        self.VoltGain = kwargs.pop("VoltGain", 1.0)
-        self._cavitymode = int(cavitymode)
+        zcuts = kwargs.pop("ZCuts", None) #fixed or adaptive slicing
+        if zcuts is not None:
+            self.ZCuts = zcuts
+            
+
+        # Initialise tuner parameters
+        self.TunerGain = kwargs.pop("TunerGain", 0.01)
+        self.TunerOffset = kwargs.pop("TunerOffset", 0)
+        self.TunerAveragingPeriod = kwargs.pop("TunerAveragingPeriod", 1)
+        if self.TunerAveragingPeriod <1:
+            raise AttributeError('Tuner Averaging Period must be >=1)')
+        self._TunerParams = np.array([0.0, 0.0]) #TunerCount and TunerDiff
+            
+        # Initialise common regulator parameters
+        self.Gain = kwargs.pop("Gain", [1e-3,1e-3])
+        self.delay = kwargs.pop("delay", 1)
+        if self.delay <= 0:
+            raise AttributeError('Attribute delay must be >= 1')  
+
+
+        # Initialise FBMode=PROP buffers
+        self.VoltDelay = np.ones(self.delay)
+        self.PhaseDelay = np.ones(self.delay)
+
+
+        # Initlise CavityMode=Passive parameters
+        self.detune = detune
+        
+        # Initialise CavityMode=Passive_SetVoltage parameters
+        self._passive_vset = kwargs.pop("passive_voltage", 0.0)  
+              
+              
+        ####################################
+        ### Next we perform all the checks #
+        ####################################
+        if not isinstance(cavitymode, CavityMode):
+            error_string = ("cavitymode has to be an "
+                            "instance of CavityMode")
+            raise TypeError(error_string)
 
         if self._cavitymode == 1:
             if not isinstance(fbmode, FeedbackMode):
                 err_string = (
-                    "For an active cavity, fbmode has to be defined and an "
+                    "For an active cavity, fbmode has to be defined as an "
                     "instance of FeedbackMode"
                 )
                 raise TypeError(err_string)
@@ -288,6 +338,8 @@ class BeamLoadingElement(RFCavity, Collective):
         else:
             self._fbmode = 0
 
+
+        # Here we make checks relating to the passive cavity with FB
         if self.detune == 0 and self._cavitymode == 3:
             err_string = (
                 "Cannot start passive cavity feedback from zero detuning."
@@ -297,35 +349,47 @@ class BeamLoadingElement(RFCavity, Collective):
             )
             raise AtError(err_string)
 
-        self._passive_vset = kwargs.pop("passive_voltage", 0.0)
-        self._beta = ring.beta
-        self._wakefact = -ring.circumference / (clight * ring.energy * ring.beta**3)
-        self._nslice = kwargs.pop("Nslice", 101)
-        self._nturns = kwargs.pop("Nturns", 1)
-        self._nbunch = ring.nbunch
-        self._turnhistory = None  # Defined here to avoid warning
-        self._vbunch = None
-        self._buffersize = buffersize
-        self._windowlength = kwargs.pop("windowlength", 0)
+        # Check that the cavity frequency provided is system_harmonic * ring.rf_frequency
+        check_frequency = np.abs(frequency - self.system_harmonic * ring.rf_frequency)
+        if check_frequency > 1.0:  # 1 Hz is the limit for the float check
+            error_string = (
+                "Cavity frequency must be system_harmonic*rf_frequency, otherwise"
+                "the phi_s computation will be wrong. Please use the detune"
+                "argument but keep the resonant frequency on resonance."
+            )
+            raise AtError(error_string)
 
-        if self._windowlength > self._buffersize:
-            err_string = "The windowlength must be smaller than the buffersize"
-            raise ValueError(err_string)
+
+
+
+        # buffer size 
+        self._buffersize = kwargs.pop("buffersize", 0)
+
+
+        # Initlise the buffers before super. Redefined later.
         self._vgen_buffer = np.zeros(1)
         self._vbeam_buffer = np.zeros(1)
         self._vbunch_buffer = np.zeros(1)
+        
 
-        if zcuts is not None:
-            self.ZCuts = zcuts
 
         super().__init__(
             family_name, length, voltage, frequency, harmonic_number, energy, **kwargs
         )
 
+        # ts says where the beam will be. Is either provided or computed.
+        ts = kwargs.pop("ts", None)
         if ts is None:
             _, ts = get_timelag_fromU0(ring)
         self._ts = ts
 
+        # this one has to come after the super in order to properly initialise
+        cavity_voltage = self.Voltage
+        if self._cavitymode == 3:
+            cavity_voltage = self._passive_vset
+
+        # phis must be defined in such a way that the beam loading compensation
+        # works for any value of TimeLag. 
         self._phis = 2 * np.pi * self.Frequency * (-self._ts - self.TimeLag) / clight
 
         # The below is needed because atan2 returns phases between -pi and pi
@@ -333,19 +397,18 @@ class BeamLoadingElement(RFCavity, Collective):
         # to achieve
         while self._phis < -np.pi:
             self._phis += 2 * np.pi
-
         while self._phis > np.pi:
             self._phis -= 2 * np.pi
 
+        # Initlise some parameters needed
         self._vbeam_phasor = np.zeros(2)
         self._vbeam = np.zeros(2)
-        self._vgen = np.zeros(4)
+        self._vgen = np.zeros(3)
 
-        cavity_voltage = self.Voltage
-        if self._cavitymode == 3:
-            cavity_voltage = self._passive_vset
-
+        # Here we define the cavity setpoints, finally
         self._vcav = np.array([cavity_voltage, self._phis])
+        self.VoltDelay *= self._vcav[0] # PROP 
+        self.PhaseDelay *= self._vcav[1] # PROP
         self.clear_history(ring=ring)
 
     def is_compatible(self, other):
@@ -359,18 +422,59 @@ class BeamLoadingElement(RFCavity, Collective):
         tl = self._nturns * self._nslice * self._nbunch
         self._turnhistory = np.zeros((tl, 4), order="F")
         if self._buffersize > 0:
-            self._vgen_buffer = np.zeros((4, self._buffersize), order="F")
+            self._vgen_buffer = np.zeros((3, self._buffersize), order="F")
             self._vbeam_buffer = np.zeros((2, self._buffersize), order="F")
             self._vbunch_buffer = np.zeros(
                 (self.ring_harmonic_number, 2, self._buffersize), order="F"
             )
 
+    def _set_optimum_detuning(self, current):
+        psi = np.arctan(- 2 * current * self.Rshunt / self.Voltage * np.cos(self._phis))
+        return psi
+        
+        
+    def _compute_generator_parameters(self, current, psi):
+        """
+        This function was taken from MBTRACK2 (A. Gamelin et al),   
+        which is based on [1].
+                  
+        [1] Wilson, P. B. (1994). Fundamental-mode rf design in e+ e− storage ring
+            factories. In Frontiers of Particle Beams: Factories with e+ e-Rings
+            (pp. 293-311). Springer, Berlin, Heidelberg.
+        """
+        # Generator power [W] - Eq. (4.1.2) [1] corrected with factor
+        # (1+beta)**2 instead of (1+beta**2)
+        
+        Pg = self.Voltage**2 * (1 + self.CavityBeta)**2 / (
+            2 * self.Rshunt_unloaded * 4 * self.CavityBeta * np.cos(psi)**2) * (
+                (-np.sin(self._phis) + 2 * current * self.Rshunt_unloaded /
+                 (self.Voltage * (1 + self.CavityBeta)) * np.cos(psi)**2)**2 +
+                (np.cos(self._phis) + 2 * current * self.Rshunt_unloaded /
+                 (self.Voltage *
+                  (1 + self.CavityBeta)) * np.cos(psi) * np.sin(psi))**2)
+
+                  
+        # Generator voltage at resonance [V] - Eq. (3.2.2) [1]
+        Vgr = 2 * self.CavityBeta**(1 / 2) / (1 + self.CavityBeta) * (
+            2 * self.Rshunt_unloaded * Pg)**(1 / 2)
+
+        # Generator voltage [V]
+        Vg = Vgr * np.cos(psi)
+            
+        vbr = 2 * current * self.Rshunt   
+                 
+        theta_g = np.arctan2(
+            (self.Voltage * np.cos(self._phis) +
+             vbr * np.cos(psi) * np.sin(psi)),
+            (-self.Voltage * np.sin(self._phis) +
+             vbr * np.cos(psi)**2)) - np.pi/2
+             
+        return np.array([Vg, theta_g])
+        
+
     def _init_bl_params(self, current):
         if (self._cavitymode == 1) and (current > 0.0):
-            vb = 2 * current * self.Rshunt
-            a = self.Voltage
-            b = -vb * np.cos(self._phis)
-            psi = np.arcsin(b / np.sqrt(a**2 + b**2))
+            psi = self._set_optimum_detuning(current)
             if np.isnan(psi):
                 psi = 0.0
                 warning_string = (
@@ -378,21 +482,23 @@ class BeamLoadingElement(RFCavity, Collective):
                     "Setting initial psi to 0 to avoid NaNs"
                 )
                 warnings.warn(AtWarning(warning_string), stacklevel=2)
-            psi += self.feedback_angle_offset
-            vgen = self.Voltage * np.cos(psi) - vb * np.cos(psi) * np.sin(self._phis)
-
+            psi += self.TunerOffset
+            vgen, theta_g = self._compute_generator_parameters(current, psi)
+            
         elif self._cavitymode in {2, 3}:
             vgen = 0
+            theta_g = 0
             psi = np.arctan(
                 2 * self.Qfactor * (1 - self.Frequency / (self.Frequency + self.detune))
             )
         else:
             vgen = self.Voltage
             psi = 0
+            theta_g = 0
 
         self._vbeam = np.array([2 * current * self.Rshunt * np.cos(psi), np.pi + psi])
 
-        self._vgen = np.array([vgen, psi + self._phis, psi, vgen / np.cos(psi)])
+        self._vgen = np.array([vgen, theta_g, psi])
 
         vbp_amp = 2 * current * self.Rshunt * np.cos(psi)
         vbp_phase = np.pi + psi
@@ -491,6 +597,7 @@ class BeamLoadingElement(RFCavity, Collective):
         ring: Sequence,
         qfactor: float,
         rshunt: float,
+        cavitybeta: float,
         cavitymode: CavityMode | None = CavityMode.ACTIVE,
         buffersize: int | None = 0,
         **kwargs,
@@ -503,7 +610,8 @@ class BeamLoadingElement(RFCavity, Collective):
             ring:            Lattice object
             qfactor:         Q factor
             rshunt:          Shunt impedance, [:math:`\Omega`]
-
+            cavitybeta:      Cavity coupling factor
+            
         Keyword Arguments:
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
@@ -534,6 +642,7 @@ class BeamLoadingElement(RFCavity, Collective):
             ring,
             qfactor,
             rshunt,
+            cavitybeta,
             cavitymode=cavitymode,
             buffersize=buffersize,
             **cav_attrs,
