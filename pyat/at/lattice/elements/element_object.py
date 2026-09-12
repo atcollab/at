@@ -39,6 +39,14 @@ def _no_encoder(v):
     return v
 
 
+def _values_equal(value, default) -> bool:
+    if isinstance(value, dict) and isinstance(default, dict):
+        return value.keys() == default.keys() and all(
+            _values_equal(value[key], default[key]) for key in value
+        )
+    return np.array_equal(value, default)
+
+
 class Element:
     """Base class for AT elements."""
 
@@ -228,7 +236,7 @@ class Element:
         keywords = {
             k: v
             for k, v in attrs.items()
-            if not np.array_equal(v, getattr(defelem, k, None))
+            if not _values_equal(v, getattr(defelem, k, None))
         }
         return self.__class__.__name__, arguments, keywords
 
