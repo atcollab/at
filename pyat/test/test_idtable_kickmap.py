@@ -6,6 +6,7 @@ from importlib.resources import files
 
 import machine_data
 import pytest
+from at.lattice import Lattice
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
 from numpy.testing import assert_array_equal
 
@@ -29,21 +30,21 @@ def idkm_elem(idkm_file: str) -> InsertionDeviceKickMap:
 class TestKickmapStore:
     """Tests for add_kickmap / use_kickmap / list_kickmaps / active_kickmap."""
 
-    def test_list_kickmaps_empty_on_new_element(self, idkm_elem):
+    def test_list_kickmaps_on_new_element(self, idkm_elem):
         """A freshly constructed element has only the 'default' entry in the store."""
         assert idkm_elem.list_kickmaps() == ["default"]
 
-    def test_active_kickmap_none_on_new_element(self, idkm_elem):
+    def test_active_kickmap_on_new_element(self, idkm_elem):
         """active_kickmap is 'default' immediately after construction."""
         assert idkm_elem.active_kickmap == "default"
 
     def test_default_kickmap_matches_initial_fields(self, idkm_elem):
         """The 'default' kickmap must contain the element's construction-time arrays."""
         assert_array_equal(
-            idkm_elem._kickmap_store["default"]["xkick"], idkm_elem.xkick
+            idkm_elem.KickmapStore["default"]["xkick"], idkm_elem.xkick
         )
         assert_array_equal(
-            idkm_elem._kickmap_store["default"]["ykick"], idkm_elem.ykick
+            idkm_elem.KickmapStore["default"]["ykick"], idkm_elem.ykick
         )
 
     def test_use_kickmap_default_restores_initial_fields(self, idkm_elem, idkm_file):
@@ -55,7 +56,7 @@ class TestKickmapStore:
         assert_array_equal(idkm_elem.xkick, xkick_initial)
         assert idkm_elem.active_kickmap == "default"
 
-
+    def test_add_kickmap_lists_new_key(self, idkm_elem, idkm_file):
         """add_kickmap makes the key visible in list_kickmaps."""
         idkm_elem.add_kickmap("mode_a", 10, idkm_file, 6.04)
         assert "mode_a" in idkm_elem.list_kickmaps()
@@ -128,14 +129,16 @@ class TestKickmapStore:
 
     def test_use_kickmap_on_empty_store_raises_keyerror(self, idkm_elem):
         """use_kickmap raises KeyError when the store is empty."""
+        idkm_elem.KickmapStore = {}
         with pytest.raises(KeyError):
             idkm_elem.use_kickmap("anything")
 
-    def test_list_kickmaps_excludes_internal_active_key(self, idkm_elem, idkm_file):
-        """The internal '_active' sentinel must never appear in list_kickmaps."""
-        idkm_elem.add_kickmap("m", 10, idkm_file, 6.04)
-        idkm_elem.use_kickmap("m")
-        assert "_active" not in idkm_elem.list_kickmaps()
+    def test_active_is_available_as_a_kickmap_key(self, idkm_elem, idkm_file):
+        """The active marker does not reserve a key in the kickmap store."""
+        idkm_elem.add_kickmap("active", 10, idkm_file, 6.04)
+        idkm_elem.use_kickmap("active")
+        assert idkm_elem.active_kickmap == "active"
+        assert "active" in idkm_elem.list_kickmaps()
 
     def test_add_kickmap_does_not_activate(self, idkm_elem, idkm_file):
         """add_kickmap alone must not change the active tracking fields."""
@@ -143,6 +146,36 @@ class TestKickmapStore:
         idkm_elem.add_kickmap("other", 5, idkm_file, 3.0)
         assert_array_equal(idkm_elem.xkick, xkick_orig)
         assert idkm_elem.active_kickmap == "default"
+
+    @pytest.mark.parametrize("suffix", [".json", ".mat", ".m"])
+    def test_kickmap_store_round_trip(
+        self, idkm_elem, idkm_file, tmp_path, suffix
+    ):
+        """All native lattice formats preserve every stored kickmap."""
+        idkm_elem.add_kickmap("mode_a", 10, idkm_file, 6.04)
+        smaller_map = {
+            "Length": idkm_elem.Length,
+            "xkick": idkm_elem.xkick[:7, :5],
+            "ykick": idkm_elem.ykick[:7, :5],
+            "xkick1": idkm_elem.xkick1[:7, :5],
+            "ykick1": idkm_elem.ykick1[:7, :5],
+            "xtable": idkm_elem.xtable[:5],
+            "ytable": idkm_elem.ytable[:7],
+        }
+        idkm_elem.add_kickmap("mode_b", 5, smaller_map, 3.0)
+        idkm_elem.use_kickmap("mode_b")
+        fname = tmp_path / f"idmap{suffix}"
+
+        Lattice([idkm_elem], energy=6.04e9).save(fname)
+        loaded = Lattice.load(fname)[0]
+
+        assert loaded.list_kickmaps() == ["default", "mode_a", "mode_b"]
+        assert loaded.active_kickmap == "mode_b"
+        assert loaded.xkick.shape == (7, 5)
+        loaded.use_kickmap("mode_a")
+        assert_array_equal(
+            loaded.xkick, idkm_elem.KickmapStore["mode_a"]["xkick"]
+        )
 
 
 # ---------------------------------------------------------------------------
