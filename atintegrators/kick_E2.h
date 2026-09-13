@@ -38,10 +38,10 @@ static double B2perp(double bx, double by, double irho, double x, double xpr, do
     return((xh1*SQR(by) + xh1*SQR(bx) + SQR(bx*ypr - by*xpr)) / v_norm2) ;
 }
 
-static void kick(double *r6, double A0, double B0, const double *A, const double *B, int max_order,
+static void kick(double *r6, const double *A, const double *B, int max_order,
                  double L, double irho, double rad_const, double diff_const, double *bdiff)
 #else
-static void kick(double *r6, double A0, double B0, const double *A, const double *B, int max_order,
+static void kick(double *r6, const double *A, const double *B, int max_order,
                  double L, double irho)
 #endif /* RADIATION */
 {
@@ -69,8 +69,9 @@ static void kick(double *r6, double A0, double B0, const double *A, const double
         ImSum = ImSum*x + ReSum*y + A[i];
         ReSum = ReSumTemp;
     }
-    ReSum += B0;
-    ImSum += A0;
+    #ifdef CURVATURE_IN_B0
+    ReSum += irho;
+    #endif
 
     #ifdef RADIATION
     double p_norm = 1.0 / (1.0+r6[4]);
@@ -83,7 +84,11 @@ static void kick(double *r6, double A0, double B0, const double *A, const double
     ImSum += irho*(K1*irho-K2)*y*y*y/6.0;
     ReSum += -K1*irho*y*y/2.0 + irho*(K1*irho-K2)*x*y*y/2.0;
 
-    double B2P = B2perp(ImSum, ReSum+irho, irho, x , xpr, y ,ypr);
+    #ifdef CURVATURE_IN_B0
+    double B2P = B2perp(ImSum, ReSum, irho, x, xpr, y ,ypr);
+    #else
+    double B2P = B2perp(ImSum, ReSum + irho, irho, x, xpr, y ,ypr);
+    #endif
     double factor = L * (1.0 + x*irho + (SQR(xpr) + SQR(ypr)) / 2.0) / SQR(p_norm);
 
     /* Momentum loss */

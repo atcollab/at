@@ -116,7 +116,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
                     polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
                 };
             };
-            kick(r6, 0.0, 0.0, pola, polb, maxorder, 1.0, 0.0);
+            kick(r6, pola, polb, maxorder, 1.0, 0.0);
         }
     }
 }
