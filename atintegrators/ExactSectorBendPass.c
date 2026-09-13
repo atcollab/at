@@ -5,13 +5,13 @@
 #include "kick_k1h_kn.h"
 #include "curved_dipole.h"
 
-#define INTEGRATOR(r6, num_int_steps, slength, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff) \
+#define INTEGRATOR(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     if (num_int_steps == 0) { \
         DRIFT(r6, slength, irho, bdiff); \
         FIX_LENGTH(slength); \
     } \
     else { \
-        integrator(r6, num_int_steps, slength, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff); \
+        integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff); \
     }
 
 #define CHECK_NSTEPS \

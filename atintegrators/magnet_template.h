@@ -37,7 +37,6 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
-    double *KickAngle;
 #ifdef STRAIGHT_DIPOLE
     double X0ref;
     double RefDZ;
@@ -60,7 +59,7 @@ static void magnet(double *r, double le, double bending_angle,
     double *T1, double *T2,
     double *R1, double *R2,
     double *RApertures, double *EApertures,
-    double *KickAngle, double scaling,
+    double scaling,
 #if defined(STRAIGHT_DIPOLE)
     double x0ref,
     double refdz,
@@ -102,17 +101,6 @@ static void magnet(double *r, double le, double bending_angle,
 
     INTEGRATOR_STEPS(SL)
     double B1 = (max_order >= 1) ? B[1] : 0.0;
-    double A0 = 0.0;
-    #ifdef CURVATURE_IN_B0
-    double B0 = irho;
-    #else
-    double B0 = 0.0;
-    #endif
-
-    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
-        B0 -= sin(KickAngle[0]) / le;
-        A0 += sin(KickAngle[1]) / le;
-    }
 
     #ifndef NO_OMP
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared)
@@ -135,7 +123,7 @@ static void magnet(double *r, double le, double bending_angle,
             MAGNET_ENTRY
 
             /* Integrator */
-            INTEGRATOR(r6, num_int_steps, SL, irho, A0, B0, A, B, max_order, rad_const, diff_const, bdiff)
+            INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff)
 
             /* Exit face*/
             MAGNET_EXIT
@@ -158,7 +146,6 @@ static void magnet(double *r, double le, double bending_angle,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
-    double *bdiff = NULL;
     if (!Elem) {
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -183,7 +170,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         CHECK_NSTEPS
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -206,12 +192,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
-        Elem->KickAngle=KickAngle;
     }
     #if defined(RADIATION) || defined(QUANTUM)
     double gamma0 = atGamma(Param->energy, Elem->Energy, Param->rest_energy); check_error();
     #ifdef DIFFUSION
-    bdiff = Param->bdiff;
+    double *bdiff = Param->bdiff;
+    #elif defined RADIATION
+    double *bdiff = NULL;
     #endif
     #endif
     magnet(r_in, Elem->Length, Elem->BendingAngle,
@@ -223,7 +210,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->fringeIntM0, Elem->fringeIntP0,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling,
+            Elem->Scaling,
     #if defined(STRAIGHT_DIPOLE)
             Elem->X0ref,
             Elem->RefDZ,
@@ -275,7 +262,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        double *KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         CHECK_NSTEPS
         MAGNET_MEX_ITEMS
 
@@ -298,7 +284,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             FringeQuadEntrance, FringeQuadExit,
             fringeIntM0, fringeIntP0,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling,
+            Scaling,
         #if defined(STRAIGHT_DIPOLE)
             X0ref,
             RefDZ,
@@ -329,7 +315,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0], i0++, mxCreateString(required[i]));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
-            plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
+            plhs[1] = mxCreateCellMatrix(11+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
@@ -342,7 +328,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1], i1++, mxCreateString("R2"));
             mxSetCell(plhs[1], i1++, mxCreateString("RApertures"));
             mxSetCell(plhs[1], i1++, mxCreateString("EApertures"));
-            mxSetCell(plhs[1], i1++, mxCreateString("KickAngle"));
             mxSetCell(plhs[1], i1++, mxCreateString("FieldScaling"));
         }
     }
