@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from importlib.resources import files
+from inspect import Parameter, signature
 
-import machine_data
 import pytest
 from at.lattice import Lattice
 from at.lattice.elements.idtable_element import InsertionDeviceKickMap
 from numpy.testing import assert_array_equal
+
+import machine_data
 
 
 @pytest.fixture()
@@ -29,6 +31,102 @@ def idkm_elem(idkm_file: str) -> InsertionDeviceKickMap:
 
 class TestKickmapStore:
     """Tests for add_kickmap / use_kickmap / list_kickmaps / active_kickmap."""
+
+    def test_constructor_has_explicit_arguments(self):
+        """Required kickmap inputs are visible in the public signature."""
+        parameters = signature(InsertionDeviceKickMap).parameters
+        assert {"family_name", "nslice", "fname", "norm_energy", "kickmaps"} <= set(
+            parameters
+        )
+        assert all(
+            parameter.kind is not Parameter.VAR_POSITIONAL
+            for parameter in parameters.values()
+        )
+
+    def test_empty_element(self):
+        """An element may be created before any kickmaps are available."""
+        elem = InsertionDeviceKickMap("idmap")
+        assert elem.PassMethod == "DriftPass"
+        assert elem.list_kickmaps() == []
+        assert elem.active_kickmap is None
+
+    def test_first_added_kickmap_activates_empty_element(self, idkm_file):
+        """Adding the first map makes an empty element trackable."""
+        elem = InsertionDeviceKickMap("idmap")
+        elem.add_kickmap("mode_a", 10, idkm_file, 6.04)
+        assert elem.PassMethod == "IdTablePass"
+        assert elem.list_kickmaps() == ["mode_a"]
+        assert elem.active_kickmap == "mode_a"
+
+    def test_constructor_accepts_named_kickmap_mapping(self, idkm_file):
+        """Several named kickmaps may be supplied at construction."""
+        elem = InsertionDeviceKickMap(
+            "idmap",
+            kickmaps={
+                "mode_a": (10, idkm_file, 6.04),
+                "mode_b": (5, idkm_file, 3.0),
+            },
+        )
+        assert elem.list_kickmaps() == ["mode_a", "mode_b"]
+        assert elem.active_kickmap == "mode_a"
+        elem.use_kickmap("mode_b")
+        assert int(elem.Nslice) == 5
+
+    def test_constructor_rejects_single_map_and_mapping(self, idkm_file):
+        """Single-map arguments cannot be mixed with a kickmap mapping."""
+        with pytest.raises(TypeError, match="cannot be combined"):
+            InsertionDeviceKickMap(
+                "idmap",
+                10,
+                idkm_file,
+                6.04,
+                kickmaps={"mode_a": (10, idkm_file, 6.04)},
+            )
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"nslice": 10},
+            {"fname": "kickmap.txt"},
+            {"norm_energy": 6.04},
+            {"nslice": 10, "fname": "kickmap.txt"},
+        ],
+    )
+    def test_constructor_rejects_incomplete_single_map(self, kwargs):
+        """Single-map construction requires all three map arguments."""
+        with pytest.raises(TypeError, match="must be supplied together"):
+            InsertionDeviceKickMap("idmap", **kwargs)
+
+    @pytest.mark.parametrize("suffix", [".json", ".mat", ".m"])
+    def test_empty_element_round_trip(self, tmp_path, suffix):
+        """An empty element remains empty when saved and loaded."""
+        fname = tmp_path / f"empty_idmap{suffix}"
+        Lattice([InsertionDeviceKickMap("idmap")], energy=6.04e9).save(fname)
+
+        loaded = Lattice.load(fname, energy=6.04e9, periodicity=1)[0]
+
+        assert loaded.PassMethod == "DriftPass"
+        assert loaded.list_kickmaps() == []
+        assert loaded.active_kickmap is None
+
+    def test_legacy_m_file_loads(self, tmp_path):
+        """The previous positional MATLAB constructor syntax remains readable."""
+        fname = tmp_path / "legacy_idmap.m"
+        fname.write_text(
+            """function ring = legacy_idmap()
+ring = {...
+atinsertiondevicekickmap('idmap','IdTablePass','',6.04,10,1,[1],[2],[0],[0],[0],[0]);...
+};
+end
+""",
+            encoding="utf-8",
+        )
+
+        loaded = Lattice.load(fname, energy=6.04e9, periodicity=1)[0]
+
+        assert loaded.PassMethod == "IdTablePass"
+        assert loaded.list_kickmaps() == ["default"]
+        assert loaded.active_kickmap == "default"
 
     def test_list_kickmaps_on_new_element(self, idkm_elem):
         """A freshly constructed element has only the 'default' entry in the store."""
@@ -92,7 +190,7 @@ class TestKickmapStore:
         idkm_elem.use_kickmap("half_e")
         xkick_half = idkm_elem.xkick.copy()
 
-        # kick values are 1/E² normalised; different energies must yield different tables
+        # Kicks are normalized by 1/E², so different energies change the tables.
         assert not (xkick_norm == xkick_half).all()
 
     def test_use_kickmap_changes_nslice(self, idkm_elem, idkm_file):
