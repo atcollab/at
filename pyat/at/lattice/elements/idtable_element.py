@@ -10,13 +10,6 @@ import numpy as np
 from ...constants import clight, e_mass
 from .element_object import Element
 
-# 2023jan15 orblancog first release
-# 2023jan18 orblancog fix bug with element print
-# 2023apr30 orblancog redefinition to function
-# 2023jul04 orblancog changing class to save in .mat and .m
-# 2025ago15 orblancog include first order kick maps from text files
-
-
 def _anyarray(value: np.ndarray) -> None:
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return np.require(value, dtype=np.float64, requirements=["F", "A"])
@@ -27,7 +20,7 @@ class InsertionDeviceKickMap(Element):
     Insertion Device Element. Valid for a parallel electron beam.
 
     This elememt implements tracking through an integrated magnetic
-    field map of second order in energy, normalized to an energy
+    field map of first and second order in energy, normalized to an energy
     value that is required to calculate alpha. See Eq. (5) in [#].
 
     First order maps could be included. See Eq. (3) in [#].
@@ -63,6 +56,8 @@ class InsertionDeviceKickMap(Element):
         ykick=_anyarray,
         xkick1=_anyarray,
         ykick1=_anyarray,
+        xtable=_anyarray,
+        ytable=_anyarray,
     )
 
     def __init__(
@@ -106,6 +101,35 @@ class InsertionDeviceKickMap(Element):
             elemargs = dict(zip(_argnames, args))
         elemargs.update(kwargs)
         super().__init__(family_name, **elemargs)
+        if hasattr(self, "KickmapStore"):
+            self._normalise_kickmap_store()
+        else:
+            # Fresh creation: register current fields as "default" and activate.
+            self.KickmapStore = {
+                "default": self._snapshot(),
+            }
+            self.ActiveKickmap = "default"
+
+    def _snapshot(self: InsertionDeviceKickMap) -> dict:
+        """Return a dict of the element's current tracking-field values."""
+        return {
+            "Nslice": int(self.Nslice),
+            "Length": float(self.Length),
+            "xkick":  self.xkick.copy(),
+            "ykick":  self.ykick.copy(),
+            "xkick1": self.xkick1.copy(),
+            "ykick1": self.ykick1.copy(),
+            "xtable": self.xtable.copy(),
+            "ytable": self.ytable.copy(),
+        }
+
+    def _normalise_kickmap_store(self: InsertionDeviceKickMap) -> None:
+        """Restore kickmap types after loading from a lattice file."""
+        for data in self.KickmapStore.values():
+            data["Nslice"] = int(data["Nslice"])
+            data["Length"] = float(data["Length"])
+            for field in ("xkick", "ykick", "xkick1", "ykick1", "xtable", "ytable"):
+                data[field] = _anyarray(data[field])
 
     def set_DriftPass(self: InsertionDeviceKickMap) -> None:
         """Set DriftPass tracking pass method."""
@@ -404,6 +428,78 @@ class InsertionDeviceKickMap(Element):
             h_points,
             v_points,
         )
+    def _apply_kickmap_data(self: InsertionDeviceKickMap, data: dict) -> None:
+        """Apply kickmap data dict to the active tracking fields."""
+        self.Nslice = data["Nslice"]
+        self.Length = data["Length"]
+        self.xkick = data["xkick"]
+        self.ykick = data["ykick"]
+        self.xkick1 = data["xkick1"]
+        self.ykick1 = data["ykick1"]
+        self.xtable = data["xtable"]
+        self.ytable = data["ytable"]
 
+    def add_kickmap(
+        self: InsertionDeviceKickMap,
+        key: str,
+        nslice: int,
+        fname: str,
+        norm_energy: float,
+    ) -> None:
+        """Store a kickmap under a string key without activating it.
+
+        Use :meth:`use_kickmap` to make a stored kickmap active for tracking.
+
+        Arguments:
+            key: identifier string for this kickmap.
+            nslice: number of slices in integrator.
+            fname: input filename (text file or dict).
+            norm_energy: normalization energy in GeV.
+        """
+        data = self.from_user(nslice, fname, norm_energy)
+        self.KickmapStore[key] = {
+            "Nslice": int(data["Nslice"]),
+            "Length": float(data["Length"]),
+            "xkick": _anyarray(data["xkick"]),
+            "ykick": _anyarray(data["ykick"]),
+            "xkick1": _anyarray(data["xkick1"]),
+            "ykick1": _anyarray(data["ykick1"]),
+            "xtable": _anyarray(data["xtable"]),
+            "ytable": _anyarray(data["ytable"]),
+        }
+
+    def use_kickmap(self: InsertionDeviceKickMap, key: str) -> None:
+        """Activate a stored kickmap by key for tracking.
+
+        Swaps xtable, ytable, xkick, ykick, xkick1, ykick1 and Nslice/Length
+        to the data stored under *key*.
+
+        Arguments:
+            key: identifier of a kickmap previously added with
+                :meth:`add_kickmap`.
+
+        Raises:
+            KeyError: if *key* is not found in the store.
+        """
+        if not hasattr(self, "KickmapStore") or key not in self.KickmapStore:
+            available = self.list_kickmaps()
+            raise KeyError(
+                f"Kickmap '{key}' not found. Available keys: {available}"
+            )
+        self.ActiveKickmap = key
+        self._apply_kickmap_data(self.KickmapStore[key])
+
+    @property
+    def active_kickmap(self: InsertionDeviceKickMap) -> str | None:
+        """The key of the currently active kickmap, or None if not set."""
+        return getattr(self, "ActiveKickmap", None)
+
+    def list_kickmaps(self: InsertionDeviceKickMap) -> list[str]:
+        """Return the list of stored kickmap keys.
+
+        Returns:
+            List of key strings.
+        """
+        return list(getattr(self, "KickmapStore", {}))
 
 # EOF
