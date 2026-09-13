@@ -34,10 +34,10 @@ static double B2perp(double bx, double by, double irho, double x, double xpr, do
     return((xh1*SQR(by) + xh1*SQR(bx) + SQR(bx*ypr - by*xpr)) / v_norm2) ;
 }
 
-static void kick(double *r6, double A0, double B0, const double *A, const double *B, int max_order,
+static void kick(double *r6, const double *A, const double *B, int max_order,
                  double L, double irho, double rad_const, double diff_const, double *bdiff)
 #else
-static void kick(double *r6, double A0, double B0, const double *A, const double *B, int max_order,
+static void kick(double *r6, const double *A, const double *B, int max_order,
                  double L, double irho)
 #endif /* RADIATION */
 {
@@ -76,8 +76,9 @@ theta  = --- B  + ----------
         ImSum = ImSum*x + ReSum*y + A[i];
         ReSum = ReSumTemp;
     }
-    ReSum += B0;
-    ImSum += A0;
+    #ifdef CURVATURE_IN_B0
+    ReSum += irho;
+    #endif
 
     #ifdef RADIATION
     double p_norm = 1.0 / (1.0+r6[4]);
