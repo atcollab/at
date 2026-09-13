@@ -183,48 +183,51 @@ class TestKickmapStore:
 # ---------------------------------------------------------------------------
 
 class TestKickmapPassMethodInteraction:
-    """use_kickmap must not interfere with set_DriftPass / set_IdTablePass."""
+    """use_kickmap must not interfere with enable / disable."""
 
-    def test_idtablepass_preserved_after_use_kickmap(self, idkm_elem, idkm_file):
-        """use_kickmap must not change an existing IdTablePass setting."""
-        idkm_elem.set_IdTablePass()
+    def test_enabled_state_preserved_after_use_kickmap(
+        self, idkm_elem, idkm_file
+    ):
+        """use_kickmap must not change the enabled pass method."""
         idkm_elem.add_kickmap("m", 10, idkm_file, 6.04)
         idkm_elem.use_kickmap("m")
         assert idkm_elem.PassMethod == "IdTablePass"
 
-    def test_driftpass_preserved_after_use_kickmap(self, idkm_elem, idkm_file):
-        """use_kickmap must not revert a DriftPass setting."""
-        idkm_elem.set_DriftPass()
+    def test_disabled_state_preserved_after_use_kickmap(
+        self, idkm_elem, idkm_file
+    ):
+        """use_kickmap must not re-enable a disabled element."""
+        idkm_elem.disable()
         idkm_elem.add_kickmap("m", 10, idkm_file, 6.04)
         idkm_elem.use_kickmap("m")
         assert idkm_elem.PassMethod == "DriftPass"
 
-    def test_set_driftpass_after_use_kickmap(self, idkm_elem, idkm_file):
-        """set_DriftPass works correctly after a kickmap swap."""
+    def test_disable_after_use_kickmap(self, idkm_elem, idkm_file):
+        """disable works correctly after a kickmap swap."""
         idkm_elem.add_kickmap("m", 10, idkm_file, 6.04)
         idkm_elem.use_kickmap("m")
-        idkm_elem.set_DriftPass()
+        idkm_elem.disable()
         assert idkm_elem.PassMethod == "DriftPass"
 
-    def test_set_idtablepass_after_driftpass(self, idkm_elem, idkm_file):
-        """set_IdTablePass restores tracking pass after set_DriftPass."""
+    def test_enable_after_disable(self, idkm_elem, idkm_file):
+        """enable restores the tracking pass method after disable."""
         idkm_elem.add_kickmap("m", 10, idkm_file, 6.04)
         idkm_elem.use_kickmap("m")
-        idkm_elem.set_DriftPass()
-        idkm_elem.set_IdTablePass()
+        idkm_elem.disable()
+        idkm_elem.enable()
         assert idkm_elem.PassMethod == "IdTablePass"
 
     def test_kick_tables_intact_after_passmethod_round_trip(
         self, idkm_elem, idkm_file
     ):
-        """DriftPass → IdTablePass round-trip must leave kick arrays unchanged."""
+        """disable / enable round-trip must leave kick arrays unchanged."""
         idkm_elem.add_kickmap("m", 10, idkm_file, 6.04)
         idkm_elem.use_kickmap("m")
         xkick_before = idkm_elem.xkick.copy()
         ykick_before = idkm_elem.ykick.copy()
 
-        idkm_elem.set_DriftPass()
-        idkm_elem.set_IdTablePass()
+        idkm_elem.disable()
+        idkm_elem.enable()
 
         assert_array_equal(idkm_elem.xkick, xkick_before)
         assert_array_equal(idkm_elem.ykick, ykick_before)
@@ -237,8 +240,8 @@ class TestKickmapPassMethodInteraction:
         idkm_elem.add_kickmap("half_e", 5, idkm_file, 3.0)
 
         idkm_elem.use_kickmap("norm")
-        idkm_elem.set_DriftPass()
-        idkm_elem.set_IdTablePass()
+        idkm_elem.disable()
+        idkm_elem.enable()
 
         # now switch to a different kickmap
         idkm_elem.use_kickmap("half_e")

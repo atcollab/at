@@ -131,23 +131,6 @@ class InsertionDeviceKickMap(Element):
             for field in ("xkick", "ykick", "xkick1", "ykick1", "xtable", "ytable"):
                 data[field] = _anyarray(data[field])
 
-    def set_DriftPass(self: InsertionDeviceKickMap) -> None:
-        """Set DriftPass tracking pass method."""
-        self.PassMethod = "DriftPass"
-
-    def set_IdTablePass(self: InsertionDeviceKickMap) -> str:
-        """Set IdTablePass tracking pass method."""
-        self.PassMethod = "IdTablePass"
-
-    def get_PassMethod(self: InsertionDeviceKickMap) -> str:
-        """Get the current tracking pass method.
-
-        Returns:
-            String with the current tracking pass method.
-        """
-        warn(UserWarning("get_PassMethod is deprecated; do not use"), stacklevel=2)
-        return self.PassMethod
-
     def from_user(
         self: InsertionDeviceKickMap, nslice: int, fname: str, norm_energy: float
     ) -> dict:
