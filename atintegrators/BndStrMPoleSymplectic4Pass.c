@@ -2,6 +2,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "kick_kn.h"  /* kick */
+#define CURVATURE_IN_B0
 
 /* Straight dipole w/ multipole using Symplectic Integration and rotation at
  * dipole faces.
@@ -29,7 +30,6 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
-    double *KickAngle;
     double X0ref;
     double ByError;
     double RefDZ;
@@ -123,7 +123,7 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, int num_particles)
+        double scaling, int num_particles)
 {
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
@@ -132,13 +132,6 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
     double K2 = SL*KICK2;
     bool useFringe1 = (fint1 != 0) && (gap != 0);
     bool useFringe2 = (fint2 != 0) && (gap != 0);
-    double B0 = irho;
-    double A0 = 0.0;
-
-    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
-        B0 -= sin(KickAngle[0]) / le;
-        A0 = sin(KickAngle[1]) / le;
-    }
 
     for (int c = 0; c<num_particles; c++) { /* Loop over particles */
         double *r6 = r + 6*c;
@@ -162,11 +155,11 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
 				ladrift6(r6,L1);
-			    kick(r6, A0, B0, A, B, max_order, K1, 0.0);
+			    kick(r6, A, B, max_order, K1, 0.0);
 				ladrift6(r6,L2);
-			    kick(r6, A0, B0, A, B, max_order, K2, 0.0);
+			    kick(r6, A, B, max_order, K2, 0.0);
 				ladrift6(r6,L2);
-				kick(r6, A0, B0, A, B, max_order, K1, 0.0);
+				kick(r6, A, B, max_order, K1, 0.0);
 				ladrift6(r6,L1);
 			}
             /* Rotate and translate back to curvilinear coordinate */
@@ -198,7 +191,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, Scaling,
                 FringeInt1, FringeInt2, X0ref, ByError, RefDZ;
         int MaxOrder, NumIntSteps;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -218,7 +211,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         X0ref=atGetOptionalDouble(ElemData,"X0ref",0); check_error();
         ByError=atGetOptionalDouble(ElemData,"ByError",0); check_error();
         RefDZ=atGetOptionalDouble(ElemData,"RefDZ",0); check_error();
@@ -243,7 +235,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
-        Elem->KickAngle=KickAngle;
         Elem->X0ref=X0ref;
         Elem->ByError=ByError;
         Elem->RefDZ=RefDZ;
@@ -256,7 +247,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->FringeInt1, Elem->FringeInt2, Elem->FullGap,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, num_particles);
+            Elem->Scaling, num_particles);
     return Elem;
 }
 
@@ -271,7 +262,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, Scaling,
                 FringeInt1, FringeInt2, X0ref, ByError, RefDZ;
         int MaxOrder, NumIntSteps;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double irho, flen;
         double *r_in;
         const mxArray *ElemData = prhs[0];
@@ -300,7 +291,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         RefDZ=atGetOptionalDouble(ElemData,"RefDZ", 0); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
         irho = BendingAngle/Length;
         flen = 2.0/irho*sin(BendingAngle/2.0); /* field length */
 
@@ -312,7 +302,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             X0ref, ByError, RefDZ,
             FringeInt1, FringeInt2, FullGap,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, num_particles);
+            Scaling, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(8,1);
@@ -326,7 +316,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
 
         if (nlhs>1) {    /* list of optional fields */
-	        plhs[1] = mxCreateCellMatrix(14,1);
+	        plhs[1] = mxCreateCellMatrix(13,1);
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
             mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
@@ -339,8 +329,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],9,mxCreateString("R2"));
             mxSetCell(plhs[1],10,mxCreateString("RApertures"));
             mxSetCell(plhs[1],11,mxCreateString("EApertures"));
-            mxSetCell(plhs[1],12,mxCreateString("KickAngle"));
-            mxSetCell(plhs[1],13,mxCreateString("FieldScaling"));
+            mxSetCell(plhs[1],12,mxCreateString("FieldScaling"));
         }
     }
     else {
