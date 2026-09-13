@@ -110,7 +110,7 @@ static void wigglerB(struct gwig *pWig, double* orbit_in, double L, double *bdif
 
     double B66[36];
     double ax,ay,kx,ky,axpy,aypx;
-	double BB, E;
+	double BB;
 	double Brho,irho3,B2;
 	double Bxyz[3];
     double gamma0 = sqrt(1.0 + pWig->Po*pWig->Po);
