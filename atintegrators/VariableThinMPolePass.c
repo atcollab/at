@@ -60,7 +60,7 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
     int idx;
-    double ampt, freq, ph, sinval, val;
+    double ampt, freq, ph, sinval;
     double* func;
     double* amp = elem->Amplitude;
     if (!amp) {
@@ -128,7 +128,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     };
 
     for (int c = 0; c < num_particles; c++) {
-        double *r6 = r + c * 6;;
+        double *r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
             if (mode == 0) {
                 double tpart = t + r6[5] / C0;
