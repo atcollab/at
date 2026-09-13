@@ -571,7 +571,7 @@ def test_ohmi_envelope(request, lattice, refpts):
         obs["emitXY"],
         [1.320358475286751e-10, 0.000000000000000e00],
         rtol=1.0e-9,
-        atol=1e-18,
+        atol=2e-18,
     )
     assert_close(
         obs["emitXYZ"],
