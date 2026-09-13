@@ -148,10 +148,12 @@ def test_buffers(hmba_lattice):
     nslice = 51
     ns = nbunch*nslice
     ls = ns*ring.circumference/ring.periodicity
-    add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
-                    buffersize=nturns)
+
     ring.set_fillpattern(nbunch)
     ring.beam_current = 0.2
+
+    add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
+                    buffersize=nturns)
     rin = numpy.zeros((6, nbunch)) + 1.0e-6
     bl_elem = ring.get_elements('*_BL')[0]
     th = numpy.zeros((nturns, ) + bl_elem.TurnHistory.shape)

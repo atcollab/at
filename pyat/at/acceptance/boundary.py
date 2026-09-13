@@ -30,7 +30,7 @@ class GridMode(Enum):
     FLOODFILL = 3  #: from exterior to stable boundary
 
 
-def grid_config(axes, amplitudes, npoints, bounds, grid_mode, shift_zero):
+def grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     """
     Returns an object that defines the grid configuration
     """
@@ -38,8 +38,8 @@ def grid_config(axes, amplitudes, npoints, bounds, grid_mode, shift_zero):
     bounds = tuple(map(tuple, bounds))
     shape = np.array(npoints, dtype=np.int32)
     d = {
-        "axes": np.atleast_1d(axes),
-        "axesi": np.atleast_1d(axisdef.axis_(axes, key="index")),
+        "planes": np.atleast_1d(planes),
+        "planesi": np.atleast_1d(axisdef.axis_(planes, key="index")),
         "amplitudes": np.atleast_1d(amplitudes),
         "shape": np.atleast_1d(shape),
         "bounds": bounds,
@@ -74,25 +74,25 @@ def set_ring_orbit(ring, dp, obspt, orbit):
 
 
 def grid_configuration(
-    axes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=1.0e-6
+    planes, npoints, amplitudes, grid_mode, bounds=None, shift_zero=1.0e-6
 ):
     """
     Return a grid configuration based on user input parameters, the ordering
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
     Scalar inputs can be used for 1D grid
     """
-    ndims = len(np.atleast_1d(axes))
+    ndims = len(np.atleast_1d(planes))
     if ndims > 2 or ndims == 0:
-        raise AtError("axes can have 1 or 2 element (1D or 2D aperture)")
+        raise AtError("planes can have 1 or 2 element (1D or 2D aperture)")
     elif ndims == 1 and grid_mode is GridMode.RADIAL:
         grid_mode = GridMode.CARTESIAN
 
     if np.shape(np.atleast_1d(npoints)) != (ndims,):
-        raise AtError("npoints shape should be (len(axes),)")
+        raise AtError("npoints shape should be (len(planes),)")
     if np.shape(np.atleast_1d(amplitudes)) != (ndims,):
-        raise AtError("amplitudes shape should be (len(axes),)")
+        raise AtError("amplitudes shape should be (len(planes),)")
     if np.shape(np.atleast_2d(bounds)) != (ndims, 2) and bounds is not None:
-        raise AtError("bounds shape should be (len(axes),2)")
+        raise AtError("bounds shape should be (len(planes),2)")
 
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
@@ -104,7 +104,7 @@ def grid_configuration(
     else:
         raise AtError("GridMode {0} undefined.".format(grid_mode))
 
-    config = grid_config(axes, amplitudes, npoints, bounds, grid_mode, shift_zero)
+    config = grid_config(planes, amplitudes, npoints, bounds, grid_mode, shift_zero)
     return config
 
 
@@ -130,7 +130,7 @@ def get_parts(config, offset):
         g2r = amp[1] * np.sin(g2) * g1
         return np.array([g1r.flatten(), g2r.flatten()])
 
-    pind = config.axesi
+    pind = config.planesi
     amp = config.amplitudes
     npt = config.shape
     bnd = config.bounds
@@ -342,7 +342,7 @@ def grid_boundary_search(
             data_ff = floodfill(
                 _ringrot,
                 nturns=nturns,
-                planes=config.axes,
+                planes=config.planes,
                 amplitudes=config.amplitudes,
                 bounds=config.bounds,
                 npoints=config.shape,
@@ -426,7 +426,7 @@ def recursive_boundary_search(
     Recursively search for the boundary in a given axis and direction (angle)
     """
 
-    def search_boundary(axesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs):
+    def search_boundary(planesi, angles, rtol, rsteps, nturns, offset, use_mp, **kwargs):
         ftol = min(rtol / rsteps)
         cs = np.squeeze([np.cos(angles), np.sin(angles)])
         cs = np.around(cs, decimals=9)
@@ -437,41 +437,41 @@ def recursive_boundary_search(
         mask = np.array([])
 
         while np.any(survived):
-            for i, pi in enumerate(axesi):
+            for i, pi in enumerate(planesi):
                 part[pi, survived] += cs[i, survived] * rsteps[i] * fact[survived]
             istracked = np.array(
                 [
                     not np.any([np.allclose(p, g, rtol=1.0e-9) for g in grid.T])
-                    for p in part[axesi].T
+                    for p in part[planesi].T
                 ]
             )
             survived = np.array(
                 [
                     np.any([np.allclose(p, m, rtol=1.0e-9) for m in mask.T])
-                    for p in part[axesi].T
+                    for p in part[planesi].T
                 ]
             )
             pt = part[:, istracked]
-            grid = np.hstack([grid, pt[axesi]]) if grid.size else pt[axesi]
+            grid = np.hstack([grid, pt[planesi]]) if grid.size else pt[planesi]
             ptmp = (pt.T + offset).T
             survived[istracked] = get_survived(ptmp, newring, nturns, use_mp, **kwargs)
             pm = part[:, np.logical_and(istracked, survived)]
-            mask = np.hstack([mask, pm[axesi]]) if mask.size else pm[axesi]
+            mask = np.hstack([mask, pm[planesi]]) if mask.size else pm[planesi]
             for i in range(len(angles)):
                 if not survived[i] and fact[i] > ftol:
                     deltas = cs[:, i] * rsteps[:] * min(1, 2 * fact[i])
-                    if np.any(abs(deltas) > abs(part[axesi, i])):
-                        part[axesi, i] = np.zeros(len(axesi))
+                    if np.any(abs(deltas) > abs(part[planesi, i])):
+                        part[planesi, i] = np.zeros(len(planesi))
                     else:
-                        for j, pi in enumerate(axesi):
+                        for j, pi in enumerate(planesi):
                             part[pi, i] -= deltas[j]
                     survived[i] = True
                     fact[i] *= 1 / divider
 
-        for i, pi in enumerate(axesi):
+        for i, pi in enumerate(planesi):
             part[pi] -= cs[i] * rsteps[i] * fact
 
-        p = np.squeeze(part[axesi])
+        p = np.squeeze(part[planesi])
         return p, mask, grid
 
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
@@ -510,7 +510,7 @@ def recursive_boundary_search(
 
     t0 = time.time()
     result = search_boundary(
-        config.axesi, angles, rtol, rstep, nturns, offset, use_mp, **kwargs
+        config.planesi, angles, rtol, rstep, nturns, offset, use_mp, **kwargs
     )
     if verbose:
         print("Calculation took {0}".format(time.time() - t0))

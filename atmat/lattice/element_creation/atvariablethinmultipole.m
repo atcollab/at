@@ -20,8 +20,9 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    FREQUENCYB     Frequency of SINE excitation for PolynomB
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
+%    SINMIN         Sine function min limit. Default -1.1
+%    SINMAX         Sine function max limit. Default +1.1
 %    MAXORDER       Order of the multipole for a scalar amplitude
-%    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
 %    PERIODIC       If true (default) the user input kick list is repeated
@@ -50,15 +51,20 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 % % Create a white noise dipole excitation of amplitude 0.1 mrad
 % >> atvariablethinmultipole('ACM','WHITENOISE','AmplitudeB',1.e-4);
+%
+% % Create a half-sine function
+% >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmin',0)
+%
+% % Create a sine saturation
+% >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmax',0.9)
 
 % Input parser for option
 
 [modename, rsrc] = getargs(varargin,'SINE', ...
                    'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
 [modename, rsrc] = getoption(rsrc,'ModeName',modename);
-if ~any(strcmpi(modename,{'SINE','WHITENOISE','ARBITRARY'}))
-  error("ModeName should be 'SINE', 'WHITENOISE' or 'ARBITRARY'");
-end
+modename = char(modename);
+[~, rsrc] = getoption(rsrc,'Mode',2); % remove Mode, the element is set by ModeName
 [method,rsrc]   = getargs(rsrc,'VariableThinMPolePass', ...
                   'check',@(arg) (ischar(arg) || isstring(arg)) && endsWith(arg,'Pass'));
 [method,rsrc]   = getoption(rsrc,'PassMethod',method);
@@ -93,6 +99,19 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         if ~isfield(rsrc,funcarg)
             rsrc.(funcarg) = 0;
         end
+        funcarg="Sinmin";
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = -1.1;
+        end
+        funcarg="Sinmax";
+        if ~isfield(rsrc,funcarg)
+            rsrc.(funcarg) = 1.1;
+        end
+
+    end
+
+    function rsrc = setwhitenoise(rsrc, ~)
+    % it will later implement a buffer
     end
 
     function rsrc = setarb(rsrc, ab)
@@ -107,11 +126,11 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         amplarg=strcat('Amplitude',ab);
         if isfield(rsrc,amplarg)
             switch modename
-                case "SINE"
+                case 'SINE'
                     rsrc = setsine(rsrc,ab);
-                case "ARBITRARY"
+                case 'ARBITRARY'
                     rsrc = setarb(rsrc,ab);
-                case "WHITENOISE"
+                case 'WHITENOISE'
                     rsrc = setwhitenoise(rsrc,ab);
             end
         end

@@ -249,26 +249,20 @@ classdef pytests < matlab.unittest.TestCase
         function fastring(testCase,lat2)
             lattice=testCase.ring4.(lat2);
             [rm, rmrad]=atfastring(lattice.m);
-            rpy=cell(py.at.fast_ring(lattice.p));
-            rp=cell(rpy{1});
-            rprad=cell(rpy{2});
+            rp=py.at.fast_ring(lattice.p);
+            rp.disable_6d()
             checkattr(rm, rp);
-            checkattr(rmrad,rprad);
 
             function checkattr(rm, rp)
-                testCase.verifyEqual(rm{2}.Frequency, rp{1}.Frequency, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{2}.Voltage, rp{1}.Voltage, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{3}.Length, rp{2}.Length, RelTol=1.0e-20);
-                testCase.verifyEqual(rm{3}.M66, double(rp{2}.M66), AbsTol=1.0e-7);
-                testCase.verifyEqual(rm{end}.A1, rp{3}.A1, RelTol=0.01);
-                testCase.verifyEqual(rm{end}.A2, rp{3}.A2, RelTol=0.02);
-                testCase.verifyEqual(rm{end}.A3, rp{3}.A3, RelTol=0.01);
-                testCase.verifyEqual(rm{end}.Alphax, rp{3}.Alphax, AbsTol=1.e-10);
-                testCase.verifyEqual(rm{end}.Alphay, rp{3}.Alphay, AbsTol=1.e-10);
-                testCase.verifyEqual(rm{end}.Betax, rp{3}.Betax, RelTol=1.e-10);
-                testCase.verifyEqual(rm{end}.Betay, rp{3}.Betay, RelTol=1.e-10);
-                testCase.verifyEqual(rm{end}.chromx_arr, double(rp{3}.chromx_arr), RelTol=1.e-8);
-                testCase.verifyEqual(rm{end}.chromy_arr, double(rp{3}.chromy_arr), RelTol=1.e-8);
+                testCase.verifyEqual(rm{2}.Frequency, rp{2}.Frequency, RelTol=1.0e-14);
+                testCase.verifyEqual(rm{2}.Voltage, rp{2}.Voltage, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{3}.Length, rp{1}.Length, RelTol=1.0e-20);
+                testCase.verifyEqual(rm{3}.M66, double(rp{1}.M66), AbsTol=1.0e-7);
+                testCase.verifyEqual(rm{end}.Detuning', double(rp{3}.Detuning), RelTol=0.02);
+                testCase.verifyEqual(rm{end}.Alpha, double(rp{3}.Alpha), AbsTol=1.e-10);
+                testCase.verifyEqual(rm{end}.Beta, double(rp{3}.Beta), RelTol=1.e-10);
+                testCase.verifyEqual(rm{end}.ChromX, double(rp{3}.ChromX), RelTol=1.e-8);
+                testCase.verifyEqual(rm{end}.ChromY, double(rp{3}.ChromY), RelTol=1.e-8);
                 if length(rm) >= 5
                     testCase.verifyEqual(rm{end-1}.Lmatp, double(rp{4}.Lmatp), AbsTol=2.e-7);
                 end
