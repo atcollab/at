@@ -1,8 +1,8 @@
+#define CURVATURE_IN_B0
 #include "atconstants.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "kick_kn.h"  /* kick */
-#define CURVATURE_IN_B0
 
 /* Straight dipole w/ multipole using Symplectic Integration and rotation at
  * dipole faces.
@@ -155,11 +155,11 @@ void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, do
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
 				ladrift6(r6,L1);
-			    kick(r6, A, B, max_order, K1, 0.0);
+			    kick(r6, A, B, max_order, K1, irho);
 				ladrift6(r6,L2);
-			    kick(r6, A, B, max_order, K2, 0.0);
+			    kick(r6, A, B, max_order, K2, irho);
 				ladrift6(r6,L2);
-				kick(r6, A, B, max_order, K1, 0.0);
+				kick(r6, A, B, max_order, K1, irho);
 				ladrift6(r6,L1);
 			}
             /* Rotate and translate back to curvilinear coordinate */
