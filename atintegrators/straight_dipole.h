@@ -35,6 +35,7 @@
     Yrot(r6, exit_angle, bdiff);
 #endif /*MAGNET_EXIT*/
 
+#ifndef MAGNET_ARGUMENTS
 #define MAGNET_ARGUMENTS \
     double BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error(); \
     double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error(); \
@@ -46,7 +47,9 @@
     double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0.0); check_error(); \
     double X0ref=atGetOptionalDouble(ElemData,"X0ref", 0.0); check_error(); \
     double RefDZ=atGetOptionalDouble(ElemData,"RefDZ", 0.0); check_error();
+#endif /*MAGNET_ARGUMENTS*/
 
+#ifndef MAGNET_ITEMS
 #define MAGNET_ITEMS \
     Elem->BendingAngle=BendingAngle; \
     Elem->EntranceAngle=EntranceAngle; \
@@ -57,6 +60,7 @@
     Elem->gK_exit=FullGap*FringeInt2; \
     Elem->X0ref=X0ref; \
     Elem->RefDZ=RefDZ;
+#endif /*MAGNET_ITEMS*/
 
 #ifdef MATLAB_MEX_FILE
 #define MAGNET_MEX_ITEMS \
