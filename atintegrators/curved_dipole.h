@@ -43,6 +43,7 @@
     }
 #endif /*MAGNET_EXIT*/
 
+#ifndef MAGNET_ARGUMENTS
 #define MAGNET_ARGUMENTS \
     double BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error(); \
     double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error(); \
@@ -52,7 +53,9 @@
     double FullGap=atGetOptionalDouble(ElemData,"FullGap",0.0); check_error(); \
     double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0.0); check_error(); \
     double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0.0); check_error();
+#endif /*MAGNET_ARGUMENTS*/
 
+#ifndef MAGNET_ITEMS
 #define MAGNET_ITEMS \
     Elem->BendingAngle=BendingAngle; \
     Elem->EntranceAngle=EntranceAngle; \
@@ -61,6 +64,7 @@
     Elem->FringeBendExit=FringeBendExit; \
     Elem->gK_entrance=FullGap*FringeInt1; \
     Elem->gK_exit=FullGap*FringeInt2;
+#endif /*MAGNET_ITEMS*/
 
 #ifdef MATLAB_MEX_FILE
 #define MAGNET_MEX_ITEMS \
