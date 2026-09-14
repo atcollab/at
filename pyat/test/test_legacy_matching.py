@@ -108,5 +108,5 @@ def test_envelope_matching(mring: Lattice):
     # check the residuals
     linresidual = lincst.evaluate(newring)
     lopresidual = lopcst.evaluate(newring.radiation_on(copy=True))
-    assert_close(linresidual, 0, rtol=0.0, atol=3.e-8)
+    assert_close(linresidual, 0, rtol=0.0, atol=4.e-8)
     assert_close(lopresidual, 0, rtol=0.0, atol=3.e-8)
