@@ -8,7 +8,6 @@
 #define INTEGRATOR(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     if (num_int_steps == 0) { \
         DRIFT(r6, slength, irho, bdiff); \
-        FIX_LENGTH(slength); \
     } \
     else { \
         integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff); \
