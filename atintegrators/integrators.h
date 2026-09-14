@@ -20,14 +20,6 @@
 #define KICK kick
 #endif
 
-#ifdef RADIATION
-#define KICK_(r6, A, B, max_order, length, irho, rad_const, diff_const, bdiff) \
-    KICK(r6, A, B, max_order, length, irho, rad_const, diff_const, bdiff)
-#else
-#define KICK_(r6, A, B, max_order, length, irho, rad_const, diff_const, bdiff) \
-    KICK(r6, A, B, max_order, length, irho)
-#endif
-
 #ifndef INTEGRATOR_PREFIX
 #define INTEGRATOR_PREFIX
 #endif
@@ -40,10 +32,6 @@
 #define INTEGRATOR integrator
 #endif
 
-#ifndef FIX_LENGTH
-#define FIX_LENGTH(length)
-#endif
-
 #if defined(INTEGRATOR_4)
 
 #define INTEGRATOR_STEPS(sl) \
@@ -54,15 +42,15 @@
 
 #define integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */ \
-        INTEGRATOR_PREFIX \
+        INTEGRATOR_PREFIX; \
         DRIFT(r6, ID1, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID2, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID2, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID1, irho, bdiff); \
-        INTEGRATOR_SUFFIX \
+        INTEGRATOR_SUFFIX; \
     }
 
 #elif defined(INTEGRATOR_6)
@@ -79,23 +67,23 @@
 
 #define integrator(r6, num_int_steps, slength, irho, A, B, max_order, rad_const, diff_const, bdiff) \
     for (int m = 0; m < num_int_steps; m++) { /* Loop over slices */ \
-        INTEGRATOR_PREFIX \
+        INTEGRATOR_PREFIX; \
         DRIFT(r6, ID1, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID2, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID3, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID4, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK4, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK4, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID4, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK3, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID3, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK2, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID2, irho, bdiff); \
-        KICK_(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
+        KICK(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID1, irho, bdiff); \
-        INTEGRATOR_SUFFIX \
+        INTEGRATOR_SUFFIX; \
     }
 
 #endif /*INTEGRATOR_4*/
