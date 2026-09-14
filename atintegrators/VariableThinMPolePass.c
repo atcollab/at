@@ -143,7 +143,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            kick(r6, pola, polb, maxorder, 1.0, 0.0);
+            kick(r6, pola, polb, maxorder, 1.0);
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
