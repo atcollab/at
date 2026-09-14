@@ -10,6 +10,10 @@
     }
 #endif
 
+#ifndef FIX_LENGTH
+#define FIX_LENGTH(length)
+#endif
+
 struct elem
 {
     double Length;
@@ -123,7 +127,10 @@ static void magnet(double *r, double le, double bending_angle,
             MAGNET_ENTRY
 
             /* Integrator */
-            INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff)
+            INTEGRATOR(r6, num_int_steps, SL, irho, A, B, max_order, rad_const, diff_const, bdiff);
+
+            /* Compensate for absolute path length if necessary */
+            FIX_LENGTH(le+refdz);
 
             /* Exit face*/
             MAGNET_EXIT
