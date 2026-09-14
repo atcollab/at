@@ -63,8 +63,7 @@
         KICK_(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID1, irho, bdiff); \
         INTEGRATOR_SUFFIX \
-    } \
-    FIX_LENGTH(le+refdz);
+    }
 
 #elif defined(INTEGRATOR_6)
 
@@ -97,7 +96,6 @@
         KICK_(r6, A, B, max_order, IK1, irho, rad_const, diff_const, bdiff); \
         DRIFT(r6, ID1, irho, bdiff); \
         INTEGRATOR_SUFFIX \
-    } \
-    FIX_LENGTH(le+refdz);
+    }
 
 #endif /*INTEGRATOR_4*/
