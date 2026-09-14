@@ -158,7 +158,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         MAGNET_ARGUMENTS
         /*optional fields*/
         #if defined(RADIATION) || defined(QUANTUM)
@@ -166,6 +165,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         #else
         double Energy=0.0;
         #endif
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -255,9 +255,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         MAGNET_ARGUMENTS
         /*optional fields*/
+        int NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", DEFAULT_NUM_INT_STEPS); check_error();
         double Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         int FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error(); \
         int FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
@@ -312,19 +312,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     } else if (nrhs == 0) {
         /* list of required fields */
         int i0 = 0;
-        plhs[0] = mxCreateCellMatrix(5+N_REQUIRED, 1);
+        plhs[0] = mxCreateCellMatrix(4+N_REQUIRED, 1);
         mxSetCell(plhs[0], i0++, mxCreateString("Length"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
         mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
         mxSetCell(plhs[0], i0++, mxCreateString("MaxOrder"));
-        mxSetCell(plhs[0], i0++, mxCreateString("NumIntSteps"));
         for (int i=0; i<N_REQUIRED; i++)
             mxSetCell(plhs[0], i0++, mxCreateString(required[i]));
         if (nlhs>1) {    /* list of optional fields */
             int i1 = 0;
-            plhs[1] = mxCreateCellMatrix(11+N_OPTIONAL, 1);
+            plhs[1] = mxCreateCellMatrix(12+N_OPTIONAL, 1);
             for (int i=0; i<N_OPTIONAL; i++)
                 mxSetCell(plhs[1], i1++, mxCreateString(optional[i]));
+            mxSetCell(plhs[0], i1++, mxCreateString("NumIntSteps"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1], i1++, mxCreateString("FringeQuadExit"));
             mxSetCell(plhs[1], i1++, mxCreateString("fringeIntM0"));
