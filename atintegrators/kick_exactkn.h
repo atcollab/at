@@ -33,13 +33,21 @@ static double B2perp(double bx, double by, double x, double xpr, double y, doubl
 
 static void kick(double *r6, const double *A, const double *B, int max_order,
                  double L, double irho, double rad_const, double diff_const, double *bdiff)
-#else
+
+#elif defined CURVATURE_IN_B0
 
 #define KICK(r6, A, B, max_order, length, irho, rad_const, diff_const, bdiff) \
     kick(r6, A, B, max_order, length, irho)
 
 static void kick(double *r6, const double *A, const double *B, int max_order,
                  double L, double irho)
+#else
+
+#define KICK(r6, A, B, max_order, length, irho, rad_const, diff_const, bdiff) \
+    kick(r6, A, B, max_order, length)
+
+static void kick(double *r6, const double *A, const double *B, int max_order,
+                 double L)
 #endif /* RADIATION */
 {
 /* clang-format off */
