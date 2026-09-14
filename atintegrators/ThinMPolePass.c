@@ -46,7 +46,7 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            kick(r6, A, B, max_order, 1.0, 0.0);
+            kick(r6, A, B, max_order, 1.0);
             r6[1] += bax*r6[4];
             r6[3] -= bay*r6[4];
             r6[5] -= bax*r6[0]-bay*r6[2]; /* Path lenghtening */
