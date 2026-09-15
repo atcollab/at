@@ -176,7 +176,6 @@ class VariableThinMultipole(Element):
             if self.Mode == ACMode.INTERPOLATION_TABLE:
                 self._set_interpolate(ab, **kwargs)
 
-
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop("Frequency" + ab, 0)
         phase = kwargs.pop("Phase" + ab, 0)
@@ -196,15 +195,16 @@ class VariableThinMultipole(Element):
 
     def _set_interpolate(self, ab, **kwargs):
         interpolate = kwargs.get("Func" + ab)
-        assert (np.shape(interpolate) >= (2,2)), \
-                "Func" + ab + "requires at least two points to interpolate."
+        assert np.shape(interpolate) >= (2, 2), (
+            "Func" + ab + "requires at least two points to interpolate."
+        )
         _, nsamp = np.shape(interpolate)
-        tsort = interpolate[0,:]
-        idxsort = np.argsort(interpolate[0,:])
+        tsort = interpolate[0, :]
+        idxsort = np.argsort(interpolate[0, :])
         if ~np.all(np.diff(idxsort) == 1):
             warn(UserWarning("Time is not sorted. It will be rearanged."), stacklevel=2)
-            tsort = np.sort(interpolate[0,:])
+            tsort = np.sort(interpolate[0, :])
         assert tsort[-1] > 0, "Zero time cannot be interpolated"
         setattr(self, "Tinterpolate" + ab, tsort)
-        setattr(self, "Finterpolate" + ab, interpolate[1,:])
+        setattr(self, "Finterpolate" + ab, interpolate[1, :])
         setattr(self, "NSamples" + ab, nsamp)
