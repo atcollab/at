@@ -99,12 +99,12 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
        titp = elem->Tinterpolate;
        fitp = elem->Finterpolate;
        if (periodic){
-         while (t < 0){t = t+titp[nsamples-1];};
+         while (t < titp[0]){t = t+titp[nsamples-1];};
          t = fmod(t, titp[nsamples-1]);
        };
        idx = binarySearch(titp , t, nsamples, 0, 0);
        /* checking if t is outside the range of titp */
-       if (t < 0){
+       if (t < titp[0]){
          val = fitp[0];
        }else if(t > titp[nsamples-1]){
          val = fitp[nsamples-1];
