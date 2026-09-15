@@ -17,7 +17,7 @@ class ACMode(IntEnum):
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
-    INTERPOLATE = 3
+    INTERPOLATION_TABLE = 3
 
 
 class VariableThinMultipole(Element):
@@ -61,6 +61,7 @@ class VariableThinMultipole(Element):
               * :py:attr:`at.ACMode.SINE`: sine function
               * :py:attr:`at.ACMode.WHITENOISE`: gaussian white noise
               * :py:attr:`at.ACMode.ARBITRARY`: user defined turn-by-turn kick list
+              * :py:attr:`at.ACMode.INTERPOLATION_TABLE`: linear interpolation from user curve
 
         Keyword Arguments:
             AmplitudeA(list,float): Amplitude of the excitation for PolynomA.
@@ -102,6 +103,8 @@ class VariableThinMultipole(Element):
             ...     "ACMPOLE", at.ACMode.WHITENOISE, AmplitudeB=amp, ... )
             >>> acmpole = at.VariableThinMultipole(
             ...     "ACMPOLE", at.ACMode.ARBITRARY, AmplitudeB=amp, FuncB=fun, ... )
+            >>> fvst = at.VariableThinMultipole(
+            ...     "FvsT", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=amp, FuncB=func, ...)
 
         .. note::
 
@@ -110,6 +113,9 @@ class VariableThinMultipole(Element):
               ``Amplitude(A,B)`` has to be provided
             * For ``mode=at.ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
               ``Amplitude(A,B)`` has to be provided
+            * For ``mode=at.ACMode.INTERPOLATION_TABLE`` the ``Fnc(A,B)`` corresponding to the
+              ``Amplitude(A,B)`` needs to be of shape (2, n) with n >= 2. The first row
+              is time in seconds, and the second row is the function value.
         """
 
         def _default_amplitudes(ampa, ampb):
@@ -167,7 +173,7 @@ class VariableThinMultipole(Element):
                 self._set_sine(ab, **kwargs)
             if self.Mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
-            if self.Mode == ACMode.INTERPOLATE:
+            if self.Mode == ACMode.INTERPOLATION_TABLE:
                 self._set_interpolate(ab, **kwargs)
 
 
