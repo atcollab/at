@@ -7,7 +7,7 @@ from __future__ import annotations
 __all__ = ["load_m", "load_mat", "load_var", "save_m", "save_mat"]
 
 import sys
-from collections.abc import Generator, Sequence, Mapping, Iterator, Iterable
+from collections.abc import Generator, Iterable, Iterator, Mapping, Sequence
 from math import isfinite
 from pathlib import Path
 from typing import Any
@@ -18,9 +18,11 @@ import numpy as np
 import scipy.io
 
 # imports necessary in 'globals()' for 'eval'
-from numpy import array  # noqa: F401
+from numpy import (
+    array,  # noqa: F401
+    uint8,  # noqa: F401
+)
 from numpy import nan as NaN  # noqa: F401
-from numpy import uint8  # noqa: F401
 
 from ..lattice import (
     AtError,
@@ -37,9 +39,9 @@ from .utils import (
     _CLASS_MAP,
     RingParam,
     _drop_attrs,
+    element_from_dict,
     keep_elements,
     split_ignoring_parentheses,
-    element_from_dict,
 )
 
 # Translation of RingParam attributes
@@ -317,6 +319,26 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     matcls = line[:left].strip()[2:]
     build_attrs = _CLASS_MAP[matcls]._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
+    if (
+        matcls == "insertiondevicekickmap"
+        and len(arguments) >= 12
+        and arguments[1].endswith("Pass'")
+        and not all(arg.startswith(("'", '"')) for arg in arguments[2::2])
+    ):
+        build_attrs = [
+            "FamName",
+            "PassMethod",
+            "Filename_in",
+            "Normalization_energy",
+            "Nslice",
+            "Length",
+            "xkick",
+            "ykick",
+            "xkick1",
+            "ykick1",
+            "xtable",
+            "ytable",
+        ]
     ll = len(build_attrs)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
