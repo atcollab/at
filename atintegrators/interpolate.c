@@ -16,6 +16,9 @@
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
+    if (nStep > 200){
+       return pivot;
+    };
     if ((upper-lower)<=1){
         return lower;
     };
