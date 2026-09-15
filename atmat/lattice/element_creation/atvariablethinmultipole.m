@@ -9,7 +9,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    FNAME          Family name
 %
 %  OPTIONS (order does not matter)
-%    MODENAME       'SINE', 'WHITENOISE' or 'ARBITRARY'.
+%    MODENAME       'SINE', 'WHITENOISE', 'ARBITRARY' or 'INTERPOLATION_TABLE'
 %                   Default: 'SINE'
 %    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
@@ -41,8 +41,10 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    required.
 %    2. For SINE excitation modes the FREQUENCY corresponding to the input
 %    AMPLITUDE is required
-%    3. For ARBITRARY excitation modes the FUNC corresponding to the input
+%    3. For ARBITRARY excitation mode the FUNC corresponding to the input
 %    AMPLITUDE is required
+%    4. For INTERPOLATION_TABLE mode the FUNC needs to be of size (2, n) with n>=2.
+%    The first row is time in seconds, while the second row is the amplitude
 %
 %  EXAMPLES
 %
@@ -57,6 +59,9 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 % % Create a sine saturation
 % >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmax',0.9)
+%
+% % Create a triangular kick from amplitude versus time
+% >> atvariablethinmultipole('FvsT', 'INTERPOLATION_TABLE','AmplitudeA=1e-3, 'Func',[0 1; -1 1])
 
 % Input parser for option
 
@@ -110,8 +115,26 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
 
     end
 
-    function rsrc = setwhitenoise(rsrc, ~)
-    % it will later implement a buffer
+    function rsrc = setinterpolate(rsrc, ab)
+        funcarg=strcat('Func',ab);
+        if ~isfield(rsrc,funcarg)
+            error(strcat('Please provide a value for Func',ab))
+        end
+        if ~all(size(rsrc.(funcarg)) >= [2,2])
+            error("Function needs at least two points.")
+        end
+        func = rsrc.(funcarg);
+        tsort = func(1,:);
+        if ~issorted(tsort)
+          tsort = sort(tsort);
+          warning("Time has been sorted.")
+        end
+        if ~(tsort(end) >0)
+          error("Zero time cannot be interpolated.");
+        end
+        rsrc.(strcat("Tinterpolate",ab)) = tsort;
+        rsrc.(strcat("Finterpolate",ab)) = func(2,:);
+        rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
     end
 
     function rsrc = setarb(rsrc, ab)
@@ -130,8 +153,8 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
                     rsrc = setsine(rsrc,ab);
                 case 'ARBITRARY'
                     rsrc = setarb(rsrc,ab);
-                case 'WHITENOISE'
-                    rsrc = setwhitenoise(rsrc,ab);
+                case 'INTERPOLATION_TABLE'
+                    rsrc = setinterpolate(rsrc,ab);
             end
         end
     end
