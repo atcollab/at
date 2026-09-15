@@ -11,13 +11,15 @@
 */
 
 #include "at.h"
+#include "atelem.c"
 #include <math.h>
 
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if (nStep > 200){
-       return pivot;
+       atWarning("Maximum number of calls reached in binarySearch."); check_error();
+       return -1;
     };
     if ((upper-lower)<=1){
         return lower;
