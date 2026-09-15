@@ -66,7 +66,8 @@ function elem=atvariablethinmultipole(fname,varargin)
 % Input parser for option
 
 [modename, rsrc] = getargs(varargin,'SINE', ...
-                   'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
+                   'check',@(arg) any(strcmpi(arg, ...
+                   {'SINE','WHITENOISE','ARBITRARY','INTERPOLATION_TABLE'})));
 [modename, rsrc] = getoption(rsrc,'ModeName',modename);
 modename = char(modename);
 [~, rsrc] = getoption(rsrc,'Mode',2); % remove Mode, the element is set by ModeName
@@ -86,7 +87,7 @@ rsrc = setparams(rsrc,modename,'A');
 rsrc = setparams(rsrc,modename,'B');
 rsrc = setmaxorder(rsrc);
 
-m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
+m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2,'INTERPOLATION_TABLE',3);
 
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
