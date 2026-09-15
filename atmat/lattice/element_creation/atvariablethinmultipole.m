@@ -132,7 +132,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
           tsort = sort(tsort);
           warning("Time has been sorted.")
         end
-        if ~(tsort(end) >0)
+        if ~((tsort(end)-tsort(1)) >0)
           error("Zero time cannot be interpolated.");
         end
         rsrc.(strcat("Tinterpolate",ab)) = tsort;
