@@ -11,14 +11,13 @@
 */
 
 #include "at.h"
-#include "atelem.c"
 #include <math.h>
 
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if (nStep > 200){
-       atWarning("Maximum number of calls reached in binarySearch."); check_error();
+       printf("Warning: binarySearch could not converge, -1 returned.");
        return -1;
     };
     if ((upper-lower)<=1){
