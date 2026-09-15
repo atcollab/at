@@ -204,7 +204,7 @@ class VariableThinMultipole(Element):
         if ~np.all(np.diff(idxsort) == 1):
             warn(UserWarning("Time is not sorted. It will be rearanged."), stacklevel=2)
             tsort = np.sort(interpolate[0, :])
-        assert tsort[-1] > 0, "Zero time cannot be interpolated"
+        assert (tsort[-1] - tsort[0]) > 0, "Zero time cannot be interpolated"
         setattr(self, "Tinterpolate" + ab, tsort)
         setattr(self, "Finterpolate" + ab, interpolate[1, :])
         setattr(self, "NSamples" + ab, nsamp)
