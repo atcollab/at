@@ -17,7 +17,7 @@
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if (nStep > 200){
-       printf("Warning: binarySearch could not converge, -1 returned.");
+       printf("Warning: binarySearch could not converge, -1 returned.\n");
        return -1;
     };
     if ((upper-lower)<=1){
