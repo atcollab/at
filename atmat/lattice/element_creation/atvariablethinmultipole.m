@@ -45,6 +45,8 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    AMPLITUDE is required
 %    4. For INTERPOLATION_TABLE mode the FUNC needs to be of size (2, n) with n>=2.
 %    The first row is time in seconds, while the second row is the amplitude
+%    If the periodic is false, the function is considered to be constant outside
+%    the time interval, using the first value for time < 0 and the last for time > tmax.
 %
 %  EXAMPLES
 %
