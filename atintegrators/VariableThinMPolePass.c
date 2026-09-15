@@ -8,6 +8,8 @@
 #include "atlalib.c"
 #include "atrandom.c"
 #include "driftkick.c"
+#include "interpolate.c"
+#include <math.h>
 
 struct elemab {
     double* Amplitude;
@@ -16,6 +18,8 @@ struct elemab {
     double Sinmin, Sinmax;
     int NSamples;
     double* Func;
+    double* Finterpolate;
+    double* Tinterpolate;
 };
 
 struct elem {
@@ -60,9 +64,12 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
     int idx;
-    double ampt, freq, ph, sinval, val;
+    double ampt, freq, ph, val;
     double* func;
     double* amp = elem->Amplitude;
+    double* titp;
+    double* fitp;
+    int nsamples = elem->NSamples;
     if (!amp) {
         return 0.0;
     }
@@ -71,23 +78,40 @@ double get_pol(struct elemab* elem, double* ramps, int mode,
     case 0:
         freq = elem->Frequency;
         ph = elem->Phase;
-        sinval = sin(TWOPI * freq * t + ph);
-        if (sinval < elem->Sinmin) sinval = elem->Sinmin;
-        if (sinval > elem->Sinmax) sinval = elem->Sinmax;
-        ampt *= sinval;
+        val = sin(TWOPI * freq * t + ph);
+        if (val < elem->Sinmin) val = elem->Sinmin;
+        if (val > elem->Sinmax) val = elem->Sinmax;
+        ampt *= val;
         return ampt;
     case 1:
         ampt *= atrandn_r(rng, 0, 1);
         return ampt;
     case 2:
-        if (periodic || turn < elem->NSamples) {
+        if (periodic || turn < nsamples) {
             func = elem->Func;
-            idx = turn % elem->NSamples;
+            idx = turn % nsamples;
             ampt *= func[idx];
             return ampt;
         } else {
             return 0.0;
         }
+    case 3:
+       titp = elem->Tinterpolate;
+       fitp = elem->Finterpolate;
+       if (periodic){
+         while (t < titp[0]){t = t+titp[nsamples-1];};
+         t = fmod(t, titp[nsamples-1]);
+       };
+       idx = binarySearch(titp , t, nsamples, 0, 0);
+       /* checking if t is outside the range of titp */
+       if (t < titp[0]){
+         val = fitp[0];
+       }else if(t > titp[nsamples-1]){
+         val = fitp[nsamples-1];
+       }else{
+         val = interpolTable(fitp, titp, t, idx);
+       };
+       return ampt *= val;
     default:
         return 0.0;
     }
@@ -100,6 +124,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     int i, c;
     double* r6;
     double t = t0 * turn;
+    double tpart;
 
     int maxorder = Elem->MaxOrder;
     int periodic = Elem->Periodic;
@@ -121,23 +146,36 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
 
-    if (mode != 0) {
+    /* mode 0 : sin function */
+    /* mode 1 : random value applied to all particles */
+    /* mode 2 : custom function */
+    /* mode 3 : interpolate */
+
+    if (mode == 1) {
         for (i = 0; i < maxorder + 1; i++) {
-            pola[i] = get_pol(ElemA, ramps, mode, t, turn, i, periodic, rng);
-            polb[i] = get_pol(ElemB, ramps, mode, t, turn, i, periodic, rng);
+            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, i, periodic, rng);
+            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, i, periodic, rng);
         };
     };
 
     for (c = 0; c < num_particles; c++) {
         r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
-            if (mode == 0) {
-                double tpart = t + r6[5] / C0;
+            if (mode == 0 || mode == 3) {
+                tpart = t + r6[5] / C0;
                 for (i = 0; i < maxorder + 1; i++) {
                     pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
                     polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
                 };
             };
+            if (mode == 2) {
+                tpart = r6[5] / C0;
+                for (i = 0; i < maxorder + 1; i++) {
+                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+                };
+            };
+
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
@@ -167,6 +205,8 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
+        double *FinterpolateA, *FinterpolateB;
+        double *TinterpolateA, *TinterpolateB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
@@ -194,6 +234,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        FinterpolateA=atGetOptionalDoubleArray(ElemData,"FinterpolateA"); check_error();
+        FinterpolateB=atGetOptionalDoubleArray(ElemData,"FinterpolateB"); check_error();
+        TinterpolateA=atGetOptionalDoubleArray(ElemData,"TinterpolateA"); check_error();
+        TinterpolateB=atGetOptionalDoubleArray(ElemData,"TinterpolateB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         ElemA = (struct elemab*)atMalloc(sizeof(struct elemab));
@@ -228,6 +272,10 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
+        ElemA->Finterpolate = FinterpolateA;
+        ElemB->Finterpolate = FinterpolateB;
+        ElemA->Tinterpolate = TinterpolateA;
+        ElemB->Tinterpolate = TinterpolateB;
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
     }
@@ -252,6 +300,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
+        double *FinterpolateA, *FinterpolateB;
+        double *TinterpolateA, *TinterpolateB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
@@ -276,11 +326,15 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Sinmin=atGetOptionalDouble(ElemData,"Sinmin", -1.1); check_error();
         Sinmax=atGetOptionalDouble(ElemData,"Sinmax", 1.1); check_error();
-        Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
-        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
+        Ramps=atGetOptionalDoubleArray(ElemData,"Ramps"); check_error();
+        NSamplesA=atGetOptionalLong(ElemData,"NSamplesA", 0); check_error();
+        NSamplesB=atGetOptionalLong(ElemData,"NSamplesB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        FinterpolateA=atGetOptionalDoubleArray(ElemData,"FinterpolateA"); check_error();
+        FinterpolateB=atGetOptionalDoubleArray(ElemData,"FinterpolateB"); check_error();
+        TinterpolateA=atGetOptionalDoubleArray(ElemData,"TinterpolateA"); check_error();
+        TinterpolateB=atGetOptionalDoubleArray(ElemData,"TinterpolateB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
@@ -312,6 +366,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->NSamples = NSamplesB;
         ElemA->Func = FuncA;
         ElemB->Func = FuncB;
+        ElemA->Finterpolate = FinterpolateA;
+        ElemB->Finterpolate = FinterpolateB;
+        ElemA->Tinterpolate = TinterpolateA;
+        ElemB->Tinterpolate = TinterpolateB;
         Elem->ElemA = ElemA;
         Elem->ElemB = ElemB;
         /* ALLOCATE memory for the output array of the same size as the input  */
@@ -327,7 +385,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(20, 1);
+            plhs[1] = mxCreateCellMatrix(24, 1);
             mxSetCell(plhs[1], 0, mxCreateString("AmplitudeA"));
             mxSetCell(plhs[1], 1, mxCreateString("AmplitudeB"));
             mxSetCell(plhs[1], 2, mxCreateString("FrequencyA"));
@@ -337,17 +395,21 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
             mxSetCell(plhs[1], 6, mxCreateString("Ramps"));
             mxSetCell(plhs[1], 7, mxCreateString("FuncA"));
             mxSetCell(plhs[1], 8, mxCreateString("FuncB"));
-            mxSetCell(plhs[1], 9, mxCreateString("NSamplesA"));
-            mxSetCell(plhs[1], 10, mxCreateString("NSamplesB"));
-            mxSetCell(plhs[1], 11, mxCreateString("Periodic"));
-            mxSetCell(plhs[1], 12, mxCreateString("T1"));
-            mxSetCell(plhs[1], 13, mxCreateString("T2"));
-            mxSetCell(plhs[1], 14, mxCreateString("R1"));
-            mxSetCell(plhs[1], 15, mxCreateString("R2"));
-            mxSetCell(plhs[1], 16, mxCreateString("RApertures"));
-            mxSetCell(plhs[1], 17, mxCreateString("EApertures"));
-            mxSetCell(plhs[1], 18, mxCreateString("Sinmin"));
-            mxSetCell(plhs[1], 19, mxCreateString("Sinmax"));
+            mxSetCell(plhs[1], 9, mxCreateString("FinterpolateA"));
+            mxSetCell(plhs[1], 10, mxCreateString("FinterpolateB"));
+            mxSetCell(plhs[1], 11, mxCreateString("TinterpolateA"));
+            mxSetCell(plhs[1], 12, mxCreateString("TinterpolateB"));
+            mxSetCell(plhs[1], 13, mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1], 14, mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1], 15, mxCreateString("Periodic"));
+            mxSetCell(plhs[1], 16, mxCreateString("T1"));
+            mxSetCell(plhs[1], 17, mxCreateString("T2"));
+            mxSetCell(plhs[1], 18, mxCreateString("R1"));
+            mxSetCell(plhs[1], 19, mxCreateString("R2"));
+            mxSetCell(plhs[1], 20, mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 21, mxCreateString("EApertures"));
+            mxSetCell(plhs[1], 22, mxCreateString("Sinmin"));
+            mxSetCell(plhs[1], 23, mxCreateString("Sinmax"));
         }
     } else {
         mexErrMsgIdAndTxt("AT:WrongArg", "Needs 0 or 2 arguments");
