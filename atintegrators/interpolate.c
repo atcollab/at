@@ -35,9 +35,9 @@ int binarySearch(double *array,double value,int upper,int lower,int nStep){
 };
 
 
-/* interpolTable returns the linear interpolation of x(t+dt) using index and index+1 */
-double interpolTable(double *x, double *t, double dt, int index){
-    double w = x[index] + (dt-t[index]) * (x[index+1]-x[index]) / (t[index+1]-t[index]);
+/* interpolTable returns the linear interpolation of x(t0) using index and index+1 */
+double interpolTable(double *x, double *t, double t0, int index){
+    double w = x[index] + (t0-t[index]) * (x[index+1]-x[index]) / (t[index+1]-t[index]);
     if(atIsNaN(w)){
         return 0;
     }else{
