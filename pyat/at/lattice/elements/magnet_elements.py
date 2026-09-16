@@ -42,19 +42,20 @@ __all__ = [
     "Wiggler",
 ]
 
-import contextlib
 import warnings
 from collections.abc import Generator, Callable
-from math import tan, atan
 from typing import Any
+import contextlib
+from warnings import warn
+from math import tan, atan
 
 import numpy as np
 
-from .abstract_elements import Radiative, _Radiative
-from .basic_elements import LongElement
-from .conversions import _float, _array
-from .element_object import Element
 from ..exceptions import AtError, AtWarning
+from .conversions import _float, _array
+from .abstract_elements import Radiative, _Radiative
+from .element_object import Element
+from .basic_elements import LongElement
 
 # AtWarning from this module should always be issued (not only on the first occurrence)
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
@@ -277,7 +278,7 @@ class ThinMultipole(Element):
                 raise ValueError(msg)
             if ordp > lmin:
                 msg = f"Some values of {key} are truncated by MaxOrder={lmin}"
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                warn(AtWarning(msg), stacklevel=2)
         elif key == "MaxOrder":
             intval = int(value)
             lens, ords = zip(*(ck(k) for k in polys), strict=True)
@@ -286,7 +287,7 @@ class ThinMultipole(Element):
                 raise ValueError(msg)
             if intval < max(ords):
                 msg = f"Some values are truncated by MaxOrder={intval}"
-                warnings.warn(AtWarning(msg), stacklevel=2)
+                warn(AtWarning(msg), stacklevel=2)
         super().__setattr__(key, value)
 
     # noinspection PyPep8Naming
@@ -381,22 +382,16 @@ class ThinMultipole(Element):
     )
 
     @property
-    def HKick(self) -> float:
-        """Integrated horizontal momentum kick."""
-        return -self.Kn0L
+    def KickAngle(self) -> np.ndarray:
+        """Deviation angles (H, V)."""
+        return np.atan([-self.Kn0L, self.Ks0L])
 
-    @HKick.setter
-    def HKick(self, value: float) -> None:
-        self.Kn0L = -value
+    @KickAngle.setter
+    def KickAngle(self, value) -> None:
+        kicks = np.tan(value)
+        self.Kn0L = -kicks[0]
+        self.Ks0L = kicks[1]
 
-    @property
-    def VKick(self) -> float:
-        """Integrated vertical momentum kick."""
-        return self.Ks0L
-
-    @VKick.setter
-    def VKick(self, value: float) -> None:
-        self.Ks0L = value
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
@@ -429,7 +424,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
@@ -548,7 +542,7 @@ class Dipole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=0:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps:        Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
@@ -642,7 +636,7 @@ class Quadrupole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=1:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps :       Number of integration steps
             FringeQuadEntrance: 0: no fringe field effect (default)
 
               1: Lee-Whiting's thin lens limit formula
@@ -683,7 +677,7 @@ class Sextupole(Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder:           Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps:        Number of integration steps
             FieldScaling:       Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -743,24 +737,6 @@ class Corrector(LongElement):
 
     @Ks0L.setter
     def Ks0L(self, value: float) -> None:
-        self.KickAngle[1] = atan(value)
-
-    @property
-    def HKick(self) -> float:
-        """Integrated horizontal momentum kick."""
-        return tan(self.KickAngle[0])
-
-    @HKick.setter
-    def HKick(self, value: float) -> None:
-        self.KickAngle[0] = atan(value)
-
-    @property
-    def VKick(self) -> float:
-        """Integrated vertical momentum kick."""
-        return tan(self.KickAngle[1])
-
-    @VKick.setter
-    def VKick(self, value: float) -> None:
         self.KickAngle[1] = atan(value)
 
 

@@ -148,7 +148,6 @@ def test_multipole():
     m = elements.Multipole("multi", 1.0, [], [0.0, 0.0, 0.0, 0.0])
     assert m.Length == 1.0
     assert m.MaxOrder == 3
-    assert m.NumIntSteps == 10
     assert m.PassMethod == "StrMPoleSymplectic4Pass"
 
 
