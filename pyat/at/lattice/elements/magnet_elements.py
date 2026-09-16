@@ -392,6 +392,23 @@ class ThinMultipole(Element):
         self.Kn0L = -kicks[0]
         self.Ks0L = kicks[1]
 
+    @property
+    def HKick(self) -> float:
+        """Horizontal deviation angle."""
+        return -self.Kn0L
+
+    @HKick.setter
+    def HKick(self, value: float) -> None:
+        self.Kn0L = -value
+
+    @property
+    def VKick(self) -> float:
+        """Vertical deviation angle."""
+        return self.Ks0L
+
+    @VKick.setter
+    def VKick(self, value: float) -> None:
+        self.Ks0L = value
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
@@ -737,6 +754,24 @@ class Corrector(LongElement):
 
     @Ks0L.setter
     def Ks0L(self, value: float) -> None:
+        self.KickAngle[1] = atan(value)
+
+    @property
+    def HKick(self) -> float:
+        """Horizontal deviation angle."""
+        return tan(self.KickAngle[0])
+
+    @HKick.setter
+    def HKick(self, value: float) -> None:
+        self.KickAngle[0] = atan(value)
+
+    @property
+    def VKick(self) -> float:
+        """Vertical deviation angle."""
+        return tan(self.KickAngle[1])
+
+    @VKick.setter
+    def VKick(self, value: float) -> None:
         self.KickAngle[1] = atan(value)
 
 
