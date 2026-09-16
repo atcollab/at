@@ -357,43 +357,28 @@ def split_ignoring_parentheses(
 
     Example: "l=0,hom(4,0.0,0)" -> ["l=0", "hom(4,0.0,0)"]
     """
-    if fence == ("\\(", "\\)"):
-        parts = []
-        start = 0
-        depth = 0
-        quote = None
-        splits = 0
-        index = 0
-        while index < len(string):
-            char = string[index]
-            if quote is not None:
-                if char == quote and (
-                    index == 0 or string[index - 1] != "\\"
-                ):
-                    quote = None
-            elif char in {"'", '"'}:
-                quote = char
-            elif char == "(":
-                depth += 1
-            elif char == ")":
-                depth -= 1
-            elif (
-                depth == 0
-                and string.startswith(delimiter, index)
-                and (maxsplit < 0 or splits < maxsplit)
-            ):
-                parts.append(string[start:index])
-                index += len(delimiter)
-                start = index
-                splits += 1
-                continue
-            index += 1
-        parts.append(string[start:])
-        return parts
+    substituted = string
+    protected = []
+    level = 0
+    while True:
+        placeholder = f"{_plh}_{level}_"
+        while placeholder in string:
+            placeholder += "_"
+        updated, matches = protect(
+            substituted,
+            fence=fence,
+            placeholder=placeholder,
+        )
+        if not matches[1]:
+            break
+        substituted = updated
+        protected.append(matches)
+        level += 1
 
-    substituted, matches = protect(string, fence=fence)
     parts = substituted.split(delimiter, maxsplit=maxsplit)
-    return restore(matches, *parts)
+    for matches in reversed(protected):
+        parts = restore(matches, *parts)
+    return parts
 
 
 def protect(
