@@ -25,8 +25,8 @@ struct elemab {
 struct elem {
     double* PolynomA;
     double* PolynomB;
-    struct elemab* ElemA;
-    struct elemab* ElemB;
+    struct elemab ElemA;
+    struct elemab ElemB;
     int Mode;
     int MaxOrder;
     double* Ramps;
@@ -127,8 +127,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     int maxorder = Elem->MaxOrder;
     int periodic = Elem->Periodic;
     int mode = Elem->Mode;
-    struct elemab* ElemA = Elem->ElemA;
-    struct elemab* ElemB = Elem->ElemB;
+    struct elemab* ElemA = &(Elem->ElemA);
+    struct elemab* ElemB = &(Elem->ElemB);
     double* ramps = Elem->Ramps;
 
 
@@ -207,7 +207,9 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
-        struct elemab *ElemA, *ElemB;
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        struct elemab* ElemA = &(Elem->ElemA);
+        struct elemab* ElemB = &(Elem->ElemB);
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -236,9 +238,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         TinterpolateA=atGetOptionalDoubleArray(ElemData,"TinterpolateA"); check_error();
         TinterpolateB=atGetOptionalDoubleArray(ElemData,"TinterpolateB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
-        Elem = (struct elem*)atMalloc(sizeof(struct elem));
-        ElemA = (struct elemab*)atMalloc(sizeof(struct elemab));
-        ElemB = (struct elemab*)atMalloc(sizeof(struct elemab));
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -269,8 +268,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         ElemB->Finterpolate = FinterpolateB;
         ElemA->Tinterpolate = TinterpolateA;
         ElemB->Tinterpolate = TinterpolateB;
-        Elem->ElemA = ElemA;
-        Elem->ElemB = ElemB;
     }
     double t0 = Param->T0;
     int turn = Param->nturn;
@@ -298,9 +295,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
-        struct elemab ElA, *ElemA = &ElA;
-        struct elemab ElB, *ElemB = &ElB;
         struct elem El, *Elem = &El;
+        struct elemab* ElemA = &(Elem->ElemA);
+        struct elemab* ElemB = &(Elem->ElemB);
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -359,8 +356,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         ElemB->Finterpolate = FinterpolateB;
         ElemA->Tinterpolate = TinterpolateA;
         ElemB->Tinterpolate = TinterpolateB;
-        Elem->ElemA = ElemA;
-        Elem->ElemB = ElemB;
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
