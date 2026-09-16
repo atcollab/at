@@ -196,11 +196,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
+        NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 10); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
@@ -273,11 +273,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
+        NumIntSteps=atGetOptionalLong(ElemData,"NumIntSteps", 10); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
         Scaling=atGetOptionalDouble(ElemData,"FieldScaling",1.0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
@@ -305,7 +305,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             Scaling, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(8,1);
+        plhs[0] = mxCreateCellMatrix(7,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
         mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
         mxSetCell(plhs[0],2,mxCreateString("EntranceAngle"));
@@ -313,23 +313,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],4,mxCreateString("PolynomA"));
         mxSetCell(plhs[0],5,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],6,mxCreateString("MaxOrder"));
-        mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
 
         if (nlhs>1) {    /* list of optional fields */
-	        plhs[1] = mxCreateCellMatrix(13,1);
-            mxSetCell(plhs[1],0,mxCreateString("FullGap"));
-            mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
-            mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
-            mxSetCell(plhs[1],3,mxCreateString("X0ref"));
-            mxSetCell(plhs[1],4,mxCreateString("ByError"));
-            mxSetCell(plhs[1],5,mxCreateString("RefDZ"));
-            mxSetCell(plhs[1],6,mxCreateString("T1"));
-            mxSetCell(plhs[1],7,mxCreateString("T2"));
-            mxSetCell(plhs[1],8,mxCreateString("R1"));
-            mxSetCell(plhs[1],9,mxCreateString("R2"));
-            mxSetCell(plhs[1],10,mxCreateString("RApertures"));
-            mxSetCell(plhs[1],11,mxCreateString("EApertures"));
-            mxSetCell(plhs[1],12,mxCreateString("FieldScaling"));
+	        plhs[1] = mxCreateCellMatrix(14,1);
+            mxSetCell(plhs[1],0,mxCreateString("NumIntSteps"));
+            mxSetCell(plhs[1],1,mxCreateString("FullGap"));
+            mxSetCell(plhs[1],2,mxCreateString("FringeInt1"));
+            mxSetCell(plhs[1],3,mxCreateString("FringeInt2"));
+            mxSetCell(plhs[1],4,mxCreateString("X0ref"));
+            mxSetCell(plhs[1],5,mxCreateString("ByError"));
+            mxSetCell(plhs[1],6,mxCreateString("RefDZ"));
+            mxSetCell(plhs[1],7,mxCreateString("T1"));
+            mxSetCell(plhs[1],8,mxCreateString("T2"));
+            mxSetCell(plhs[1],9,mxCreateString("R1"));
+            mxSetCell(plhs[1],10,mxCreateString("R2"));
+            mxSetCell(plhs[1],11,mxCreateString("RApertures"));
+            mxSetCell(plhs[1],12,mxCreateString("EApertures"));
+            mxSetCell(plhs[1],13,mxCreateString("FieldScaling"));
         }
     }
     else {
