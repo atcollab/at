@@ -10,11 +10,9 @@ void ChangePRefPass(double *r_in, double scaling, int num_particles)
    r_in:    6-by-N matrix of initial conditions reshaped into 1-d array of 6*N elements
 */
 {
-    int c;
-
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) \
-    default(none) shared(r_in, num_particles, scaling ) private(c)
-    for (c = 0; c<num_particles; c++) { /*Loop over particles  */
+    default(none) shared(r_in, num_particles, scaling)
+    for (int c = 0; c<num_particles; c++) { /*Loop over particles  */
         double *r6 = r_in + 6*c;
         if (!atIsNaN(r6[0])) {
             ATChangePRef(r6, scaling);

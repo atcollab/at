@@ -1,7 +1,10 @@
 static void thinkickM(const double *r6, const double *A, const double *B, int max_order,
-                      double L, double *bdiff)
+                      double L, double irho, double *bdiff)
 /* Calculate the symplectic (no radiation) transfer matrix of a
    thin multipole kick near the entrance point r6
+   For elements with straight coordinate system irho = 0
+   For curved elements the B polynomial (PolynomB in MATLAB)
+   MUST NOT include the guide field  By0 = irho * E0 /(c*e)
 */
 {
   double M66[36];
@@ -30,6 +33,9 @@ static void thinkickM(const double *r6, const double *A, const double *B, int ma
   M66[13] = L * ImSumN;       /* [1, 2] */
   M66[3] = L * ImSumN;        /* [3, 0] */
   M66[15] = L * ReSumN;       /* [3, 2] */
+  M66[25] = L * irho;         /* [1, 4] */
+  M66[1] -= L * irho * irho; /* [1, 0] */
+  M66[5] = L * irho;          /* [5, 0] */
 
   ATsandwichmmt(M66, bdiff);
 }

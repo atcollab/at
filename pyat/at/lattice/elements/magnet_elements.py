@@ -139,7 +139,7 @@ class ThinMultipole(Element):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*Element._BUILD_ATTRIBUTES, "PolynomA", "PolynomB"]
-    _conversions = dict(Element._conversions, K=float, H=float)
+    _conversions = dict(Element._conversions, K=float, H=float, FieldScaling=float)
     _stacklevel = 4  # Stacklevel for warnings
 
     # Instance attributes
@@ -243,14 +243,20 @@ class ThinMultipole(Element):
         deforder = max(getattr(self, "DefaultOrder", 0), len_a - 1, len_b - 1)
         # Remove MaxOrder
         maxorder = int(kwargs.pop("MaxOrder", deforder))
-        kwargs.setdefault("PassMethod", "ThinMPolePass")
-        super().__init__(family_name, **kwargs)
+        # Set the minimum attributes
+        super().__init__(
+            family_name,
+            Length=kwargs.pop("Length", 0),
+            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass")
+        )
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
         # Adjust polynom lengths and set them
         len_ab = max(maxorder, deforder) + 1
         self.PolynomA = np.pad(prmpola, (0, len_ab - len_a))
         self.PolynomB = np.pad(prmpolb, (0, len_ab - len_b))
+        # Set the rest of attributes
+        self.update(kwargs)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB."""
@@ -375,6 +381,34 @@ class ThinMultipole(Element):
         "Integrated strength of the main field component.",
     )
 
+    @property
+    def KickAngle(self) -> np.ndarray:
+        """Deviation angles (H, V)."""
+        return np.atan([-self.Kn0L, self.Ks0L])
+
+    @KickAngle.setter
+    def KickAngle(self, value) -> None:
+        kicks = np.tan(value)
+        self.Kn0L = -kicks[0]
+        self.Ks0L = kicks[1]
+
+    @property
+    def HKick(self) -> float:
+        """Horizontal deviation angle."""
+        return -self.Kn0L
+
+    @HKick.setter
+    def HKick(self, value: float) -> None:
+        self.Kn0L = -value
+
+    @property
+    def VKick(self) -> float:
+        """Vertical deviation angle."""
+        return self.Ks0L
+
+    @VKick.setter
+    def VKick(self, value: float) -> None:
+        self.Ks0L = value
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
@@ -401,14 +435,12 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
             MaxOrder:       Number of desired multipoles. Default: highest
               index of non-zero polynomial coefficients
             NumIntSteps:    Number of integration steps (default: 10)
-            KickAngle:      Correction deviation angles (H, V)
             FieldScaling:   Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
@@ -527,7 +559,7 @@ class Dipole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=0:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps:        Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
@@ -545,7 +577,6 @@ class Dipole(Radiative, Multipole):
             FringeQuadExit:     See *FringeQuadEntrance*
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
-            KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
 
         Available PassMethods: :ref:`BndMPoleSymplectic4Pass`,
@@ -622,7 +653,7 @@ class Quadrupole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=1:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps :       Number of integration steps
             FringeQuadEntrance: 0: no fringe field effect (default)
 
               1: Lee-Whiting's thin lens limit formula
@@ -631,7 +662,6 @@ class Quadrupole(Radiative, Multipole):
             FringeQuadExit:     See ``FringeQuadEntrance``
             fringeIntM0:        Integrals for FringeQuad method 2
             fringeIntP0:
-            KickAngle:          Correction deviation angles (H, V)
             FieldScaling:       Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -664,8 +694,7 @@ class Sextupole(Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder:           Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
-            KickAngle:          Correction deviation angles (H, V)
+            NumIntSteps:        Number of integration steps
             FieldScaling:       Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -725,6 +754,24 @@ class Corrector(LongElement):
 
     @Ks0L.setter
     def Ks0L(self, value: float) -> None:
+        self.KickAngle[1] = atan(value)
+
+    @property
+    def HKick(self) -> float:
+        """Horizontal deviation angle."""
+        return tan(self.KickAngle[0])
+
+    @HKick.setter
+    def HKick(self, value: float) -> None:
+        self.KickAngle[0] = atan(value)
+
+    @property
+    def VKick(self) -> float:
+        """Vertical deviation angle."""
+        return tan(self.KickAngle[1])
+
+    @VKick.setter
+    def VKick(self, value: float) -> None:
         self.KickAngle[1] = atan(value)
 
 
