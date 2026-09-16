@@ -7,7 +7,7 @@ from warnings import warn
 
 import numpy as np
 
-from .conversions import _anyarray, _array
+from .conversions import _array
 from .element_object import Element
 
 
@@ -38,8 +38,8 @@ class VariableThinMultipole(Element):
         Sinmax=float,
         NSamplesA=int,
         NSamplesB=int,
-        FuncA=_anyarray,
-        FuncB=_anyarray,
+        FuncA=lambda v: _array(v, (2, -1)),
+        FuncB=lambda v: _array(v, (2, -1)),
         FinterpolateA=_array,
         FinterpolateB=_array,
         TinterpolateA=_array,
