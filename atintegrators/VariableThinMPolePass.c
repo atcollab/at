@@ -58,20 +58,16 @@ double get_amp(double amp, double* ramps, double t)
     return ampt;
 }
 
-double get_pol(struct elemab* elem, double* ramps, int mode,
+double get_val(struct elemab* elem, double* ramps, int mode,
     double t, int turn, int order, int periodic, pcg32_random_t* rng)
 {
     int idx;
     double ampt, freq, ph, val;
     double* func;
-    double* amp = elem->Amplitude;
     double* titp;
     double* fitp;
     int nsamples = elem->NSamples;
-    if (!amp) {
-        return 0.0;
-    }
-    ampt = get_amp(amp[order], ramps, turn);
+    ampt = get_amp(1.0, ramps, turn);
     switch (mode) {
     case 0:
         freq = elem->Frequency;
@@ -123,6 +119,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     double* r6;
     double t = t0 * turn;
     double tpart;
+    double vala, valb;
 
     int maxorder = Elem->MaxOrder;
     int periodic = Elem->Periodic;
@@ -146,33 +143,40 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     double *pola = (double *) atMalloc((maxorder+1)*sizeof(double));
     double *polb = (double *) atMalloc((maxorder+1)*sizeof(double));
 
+    // initialize pola and polb
+    for (i = 0; i < maxorder + 1; i++){
+      pola[i] = 0;
+      polb[i] = 0;
+    };
+
     /* mode 0 : sin function */
     /* mode 1 : random value applied to all particles */
     /* mode 2 : custom function */
     /* mode 3 : interpolate */
 
     if (mode == 1) {
-        for (i = 0; i < maxorder + 1; i++) {
-            pola[i] = get_pol(ElemA, ramps, mode, 0, turn, i, periodic, rng);
-            polb[i] = get_pol(ElemB, ramps, mode, 0, turn, i, periodic, rng);
+        if (ElemA->Amplitude){
+            vala = get_val(ElemA, ramps, mode, 0, turn, i, periodic, rng);
+            for (i = 0; i < maxorder + 1; i++) pola[i] = vala * ElemA->Amplitude[i];
+        };
+        if (ElemB->Amplitude){
+            valb = get_val(ElemB, ramps, mode, 0, turn, i, periodic, rng);
+            for (i = 0; i < maxorder + 1; i++) polb[i] = valb * ElemB->Amplitude[i];
         };
     };
 
     for (c = 0; c < num_particles; c++) {
         r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
-            if (mode == 0 || mode == 3) {
-                tpart = t + r6[5] / C0;
-                for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+            if (mode != 1){
+                tpart = t*(mode == 0) + t*(mode == 3) + r6[5] / C0;
+                if (ElemA->Amplitude){
+                    vala = get_val(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    for (i = 0; i < maxorder + 1; i++) pola[i]=vala*ElemA->Amplitude[i];
                 };
-            };
-            if (mode == 2) {
-                tpart = r6[5] / C0;
-                for (i = 0; i < maxorder + 1; i++) {
-                    pola[i] = get_pol(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
-                    polb[i] = get_pol(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+                if (ElemB->Amplitude){
+                    valb = get_val(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+                    for (i = 0; i < maxorder + 1; i++) polb[i]=valb*ElemB->Amplitude[i];
                 };
             };
 
