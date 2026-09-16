@@ -207,9 +207,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
         double Sinmin, Sinmax;
-        Elem = (struct elem*)atMalloc(sizeof(struct elem));
-        struct elemab* ElemA = &(Elem->ElemA);
-        struct elemab* ElemB = &(Elem->ElemB);
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -238,6 +235,9 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         TinterpolateA=atGetOptionalDoubleArray(ElemData,"TinterpolateA"); check_error();
         TinterpolateB=atGetOptionalDoubleArray(ElemData,"TinterpolateB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        struct elemab* ElemA = &(Elem->ElemA);
+        struct elemab* ElemB = &(Elem->ElemB);
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
