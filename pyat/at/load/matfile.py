@@ -319,26 +319,6 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     matcls = line[:left].strip()[2:]
     build_attrs = _CLASS_MAP[matcls]._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
-    if (
-        matcls == "insertiondevicekickmap"
-        and len(arguments) >= 12
-        and arguments[1].endswith("Pass'")
-        and not all(arg.startswith(("'", '"')) for arg in arguments[2::2])
-    ):
-        build_attrs = [
-            "FamName",
-            "PassMethod",
-            "Filename_in",
-            "Normalization_energy",
-            "Nslice",
-            "Length",
-            "xkick",
-            "ykick",
-            "xkick1",
-            "ykick1",
-            "xtable",
-            "ytable",
-        ]
     ll = len(build_attrs)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
