@@ -25,8 +25,6 @@ struct elemab {
 struct elem {
     double* PolynomA;
     double* PolynomB;
-    double* PolynomAstart;
-    double* PolynomBstart;
     struct elemab* ElemA;
     struct elemab* ElemB;
     int Mode;
@@ -128,8 +126,6 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
 
     int maxorder = Elem->MaxOrder;
     int periodic = Elem->Periodic;
-    double* pola = Elem->PolynomA;
-    double* polb = Elem->PolynomB;
     int mode = Elem->Mode;
     struct elemab* ElemA = Elem->ElemA;
     struct elemab* ElemB = Elem->ElemB;
@@ -145,6 +141,10 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     // apertures
     double *RApertures = Elem->RApertures;
     double *EApertures = Elem->EApertures;
+
+    // create thread safe polynoms. Each thread will allocate and free pola and polb
+    double *pola = (double *) atMalloc((maxorder+1)*sizeof(double));
+    double *polb = (double *) atMalloc((maxorder+1)*sizeof(double));
 
     /* mode 0 : sin function */
     /* mode 1 : random value applied to all particles */
@@ -189,11 +189,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         }
     }
 
-    /* restore polynoms to initial value. */
-    for (i = 0; i < maxorder + 1; i++) {
-        pola[i] = Elem->PolynomAstart[i];
-        polb[i] = Elem->PolynomBstart[i];
-    }
+    atFree(pola);
+    atFree(polb);
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -250,10 +247,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->RApertures=RApertures;
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
-        Elem->PolynomAstart = (double *) atMalloc(sizeof(double *));
-        Elem->PolynomBstart = (double *) atMalloc(sizeof(double *));
-        memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
-        memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
@@ -338,10 +331,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem->PolynomA = PolynomA;
         Elem->PolynomB = PolynomB;
-        Elem->PolynomAstart = (double *) atMalloc(sizeof(double *));
-        Elem->PolynomBstart = (double *) atMalloc(sizeof(double *));
-        memcpy(Elem->PolynomAstart, Elem->PolynomA, (MaxOrder+1)*sizeof(double));
-        memcpy(Elem->PolynomBstart, Elem->PolynomB, (MaxOrder+1)*sizeof(double));
         Elem->Ramps = Ramps;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
