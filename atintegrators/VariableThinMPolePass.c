@@ -173,7 +173,6 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
                     for (i = 0; i < maxorder + 1; i++) polb[i]=valb*ElemB->Amplitude[i];
                 };
             };
-
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
