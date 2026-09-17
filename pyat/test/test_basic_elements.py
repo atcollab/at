@@ -600,6 +600,9 @@ def test_variable_thin_multipole(rin, func):
     )
     expected = v.track(np.array([0, 0, 0, 0, 0, 0.125 * 299792458]))
     np.testing.assert_equal(expected[3], 0.0007071067811865476)
+    v = elements.VariableThinMultipole("v", at.ACMode.WHITENOISE, AmplitudeA=1e-3)
+    expected = v.track(np.zeros(6))
+    np.testing.assert_equal(expected[0], 0)
     f = np.array([[-1, 0, 1, 2], [2, 1, 0, 1]])
     v = elements.VariableThinMultipole(
         "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
