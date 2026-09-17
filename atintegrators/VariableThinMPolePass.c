@@ -94,13 +94,13 @@ double get_val(struct elemab* elem, double* ramps, int mode,
          while (t < titp[0]){t = t+titp[nsamples-1];};
          t = fmod(t, titp[nsamples-1]);
        };
-       idx = binarySearch(titp , t, nsamples, 0, 0);
        /* checking if t is outside the range of titp */
        if (t < titp[0]){
          val = fitp[0];
        }else if(t > titp[nsamples-1]){
          val = fitp[nsamples-1];
        }else{
+         idx = binarySearch(titp , t, nsamples, 0, 0);
          val = interpolTable(fitp, titp, t, idx);
        };
        return ampt *= val;
