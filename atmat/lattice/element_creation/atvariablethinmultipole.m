@@ -126,17 +126,28 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         if ~all(size(rsrc.(funcarg)) >= [2,2])
             error("Function needs at least two points.")
         end
+        if any(isnan(rsrc.(funcarg)),'all')
+            error("Function has NAN values.")
+        end
+        if any(isinf(rsrc.(funcarg)),'all')
+            error("Function has inf values.")
+        end
         func = rsrc.(funcarg);
         tsort = func(1,:);
+        if length(tsort) ~= length(unique(tsort))
+            error("Time array has repeated elements.")
+        end
+        fsort = func(2,:);
         if ~issorted(tsort)
-          tsort = sort(tsort);
+          [tsort, idx] = sort(tsort);
+          fsort = fsort(idx);
           warning("Time has been sorted.")
         end
         if ~((tsort(end)-tsort(1)) >0)
           error("Zero time cannot be interpolated.");
         end
         rsrc.(strcat("Tinterpolate",ab)) = tsort;
-        rsrc.(strcat("Finterpolate",ab)) = func(2,:);
+        rsrc.(strcat("Finterpolate",ab)) = fsort;
         rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
     end
 
