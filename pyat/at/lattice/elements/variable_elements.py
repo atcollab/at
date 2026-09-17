@@ -198,9 +198,13 @@ class VariableThinMultipole(Element):
         assert np.shape(interpolate) >= (2, 2), (
             "Func" + ab + "requires at least two points to interpolate."
         )
+        assert ~np.any(np.isnan(interpolate)), "Function has nan values."
+        assert ~np.any(np.isinf(interpolate)), "Function has inf values."
         _, nsamp = np.shape(interpolate)
         tsort = interpolate[0, :]
+        assert len(tsort) == len(np.unique(tsort)), "Time array has repeated elements."
         idxsort = np.argsort(interpolate[0, :])
+        fsort = interpolate[1, :]
         if ~np.all(np.diff(idxsort) == 1):
             warn(UserWarning("Time is not sorted. It will be rearanged."), stacklevel=2)
             tsort = interpolate[0, idxsort]
