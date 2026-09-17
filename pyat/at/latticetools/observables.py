@@ -66,8 +66,9 @@ from typing import ClassVar, Any
 
 import numpy as np
 import numpy.typing as npt
+import warnings
 
-from ..lattice import AtError, AxisDef, axis_, plane_
+from ..lattice import AtError, AxisDef, axis_, plane_, AtWarning
 from ..lattice import Lattice, Refpts, End
 
 RefIndex = int | tuple[int, ...] | slice
@@ -525,6 +526,9 @@ class Observable:
         if vnow is None:
             deviation = None
         elif self.target is None:
+            msg = (f"Target for observable {self.name} is None,"
+                   "this observable is therefore excluded from correction")
+            warnings.warn(AtWarning(msg))
             deviation = np.broadcast_to(0.0, vnow.shape)
         else:
             vsh = vnow.shape
