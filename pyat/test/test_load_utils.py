@@ -249,7 +249,9 @@ def test_sanitise_class_error(elem_kwargs):
         ["a,b(c,d)", ",", ["a", "b(c,d)"]],
         ["l=0,hom(4,0.0,0)", ",", ["l=0", "hom(4,0.0,0)"]],
         ["inv(arca_c1r),3*(ms,arca_c2)", ",",
-         ["inv(arca_c1r)", "3*(ms,arca_c2)"]]
+         ["inv(arca_c1r)", "3*(ms,arca_c2)"]],
+        ["a,struct('b',struct('c',1))", ",",
+         ["a", "struct('b',struct('c',1))"]],
     ],
 )
 def test_split_ignoring_parentheses(string, delimiter, target):
