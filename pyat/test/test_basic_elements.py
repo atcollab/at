@@ -394,7 +394,8 @@ def test_dipole_bend_synonym(rin, dipole_class, func):
 def test_marker(rin, func):
     m = elements.Marker("marker")
     assert m.Length == 0
-    rin = np.array(np.random.rand(*rin.shape), order="F")
+    rng = np.random.default_rng()
+    rin = np.array(rng.random(rin.shape), order="F")
     rin_orig = np.array(rin, copy=True, order="F")
     if func == element_track:
         func(m, rin, in_place=True)
@@ -407,7 +408,8 @@ def test_marker(rin, func):
 def test_monitor(rin, func):
     mon = elements.Monitor("monitor")
     assert mon.Length == 0
-    rin = np.array(np.random.rand(*rin.shape), order="F")
+    rng = np.random.default_rng()
+    rin = np.array(rng.random(rin.shape), order="F")
     rin_orig = rin.copy()
     if func == element_track:
         func(mon, rin, in_place=True)
@@ -542,7 +544,8 @@ def test_rfcavity(rin: np.ndarray, func: any) -> None:
 @pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
 @pytest.mark.parametrize("n", (0, 1, 2, 3, 4, 5))
 def test_m66(rin, n, func):
-    m = np.random.rand(6, 6)
+    rng = np.random.default_rng()
+    m = rng.random((6, 6))
     m66 = elements.M66("m66", m)
     assert m66.Length == 0
     rin[n, 0] = 1e-6
