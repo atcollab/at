@@ -1,8 +1,10 @@
 import warnings
 
+import at
 import numpy as np
 import pytest
 from at import (
+    AtWarning,
     element_pass,
     element_track,
     elements,
@@ -11,7 +13,6 @@ from at import (
     lattice,
     lattice_pass,
     lattice_track,
-    AtWarning,
 )
 from at.lattice.elements.conversions import _array, _array66
 
@@ -97,7 +98,9 @@ def test_quadrupole():
     assert len(q.PolynomA) == 3
     assert q.K == 0.0
     with pytest.warns(AtWarning):
-        q = elements.Quadrupole("quadrupole", 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1)
+        q = elements.Quadrupole(
+            "quadrupole", 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1
+        )
     assert q.MaxOrder == 1
     assert len(q.PolynomA) == 3
     assert q.K == 0.5
@@ -585,6 +588,21 @@ def test_wiggler(rin, func):
     else:
         func(c, rin, energy=3e9)
     np.testing.assert_allclose(rin, expected, atol=1e-12)
+
+
+@pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
+def test_variable_thin_multipole(rin, func):
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.SINE, AmplitudeA=1e-3, FrequencyA=1, PhaseA=2 * np.pi / 4
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.125 * 299792458]))
+    np.testing.assert_equal(expected[3], 0.0007071067811865476)
+    f = np.array([[-1, 0, 1, 2], [2, 1, 0, 1]])
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, 0.5 * 299792458]))
+    np.testing.assert_equal(expected[3], 0.5e-3)
 
 
 def test_exit_entrance():
