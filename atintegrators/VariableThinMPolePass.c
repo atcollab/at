@@ -23,8 +23,6 @@ struct elemab {
 };
 
 struct elem {
-    double* PolynomA;
-    double* PolynomB;
     struct elemab ElemA;
     struct elemab ElemB;
     int Mode;
@@ -197,7 +195,7 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
     if (!Elem) {
         int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
-        double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
+        double *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double *FinterpolateA, *FinterpolateB;
         double *TinterpolateA, *TinterpolateB;
@@ -212,8 +210,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
-        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         AmplitudeA=atGetOptionalDoubleArray(ElemData,"AmplitudeA"); check_error();
         AmplitudeB=atGetOptionalDoubleArray(ElemData,"AmplitudeB"); check_error();
         FrequencyA=atGetOptionalDouble(ElemData,"FrequencyA", 0); check_error();
@@ -241,8 +237,6 @@ ExportMode struct elem* trackFunction(const atElem* ElemData, struct elem* Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
-        Elem->PolynomA = PolynomA;
-        Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
@@ -285,7 +279,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         int num_particles = mxGetN(prhs[1]);
         int MaxOrder, Mode, NSamplesA, NSamplesB, Periodic;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
-        double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
+        double *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double *FinterpolateA, *FinterpolateB;
         double *TinterpolateA, *TinterpolateB;
@@ -303,8 +297,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
-        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
         AmplitudeA=atGetOptionalDoubleArray(ElemData,"AmplitudeA"); check_error();
         AmplitudeB=atGetOptionalDoubleArray(ElemData,"AmplitudeB"); check_error();
         FrequencyA=atGetOptionalDouble(ElemData,"FrequencyA", 0); check_error();
@@ -323,8 +315,6 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         TinterpolateA=atGetOptionalDoubleArray(ElemData,"TinterpolateA"); check_error();
         TinterpolateB=atGetOptionalDoubleArray(ElemData,"TinterpolateB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
-        Elem->PolynomA = PolynomA;
-        Elem->PolynomB = PolynomB;
         Elem->Ramps = Ramps;
         Elem->Mode = Mode;
         Elem->MaxOrder = MaxOrder;
@@ -359,11 +349,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
         VariableThinMPolePass(r_in, Elem, 0, 0, num_particles, &pcg32_global);
     } else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(4, 1);
+        plhs[0] = mxCreateCellMatrix(2, 1);
         mxSetCell(plhs[0], 0, mxCreateString("MaxOrder"));
         mxSetCell(plhs[0], 1, mxCreateString("Mode"));
-        mxSetCell(plhs[0], 2, mxCreateString("PolynomA"));
-        mxSetCell(plhs[0], 3, mxCreateString("PolynomB"));
         if (nlhs > 1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(24, 1);
