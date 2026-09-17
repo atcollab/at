@@ -125,7 +125,11 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         if ~isfield(rsrc,funcarg)
             error(strcat('Please provide a value for Func',ab))
         end
-        if ~all(size(rsrc.(funcarg)) >= [2,2])
+        [ndim, nsamples] = size(rsrc.(funcarg));
+        if ndim ~= 2
+            error("Function needs two rows: [time; f(time)]")
+        end
+        if nsamples < 2
             error("Function needs at least two points.")
         end
         if any(isnan(rsrc.(funcarg)),'all')
@@ -150,7 +154,7 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
         end
         rsrc.(strcat("Tinterpolate",ab)) = tsort;
         rsrc.(strcat("Finterpolate",ab)) = fsort;
-        rsrc.(strcat('NSamples',ab))=length(rsrc.(funcarg));
+        rsrc.(strcat('NSamples',ab)) = nsamples;
     end
 
     function rsrc = setarb(rsrc, ab)
