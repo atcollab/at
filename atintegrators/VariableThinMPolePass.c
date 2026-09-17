@@ -9,6 +9,7 @@
 #include "atrandom.c"
 #include "driftkick.c"
 #include "interpolate.c"
+#include <math.h>
 
 struct elemab {
     double* Amplitude;
@@ -92,7 +93,7 @@ double get_val(struct elemab* elem, double* ramps, int mode,
        double trange = titp[nsamples-1]-titp[0];
        if (periodic){
          while (t < titp[0]){t=t+trange;};
-         while (t > titp[nsamples-1]){t=t-trange;};
+         t = fmod(t-titp[0],trange)+titp[0];
        };
        /* checking if t is outside the range of titp */
        if (t < titp[0]){
