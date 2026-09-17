@@ -57,7 +57,7 @@ double get_amp(double amp, double* ramps, double t)
 }
 
 double get_val(struct elemab* elem, double* ramps, int mode,
-    double t, int turn, int order, int periodic, pcg32_random_t* rng)
+    double t, int turn, int periodic, pcg32_random_t* rng)
 {
     int idx;
     double ampt, freq, ph, val;
@@ -148,11 +148,11 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
 
     if (mode == 1) {
         if (ElemA->Amplitude){
-            vala = get_val(ElemA, ramps, mode, 0, turn, i, periodic, rng);
+            vala = get_val(ElemA, ramps, mode, 0, turn, periodic, rng);
             for (i = 0; i < maxorder + 1; i++) pola[i] = vala * ElemA->Amplitude[i];
         };
         if (ElemB->Amplitude){
-            valb = get_val(ElemB, ramps, mode, 0, turn, i, periodic, rng);
+            valb = get_val(ElemB, ramps, mode, 0, turn, periodic, rng);
             for (i = 0; i < maxorder + 1; i++) polb[i] = valb * ElemB->Amplitude[i];
         };
     };
@@ -163,11 +163,11 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
             if (mode != 1){
                 tpart = t*(mode == 0) + t*(mode == 3) + r6[5] / C0;
                 if (ElemA->Amplitude){
-                    vala = get_val(ElemA, ramps, mode, tpart, turn, i, periodic, rng);
+                    vala = get_val(ElemA, ramps, mode, tpart, turn, periodic, rng);
                     for (i = 0; i < maxorder + 1; i++) pola[i]=vala*ElemA->Amplitude[i];
                 };
                 if (ElemB->Amplitude){
-                    valb = get_val(ElemB, ramps, mode, tpart, turn, i, periodic, rng);
+                    valb = get_val(ElemB, ramps, mode, tpart, turn, periodic, rng);
                     for (i = 0; i < maxorder + 1; i++) polb[i]=valb*ElemB->Amplitude[i];
                 };
             };
