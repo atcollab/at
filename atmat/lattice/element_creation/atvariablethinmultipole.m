@@ -79,6 +79,8 @@ modename = char(modename);
 [cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
 [maxorder,rsrc] = getoption(rsrc,'MaxOrder',0);
 [periodic,rsrc] = getoption(rsrc,'Periodic',true);
+[pola,rsrc]     = getoption(rsrc,'PolynomA',[]);
+[polb,rsrc]     = getoption(rsrc,'PolynomB',[]);
 rsrc            = struct(rsrc{:});
 rsrc.MaxOrder   = maxorder;
 rsrc.Periodic   = periodic;
@@ -97,7 +99,7 @@ m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2,'INTERPOLATION_TABLE',3);
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
 rsrc=reshape([fieldnames(rsrc) struct2cell(rsrc)]',1,[]);
 elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
-               'ModeName',modename,'PolynomA',[],'PolynomB',[],rsrc{:});
+               'ModeName',modename,'PolynomA',pola,'PolynomB',polb,rsrc{:});
 
 
     function rsrc = setsine(rsrc, ab)
