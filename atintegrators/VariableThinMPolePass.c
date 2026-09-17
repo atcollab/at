@@ -161,7 +161,7 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
         r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
             if (mode != 1){
-                tpart = t*(mode == 0) + t*(mode == 3) + r6[5] / C0;
+                tpart = t + r6[5] / C0;
                 if (ElemA->Amplitude){
                     vala = get_val(ElemA, ramps, mode, tpart, turn, periodic, rng);
                     for (i = 0; i < maxorder + 1; i++) pola[i]=vala*ElemA->Amplitude[i];
