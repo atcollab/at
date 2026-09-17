@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
-__all__ = ["_array", "_array66", "_float", "_int"]
+__all__ = ["_anyarray", "_array", "_array66", "_float", "_int"]
 
 import numpy as np
+
+
+def _anyarray(value: np.ndarray) -> np.ndarray:
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return np.require(value, dtype=np.float64, requirements=["F", "A"])
 
 
 def _array(value, shape=(-1,), dtype=np.float64):
