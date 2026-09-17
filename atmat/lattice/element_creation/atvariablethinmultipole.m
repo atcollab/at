@@ -78,8 +78,10 @@ modename = char(modename);
 [method,rsrc]   = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
 [maxorder,rsrc] = getoption(rsrc,'MaxOrder',0);
+[periodic,rsrc] = getoption(rsrc,'Periodic',true);
 rsrc            = struct(rsrc{:});
 rsrc.MaxOrder   = maxorder;
+rsrc.Periodic   = periodic;
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
     rsrc.AmplitudeB = 0;
