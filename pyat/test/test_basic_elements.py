@@ -595,14 +595,26 @@ def test_wiggler(rin, func):
 
 @pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
 def test_variable_thin_multipole(rin, func):
+    # mode SINE
     v = elements.VariableThinMultipole(
         "v", at.ACMode.SINE, AmplitudeA=1e-3, FrequencyA=1, PhaseA=2 * np.pi / 4
     )
     expected = v.track(np.array([0, 0, 0, 0, 0, 0.125 * 299792458]))
     np.testing.assert_equal(expected[3], 0.0007071067811865476)
+    # mode WHITENOISE
     v = elements.VariableThinMultipole("v", at.ACMode.WHITENOISE, AmplitudeA=1e-3)
     expected = v.track(np.zeros(6))
     np.testing.assert_equal(expected[0], 0)
+    # mode ARBITRARY
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.ARBITRARY, AmplitudeB=[0, 1e-3], FuncB=[1, 2]
+    )
+    expected = v.track(np.array([1e-3, 0, 0, 0, 0, 0]))
+    np.testing.assert_equal(expected[1], -1e-6)
+    fakering = at.Lattice([v], energy=1e9)
+    expected, *_ = fakering.track(np.array([1e-3, 0, 0, 0, 0, 0]), nturns=2)
+    np.testing.assert_equal(expected[1, 0, 0, :], np.array([-1e-6, -3e-6]))
+    # mode INTERPOLATION_TABLE
     f = np.array([[-1, 0, 1, 2], [2, 1, 0, 1]])
     v = elements.VariableThinMultipole(
         "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
