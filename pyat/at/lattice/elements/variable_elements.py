@@ -7,7 +7,7 @@ from warnings import warn
 
 import numpy as np
 
-from .conversions import _array
+from .conversions import _anyarray, _array
 from .element_object import Element
 
 
@@ -38,8 +38,8 @@ class VariableThinMultipole(Element):
         Sinmax=float,
         NSamplesA=int,
         NSamplesB=int,
-        FuncA=lambda v: _array(v, (2, -1)),
-        FuncB=lambda v: _array(v, (2, -1)),
+        FuncA=_anyarray,
+        FuncB=_anyarray,
         FinterpolateA=_array,
         FinterpolateB=_array,
         TinterpolateA=_array,
@@ -195,12 +195,11 @@ class VariableThinMultipole(Element):
 
     def _set_interpolate(self, ab, **kwargs):
         interpolate = kwargs.get("Func" + ab)
-        assert np.shape(interpolate) >= (2, 2), (
-            "Func" + ab + "requires at least two points to interpolate."
-        )
+        assert np.ndim(interpolate) == 2, "Func" + ab + " should be of 2 dimensions."
+        _, nsamp = np.shape(interpolate)
+        assert nsamp >= 2, "Func" + ab + " requires at least two points to interpolate."
         assert ~np.any(np.isnan(interpolate)), "Function has nan values."
         assert ~np.any(np.isinf(interpolate)), "Function has inf values."
-        _, nsamp = np.shape(interpolate)
         tsort = interpolate[0, :]
         assert len(tsort) == len(np.unique(tsort)), "Time array has repeated elements."
         idxsort = np.argsort(interpolate[0, :])
