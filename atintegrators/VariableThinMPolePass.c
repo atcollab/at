@@ -140,14 +140,8 @@ void VariableThinMPolePass(double* r, struct elem* Elem, double t0, int turn, in
     double *EApertures = Elem->EApertures;
 
     // create thread safe polynoms. Each thread will allocate and free pola and polb
-    double *pola = (double *) atMalloc((maxorder+1)*sizeof(double));
-    double *polb = (double *) atMalloc((maxorder+1)*sizeof(double));
-
-    // initialize pola and polb
-    for (i = 0; i < maxorder + 1; i++){
-      pola[i] = 0;
-      polb[i] = 0;
-    };
+    double *pola = (double *) atCalloc((maxorder+1),sizeof(double));
+    double *polb = (double *) atCalloc((maxorder+1),sizeof(double));
 
     /* mode 0 : sin function */
     /* mode 1 : random value applied to all particles */
