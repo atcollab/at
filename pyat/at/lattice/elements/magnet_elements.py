@@ -42,20 +42,19 @@ __all__ = [
     "Wiggler",
 ]
 
+import contextlib
 import warnings
 from collections.abc import Generator, Callable
-from typing import Any
-import contextlib
-from warnings import warn
 from math import tan, atan
+from typing import Any
 
 import numpy as np
 
-from ..exceptions import AtError, AtWarning
-from .conversions import _float, _array
 from .abstract_elements import Radiative, _Radiative
-from .element_object import Element
 from .basic_elements import LongElement
+from .conversions import _float, _array
+from .element_object import Element
+from ..exceptions import AtError, AtWarning
 
 # AtWarning from this module should always be issued (not only on the first occurrence)
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
@@ -278,7 +277,7 @@ class ThinMultipole(Element):
                 raise ValueError(msg)
             if ordp > lmin:
                 msg = f"Some values of {key} are truncated by MaxOrder={lmin}"
-                warn(AtWarning(msg), stacklevel=2)
+                warnings.warn(AtWarning(msg), stacklevel=2)
         elif key == "MaxOrder":
             intval = int(value)
             lens, ords = zip(*(ck(k) for k in polys), strict=True)
@@ -287,7 +286,7 @@ class ThinMultipole(Element):
                 raise ValueError(msg)
             if intval < max(ords):
                 msg = f"Some values are truncated by MaxOrder={intval}"
-                warn(AtWarning(msg), stacklevel=2)
+                warnings.warn(AtWarning(msg), stacklevel=2)
         super().__setattr__(key, value)
 
     # noinspection PyPep8Naming
@@ -383,7 +382,7 @@ class ThinMultipole(Element):
 
     @property
     def HKick(self) -> float:
-        """Horizontal momentum kick."""
+        """Integrated horizontal momentum kick."""
         return -self.Kn0L
 
     @HKick.setter
@@ -392,7 +391,7 @@ class ThinMultipole(Element):
 
     @property
     def VKick(self) -> float:
-        """Vertical momentum kick."""
+        """Integrated vertical momentum kick."""
         return self.Ks0L
 
     @VKick.setter
@@ -748,7 +747,7 @@ class Corrector(LongElement):
 
     @property
     def HKick(self) -> float:
-        """Horizontal momentum kick."""
+        """Integrated horizontal momentum kick."""
         return tan(self.KickAngle[0])
 
     @HKick.setter
@@ -757,7 +756,7 @@ class Corrector(LongElement):
 
     @property
     def VKick(self) -> float:
-        """Vertical momentum kick."""
+        """Integrated vertical momentum kick."""
         return tan(self.KickAngle[1])
 
     @VKick.setter
