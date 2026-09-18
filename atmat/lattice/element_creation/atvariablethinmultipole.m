@@ -9,7 +9,7 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    FNAME          Family name
 %
 %  OPTIONS (order does not matter)
-%    MODENAME       'SINE', 'WHITENOISE' or 'ARBITRARY'.
+%    MODENAME       'SINE', 'WHITENOISE', 'ARBITRARY' or 'INTERPOLATION_TABLE'
 %                   Default: 'SINE'
 %    PASSMETHOD     Tracking function. Default: 'VariableThinMPolePass'
 %    AMPLITUDEA     Vector or scalar to define the excitation amplitude for
@@ -41,8 +41,12 @@ function elem=atvariablethinmultipole(fname,varargin)
 %    required.
 %    2. For SINE excitation modes the FREQUENCY corresponding to the input
 %    AMPLITUDE is required
-%    3. For ARBITRARY excitation modes the FUNC corresponding to the input
+%    3. For ARBITRARY excitation mode the FUNC corresponding to the input
 %    AMPLITUDE is required
+%    4. For INTERPOLATION_TABLE mode the FUNC needs to be of size (2, n) with n>=2.
+%    The first row is time in seconds, while the second row is the amplitude
+%    If the periodic is false, the function is considered to be constant outside
+%    the time interval, using the first value for time < 0 and the last for time > tmax.
 %
 %  EXAMPLES
 %
@@ -57,11 +61,15 @@ function elem=atvariablethinmultipole(fname,varargin)
 %
 % % Create a sine saturation
 % >> atvariablethimultipole('HSINE','SINE','AmplitudeB',1e-3,'FrequencyB',100,'Sinmax',0.9)
+%
+% % Create a triangular kick from amplitude versus time
+% >> atvariablethinmultipole('FvsT', 'INTERPOLATION_TABLE','AmplitudeA=1e-3, 'Func',[0 1; -1 1])
 
 % Input parser for option
 
 [modename, rsrc] = getargs(varargin,'SINE', ...
-                   'check',@(arg) any(strcmpi(arg,{'SINE','WHITENOISE','ARBITRARY'})));
+                   'check',@(arg) any(strcmpi(arg, ...
+                   {'SINE','WHITENOISE','ARBITRARY','INTERPOLATION_TABLE'})));
 [modename, rsrc] = getoption(rsrc,'ModeName',modename);
 modename = char(modename);
 [~, rsrc] = getoption(rsrc,'Mode',2); % remove Mode, the element is set by ModeName
@@ -70,8 +78,12 @@ modename = char(modename);
 [method,rsrc]   = getoption(rsrc,'PassMethod',method);
 [cl,rsrc]       = getoption(rsrc,'Class','VariableThinMultipole');
 [maxorder,rsrc] = getoption(rsrc,'MaxOrder',0);
+[periodic,rsrc] = getoption(rsrc,'Periodic',true);
+[pola,rsrc]     = getoption(rsrc,'PolynomA',[]);
+[polb,rsrc]     = getoption(rsrc,'PolynomB',[]);
 rsrc            = struct(rsrc{:});
 rsrc.MaxOrder   = maxorder;
+rsrc.Periodic   = periodic;
 
 if ~any(isfield(rsrc,{'AmplitudeA','AmplitudeB'}))
     rsrc.AmplitudeB = 0;
@@ -81,13 +93,13 @@ rsrc = setparams(rsrc,modename,'A');
 rsrc = setparams(rsrc,modename,'B');
 rsrc = setmaxorder(rsrc);
 
-m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2);
+m=struct('SINE',0,'WHITENOISE',1,'ARBITRARY',2,'INTERPOLATION_TABLE',3);
 
 % Build the element
 % rsrc =namedargs2cell(rsrc);   % introduced in R2019b
 rsrc=reshape([fieldnames(rsrc) struct2cell(rsrc)]',1,[]);
 elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
-               'ModeName',modename,'PolynomA',[],'PolynomB',[],rsrc{:});
+               'ModeName',modename,'PolynomA',pola,'PolynomB',polb,rsrc{:});
 
 
     function rsrc = setsine(rsrc, ab)
@@ -110,8 +122,41 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
 
     end
 
-    function rsrc = setwhitenoise(rsrc, ~)
-    % it will later implement a buffer
+    function rsrc = setinterpolate(rsrc, ab)
+        funcarg=strcat('Func',ab);
+        if ~isfield(rsrc,funcarg)
+            error(strcat('Please provide a value for Func',ab))
+        end
+        [ndim, nsamples] = size(rsrc.(funcarg));
+        if ndim ~= 2
+            error("Function needs two rows: [time; f(time)]")
+        end
+        if nsamples < 2
+            error("Function needs at least two points.")
+        end
+        if any(isnan(rsrc.(funcarg)),'all')
+            error("Function has NAN values.")
+        end
+        if any(isinf(rsrc.(funcarg)),'all')
+            error("Function has inf values.")
+        end
+        func = rsrc.(funcarg);
+        tsort = func(1,:);
+        if length(tsort) ~= length(unique(tsort))
+            error("Time array has repeated elements.")
+        end
+        fsort = func(2,:);
+        if ~issorted(tsort)
+          [tsort, idx] = sort(tsort);
+          fsort = fsort(idx);
+          warning("Time has been sorted.")
+        end
+        if ~((tsort(end)-tsort(1)) >0)
+          error("Zero time cannot be interpolated.");
+        end
+        rsrc.(strcat("Tinterpolate",ab)) = tsort;
+        rsrc.(strcat("Finterpolate",ab)) = fsort;
+        rsrc.(strcat('NSamples',ab)) = nsamples;
     end
 
     function rsrc = setarb(rsrc, ab)
@@ -130,8 +175,8 @@ elem=atbaselem(fname,method,'Class',cl,'Length',0,'Mode',m.(modename),...
                     rsrc = setsine(rsrc,ab);
                 case 'ARBITRARY'
                     rsrc = setarb(rsrc,ab);
-                case 'WHITENOISE'
-                    rsrc = setwhitenoise(rsrc,ab);
+                case 'INTERPOLATION_TABLE'
+                    rsrc = setinterpolate(rsrc,ab);
             end
         end
     end
