@@ -136,6 +136,8 @@ class VariableThinMultipole(Element):
             return max(mxa, mxb)
 
         self.Mode = kwargs.get("Mode", mode.value)
+        AmplitudeA = kwargs.get("AmplitudeA", AmplitudeA)
+        AmplitudeB = kwargs.get("AmplitudeB", AmplitudeB)
         self.ModeName = kwargs.get("ModeName", mode.name)
         kwargs.setdefault("PassMethod", "VariableThinMPolePass")
         AmplitudeA, AmplitudeB = _default_amplitudes(AmplitudeA, AmplitudeB)
