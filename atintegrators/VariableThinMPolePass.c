@@ -92,7 +92,9 @@ double get_val(struct elemab* elem, double* ramps, int mode,
        fitp = elem->Finterpolate;
        double trange = titp[nsamples-1]-titp[0];
        if (periodic){
-         while (t < titp[0]){t=t+trange;};
+         // t is less than minimum of time array
+         if (t < titp[0]) t = ceil((titp[0]-t)/trange)*trange+t;
+         // t is equal or larger than maximum of time array
          t = fmod(t-titp[0],trange)+titp[0];
        };
        /* checking if t is outside the range of titp */
