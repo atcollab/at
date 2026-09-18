@@ -121,6 +121,10 @@ class VariableThinMultipole(Element):
         def _default_amplitudes(ampa, ampb):
             if ampa is None and ampb is None:
                 ampb = np.array([0])
+            if np.ndim(ampa) == 0 and ampa is not None:
+                ampa = np.array([float(ampa)])
+            if np.ndim(ampb) == 0 and ampb is not None:
+                ampb = np.array([float(ampb)])
             if np.isscalar(ampa):
                 ampa = np.array([ampa])
             if np.isscalar(ampb):
