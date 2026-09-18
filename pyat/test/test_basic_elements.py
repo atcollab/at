@@ -621,6 +621,14 @@ def test_variable_thin_multipole(rin, func):
     )
     expected = v.track(np.array([0, 0, 0, 0, 0, 0.5 * 299792458]))
     np.testing.assert_equal(expected[3], 0.5e-3)
+    f = np.array([[-1, 0, 1, 2], [2, 1, 1, 2]])
+    v = elements.VariableThinMultipole(
+        "v", at.ACMode.INTERPOLATION_TABLE, AmplitudeA=1e-3, FuncA=f
+    )
+    expected = v.track(np.array([0, 0, 0, 0, 0, -4.1 * 299792458]))
+    np.testing.assert_allclose(expected[3], 1.9e-3)
+    expected = v.track(np.array([0, 0, 0, 0, 0, 5.1 * 299792458]))
+    np.testing.assert_allclose(expected[3], 1.9e-3)
 
 
 def test_exit_entrance():
