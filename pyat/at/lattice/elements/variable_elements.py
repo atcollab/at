@@ -157,7 +157,9 @@ class VariableThinMultipole(Element):
         self.PolynomB = kwargs.get("PolynomB", np.zeros(self.MaxOrder + 1))
         ramps = kwargs.pop("Ramps", None)
         if ramps is not None:
-            assert len(ramps) == 4, "Ramps has to be a vector with 4 elements"
+            if len(ramps) != 4:
+                msg = "Ramps has to be a vector with 4 elements"
+                raise ValueError(msg)
             self.Ramps = ramps
         super().__init__(family_name, **kwargs)
 
@@ -194,27 +196,42 @@ class VariableThinMultipole(Element):
 
     def _set_arb(self, ab, **kwargs):
         func = kwargs.pop("Func" + ab, None)
-        assert func is not None, "Please provide a value for Func" + ab
+        if func is None:
+            msg = "Please provide a value for Func" + ab
+            raise TypeError(msg)
         nsamp = len(func)
         setattr(self, "Func" + ab, func)
         setattr(self, "NSamples" + ab, nsamp)
 
     def _set_interpolate(self, ab, **kwargs):
         interpolate = kwargs.get("Func" + ab)
-        assert np.ndim(interpolate) == 2, "Func" + ab + " should be of 2 dimensions."
+        ndim = np.ndim(interpolate)
+        if ndim != 2:
+            msg = "Func" + ab + " should be of 2 dimensions."
+            raise ValueError(msg)
         _, nsamp = np.shape(interpolate)
-        assert nsamp >= 2, "Func" + ab + " requires at least two points to interpolate."
-        assert ~np.any(np.isnan(interpolate)), "Function has nan values."
-        assert ~np.any(np.isinf(interpolate)), "Function has inf values."
+        if not (nsamp >= 2):
+            msg = "Func" + ab + " requires at least two points to interpolate."
+            raise ValueError(msg)
+        if np.any(np.isnan(interpolate)):
+            msg = "Function has nan values."
+            raise ValueError(msg)
+        if np.any(np.isinf(interpolate)):
+            msg = "Function has inf values."
+            raise ValueError(msg)
         tsort = interpolate[0, :]
-        assert len(tsort) == len(np.unique(tsort)), "Time array has repeated elements."
+        if len(tsort) != len(np.unique(tsort)):
+            msg = "Time array has repeated elements."
+            raise ValueError(msg)
         idxsort = np.argsort(interpolate[0, :])
         fsort = interpolate[1, :]
         if ~np.all(np.diff(idxsort) == 1):
             warn(UserWarning("Time is not sorted. It will be rearanged."), stacklevel=2)
             tsort = interpolate[0, idxsort]
             fsort = interpolate[1, idxsort]
-        assert (tsort[-1] - tsort[0]) > 0, "Zero time cannot be interpolated"
+        if not ((tsort[-1] - tsort[0]) > 0):
+            msg = "Zero time cannot be interpolated"
+            raise ValueError(msg)
         setattr(self, "Tinterpolate" + ab, tsort)
         setattr(self, "Finterpolate" + ab, fsort)
         setattr(self, "NSamples" + ab, nsamp)
