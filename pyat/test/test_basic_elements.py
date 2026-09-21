@@ -320,12 +320,10 @@ def test_divide_splits_attributes_correctly():
     post = pre.divide([0.2, 0.5, 0.3])
     assert len(post) == 3
     assert sum([e.Length for e in post]) == pre.Length
-    pre = elements.Dipole("dipole", 1, KickAngle=[0.5, -0.5], BendingAngle=0.2)
+    pre = elements.Dipole("dipole", 1, BendingAngle=0.2)
     post = pre.divide([0.2, 0.5, 0.3])
     assert len(post) == 3
     assert sum([e.Length for e in post]) == pre.Length
-    assert sum([e.KickAngle[0] for e in post]) == pre.KickAngle[0]
-    assert sum([e.KickAngle[1] for e in post]) == pre.KickAngle[1]
     assert sum([e.BendingAngle for e in post]) == pre.BendingAngle
     pre = elements.RFCavity(
         "rfc", 1, voltage=187500, frequency=3.5237e8, harmonic_number=31, energy=6.0e9

@@ -112,7 +112,7 @@ def test_tracy_element_from_string_handles_sextupole(defaults):
 
 def test_tracy_element_from_string_handles_hom(defaults):
     oct = "multipole,l=0.0,hom=(4,1.0,0.3)"
-    expected = Multipole("m1", 0.0, poly_a=[0, 0, 0, 0.3], poly_b=[0, 0, 0, 1])
+    expected = Multipole("m1", 0.0, poly_a=[0, 0, 0, 0.3], poly_b=[0, 0, 0, 1], NumIntSteps=10)
     assert tracy_element_from_string("m1", oct, defaults).equals(expected)
 
 
