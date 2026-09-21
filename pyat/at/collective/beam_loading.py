@@ -260,7 +260,7 @@ class BeamLoadingElement(RFCavity, Collective):
         )
         harmonic_number = self.system_harmonic * ring.harmonic_number #cavity harmonic number
         if harmonic_number % 1 != 0:
-            error_string = ("Cavity harmonic number must be a whole number"
+            error_string = ("Cavity harmonic number must be an integer"
                             "Please check system_harmonic"
                             )
             raise AtError(error_string)
@@ -275,9 +275,9 @@ class BeamLoadingElement(RFCavity, Collective):
 
         # Initialise resonator parameters
         self.CavityBeta = cavitybeta
-        self.Rshunt = rshunt/(1+self.CavityBeta)
+        self.Rshunt = rshunt / (1 + self.CavityBeta)
         self.Rshunt_unloaded = rshunt
-        self.Qfactor = qfactor/(1+self.CavityBeta)
+        self.Qfactor = qfactor / (1 + self.CavityBeta)
         self.Qfactor_unloaded = qfactor
 
         # Initialise wake computation parameters
@@ -297,14 +297,14 @@ class BeamLoadingElement(RFCavity, Collective):
         self.TunerOffset = kwargs.pop("TunerOffset", 0)
         self.TunerAveragingPeriod = kwargs.pop("TunerAveragingPeriod", 1)
         if self.TunerAveragingPeriod <1:
-            raise AttributeError('Tuner Averaging Period must be >=1)')
+            raise AtError('Tuner Averaging Period must be >=1)')
         self._TunerParams = np.array([0.0, 0.0]) #TunerCount and TunerDiff
             
         # Initialise common regulator parameters
         self.Gain = kwargs.pop("Gain", [1e-3,1e-3])
         self.delay = kwargs.pop("delay", 1)
         if self.delay <= 0:
-            raise AttributeError('Attribute delay must be >= 1')  
+            raise AtError('Attribute delay must be >= 1')  
 
 
         # Initialise FBMode=PROP buffers
@@ -353,9 +353,9 @@ class BeamLoadingElement(RFCavity, Collective):
         check_frequency = np.abs(frequency - self.system_harmonic * ring.rf_frequency)
         if check_frequency > 1.0:  # 1 Hz is the limit for the float check
             error_string = (
-                "Cavity frequency must be system_harmonic*rf_frequency, otherwise"
-                "the phi_s computation will be wrong. Please use the detune"
-                "argument but keep the resonant frequency on resonance."
+                "Cavity frequency must be system_harmonic*rf_frequency within 1 Hz."
+                "For detuned cavities, set the cavity frequency to be on resonance "
+                "then use the detune argument."
             )
             raise AtError(error_string)
 

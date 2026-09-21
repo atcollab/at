@@ -27,50 +27,6 @@ void roll_array(double *arr, int arr_len){
     }    
 }
 
-
-static void update_vbeam_set(long fbmode, double *vbeam_set,
-                             double *vbeamk, double *vbeam_buffer,
-                             long buffersize, long windowlength){
-
-    vbeam_set[0] = vbeamk[0];
-    vbeam_set[1] = vbeamk[1];        
-}
-
-
-void compute_buffer_mean(double *out_array, double *buffer, long windowlength, long buffersize, long numcolumns){
-
-    int c,p,offset;
-    offset = buffersize - windowlength;
-
-    for (p=0; p<numcolumns; p++) {
-        out_array[p] = 0.0;
-    }
-    
-    for (c=offset; c<buffersize; c++) {
-        for (p=0; p<numcolumns; p++) {
-            out_array[p] += buffer[2*c+p];
-        }
-    }
-    
-    for (p=0; p<numcolumns; p++) {
-        out_array[p] /= windowlength ; 
-    }
-}
-
-int check_buffer_length(double *buffer, long buffersize, long numcolumns){
-    int c;
-    int bufferlengthnow=0;
-    for (c=0; c<numcolumns*buffersize; c++){
-        if (buffer[c]!=0.0){
-            bufferlengthnow += 1;
-        }
-    }
-    bufferlengthnow /= numcolumns;
-    return bufferlengthnow;
-}
-
-
-
 static void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
@@ -119,20 +75,18 @@ static void compute_tuner(double *vcav_meas, double *vgen_arr,
                           double *TunerParams, double TunerGain, double TunerAveragingPeriod,
                           double TunerOffset){
 
-    if(TunerGain>0){
-        TunerParams[0] += 1; // TunerCount        
-        TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
-        
-        if(TunerParams[0]==TunerAveragingPeriod){
-            TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
-            vgen_arr[2] += TunerGain * TunerParams[1];
-            TunerParams[0] = 0.0; //TunerCount
-            TunerParams[1] = 0.0; //TunerDiff
-        }
-    }     
+    TunerParams[0] += 1; // TunerCount        
+    TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
+    
+    if(TunerParams[0]==TunerAveragingPeriod){
+        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
+        vgen_arr[2] += TunerGain * TunerParams[1];
+        TunerParams[0] = 0.0; //TunerCount
+        TunerParams[1] = 0.0; //TunerDiff
+    }
 }
 
-static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double phasegain){
+static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double TunerGain){
     /* The cavity voltage is
     V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
     We save the amplitude of vbeam, so the exponent goes to 1.
@@ -161,6 +115,6 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
     delta_psi is inf, which even when multiplied by 0 gives nan
     */
     if (grad!=0.0){
-        vgen[2] += sg*delta_psi*phasegain;
+        vgen[2] += sg*delta_psi*TunerGain;
     }
 }

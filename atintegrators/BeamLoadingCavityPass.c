@@ -192,9 +192,10 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
         /* Here is where the tuner is calculated and applied */
         /* If TunerGain is zero, it is skipped */
-        compute_tuner(vcav_meas, vgen_arr,
-                      TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
-            
+        if(TunerGain>0){
+            compute_tuner(vcav_meas, vgen_arr,
+                          TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
+        }            
 
         vbeam[0] = ave_vbeam[0];
         vbeam[1] = ave_vbeam[1];
