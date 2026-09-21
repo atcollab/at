@@ -213,17 +213,17 @@ _EDGE_MODEL_TO_INDEX = {k: v for v, k in _INDEX_TO_EDGE_MODEL.items()}
 class _AtEncoder(json.JSONEncoder):
     """JSON encoder for specific AT types."""
 
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, Particle):
-            return obj.to_dict()
-        elif isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
+    def default(self, o):
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        elif isinstance(o, Particle):
+            return o.to_dict()
+        elif isinstance(o, np.integer):
+            return int(o)
+        elif isinstance(o, np.floating):
+            return float(o)
         else:
-            return super().default(obj)
+            return super().default(o)
 
 
 class _XsFactory(Protocol):
