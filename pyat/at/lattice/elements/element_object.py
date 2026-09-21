@@ -172,7 +172,8 @@ class Element:
     def __str__(self):
         return "\n".join(
             [self.__class__.__name__ + ":"]
-            + [f"{k:>14}: {v!s}" for k, v in self.items(freeze=False)]
+            + [f"{k:>14}: {v!s}" for k, v in self.items()
+               if k not in self._drop_attr]
         )
 
     def __repr__(self):
