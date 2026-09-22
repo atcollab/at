@@ -1,5 +1,6 @@
 #include "atconstants.h"
 #include "atelem.c"
+#include "interpolate.c"
 #include <math.h>
 #include <float.h>
 #include <complex.h>
@@ -8,35 +9,6 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
-
-int binarySearch(double *array,double value,int upper,int lower,int nStep){
-    int pivot = (int)(lower+upper)/2;
-    if ((upper-lower)<=1){
-        return lower;
-    };
-    if (value < array[pivot]){
-        upper = pivot;
-        nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
-    } else if (value > array[pivot]){
-        lower = pivot;
-        nStep+=1;
-        return binarySearch(array,value,upper,lower,nStep);
-    }else{
-        return pivot;
-    };
-};
-
-
-static double getTableWake(double *waketable,double *waketableT,double distance,int index){
-    double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
-          (waketableT[index+1]-waketableT[index]);
-    if(atIsNaN(w)){
-        return 0;
-    }else{
-        return w;
-    };
-};
 
 static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
 
@@ -237,13 +209,13 @@ static void compute_kicks(int nslice,int nturns,int nelem,
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
                     index = binarySearch(waketableT,ds,nelem,0,0);          
-                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,ds,index);
-                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,ds,index);
-                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,ds,index);
-                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableQY,waketableT,ds,index);
-                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*getTableWake(waketableZ,waketableT,ds,index);
-                    if(waketableCX)kcx[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableCX,waketableT,ds,index);
-                    if(waketableCY)kcy[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableCY,waketableT,ds,index);
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*interpolTable(waketableDX,waketableT,ds,index);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*interpolTable(waketableDY,waketableT,ds,index);
+                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableQX,waketableT,ds,index);
+                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableQY,waketableT,ds,index);
+                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*interpolTable(waketableZ,waketableT,ds,index);
+                    if(waketableCX)kcx[i-nslice*(nturns-1)] += normfact[0]*wi*interpolTable(waketableCX,waketableT,ds,index);
+                    if(waketableCY)kcy[i-nslice*(nturns-1)] += normfact[1]*wi*interpolTable(waketableCY,waketableT,ds,index);
                     
                 }            
             }
@@ -308,10 +280,10 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
                           double *fillpattern, double ts_central_z){ 
                           
     #ifndef _MSC_VER  
-    int i,ib;
+    int i=0;
     double wi;
     double selfkick;
-    double dt =0.0;
+    double dt=0.0;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
     double omr = TWOPI*resfreq;
@@ -319,66 +291,64 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
     double *vbr = vbunch;
-    double *vbi = vbunch+nbunch;
-    int ibunch, islice, total_slice_counter;
+    double *vbi = vbunch+ring_harmn;
+    int ibucket = 0;
+    int total_slice_counter = 0;
+    int islice = 0;
     int bunch_counter = 0;
-    double bucket_curr = 0.0;
+    double is_filled = 0.0;
     double main_bucket = circumference / (double) ring_harmn;
     double ave_vbeam_ri[] = {0.0, 0.0};
     
     
     
     for (i=0;i<nslice*nbunch;i++) {
-        ibunch = (int)(i/nslice);
         vbeam_kicks[i] = 0.0;
-        vbr[ibunch] = 0.0;
-        vbi[ibunch] = 0.0;
     }
 
-    
+    for (ibucket=0;ibucket<ring_harmn;ibucket++){
+        vbr[ibucket] = 0.0;
+        vbi[ibucket] = 0.0;
+    }
+
     /* The vbeam_complex will always be sent to the center of the next bucket */
-    
-    for(ibunch=0; ibunch<ring_harmn; ibunch++){
-        bucket_curr = fillpattern[ibunch];
-        if(bucket_curr!=0.0){
+
+    double bucket_z_center = 0.0;
+    for(ibucket=0; ibucket<ring_harmn; ibucket++){
+        is_filled = fillpattern[ibucket]; 
+        bucket_z_center = ibucket*main_bucket;
+        if(is_filled!=0.0){
             for(islice=0; islice<nslice; islice++){
                 total_slice_counter = islice + nslice*bunch_counter; 
                 wi = turnhistoryW[total_slice_counter];
                 selfkick = normfact*wi*kloss*energy; /*normfact*energy is -t0 . This number comes out to be negative, which is correct*/       
                 if(islice==0){
-                    /* TurnhistoryZ goes from -bucket991 to bucket0 */
-                    dt = (turnhistoryZ[total_slice_counter] + bunch_spos[nbunch-1-bunch_counter] - bunch_spos[0])/bc;
-                    
+                    // TurnhistoryZ goes from -bucket991 to bucket0 
+                    // so the bucket center in the turnhistory reference is one bucket shifted,
+                    dt = (turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc; 
                 }else{
                     /* This is dt between each slice*/
                     dt = (turnhistoryZ[total_slice_counter]-turnhistoryZ[total_slice_counter-1])/bc;
                 }
-                
                 /* track the dt */
                 vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
                 vbeam_kicks[total_slice_counter] = creal((vbeam_complex + selfkick)/energy);
-                
                 vbeam_complex += 2*selfkick;    
                
             }
             /* back to the center of the bucket */
-            dt = -(turnhistoryZ[total_slice_counter] + bunch_spos[nbunch - 1 - bunch_counter] - bunch_spos[0])/bc;
+            dt = -(turnhistoryZ[total_slice_counter] + circumference - bucket_z_center - main_bucket)/bc;
             vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-            
-            /* move to ts_central time */
-            dt = -ts_central_z/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-            
-            vbr[bunch_counter] = cabs(vbeam_complex);
-            vbi[bunch_counter] = carg(vbeam_complex);
-                        
             bunch_counter += 1;
-        }else{
-            /* move to ts_central time */
-            dt = -ts_central_z/bc;
-            vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);     
         }
+        
+        /* move to ts_central time */
+        dt = -ts_central_z/bc;
+        vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
 
+        vbr[ibucket] = cabs(vbeam_complex);
+        vbi[ibucket] = carg(vbeam_complex);
+            
         ave_vbeam_ri[0] += creal(vbeam_complex)/ring_harmn;
         ave_vbeam_ri[1] += cimag(vbeam_complex)/ring_harmn;
 
@@ -390,7 +360,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
        
         dt = main_bucket/bc;
         vbeam_complex *= cexp((_Complex_I*omr-omr/(2*qfactor))*dt);
-        
+
     }
     /* store the phasor for the next turn */
     vbeam_phasor[0] = cabs(vbeam_complex);
@@ -401,7 +371,6 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
 
     #endif    
 };
-
 
 static void update_vgen(double *vbeam,double *vcav,double *vgen, double voltgain,double phasegain,double detune_angle){
 
