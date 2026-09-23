@@ -943,6 +943,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
+        self.attr_name = attr_name
 
     def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
@@ -1048,6 +1049,9 @@ class OrbitResponseMatrix(ResponseMatrix):
                 tau += 2.0 * pi_tune
             return tau - pi_tune
 
+        if self.attr_name !="HKick" and self.attr_name!="VKick":
+            msg = "Analytical response matrix available only for default attribtues"
+            raise AtError(msg)
         self.eval_kw.update(kwargs)
         ring = self.ring
         pl = self.plane
