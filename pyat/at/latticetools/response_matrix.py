@@ -787,19 +787,18 @@ class OrbitResponseMatrix(ResponseMatrix):
     and optionally the sum of steerer angles named ``sum(h_kicks)`` or
     ``sum(v_kicks)``
 
-    By default, and when the steerer are explicitly selected, integrated dipole strengh
-    *Kn0L* and *Ks0L* are used. In case *use_polynoms=False* and the list of steerers is
-    not provided the variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default except in
-    :py:class:`.Corrector` magnets. For other magnets, the attribute should be explicitly
-    created.
+    By default momentum kick attributes *HKick* and *VKick* are used. The attribute
+    to be used for the correction can be changed using *attr_name" and *index*
+    keywords. In this case the steerer sum is automatically disabled since homogeinity
+    between variables cannot be guarantied.
 
-    By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements having a *KickAngle* attribute.
-    This is equivalent to:
+    Example of a horizontal ORM, in this case the observables correspond to all the
+    element having their attribute *FamName* strating with *BPM* and the variables
+    and the elements of type *at.Corrector*. The target is set to 0.0 in all BPMs,
+    which is the default:
 
     >>> resp_v = OrbitResponseMatrix(
-    ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
+    ...     ring, "v", "BPM*", at.Corrector, target=0.0
     ... )
     """
 
@@ -820,7 +819,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         cavdelta: float | None = None,
         steersum: bool = False,
         stsumweight: float | None = None,
-        use_polynoms: bool = True,
+        attr_name: str | None = None,
+        index: int | None = None,       
     ):
         """
         Args:
@@ -830,10 +830,8 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
               Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. If *use_polynoms=False,
-              their *KickAngle* attribute is used and must be present in the
-              selected elements, otherwise integrated dipole strength *Kn0L* and
-              *Ks0L* are used, they are present in all magnets.
+            steerrefs:  Location of orbit steerers. If *attr_name=None*,
+              their *[HV]Kick* attribute is used
               Default: All Elements having a *KickAngle* attribute.
             cavrefs:    Location of RF cavities. Their *Frequency* attribute
               is used. If :py:obj:`None`, no cavity is included in the response.
@@ -848,8 +846,12 @@ class OrbitResponseMatrix(ResponseMatrix):
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
             steersum:   If :py:obj:`True`, the sum of steerers is appended to the
-              Observables.
+              Observables. Disabled for user defined attributes.
             stsumweight: Weight on steerer summation. Default: automatically computed.
+            attr_name: User define attribute to use for the correction. Default is
+              *[HV]Kick*, if is set by the user steersum is disabled.
+            index: Index of the variable, in case the attribute corresponding to
+              *attr_name* is an array
 
         :ivar VariableList variables: matrix variables
         :ivar ObservableList observables: matrix observables
@@ -883,12 +885,15 @@ class OrbitResponseMatrix(ResponseMatrix):
             return cd, sw
 
         pl = plane_(plane, key="index")
-        idx = None
-        if pl==0:
+        if pl==0 and attr_name is None:
             attr_name = "HKick"
-        elif pl==1:
+        elif pl==1 and attr_name is None:
             attr_name = "VKick"
-        else:
+        elif attr_name is not None and steersum:
+            msg = ("For custom attributes, homogeinity of the variables cannot be guarantied"
+                   "and the steersum has to be disabled")
+            raise AtError(msg)
+        elif pl!=0 and pl!=1:
             msg = "Orbit response can only be horizontal or vertical"
             raise AtError(msg)
         
@@ -909,7 +914,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 attr_name,
                 name=f"{plcode}_kicks",
                 target=0.0,
-                index=idx,
+                index=index,
                 weight=stsumweight if stsumweight else stsw / 2.0,
                 statfun=np.sum,
             )
@@ -917,7 +922,7 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         # Variables
         variables = VariableList(
-            steerer(ik, delta, attr_name, idx) for ik, delta in zip(ids, deltas, strict=True)
+            steerer(ik, delta, attr_name, index) for ik, delta in zip(ids, deltas, strict=True)
         )
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
