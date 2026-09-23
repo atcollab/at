@@ -186,13 +186,14 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay);
 
         }else if(cavitymode==3){     
-            update_passive_frequency(vbeam_set, vcav_set, vgen_arr, TunerGain);
+            update_passive_frequency(vbeam_set, vcav_set, vgen_arr,
+                                     TunerParams, TunerGain, TunerAveragingPeriod);
         }
 
 
         /* Here is where the tuner is calculated and applied */
         /* If TunerGain is zero, it is skipped */
-        if(TunerGain>0){
+        if(TunerGain>0 && cavitymode!=3){
             compute_tuner(vcav_meas, vgen_arr,
                           TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
         }            

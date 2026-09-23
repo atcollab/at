@@ -75,23 +75,22 @@ static void compute_tuner(double *vcav_meas, double *vgen_arr,
     }
 }
 
-static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, double TunerGain){
+static void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
+                                     double *TunerParams, double TunerGain, double TunerAveragingPeriod){
     /* The cavity voltage is
     V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
     We save the amplitude of vbeam, so the exponent goes to 1.
     Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
     */
-    double vset = vcav[0];
-    double psi = vgen[2];
+    double vset = vcav[0]; /* desired vbeam */
+    double psi = vgen[2]; /*current psi */
     double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
-    double delta_v = vset - vpeak;
-    double grad = vbeam[0]*sin(psi)/cos(psi); 
+    
     /*vbeam amp contains cos(psi). So replace with sin(psi)
     to get get the gradient */
-    
-    double delta_psi = delta_v / grad; /*linear extrapolation*/
+    double grad = vpeak*sin(psi)/cos(psi); 
+    double delta_psi = 0.0;
 
-    
     /* If the cavity is detuned positively, the psi needs to
     be increased to reduce the voltage. Likewise, if the cavity
     is detuned negatively, the psi needs to be decreased to reduce
@@ -100,10 +99,24 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen, 
         
     int sg = (psi<0) - (psi>0);
 
-    /* This is to avoid setting a value if grad is 0, as then
-    delta_psi is inf, which even when multiplied by 0 gives nan
-    */
-    if (grad!=0.0){
-        vgen[2] += sg*delta_psi*TunerGain;
-    }
+    TunerParams[0] += 1; // TunerCount        
+    TunerParams[1] += vset - vpeak; //DeltaV
+    if(TunerParams[0]==TunerAveragingPeriod){
+        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod);
+
+        delta_psi = TunerParams[1] / grad; /*linear extrapolation*/
+
+        /* This is to avoid setting a value if grad is 0, as then
+        delta_psi is inf, which even when multiplied by 0 gives nan
+        */
+        if (grad!=0.0){
+            vgen[2] += sg*delta_psi*TunerGain;
+        }
+        
+        TunerParams[0] = 0.0; //TunerCount
+        TunerParams[1] = 0.0; //TunerDiff
+    }   
 }
+
+
+
