@@ -22,7 +22,12 @@ def idkm_file() -> str:
 @pytest.fixture()
 def idkm_elem(idkm_file: str) -> InsertionDeviceKickMap:
     """A base InsertionDeviceKickMap element created from the test file."""
-    return InsertionDeviceKickMap("idmap", 10, idkm_file, 6.04)
+    return InsertionDeviceKickMap(
+        "idmap",
+        norm_energy=6.04,
+        nslice=10,
+        fname=idkm_file,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -35,9 +40,17 @@ class TestKickmapStore:
     def test_constructor_has_explicit_arguments(self):
         """Required kickmap inputs are visible in the public signature."""
         parameters = signature(InsertionDeviceKickMap).parameters
-        assert {"family_name", "nslice", "fname", "norm_energy", "kickmaps"} <= set(
-            parameters
-        )
+        assert {
+            "family_name",
+            "length",
+            "norm_energy",
+            "nslice",
+            "fname",
+            "kickmaps",
+        } <= set(parameters)
+        assert parameters["nslice"].kind is Parameter.KEYWORD_ONLY
+        assert parameters["fname"].kind is Parameter.KEYWORD_ONLY
+        assert parameters["kickmaps"].kind is Parameter.KEYWORD_ONLY
         assert all(
             parameter.kind is not Parameter.VAR_POSITIONAL
             for parameter in parameters.values()
@@ -77,9 +90,9 @@ class TestKickmapStore:
         with pytest.raises(TypeError, match="cannot be combined"):
             InsertionDeviceKickMap(
                 "idmap",
-                10,
-                idkm_file,
-                6.04,
+                norm_energy=6.04,
+                nslice=10,
+                fname=idkm_file,
                 kickmaps={"mode_a": (10, idkm_file, 6.04)},
             )
 
@@ -88,7 +101,6 @@ class TestKickmapStore:
         [
             {"nslice": 10},
             {"fname": "kickmap.txt"},
-            {"norm_energy": 6.04},
             {"nslice": 10, "fname": "kickmap.txt"},
         ],
     )
@@ -109,6 +121,25 @@ class TestKickmapStore:
         assert loaded.list_kickmaps() == []
         assert loaded.active_kickmap is None
 
+    def test_keyword_m_file_loads(self, tmp_path):
+        """ID data after the build attributes are read as field/value pairs."""
+        fname = tmp_path / "idmap.m"
+        fname.write_text(
+            """function ring = idmap()
+ring = {...
+atinsertiondevicekickmap('idmap',1,6.04,'IdTablePass','Filename_in','','Nslice',10,'xkick',[1],'ykick',[2],'xkick1',[0],'ykick1',[0],'xtable',[0],'ytable',[0]);...
+};
+end
+""",
+            encoding="utf-8",
+        )
+
+        loaded = Lattice.load(fname, energy=6.04e9, periodicity=1)[0]
+
+        assert loaded.PassMethod == "IdTablePass"
+        assert loaded.list_kickmaps() == ["default"]
+        assert loaded.active_kickmap == "default"
+
     def test_legacy_m_file_loads(self, tmp_path):
         """The previous positional MATLAB constructor syntax remains readable."""
         fname = tmp_path / "legacy_idmap.m"
@@ -125,6 +156,8 @@ end
         loaded = Lattice.load(fname, energy=6.04e9, periodicity=1)[0]
 
         assert loaded.PassMethod == "IdTablePass"
+        assert loaded.Length == 1.0
+        assert loaded.Normalization_energy == 6.04
         assert loaded.list_kickmaps() == ["default"]
         assert loaded.active_kickmap == "default"
 
@@ -138,6 +171,14 @@ end
 
     def test_default_kickmap_matches_initial_fields(self, idkm_elem):
         """The 'default' kickmap must contain the element's construction-time arrays."""
+        assert (
+            idkm_elem.KickmapStore["default"]["Normalization_energy"]
+            == idkm_elem.Normalization_energy
+        )
+        assert (
+            idkm_elem.KickmapStore["default"]["Filename_in"]
+            == idkm_elem.Filename_in
+        )
         assert_array_equal(
             idkm_elem.KickmapStore["default"]["xkick"], idkm_elem.xkick
         )
@@ -192,6 +233,7 @@ end
 
         # Kicks are normalized by 1/E², so different energies change the tables.
         assert not (xkick_norm == xkick_half).all()
+        assert idkm_elem.Normalization_energy == 3.0
 
     def test_use_kickmap_changes_nslice(self, idkm_elem, idkm_file):
         """use_kickmap also updates Nslice."""
@@ -271,6 +313,8 @@ end
         assert loaded.active_kickmap == "mode_b"
         assert loaded.xkick.shape == (7, 5)
         loaded.use_kickmap("mode_a")
+        assert loaded.Normalization_energy == 6.04
+        assert loaded.Filename_in == idkm_file
         assert_array_equal(
             loaded.xkick, idkm_elem.KickmapStore["mode_a"]["xkick"]
         )

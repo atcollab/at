@@ -317,29 +317,14 @@ def _element_from_m(line: str, index: int | None = None) -> Element:
     left = line.index("(")
     right = line.rindex(")")
     matcls = line[:left].strip()[2:]
-    build_attrs = _CLASS_MAP[matcls]._BUILD_ATTRIBUTES
+    element_class = _CLASS_MAP[matcls]
+    build_attrs = element_class._BUILD_ATTRIBUTES
     arguments = argsplit(line[left + 1 : right])
-    
-    if (
-        matcls == "insertiondevicekickmap"
-        and len(arguments) >= 12
-        and arguments[1].endswith("Pass'")
-        and not all(arg.startswith(("'", '"')) for arg in arguments[2::2])
-    ):
-        build_attrs = [
-            "FamName",
-            "PassMethod",
-            "Filename_in",
-            "Normalization_energy",
-            "Nslice",
-            "Length",
-            "xkick",
-            "ykick",
-            "xkick1",
-            "ykick1",
-            "xtable",
-            "ytable",
-        ]
+    legacy_attrs = getattr(element_class, "_LEGACY_M_BUILD_ATTRIBUTES", None)
+    if legacy_attrs and len(arguments) >= len(legacy_attrs):
+        pass_index = legacy_attrs.index("PassMethod")
+        if arguments[pass_index].strip("'\"").endswith("Pass"):
+            build_attrs = legacy_attrs
     ll = len(build_attrs)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")

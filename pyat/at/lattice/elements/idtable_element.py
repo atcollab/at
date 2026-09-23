@@ -27,11 +27,13 @@ class InsertionDeviceKickMap(Element):
 
     Args:
         family_name: Element family name.
-        nslice: Number of integration slices for a single kickmap.
-        fname: Radia text-file path or dictionary containing a single kickmap.
-        norm_energy: Normalization energy in GeV for a single kickmap.
+        length: Insertion device length in m. A zero value uses the length
+            read from a supplied kickmap.
+        norm_energy: Normalization energy in GeV.
 
     Keyword Args:
+        nslice: Number of integration slices for a single kickmap.
+        fname: Radia text-file path or dictionary containing a single kickmap.
         kickmaps: Mapping of kickmap names to ``(nslice, source, energy)``
             tuples. The first entry is initially active.
         **kwargs: Additional element attributes. This is also used internally
@@ -55,6 +57,15 @@ class InsertionDeviceKickMap(Element):
         >>> elem = InsertionDeviceKickMap("ID")
         >>> elem.add_kickmap("LH", 25, "lh_kickmap.txt", 2.75)
 
+        Create an element with one kickmap:
+
+        >>> elem = InsertionDeviceKickMap(
+        ...     "ID",
+        ...     norm_energy=2.75,
+        ...     nslice=25,
+        ...     fname="lh_kickmap.txt",
+        ... )
+
         Create an element with several named kickmaps:
 
         >>> elem = InsertionDeviceKickMap(
@@ -66,10 +77,29 @@ class InsertionDeviceKickMap(Element):
         ... )
     """
 
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = [
+        *Element._BUILD_ATTRIBUTES,
+        "Length",
+        "Normalization_energy",
+    ]
+    _LEGACY_M_BUILD_ATTRIBUTES = [
+        "FamName",
+        "PassMethod",
+        "Filename_in",
+        "Normalization_energy",
+        "Nslice",
+        "Length",
+        "xkick",
+        "ykick",
+        "xkick1",
+        "ykick1",
+        "xtable",
+        "ytable",
+    ]
 
     _conversions = dict(
         Element._conversions,
+        Normalization_energy=float,
         Nslice=int,
         xkick=_anyarray,
         ykick=_anyarray,
@@ -82,10 +112,11 @@ class InsertionDeviceKickMap(Element):
     def __init__(
         self: InsertionDeviceKickMap,
         family_name: str,
+        length: float = 0.0,
+        norm_energy: float = 0.0,
+        *,
         nslice: int | None = None,
         fname: str | Path | dict[str, Any] | None = None,
-        norm_energy: float | None = None,
-        *,
         kickmaps: Mapping[
             str, tuple[int, str | Path | dict[str, Any], float]
         ]
@@ -94,14 +125,16 @@ class InsertionDeviceKickMap(Element):
     ) -> None:
         """Initialize an insertion device kick-map element."""
         file_data = "xkick" in kwargs or "KickmapStore" in kwargs
-        single_values = (nslice, fname, norm_energy)
+        source_values = (nslice, fname)
 
         if file_data:
             if kickmaps is not None or any(
-                value is not None for value in single_values
+                value is not None for value in source_values
             ):
                 msg = "Kickmap arguments cannot be combined with serialized data"
                 raise TypeError(msg)
+            kwargs.setdefault("Length", length)
+            kwargs.setdefault("Normalization_energy", norm_energy)
             super().__init__(family_name, **kwargs)
             if hasattr(self, "KickmapStore"):
                 self._normalise_kickmap_store()
@@ -110,14 +143,20 @@ class InsertionDeviceKickMap(Element):
                 self.ActiveKickmap = "default"
             return
 
-        if kickmaps is not None and any(
-            value is not None for value in single_values
+        if kickmaps is not None and (
+            length != 0.0
+            or norm_energy != 0.0
+            or any(value is not None for value in source_values)
         ):
-            msg = "kickmaps cannot be combined with nslice, fname or norm_energy"
+            msg = (
+                "kickmaps cannot be combined with length, norm_energy, "
+                "nslice or fname"
+            )
             raise TypeError(msg)
-        if kickmaps is None and any(
-            value is not None for value in single_values
-        ) and not all(value is not None for value in single_values):
+        if any(value is not None for value in source_values) and (
+            not all(value is not None for value in source_values)
+            or norm_energy == 0.0
+        ):
             msg = "nslice, fname and norm_energy must be supplied together"
             raise TypeError(msg)
 
@@ -133,14 +172,18 @@ class InsertionDeviceKickMap(Element):
             self.ActiveKickmap = first_key
             for key, spec in entries[1:]:
                 self._store_kickmap(key, *self._validate_kickmap_spec(key, spec))
-        elif all(value is not None for value in single_values):
+        elif all(value is not None for value in source_values):
             elemargs = self._load_kickmap(nslice, fname, norm_energy)
+            if length != 0.0:
+                elemargs["Length"] = length
             elemargs.update(kwargs)
             super().__init__(family_name, **elemargs)
             self.KickmapStore = {"default": self._snapshot()}
             self.ActiveKickmap = "default"
         else:
             kwargs.setdefault("PassMethod", "DriftPass")
+            kwargs.setdefault("Length", length)
+            kwargs.setdefault("Normalization_energy", norm_energy)
             super().__init__(family_name, **kwargs)
             self.KickmapStore = {}
             self.ActiveKickmap = ""
@@ -185,6 +228,8 @@ class InsertionDeviceKickMap(Element):
         self.KickmapStore[key] = {
             field: data[field]
             for field in (
+                "Filename_in",
+                "Normalization_energy",
                 "Nslice",
                 "Length",
                 "xkick",
@@ -200,6 +245,8 @@ class InsertionDeviceKickMap(Element):
     def _snapshot(self: InsertionDeviceKickMap) -> dict:
         """Return a dict of the element's current tracking-field values."""
         return {
+            "Filename_in": getattr(self, "Filename_in", ""),
+            "Normalization_energy": float(self.Normalization_energy),
             "Nslice": int(self.Nslice),
             "Length": float(self.Length),
             "xkick":  self.xkick.copy(),
@@ -213,6 +260,8 @@ class InsertionDeviceKickMap(Element):
     def _normalise_kickmap_store(self: InsertionDeviceKickMap) -> None:
         """Restore kickmap types after loading from a lattice file."""
         for data in self.KickmapStore.values():
+            data["Filename_in"] = str(data["Filename_in"])
+            data["Normalization_energy"] = float(data["Normalization_energy"])
             data["Nslice"] = int(data["Nslice"])
             data["Length"] = float(data["Length"])
             for field in ("xkick", "ykick", "xkick1", "ykick1", "xtable", "ytable"):
@@ -482,6 +531,8 @@ class InsertionDeviceKickMap(Element):
         )
     def _apply_kickmap_data(self: InsertionDeviceKickMap, data: dict) -> None:
         """Apply kickmap data dict to the active tracking fields."""
+        self.Filename_in = data["Filename_in"]
+        self.Normalization_energy = data["Normalization_energy"]
         self.Nslice = data["Nslice"]
         self.Length = data["Length"]
         self.xkick = data["xkick"]

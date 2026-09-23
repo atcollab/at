@@ -5,8 +5,8 @@ function element = swapKickmapData(element,kickmapKey)
 % ELEMENT.KickmapStore.(KICKMAPKEY) to ELEMENT and sets ActiveKickmap to
 % KICKMAPKEY. The PassMethod and all unrelated element fields are unchanged.
 %
-% The selected kick map must contain Nslice, Length, xkick, ykick, xkick1,
-% ykick1, xtable and ytable.
+% The selected kick map must contain Filename_in, Normalization_energy,
+% Nslice, Length, xkick, ykick, xkick1, ykick1, xtable and ytable.
 %
 % Example:
 %   ring{idindex} = swapKickmapData(ring{idindex},'LV');
@@ -31,8 +31,8 @@ if ~isfield(element.KickmapStore,kickmapKey)
 end
 
 kickmapData = element.KickmapStore.(kickmapKey);
-trackingFields = {'Nslice','Length','xkick','ykick','xkick1','ykick1', ...
-    'xtable','ytable'};
+trackingFields = {'Filename_in','Normalization_energy','Nslice','Length', ...
+    'xkick','ykick','xkick1','ykick1','xtable','ytable'};
 missingFields = trackingFields(~isfield(kickmapData,trackingFields));
 if ~isempty(missingFields)
     error('AT:swapKickmapData:IncompleteKickmap', ...
