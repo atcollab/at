@@ -1049,7 +1049,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                 tau += 2.0 * pi_tune
             return tau - pi_tune
 
-        if self.attr_name !="HKick" and self.attr_name!="VKick":
+        if self.attr_name!="HKick" and self.attr_name!="VKick":
             msg = "Analytical response matrix available only for default attribtues"
             raise AtError(msg)
         self.eval_kw.update(kwargs)
