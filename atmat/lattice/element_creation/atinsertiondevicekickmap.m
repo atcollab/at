@@ -16,7 +16,21 @@ function Elem = atinsertiondevicekickmap(fname,length,normalizationEnergy,vararg
 %   LENGTH               Insertion device length [m]
 %   NORMALIZATION_ENERGY Energy in GeV used to normalize the kick map
 %   PASSMETHOD           Tracking function. Default: 'DriftPass'
-%   FIELD, VALUE         Additional element attributes
+%
+% Field/value pairs:
+%   'Filename_in'        Source kick-map file name
+%   'Nslice'             Number of integration slices
+%   'xkick', 'ykick'     Second-order horizontal and vertical kick tables
+%   'xkick1', 'ykick1'   First-order horizontal and vertical kick tables
+%   'xtable', 'ytable'   Horizontal and vertical table coordinates
+%   'KickmapStore'       Structure of named kick maps. Each entry contains
+%                        Filename_in, Normalization_energy, Nslice, Length,
+%                        xkick, ykick, xkick1, ykick1, xtable and ytable
+%   'ActiveKickmap'      Name of the KickmapStore entry currently copied to
+%                        the element tracking fields
+%
+% Additional standard AT element fields may also be supplied as field/value
+% pairs. PassMethod may equivalently be supplied as a 'PassMethod' field.
 %
 % Examples:
 %   emptyid = atinsertiondevicekickmap('ID');
