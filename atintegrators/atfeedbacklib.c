@@ -9,24 +9,6 @@
 #endif
 
 
-
-void roll_array2(double *arr, int arr_len){
-
-
-    if(arr_len>1){
-        int idx = 0;
-        double tmp=0.0;
-        double tmp2=0.0;    
-        tmp = arr[arr_len-1];
-       
-        for(idx=0;idx<arr_len;idx++){
-            tmp2 = arr[idx];
-            arr[idx] = tmp;
-            tmp = tmp2;
-        }
-    }    
-}
-
 void roll_array(double *arr, int arr_len, int shift){
     
     memmove(arr + shift, arr, (arr_len-shift) * sizeof(*arr));
