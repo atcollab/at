@@ -10,7 +10,7 @@
 
 
 
-void roll_array(double *arr, int arr_len){
+void roll_array2(double *arr, int arr_len){
 
 
     if(arr_len>1){
@@ -26,6 +26,13 @@ void roll_array(double *arr, int arr_len){
         }
     }    
 }
+
+void roll_array(double *arr, int arr_len, int shift){
+    
+    memmove(arr + shift, arr, (arr_len-shift) * sizeof(*arr));
+    memset(arr, 0, shift * sizeof(*arr));
+}
+
 
 static void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
 
@@ -64,8 +71,8 @@ static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double vo
     vgen[0] -= voltgain * diff_Amp;
     vgen[1] -= phasegain * diff_Phase;
     
-    roll_array(VoltDelay, delay);
-    roll_array(PhaseDelay, delay);
+    roll_array(VoltDelay, delay, 1);
+    roll_array(PhaseDelay, delay, 1);
     
     VoltDelay[0] = vcav_meas[0];
     PhaseDelay[0] = vcav_meas[1];    
