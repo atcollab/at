@@ -56,8 +56,6 @@ class LongElement(Element):
     def _part(self, fr, sumfr):
         pp = self.copy()
         pp.Length = fr * self.Length
-        if hasattr(self, "KickAngle"):
-            pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
     def divide(self, frac) -> list[Element]:

@@ -379,17 +379,20 @@ class ThinMultipole(Element):
         "IntegratedPolynomB",
         "Integrated strength of the main field component.",
     )
-    #
-    # @property
-    # def KickAngle(self) -> np.ndarray:
-    #     """Deviation angles (H, V)."""
-    #     return np.atan([-self.Kn0L, self.Ks0L])
-    #
-    # @KickAngle.setter
-    # def KickAngle(self, value) -> None:
-    #     kicks = np.tan(value)
-    #     self.Kn0L = -kicks[0]
-    #     self.Ks0L = kicks[1]
+
+    @property
+    def KickAngle(self) -> np.ndarray:
+        """Deviation angles (H, V).
+
+        Provided for backwards compatibility, use *HKick*, *VKick* instead.
+        """
+        return np.atan([-self.Kn0L, self.Ks0L])
+
+    @KickAngle.setter
+    def KickAngle(self, value) -> None:
+        kicks = np.tan(value)
+        self.Kn0L = -kicks[0]
+        self.Ks0L = kicks[1]
 
     @property
     def HKick(self) -> float:
@@ -716,6 +719,10 @@ class Corrector(LongElement):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "KickAngle"]
+    _conversions = dict(
+        Element._conversions,
+        KickAngle=lambda v: _array(v, (2,)),
+    )
 
     # Instance attributes
     KickAngle: np.ndarray  #: (H, V) deviation angles

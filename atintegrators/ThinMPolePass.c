@@ -22,7 +22,6 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
-    double *KickAngle;
 };
 
 void ThinMPolePass(double *r, double *A, double *B, int max_order,
@@ -30,7 +29,7 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double *KickAngle, double scaling, int num_particles)
+        double scaling, int num_particles)
 {
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
@@ -66,7 +65,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double Scaling;
         int MaxOrder;
-        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
+        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double bax = 0.0, bay = 0.0;
         int nl, nc;
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
@@ -86,7 +85,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->PolynomA=PolynomA;
@@ -102,13 +100,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
-        Elem->KickAngle=KickAngle;
     }
     ThinMPolePass(r_in, Elem->PolynomA, Elem->PolynomB, Elem->MaxOrder,
             Elem->bax, Elem->bay,
             Elem->T1, Elem->T2, Elem->R1, Elem->R2,
             Elem->RApertures, Elem->EApertures,
-            Elem->KickAngle, Elem->Scaling, num_particles);
+            Elem->Scaling, num_particles);
     return Elem;
 }
 
@@ -125,7 +122,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int num_particles = mxGetN(prhs[1]);
         double Scaling;
         int MaxOrder;
-        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
+        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
         double bax = 0.0, bay = 0.0;
         int nl, nc;
         if (mxGetM(prhs[1]) != 6) mexErrMsgTxt("Second argument must be a 6 x N matrix");
@@ -147,7 +144,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
-        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
 
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -155,7 +151,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ThinMPolePass(r_in, PolynomA, PolynomB, MaxOrder,
             bax, bay,
             T1, T2, R1, R2, RApertures, EApertures,
-            KickAngle, Scaling, num_particles);
+            Scaling, num_particles);
     } else if (nrhs == 0) {
         /* list of required fields */
         plhs[0] = mxCreateCellMatrix(3,1);
@@ -163,7 +159,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],1,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],2,mxCreateString("MaxOrder"));
         if (nlhs>1) {    /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(9,1);
+            plhs[1] = mxCreateCellMatrix(8,1);
             mxSetCell(plhs[1],0,mxCreateString("BendingAngle"));
             mxSetCell(plhs[1],1,mxCreateString("T1"));
             mxSetCell(plhs[1],2,mxCreateString("T2"));
@@ -171,8 +167,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],4,mxCreateString("R2"));
             mxSetCell(plhs[1],5,mxCreateString("RApertures"));
             mxSetCell(plhs[1],6,mxCreateString("EApertures"));
-            mxSetCell(plhs[1],7,mxCreateString("KickAngle"));
-            mxSetCell(plhs[1],8,mxCreateString("FieldScaling"));
+            mxSetCell(plhs[1],7,mxCreateString("FieldScaling"));
         }
     }
     else {
