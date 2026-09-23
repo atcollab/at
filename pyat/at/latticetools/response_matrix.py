@@ -810,8 +810,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         self,
         ring: Lattice,
         plane: AxisDef,
-        bpmrefs: Refpts = Monitor,
-        steerrefs: Refpts | None = None,
+        bpmrefs: Refpts,
+        steerrefs: Refpts,
         *,
         cavrefs: Refpts = None,
         bpmweight: float | Sequence[float] = 1.0,
@@ -883,19 +883,15 @@ class OrbitResponseMatrix(ResponseMatrix):
             return cd, sw
 
         pl = plane_(plane, key="index")
-        if (pl!=0) and (pl!=1):
+        idx = None
+        if pl==0:
+            attr_name = "HKick"
+        elif pl==1:
+            attr_name = "VKick"
+        else:
             msg = "Orbit response can only be horizontal or vertical"
             raise AtError(msg)
-        attr_name = "KickAngle"
-        idx = pl
-        if use_polynoms and steerrefs is not None:
-            if pl==0:
-                attr_name = "Kn0L"
-            if pl==1:
-                attr_name = "Ks0L"
-            idx = None
-        if steerrefs is None:
-            steerrefs = _orbit_correctors
+        
         plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
