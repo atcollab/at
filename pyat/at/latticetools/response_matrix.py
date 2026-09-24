@@ -503,6 +503,9 @@ class ResponseMatrix(_SvdSolver):
         apply: bool = False,
     ) -> FloatArray:
         """Compute and optionally apply the correction.
+           The correction will only work if target are define for all observables.
+           Targets can either be a float to correct to or None in which case it is
+           considered that the target is already achieved for this observable.
 
         Args:
             ring:       Lattice description. The response matrix observables
@@ -525,10 +528,14 @@ class ResponseMatrix(_SvdSolver):
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
+        if np.any(np.isnan(obs.targets)):
+            msg = (f"Some observables have undefined targets (NaN), please define a target"
+                    " value for all observables (float or None).")
+            raise AtError(msg)   
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,)), strict=True):
             print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self.eval_kw)
-            deviation = obs.flat_deviations
+            deviation = obs.flat_deviations        
             if np.any(np.isnan(deviation)):
                 msg = f"Step {it + 1}: Invalid observables, cannot compute correction."
                 raise AtError(msg)
