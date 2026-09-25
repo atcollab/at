@@ -503,8 +503,8 @@ class ResponseMatrix(_SvdSolver):
         apply: bool = False,
     ) -> FloatArray:
         """Compute and optionally apply the correction.
-           The correction will only work if target are define for all observables.
-           Targets can either be a float to correct to or None in which case it is
+           The correction will only work if targets are defined for all observables.
+           Targets can either be a float to correct to or `None` in which case it is
            considered that the target is already achieved for this observable.
 
         Args:
@@ -847,7 +847,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmweight:  Weight of position readings. Must be broadcastable to the
               number of BPMs.
             bpmtarget:  Target orbit position. Must be broadcastable to the number of
-              observation points.
+              observation points. Default=0.0.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
               is also the cavity weight. Default: automatically computed.
             steerdelta: Step on steerers for matrix computation [rad]. This is
@@ -1057,7 +1057,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             return tau - pi_tune
 
         if self.attr_name!="HKick" and self.attr_name!="VKick":
-            msg = "Analytical response matrix available only for default attribtues"
+            msg = "Analytical response matrix available only for default attributes"
             raise AtError(msg)
         self.eval_kw.update(kwargs)
         ring = self.ring
@@ -1144,14 +1144,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
     Observables are the trajectory position at selected points, named ``trajectory[x]``
     for the horizontal plane or ``trajectory[y]`` for the vertical plane.
 
-    The variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default
-    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
-    should be explicitly created.
-
-    By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements having a *KickAngle* attribute.
-
+    By default momentum kick attributes *HKick* and *VKick* are used. The attribute
+    to be used for the correction can be changed using *attr_name" and *index*
+    keywords. 
     """
 
     bpmrefs: Uint32Refpts
@@ -1162,12 +1157,14 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self,
         ring: Lattice,
         plane: AxisDef,
-        bpmrefs: Refpts = Monitor,
-        steerrefs: Refpts = _orbit_correctors,
+        bpmrefs: Refpts,
+        steerrefs: Refpts,
         *,
         bpmweight: float = 1.0,
         bpmtarget: float = 0.0,
         steerdelta: float = 0.0001,
+        attr_name: str | None = None,
+        index: int | None = None,   
     ):
         """
         Args:
@@ -1176,22 +1173,27 @@ class TrajectoryResponseMatrix(ResponseMatrix):
               one of {1, 'y', 'v', 'V'} for vertical orbit
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
-              Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used and must be present in the selected elements.
-              Default: All Elements having a *KickAngle* attribute.
+            steerrefs:  Location of orbit steerers.
             bpmweight:  Weight on position readings. Must be broadcastable to the
               number of BPMs
-            bpmtarget:  Target position
+            bpmtarget:  Target position, default=0.0.
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
         """
 
-        def steerer(ik, delta):
+        def steerer(ik, delta, attr_name, idx):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attr_name, index=idx, name=name, delta=delta)
 
         pl = plane_(plane, key="index")
+        if pl==0 and attr_name is None:
+            attr_name = "HKick"
+        elif pl==1 and attr_name is None:
+            attr_name = "VKick"
+        elif pl!=0 and pl!=1:
+            msg = "Orbit response can only be horizontal or vertical"
+            raise AtError(msg)
+            
         plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
@@ -1203,7 +1205,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         observables = ObservableList([bpms])
         # Variables
         variables = VariableList(
-            steerer(ik, delta) for ik, delta in zip(ids, deltas, strict=True)
+            steerer(ik, delta, attr_name, index) for ik, delta in zip(ids, deltas, strict=True)
         )
 
         super().__init__(variables, observables, ring=ring)
@@ -1211,6 +1213,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
+        self.attr_name = attr_name
 
     def build_analytical(self, **kwargs) -> FloatArray:
         """Analytically build the response matrix.
@@ -1224,6 +1227,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         Returns:
             response:       Response matrix
         """
+        if self.attr_name!="HKick" and self.attr_name!="VKick":
+            msg = "Analytical response matrix available only for default attributes"
+            raise AtError(msg)
         self.eval_kw.update(kwargs)
         self.eval_kw.setdefault("twiss_in", self._default_twiss_in)
         ring = self.ring
