@@ -10,7 +10,7 @@
 
 #ifndef _MSC_VER  
 
-static void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, int every, double Vc){
+void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, int every, double Vc){
     
     if(cutoff==0){
         IIRcoef[0] =  1.0;
@@ -29,7 +29,7 @@ static void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, 
     }
 }
 
-static void IIR(double complex input, double *IIRcoef, double *IIRout){
+void IIR(double complex input, double *IIRcoef, double *IIRout){
     /*
 
     """Return IIR filter output."""
@@ -45,7 +45,7 @@ static void IIR(double complex input, double *IIRcoef, double *IIRout){
 }
         
 
-static double Vg2Ig_real(double vgen, double thetag, double psi, double RL){
+double Vg2Ig_real(double vgen, double thetag, double psi, double RL){
     /*
     Return Ig from Vg (assuming constant Vg).
 
@@ -56,7 +56,7 @@ static double Vg2Ig_real(double vgen, double thetag, double psi, double RL){
     return creal(Ig);
 }
 
-static double Vg2Ig_imag(double vgen, double thetag, double psi, double RL){
+double Vg2Ig_imag(double vgen, double thetag, double psi, double RL){
     /*
     Return Ig from Vg (assuming constant Vg).
 
@@ -71,7 +71,7 @@ static double Vg2Ig_imag(double vgen, double thetag, double psi, double RL){
 
         
         
-static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag, double *Ig2Vg_tmp_real, double *Ig2Vg_tmp_imag, double filling_time, double psi, double T1, double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag){
+void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag, double *Ig2Vg_tmp_real, double *Ig2Vg_tmp_imag, double filling_time, double psi, double T1, double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag){
     /*
     Initialize matrix for Ig2Vg_matrix.
 
@@ -132,7 +132,7 @@ static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig
     }        
 }
 
-static void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag, int ring_harmn, double *FFconst){
+void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag, int ring_harmn, double *FFconst){
     //Initialize feedforward constant
     double FFconst_real=0.0;
     double FFconst_imag=0.0;
@@ -150,7 +150,7 @@ static void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag
     
 }
 
-static void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn, double RL, double psi, double *generator_phasor_record_real, double *generator_phasor_record_imag){
+void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn, double RL, double psi, double *generator_phasor_record_real, double *generator_phasor_record_imag){
 
     double ig_real = Vg2Ig_real(vgen, thetag, psi, RL);
     double ig_imag = Vg2Ig_imag(vgen, thetag, psi, RL);
@@ -167,7 +167,7 @@ static void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_rea
     }
 }
 
-static void init_cavity_record_phasor_array(double *vbunch, 
+void init_cavity_record_phasor_array(double *vbunch, 
                                             double *beam_phasor_record_real, double *beam_phasor_record_imag, 
                                             double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
                                             double *generator_phasor_record_real, double *generator_phasor_record_imag,
@@ -187,7 +187,7 @@ static void init_cavity_record_phasor_array(double *vbunch,
         }
 }
 
-static void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, double *vcav_phasor){
+void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, double *vcav_phasor){
     double complex generator_phasor = vgen*cexp(_Complex_I*(thetag+TWOPI/4));
     double complex beam_phasor = vbeam_phasor[0]*cexp(_Complex_I*vbeam_phasor[1]);
     double complex cavity_phasor = generator_phasor + beam_phasor;
@@ -198,7 +198,7 @@ static void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, 
 }
 
 
-static void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, double *dot_output_real, double *dot_output_imag, int ring_harmn){	
+void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, double *dot_output_real, double *dot_output_imag, int ring_harmn){	
     /*
     For whatever stupud reason I have mIg2V to be the inverse matrix in the memory. So the logic
     here is kind of inverted with i and j
@@ -225,7 +225,7 @@ static void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_p
 }
 
 
-static void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, double *vc_list_real, double *vc_list_imag, double *cavity_phasor_record_real, double *cavity_phasor_record_imag, int ring_harmn, int samplenum){
+void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, double *vc_list_real, double *vc_list_imag, double *cavity_phasor_record_real, double *cavity_phasor_record_imag, int ring_harmn, int samplenum){
 
     int idx=0;
     for(idx=0;idx<samplenum;idx++){
@@ -243,7 +243,7 @@ static void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, d
 
 
 
-static void init_sample_list(double *sample_list, int ring_harmn, int every, int samplelist_length){
+void init_sample_list(double *sample_list, int ring_harmn, int every, int samplelist_length){
     /*
     self.sample_list = range(0, self.ring.h, self.every)
     
@@ -265,7 +265,7 @@ static void init_sample_list(double *sample_list, int ring_harmn, int every, int
     }
 }
 
-static void update_sample_list(int *sample_list, int index, int every, int ring_harmn){
+void update_sample_list(int *sample_list, int index, int every, int ring_harmn){
     int idx=0;
     int tt = 0;
     for(idx=index+every-ring_harmn;idx<ring_harmn;idx=idx+every){
@@ -275,7 +275,7 @@ static void update_sample_list(int *sample_list, int index, int every, int ring_
 }
 
 
-static void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator_phasor_record_imag,
+void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator_phasor_record_imag,
                          double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
                          double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
                          double *ig_phasor_record_real, double *ig_phasor_record_imag,
@@ -312,7 +312,7 @@ static void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator
 }
 
 
-static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor_record_imag,
+void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor_record_imag,
                  double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
                  double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
                  double *ig_phasor_record_real, double *ig_phasor_record_imag,
@@ -357,7 +357,7 @@ static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor
 
 
 
-static void update_ig_phasor(double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn){
+void update_ig_phasor(double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn){
     int idx=0;
     for(idx=0;idx<ring_harmn;idx++){
         ig_phasor_record_real[idx] = ig_phasor_real[idx];
@@ -381,7 +381,7 @@ static void init_vc_previous(double *vc_previous_real, double *vc_previous_imag,
 
 
 
-static void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, int ring_harmn, double *cavity_phasor_record_real, double *cavity_phasor_record_imag){
+void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, int ring_harmn, double *cavity_phasor_record_real, double *cavity_phasor_record_imag){
     /*
     
     */
@@ -393,7 +393,7 @@ static void update_vc_previous(double *vc_previous_real, double *vc_previous_ima
 }
 
 
-static void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean, int index, int samplenum){
+void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean, int index, int samplenum){
     int idx=0;
     vc_mean[0] = 0.0;
     vc_mean[1] = 0.0;
@@ -405,7 +405,7 @@ static void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *
 
 
 
-static void roll_array(double *arr, int arr_len, int shift){
+void roll_array(double *arr, int arr_len, int shift){
     
     memmove(arr + shift, arr, (arr_len-shift) * sizeof(*arr));
     memset(arr, 0, shift * sizeof(*arr));
@@ -413,7 +413,7 @@ static void roll_array(double *arr, int arr_len, int shift){
 
 
 
-static void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
+void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
     double vbeami_meas = vbeam[0]*sin(vbeam[1]);
@@ -472,7 +472,7 @@ static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double vo
     PhaseDelay[0] = vcav_meas[1];    
 }
 
-static void compute_tuner(double *vcav_meas, double *vgen_arr,
+void compute_tuner(double *vcav_meas, double *vgen_arr,
                           double *TunerParams, double TunerGain, double TunerAveragingPeriod,
                           double TunerOffset){
 
@@ -487,7 +487,7 @@ static void compute_tuner(double *vcav_meas, double *vgen_arr,
     }
 }
 
-static void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
+void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
                                      double *TunerParams, double TunerGain, double TunerAveragingPeriod){
     /* The cavity voltage is
     V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
@@ -531,7 +531,7 @@ static void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
     }   
 }
 
-static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
+void track_PIL(double *vc_previous_real, double *vc_previous_imag,
                double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
                double *ig_phasor_real, double *ig_phasor_imag,
                double *sample_list, int samplenum, int record_size, int samplelist_length,
