@@ -665,7 +665,7 @@ class ResponseMatrix(_SvdSolver):
 
         return self._on_obs(_set, target, obsid=obsid)
 
-    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None, index: int | None = None) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 
@@ -674,8 +674,11 @@ class ResponseMatrix(_SvdSolver):
 
         Args:
             obsid:      :py:class:`.Observable` name or index in the observable list.
-            refpts:     location of elements to exclude for
+            refpts:     location (refpts from the lattice) of elements to exclude for
               :py:class:`.ElementObservable` objects, otherwise ignored.
+            index:     index of elements to exclude for
+              :py:class:`.ElementObservable` objects, otherwise ignored.
+              Default=None, all the elements of the observable are excluded
 
         Raises:
             ValueError: No observable with the given name.
@@ -683,19 +686,29 @@ class ResponseMatrix(_SvdSolver):
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h", Monitor, Corrector)
+            >>> resp.exclude_obs(obsid="x_orbit", index=2)
+            
+            or
+            
             >>> resp.exclude_obs(obsid="x_orbit", refpts="BPM_02")
 
             Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
-            and exclude the monitor with name "BPM_02"
+            and exclude the second monitor in the orbit observable
         """
 
         def exclude(ob, msk):
             inimask = msk.copy()
             if isinstance(ob, ElementObservable) and not ob.summary:
-                boolref = self.ring.get_bool_index(refpts)
-                # noinspection PyProtectedMember
-                msk &= np.logical_not(boolref[ob._boolrefs])
+                if index is None:
+                    boolref = self.ring.get_bool_index(refpts)
+                    # noinspection PyProtectedMember
+                    msk &= np.logical_not(boolref[ob._boolrefs])
+                elif index is not None and refpts is None:
+                    msk[index] = False
+                else:
+                    msg = "Please select either refpts or index to exclude obsevables"
+                    raise AtError(msg)
             else:
                 msk[:] = False
             if np.all(msk == inimask):
@@ -715,11 +728,12 @@ class ResponseMatrix(_SvdSolver):
                 raise ValueError(msg)
 
     @property
-    def excluded_obs(self) -> dict:
+    def excluded_obs_refpts(self) -> dict:
         """Directory of excluded observables.
 
-        The dictionary keys are the observable names, the values are the integer
-        indices of excluded items (empty list if no exclusion).
+        The dictionary keys are the observable names, the values are the
+        refpts index from the lattice of excluded items
+        (empty list if no exclusion).
         """
 
         def ex(obs, mask):
@@ -734,6 +748,18 @@ class ResponseMatrix(_SvdSolver):
 
         return {
             ob.name: ex(ob, mask)
+            for ob, mask in zip(self.observables, self._ob, strict=True)
+        }
+        
+    @property
+    def excluded_obs_index(self) -> dict:
+        """Directory of excluded observables.
+
+        The dictionary keys are the observable names, the values are the integer
+        indices of excluded items (empty list if no exclusion).
+        """
+        return {
+            ob.name: np.where(mask==False)
             for ob, mask in zip(self.observables, self._ob, strict=True)
         }
 
@@ -952,7 +978,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
         self.attr_name = attr_name
 
-    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None, index: int | None = None) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 
@@ -963,6 +989,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             obsid:      If 0 (default), act on Monitors. Otherwise,
               it must be 1 or "sum(x_kicks)"  or "sum(y_kicks)"
             refpts:    location of Monitors to exclude
+            index:    index of Monitors to exclude
 
         Raises:
             ValueError: No observable with the given name.
@@ -976,7 +1003,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude all monitors with name "BPM_02"
         """
-        super().exclude_obs(obsid=obsid, refpts=refpts)
+        super().exclude_obs(obsid=obsid, refpts=refpts, index=index)
 
     def exclude_vars(self, *varid: int | str, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
