@@ -649,7 +649,7 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
         printf("\n mean_vc %f \t %f \n\n", creal(mean_vc), cimag(mean_vc));
         
         
-        IIR(creal(mean_vc), cimag(mean_vc) IIRcoef, IIRout);
+        IIR(creal(mean_vc), cimag(mean_vc), IIRcoef, IIRout);
 
         diff_record_real[0] = Vc - IIRout[0];
         diff_record_imag[0] = IIRout[1];
