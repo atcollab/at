@@ -8,7 +8,7 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
-static void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, int every, double Vc){
+void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, int every, double Vc){
     
     if(cutoff==0){
         IIRcoef[0] =  1.0;
@@ -27,7 +27,7 @@ static void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, 
     }
 }
 
-static void IIR(double complex input, double *IIRcoef, double *IIRout){
+void IIR(double complex input, double *IIRcoef, double *IIRout){
     /*
 
     """Return IIR filter output."""
@@ -45,7 +45,7 @@ static void IIR(double complex input, double *IIRcoef, double *IIRout){
 }
         
 
-static double complex Vg2Ig_real(double vgen, double thetag, double psi, double RL){
+double complex Vg2Ig_real(double vgen, double thetag, double psi, double RL){
     /*
     Return Ig from Vg (assuming constant Vg).
 
@@ -56,7 +56,7 @@ static double complex Vg2Ig_real(double vgen, double thetag, double psi, double 
     return creal(Ig);
 }
 
-static double complex Vg2Ig_imag(double vgen, double thetag, double psi, double RL){
+double complex Vg2Ig_imag(double vgen, double thetag, double psi, double RL){
     /*
     Return Ig from Vg (assuming constant Vg).
 
@@ -71,7 +71,7 @@ static double complex Vg2Ig_imag(double vgen, double thetag, double psi, double 
 
         
         
-static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag, double *Ig2Vg_tmp_real, double *Ig2Vg_tmp_imag, double filling_time, double psi, double T1, double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag){
+void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag, double *Ig2Vg_tmp_real, double *Ig2Vg_tmp_imag, double filling_time, double psi, double T1, double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag){
     /*
     Initialize matrix for Ig2Vg_matrix.
 
@@ -132,7 +132,7 @@ static void init_Ig2Vg_matrix(int ring_harmn, double *Ig2Vg_vec_real, double *Ig
     }        
 }
 
-static void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag, int ring_harmn, double *FFconst){
+void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag, int ring_harmn, double *FFconst){
     //Initialize feedforward constant
     double FFconst_real=0.0;
     double FFconst_imag=0.0;
@@ -150,7 +150,7 @@ static void init_FFconst(bool FF, double *ig_phasor_real, double *ig_phasor_imag
     
 }
 
-static void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn, double RL, double psi, double *generator_phasor_record_real, double *generator_phasor_record_imag){
+void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn, double RL, double psi, double *generator_phasor_record_real, double *generator_phasor_record_imag){
 
     double ig_real = Vg2Ig_real(vgen, thetag, psi, RL);
     double ig_imag = Vg2Ig_imag(vgen, thetag, psi, RL);
@@ -167,7 +167,7 @@ static void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_rea
     }
 }
 
-static void init_cavity_record_phasor_array(double *vbunch, 
+void init_cavity_record_phasor_array(double *vbunch, 
                                             double *beam_phasor_record_real, double *beam_phasor_record_imag, 
                                             double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
                                             double *generator_phasor_record_real, double *generator_phasor_record_imag,
@@ -187,7 +187,7 @@ static void init_cavity_record_phasor_array(double *vbunch,
         }
 }
 
-static void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, double *vcav_phasor){
+void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, double *vcav_phasor){
     double complex generator_phasor = vgen*cexp(_Complex_I*(thetag+TWOPI/4));
     double complex beam_phasor = vbeam_phasor[0]*cexp(_Complex_I*vbeam_phasor[1]);
     double complex cavity_phasor = generator_phasor + beam_phasor;
@@ -198,7 +198,7 @@ static void set_cavity_phasor(double vgen, double thetag, double *vbeam_phasor, 
 }
 
 
-static void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, double *dot_output_real, double *dot_output_imag, int ring_harmn){	
+void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, double *dot_output_real, double *dot_output_imag, int ring_harmn){	
     /*
     For whatever stupud reason I have mIg2V to be the inverse matrix in the memory. So the logic
     here is kind of inverted with i and j
@@ -225,7 +225,7 @@ static void mat_dot(double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag, double *ig_p
 }
 
 
-static void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, double *vc_list_real, double *vc_list_imag, double *cavity_phasor_record_real, double *cavity_phasor_record_imag, int ring_harmn, int samplenum){
+void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, double *vc_list_real, double *vc_list_imag, double *cavity_phasor_record_real, double *cavity_phasor_record_imag, int ring_harmn, int samplenum){
 
     int idx=0;
     for(idx=0;idx<samplenum;idx++){
@@ -243,7 +243,7 @@ static void concat_vc_list(double *vc_previous_real, double *vc_previous_imag, d
 
 
 
-static void init_sample_list(double *sample_list, int ring_harmn, int every, int samplelist_length){
+void init_sample_list(double *sample_list, int ring_harmn, int every, int samplelist_length){
     /*
     self.sample_list = range(0, self.ring.h, self.every)
     
@@ -275,7 +275,7 @@ void update_sample_list(int *sample_list, int index, int every, int ring_harmn){
 }
 
 
-static void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator_phasor_record_imag,
+void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator_phasor_record_imag,
                          double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
                          double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
                          double *ig_phasor_record_real, double *ig_phasor_record_imag,
@@ -312,7 +312,7 @@ static void Ig2Vg_matrix(double *generator_phasor_record_real, double *generator
 }
 
 
-static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor_record_imag,
+void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor_record_imag,
                  double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
                  double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
                  double *ig_phasor_record_real, double *ig_phasor_record_imag,
@@ -356,26 +356,201 @@ static void Ig2Vg(double *generator_phasor_record_real, double *generator_phasor
 
 
 
-static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
-                      double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
-                      double *ig_phasor_real, double *ig_phasor_imag,
-                      double *sample_list, int samplenum, int record_size, int samplelist_length,
-                      double *diff_record_real, double *diff_record_imag,
-                      double *FFconst, double *gain, double *I_record,
-                      double frf,
-                      double Vc, double theta,
-                      double *generator_phasor_record_real, double *generator_phasor_record_imag,
-                      double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
-                      double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
-                      double *ig_phasor_record_real, double *ig_phasor_record_imag,
-                      double *dot_output_real, double *dot_output_imag,
-                      double kloss, double T1, int ring_harmn, double *vgen_arr,
-                      double *IIRout, double *IIRcoef,
-                      double *vc_list_real, double *vc_list_imag,
-                      int every,
-                      double psi, double rshunt,
-                      int open
-                      ){
+
+void update_ig_phasor(double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn){
+    int idx=0;
+    for(idx=0;idx<ring_harmn;idx++){
+        ig_phasor_record_real[idx] = ig_phasor_real[idx];
+        ig_phasor_record_imag[idx] = ig_phasor_imag[idx];
+    }    
+
+}
+
+void init_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, double *vcav_phasor){
+    /*
+    self.vc_previous = np.ones(
+    self.sample_num) * self.cav_res.cavity_phasor
+    */
+    int idx=0;
+    for(idx=0;idx<samplenum;idx++){
+        vc_previous_real[idx] = vcav_phasor[0];
+        vc_previous_imag[idx] = vcav_phasor[1];
+    }
+
+}
+
+
+
+void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, int ring_harmn, double *cavity_phasor_record_real, double *cavity_phasor_record_imag){
+    /*
+    
+    */
+    int idx=0;
+    for(idx=0;idx<samplenum;idx++){
+        vc_previous_real[idx] = cavity_phasor_record_real[ring_harmn-samplenum+idx];
+        vc_previous_imag[idx] = cavity_phasor_record_imag[ring_harmn-samplenum+idx];
+    }    
+}
+
+
+void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean, int index, int samplenum){
+    int idx=0;
+    vc_mean[0] = 0.0;
+    vc_mean[1] = 0.0;
+    for(idx=index;idx<index+samplenum;idx++){
+        vc_mean[0] += vc_list_real[idx]/samplenum;
+        vc_mean[1] += vc_list_imag[idx]/samplenum;
+    }
+}
+
+
+
+void roll_array(double *arr, int arr_len, int shift){
+    
+    memmove(arr + shift, arr, (arr_len-shift) * sizeof(*arr));
+    memset(arr, 0, shift * sizeof(*arr));
+}
+
+
+
+void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
+
+    double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
+    double vbeami_meas = vbeam[0]*sin(vbeam[1]);
+    
+    double vgenr_meas = -vgen[0]*sin(vgen[1]);
+    double vgeni_meas = vgen[0]*cos(vgen[1]);      
+    
+    double vcavr_meas = vgenr_meas + vbeamr_meas;
+    double vcavi_meas = vgeni_meas + vbeami_meas;   
+
+    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
+    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
+
+    double meas_psi = vgen[1] - phis_meas;
+    
+    // This part is needed to make sure there is not a 2pi
+    // phase difference (sometimes seen with harmonic cavity
+
+    if(meas_psi<-TWOPI/2){
+        meas_psi += TWOPI;
+    }else if(meas_psi > TWOPI/2){
+        meas_psi -= TWOPI;
+    }
+    
+    vgen_set[0] = vcav_meas;
+    vgen_set[1] = phis_meas;
+    vgen_set[2] = meas_psi;
+
+}
+void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
+                        double phasegain, double *VoltDelay, double *PhaseDelay, int delay){
+    /*
+            diff_A = self.volt_delay[-1] - self.cav_res.Vc
+        diff_P = self.phase_delay[-1] - self.cav_res.theta
+        self.cav_res.Vg -= self.gain_A * diff_A
+        self.cav_res.theta_g -= self.gain_P * diff_P
+        self.cav_res.generator_phasor_record = np.ones(
+            self.ring.h) * self.cav_res.generator_phasor
+        self.volt_delay = np.roll(self.volt_delay, 1)
+        self.phase_delay = np.roll(self.phase_delay, 1)
+        self.volt_delay[0] = self.cav_res.cavity_voltage
+        self.phase_delay[0] = self.cav_res.cavity_phase
+
+    */
+    
+    double diff_Amp = VoltDelay[delay-1] - vcav[0];
+    double diff_Phase = PhaseDelay[delay-1] - vcav[1];
+    vgen[0] -= voltgain * diff_Amp;
+    vgen[1] -= phasegain * diff_Phase;
+    
+    roll_array(VoltDelay, delay, 1);
+    roll_array(PhaseDelay, delay, 1);
+
+    
+    VoltDelay[0] = vcav_meas[0];
+    PhaseDelay[0] = vcav_meas[1];    
+}
+
+void compute_tuner(double *vcav_meas, double *vgen_arr,
+                          double *TunerParams, double TunerGain, double TunerAveragingPeriod,
+                          double TunerOffset){
+
+    TunerParams[0] += 1; // TunerCount        
+    TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
+    
+    if(TunerParams[0]==TunerAveragingPeriod){
+        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
+        vgen_arr[2] += TunerGain * TunerParams[1];
+        TunerParams[0] = 0.0; //TunerCount
+        TunerParams[1] = 0.0; //TunerDiff
+    }
+}
+
+void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
+                                     double *TunerParams, double TunerGain, double TunerAveragingPeriod){
+    /* The cavity voltage is
+    V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
+    We save the amplitude of vbeam, so the exponent goes to 1.
+    Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
+    */
+
+    double vset = vcav[0]; /* desired vbeam */
+    double psi = vgen[2]; /*current psi */
+    double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
+    
+    /*vbeam amp contains cos(psi). So replace with sin(psi)
+    to get get the gradient */
+    double grad = vpeak*sin(psi)/cos(psi); 
+    double delta_psi = 0.0;
+
+    /* If the cavity is detuned positively, the psi needs to
+    be increased to reduce the voltage. Likewise, if the cavity
+    is detuned negatively, the psi needs to be decreased to reduce
+    the voltage.
+    */
+        
+    int sg = (psi<0) - (psi>0);
+
+    TunerParams[0] += 1; // TunerCount        
+    TunerParams[1] += vset - vpeak; //DeltaV
+    if(TunerParams[0]==TunerAveragingPeriod){
+        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod);
+
+        delta_psi = TunerParams[1] / grad; /*linear extrapolation*/
+
+        /* This is to avoid setting a value if grad is 0, as then
+        delta_psi is inf, which even when multiplied by 0 gives nan
+        */
+        if (grad!=0.0){
+            vgen[2] += sg*delta_psi*TunerGain;
+        }
+        
+        TunerParams[0] = 0.0; //TunerCount
+        TunerParams[1] = 0.0; //TunerDiff
+    }   
+}
+
+void track_PIL(double *vc_previous_real, double *vc_previous_imag,
+               double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
+               double *ig_phasor_real, double *ig_phasor_imag,
+               double *sample_list, int samplenum, int record_size, int samplelist_length,
+               double *diff_record_real, double *diff_record_imag,
+               double *FFconst, double *gain, double *I_record,
+               double frf,
+               double Vc, double theta,
+               double *generator_phasor_record_real, double *generator_phasor_record_imag,
+               double *Ig2Vg_vec_real, double *Ig2Vg_vec_imag,
+               double *Ig2Vg_mat_real, double *Ig2Vg_mat_imag,
+               double *ig_phasor_record_real, double *ig_phasor_record_imag,
+               double *dot_output_real, double *dot_output_imag,
+               double kloss, double T1, int ring_harmn, double *vgen_arr,
+               double *IIRout, double *IIRcoef,
+               double *vc_list_real, double *vc_list_imag,
+               int every,
+               double psi, double rshunt,
+               int open
+               ){
     /*
     def track(self, apply_changes: bool = True):
         """
@@ -436,7 +611,7 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
     for(idx=0;idx<samplelist_length;idx++){
         index_tmp = sample_list[idx];
         index = (int)index_tmp;
-        printf("LOOK AT THIS ONE THE INDEX IS %d \t %d \t %f \t %f \n", (int)index, idx, index, idx);
+        printf("LOOK AT THIS ONE THE INDEX IS %d \t %d \t %f \t %d \n", (int)index, idx, index, idx);
         diff_real = diff_record_real[record_size-1] - FFconst[0];
         diff_imag = diff_record_imag[record_size-1] - FFconst[1];
         printf("diff_real[0] %f \n", diff_real);
@@ -467,8 +642,8 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
 
         printf("\n ig_phasor_real %f \t imag %f \n", ig_phasor_real[0], ig_phasor_imag[0]);
 
-        roll_array(diff_record_real, record_size);
-        roll_array(diff_record_imag, record_size);
+        roll_array(diff_record_real, record_size, 1);
+        roll_array(diff_record_imag, record_size, 1);
         printf("\n\n vc list %f \t %f \n\n", vc_list_real[0], vc_list_imag[0]);
         compute_mean_vc(vc_list_real, vc_list_imag, mean_vc_arr, index, samplenum);
         printf("\n mean_vc arr %f \t %f \n\n", mean_vc_arr[0], mean_vc_arr[1]);
@@ -500,180 +675,6 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
                          dot_output_real, dot_output_imag,
                          kloss, T1, ring_harmn, vgen_arr);     
         }                    
-    };
-
-void update_ig_phasor(double *ig_phasor_real, double *ig_phasor_imag, double *ig_phasor_record_real, double *ig_phasor_record_imag, int ring_harmn){
-    int idx=0;
-    for(idx=0;idx<ring_harmn;idx++){
-        ig_phasor_record_real[idx] = ig_phasor_real[idx];
-        ig_phasor_record_imag[idx] = ig_phasor_imag[idx];
-    }    
-
-}
-
-static void init_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, double *vcav_phasor){
-    /*
-    self.vc_previous = np.ones(
-    self.sample_num) * self.cav_res.cavity_phasor
-    */
-    int idx=0;
-    for(idx=0;idx<samplenum;idx++){
-        vc_previous_real[idx] = vcav_phasor[0];
-        vc_previous_imag[idx] = vcav_phasor[1];
-    }
-
-}
-
-
-
-void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int samplenum, int ring_harmn, double *cavity_phasor_record_real, double *cavity_phasor_record_imag){
-    /*
-    
-    */
-    int idx=0;
-    for(idx=0;idx<samplenum;idx++){
-        vc_previous_real[idx] = cavity_phasor_record_real[ring_harmn-samplenum+idx];
-        vc_previous_imag[idx] = cavity_phasor_record_imag[ring_harmn-samplenum+idx];
-    }    
-}
-
-
-void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean, int index, int samplenum){
-    int idx=0;
-    vc_mean[0] = 0.0;
-    vc_mean[1] = 0.0;
-    for(idx=index;idx<index+samplenum;idx++){
-        vc_mean[0] += vc_list_real[idx]/samplenum;
-        vc_mean[1] += vc_list_imag[idx]/samplenum;
-    }
-}
-
-
-
-void roll_array(double *arr, int arr_len, int shift){
-    
-    memmove(arr + shift, arr, (arr_len-shift) * sizeof(*arr));
-    memset(arr, 0, shift * sizeof(*arr));
-}
-
-
-
-static void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
-
-    double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
-    double vbeami_meas = vbeam[0]*sin(vbeam[1]);
-    
-    double vgenr_meas = -vgen[0]*sin(vgen[1]);
-    double vgeni_meas = vgen[0]*cos(vgen[1]);      
-    
-    double vcavr_meas = vgenr_meas + vbeamr_meas;
-    double vcavi_meas = vgeni_meas + vbeami_meas;   
-
-    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
-    double phis_meas = -atan2(vcavr_meas, vcavi_meas);
-
-    double meas_psi = vgen[1] - phis_meas;
-    
-    // This part is needed to make sure there is not a 2pi
-    // phase difference (sometimes seen with harmonic cavity
-
-    if(meas_psi<-TWOPI/2){
-        meas_psi += TWOPI;
-    }else if(meas_psi > TWOPI/2){
-        meas_psi -= TWOPI;
-    }
-    
-    vgen_set[0] = vcav_meas;
-    vgen_set[1] = phis_meas;
-    vgen_set[2] = meas_psi;
-
-}
-static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,
-                        double phasegain, double *VoltDelay, double *PhaseDelay, int delay){
-    /*
-            diff_A = self.volt_delay[-1] - self.cav_res.Vc
-        diff_P = self.phase_delay[-1] - self.cav_res.theta
-        self.cav_res.Vg -= self.gain_A * diff_A
-        self.cav_res.theta_g -= self.gain_P * diff_P
-        self.cav_res.generator_phasor_record = np.ones(
-            self.ring.h) * self.cav_res.generator_phasor
-        self.volt_delay = np.roll(self.volt_delay, 1)
-        self.phase_delay = np.roll(self.phase_delay, 1)
-        self.volt_delay[0] = self.cav_res.cavity_voltage
-        self.phase_delay[0] = self.cav_res.cavity_phase
-
-    */
-    
-    double diff_Amp = VoltDelay[delay-1] - vcav[0];
-    double diff_Phase = PhaseDelay[delay-1] - vcav[1];
-    vgen[0] -= voltgain * diff_Amp;
-    vgen[1] -= phasegain * diff_Phase;
-    
-    roll_array(VoltDelay, delay, 1);
-    roll_array(PhaseDelay, delay, 1);
-
-    
-    VoltDelay[0] = vcav_meas[0];
-    PhaseDelay[0] = vcav_meas[1];    
-}
-
-static void compute_tuner(double *vcav_meas, double *vgen_arr,
-                          double *TunerParams, double TunerGain, double TunerAveragingPeriod,
-                          double TunerOffset){
-
-    TunerParams[0] += 1; // TunerCount        
-    TunerParams[1] += (vcav_meas[2] - vgen_arr[2]); //TunerDiff
-    
-    if(TunerParams[0]==TunerAveragingPeriod){
-        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod) + TunerOffset;
-        vgen_arr[2] += TunerGain * TunerParams[1];
-        TunerParams[0] = 0.0; //TunerCount
-        TunerParams[1] = 0.0; //TunerDiff
-    }
-}
-
-static void update_passive_frequency(double *vbeam, double *vcav, double *vgen,
-                                     double *TunerParams, double TunerGain, double TunerAveragingPeriod){
-    /* The cavity voltage is
-    V(t) = 2*I0*rs*cos(psi)*exp(i(wt+psi))
-    We save the amplitude of vbeam, so the exponent goes to 1.
-    Therefore vbeam[0] = 2*I0*rs*cos(psi) which is the cavity voltage.
-    */
-
-    double vset = vcav[0]; /* desired vbeam */
-    double psi = vgen[2]; /*current psi */
-    double vpeak = vbeam[0]; /* Peak amplitude of cavity voltage */
-    
-    /*vbeam amp contains cos(psi). So replace with sin(psi)
-    to get get the gradient */
-    double grad = vpeak*sin(psi)/cos(psi); 
-    double delta_psi = 0.0;
-
-    /* If the cavity is detuned positively, the psi needs to
-    be increased to reduce the voltage. Likewise, if the cavity
-    is detuned negatively, the psi needs to be decreased to reduce
-    the voltage.
-    */
-        
-    int sg = (psi<0) - (psi>0);
-
-    TunerParams[0] += 1; // TunerCount        
-    TunerParams[1] += vset - vpeak; //DeltaV
-    if(TunerParams[0]==TunerAveragingPeriod){
-        TunerParams[1] = (TunerParams[1]/TunerAveragingPeriod);
-
-        delta_psi = TunerParams[1] / grad; /*linear extrapolation*/
-
-        /* This is to avoid setting a value if grad is 0, as then
-        delta_psi is inf, which even when multiplied by 0 gives nan
-        */
-        if (grad!=0.0){
-            vgen[2] += sg*delta_psi*TunerGain;
-        }
-        
-        TunerParams[0] = 0.0; //TunerCount
-        TunerParams[1] = 0.0; //TunerDiff
-    }   
-}
+};
 
 

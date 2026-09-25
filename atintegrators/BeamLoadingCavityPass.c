@@ -1,7 +1,6 @@
 #include "atconstants.h"
 #include "atelem.c"
 #include "atimplib.c"
-#include "atfeedbacklib.c"
 #include "attrackfunc.c"
 #include "atfeedbacklib.c"
 #include <complex.h>
@@ -18,7 +17,6 @@ struct elem
   int buffersize;
   int openloop;
   double normfact;
-  double *gain;
   double *turnhistory;
   double *z_cuts;
   int delay;  double *VoltDelay; double *PhaseDelay;
@@ -34,12 +32,10 @@ struct elem
   double Beta;
   double phis;
   double ts;
-  double TunerOffset; int TunerAveragingPeriod; double TunerGain; double *TunerParams;
   double *vbunch;
   double *vbeam_phasor; double *vbeam;
   double *vcav; double *vgen;
   double *vgen_buffer; double *vbeam_buffer; double *vbunch_buffer;
-  int delay;  double *VoltDelay; double *PhaseDelay;
   int samplenum; int every; int recordsize;
   int ff; double cutoff;
   double *Ig2Vg_vec; double *Ig2Vg_tmp;
@@ -94,17 +90,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     int TunerAveragingPeriod = Elem->TunerAveragingPeriod;
     double *TunerParams = Elem->TunerParams; //TunerParams[0] is TunerCount, TunerParams[1] is TunerDiff
 
-    //if fb mode is PROP then gain[0] is Voltgain and gain[1] is PhaseGain
-    //if fb mode is PROP_INTEGRAL then gain[0] is Prop gain and gain[1] is integral gain
-    double *gain = Elem->gain;
-
-    int delay = Elem->delay; 
-    double *VoltDelay = Elem->VoltDelay;
-    double *PhaseDelay = Elem->PhaseDelay;
-
-    double ts = Elem->ts;
-
-    
     //if fb mode is PROP then gain[0] is Voltgain and gain[1] is PhaseGain
     //if fb mode is PROP_INTEGRAL then gain[0] is Prop gain and gain[1] is integral gain
     double *gain = Elem->gain;
@@ -373,8 +358,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *vbeam_buffer;
         double *vbunch_buffer;
         double *z_cuts;
-        double Energy, Frequency, TimeLag, Length;
-        double qfactor,rshunt,beta;
+
         double *vbunch;
         double *vbeam_phasor;
         double *vbeam;
