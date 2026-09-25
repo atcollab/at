@@ -94,8 +94,8 @@ def test_resistive_wall_element(hmba_lattice):
 def test_beamloading(hmba_lattice):
     ring = hmba_lattice.enable_6d(copy=True)
     with pytest.raises(Exception):
-        add_beamloading(ring, 44e3, 400, cavpts=range(len(ring)))
-    add_beamloading(ring, 44e3, 400)
+        add_beamloading(ring, 2*44e3, 2*400,1, cavpts=range(len(ring)))
+    add_beamloading(ring, 2*44e3, 2*400, 1)
     cavs = ring.get_elements(at.RFCavity)  
     for cav in cavs:
         assert cav.PassMethod == 'BeamLoadingCavityPass'
@@ -119,7 +119,7 @@ def test_track_beamloading(hmba_lattice, func):
     ring = hmba_lattice.enable_6d(copy=True)
     ring.set_fillpattern(2)
     ring.set_beam_current(0.2)
-    at.add_beamloading(ring, 44e3, 400)
+    at.add_beamloading(ring, 2*44e3, 2*400, 1)
     rin = numpy.zeros((6, 1))
     if 'win' in platform:
         with pytest.raises(Exception):
@@ -152,7 +152,7 @@ def test_buffers(hmba_lattice):
     ring.set_fillpattern(nbunch)
     ring.beam_current = 0.2
 
-    add_beamloading(ring, 44e3, 400, Nturns=nturns, Nslice=nslice,
+    add_beamloading(ring, 2*44e3, 2*400, 1, Nturns=nturns, Nslice=nslice,
                     buffersize=nturns)
     rin = numpy.zeros((6, nbunch)) + 1.0e-6
     bl_elem = ring.get_elements('*_BL')[0]
