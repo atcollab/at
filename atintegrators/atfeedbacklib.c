@@ -8,6 +8,8 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
+#ifndef _MSC_VER  
+
 static void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, int every, double Vc){
     
     if(cutoff==0){
@@ -27,7 +29,7 @@ static void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, 
     }
 }
 
-static void IIR(double input_real, double input_imag, double *IIRcoef, double *IIRout){
+static void IIR(double complex input, double *IIRcoef, double *IIRout){
     /*
 
     """Return IIR filter output."""
@@ -37,8 +39,8 @@ static void IIR(double input_real, double input_imag, double *IIRcoef, double *I
     */
 
     
-    IIRout[0] = (1 - IIRcoef[0]) * IIRout[0] + IIRcoef[0] * input_real;
-    IIRout[1] = (1 - IIRcoef[0]) * IIRout[1] + IIRcoef[0] * input_imag;
+    IIRout[0] = (1 - IIRcoef[0]) * IIRout[0] + IIRcoef[0] * creal(input);
+    IIRout[1] = (1 - IIRcoef[0]) * IIRout[1] + IIRcoef[0] * cimag(input;
     
 }
         
@@ -649,7 +651,7 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
         printf("\n mean_vc %f \t %f \n\n", creal(mean_vc), cimag(mean_vc));
         
         
-        IIR(creal(mean_vc), cimag(mean_vc), IIRcoef, IIRout);
+        IIR(creal(mean_vc), IIRcoef, IIRout);
 
         diff_record_real[0] = Vc - IIRout[0];
         diff_record_imag[0] = IIRout[1];
@@ -676,4 +678,5 @@ static void track_PIL(double *vc_previous_real, double *vc_previous_imag,
         }                    
 };
 
+#endif    
 
