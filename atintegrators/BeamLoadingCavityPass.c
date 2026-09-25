@@ -192,8 +192,9 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double kloss = rshunt * TWOPI * freqres / (2 * qfactor);
 
     double vcav_phasor[] = {0.0, 0.0}; 
+    #ifndef _MSC_VER
     set_cavity_phasor(vgen, gen_phase, vbeam_phasor, vcav_phasor);
-
+    #endif
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
