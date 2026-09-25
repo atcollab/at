@@ -314,6 +314,7 @@ static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *tur
     /* The vbeam_complex will always be sent to the center of the next bucket */
 
     double bucket_z_center = 0.0;
+
     for(ibucket=0; ibucket<ring_harmn; ibucket++){
         is_filled = fillpattern[ibucket]; 
         bucket_z_center = ibucket*main_bucket;
