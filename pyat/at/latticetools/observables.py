@@ -66,8 +66,9 @@ from typing import ClassVar, Any
 
 import numpy as np
 import numpy.typing as npt
+import warnings
 
-from ..lattice import AtError, AxisDef, axis_, plane_
+from ..lattice import AtError, AxisDef, axis_, plane_, AtWarning
 from ..lattice import Lattice, Refpts, End
 
 RefIndex = int | tuple[int, ...] | slice
@@ -288,7 +289,7 @@ class Observable:
         fun: Callable,
         *eval_args,
         name: str | None = None,
-        target: npt.ArrayLike | None = None,
+        target: npt.ArrayLike = np.nan,
         weight: npt.ArrayLike = 1.0,
         bounds=(0.0, 0.0),
         needs: AbstractSet[Need] | None = None,
@@ -302,8 +303,9 @@ class Observable:
               name will be generated
             fun:            :ref:`evaluation function <base_eval>`
             *eval_args:          Arguments provided to the evaluation function
-            target:         Target value for a constraint. If :py:obj:`None`
-              (default), the residual will always be zero.
+            target:         Target value for a constraint.
+              If :py:obj:`None`, the residual will always be zero.
+              If :py:obj:`np.nan` (default), the residual will be :py:obj:`np.nan`.
             weight:         Weight factor: the residual is
               :pycode:`((value-target)/weight)**2`
             bounds:         Tuple of lower and upper bounds. The parameter
@@ -526,6 +528,8 @@ class Observable:
             deviation = None
         elif self.target is None:
             deviation = np.broadcast_to(0.0, vnow.shape)
+        elif self.target is np.nan:
+            deviation = np.nan
         else:
             vsh = vnow.shape
             diff = np.atleast_1d(vnow - np.broadcast_to(self.target, vsh))
