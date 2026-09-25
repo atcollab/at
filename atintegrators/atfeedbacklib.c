@@ -37,8 +37,8 @@ static void IIR(double input_real, double input_imag, double *IIRcoef, double *I
     */
 
     
-    IIRout[0] = (1 - IIRcoef[0]) * IIRout[0] + IIRcoef[0] * creal(input);
-    IIRout[1] = (1 - IIRcoef[0]) * IIRout[1] + IIRcoef[0] * cimag(input);
+    IIRout[0] = (1 - IIRcoef[0]) * IIRout[0] + IIRcoef[0] * input_real;
+    IIRout[1] = (1 - IIRcoef[0]) * IIRout[1] + IIRcoef[0] * input_imag;
     
 }
         
