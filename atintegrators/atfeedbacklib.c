@@ -8,7 +8,7 @@
 #include <mpi4py/mpi4py.h>
 #endif
 
-#ifndef _MSC_VER  
+
 
 void init_IIR(double cutoff, double *IIRcoef, double *IIRout, double T1, int every, double Vc){
     
@@ -678,5 +678,4 @@ void track_PIL(double *vc_previous_real, double *vc_previous_imag,
         }                    
 };
 
-#endif    
 

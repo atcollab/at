@@ -2,8 +2,11 @@
 #include "atelem.c"
 #include "atimplib.c"
 #include "attrackfunc.c"
+
+#ifndef _MSC_VER  
 #include "atfeedbacklib.c"
 #include <complex.h>
+#endif
 
 /*
  * BeamLoadingCavity pass method by Simon White.  
@@ -199,7 +202,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     
     /*Track RF cavity is always done. */
     trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
-    
+    #ifndef _MSC_VER
     /*Only allocate memory if current is > 0*/
     if(tot_current>0 && rshunt > 0){
         void *buffer = atMalloc(sz);
@@ -333,7 +336,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         vbeam[1] = ave_vbeam[1];
         atFree(buffer);
     }
-    
+    #endif
 }
 
 
