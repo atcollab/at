@@ -15,7 +15,7 @@ DefaultNumIntSteps = 10;
 [method,rsrc]  = getoption(rsrc,'PassMethod',method);
 [lg,rsrc]      = getoption(rsrc,'Length',0);
 [defmax,rsrc]  = getoption(rsrc,'DefaultMaxOrder',0);
-elem           = struct('FamName',famname,'PassMethod',method,'Length',lg,rsrc{:});
+elem           = struct('FamName',char(famname),'PassMethod',char(method),'Length',lg,rsrc{:});
 
 % Making PolynomA of same length with zero padding when necesssary
 ab = isfield(elem,{'PolynomA','PolynomB'});

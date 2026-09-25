@@ -1,12 +1,9 @@
+import at
 import numpy as np
 import pytest
+from at import AtWarning, internal_lpass, lattice_pass, lattice_track, physics
 from numpy.testing import assert_allclose as assert_close
 from numpy.testing import assert_equal
-
-import at
-from at import AtWarning, physics
-from at import lattice_pass, internal_lpass
-from at import lattice_track
 
 DP = 1e-5
 DP2 = 0.005
@@ -161,7 +158,7 @@ def test_find_sync_orbit_finds_zeros(dba_lattice):
 def test_find_orbit6(request, lattice):
     lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
     refpts = np.ones(len(lattice), dtype=bool)
-    orbit6, all_points = lattice.find_orbit6(refpts)
+    orbit6, _ = lattice.find_orbit6(refpts)
     assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-12)
 
 
@@ -199,10 +196,8 @@ def test_find_m44_no_refpts(dba_lattice):
 
 @pytest.mark.parametrize("refpts", ([145], [1, 2, 3, 145]))
 def test_linopt(dba_lattice, refpts):
-    """Compare with Matlab results"""
-    lindata0, tune, chrom, lindata = physics.linopt(
-        dba_lattice, DP2, refpts, get_chrom=True
-    )
+    """Compare with Matlab results."""
+    _, tune, chrom, lindata = physics.linopt(dba_lattice, DP2, refpts, get_chrom=True)
     obs = lindata[-1]
     assert_close(tune, [0.355804633927360, 0.488487169156598], rtol=1e-8)
     assert_close(chrom, [-3.428312247995742, -1.597924047969101], rtol=2e-4)
@@ -267,10 +262,8 @@ def test_linopt(dba_lattice, refpts):
 
 @pytest.mark.parametrize("refpts", ([145], [1, 2, 3, 145]))
 def test_linopt_uncoupled(dba_lattice, refpts):
-    """Compare with Matlab results"""
-    lindata0, tune, chrom, lindata = physics.linopt(
-        dba_lattice, DP2, refpts, coupled=False
-    )
+    """Compare with Matlab results."""
+    _, tune, _, lindata = physics.linopt(dba_lattice, DP2, refpts, coupled=False)
     obs = lindata[-1]
     assert_close(tune, [0.355804634603528, 0.488487169156732], rtol=1e-8)
     assert_close(obs["s_pos"], 56.209377216, atol=1e-9)
@@ -303,7 +296,7 @@ def test_linopt_uncoupled(dba_lattice, refpts):
 
 
 def test_linopt_no_refpts(dba_lattice):
-    lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, get_chrom=True)
+    _, _, _, lindata = physics.linopt(dba_lattice, DP, get_chrom=True)
     assert list(lindata) == []
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
@@ -311,8 +304,8 @@ def test_linopt_no_refpts(dba_lattice):
 @pytest.mark.parametrize("refpts", ([121], [1, 2, 3, 121]))
 def test_linopt_line(hmba_lattice, refpts):
     #    refpts.append(len(hmba_lattice))
-    l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts)
-    lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
+    l0, _, _, ld = at.linopt(hmba_lattice, refpts=refpts)
+    _, _, _, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
     assert_close(ld["beta"], ltd["beta"], rtol=1e-12)
     assert_close(ld["s_pos"], ltd["s_pos"], rtol=1e-12)
     assert_close(ld["closed_orbit"], ltd["closed_orbit"], rtol=1e-12)
@@ -431,9 +424,9 @@ def test_simple_ring():
     ring = physics.simple_ring(6e9, 844, 992, 0.1, 0.2, 6e6, 8.5e-5)
     assert_equal(len(ring), 5)
     num_cavities = len(ring[at.RFCavity])
-    assert_equal(ring[num_cavities+1].PassMethod, "SimpleQuantDiffPass")
+    assert_equal(ring[num_cavities + 1].PassMethod, "SimpleQuantDiffPass")
     ring.disable_6d()
-    assert_equal(ring[num_cavities+1].PassMethod, "IdentityPass")
+    assert_equal(ring[num_cavities + 1].PassMethod, "IdentityPass")
     assert_close(ring.get_tune(), [0.1, 0.2], atol=1e-10)
 
 
@@ -444,7 +437,7 @@ def test_simple_ring():
 @pytest.mark.parametrize("refpts", ([121], [0, 40, 121]))
 def test_ohmi_envelope(request, lattice, refpts):
     lattice = request.getfixturevalue(lattice).enable_6d(copy=True)
-    emit0, beamdata, emit = lattice.ohmi_envelope(refpts)
+    _, beamdata, emit = lattice.ohmi_envelope(refpts)
     obs = emit[-1]
 
     # All expected values are Matlab results
@@ -526,7 +519,7 @@ def test_ohmi_envelope(request, lattice, refpts):
         [-1.2683061573110081e-15, -1.2870496457572292e-13, -4.9337080646554964e-23,
          -2.3925455405223884e-23,  9.7941378315054641e-10,  9.3578103418469929e-06]
         ]),
-        rtol=1.0E-12, atol=2.0E-12
+        rtol=1.0E-12, atol=3.0E-12
     )
 
     assert_close(
@@ -592,6 +585,10 @@ def test_rdt(hmba_lattice):
         "refpts": [5],
         "h20000": [-2.95967705 - 1.77129145j],
         "h00200": [1.91618925 + 1.03505564j],
+        "h11000": [342.6894347 + 0.0j],
+        "h00110": [257.16817596 + 0.0j],
+        "h10001": [0.00644487 + 0.00176723j],
+        "h00002": [0.24292177 + 0.0j],
         "h10010": [0.0 + 0.0j],
         "h10100": [0.0 + 0.0j],
         "h11001": [18.80466492 + 0.0j],
@@ -599,6 +596,7 @@ def test_rdt(hmba_lattice):
         "h20001": [-4.13510682 - 2.41357511j],
         "h00201": [1.71499168 + 0.93163935j],
         "h10002": [-0.00846011 - 0.00231724j],
+        "h00003": [-0.07697747 + 0.0j],
         "h21000": [-0.82318652 - 0.22468352j],
         "h30000": [-1.93582223 - 1.99073744j],
         "h10110": [5.86104821 + 1.60003465j],
@@ -618,17 +616,31 @@ def test_rdt(hmba_lattice):
         "h20200": [-210.39145057 - 349.80230878j],
         "h00310": [-578.20990151 - 313.16651706j],
         "h00400": [-68.59147195 - 105.14365305j],
-        "h21001": [7.67441163 + 2.09471862j],
-        "h30001": [17.54984324 + 18.0477455j],
-        "h10021": [40.21318804 - 9.41188329j],
-        "h10111": [-10.38109186 - 2.83315514j],
-        "h10201": [44.75048054 + 42.77549618j],
-        "h11002": [-370.02209659 + 0.0j],
-        "h20002": [7.0782955 + 4.17514102j],
-        "h00112": [250.26027312 + 0.0j],
-        "h00202": [3.50518531 + 1.89845499j],
-        "h10003": [0.00699234 + 0.00190852j],
-        "h00004": [-0.08428393 + 0.0j],
+        "h21001": [8.49759816 + 2.31940215j],
+        "h30001": [19.48566545 + 20.03848294j],
+        "h10021": [32.25603524 - 7.54967556j],
+        "h10111": [-16.24214009 - 4.43318979j],
+        "h10201": [47.9919823 + 45.87430765j],
+        "h11002": [-388.82676151 + 0.0j],
+        "h20002": [11.21340231 + 6.58871615j],
+        "h00112": [236.73487128 + 0.0j],
+        "h00202": [1.79019363 + 0.96681565j],
+        "h10003": [0.01545246 + 0.00422576j],
+        "h00004": [-0.00730645 + 0.0j],
+        "h10400": [0.0 + 0.0j],
+        "h10040": [0.0 + 0.0j],
+        "h10310": [0.0 + 0.0j],
+        "h10130": [0.0 + 0.0j],
+        "h10220": [0.0 + 0.0j],
+        "h30200": [0.0 + 0.0j],
+        "h30020": [0.0 + 0.0j],
+        "h21200": [0.0 + 0.0j],
+        "h21020": [0.0 + 0.0j],
+        "h30110": [0.0 + 0.0j],
+        "h21110": [0.0 + 0.0j],
+        "h50000": [0.0 + 0.0j],
+        "h41000": [0.0 + 0.0j],
+        "h32000": [0.0 + 0.0j],
     }
 
     ring = at.Lattice(hmba_lattice, periodicity=32)

@@ -1,6 +1,5 @@
 """ID table :py:class:`.Element`."""
 
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -339,9 +338,9 @@ class InsertionDeviceKickMap(Element):
                         kick_block[block_lines - 2][:] = sline[1:]
                     if block_lines > v_points:
                         block_lines = 0
-                        kick_block_list.append(kick_block)
-                        kick_haxes_list.append(haxis)
-                        kick_vaxes_list.append(vaxis)
+                        kick_block_list.append(np.copy(kick_block))
+                        kick_haxes_list.append(np.copy(haxis))
+                        kick_vaxes_list.append(np.copy(vaxis))
                     block_lines += 1
         # checking how many kick blocks were added
         lenkick_block_list = len(kick_block_list)
