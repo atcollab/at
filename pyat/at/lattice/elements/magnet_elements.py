@@ -381,6 +381,20 @@ class ThinMultipole(Element):
     )
 
     @property
+    def KickAngle(self) -> np.ndarray:
+        """Deviation angles (H, V).
+
+        Provided for backwards compatibility, use *HKick*, *VKick* instead.
+        """
+        return np.atan([-self.Kn0L, self.Ks0L])
+
+    @KickAngle.setter
+    def KickAngle(self, value) -> None:
+        kicks = np.tan(value)
+        self.Kn0L = -kicks[0]
+        self.Ks0L = kicks[1]
+
+    @property
     def HKick(self) -> float:
         """Integrated horizontal momentum kick."""
         return -self.Kn0L
@@ -429,7 +443,6 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault("PassMethod", "StrMPoleSymplectic4Pass")
-        kwargs.setdefault("NumIntSteps", 10)
         super().__init__(family_name, length, poly_a, poly_b, **kwargs)
 
     def is_compatible(self, other) -> bool:
@@ -548,7 +561,7 @@ class Dipole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=0:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps:        Number of integration steps
             FullGap:            Magnet full gap
             FringeInt1:         Extension of the entrance fringe field
             FringeInt2:         Extension of the exit fringe field
@@ -642,7 +655,7 @@ class Quadrupole(Radiative, Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder=1:         Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps :       Number of integration steps
             FringeQuadEntrance: 0: no fringe field effect (default)
 
               1: Lee-Whiting's thin lens limit formula
@@ -683,7 +696,7 @@ class Sextupole(Multipole):
             PolynomB:           normal multipoles
             PolynomA:           skew multipoles
             MaxOrder:           Number of desired multipoles
-            NumIntSteps=10:     Number of integration steps
+            NumIntSteps:        Number of integration steps
             FieldScaling:       Scaling factor applied to the magnetic field
               (*PolynomA* and *PolynomB*)
 
@@ -706,6 +719,10 @@ class Corrector(LongElement):
 
     # Class attributes
     _BUILD_ATTRIBUTES = [*LongElement._BUILD_ATTRIBUTES, "KickAngle"]
+    _conversions = dict(
+        Element._conversions,
+        KickAngle=lambda v: _array(v, (2,)),
+    )
 
     # Instance attributes
     KickAngle: np.ndarray  #: (H, V) deviation angles

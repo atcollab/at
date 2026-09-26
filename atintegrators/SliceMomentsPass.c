@@ -50,8 +50,8 @@ static void slice_beam(double *r_in,int num_particles,int nslice,int turn,
     double *spos = dptr; dptr += nbunch*nslice;
     double *weight = dptr;
     
-    for (i=0;i<num_particles;i++) {
-        rtmp = r_in+i*6;
+    for (int i=0;i<num_particles;i++) {
+        double *rtmp = r_in+i*6;
         ib = i%nbunch;
         np_bunch[ib] += 1.0;
         if (!atIsNaN(rtmp[0]) && (rtmp[5] >= smin[ib]) && (rtmp[5] <= smax[ib])) {

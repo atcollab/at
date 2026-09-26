@@ -53,7 +53,6 @@ class Element:
         "T2": lambda v: _array(v, (6,)),
         "RApertures": lambda v: _array(v, (4,)),
         "EApertures": lambda v: _array(v, (2,)),
-        "KickAngle": lambda v: _array(v, (2,)),
         "PolynomB": _array,
         "PolynomA": _array,
         "BendingAngle": _float,
