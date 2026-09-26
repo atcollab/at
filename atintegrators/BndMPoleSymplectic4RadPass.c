@@ -1,8 +1,8 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "diff_bend_fringe.c"
-#include "diff_bnd_kick.c"
 #include "diff_drift.c"
+#include "diff_h_k0h_k1h_kn.c"
+#include "diff_bend_fringe.c"
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 struct elem
@@ -57,15 +57,16 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
     double K2 = SL*KICK2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
-    double B0 = B[0];
-    double A0 = A[0];
     double rad_const = RAD_CONST*pow(gamma, 3);
     double diff_const = DIF_CONST*pow(gamma, 5);
+    double B0 = 0.0;
+    double A0 = 0.0;
 
-    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
-        B[0] -= sin(KickAngle[0])/le;
-        A[0] += sin(KickAngle[1])/le;
+    if (KickAngle) { /* Convert corrector component to polynomial coefficients */
+        B0 = -sin(KickAngle[0]) / le;
+        A0 = sin(KickAngle[1]) / le;
     }
+
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,bdiff,\
     irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,rad_const, diff_const,scaling,\
@@ -95,11 +96,11 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
                 diff_drift(r6, L1, bdiff);
-                diff_bnd_kick(r6, A, B, max_order, K1, irho, rad_const, diff_const, bdiff);
+                diff_kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, bdiff);
                 diff_drift(r6, L2, bdiff);
-                diff_bnd_kick(r6, A, B, max_order, K2, irho, rad_const, diff_const, bdiff);
+                diff_kick(r6, A0, B0, A, B, max_order, K2, irho, rad_const, diff_const, bdiff);
                 diff_drift(r6, L2, bdiff);
-                diff_bnd_kick(r6, A, B, max_order, K1, irho, rad_const, diff_const, bdiff);
+                diff_kick(r6, A0, B0, A, B, max_order, K1, irho, rad_const, diff_const, bdiff);
                 diff_drift(r6, L1, bdiff);
             }
             /* quadrupole gradient fringe */
@@ -120,10 +121,6 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
             /* Check for change of reference momentum */
             if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
-    }
-    if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
-        B[0] = B0;
-        A[0] = A0;
     }
 }
 
