@@ -118,21 +118,6 @@ static double atGetDouble(const mxArray *ElemData, const char *fieldname)
     return mxGetScalar(field);
 }
 
-static double* atGetDoubleArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
-{
-     mxArray *field=get_field(ElemData,fieldname);
-    if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
-    *msz = mxGetM(field);  /*Number of rows in the 2-D array*/
-    *nsz = mxGetN(field);  /*Number of columns in the 2-D array.*/
-    return mxGetDoubles(field);
-}
-
-static double* atGetDoubleArray(const mxArray *ElemData, const char *fieldname)
-{
-    int msz, nsz;
-    return atGetDoubleArraySz(ElemData, fieldname, &msz, &nsz);
-}
-
 static long atGetOptionalLong(const mxArray *ElemData, const char *fieldname, long default_value)
 {
     mxArray *field=get_field(ElemData,fieldname);
@@ -177,10 +162,54 @@ static double* atGetOptionalDoubleArraySz(const mxArray *ElemData, const char *f
     return ptr;
 }
 
+static double* atGetDoubleArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
+{
+    double *ptr = atGetOptionalDoubleArraySz(ElemData, fieldname, msz, nsz);
+    if (!ptr) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    return ptr;
+}
+
+static double* atGetDoubleArray(const mxArray *ElemData, const char *fieldname)
+{
+    int msz, nsz;
+    return atGetDoubleArraySz(ElemData, fieldname, &msz, &nsz);
+}
+
 static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fieldname)
 {
     int msz, nsz;
     return atGetOptionalDoubleArraySz(ElemData, fieldname, &msz, &nsz);
+}
+
+static long* atGetOptionalLongArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
+{
+    long *ptr = NULL;
+    mxArray *field=get_field(ElemData,fieldname);
+    if (field) {
+        *msz = mxGetM(field);
+        *nsz = mxGetN(field);
+        ptr = mxGetInt32s(field);
+    }
+    return ptr;
+}
+
+static long *atGetLongArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
+{
+    long *ptr = atGetOptionalLongArraySz(ElemData, fieldname, msz, nsz);
+    if (!ptr) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    return ptr
+}
+
+static long *atGetLongArray(const mxArray *ElemData, const char *fieldname)
+{
+    int msz, nsz;
+    return atGetLongArraySz(ElemData, fieldname, &msz, &nsz);
+}
+
+static long* atGetOptionalLongArray(const mxArray *ElemData, const char *fieldname)
+{
+    int msz, nsz;
+    return atGetOptionalLongArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
 #endif /* MATLAB_MEX_FILE */
@@ -354,7 +383,6 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
     int msz, nsz;
     return atGetOptionalDoubleArraySz(element, name, &msz, &nsz);
 }
-
 
 static long *atGetLongArraySz(const PyObject *element, char *name, int *msz, int *nsz)
 {
