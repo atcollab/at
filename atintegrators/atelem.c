@@ -188,7 +188,7 @@ static long* atGetOptionalLongArraySz(const mxArray *ElemData, const char *field
     if (field) {
         *msz = mxGetM(field);
         *nsz = mxGetN(field);
-        ptr = mxGetInt32s(field);
+        ptr = (long *) mxGetInt32s(field);
     }
     return ptr;
 }
@@ -197,7 +197,7 @@ static long *atGetLongArraySz(const mxArray *ElemData, const char *fieldname, in
 {
     long *ptr = atGetOptionalLongArraySz(ElemData, fieldname, msz, nsz);
     if (!ptr) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
-    return ptr
+    return ptr;
 }
 
 static long *atGetLongArray(const mxArray *ElemData, const char *fieldname)
