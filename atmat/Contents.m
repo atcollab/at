@@ -378,7 +378,7 @@
 %   atskewquad                          - Creates a skew quadrupole element with Class 'Multipole'
 %   atsolenoid                          - Creates a new solenoid element with Class 'Solenoid'
 %   atthinmultipole                     - Creates a thin multipole element
-%   atvariablemultipole                 - Creates a variable thin multipole element
+%   atvariablethinmultipole             - Creates a variable thin multipole element
 %   atwiggler                           - Creates a wiggler
 %   
 %   ATMAT/LATTICE/ELEMENT_CREATION/PRIVATE

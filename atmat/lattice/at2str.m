@@ -121,7 +121,7 @@ switch atclass
                             });
     case 'VariableThinMultipole'
         create=@atvariablethinmultipole;
-        [options,args]=doptions(elem,create);
+        [options,args]=doptions(elem,create,{'Mode'});
         if isfield(options,'Energy')
             options=rmfield(options,'Energy');
         end
