@@ -427,7 +427,8 @@ class Observable:
 
     def _all_lines(self):
         vnow = self._value
-        if vnow is None or isinstance(vnow, Exception):
+        if (vnow is None or isinstance(vnow, Exception)
+            or np.any(np.isnan(self.target))):
             deviation = None
             vmin = None
             vmax = None
@@ -736,7 +737,8 @@ class ElementObservable(Observable):
             return super()._all_lines()
         else:
             vnow = self._value
-            if vnow is None or isinstance(vnow, Exception):
+            if (vnow is None or isinstance(vnow, Exception) 
+                or np.any(np.isnan(self.target))):
                 vnow = repeat(vnow)
                 deviation = repeat(None)
                 vmin = repeat(None)
