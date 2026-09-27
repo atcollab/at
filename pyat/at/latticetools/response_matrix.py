@@ -160,13 +160,11 @@ from .observables import TrajectoryObservable, OrbitObservable, LatticeObservabl
 from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
 from ..lattice import AtError, AtWarning, Refpts, Uint32Refpts, All
-from ..lattice import AxisDef, plane_, Lattice, checkattr
+from ..lattice import AxisDef, plane_, Lattice
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableBase, VariableList
 
 FloatArray: TypeAlias = npt.NDArray[np.float64]
-
-_orbit_correctors = checkattr("KickAngle")
 
 _globring: Lattice | None = None
 _globobs: ObservableList | None = None
@@ -761,7 +759,7 @@ class ResponseMatrix(_SvdSolver):
         indices of excluded items (empty list if no exclusion).
         """
         return {
-            ob.name: np.where(mask==False)
+            ob.name: np.where(~mask)
             for ob, mask in zip(self.observables, self._ob, strict=True)
         }
 
@@ -857,7 +855,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         var_attr_name: str | None = None,
         var_index: int | None = None,
     ):
-        """
+        """Arguments for OrbitResponseMatrix.
+
         Args:
             ring:       Design lattice, used to compute the response.
             plane:      One out of {0, 'x', 'h', 'H'} for horizontal orbit, or
@@ -984,8 +983,9 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.var_attr_name = var_attr_name
 
     def exclude_obs(
-        self, *, obsid: int | str = 0, refpts: Refpts = None, obs_index: int | None = None
-    ) -> None:
+        self, *, obsid: int | str = 0, refpts: Refpts = None,
+        obs_index: int | None = None
+        ) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 

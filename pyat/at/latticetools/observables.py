@@ -66,9 +66,8 @@ from typing import ClassVar, Any
 
 import numpy as np
 import numpy.typing as npt
-import warnings
 
-from ..lattice import AtError, AxisDef, axis_, plane_, AtWarning
+from ..lattice import AtError, AxisDef, axis_, plane_
 from ..lattice import Lattice, Refpts, End
 
 RefIndex = int | tuple[int, ...] | slice
@@ -427,8 +426,7 @@ class Observable:
 
     def _all_lines(self):
         vnow = self._value
-        if (vnow is None or isinstance(vnow, Exception)
-            or np.any(np.isnan(self.target))):
+        if vnow is None or isinstance(vnow, Exception) or np.any(np.isnan(self.target)):
             deviation = None
             vmin = None
             vmax = None
@@ -526,9 +524,11 @@ class Observable:
         """
         vnow = self.value
         if np.any(np.isnan(self.target)):
-            msg = (f"The target of {self.name} is undefined. "
-                   "The residual cannot be calculated. "
-                   "Please set a value (float or None)")
+            msg = (
+                f"The target of {self.name} is undefined. "
+                "The residual cannot be calculated. "
+                "Please set a value (float or None)"
+            )
             raise AtError(msg)
         elif vnow is None:
             deviation = None
@@ -737,8 +737,11 @@ class ElementObservable(Observable):
             return super()._all_lines()
         else:
             vnow = self._value
-            if (vnow is None or isinstance(vnow, Exception) 
-                or np.any(np.isnan(self.target))):
+            if (
+                vnow is None
+                or isinstance(vnow, Exception)
+                or np.any(np.isnan(self.target))
+            ):
                 vnow = repeat(vnow)
                 deviation = repeat(None)
                 vmin = repeat(None)
