@@ -528,12 +528,6 @@ class ResponseMatrix(_SvdSolver):
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
-        if np.any(np.isnan(obs.targets)):
-            msg = (
-                "Some observables have undefined targets (NaN), please define "
-                "a target value for all observables (float or None)."
-            )
-            raise AtError(msg)
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,)), strict=True):
             print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self.eval_kw)
@@ -767,7 +761,7 @@ class ResponseMatrix(_SvdSolver):
         indices of excluded items (empty list if no exclusion).
         """
         return {
-            ob.name: np.where(not mask)
+            ob.name: np.where(mask==False)
             for ob, mask in zip(self.observables, self._ob, strict=True)
         }
 
@@ -990,7 +984,7 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.var_attr_name = var_attr_name
 
     def exclude_obs(
-        self, *, obsid: int | str = 0, refpts: Refpts = None, index: int | None = None
+        self, *, obsid: int | str = 0, refpts: Refpts = None, obs_index: int | None = None
     ) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
@@ -1016,7 +1010,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude all monitors with name "BPM_02"
         """
-        super().exclude_obs(obsid=obsid, refpts=refpts, index=index)
+        super().exclude_obs(obsid=obsid, refpts=refpts, obs_index=obs_index)
 
     def exclude_vars(self, *varid: int | str, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences

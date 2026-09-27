@@ -524,7 +524,12 @@ class Observable:
         If *target* is :py:obj:`None`, the deviation is zero for any value.
         """
         vnow = self.value
-        if vnow is None:
+        if np.any(np.isnan(self.target)):
+            msg = (f"The target of {self.name} is undefined. "
+                   "The residual cannot be calculated. "
+                   "Please set a value (float or None)")
+            raise AtError(msg)
+        elif vnow is None:
             deviation = None
         elif self.target is None:
             deviation = np.broadcast_to(0.0, vnow.shape)
