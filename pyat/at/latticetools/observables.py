@@ -528,8 +528,6 @@ class Observable:
             deviation = None
         elif self.target is None:
             deviation = np.broadcast_to(0.0, vnow.shape)
-        elif self.target is np.nan:
-            deviation = np.nan
         else:
             vsh = vnow.shape
             diff = np.atleast_1d(vnow - np.broadcast_to(self.target, vsh))
