@@ -119,6 +119,6 @@ theta  = --- B  + ----------
     r6[3] += L * (ImSum + irho*B1*x*y);
  */
     r6[1] -= L * (ReSum + irho*(x*irho - dp_0));
-    r6[3] += L * ImSum
+    r6[3] += L * ImSum;
     r6[5] += L * irho*x; /* pathlength */
 }
