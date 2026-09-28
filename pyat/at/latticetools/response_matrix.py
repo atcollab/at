@@ -526,6 +526,13 @@ class ResponseMatrix(_SvdSolver):
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
+        if np.any(np.isnan(obs.targets)):
+            msg = (
+                f"The targets are undefined for some observable(s). "
+                "The residuals cannot be calculated. "
+                "Please set a value (float or None) for all targets."
+            )
+            raise AtError(msg)
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,)), strict=True):
             print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self.eval_kw)
@@ -821,9 +828,9 @@ class OrbitResponseMatrix(ResponseMatrix):
     ``sum(v_kicks)``
 
     By default momentum kick attributes *HKick* and *VKick* are used. The attribute
-    to be used for the correction can be changed using *var_attr_name" and *var_index*
+    to be used for the correction can be changed using *var_attr_name* and *var_index*
     keywords. In this case the steerer sum is automatically disabled since homogeinity
-    between variables cannot be guarantied.
+    between variables cannot be guaranteed.
 
     Example of a horizontal ORM, in this case the observables correspond to all the
     element having their attribute *FamName* strating with *BPM* and the variables
