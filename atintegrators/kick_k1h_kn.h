@@ -111,6 +111,6 @@ theta  = --- B  + ----------
     #endif /* RADIATION */
 
     /* Multipole kick */
-    r6[1] -= L * ReSum ;
+    r6[1] -= L * ReSum;
     r6[3] += L * ImSum;
 }
