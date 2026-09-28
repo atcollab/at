@@ -160,13 +160,11 @@ from .observables import TrajectoryObservable, OrbitObservable, LatticeObservabl
 from .observables import LocalOpticsObservable, GlobalOpticsObservable
 from .observablelist import ObservableList
 from ..lattice import AtError, AtWarning, Refpts, Uint32Refpts, All
-from ..lattice import AxisDef, plane_, Lattice, Monitor, checkattr
+from ..lattice import AxisDef, plane_, Lattice
 from ..lattice.lattice_variables import RefptsVariable
 from ..lattice.variables import VariableBase, VariableList
 
 FloatArray: TypeAlias = npt.NDArray[np.float64]
-
-_orbit_correctors = checkattr("KickAngle")
 
 _globring: Lattice | None = None
 _globobs: ObservableList | None = None
@@ -503,6 +501,9 @@ class ResponseMatrix(_SvdSolver):
         apply: bool = False,
     ) -> FloatArray:
         """Compute and optionally apply the correction.
+           The correction will only work if targets are defined for all observables.
+           Targets can either be a float to correct to or `None` in which case it is
+           considered that the target is already achieved for this observable.
 
         Args:
             ring:       Lattice description. The response matrix observables
@@ -525,6 +526,13 @@ class ResponseMatrix(_SvdSolver):
         if apply:
             self.variables.get(ring=ring, initial=True)
         sumcorr = np.array([0.0])
+        if np.any(np.isnan(obs.targets)):
+            msg = (
+                "The targets are undefined for some observable(s). "
+                "The residuals cannot be calculated. "
+                "Please set a value (float or None) for all targets."
+            )
+            raise AtError(msg)
         for it, nv in zip(range(niter), np.broadcast_to(nvals, (niter,)), strict=True):
             print(f"step {it + 1}, nvals = {nv}")
             obs.evaluate(ring, **self.eval_kw)
@@ -658,7 +666,13 @@ class ResponseMatrix(_SvdSolver):
 
         return self._on_obs(_set, target, obsid=obsid)
 
-    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(
+        self,
+        *,
+        obsid: int | str = 0,
+        refpts: Refpts = None,
+        obs_index: int | None = None,
+    ) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 
@@ -667,7 +681,9 @@ class ResponseMatrix(_SvdSolver):
 
         Args:
             obsid:      :py:class:`.Observable` name or index in the observable list.
-            refpts:     location of elements to exclude for
+            refpts:     location (refpts from the lattice) of elements to exclude for
+              :py:class:`.ElementObservable` objects, otherwise ignored.
+            obs_index:     index of elements to exclude for
               :py:class:`.ElementObservable` objects, otherwise ignored.
 
         Raises:
@@ -676,19 +692,29 @@ class ResponseMatrix(_SvdSolver):
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, "h", Monitor, Corrector)
+            >>> resp.exclude_obs(obsid="x_orbit", obs_index=2)
+
+            or
+
             >>> resp.exclude_obs(obsid="x_orbit", refpts="BPM_02")
 
             Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
-            and exclude the monitor with name "BPM_02"
+            and exclude the second monitor in the orbit observable
         """
 
         def exclude(ob, msk):
             inimask = msk.copy()
             if isinstance(ob, ElementObservable) and not ob.summary:
-                boolref = self.ring.get_bool_index(refpts)
-                # noinspection PyProtectedMember
-                msk &= np.logical_not(boolref[ob._boolrefs])
+                if obs_index is None:
+                    boolref = self.ring.get_bool_index(refpts)
+                    # noinspection PyProtectedMember
+                    msk &= np.logical_not(boolref[ob._boolrefs])
+                elif refpts is None:
+                    msk[obs_index] = False
+                else:
+                    msg = "Please select either refpts or index to exclude obsevables"
+                    raise AtError(msg)
             else:
                 msk[:] = False
             if np.all(msk == inimask):
@@ -708,11 +734,12 @@ class ResponseMatrix(_SvdSolver):
                 raise ValueError(msg)
 
     @property
-    def excluded_obs(self) -> dict:
+    def excluded_obs_refpts(self) -> dict:
         """Directory of excluded observables.
 
-        The dictionary keys are the observable names, the values are the integer
-        indices of excluded items (empty list if no exclusion).
+        The dictionary keys are the observable names, the values are the
+        refpts index from the lattice of excluded items
+        (empty list if no exclusion).
         """
 
         def ex(obs, mask):
@@ -727,6 +754,18 @@ class ResponseMatrix(_SvdSolver):
 
         return {
             ob.name: ex(ob, mask)
+            for ob, mask in zip(self.observables, self._ob, strict=True)
+        }
+
+    @property
+    def excluded_obs_index(self) -> dict:
+        """Directory of excluded observables.
+
+        The dictionary keys are the observable names, the values are the integer
+        indices of excluded items (empty list if no exclusion).
+        """
+        return {
+            ob.name: np.where(~mask)
             for ob, mask in zip(self.observables, self._ob, strict=True)
         }
 
@@ -787,17 +826,18 @@ class OrbitResponseMatrix(ResponseMatrix):
     and optionally the sum of steerer angles named ``sum(h_kicks)`` or
     ``sum(v_kicks)``
 
-    The variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default
-    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
-    should be explicitly created.
+    By default momentum kick attributes *HKick* and *VKick* are used. The attribute
+    to be used for the correction can be changed using *var_attr_name* and *var_index*
+    keywords. In this case the steerer sum is automatically disabled since homogeinity
+    between variables cannot be guaranteed.
 
-    By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements having a *KickAngle* attribute.
-    This is equivalent to:
+    Example of a horizontal ORM, in this case the observables correspond to all the
+    element having their attribute *FamName* strating with *BPM* and the variables
+    and the elements of type *at.Corrector*. The target is set to 0.0 in all BPMs,
+    which is the default:
 
     >>> resp_v = OrbitResponseMatrix(
-    ...     ring, "v", bpmrefs=at.Monitor, steerrefs=at.checkattr("KickAngle")
+    ...     ring, "v", "BPM*", at.Corrector, target=0.0
     ... )
     """
 
@@ -808,8 +848,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         self,
         ring: Lattice,
         plane: AxisDef,
-        bpmrefs: Refpts = Monitor,
-        steerrefs: Refpts = _orbit_correctors,
+        bpmrefs: Refpts,
+        steerrefs: Refpts,
         *,
         cavrefs: Refpts = None,
         bpmweight: float | Sequence[float] = 1.0,
@@ -818,8 +858,11 @@ class OrbitResponseMatrix(ResponseMatrix):
         cavdelta: float | None = None,
         steersum: bool = False,
         stsumweight: float | None = None,
+        var_attr_name: str | None = None,
+        var_index: int | None = None,
     ):
-        """
+        """Arguments for OrbitResponseMatrix.
+
         Args:
             ring:       Design lattice, used to compute the response.
             plane:      One out of {0, 'x', 'h', 'H'} for horizontal orbit, or
@@ -827,8 +870,8 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
               Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used and must be present in the selected elements.
+            steerrefs:  Location of orbit steerers. If *var_attr_name=None*,
+              their *[HV]Kick* attribute is used
               Default: All Elements having a *KickAngle* attribute.
             cavrefs:    Location of RF cavities. Their *Frequency* attribute
               is used. If :py:obj:`None`, no cavity is included in the response.
@@ -837,14 +880,18 @@ class OrbitResponseMatrix(ResponseMatrix):
             bpmweight:  Weight of position readings. Must be broadcastable to the
               number of BPMs.
             bpmtarget:  Target orbit position. Must be broadcastable to the number of
-              observation points.
+              observation points. Default=0.0.
             cavdelta:   Step on RF frequency for matrix computation [Hz]. This
               is also the cavity weight. Default: automatically computed.
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
             steersum:   If :py:obj:`True`, the sum of steerers is appended to the
-              Observables.
+              Observables. Disabled for user defined attributes.
             stsumweight: Weight on steerer summation. Default: automatically computed.
+            var_attr_name: User define attribute to use for the correction. Default is
+              *[HV]Kick*, if is set by the user steersum is disabled.
+            var_index: Index of the variable, in case the attribute corresponding to
+              *var_attr_name* is an array
 
         :ivar VariableList variables: matrix variables
         :ivar ObservableList observables: matrix observables
@@ -854,9 +901,9 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         """
 
-        def steerer(ik, delta):
+        def steerer(ik, delta, attr_name, idx):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attr_name, index=idx, name=name, delta=delta)
 
         def set_norm():
             bpm = LocalOpticsObservable(bpmrefs, "beta", plane=pl)
@@ -878,6 +925,20 @@ class OrbitResponseMatrix(ResponseMatrix):
             return cd, sw
 
         pl = plane_(plane, key="index")
+        if pl == 0 and var_attr_name is None:
+            var_attr_name = "HKick"
+        elif pl == 1 and var_attr_name is None:
+            var_attr_name = "VKick"
+        elif var_attr_name is not None and steersum:
+            msg = (
+                "For custom attributes, homogeinity of the variables cannot "
+                "be guarantied and the steersum has to be disabled"
+            )
+            raise AtError(msg)
+        elif pl not in {0, 1}:
+            msg = "Orbit response can only be horizontal or vertical"
+            raise AtError(msg)
+
         plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
@@ -892,10 +953,10 @@ class OrbitResponseMatrix(ResponseMatrix):
             # noinspection PyUnboundLocalVariable
             sumobs = LatticeObservable(
                 steerrefs,
-                "KickAngle",
+                var_attr_name,
                 name=f"{plcode}_kicks",
                 target=0.0,
-                index=pl,
+                index=var_index,
                 weight=stsumweight if stsumweight else stsw / 2.0,
                 statfun=np.sum,
             )
@@ -903,7 +964,8 @@ class OrbitResponseMatrix(ResponseMatrix):
 
         # Variables
         variables = VariableList(
-            steerer(ik, delta) for ik, delta in zip(ids, deltas, strict=True)
+            steerer(ik, delta, var_attr_name, var_index)
+            for ik, delta in zip(ids, deltas, strict=True)
         )
         if cavrefs is not None:
             active = (el.longt_motion for el in ring.select(cavrefs))
@@ -924,8 +986,12 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
+        self.var_attr_name = var_attr_name
 
-    def exclude_obs(self, *, obsid: int | str = 0, refpts: Refpts = None) -> None:
+    def exclude_obs(
+        self, *, obsid: int | str = 0, refpts: Refpts = None,
+        obs_index: int | None = None
+        ) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 
@@ -936,6 +1002,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             obsid:      If 0 (default), act on Monitors. Otherwise,
               it must be 1 or "sum(x_kicks)"  or "sum(y_kicks)"
             refpts:    location of Monitors to exclude
+            index:    index of Monitors to exclude
 
         Raises:
             ValueError: No observable with the given name.
@@ -949,7 +1016,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude all monitors with name "BPM_02"
         """
-        super().exclude_obs(obsid=obsid, refpts=refpts)
+        super().exclude_obs(obsid=obsid, refpts=refpts, obs_index=obs_index)
 
     def exclude_vars(self, *varid: int | str, refpts: Refpts = None) -> None:
         # noinspection PyUnresolvedReferences
@@ -1029,6 +1096,9 @@ class OrbitResponseMatrix(ResponseMatrix):
                 tau += 2.0 * pi_tune
             return tau - pi_tune
 
+        if self.var_attr_name not in {"HKick", "VKick"}:
+            msg = "Analytical response matrix available only for default attributes"
+            raise AtError(msg)
         self.eval_kw.update(kwargs)
         ring = self.ring
         pl = self.plane
@@ -1114,14 +1184,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
     Observables are the trajectory position at selected points, named ``trajectory[x]``
     for the horizontal plane or ``trajectory[y]`` for the vertical plane.
 
-    The variable elements must have the *KickAngle* attribute used for correction.
-    It's available for all magnets, though not present by default
-    except in :py:class:`.Corrector` magnets. For other magnets, the attribute
-    should be explicitly created.
-
-    By default, the observables are all the :py:class:`.Monitor` elements, and the
-    variables are all the elements having a *KickAngle* attribute.
-
+    By default momentum kick attributes *HKick* and *VKick* are used. The attribute
+    to be used for the correction can be changed using *var_attr_name* and *var_index*
+    keywords.
     """
 
     bpmrefs: Uint32Refpts
@@ -1132,12 +1197,14 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self,
         ring: Lattice,
         plane: AxisDef,
-        bpmrefs: Refpts = Monitor,
-        steerrefs: Refpts = _orbit_correctors,
+        bpmrefs: Refpts,
+        steerrefs: Refpts,
         *,
         bpmweight: float = 1.0,
         bpmtarget: float = 0.0,
         steerdelta: float = 0.0001,
+        var_attr_name: str | None = None,
+        var_index: int | None = None,
     ):
         """
         Args:
@@ -1146,22 +1213,27 @@ class TrajectoryResponseMatrix(ResponseMatrix):
               one of {1, 'y', 'v', 'V'} for vertical orbit
             bpmrefs:    Location of closed orbit observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`".
-              Default: all :py:class:`.Monitor` elements.
-            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
-              is used and must be present in the selected elements.
-              Default: All Elements having a *KickAngle* attribute.
+            steerrefs:  Location of orbit steerers.
             bpmweight:  Weight on position readings. Must be broadcastable to the
               number of BPMs
-            bpmtarget:  Target position
+            bpmtarget:  Target position, default=0.0.
             steerdelta: Step on steerers for matrix computation [rad]. This is
               also the steerer weight. Must be broadcastable to the number of steerers.
         """
 
-        def steerer(ik, delta):
+        def steerer(ik, delta, attr_name, idx):
             name = f"{plcode}{ik:04}"
-            return RefptsVariable(ik, "KickAngle", index=pl, name=name, delta=delta)
+            return RefptsVariable(ik, attr_name, index=idx, name=name, delta=delta)
 
         pl = plane_(plane, key="index")
+        if pl == 0 and var_attr_name is None:
+            var_attr_name = "HKick"
+        elif pl == 1 and var_attr_name is None:
+            var_attr_name = "VKick"
+        elif pl not in {0, 1}:
+            msg = "Orbit response can only be horizontal or vertical"
+            raise AtError(msg)
+
         plcode = plane_(plane, key="code")
         ids = ring.get_uint32_index(steerrefs)
         nbsteers = len(ids)
@@ -1173,7 +1245,8 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         observables = ObservableList([bpms])
         # Variables
         variables = VariableList(
-            steerer(ik, delta) for ik, delta in zip(ids, deltas, strict=True)
+            steerer(ik, delta, var_attr_name, var_index)
+            for ik, delta in zip(ids, deltas, strict=True)
         )
 
         super().__init__(variables, observables, ring=ring)
@@ -1181,6 +1254,7 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         self.steerrefs = ids
         self.nbsteers = nbsteers
         self.bpmrefs = ring.get_uint32_index(bpmrefs)
+        self.var_attr_name = var_attr_name
 
     def build_analytical(self, **kwargs) -> FloatArray:
         """Analytically build the response matrix.
@@ -1194,6 +1268,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         Returns:
             response:       Response matrix
         """
+        if self.var_attr_name not in {"HKick", "VKick"}:
+            msg = "Analytical response matrix available only for default attributes"
+            raise AtError(msg)
         self.eval_kw.update(kwargs)
         self.eval_kw.setdefault("twiss_in", self._default_twiss_in)
         ring = self.ring
