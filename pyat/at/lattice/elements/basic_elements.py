@@ -508,7 +508,7 @@ class DeltaQ(Radiative, Element):
         alphac: Sequence[float] | None = None,
         **kwargs,
     ):
-        """
+        r"""
         Object to lump sources of tune shifts from a ring in a single Element.
         All optics imput argument and T1 /T2 have \*Rad equivalent used to
         enable_6d.
