@@ -314,7 +314,7 @@ void atCheckArrayDims(const PyObject *element, char *name, int ndim, int *dims)
 }
 
 
-static PyArrayObject *atGetArrayData(PyArrayObject *array, char *name, int atype, int *msz, int *nsz)
+static void *atGetArrayData(PyArrayObject *array, char *name, int atype, int *msz, int *nsz)
 {
     char errmessage[60];
     int ndims;
@@ -344,7 +344,7 @@ static PyArrayObject *atGetArrayData(PyArrayObject *array, char *name, int atype
     *nsz = (ndims >= 2) ? (int)dims[1] : 0;
     *msz = (ndims >= 1) ? (int)dims[0] : 0;
 
-    return  (PyArrayObject *) PyArray_DATA(array);
+    return  PyArray_DATA(array);
     
 }
 
