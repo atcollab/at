@@ -613,8 +613,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *diff_record;
       double *samplelist;
       double *vc_list;
-      double *I_record;
-      double *FFconst;
+
+
       
       /*attributes for RF cavity*/
       Length=atGetDouble(ElemData,"Length"); check_error();
