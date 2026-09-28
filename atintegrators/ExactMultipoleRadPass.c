@@ -1,5 +1,5 @@
 #define MAGNET_PASS ExactMultipoleRadPass
-#define INTEGRATOR_6
+#define INTEGRATOR_4
 #define RADIATION
 #define DIFFUSION
 

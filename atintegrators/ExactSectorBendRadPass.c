@@ -1,5 +1,5 @@
 #define MAGNET_PASS ExactSectorBendRadPass
-#define INTEGRATOR_6
+#define INTEGRATOR_4
 #define RADIATION
 
 #include "drift_exactbend.h"

@@ -1,5 +1,5 @@
 #define MAGNET_PASS ExactRectangularBendPass
-#define INTEGRATOR_6
+#define INTEGRATOR_4
 #define CURVATURE_IN_B0
 
 #include "drift_exact.h"
