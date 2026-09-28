@@ -68,7 +68,7 @@ def match(
         constraints.evaluate(**eval_kw)
         return constraints.get_flat_weighted_deviations(err=1.0e6)
     
-    if np.any(np.isnan(constraints.get_targets)):
+    if np.any(np.isnan(constraints.get_flat_targets())):
         msg = (
             "The targets are undefined for some constraints. "
             "The residual cannot be calculated. "
