@@ -1,5 +1,5 @@
 #define MAGNET_PASS ExactMultipolePass
-#define INTEGRATOR_6
+#define INTEGRATOR_4
 
 #include "drift_exact.h"
 #include "kick_exactkn.h"  /* kick */

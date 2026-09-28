@@ -1,5 +1,5 @@
 #define MAGNET_PASS ExactSectorBendPass
-#define INTEGRATOR_6
+#define INTEGRATOR_4
 
 #include "drift_exactbend.h"
 #include "kick_k1h_kn.h"
