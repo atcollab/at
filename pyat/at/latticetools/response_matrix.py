@@ -528,7 +528,7 @@ class ResponseMatrix(_SvdSolver):
         sumcorr = np.array([0.0])
         if np.any(np.isnan(obs.targets)):
             msg = (
-                f"The targets are undefined for some observable(s). "
+                "The targets are undefined for some observable(s). "
                 "The residuals cannot be calculated. "
                 "Please set a value (float or None) for all targets."
             )
@@ -685,7 +685,6 @@ class ResponseMatrix(_SvdSolver):
               :py:class:`.ElementObservable` objects, otherwise ignored.
             obs_index:     index of elements to exclude for
               :py:class:`.ElementObservable` objects, otherwise ignored.
-              Default=None, all the elements of the observable are excluded
 
         Raises:
             ValueError: No observable with the given name.
@@ -711,7 +710,7 @@ class ResponseMatrix(_SvdSolver):
                     boolref = self.ring.get_bool_index(refpts)
                     # noinspection PyProtectedMember
                     msk &= np.logical_not(boolref[ob._boolrefs])
-                elif obs_index is not None and refpts is None:
+                elif refpts is None:
                     msk[obs_index] = False
                 else:
                     msg = "Please select either refpts or index to exclude obsevables"
