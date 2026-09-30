@@ -123,7 +123,7 @@ static void bend_linear_fringe(double* r6, double irho, double edge_angle,
     else if (method==2)
         fy = irho * tan(edge_angle - fringecorr*p_norm) * p_norm;
     else if (method==3)
-        fy = irho * tan(edge_angle - fringecorr + r6[1]*p_norm);
+        fy = irho * tan(edge_angle - fringecorr + sign*r6[1]*p_norm);
     else    /* fall back to legacy version */
         fy = irho * tan(edge_angle - fringecorr*p_norm);
 
