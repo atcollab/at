@@ -386,7 +386,7 @@ class ThinMultipole(Element):
 
         Provided for backwards compatibility, use *HKick*, *VKick* instead.
         """
-        return np.atan([-self.Kn0L, self.Ks0L])
+        return np.arctan([-self.Kn0L, self.Ks0L])
 
     @KickAngle.setter
     def KickAngle(self, value) -> None:
