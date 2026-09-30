@@ -743,6 +743,11 @@ class Corrector(LongElement):
         kwargs.setdefault("PassMethod", "CorrectorPass")
         super().__init__(family_name, length, KickAngle=kick_angle, **kwargs)
 
+    def _part(self, fr, sumfr):
+        pp = super()._part(fr, sumfr)
+        pp.KickAngle = fr / sumfr * self.KickAngle
+        return pp
+
     @property
     def Kn0L(self) -> float:
         r"""Opposite of the horizontal momentum kick -
