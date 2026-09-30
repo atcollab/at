@@ -106,6 +106,7 @@ extend-select = [
   "D415",  # period at the end of comments
 ]
 ignore = [
+  "I",
   "D417",  # undocumented param
   "PLW0603",  # global variables
   "PLR2004",  # magic value
