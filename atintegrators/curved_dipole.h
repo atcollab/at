@@ -19,7 +19,7 @@
             bend_wedge(r6, irho, -entrance_angle, bdiff); \
         } \
     } \
-    else if (FringeBendEntrance > 0) { \
+    else { \
         bend_linear_fringe(r6, irho, entrance_angle, gK_entrance, FringeBendEntrance, 1.0, bdiff); \
         multipole_fringe(r6, FringeQuadEntrance, B1, A, B, max_order, fringeIntM0, fringeIntP0, 1.0); \
     }
@@ -37,7 +37,7 @@
         bend_fringe(r6, -irho, gK_exit); \
         Yrot(r6, exit_angle, bdiff); \
     } \
-    else if (FringeBendExit > 0) { \
+    else { \
         multipole_fringe(r6, FringeQuadExit, B1, A, B, max_order, fringeIntM0, fringeIntP0, -1.0); \
         bend_linear_fringe(r6, irho, exit_angle, gK_exit, FringeBendExit, -1.0, bdiff); \
     }
