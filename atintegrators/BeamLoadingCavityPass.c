@@ -48,7 +48,7 @@ struct elem
   double *Ig2Vg_mat;
   double *vc_previous; double *vc_list;
   double *diff_record;
-  double *samplelist;
+  long *samplelist;
   double *I_record; double *FFconst; double *IIRout; double *IIRcoef;
   }; 
 
@@ -149,7 +149,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double *vc_previous_imag = Elem->vc_previous + samplenum;
     double *diff_record_real = Elem->diff_record; 
     double *diff_record_imag = Elem->diff_record + record_size;
-    double *samplelist = Elem->samplelist;
+    long *samplelist = Elem->samplelist;
     double *vc_list_real = Elem->vc_list; 
     double *vc_list_imag = Elem->vc_list + ring_harmn + samplenum;
     
@@ -195,6 +195,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     #ifndef _MSC_VER
     set_cavity_phasor(vgen, gen_phase, vbeam_phasor, vcav_phasor);
     #endif
+    
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
@@ -326,7 +327,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         }
 
 
-        /* Here is where the tuner is calculated and applied */
+        /* Here is where the tuner is calculated and applied for PROP and PROP_INTEGRAL */
         /* If TunerGain is zero, it is skipped */
         if(TunerGain>0 && cavitymode!=3){
             compute_tuner(vcav_meas, vgen_arr,
@@ -380,7 +381,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *Ig2Vg_mat;
         double *vc_previous;
         double *diff_record;
-        double *samplelist;
+        long *samplelist;
         double *vc_list;
         double *I_record;
         double *FFconst;
@@ -444,7 +445,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Ig2Vg_mat=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_mat"); check_error();
         vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
         diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
-        samplelist=atGetOptionalDoubleArray(ElemData,"_samplelist"); check_error();        
+        samplelist=atGetOptionalLongArray(ElemData,"_samplelist"); check_error();        
         vc_list=atGetOptionalDoubleArray(ElemData,"_vc_list"); check_error();        
         I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
         FFconst=atGetOptionalDoubleArray(ElemData,"_FFconst"); check_error();
@@ -611,7 +612,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double *Ig2Vg_mat;
       double *vc_previous;
       double *diff_record;
-      double *samplelist;
+      long *samplelist;
       double *vc_list;
 
 
@@ -677,7 +678,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       Ig2Vg_mat=atGetOptionalDoubleArray(ElemData,"_Ig2Vg_mat"); check_error();
       vc_previous=atGetOptionalDoubleArray(ElemData,"_vc_previous"); check_error();
       diff_record=atGetOptionalDoubleArray(ElemData,"_diff_record"); check_error();        
-      samplelist=atGetOptionalDoubleArray(ElemData,"_samplelist"); check_error();        
+      samplelist=atGetOptionalLongArray(ElemData,"_samplelist"); check_error();        
       vc_list=atGetOptionalDoubleArray(ElemData,"_vc_list"); check_error();        
       I_record=atGetOptionalDoubleArray(ElemData,"_I_record"); check_error();
       FFconst=atGetOptionalDoubleArray(ElemData,"_FFcont"); check_error();
