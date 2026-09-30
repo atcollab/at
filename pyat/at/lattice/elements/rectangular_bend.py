@@ -58,6 +58,8 @@ def rbendtune(self: Dipole) -> None:
         if checkmul(self):
             x0ref = float(fsolve(cross, x0ref))
 
+        elem.X0ref = x0ref
+        elem.RefDZ = 0.0
         rout = elem.track(np.zeros(6))
         self.X0ref = x0ref
         self.RefDZ = rout[5]
