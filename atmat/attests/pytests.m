@@ -313,9 +313,10 @@ classdef pytests < matlab.unittest.TestCase
             % from the stored transformation
             fout=double(py.at.lattice_pass(atwritepy(mring,'keep_all',true),...
                 pin.copy(),pyargs('refpts',py.at.All)));
-            % check
-            testCase.verifyEqual(mout,reshape(pout,6,[]),AbsTol=1.E-15);
-            testCase.verifyEqual(mout,reshape(fout,6,[]),AbsTol=1.E-15);
+            % check: R1, T1, R2, T2 are built separately in Matlab and pyAT;
+            % differences up to 2e-15 were seen on Linux
+            testCase.verifyEqual(mout,reshape(pout,6,[]),AbsTol=1.E-12);
+            testCase.verifyEqual(mout,reshape(fout,6,[]),AbsTol=1.E-12);
         end
 
     end
