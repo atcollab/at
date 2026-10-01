@@ -14,6 +14,7 @@ classdef pytests < matlab.unittest.TestCase
         rad = struct("radoff","ring4","radon","ring6");
         lat = {"hmba","dba","spear3"};  % All lattices
         lat2 = {"hmba","spear3"};       % lattices with cavities
+        reference = {'centre','entrance'};
     end
     
     properties
@@ -288,6 +289,33 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(memit,pemit,AbsTol=1.e-30,RelTol=1.e-6);
             testCase.verifyEqual(mtunes,ptunes,AbsTol=1.e-10);
             testCase.verifyEqual(mdamprate,pdamprate,AbsTol=1.e-10);
+        end
+
+        function transform(testCase,lat,reference)
+            % Random translations and rotations of all elements
+            lattice=testCase.ring4.(lat);
+            n=length(lattice.m);
+            v=1.e-4*randn(RandStream('mt19937ar','Seed',1),6,n);
+            rin=[1.e-6*eye(6) [1.e-4;0;1.e-4;0;0.01;0]];
+            pin=py.numpy.asfortranarray(rin);
+            % python    Make a copy to keep the shared lattice unchanged
+            pref=py.at.ReferencePoint(int32(strcmp(reference,'entrance')));
+            pring=lattice.p.deepcopy();
+            py.at.set_shift(pring,v(1,:),v(2,:),v(3,:),pyargs('reference',pref));
+            py.at.set_rotation(pring,pyargs('tilts',v(4,:),'pitches',v(5,:),...
+                'yaws',v(6,:),'reference',pref));
+            pout=double(py.at.lattice_pass(pring,pin.copy(),pyargs('refpts',py.at.All)));
+            % Matlab
+            mring=atsettransform(lattice.m,1:n,'dx',v(1,:),'dy',v(2,:),'dz',v(3,:),...
+                'tilt',v(4,:),'pitch',v(5,:),'yaw',v(6,:),'reference',reference);
+            mout=linepass(mring,rin,1:n+1);
+            % Matlab lattice converted to python, which recomputes R1, T1, R2, T2
+            % from the stored transformation
+            fout=double(py.at.lattice_pass(atwritepy(mring,'keep_all',true),...
+                pin.copy(),pyargs('refpts',py.at.All)));
+            % check
+            testCase.verifyEqual(mout,reshape(pout,6,[]),AbsTol=1.E-15);
+            testCase.verifyEqual(mout,reshape(fout,6,[]),AbsTol=1.E-15);
         end
 
     end
