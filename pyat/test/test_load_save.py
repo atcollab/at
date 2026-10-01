@@ -95,7 +95,12 @@ def test_long_arrays_in_m_file() -> None:
     # create an element with long arrays
     thepath = files(machine_data).as_posix()
     theidfname = "/kickmap_w150_20mm.txt"
-    elem = InsertionDeviceKickMap("idmap", 10, thepath + theidfname, 6.04)
+    elem = InsertionDeviceKickMap(
+        "idmap",
+        norm_energy=6.04,
+        nslice=10,
+        fname=thepath + theidfname,
+    )
 
     # check the block first value
     assert_equal(elem.xkick[0, 0], 6.67990816327951e-06)
