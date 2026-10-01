@@ -168,10 +168,10 @@ void init_phasor_arrays(double vgen, double thetag, double *ig_phasor_real, doub
 }
 
 void init_cavity_record_phasor_array(double *vbunch, 
-                                            double *beam_phasor_record_real, double *beam_phasor_record_imag, 
-                                            double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
-                                            double *generator_phasor_record_real, double *generator_phasor_record_imag,
-                                            int ring_harmn){
+                                     double *beam_phasor_record_real, double *beam_phasor_record_imag, 
+                                     double *cavity_phasor_record_real, double *cavity_phasor_record_imag,
+                                     double *generator_phasor_record_real, double *generator_phasor_record_imag,
+                                     int ring_harmn){
         int idx;
         double complex tmp = 0 + _Complex_I*0;
         
@@ -386,7 +386,6 @@ void update_vc_previous(double *vc_previous_real, double *vc_previous_imag, int 
     */
     int idx=0;
     for(idx=0;idx<samplenum;idx++){
-        printf("check ring_harmn - samplenum + idx %d \n", ring_harmn-samplenum+idx);
         vc_previous_real[idx] = cavity_phasor_record_real[ring_harmn-samplenum+idx];
         vc_previous_imag[idx] = cavity_phasor_record_imag[ring_harmn-samplenum+idx];
     }    
@@ -397,7 +396,6 @@ void compute_mean_vc(double *vc_list_real, double *vc_list_imag, double *vc_mean
     int idx=0;
     vc_mean[0] = 0.0;
     vc_mean[1] = 0.0;
-    printf("index+samplenum %d \n", index+samplenum);
     for(idx=index;idx<index+samplenum;idx++){
 
         vc_mean[0] += vc_list_real[idx]/samplenum;
@@ -415,7 +413,7 @@ void roll_array(double *arr, int arr_len, int shift){
 
 
 
-void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_set){
+void compute_set_params(double *vbeam, double *vgen, double phis, double *vcav_meas){
 
     double vbeamr_meas = vbeam[0]*cos(vbeam[1]);
     double vbeami_meas = vbeam[0]*sin(vbeam[1]);
@@ -426,7 +424,7 @@ void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_s
     double vcavr_meas = vgenr_meas + vbeamr_meas;
     double vcavi_meas = vgeni_meas + vbeami_meas;   
 
-    double vcav_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
+    double vcav_amp_meas = sqrt(vcavr_meas*vcavr_meas + vcavi_meas*vcavi_meas); 
     double phis_meas = -atan2(vcavr_meas, vcavi_meas);
 
     double meas_psi = vgen[1] - phis_meas;
@@ -440,9 +438,9 @@ void compute_set_params(double *vbeam, double *vgen, double phis, double *vgen_s
         meas_psi -= TWOPI;
     }
     
-    vgen_set[0] = vcav_meas;
-    vgen_set[1] = phis_meas;
-    vgen_set[2] = meas_psi;
+    vcav_meas[0] = vcav_amp_meas;
+    vcav_meas[1] = phis_meas;
+    vcav_meas[2] = meas_psi;
 
 }
 static void update_vgen(double *vcav, double *vgen, double *vcav_meas, double voltgain,

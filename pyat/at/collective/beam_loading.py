@@ -451,7 +451,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self._Ig2Vg_mat = np.zeros(ring.harmonic_number**2 * 2)
         self._vc_previous = np.zeros(self.samplenum*2)
         self._diff_record = np.zeros(self.recordsize*2)
-        self._samplelist = np.zeros(self.samplelist_length, dtype=int)
+        self._samplelist = np.zeros(self.samplelist_length, dtype=np.long)
 
         self._vc_list = np.zeros((ring.harmonic_number + self.samplenum)*2)        
 

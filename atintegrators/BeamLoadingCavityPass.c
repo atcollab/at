@@ -69,23 +69,42 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                            int iturn,
                            struct elem *Elem) {
   
-    long cavitymode = Elem->cavitymode;
-    long fbmode = Elem->fbmode;
-    
+    // some wake definitions
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw; /* can this attribute be removed? */
     long buffersize = Elem->buffersize;
-
     double normfact = Elem->normfact;  
+    
+    // load buffer pointers
+    double *turnhistory = Elem->turnhistory;
+    double *vgen_buffer = Elem->vgen_buffer;
+    double *vbeam_buffer = Elem->vbeam_buffer;
+    double *vbunch_buffer = Elem->vbunch_buffer;
+
+    double *z_cuts = Elem->z_cuts;
+    double *vbunch = Elem->vbunch;
+    double *vbeam = Elem->vbeam;
+    double *vcav_set = Elem->vcav; /* Vcav set points amplitude, phase */
+    double *vbeam_phasor = Elem->vbeam_phasor;
+    double *vgen_arr = Elem->vgen; // [vgen, thetag, psi]
+        
+    // ring parameters
+    int ring_harmn = harmonic_number; // Ring harmonic number (number of buckets)
+
+    // cavity related parameters
     double le = Elem->Length;
     double rffreq = Elem->Frequency;
     int harmn = rffreq * circumference / C0 ;    // cavity harmonic number
-    int open = Elem->openloop;
-    int ring_harmn = harmonic_number;
+
     double tlag = Elem->TimeLag;
-    double qfactor = Elem->Qfactor;
-    double rshunt = Elem->Rshunt;
-    double beta = Elem->Beta; //not cavity beta
+    double qfactor = Elem->Qfactor; //loaded
+    double rshunt = Elem->Rshunt; // loaded 
+    double beta = Elem->Beta; //relativist beta not cavity beta
+    double ts = Elem->ts; // expected beam final position
+
+    long cavitymode = Elem->cavitymode;
+    long fbmode = Elem->fbmode;
+
 
     //Tuner Variables
     double TunerGain = Elem->TunerGain;
@@ -97,29 +116,31 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     //if fb mode is PROP_INTEGRAL then gain[0] is Prop gain and gain[1] is integral gain
     double *gain = Elem->gain;
 
-    double ts = Elem->ts;
-    double *vgen_arr = Elem->vgen; /* [vgen, thetag, psi, vgr] */
-        
-    double *turnhistory = Elem->turnhistory;
-    double *vgen_buffer = Elem->vgen_buffer;
-    double *vbeam_buffer = Elem->vbeam_buffer;
-    double *vbunch_buffer = Elem->vbunch_buffer;
-    
-    
-    size_t sztmp1 = sizeof(double)*buffersize*3; //vgen, theta_g, psi
-    void *set_params = atMalloc(sztmp1); // This is a buffer of the actual params to set. Good for PID
-    
-    double cutoff = Elem->cutoff;  
+    //if fb mode is PROP then delay is in units of turns
+    //if fb mode is PROP_INTEGRAL then delay is in units of buckets    
     int delay = Elem->delay; 
+    
+    // Only used for fb mode PROP
     double *VoltDelay = Elem->VoltDelay;
     double *PhaseDelay = Elem->PhaseDelay;
-    int every = Elem->every; 
-    int FF = Elem->ff; 
-    int samplenum = Elem->samplenum; 
-    int record_size = Elem->recordsize;
-    int samplelist_length = ring_harmn/every + 1;
 
-    /* Here we have to declare empty pointers for the PI Loop
+
+            
+    double cutoff = Elem->cutoff;  // cutoff frequency 
+
+    int samplenum = Elem->samplenum; // from 0  to samplenum buckets...
+    int every = Elem->every;  // ...in steps of every 
+    int FF = Elem->ff; //Use the feedforward constant? 
+    int record_size = Elem->recordsize; // overlap coming from delay and every sampling
+    int samplelist_length = ring_harmn/every + 1; // the length of the samplelist array
+    int open = Elem->openloop; // do you want to apply the correction?
+    
+    double *I_record = Elem->I_record; // real and imaginary of the integral part of the loop            
+    double *FFconst = Elem->FFconst; // the feedfoward constant to use
+    double *IIRout = Elem->IIRout;
+    double *IIRcoef = Elem->IIRcoef;
+    
+    /* Here we have to declare pointers for the PI Loop
     They have to be defined outside of an if statement*/
     
     double *Ig2Vg_vec_real = Elem->Ig2Vg_vec;
@@ -133,7 +154,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double *dot_output_real = Elem->dot_output;
     double *dot_output_imag = Elem->dot_output + ring_harmn;
                       
-
     double *generator_phasor_record_real = Elem->generator_phasor_record;
     double *generator_phasor_record_imag = Elem->generator_phasor_record + ring_harmn;
     double *beam_phasor_record_real = Elem->beam_phasor_record;
@@ -144,7 +164,6 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     double *Ig2Vg_mat_real = Elem->Ig2Vg_mat;
     double *Ig2Vg_mat_imag = Elem->Ig2Vg_mat + ring_harmn*ring_harmn;
 
-    
     double *vc_previous_real = Elem->vc_previous; 
     double *vc_previous_imag = Elem->vc_previous + samplenum;
     double *diff_record_real = Elem->diff_record; 
@@ -155,30 +174,25 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
     
     //double *Ig_modulation_signal_real; double *Ig_modulation_signal_imag; 
 
-    double *I_record = Elem->I_record;            
-    double *FFconst = Elem->FFconst;
-    double *IIRout = Elem->IIRout;
-    double *IIRcoef = Elem->IIRcoef;
 
-    double *z_cuts = Elem->z_cuts;
-    double *vbunch = Elem->vbunch;
-    double *vbeam = Elem->vbeam;
-    double *vcav_set = Elem->vcav; /* Vcav set points amplitude, phase */
-    double *vbeam_phasor = Elem->vbeam_phasor;
-        
-    double vbeam_set[] = {vbeam[0], vbeam[1]};
+    // End of loading element attributes.
+
+            
+    double vbeam_set[] = {vbeam[0], vbeam[1]}; 
     double vcav_meas[] = {0.0, 0.0, 0.0};
-    double ave_vbeam[] = {0.0, 0.0};
+    double vcav_phasor[] = {0.0, 0.0}; 
+
     double tot_current = 0.0;
 
     
-    int i;
+    int i, c;
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
-    int c;
+    
+    // Two empty pointers that will be pointed to later.
     int *pslice;
     double *vbeam_kicks; /* This used to be kz, it is the kick that is applied */
 
-    
+    // For now it is easier to use the variable, can be removed later
     double vgen = vgen_arr[0];
     double gen_phase = vgen_arr[1];
     double psi = vgen_arr[2];
@@ -187,28 +201,25 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
 
     double tot_lag_phase = (tlag+ts)*rffreq*TWOPI/C0;
 
+    // parameters needed to computed cavity response
     double filling_time = 2*qfactor / (TWOPI * freqres);
     double T1 = 1/rffreq;
     double kloss = rshunt * TWOPI * freqres / (2 * qfactor);
 
-    double vcav_phasor[] = {0.0, 0.0}; 
-    #ifndef _MSC_VER
-    set_cavity_phasor(vgen, gen_phase, vbeam_phasor, vcav_phasor);
-    #endif
+
     
     for(i=0;i<nbunch;i++){
         tot_current += bunch_currents[i];
     }
     
-
-    
     /*Track RF cavity is always done. */
     trackRFCavity(r_in, le, vgen/energy, rffreq, harmn, tlag, -gen_phase - tot_lag_phase, nturn, circumference/C0, num_particles);
+
     #ifndef _MSC_VER
     /*Only allocate memory if current is > 0*/
     if(tot_current>0 && rshunt > 0){
-        void *buffer = atMalloc(sz);
-        
+        // allocate memory and set pointers
+        void *buffer = atMalloc(sz);        
         double *dptr = (double *) buffer;
         int *iptr;
         vbeam_kicks = dptr;
@@ -216,12 +227,14 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         iptr = (int *) dptr;
         pslice = iptr; 
         iptr += num_particles;
+
+
         rotate_table_history(nturnsw, nslice*nbunch, turnhistory, circumference);
         slice_bunch(r_in, num_particles, nslice, nturnsw, nbunch, bunch_spos,
                     bunch_currents, turnhistory, pslice, z_cuts);
         compute_kicks_phasor(nslice, nbunch, nturnsw, turnhistory, normfact, vbeam_kicks,
                              freqres, qfactor, rshunt, vbeam_phasor, circumference, energy,
-                             beta, ave_vbeam, vbunch, bunch_spos, ring_harmn, fillpattern, ts);             
+                             beta, vbeam_set, vbunch, bunch_spos, ring_harmn, fillpattern, ts);             
 
         /*apply kicks*/
         for (c=0; c<num_particles; c++) {
@@ -232,6 +245,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             }
         }
         
+        // the beam tracking is now done, from now on we compute the feedbacks
                
         // First write the values to the buffer
         if(buffersize>0){
@@ -241,18 +255,17 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
         }   
 
 
-        vbeam_set[0] = ave_vbeam[0];
-        vbeam_set[1] = ave_vbeam[1];        
-
         compute_set_params(vbeam_set, vgen_arr, vcav_set[1], vcav_meas);
         
         if(cavitymode==1){
             // If CavityMode=ACTIVE
             if(fbmode==1){
-                    // If FBMode=PROP
-                    update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay);
-                }
+                // If FBMode=PROP
+                update_vgen(vcav_set, vgen_arr, vcav_meas, gain[0], gain[1], VoltDelay, PhaseDelay, delay);
+            }
             if(fbmode==2){
+                printf("iturn %d \n", iturn);
+                // If FBMode=PROP_INTEGRAL
                 if(iturn==0){
                     init_sample_list(samplelist, ring_harmn, every, samplelist_length); 
                              
@@ -277,7 +290,7 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                     I_record[0] = 0.0; I_record[1] = 0.0;
 
 
-                    set_cavity_phasor(vgen, gen_phase, ave_vbeam, vcav_phasor);
+                    set_cavity_phasor(vgen, gen_phase, vbeam_set, vcav_phasor);
 
                     init_vc_previous(vc_previous_real, vc_previous_imag, samplenum, vcav_phasor);    
 
@@ -290,6 +303,8 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
                                                 ring_harmn); 
 
                 if(iturn>=1 && TunerGain>0){
+                    // It is inited above, but if the psi changes
+                    // then you need to redo it
                     init_Ig2Vg_matrix(ring_harmn,
                                       Ig2Vg_vec_real, Ig2Vg_vec_imag,
                                       Ig2Vg_tmp_real, Ig2Vg_tmp_imag,
@@ -321,21 +336,23 @@ void BeamLoadingCavityPass(double *r_in, int num_particles, int nbunch,
             }
             
         }else if(cavitymode==3){     
-
+            /// If CavityMode=PASSIVE_VOLTAGE
             update_passive_frequency(vbeam_set, vcav_set, vgen_arr,
                                      TunerParams, TunerGain, TunerAveragingPeriod);
         }
 
 
-        /* Here is where the tuner is calculated and applied for PROP and PROP_INTEGRAL */
-        /* If TunerGain is zero, it is skipped */
+        // Here is where the tuner is calculated and applied for PROP and PROP_INTEGRAL 
+        // If TunerGain is zero, it is skipped 
+        // If you are in PASSIVE_VOLTAGE, then the psi 
+        //  has already been updated so don't need to come here again. 
         if(TunerGain>0 && cavitymode!=3){
             compute_tuner(vcav_meas, vgen_arr,
                           TunerParams, TunerGain, TunerAveragingPeriod, TunerOffset);
         }            
 
-        vbeam[0] = ave_vbeam[0];
-        vbeam[1] = ave_vbeam[1];
+        vbeam[0] = vbeam_set[0];
+        vbeam[1] = vbeam_set[1];
         atFree(buffer);
     }
     #endif
