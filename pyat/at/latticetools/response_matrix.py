@@ -240,7 +240,7 @@ def _init_worker(ring, observables, variables):
     _globvars = variables
 
 
-def _resp_fork(ivars, x=None, checkfun=_nocheck, f0=None, **kwargs):
+def _resp_mp(ivars, x=None, checkfun=_nocheck, f0=None, **kwargs):
     if x is not None:
         _globvars.set(x, ring=_globring, **kwargs)
         _globvars.get(initial=True, ring=_globring, **kwargs)
@@ -473,6 +473,7 @@ class ResponseMatrix(_SvdSolver):
         self.variables = variables
         self.observables = observables
         self.eval_kw = eval_kw
+        self._pool = None
         # Get the shape of observables
         observables.evaluate(ring=ring, initial=True, **self.eval_kw)
         super().__init__(len(observables.flat_values), len(variables))
@@ -496,7 +497,7 @@ class ResponseMatrix(_SvdSolver):
     def open_pool(
         self, pool_size: int | None = None, start_method: str | None = None
     ) -> None:
-        if getattr(self, "_pool", None) is not None:
+        if self._pool is not None:
             return
         ctx = multiprocessing.get_context(start_method)
         if pool_size is None:
@@ -510,7 +511,7 @@ class ResponseMatrix(_SvdSolver):
         )
 
     def close_pool(self) -> None:
-        if getattr(self, "_pool", None) is not None:
+        if self._pool is not None:
             self._pool.shutdown()
             self._pool = None
 
@@ -519,8 +520,7 @@ class ResponseMatrix(_SvdSolver):
         if one_sided:
             self.observables.evaluate(self.ring, **self.eval_kw)
             f0 = self.observables.flat_values
-        pool = getattr(self, "_pool", None)
-        if pool is None:
+        if self._pool is None:
             variables = VariableList(self.variables[i] for i in ivars)
             return _resp(
                 self.ring,
@@ -533,13 +533,13 @@ class ResponseMatrix(_SvdSolver):
         nchunks = min(self._pool_size, len(ivars))
         chunks = sequence_split(ivars, nchunks)
         func = partial(
-            _resp_fork,
+            _resp_mp,
             x=x,
             checkfun=_PicklableFunction(checkfun),
             f0=f0,
             **self.eval_kw,
         )
-        return list(chain(*pool.map(func, chunks)))
+        return list(chain(*self._pool.map(func, chunks)))
 
     @contextmanager
     def _save_variables(self) -> Generator[None, None, None]:
@@ -658,7 +658,7 @@ class ResponseMatrix(_SvdSolver):
         ivars = np.arange(len(self.variables))
         with self._save_variables():
             if use_mp:
-                temporary = getattr(self, "_pool", None) is None
+                temporary = self._pool is None
                 self.open_pool(pool_size=pool_size, start_method=start_method)
                 try:
                     results = self._columns(
