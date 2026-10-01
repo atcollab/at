@@ -168,6 +168,7 @@ FloatArray: TypeAlias = npt.NDArray[np.float64]
 
 _globring: Lattice | None = None
 _globobs: ObservableList | None = None
+_globvars: VariableList | None = None
 
 warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
@@ -210,21 +211,50 @@ def _resp(
     observables: ObservableList,
     variables: VariableList,
     checkfun: Callable[[VariableBase], None] = _nocheck,
+    f0: FloatArray | None = None,
     **kwargs,
 ):
     def _resp_one(variable: RefptsVariable):
         """Single response."""
-        variable.step_up(ring=ring)
-        observables.evaluate(ring, **kwargs)
-        op = observables.flat_values
-        variable.step_down(ring=ring)
-        observables.evaluate(ring, **kwargs)
-        om = observables.flat_values
+
+        def _step(step_fun):
+            step_fun(ring=ring)
+            observables.evaluate(ring, **kwargs)
+            return observables.flat_values
+
+        x0 = variable.initial_value
+        vmin, vmax = variable.bounds
+        delta = variable.delta
+        down = x0 - delta >= vmin
+        up = x0 + delta <= vmax or not down
+        if up and down and f0 is None:
+            fp, fm, h = _step(variable.step_up), _step(variable.step_down), 2.0
+        else:
+            base = _step(variable.reset) if f0 is None else f0
+            if up:
+                fp, fm, h = _step(variable.step_up), base, 1.0
+            else:
+                fp, fm, h = base, _step(variable.step_down), 1.0
         variable.reset(ring=ring)
         checkfun(variable)
-        return (op - om) / (2.0 * variable.delta)
+        return (fp - fm) / (h * delta)
 
     return [_resp_one(v) for v in variables]
+
+
+def _init_worker(ring, observables, variables):
+    global _globring, _globvars, _globobs
+    _globring = ring
+    _globobs = observables
+    _globvars = variables
+
+
+def _resp_mp(ivars, x=None, checkfun=_nocheck, f0=None, **kwargs):
+    if x is not None:
+        _globvars.set(x, ring=_globring, **kwargs)
+        _globvars.get(initial=True, ring=_globring, **kwargs)
+    variables = VariableList(_globvars[i] for i in ivars)
+    return _resp(_globring, _globobs, variables, checkfun=checkfun, f0=f0, **kwargs)
 
 
 class _PicklableFunction:
@@ -452,6 +482,7 @@ class ResponseMatrix(_SvdSolver):
         self.variables = variables
         self.observables = observables
         self.eval_kw = eval_kw
+        self._pool = None
         # Get the shape of observables
         observables.evaluate(ring=ring, initial=True, **self.eval_kw)
         super().__init__(len(observables.flat_values), len(variables))
@@ -472,14 +503,59 @@ class ResponseMatrix(_SvdSolver):
         no, nv = self.shape
         return f"{type(self).__name__}({no} observables, {nv} variables)"
 
+    def open_pool(
+        self, pool_size: int | None = None, start_method: str | None = None
+    ) -> bool:
+        if self._pool is not None:
+            return False
+        ctx = multiprocessing.get_context(start_method)
+        if pool_size is None:
+            pool_size = min(len(self.variables), os.cpu_count())
+        self._pool_size = pool_size
+        self._pool = concurrent.futures.ProcessPoolExecutor(
+            max_workers=pool_size,
+            mp_context=ctx,
+            initializer=_init_worker,
+            initargs=(self.ring, self.observables, self.variables),
+        )
+        return True
+
+    def close_pool(self) -> None:
+        if self._pool is not None:
+            self._pool.shutdown()
+            self._pool = None
+
+    def _columns(self, ivars, x=None, checkfun=_nocheck, one_sided=False, f0=None):
+        if one_sided and f0 is None:
+            self.observables.evaluate(self.ring, **self.eval_kw)
+            f0 = self.observables.flat_values
+        if self._pool is None:
+            variables = VariableList(self.variables[i] for i in ivars)
+            return _resp(
+                self.ring,
+                self.observables,
+                variables,
+                checkfun=checkfun,
+                f0=f0,
+                **self.eval_kw,
+            )
+        nchunks = min(self._pool_size, len(ivars))
+        chunks = sequence_split(ivars, nchunks)
+        func = partial(
+            _resp_mp,
+            x=x,
+            checkfun=_PicklableFunction(checkfun),
+            f0=f0,
+            **self.eval_kw,
+        )
+        return list(chain(*self._pool.map(func, chunks)))
+
     @contextmanager
     def _save_variables(self) -> Generator[None, None, None]:
-        print("Saving variables")
         self.variables.get(ring=self.ring, initial=True)
         try:
             yield
         finally:
-            print("Restoring variables")
             self.variables.reset(ring=self.ring)
 
     @property
@@ -553,6 +629,7 @@ class ResponseMatrix(_SvdSolver):
         pool_size: int | None = None,
         start_method: str | None = None,
         checkfun: Callable[[VariableBase], None] = _nocheck,
+        one_sided: bool = False,
         **kwargs,
     ) -> FloatArray:
         """Build the response matrix.
@@ -569,6 +646,8 @@ class ResponseMatrix(_SvdSolver):
               calculation, however it is considered unsafe.
             checkfun:       Function called after each variable has been scanned.
               ``checkfun(v: VariableBase) -> None``.
+            one_sided:      Compute the response matrix using positive delta only
+              instead of +/-delta (default).
 
         Keyword Args:
             dp (float):     Momentum deviation. Defaults to :py:obj:`None`
@@ -583,39 +662,19 @@ class ResponseMatrix(_SvdSolver):
         """
         self.eval_kw.update(kwargs)
 
-        if use_mp:
-            global _globring
-            global _globobs
-            ctx = multiprocessing.get_context(start_method)
-            if pool_size is None:
-                pool_size = min(len(self.variables), os.cpu_count())
-            varchunks = sequence_split(self.variables, pool_size)
-            _single_resp = partial(
-                _resp,
-                self.ring,
-                self.observables,
-                checkfun=_PicklableFunction(checkfun),
-                **self.eval_kw,
-            )
-            with (
-                concurrent.futures.ProcessPoolExecutor(
-                    max_workers=pool_size,
-                    mp_context=ctx,
-                ) as pool,
-                self._save_variables(),
-            ):
-                results = list(chain(*pool.map(_single_resp, varchunks)))
-            _globring = None
-            _globobs = None
-        else:
-            with self._save_variables():
-                results = _resp(
-                    self.ring,
-                    self.observables,
-                    self.variables,
-                    checkfun=checkfun,
-                    **self.eval_kw,
-                )
+        ivars = np.arange(len(self.variables))
+        with self._save_variables():
+            if use_mp:
+                opened = self.open_pool(pool_size=pool_size, start_method=start_method)
+                try:
+                    results = self._columns(
+                        ivars, checkfun=checkfun, one_sided=one_sided
+                    )
+                finally:
+                    if opened:
+                        self.close_pool()
+            else:
+                results = self._columns(ivars, checkfun=checkfun, one_sided=one_sided)
 
         resp = np.stack(results, axis=-1)
         self.response = resp
@@ -989,9 +1048,12 @@ class OrbitResponseMatrix(ResponseMatrix):
         self.var_attr_name = var_attr_name
 
     def exclude_obs(
-        self, *, obsid: int | str = 0, refpts: Refpts = None,
-        obs_index: int | None = None
-        ) -> None:
+        self,
+        *,
+        obsid: int | str = 0,
+        refpts: Refpts = None,
+        obs_index: int | None = None,
+    ) -> None:
         # noinspection PyUnresolvedReferences
         r"""Add an observable item to the set of excluded values.
 
