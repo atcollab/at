@@ -496,9 +496,9 @@ class ResponseMatrix(_SvdSolver):
 
     def open_pool(
         self, pool_size: int | None = None, start_method: str | None = None
-    ) -> None:
+    ) -> bool:
         if self._pool is not None:
-            return
+            return False
         ctx = multiprocessing.get_context(start_method)
         if pool_size is None:
             pool_size = min(len(self.variables), os.cpu_count())
@@ -509,15 +509,15 @@ class ResponseMatrix(_SvdSolver):
             initializer=_init_worker,
             initargs=(self.ring, self.observables, self.variables),
         )
+        return True
 
     def close_pool(self) -> None:
         if self._pool is not None:
             self._pool.shutdown()
             self._pool = None
 
-    def _columns(self, ivars, x=None, checkfun=_nocheck, one_sided=False):
-        f0 = None
-        if one_sided:
+    def _columns(self, ivars, x=None, checkfun=_nocheck, one_sided=False, f0=None):
+        if one_sided and f0 is None:
             self.observables.evaluate(self.ring, **self.eval_kw)
             f0 = self.observables.flat_values
         if self._pool is None:
@@ -543,12 +543,10 @@ class ResponseMatrix(_SvdSolver):
 
     @contextmanager
     def _save_variables(self) -> Generator[None, None, None]:
-        print("Saving variables")
         self.variables.get(ring=self.ring, initial=True)
         try:
             yield
         finally:
-            print("Restoring variables")
             self.variables.reset(ring=self.ring)
 
     @property
@@ -658,14 +656,13 @@ class ResponseMatrix(_SvdSolver):
         ivars = np.arange(len(self.variables))
         with self._save_variables():
             if use_mp:
-                temporary = self._pool is None
-                self.open_pool(pool_size=pool_size, start_method=start_method)
+                opened = self.open_pool(pool_size=pool_size, start_method=start_method)
                 try:
                     results = self._columns(
                         ivars, checkfun=checkfun, one_sided=one_sided
                     )
                 finally:
-                    if temporary:
+                    if opened:
                         self.close_pool()
             else:
                 results = self._columns(ivars, checkfun=checkfun, one_sided=one_sided)

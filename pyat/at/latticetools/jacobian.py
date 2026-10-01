@@ -39,6 +39,9 @@ class _JacobianSolver:
 
     Args:
         func: Merit function object. ``func(x)``.
+        bounds: ``(n, 2)`` array of lower and upper bounds of the variables.
+        max_step: Maximum change of each variable in a single step. The whole
+          step is scaled down if needed, keeping its direction.
         n_steps_max: Maximum number of outer (Newton) steps.
         ftol: Stop when the relative decrease of the cost
           (``0.5 * penalty**2``) over a step is below this value, as in
@@ -250,6 +253,7 @@ class _MeritFunction:
         self.start_method = start_method
         self.one_sided = one_sided
         self.nfev = 0
+        self._last = None
         self._rm = ResponseMatrix(variables, constraints, ring=ring, **eval_kw)
 
     def close(self) -> None:
@@ -261,7 +265,17 @@ class _MeritFunction:
         self.nfev += 1
         self.variables.set(x, ring=self._ring, **self.eval_kw)
         self.constraints.evaluate(ring=self._ring, **self.eval_kw)
+        values = self.constraints.get_flat_values(err=np.nan)
+        self._last = (x.copy(), values) if np.all(np.isfinite(values)) else None
         return self.constraints.get_flat_deviations(err=self.err)
+
+    def result(self, x0: np.ndarray, x: np.ndarray) -> np.ndarray:
+        """Raw deviations at ``x``, with the variables' initial values reset
+        to ``x0``.
+        """
+        self.variables.set(x0, ring=self._ring, **self.eval_kw)
+        self.variables.get(initial=True, ring=self._ring, **self.eval_kw)
+        return self(x)
 
     def penalty(self, y: np.ndarray) -> np.ndarray:
         """Weighted deviations, used only for the solver's convergence
@@ -306,9 +320,19 @@ class _MeritFunction:
         self.variables.get(initial=True, ring=self._ring, **self.eval_kw)
         if self.use_mp:
             self._rm.open_pool(pool_size=self.pool_size, start_method=self.start_method)
+        f0 = None
+        if self.one_sided and self._last is not None:
+            xlast, values = self._last
+            if np.array_equal(xlast, x):
+                f0 = values
         nvars = len(self.variables)
-        columns = self._rm._columns(np.arange(nvars), x=x, one_sided=self.one_sided)
-        self.nfev += nvars + 1 if self.one_sided else 2 * nvars
+        columns = self._rm._columns(
+            np.arange(nvars), x=x, one_sided=self.one_sided, f0=f0
+        )
+        if self.one_sided:
+            self.nfev += nvars + (f0 is None)
+        else:
+            self.nfev += 2 * nvars
         return np.stack(columns, axis=-1)
 
 
@@ -408,6 +432,10 @@ def jacobian_match(
          stop early.
        * With :pycode:`broyden=True` only one Jacobian is computed, so
          :pycode:`use_mp=True` rarely helps.
+       * The variable bounds are respected at every step: a step that would
+         cross a bound is scaled down to stop on it, and a variable on a bound
+         is held fixed as long as the gradient pushes it outwards. Near a
+         bound, the finite differences are taken towards the inside.
     """
     initial_values = variables.get(initial=True, check_bounds=True, **eval_kw)
 
@@ -440,9 +468,7 @@ def jacobian_match(
     )
     try:
         xbest, status = solver.solve(initial_values)
-        variables.set(initial_values, **eval_kw)
-        variables.get(initial=True, **eval_kw)
-        fbest = merit(xbest)
+        fbest = merit.result(initial_values, xbest)
     finally:
         merit.close()
 
