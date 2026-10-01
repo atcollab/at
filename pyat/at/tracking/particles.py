@@ -2,18 +2,19 @@
 Functions relating to particle generation
 """
 
+import itertools
+from warnings import warn
+
 import numpy as np
 from numpy.linalg import cholesky, LinAlgError, det
 from scipy.linalg import block_diag, eig
-from warnings import warn
-from ..lattice import AtError, AtWarning, Lattice, Orbit, random
 
-# from ..physics.amat import jmat
+from ..lattice import AtError, AtWarning, Lattice, Orbit, random
 
 __all__ = ["beam", "sigma_matrix", "emittances_from_beam"]
 
 _j2 = np.array([[0.0, 1.0], [-1.0, 0.0]])
-_jmat = block_diag(_j2, _j2, _j2)
+_jmatswap = block_diag(_j2, _j2, _j2.T)
 
 
 # noinspection PyPep8Naming
@@ -256,11 +257,19 @@ def emittances_from_beam(beam=None, sigma_mat=None):
             msg = "beam provided, sigma_matrix ignored in emittance calculation"
             warn(AtWarning(msg))
         sigma_mat = sigma_matrix(beam=beam)
-    eig_emittances, _ = eig(sigma_mat @ _jmat)
-    eig_emittances = np.unique(abs(eig_emittances))
+    lmbd, vv = eig(sigma_mat @ _jmatswap)
+    eig_emittances = np.zeros(3)
+    if np.any(lmbd):
+        keep = lmbd.imag > 1.0e-9 * abs(lmbd).max()
+        emit, vv = abs(lmbd[keep]), vv[:, keep]
+        modefrac = abs(np.imag(vv[0::2].conj() * vv[1::2]))
+        modefrac /= modefrac.sum(axis=0)
+        nmodes = len(emit)
+        planes = max(
+            itertools.permutations(range(3), nmodes),
+            key=lambda p: sum(modefrac[p[k], k] for k in range(nmodes)),
+        )
+        eig_emittances[list(planes)] = emit
     submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
     proj_emittances = np.sqrt([det(sigma_mat[s, s]) for s in submat])
-    #  Trick to reorder eigen-emittances
-    idx = [np.argmin(abs(proj_emittances - em)) for em in eig_emittances]
-    eig_emittances = eig_emittances[idx]
     return eig_emittances, proj_emittances
