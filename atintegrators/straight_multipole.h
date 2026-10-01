@@ -35,8 +35,8 @@
     double gK_entrance=0.0; \
     double gK_exit=0.0;
 
-const char *required[] = {};
-const char *optional[] = {};
+const char *required[] = {NULL};
+const char *optional[] = {NULL};
 #define N_REQUIRED 0
 #define N_OPTIONAL 0
 #endif /*MATLAB_MEX_FILE*/
