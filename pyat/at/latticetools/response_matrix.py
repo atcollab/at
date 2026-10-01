@@ -233,11 +233,18 @@ def _resp(
     return [_resp_one(v) for v in variables]
 
 
+def _init_worker(ring, observables, variables):
+    global _globring, _globvars, _globobs
+    _globring = ring
+    _globobs = observables
+    _globvars = variables
+
+
 def _resp_fork(ivars, x=None, checkfun=_nocheck, f0=None, **kwargs):
     if x is not None:
         _globvars.set(x, ring=_globring, **kwargs)
         _globvars.get(initial=True, ring=_globring, **kwargs)
-    variables = [_globvars[i] for i in ivars]
+    variables = VariableList(_globvars[i] for i in ivars)
     return _resp(_globring, _globobs, variables, checkfun=checkfun, f0=f0, **kwargs)
 
 
@@ -489,31 +496,23 @@ class ResponseMatrix(_SvdSolver):
     def open_pool(
         self, pool_size: int | None = None, start_method: str | None = None
     ) -> None:
-        global _globring, _globvars, _globobs
         if getattr(self, "_pool", None) is not None:
             return
         ctx = multiprocessing.get_context(start_method)
-        self._fork = ctx.get_start_method() == "fork"
-        if self._fork:
-            _globring = self.ring
-            _globvars = self.variables
-            _globobs = self.observables
         if pool_size is None:
             pool_size = min(len(self.variables), os.cpu_count())
         self._pool_size = pool_size
         self._pool = concurrent.futures.ProcessPoolExecutor(
-            max_workers=pool_size, mp_context=ctx
+            max_workers=pool_size,
+            mp_context=ctx,
+            initializer=_init_worker,
+            initargs=(self.ring, self.observables, self.variables),
         )
 
     def close_pool(self) -> None:
-        global _globring, _globvars, _globobs
         if getattr(self, "_pool", None) is not None:
             self._pool.shutdown()
             self._pool = None
-            if self._fork:
-                _globring = None
-                _globvars = None
-                _globobs = None
 
     def _columns(self, ivars, x=None, checkfun=_nocheck, one_sided=False):
         f0 = None
@@ -522,7 +521,7 @@ class ResponseMatrix(_SvdSolver):
             f0 = self.observables.flat_values
         pool = getattr(self, "_pool", None)
         if pool is None:
-            variables = [self.variables[i] for i in ivars]
+            variables = VariableList(self.variables[i] for i in ivars)
             return _resp(
                 self.ring,
                 self.observables,
@@ -532,19 +531,14 @@ class ResponseMatrix(_SvdSolver):
                 **self.eval_kw,
             )
         nchunks = min(self._pool_size, len(ivars))
-        if self._fork:
-            chunks = sequence_split(ivars, nchunks)
-            func = partial(_resp_fork, x=x, checkfun=checkfun, f0=f0, **self.eval_kw)
-        else:
-            chunks = sequence_split([self.variables[i] for i in ivars], nchunks)
-            func = partial(
-                _resp,
-                self.ring,
-                self.observables,
-                checkfun=_PicklableFunction(checkfun),
-                f0=f0,
-                **self.eval_kw,
-            )
+        chunks = sequence_split(ivars, nchunks)
+        func = partial(
+            _resp_fork,
+            x=x,
+            checkfun=_PicklableFunction(checkfun),
+            f0=f0,
+            **self.eval_kw,
+        )
         return list(chain(*pool.map(func, chunks)))
 
     @contextmanager
