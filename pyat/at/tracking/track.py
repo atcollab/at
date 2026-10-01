@@ -354,7 +354,7 @@ def lattice_track(
     ]
     loss_map = numpy.recarray((npart,), ldtype)
     lat_kw = ["turn"]
-    trackparam.update([(kw, kwargs.get(kw)) for kw in kwargs if kw in lat_kw])
+    trackparam.update((kw, kwargs.get(kw)) for kw in kwargs if kw in lat_kw)
     trackparam.update({"refpts": get_uint32_index(lattice, refpts), "nturns": nturns})
 
     start_method = kwargs.pop("start_method", None)
