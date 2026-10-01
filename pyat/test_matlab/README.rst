@@ -30,6 +30,13 @@ Install the Matlab engine for Python, ensuring your virtualenv is still active:
 * ``cd $MATLAB_ROOT/extern/engines/python``
 * ``python setup.py build -b /tmp/mlp install``
 
+For recent Matlab versions, you can also install the Matlab engine for Python
+directly from PyPI. You must specify the version of the Matlab engine that matches
+your Matlab installation. For example, if you are using Matlab R2025b, you can install
+the Matlab engine for Python with:
+
+* ``pip install matlabengine~=25.2.0``
+
 Now run the tests inside your virtualenv:
 
 * ``cd $AT_ROOT/pyat``
@@ -44,41 +51,4 @@ Using R2021a on RHEL8 does work.
 Footnotes
 ---------
 
-.. [1] Matlab versions and the Python versions they support:
-
-   +----------------+--------------------------+
-   | Matlab Release | Supported Python Version |
-   +================+==========================+
-   |  2021b         |  2.7, 3.7, 3.8, 3.9      |
-   +----------------+--------------------------+
-   |  2021a         |  2.7, 3.7, 3.8           |
-   +----------------+--------------------------+
-   |  2020b         |  2.7, 3.6, 3.7, 3.8      |
-   +----------------+--------------------------+
-   |  2020a         |  2.7, 3.6, 3.7           |
-   +----------------+--------------------------+
-   |  2019b         |  2.7, 3.6, 3.7           |
-   +----------------+--------------------------+
-   |  2019a         |  2.7, 3.5, 3.6, 3.7      |
-   +----------------+--------------------------+
-   |  2018b         |  2.7, 3.5, 3.6           |
-   +----------------+--------------------------+
-   |  2018a         |  2.7, 3.5, 3.6           |
-   +----------------+--------------------------+
-   |  2017b         |  2.7, 3.4, 3.5, 3.6      |
-   +----------------+--------------------------+
-   |  2017a         |  2.7, 3.4, 3.5           |
-   +----------------+--------------------------+
-   |  2016b         |  2.7, 3.3, 3.4, 3.5      |
-   +----------------+--------------------------+
-   |  2016a         |  2.7, 3.3, 3.4           |
-   +----------------+--------------------------+
-   |  2015b         |  2.7, 3.3, 3.4           |
-   +----------------+--------------------------+
-   |  2015a         |  2.7, 3.3, 3.4           |
-   +----------------+--------------------------+
-   |  2014b         |  2.7, 3.3                |
-   +----------------+--------------------------+
-   |  <=2014a       |  Not supported           |
-   +----------------+--------------------------+
-
+.. [1] `Matlab versions and the Python versions they support: <https://fr.mathworks.com/support/requirements/python-compatibility.html>`_
