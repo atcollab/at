@@ -62,16 +62,13 @@ warnings.filterwarnings("always", category=AtWarning, module=__name__)
 
 def _warn(doc: str) -> str:
     """Add a notice on AT / PALS field expansion."""
-    return "\n".join(
-        (
-            doc,
-            "",
-            "The AT field expansion differs from the MAD expansion by a factor n!. "
-            "See :ref:`here <at-field-expansion>` for the definition of the AT field "
-            "expansion and `PALS <https://pals-project.readthedocs.io/en/latest/element"
-            "-parameters.html#magneticmultipolep-magnetic-multipole-parameters>`_ "
-            "for the MAD/PALS field expansion.",
-        )
+    return (
+        f"{doc}\n\n"
+        "The AT field expansion differs from the MAD expansion by a factor n!. "
+        "See :ref:`here <at-field-expansion>` for the definition of the AT "
+        "field expansion and `PALS <https://pals-project.readthedocs.io/en/"
+        "latest/element-parameters.html#magneticmultipolep-magnetic-"
+        "multipole-parameters>`_ for the MAD/PALS field expansion."
     )
 
 
@@ -246,7 +243,7 @@ class ThinMultipole(Element):
         super().__init__(
             family_name,
             Length=kwargs.pop("Length", 0),
-            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass")
+            PassMethod=kwargs.pop("PassMethod", "ThinMPolePass"),
         )
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super().__setattr__("MaxOrder", maxorder)
@@ -386,7 +383,7 @@ class ThinMultipole(Element):
 
         Provided for backwards compatibility, use *HKick*, *VKick* instead.
         """
-        return np.atan([-self.Kn0L, self.Ks0L])
+        return np.arctan([-self.Kn0L, self.Ks0L])
 
     @KickAngle.setter
     def KickAngle(self, value) -> None:
@@ -411,6 +408,7 @@ class ThinMultipole(Element):
     @VKick.setter
     def VKick(self, value: float) -> None:
         self.Ks0L = value
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element."""
