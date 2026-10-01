@@ -26,9 +26,8 @@ Set up a virtualenv using a supported Python version:
 
 Install the Matlab engine for Python, ensuring your virtualenv is still active:
 
-* ``mkdir /tmp/mlp``
 * ``cd $MATLAB_ROOT/extern/engines/python``
-* ``python setup.py build -b /tmp/mlp install``
+* ``pip install .``
 
 For recent Matlab versions, you can also install the Matlab engine for Python
 directly from PyPI. You must specify the version of the Matlab engine that matches
