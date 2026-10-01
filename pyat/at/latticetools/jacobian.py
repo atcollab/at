@@ -38,12 +38,7 @@ class _JacobianSolver:
     """Damped Gauss-Newton solver driven by a merit-function object.
 
     Args:
-        func: Merit function object. ``func(x)`` returns the residual
-          vector ``y``. It must also provide ``get_jacobian(x,
-          mask_input)``, ``solve_step(...)``, ``mask_input``,
-          ``mask_output``, ``_bounds`` and ``_clip_to_max_steps``. If it
-          defines ``penalty(y)``, the penalty is the norm of
-          ``penalty(y)`` instead of the norm of ``y``.
+        func: Merit function object. ``func(x)``.
         n_steps_max: Maximum number of outer (Newton) steps.
         ftol: Stop when the relative decrease of the cost
           (``0.5 * penalty**2``) over a step is below this value, as in
@@ -58,19 +53,21 @@ class _JacobianSolver:
         max_nfev: Stop when ``func.nfev`` reaches this value. ``None``
           disables it.
         n_bisections: Maximum number of step-halvings in the line search.
-        error_on_penalty_increase: Raise ``AtError`` if a line-search
-          trial makes the penalty worse than this many times the
-          previous value. ``False`` disables the check.
         max_rel_penalty_increase: Once ``n_bisections`` step-halvings
           have been tried, keep bisecting only while the penalty found
           so far is within this factor of the previous value; ``None``
           disables the extra allowance.
+        broyden: If True, rank-1 (Broyden) update the Jacobian across
+          steps instead of recomputing it by finite differences.
         verbose: If True, print per-step progress.
     """
 
     def __init__(
         self,
         func,
+        bounds: np.ndarray,
+        *,
+        max_step: float | np.ndarray | None = None,
         n_steps_max: int = 20,
         ftol: float | None = 1e-8,
         xtol: float | None = 1e-8,
@@ -78,11 +75,17 @@ class _JacobianSolver:
         tol: float | None = None,
         max_nfev: int | None = None,
         n_bisections: int = 3,
-        error_on_penalty_increase: float | bool = 100,
         max_rel_penalty_increase: float | None = 10.0,
+        broyden: bool = False,
         verbose: bool = False,
     ):
         self.func = func
+        self.lower, self.upper = np.asarray(bounds, dtype=float).T
+        nvars = len(self.lower)
+        if max_step is None:
+            self.max_step = np.full(nvars, np.inf)
+        else:
+            self.max_step = np.broadcast_to(np.abs(max_step), (nvars,)).astype(float)
         self.n_steps_max = n_steps_max
         self.ftol = ftol
         self.xtol = xtol
@@ -90,158 +93,90 @@ class _JacobianSolver:
         self.tol = tol
         self.max_nfev = max_nfev
         self.n_bisections = n_bisections
-        self.error_on_penalty_increase = error_on_penalty_increase
         self.max_rel_penalty_increase = max_rel_penalty_increase
+        self.broyden = broyden
         self.verbose = verbose
 
-        self._x = None
-        self._step = 0
-        self._step_best = 0
-        self._penalty_best = 1e200
+        self.x = None
+        self._penalty_best = np.inf
         self._xbest = None
-        self.mask_from_limits = None
-        self._last_jac = None
-        self._last_jac_x = None
-        self._last_y = None
 
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, value):
-        self._x = np.array(np.atleast_1d(value), dtype=float)
-        self.mask_from_limits = np.ones(len(self._x), dtype=bool)
-
-    def _weighted(self, y):
-        return self.func.penalty(y) if hasattr(self.func, "penalty") else y
-
-    def eval(self, x):
+    def _evaluate(self, x):
         y = self.func(x)
-        penalty_vec = self._weighted(y)
+        penalty_vec = self.func.penalty(y)
         penalty = float(np.sqrt(np.dot(penalty_vec, penalty_vec)))
-        if self.verbose:
-            print(f"penalty: {penalty}")
         if penalty < self._penalty_best:
-            self._step_best = self._step
             self._penalty_best = penalty
             self._xbest = x.copy()
-            if self.verbose:
-                print(f"new best: {self._penalty_best}")
         return y, penalty
 
-    def _jacobian(self, y, mask_input, broyden):
-        """Broyden rank-1 update of the last Jacobian if requested and
-        possible, otherwise a fresh finite-difference Jacobian.
-        """
-        if broyden and self._last_jac is not None:
-            dx = self.x - self._last_jac_x
-            dx_sqnorm = np.dot(dx, dx)
-            if dx_sqnorm > 0:
-                dy = y - self._last_y
-                return (
-                    self._last_jac + np.outer(dy - self._last_jac @ dx, dx) / dx_sqnorm
-                )
-        return self.func.get_jacobian(self.x, mask_input=mask_input)
+    def _trial_step(self, xstep, alpha):
+        trial_xstep = 2.0**-alpha * xstep
+        xnew = self.x - trial_xstep
+        bound = np.where(xnew < self.lower, self.lower, self.upper)
+        cross = (xnew < self.lower) | (xnew > self.upper)
+        ratio = np.ones_like(trial_xstep)
+        ratio[cross] = (self.x[cross] - bound[cross]) / trial_xstep[cross]
+        scale = ratio.min(initial=1.0)
+        xnew = self.x - scale * trial_xstep
+        hit = cross & (ratio == scale)
+        xnew[hit] = bound[hit]
+        return self.x - np.clip(xnew, self.lower, self.upper)
 
-    def step(
-        self,
-        n_steps: int = 1,
-        rcond: float | None = None,
-        sing_val_cutoff: int | None = None,
-        broyden: bool = False,
-    ):
-        merit_func = self.func
+    def solve(self, x0):
+        func = self.func
+        self.x = np.array(x0, dtype=float)
+        if len(self.x) == 0:
+            msg = "At least one variable should be present"
+            raise AtError(msg)
+        self._xbest = self.x.copy()
         status = 0
+        jac = x_jac = y_jac = None
 
-        for step_index in range(n_steps):
-            self._step += 1
+        y, penalty = self._evaluate(self.x)
 
-            y, penalty = self.eval(self.x)
-
+        for istep in range(self.n_steps_max):
             if self.tol is not None and penalty < self.tol:
                 status = 5
                 break
 
-            if len(merit_func.mask_input) == 0:
-                msg = "At least one variable should be present"
-                raise AtError(msg)
-            if not np.any(merit_func.mask_input):
-                msg = "At least one variable should be active"
-                raise AtError(msg)
+            dx = None if jac is None else self.x - x_jac
+            if self.broyden and dx is not None and np.dot(dx, dx) > 0:
+                jac = jac + np.outer(y - y_jac - jac @ dx, dx) / np.dot(dx, dx)
+            else:
+                jac = func.get_jacobian(self.x)
+            x_jac, y_jac = self.x.copy(), y.copy()
 
-            mask_input = merit_func.mask_input & self.mask_from_limits
+            grad = func.penalty(jac.T) @ func.penalty(y)
+            at_lower = self.x <= self.lower
+            at_upper = self.x >= self.upper
+            mask = ~((at_lower & (grad > 0)) | (at_upper & (grad < 0)))
+            grad[~mask] = 0.0
 
-            jac = self._jacobian(y, mask_input, broyden)
-            self._last_jac_x = self.x.copy()
-            self._last_jac = jac.copy()
-            self._last_y = y.copy()
-
-            if self.gtol is not None:
-                grad = self._weighted(jac.T) @ self._weighted(y)
-                grad[~mask_input] = 0.0
-                if np.linalg.norm(grad, ord=np.inf) < self.gtol:
-                    status = 1
-                    break
-
-            xstep = merit_func.solve_step(
-                jac,
-                y,
-                mask_input,
-                merit_func.mask_output,
-                rcond=rcond,
-                sing_val_cutoff=sing_val_cutoff,
-            )
-            xstep = merit_func._clip_to_max_steps(xstep)
-            self.mask_from_limits[:] = True
-
-            alpha = -1
-            limits = merit_func._bounds
-            new_penalty = None
+            if self.gtol is not None and np.linalg.norm(grad, ord=np.inf) < self.gtol:
+                status = 1
+                break
 
             while True:
+                xstep = func.solve_step(jac, y, mask)
+                outwards = mask & ((at_lower & (xstep > 0)) | (at_upper & (xstep < 0)))
+                if not np.any(outwards):
+                    break
+                mask = mask & ~outwards
+            with np.errstate(divide="ignore"):
+                xstep = xstep * np.min(self.max_step / np.abs(xstep), initial=1.0)
+
+            alpha = -1
+            new_penalty = np.inf
+            while new_penalty >= penalty:
                 if alpha > self.n_bisections and (
                     self.max_rel_penalty_increase is None
                     or new_penalty < self.max_rel_penalty_increase * penalty
                 ):
                     break
                 alpha += 1
-                if self.verbose:
-                    print(f"\n--> step {step_index} alpha {alpha}\n")
-
-                trial_xstep = 2.0**-alpha * xstep
-
-                mask_hit_limit = np.zeros(len(self.x), dtype=bool)
-                for ivar in range(len(self.x)):
-                    xnew = self.x[ivar] - trial_xstep[ivar]
-                    if xnew < limits[ivar][0]:
-                        bound = limits[ivar][0]
-                    elif xnew > limits[ivar][1]:
-                        bound = limits[ivar][1]
-                    else:
-                        continue
-                    trial_xstep = (
-                        trial_xstep * (self.x[ivar] - bound) / trial_xstep[ivar]
-                    )
-                    mask_hit_limit[ivar] = True
-
-                y, new_penalty = self.eval(self.x - trial_xstep)
-                if self.verbose:
-                    print(f"penalty {penalty} new_penalty {new_penalty}")
-
-                if new_penalty < penalty:
-                    break
-
-            if (
-                self.error_on_penalty_increase
-                and new_penalty > penalty * self.error_on_penalty_increase
-            ):
-                self.eval(self.x)
-                msg = (
-                    f"penalty increased by more than "
-                    f"{self.error_on_penalty_increase} times"
-                )
-                raise AtError(msg)
+                trial_xstep = self._trial_step(xstep, alpha)
+                y_new, new_penalty = self._evaluate(self.x - trial_xstep)
 
             if new_penalty >= penalty:
                 status = 6
@@ -256,10 +191,10 @@ class _JacobianSolver:
             ) < self.xtol * (self.xtol + np.linalg.norm(self.x))
 
             self.x = self.x - trial_xstep
-            self.mask_from_limits = ~mask_hit_limit
+            y, penalty = y_new, new_penalty
 
             if self.verbose:
-                print(f"step {step_index} step_best {self._step_best} {trial_xstep}")
+                print(f"step {istep}: alpha {alpha}, penalty {penalty}")
 
             if ftol_ok and xtol_ok:
                 status = 4
@@ -270,30 +205,11 @@ class _JacobianSolver:
             if xtol_ok:
                 status = 3
                 break
-            nfev = getattr(merit_func, "nfev", 0)
-            if self.max_nfev is not None and nfev >= self.max_nfev:
+            if self.max_nfev is not None and func.nfev >= self.max_nfev:
                 status = 0
                 break
-        else:
-            status = 0
 
         return self._xbest, status
-
-    def solve(
-        self,
-        x0,
-        rcond: float | None = None,
-        sing_val_cutoff: int | None = None,
-        broyden: bool = False,
-    ):
-        self.x = np.array(x0, dtype=float).copy()
-        self._xbest = self.x.copy()
-        return self.step(
-            self.n_steps_max,
-            rcond=rcond,
-            sing_val_cutoff=sing_val_cutoff,
-            broyden=broyden,
-        )
 
 
 class _MeritFunction:
@@ -314,7 +230,8 @@ class _MeritFunction:
         ring,
         *,
         err: float = 1.0e6,
-        max_step: np.ndarray | float | None = None,
+        rcond: float | None = None,
+        sing_val_cutoff: int | None = None,
         use_mp: bool = False,
         pool_size: int | None = None,
         start_method: str | None = None,
@@ -326,23 +243,13 @@ class _MeritFunction:
         self._ring = ring
         self.eval_kw = eval_kw
         self.err = err
+        self.rcond = rcond
+        self.sing_val_cutoff = sing_val_cutoff
         self.use_mp = use_mp
         self.pool_size = pool_size
         self.start_method = start_method
         self.one_sided = one_sided
         self.nfev = 0
-
-        n = len(variables)
-        self.mask_input = np.ones(n, dtype=bool)
-        self._bounds = np.array([var.bounds for var in variables], dtype=float)
-        if max_step is None:
-            self._max_step = np.full(n, np.inf)
-        else:
-            self._max_step = np.broadcast_to(
-                np.abs(np.asarray(max_step, dtype=float)), (n,)
-            ).copy()
-        self.mask_output = None
-
         self._rm = ResponseMatrix(variables, constraints, ring=ring, **eval_kw)
 
     def close(self) -> None:
@@ -354,10 +261,7 @@ class _MeritFunction:
         self.nfev += 1
         self.variables.set(x, ring=self._ring, **self.eval_kw)
         self.constraints.evaluate(ring=self._ring, **self.eval_kw)
-        y = self.constraints.get_flat_deviations(err=self.err)
-        if self.mask_output is None:
-            self.mask_output = np.ones(len(y), dtype=bool)
-        return y
+        return self.constraints.get_flat_deviations(err=self.err)
 
     def penalty(self, y: np.ndarray) -> np.ndarray:
         """Weighted deviations, used only for the solver's convergence
@@ -366,79 +270,46 @@ class _MeritFunction:
         return y / self.constraints.get_flat_weights()
 
     def solve_step(
-        self,
-        jac: np.ndarray,
-        y: np.ndarray,
-        mask_input: np.ndarray,
-        mask_output: np.ndarray,
-        rcond: float | None = None,
-        sing_val_cutoff: int | None = None,
+        self, jac: np.ndarray, y: np.ndarray, mask: np.ndarray
     ) -> np.ndarray:
-        """Newton step for the raw deviation ``y``, using
-        :meth:`.ResponseMatrix.correction_matrix`.
+        """Newton step for the raw deviation ``y`` with the variables in
+        ``mask``, using :meth:`.ResponseMatrix.correction_matrix`.
 
         ``sing_val_cutoff`` is the number of (largest) singular values to
         keep. If not given, it is derived from the relative threshold
         ``rcond``.
         """
-        nvar = jac.shape[1]
-        if not np.any(mask_output):
-            return np.zeros(nvar)
-
-        self._rm._varmask = mask_input
-        self._rm._obsmask = mask_output
+        self._rm._varmask = mask
         self._rm.response = jac
         self._rm.solve()
 
         s = self._rm.singular_values
         if s.size == 0:
-            return np.zeros(nvar)
-        if sing_val_cutoff is not None:
-            nvals = int(sing_val_cutoff)
+            return np.zeros(jac.shape[1])
+        if self.sing_val_cutoff is not None:
+            nvals = int(self.sing_val_cutoff)
         else:
+            rcond = self.rcond
             if rcond is None:
                 rcond = max(jac.shape) * np.finfo(float).eps
             nvals = int(np.sum(s > rcond * s[0]))
 
         return self._rm.correction_matrix(nvals=nvals) @ y
 
-    def _clip_to_max_steps(self, xstep: np.ndarray) -> np.ndarray:
-        return np.clip(xstep, -self._max_step, self._max_step)
-
-    def get_jacobian(
-        self,
-        x: np.ndarray,
-        mask_input: np.ndarray | None = None,
-    ) -> np.ndarray:
+    def get_jacobian(self, x: np.ndarray) -> np.ndarray:
         """Finite-difference Jacobian at ``x``.
 
-        Only the columns of the ``mask_input``-active variables are
-        computed; the others are left as zero and are excluded again at
-        the SVD stage. :meth:`.ResponseMatrix.build` is not used because
-        it cannot be restricted to a subset of variables.
-        ``mask_input=None`` means all variables are active.
+        :meth:`.ResponseMatrix.build` is not used because, with a pool kept
+        open across Newton steps, the workers must receive the current ``x``.
         """
         self.variables.set(x, ring=self._ring, **self.eval_kw)
         self.variables.get(initial=True, ring=self._ring, **self.eval_kw)
-
-        nobs, nvar = self._rm.shape
-        if mask_input is None:
-            mask_input = np.ones(nvar, dtype=bool)
-        active_idx = np.flatnonzero(mask_input)
-        active_vars = [self.variables[i] for i in active_idx]
-
-        jac = np.zeros((nobs, nvar))
-        if len(active_vars) > 0:
-            if self.use_mp:
-                self._rm.open_pool(
-                    pool_size=self.pool_size, start_method=self.start_method
-                )
-            columns = self._rm._columns(active_idx, x=x, one_sided=self.one_sided)
-            jac[:, active_idx] = np.stack(columns, axis=-1)
-            nvars = len(active_vars)
-            self.nfev += nvars + 1 if self.one_sided else 2 * nvars
-
-        return jac
+        if self.use_mp:
+            self._rm.open_pool(pool_size=self.pool_size, start_method=self.start_method)
+        nvars = len(self.variables)
+        columns = self._rm._columns(np.arange(nvars), x=x, one_sided=self.one_sided)
+        self.nfev += nvars + 1 if self.one_sided else 2 * nvars
+        return np.stack(columns, axis=-1)
 
 
 def jacobian_match(
@@ -457,7 +328,6 @@ def jacobian_match(
     sing_val_cutoff: int | None = None,
     broyden: bool = False,
     max_step: float | np.ndarray | None = None,
-    error_on_penalty_increase: float | bool = 100,
     max_rel_penalty_increase: float | None = 10.0,
     err: float = 1.0e6,
     use_mp: bool = False,
@@ -496,9 +366,12 @@ def jacobian_match(
           the Newton step; takes precedence over ``rcond``.
         broyden: If True, rank-1 (Broyden) update the Jacobian across
           outer steps instead of recomputing it by finite differences.
-        max_step: Absolute cap on a single Newton step, per variable.
-        error_on_penalty_increase, max_rel_penalty_increase: passed
-          through to :class:`_JacobianSolver`.
+        max_step: Maximum change of each variable in a single step. The whole
+          step is scaled down if needed, keeping its direction.
+        max_rel_penalty_increase: Once ``n_bisections`` step-halvings
+          have been tried, keep bisecting only while the penalty found so
+          far is within this factor of the previous value; ``None``
+          disables the extra allowance.
         err: Value substituted for a constraint's deviation when it
           cannot be evaluated.
         use_mp, pool_size, start_method: Compute the Jacobian with
@@ -522,11 +395,6 @@ def jacobian_match(
         decrease found in the line search. ``success`` is
         ``status > 0``.
 
-    Raises:
-        AtError: If the penalty increases by more than
-          ``error_on_penalty_increase`` times in a single line-search
-          step.
-
     .. note::
 
        * *use_mp* only parallelises the finite-difference Jacobian; the line
@@ -547,7 +415,8 @@ def jacobian_match(
         variables,
         constraints,
         err=err,
-        max_step=max_step,
+        rcond=rcond,
+        sing_val_cutoff=sing_val_cutoff,
         use_mp=use_mp,
         pool_size=pool_size,
         start_method=start_method,
@@ -556,6 +425,8 @@ def jacobian_match(
     )
     solver = _JacobianSolver(
         merit,
+        [var.bounds for var in variables],
+        max_step=max_step,
         n_steps_max=n_steps_max,
         ftol=ftol,
         xtol=xtol,
@@ -563,17 +434,12 @@ def jacobian_match(
         tol=tol,
         max_nfev=max_nfev,
         n_bisections=n_bisections,
-        error_on_penalty_increase=error_on_penalty_increase,
         max_rel_penalty_increase=max_rel_penalty_increase,
+        broyden=broyden,
         verbose=verbose >= 2,
     )
     try:
-        xbest, status = solver.solve(
-            initial_values,
-            rcond=rcond,
-            sing_val_cutoff=sing_val_cutoff,
-            broyden=broyden,
-        )
+        xbest, status = solver.solve(initial_values)
         variables.set(initial_values, **eval_kw)
         variables.get(initial=True, **eval_kw)
         fbest = merit(xbest)
