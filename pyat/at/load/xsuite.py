@@ -115,7 +115,7 @@ This is summarised in this table:
    |Straight magnet  +------------------------+----------------+---------------------------+
    |                 |*default*               |"adaptive"      |"drift-kick-drift-expanded"|
    +-----------------+------------------------+----------------+---------------------------+
-   |                 |ExactSectorBendPass     |"bend-kick-bend"                            |
+   |                 |ExactSectorBendPass     |"bend-kick-bend"|                           |
    |                 +------------------------+----------------+---------------------------+
    |Dipole           |ExactRectangularBendPass|"drift-kick-drift-exact"                    |
    |                 +------------------------+----------------+---------------------------+
