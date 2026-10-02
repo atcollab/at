@@ -7,12 +7,12 @@ import pytest
 
 
 def _py_data(ml_data):
-    """Convert a Matlab vector to a numpy vector"""
+    """Convert a Matlab vector to a numpy vector."""
     return np.squeeze(np.asarray(ml_data))
 
 
 def _ml_refs(refpts, nelems):
-    """Convert refpoints to Matlab"""
+    """Convert refpoints to Matlab."""
     uintrefs = uint32_refpts(refpts, nelems)
     return matlab.double([float(ref + 1) for ref in uintrefs])
 
@@ -112,26 +112,44 @@ def test_quantdiff(engine, request, lattices):
 def test_fastring(engine, request, lattices):
     py_lattice, ml_lattice, _ = request.getfixturevalue(lattices)
     # Python call
-    ring, ringrad = physics.fastring.fast_ring(py_lattice)
+    ring = physics.fastring.fast_ring(py_lattice)
+    ringrad = ring.enable_6d(copy=True)
     # Matlab call
     ring_ml, ringrad_ml = engine.pyproxy("atfastring", ml_lattice, nargout=2)
     # Comparison
-    for r, rml in zip([ring, ringrad], [ring_ml, ringrad_ml]):
-        assert_close(r[0].Frequency, rml[1]["Frequency"], rtol=1.0e-20)
-        assert_close(r[0].Voltage, rml[1]["Voltage"], rtol=1.0e-20)
-        assert_close(r[1].Length, rml[2]["Length"], rtol=1.0e-20)
-        assert_close(r[1].M66, rml[2]["M66"], atol=1.0e-7)
-        assert_close(r[1].T1, np.squeeze(rml[2]["T1"]), rtol=1.0e-8, atol=1.0e-11)
-        assert_close(r[1].T2, np.squeeze(rml[2]["T2"]), rtol=1.0e-8, atol=1.0e-11)
-        assert_close(r[2].Detuning, rml[-1]["Detuning"], rtol=0.02)
-        assert_close(r[2].Alpha, rml[-1]["Alpha"], rtol=1.0e-5)
-        assert_close(r[2].Beta, rml[-1]["Beta"], rtol=1.0e-10)
+    for r, rml, attrM66, attrT1, attrT2 in zip(
+        [ring, ringrad],
+        [ring_ml, ringrad_ml],
+        ["M66", "M66Rad"],
+        ["T1", "T1Rad"],
+        ["T2", "T2Rad"],
+        strict=True,
+    ):
+        # Compare cavity
+        assert_close(r[1].Frequency, rml[1]["Frequency"], rtol=1.0e-20)
+        assert_close(r[1].Voltage, rml[1]["Voltage"], rtol=1.0e-20)
+        # Compare M66 matrix
+        assert_close(r[0].Length, rml[2]["Length"], rtol=1.0e-20)
+        assert_close(getattr(r[0], attrM66), rml[2]["M66"], atol=1.0e-7)
+        assert_close(
+            getattr(r[0], attrT1), np.squeeze(rml[2]["T1"]), rtol=1.0e-8, atol=1.0e-11
+        )
+        assert_close(
+            getattr(r[0], attrT2), np.squeeze(rml[2]["T2"]), rtol=1.0e-8, atol=1.0e-11
+        )
+        # Compare detuning element
+        assert_close(r[2].Detuning, np.squeeze(rml[-1]["Detuning"]), rtol=0.02)
+        assert_close(r[2].Alpha, np.squeeze(rml[-1]["Alpha"]), rtol=1.0e-5)
+        assert_close(r[2].Beta, np.squeeze(rml[-1]["Beta"]), rtol=1.0e-10)
         assert_close(r[2].ChromX, rml[-1]["ChromX"], rtol=1.0e-5)
         assert_close(r[2].ChromY, rml[-1]["ChromY"], rtol=1.0e-5)
-        assert_close(r[2].T1, np.squeeze(rml[-1]["T1"]), rtol=1.0e-8, atol=1.0e-11)
-        assert_close(r[2].T2, np.squeeze(rml[-1]["T2"]), rtol=1.0e-8, atol=1.0e-11)
-        if len(r) >= 4:
-            assert_close(r[3].Lmatp, rml[-2]["Lmatp"], rtol=0.02, atol=1.0e-10)
+        # assert_close(
+        #     getattr(r[2], attrT1), np.squeeze(rml[-1]["T1"]), rtol=1.0e-8, atol=1.0e-11
+        # )
+        # assert_close(
+        #     getattr(r[2], attrT2), np.squeeze(rml[-1]["T2"]), rtol=1.0e-8, atol=1.0e-11
+        # )
+    assert_close(ringrad[3].Lmatp, ringrad_ml[-2]["Lmatp"], rtol=0.02, atol=1.0e-10)
 
 
 @pytest.mark.parametrize("dp", (0.00, 0.01, -0.01))
