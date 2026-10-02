@@ -21,8 +21,7 @@ Set up a virtualenv using a supported Python version:
 * ``cd $AT_ROOT/pyat``
 * ``python3 -m venv matlab_venv``
 * ``source matlab_venv/bin/activate  # or matlab_venv\Scripts\activate on Windows``
-* ``pip install -r requirements.txt``
-* ``pip install -e .  # install pyAT into the virtualenv``
+* ``pip install .  # install pyAT into the virtualenv``
 
 Install the Matlab engine for Python, ensuring your virtualenv is still active:
 
