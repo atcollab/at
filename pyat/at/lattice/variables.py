@@ -271,7 +271,7 @@ class VariableBase(abc.ABC):
     def _generate_name(cls, name: str) -> str:
         """Generate unique name for variable."""
         cls._counter += 1
-        return name if name else f"{cls._COUNTER_PREFIX}{cls._counter}"
+        return name or f"{cls._COUNTER_PREFIX}{cls._counter}"
 
     @property
     def bounds(self) -> tuple[float, float]:
