@@ -1,10 +1,10 @@
-#define MAGNET_PASS StrMPoleSymplectic4QuantPass
+#define MAGNET_PASS ExactSectorBendQuantPass
 #define INTEGRATOR_4
 #define QUANTUM
 #define NO_OMP  /* because of problems with random generator and OpenMP */
 
-#include "drift_expanded.h"
-#include "kick_kn.h"
-#include "straight_multipole.h"
+#include "drift_exactbend.h"
+#include "kick_k1h_kn.h"
+#include "curved_dipole.h"
 
 #include "magnet_template.h"

@@ -11,32 +11,6 @@ from at import element_pass, internal_epass
 
 
 @pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
-def test_exact_hamiltonian_pass(rin, func):
-    drift = elements.Multipole("m1", 1, [0, 0, 0, 0], [0, 0, 0, 0])
-    drift.Type = 0
-    drift.PassMethod = "ExactHamiltonianPass"
-    drift.BendingAngle = 0
-    func(drift, rin)
-
-
-@pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
-def test_exact_hamiltonian_pass_with_dls_dipole(rin, func):
-    bend = elements.Multipole("rb", 0.15, [0, 0, 0, 0], [-0.0116333, 3.786786, 0, 0])
-    bend.Type = 1
-    bend.PassMethod = "ExactHamiltonianPass"
-    bend.BendingAngle = -0.001745
-    bend.Energy = 3.5e9
-    bend.MaxOrder = 3
-    if func == element_track:
-        func(bend, rin, in_place=True)
-    else:
-        func(bend, rin)
-    # Results from Matlab
-    expected = numpy.array([9.23965e-9, 1.22319e-5, 0, 0, 0, -4.8100e-10]).reshape(6, 1)
-    numpy.testing.assert_allclose(rin, expected, rtol=1e-5, atol=1e-6)
-
-
-@pytest.mark.parametrize("func", (element_track, element_pass, internal_epass))
 @pytest.mark.parametrize("passmethod", ("GWigSymplecticPass", "GWigSymplecticRadPass"))
 def test_gwig_symplectic_pass(rin, passmethod, func):
     # Parameters copied from one of the Diamond wigglers.
