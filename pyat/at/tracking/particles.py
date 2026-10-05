@@ -1,5 +1,5 @@
 """
-Functions relating to particle generation
+Functions relating to particle generation.
 """
 
 import itertools
@@ -11,7 +11,7 @@ from scipy.linalg import block_diag, eig
 
 from ..lattice import AtError, AtWarning, Lattice, Orbit, random
 
-__all__ = ["beam", "sigma_matrix", "emittances_from_beam"]
+__all__ = ["beam", "emittances_from_beam", "sigma_matrix"]
 
 _j2 = np.array([[0.0, 1.0], [-1.0, 0.0]])
 _jmatswap = block_diag(_j2, _j2, _j2.T)
@@ -21,7 +21,7 @@ _jmatswap = block_diag(_j2, _j2, _j2.T)
 def sigma_matrix(ring: Lattice = None, **kwargs):
     r"""
     Calculate the correlation matrix :math:`\Sigma` to be used for particle
-    generation
+    generation.
 
     Parameters:
         ring:           Lattice object or list of twiss parameters.
@@ -65,12 +65,13 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         if len(miss) == 0:
             return [kwargs.pop(key) for key in keys]
         else:
-            raise AtError("{0}: missing {1}".format(mess, ", ".join(miss)))
+            msg = f"{mess}: missing {', '.join(miss)}"
+            raise AtError(msg)
 
     def ignore(mess):
         ok = kwargs.keys()
         if any(ok):
-            warn(AtWarning("{0}: {1} ignored".format(mess, ", ".join(ok))))
+            warn(AtWarning(f"{mess}: {', '.join(ok)} ignored"), stacklevel=3)
 
     def r_s():
         rs = np.zeros((2, 2))
@@ -113,7 +114,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
 
         sigm = emx * rmat[0, :, :] + emy * rmat[1, :, :]
         if ems is None:
-            warn(AtWarning("Monochromatic beam: no energy spread"))
+            warn(AtWarning("Monochromatic beam: no energy spread"), stacklevel=3)
         else:
             sigm += ems * rmat[2, :, :]
         return sigm
@@ -182,7 +183,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
 def beam(nparts: int, sigma, orbit: Orbit = None):
     r"""
     Generates an array of random particles according to the given
-    :math:`\Sigma`-matrix
+    :math:`\Sigma`-matrix.
 
     Parameters:
         nparts:         Number of particles
@@ -238,15 +239,15 @@ def beam(nparts: int, sigma, orbit: Orbit = None):
 def emittances_from_beam(beam=None, sigma_mat=None):
     r"""
     Computes the eigen and projected emittances from a particle distribution
-    or a :math:`\Sigma`-matrix
+    or a :math:`\Sigma`-matrix.
 
     Parameters:
         beam:         particle distribution. ``6xn`` array of ``n`` particles
         sigma_mat:    :math:`\Sigma`-matrix as calculated by :py:func:`sigma_matrix`
 
     Returns:
-        eig_emittances:  a (3,) array of eigen emitances
-        proj_emittances:  a (3,) array of projected emitances
+        eig_emittances:  a (3,) array of eigen emittances
+        proj_emittances:  a (3,) array of projected emittances
     """
     if beam is None:
         if sigma_mat is None:
@@ -255,21 +256,20 @@ def emittances_from_beam(beam=None, sigma_mat=None):
     else:
         if sigma_mat is not None:
             msg = "beam provided, sigma_matrix ignored in emittance calculation"
-            warn(AtWarning(msg))
+            warn(AtWarning(msg), stacklevel=2)
         sigma_mat = sigma_matrix(beam=beam)
     lmbd, vv = eig(sigma_mat @ _jmatswap)
+    keep = lmbd.imag > 1.0e-9 * abs(lmbd).max()
+    emit, vv = lmbd.imag[keep], vv[:, keep]
+    modefrac = abs(np.imag(vv[0::2].conj() * vv[1::2]))
+    modefrac /= modefrac.sum(axis=0)
+    nmodes = len(emit)
+    planes = max(
+        itertools.permutations(range(3), nmodes),
+        key=lambda p: sum(modefrac[p[k], k] for k in range(nmodes)),
+    )
     eig_emittances = np.zeros(3)
-    if np.any(lmbd):
-        keep = lmbd.imag > 1.0e-9 * abs(lmbd).max()
-        emit, vv = abs(lmbd[keep]), vv[:, keep]
-        modefrac = abs(np.imag(vv[0::2].conj() * vv[1::2]))
-        modefrac /= modefrac.sum(axis=0)
-        nmodes = len(emit)
-        planes = max(
-            itertools.permutations(range(3), nmodes),
-            key=lambda p: sum(modefrac[p[k], k] for k in range(nmodes)),
-        )
-        eig_emittances[list(planes)] = emit
-    submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
+    eig_emittances[list(planes)] = emit
+    submat = [slice(0, 2), slice(2, 4), slice(4, 6)]
     proj_emittances = np.sqrt([det(sigma_mat[s, s]) for s in submat])
     return eig_emittances, proj_emittances
