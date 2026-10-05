@@ -3,7 +3,7 @@
 from math import pi
 
 import numpy as np
-from scipy.linalg import block_diag, eig, inv, solve
+from scipy.linalg import block_diag, eig, inv, solve, det
 
 from at.lattice import AtError
 
@@ -108,7 +108,7 @@ def a_matrix(M):
     vv = vv[:, order]
     n = n[order]
     lmbd = lmbd[order]
-    # Normalize vectors
+    # Normalise vectors
     vn = vv / np.sqrt(abs(n)).reshape((1, nv))
     # find the vectors that project most onto x,y,z, and reorder
     # nn will have structure
@@ -252,8 +252,8 @@ def get_tunes_damp(M, R=None):
         )
     else:
         inva = inv(A)
-        rdiag = np.diag(inva @ R @ inva.T)
-        mode_emit = 0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
+        rn = inva @ R @ inva.T
+        mode_emit = np.sqrt([det(rn[s, s]) for s in _submat[:dms]])
         return np.rec.fromarrays(
             (
                 np.array(tunes),
