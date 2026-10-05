@@ -253,7 +253,7 @@ def get_tunes_damp(M, R=None):
     else:
         inva = inv(A)
         rn = inva @ R @ inva.T
-        emit2 = np.maximum([0.0, 0.0, 0.0], [det(rn[s, s]) for s in _submat[:dms]])
+        emit2 = np.maximum(0.0, [det(rn[s, s]) for s in _submat[:dms]])
         mode_emit = np.sqrt(emit2)
         return np.rec.fromarrays(
             (
