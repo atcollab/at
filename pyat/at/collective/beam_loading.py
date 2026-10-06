@@ -221,7 +221,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 full RF system [m]. If not specified, it will be calculated
                 using get_timelag_fromU0. Defines the expected position of the
                 beam to be used for the beam loading setpoints.
-            BufferSize (int):  Size of the history buffer for vbeam, vgen,
+            buffersize (int):  Size of the history buffer for vbeam, vgen,
                 vbunch (default 0). Not related to feedbacks, only data
                 storage.
 
@@ -412,7 +412,7 @@ class BeamLoadingElement(RFCavity, Collective):
 
 
         # buffer size 
-        self._buffersize = kwargs.pop("BufferSize", 0)
+        self._buffersize = kwargs.pop("buffersize", 0)
 
 
         # Initlise the buffers before super. Redefined later.
@@ -727,6 +727,7 @@ class BeamLoadingElement(RFCavity, Collective):
             if cav_args[1] != 0.0:
                 warnings.warn(AtWarning("Setting Cavity Voltage to 0"), stacklevel=2)
             cav_args[1] = 0.0
+            
         return BeamLoadingElement(
             family_name,
             *cav_args,
